@@ -1,0 +1,204 @@
+.lab-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  pointer-events: none;
+}
+.lab-filter-bar > * {
+  pointer-events: auto;
+  max-width: 100%;
+}
+.lab-filter-bar .lab-toolbar-group {
+  width: fit-content;
+  flex: 0 1 auto;
+}
+.lab-filter-trailing {
+  margin-inline-start: auto;
+  display: flex;
+  gap: 8px;
+}
+.lab-filter-panel {
+  width: min(300px, calc(100vw - 24px));
+  padding: 0;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+html[data-lab-theme] .lab-filter-catalog {
+  width: min(360px, calc(100vw - 24px));
+  height: min(450px, var(--radix-popover-content-available-height, 450px));
+}
+.lab-filter-value-menu {
+  height: min(280px, var(--radix-popover-content-available-height, 280px));
+}
+.lab-filter-natural {
+  width: min(360px, calc(100vw - 24px));
+  height: min(280px, var(--radix-popover-content-available-height, 280px));
+}
+.lab-filter-natural form {
+  display: grid;
+  gap: 16px;
+}
+.lab-filter-panel .lab-scroll-area {
+  --lab-scroll-surface: var(--lab-surface);
+}
+.lab-filter-panel .lab-scroll-float--top > * {
+  width: 100%;
+}
+.lab-filter-catalog-list {
+  display: grid;
+  gap: 0;
+}
+.lab-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: transparent;
+}
+html[data-lab-theme] .lab-control.lab-filter-row-main {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  height: auto;
+  padding: 8px;
+  gap: 10px;
+  justify-content: start;
+  text-align: start;
+  border-radius: 12px;
+}
+.lab-filter-row-main > span:not(.lab-filter-row-value) {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.lab-filter-row-main strong {
+  font-size: 13px;
+  font-weight: 400;
+}
+.lab-filter-row-main small {
+  display: none;
+}
+.lab-filter-row-value {
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  color: var(--lab-muted);
+}
+.lab-filter-row-main > svg {
+  width: 18px;
+  flex: none;
+  color: var(--lab-muted);
+}
+.lab-filter-row[data-active='true'] .lab-filter-row-main {
+  color: var(--lab-primary);
+}
+.lab-filter-pins {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+.lab-filter-chip-value {
+  color: var(--lab-muted);
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lab-filter-options {
+  display: grid;
+  gap: 2px;
+}
+html[data-lab-theme] .lab-control.lab-filter-choice {
+  width: 100%;
+  justify-content: space-between;
+  min-height: 40px;
+  text-align: start;
+}
+.lab-filter-options .lab-control[aria-pressed='true'] {
+  background: var(--lab-surface-soft);
+}
+.lab-filter-editor-form {
+  display: grid;
+  gap: 16px;
+}
+.lab-filter-editor-form > p {
+  color: var(--lab-muted);
+  font-size: 13px;
+}
+.lab-filter-editor-form [role='alert'] {
+  color: var(--lab-danger);
+}
+html[data-lab-theme] .lab-filter-editor-dialog {
+  max-width: min(460px, calc(100vw - 24px));
+}
+.lab-filter-demo-results {
+  display: grid;
+  gap: 12px;
+}
+.lab-filter-demo-results article {
+  border-bottom: 1px solid var(--lab-line);
+  padding: 16px 0;
+  display: grid;
+  gap: 6px;
+}
+.lab-filter-demo-results small {
+  color: var(--lab-muted);
+}
+.lab-filter-demo-results[data-grid='true'] {
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+}
+.lab-temporal-editor {
+  display: grid;
+  gap: 16px;
+}
+.lab-temporal-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.lab-temporal-fields {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.lab-temporal-editor small {
+  color: var(--lab-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.lab-filter-error {
+  color: var(--lab-danger);
+  font-size: 12px;
+}
+.lab-filter-value-menu:has(.lab-temporal-editor) {
+  width: min(360px, calc(100vw - 24px));
+  height: min(360px, var(--radix-popover-content-available-height, 360px));
+}
+@media (max-width: 599px) {
+  html[data-lab-theme] .lab-dialog.lab-filter-editor-dialog {
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+  .lab-filter-editor-dialog .lab-dock {
+    max-width: 100%;
+  }
+}
+
+.lab-temporal-editor {
+  container-type: inline-size;
+}
+@container (min-width:400px) {
+  .lab-temporal-fields[data-range='true'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.lab-temporal-demo-title {
+  padding-inline: 10px;
+  font-size: 13px;
+}

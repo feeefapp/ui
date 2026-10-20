@@ -1,0 +1,283 @@
+.lab-text-field {
+  --lab-text-field-height: var(--lab-control-height);
+  --lab-text-field-padding-top: 17px;
+  --lab-text-field-padding-bottom: 5px;
+  --lab-text-field-label-top: 12px;
+  --lab-text-field-float-top: 4px;
+  --lab-text-field-radius: var(--lab-radius-control);
+  --lab-field-inset-start: 12px;
+  --lab-field-inset-end: 12px;
+  min-width: 0;
+  width: 100%;
+  color: var(--lab-variant-ink, var(--lab-ink));
+}
+/* The real control fills the surface. Adornments float over its reserved padding. */
+.lab-text-field-shell {
+  --lab-field-padding-left: var(--lab-field-inset-start);
+  --lab-field-padding-right: var(--lab-field-inset-end);
+  position: relative;
+  min-width: 0;
+  border-radius: var(--lab-text-field-radius);
+}
+.lab-text-field-edit {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+}
+html[data-lab-theme] .lab-text-field :is(.lab-raw-input, .lab-field-select-control) {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: var(--lab-text-field-height);
+  min-height: var(--lab-text-field-height);
+  margin: 0;
+  padding-block: var(--lab-text-field-padding-top) var(--lab-text-field-padding-bottom);
+  padding-left: var(--lab-field-padding-left);
+  padding-right: var(--lab-field-padding-right);
+  text-align: start;
+  border: 1px solid var(--lab-variant-edge, var(--lab-line));
+  border-radius: var(--lab-text-field-radius);
+  corner-shape: superellipse(1.5);
+  outline: none;
+  background: var(--lab-variant-fill, var(--lab-surface));
+  color: var(--lab-variant-ink, var(--lab-ink));
+  caret-color: var(--lab-focus);
+  font: 400 16px/20px var(--lab-font);
+  box-shadow: var(--lab-variant-shadow, none);
+  transition:
+    border-color 140ms,
+    box-shadow 140ms;
+}
+html[data-lab-theme] .lab-text-field textarea.lab-raw-input {
+  height: auto;
+}
+html[data-lab-theme] .lab-text-field :is(.lab-raw-input, .lab-field-select-control):focus {
+  border-color: var(--lab-focus);
+  box-shadow: 0 0 0 1px var(--lab-focus);
+}
+/* A trailing action focuses independently; its own ring is never suppressed. */
+.lab-text-field-label {
+  position: absolute;
+  inset-inline-start: var(--lab-field-inset-start);
+  inset-inline-end: var(--lab-field-inset-end);
+  top: var(--lab-text-field-label-top);
+  z-index: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--lab-variant-label, var(--lab-muted));
+  font: 400 16px/20px var(--lab-font);
+  transition:
+    top 140ms,
+    font-size 140ms,
+    line-height 140ms,
+    color 140ms;
+  pointer-events: none;
+}
+.lab-text-field-edit:focus-within .lab-text-field-label,
+.lab-text-field-edit:has(.lab-raw-input:not(:placeholder-shown)) .lab-text-field-label,
+.lab-text-field-edit:has(.lab-raw-input:autofill) .lab-text-field-label,
+.lab-text-field-edit[data-always-float] .lab-text-field-label {
+  top: var(--lab-text-field-float-top);
+  font-size: 10px;
+  line-height: 12px;
+}
+.lab-text-field-edit:focus-within .lab-text-field-label {
+  color: var(--lab-focus);
+}
+.lab-text-field .lab-raw-input::placeholder {
+  color: var(--lab-variant-label, var(--lab-muted));
+  opacity: 1;
+}
+.lab-text-field[data-has-label='true'] .lab-raw-input::placeholder {
+  color: transparent;
+}
+.lab-text-field-shell:dir(rtl) {
+  --lab-field-padding-left: var(--lab-field-inset-end);
+  --lab-field-padding-right: var(--lab-field-inset-start);
+}
+.lab-text-field-label,
+.lab-text-field-details {
+  text-align: start;
+}
+.lab-text-field-affix {
+  unicode-bidi: isolate;
+}
+.lab-field-leading,
+.lab-text-field-trailing {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--lab-variant-label, var(--lab-muted));
+  pointer-events: none;
+}
+.lab-field-leading {
+  inset-inline-start: 12px;
+}
+.lab-text-field-trailing {
+  inset-inline-end: 12px;
+  gap: 4px;
+}
+:is(.lab-field-leading, .lab-text-field-trailing)
+  :is(button, a, input, select, [role='button'], [tabindex]) {
+  pointer-events: auto;
+}
+.lab-text-field-icon,
+.lab-text-field-affix {
+  display: inline-flex;
+  align-items: center;
+}
+.lab-text-field-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.lab-text-field-details {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 16px 0;
+  color: var(--lab-muted);
+  font: 400 12px/18px var(--lab-font);
+}
+.lab-text-field-details:has(> :only-child:empty) {
+  display: none;
+}
+.lab-text-field-details > :last-child:not(:first-child) {
+  flex: none;
+  white-space: nowrap;
+}
+html[data-lab-theme]
+  .lab-text-field[data-invalid='true']
+  :is(.lab-raw-input, .lab-field-select-control) {
+  border-color: var(--lab-field-error, var(--lab-danger));
+}
+html[data-lab-theme]
+  .lab-text-field[data-invalid='true']
+  :is(.lab-raw-input, .lab-field-select-control):focus {
+  box-shadow: 0 0 0 1px var(--lab-field-error, var(--lab-danger));
+}
+.lab-text-field[data-invalid='true'] :is(.lab-text-field-label, .lab-text-field-details) {
+  color: var(--lab-field-error, var(--lab-danger));
+}
+.lab-text-field[data-disabled] {
+  opacity: 0.5;
+}
+.lab-text-field[data-disabled] :is(.lab-raw-input, .lab-field-select-control) {
+  cursor: not-allowed;
+}
+.lab-text-field .lab-raw-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--lab-variant-ink, var(--lab-ink));
+  box-shadow: 0 0 0 1000px var(--lab-variant-label-surface, var(--lab-surface)) inset;
+}
+.lab-text-field[data-control-size='compact'] {
+  --lab-text-field-height: var(--lab-control-compact);
+  --lab-text-field-padding-top: 14px;
+  --lab-text-field-padding-bottom: 4px;
+  --lab-text-field-label-top: 10px;
+  --lab-text-field-float-top: 3px;
+  --lab-text-field-radius: var(--lab-radius-control-compact);
+}
+.lab-text-field[data-label-style='outlined'],
+.lab-text-field:not([data-has-label='true']) {
+  --lab-text-field-padding-top: 11px;
+  --lab-text-field-padding-bottom: 11px;
+}
+.lab-text-field[data-label-style='outlined'][data-control-size='compact'],
+.lab-text-field:not([data-has-label='true'])[data-control-size='compact'] {
+  --lab-text-field-padding-top: 9px;
+  --lab-text-field-padding-bottom: 9px;
+}
+.lab-text-field[data-label-style='outlined'] .lab-text-field-label {
+  inset-inline-start: calc(var(--lab-field-inset-start) - 4px);
+  inset-inline-end: auto;
+  max-width: calc(100% - var(--lab-field-inset-start) - var(--lab-field-inset-end) + 8px);
+  padding-inline: 4px;
+}
+.lab-text-field[data-label-style='outlined']
+  .lab-text-field-edit:focus-within
+  .lab-text-field-label,
+.lab-text-field[data-label-style='outlined']
+  .lab-text-field-edit:has(.lab-raw-input:not(:placeholder-shown))
+  .lab-text-field-label,
+.lab-text-field[data-label-style='outlined']
+  .lab-text-field-edit:has(.lab-raw-input:autofill)
+  .lab-text-field-label,
+.lab-text-field[data-label-style='outlined']
+  .lab-text-field-edit[data-always-float]
+  .lab-text-field-label {
+  top: -6px;
+  font-size: 12px;
+  line-height: 14px;
+  background: var(--lab-variant-label-surface, var(--lab-surface));
+}
+.lab-text-field[data-surface-variant='filled']:not([data-invalid='true'])
+  .lab-text-field-edit:focus-within
+  .lab-text-field-label {
+  color: var(--lab-on-primary);
+}
+html[data-lab-theme] .lab-text-field .lab-field-select-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: start;
+  cursor: pointer;
+}
+.lab-field-select-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lab-field-select-control > :last-child {
+  display: inline-flex;
+  flex: none;
+}
+.lab-text-field[data-has-label='true']
+  .lab-text-field-edit:not([data-always-float])
+  .lab-field-select-value {
+  visibility: hidden;
+}
+@media (pointer: coarse) {
+  .lab-text-field[data-control-size='compact'] {
+    --lab-text-field-height: var(--lab-control-touch-target);
+    --lab-text-field-padding-top: 17px;
+    --lab-text-field-padding-bottom: 5px;
+    --lab-text-field-label-top: 12px;
+  }
+  .lab-text-field[data-label-style='outlined'][data-control-size='compact'],
+  .lab-text-field:not([data-has-label='true'])[data-control-size='compact'] {
+    --lab-text-field-padding-top: 11px;
+    --lab-text-field-padding-bottom: 11px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab-text-field :is(.lab-raw-input, .lab-field-select-control),
+  .lab-text-field-label {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  html[data-lab-theme] .lab-text-field :is(.lab-raw-input, .lab-field-select-control) {
+    background: Canvas;
+    color: CanvasText;
+    border-color: ButtonText;
+  }
+  html[data-lab-theme] .lab-text-field :is(.lab-raw-input, .lab-field-select-control):focus {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
+  }
+  .lab-text-field[data-label-style='outlined'] .lab-text-field-label {
+    background: Canvas;
+  }
+  html[data-lab-theme]
+    .lab-text-field[data-invalid='true']
+    :is(.lab-raw-input, .lab-field-select-control) {
+    border-style: dashed;
+  }
+}

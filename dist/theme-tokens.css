@@ -1,0 +1,30 @@
+/* Feeef merchant palette: bright green controls, quiet paper surfaces, forest dark mode. */
+html[data-lab-theme] {
+  --lab-primary: #72ce5d;
+  --lab-accent: #86e672;
+  --lab-on-primary: #142512;
+  --lab-ground: #f3f6ef;
+  --lab-surface: #fcfdf9;
+  --lab-surface-soft: #e8eee2;
+  --lab-line: #d6e1cf;
+  --lab-ink: #17261b;
+  --lab-muted: #657460;
+  --lab-focus: #315d2c;
+  --lab-field-error: #a02b2b;
+  --lab-pixel-ink: #86e672;
+  color-scheme: light;
+}
+html[data-lab-theme='dark'] {
+  --lab-primary: #b7e593;
+  --lab-accent: #b7e593;
+  --lab-ground: #101e17;
+  --lab-surface: #23372a;
+  --lab-surface-soft: #1a2a21;
+  --lab-line: #405744;
+  --lab-ink: #edf4e8;
+  --lab-muted: #b4c3ae;
+  --lab-focus: #b7e593;
+  --lab-field-error: #ffb4ab;
+  --lab-pixel-ink: #b7e593;
+  color-scheme: dark;
+}

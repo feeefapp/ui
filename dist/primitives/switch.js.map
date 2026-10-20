@@ -1,0 +1,1 @@
+{"version":3,"file":"switch.js","sourceRoot":"","sources":["../../src/primitives/switch.tsx"],"names":[],"mappings":";AAAA,OAAO,EAAE,cAAc,EAAE,uBAAuB,EAAE,MAAM,UAAU,CAAA;AAClE,kFAAkF;AAClF,MAAM,CAAC,MAAM,kBAAkB,GAAG,uBAAuB,CAAA;AACzD,MAAM,UAAU,SAAS,CAAC,KAMzB;IACC,OAAO,KAAC,cAAc,OAAK,KAAK,EAAE,WAAW,EAAC,SAAS,GAAG,CAAA;AAC5D,CAAC"}

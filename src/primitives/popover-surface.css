@@ -1,0 +1,62 @@
+:where(.lab-popover-surface) {
+  position: relative;
+}
+html[data-lab-theme] .lab-popover-surface {
+  isolation: isolate;
+  box-sizing: border-box;
+  background: var(--lab-surface);
+  color: var(--lab-ink);
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-group);
+  corner-shape: superellipse(1.5);
+  box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.lab-popover-decoration {
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--lab-focus);
+  --pixel-texture-opacity: 0.065;
+}
+/* Remove competing paint on the existing content layouts, not their geometry. */
+html[data-lab-theme] .lab-popover-surface > :is(.lab-ladder-card, .lab-pc-panel) {
+  background: transparent;
+  border: 0;
+  border-radius: inherit;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+html[data-lab-theme] .lab-popover-surface > .lab-pc-panel::before {
+  display: none;
+}
+html[data-lab-theme] .lab-popover-surface .lab-pc-panel-content {
+  background: transparent;
+}
+html[data-lab-theme]
+  .lab-popover-surface
+  :is(.lab-actions-menu__item, .lab-pc-menu-item, .lab-select-option) {
+  border-radius: calc(var(--lab-radius-group) - var(--lab-space-1) - 1px);
+  corner-shape: superellipse(1.5);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .lab-popover-decoration {
+    display: none;
+  }
+}
+@media (forced-colors: active) {
+  .lab-popover-decoration {
+    display: none;
+  }
+  html[data-lab-theme] .lab-popover-surface {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+    box-shadow: none;
+  }
+}

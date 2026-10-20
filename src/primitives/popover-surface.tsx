@@ -1,0 +1,52 @@
+import * as React from 'react'
+import { Slot } from '@radix-ui/react-slot'
+import { cn } from '../utils'
+import { PixelTexture } from '../pixel-art'
+import './popover-surface.css'
+
+export type LabPopoverSurfaceProps = React.HTMLAttributes<HTMLDivElement> & {
+  /** Decorate the actual Radix/content host without adding a positioning wrapper. */
+  asChild?: boolean
+  seed?: string
+}
+
+/** Shared opaque menu/popover material; owners retain positioning and interaction. */
+export const LabPopoverSurface = React.forwardRef<HTMLDivElement, LabPopoverSurfaceProps>(
+  ({ asChild = false, seed = 'lab-popover', className, children, ...props }, ref) => {
+    const decoration = (
+      <div className="lab-popover-decoration" aria-hidden="true">
+        <PixelTexture variant="grain" density="sparse" seed={seed} animated />
+      </div>
+    )
+    const shared = {
+      ...props,
+      ref,
+      'className': cn('lab-popover-surface', className),
+      'data-lab-corners': true,
+    }
+    if (asChild) {
+      const child = React.Children.only(children) as React.ReactElement<{
+        children?: React.ReactNode
+      }>
+      return (
+        <Slot {...shared}>
+          {React.cloneElement(
+            child,
+            undefined,
+            <>
+              {decoration}
+              {child.props.children}
+            </>
+          )}
+        </Slot>
+      )
+    }
+    return (
+      <div {...shared}>
+        {decoration}
+        {children}
+      </div>
+    )
+  }
+)
+LabPopoverSurface.displayName = 'LabPopoverSurface'

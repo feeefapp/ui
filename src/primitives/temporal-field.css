@@ -1,0 +1,75 @@
+html[data-lab-theme] .lab-text-field .lab-temporal-field-control {
+  cursor: pointer;
+}
+html[data-lab-theme] .lab-text-field .lab-temporal-field-control[aria-readonly='true'] {
+  cursor: default;
+}
+.lab-temporal-field-value {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+html[data-lab-theme] .lab-text-field .lab-temporal-field-clear {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+}
+.lab-temporal-field-popover {
+  width: min(390px, calc(100vw - 24px));
+  height: min(610px, var(--radix-popover-content-available-height, 610px));
+  padding: 0;
+}
+.lab-temporal-field-editor {
+  min-width: 0;
+}
+html[data-lab-theme] .lab-dialog.lab-temporal-field-dialog {
+  width: min(480px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+}
+html[data-lab-theme] .lab-dialog.lab-temporal-field-dialog.lab-filter-calendar-dialog {
+  width: min(860px, calc(100vw - 24px));
+}
+@media (max-width: 599px) {
+  html[data-lab-theme] .lab-dialog.lab-temporal-field-dialog {
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+  }
+}
+@media (pointer: coarse) {
+  html[data-lab-theme] .lab-text-field .lab-temporal-field-clear {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+  }
+}
+
+html[data-lab-theme] .lab-text-field .lab-temporal-field-control > .lab-temporal-field-value {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.lab-temporal-fields-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: 20px 16px;
+}
+.lab-temporal-fields-demo-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+  margin-block: 28px 12px;
+}
+.lab-temporal-fields-demo-form > .lab-text-field {
+  flex: 1 1 280px;
+}
+.lab-temporal-fields-demo-form > .lab-control {
+  flex: none;
+}

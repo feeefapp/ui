@@ -1,0 +1,194 @@
+.lab-account-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  min-inline-size: 0;
+}
+html[data-lab-theme] .lab-account-profile-trigger.lab-control[data-variant] {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  justify-content: start;
+  gap: 8px;
+  padding: 4px;
+  min-block-size: 44px;
+  block-size: auto;
+}
+.lab-account-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  inline-size: 32px;
+  block-size: 32px;
+  border-radius: 12px;
+  corner-shape: superellipse(1.5);
+  color: var(--lab-ink);
+  background: var(--lab-surface-soft);
+  font-weight: 500;
+}
+.lab-account-profile-copy {
+  display: grid;
+  min-inline-size: 0;
+  flex: 1;
+  gap: 0;
+  text-align: start;
+  line-height: 16px;
+}
+.lab-account-profile-copy :is(strong, small) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lab-account-profile-copy strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.lab-account-profile-copy small {
+  color: var(--lab-muted);
+  font-size: 11px;
+}
+.lab-account-profile-trigger > svg {
+  flex: 0 0 auto;
+  color: var(--lab-muted);
+}
+.lab-account-profile-row > :not(.lab-account-profile-trigger) {
+  flex-shrink: 0;
+}
+.lab-account-profile-row[data-compact='true'] {
+  flex-direction: column;
+}
+html[data-lab-theme]
+  .lab-account-profile-row[data-compact='true']
+  .lab-account-profile-trigger.lab-control[data-variant] {
+  flex: none;
+  min-block-size: 44px;
+  inline-size: 44px;
+  justify-content: center;
+  padding: 0;
+}
+.lab-actions-menu.lab-account-profile-menu {
+  inline-size: min(300px, calc(100vw - 24px));
+  padding: 4px;
+}
+.lab-account-menu-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px 14px;
+}
+.lab-account-menu-heading > span:last-child {
+  display: grid;
+  min-inline-size: 0;
+  gap: 3px;
+}
+.lab-account-menu-heading strong {
+  font-size: 14px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.lab-account-menu-heading small {
+  font-size: 12px;
+  color: var(--lab-muted);
+}
+.lab-account-profile-menu .lab-usage-summary {
+  margin-block-end: 6px;
+}
+.lab-account-upgrade {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  isolation: isolate;
+  padding: 12px;
+  border-radius: var(--lab-radius-control);
+  corner-shape: superellipse(1.5);
+  background: color-mix(in srgb, var(--lab-primary) 13%, var(--lab-surface));
+  color: var(--lab-ink);
+  text-decoration: none;
+  outline: none;
+  margin-block-end: 6px;
+}
+.lab-account-upgrade[data-highlighted] {
+  background: color-mix(in srgb, var(--lab-primary) 20%, var(--lab-surface));
+}
+.lab-account-upgrade > span:not(.lab-account-pixel-paint) {
+  display: grid;
+  gap: 0;
+  flex: 1;
+}
+.lab-account-upgrade strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.lab-account-upgrade .lab-pixel-art {
+  color: var(--lab-primary);
+}
+.lab-account-upgrade small {
+  font-size: 12px;
+  color: var(--lab-muted);
+}
+.lab-account-menu-separator {
+  block-size: 1px;
+  background: var(--lab-line);
+  margin: 4px 8px;
+}
+.lab-account-profile-error {
+  color: var(--lab-danger);
+  font-size: 12px;
+}
+.lab-account-settings-dialog {
+  max-inline-size: 460px;
+}
+.lab-account-settings-content {
+  display: grid;
+  gap: 24px;
+}
+.lab-account-settings-content section {
+  display: grid;
+  gap: 10px;
+}
+.lab-account-settings-content h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+}
+.lab-account-settings-content p {
+  margin: 0;
+  color: var(--lab-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.lab-account-settings-content a {
+  color: var(--lab-ink);
+  text-decoration: none;
+}
+.lab-account-settings-content a:focus-visible {
+  outline: 2px solid var(--lab-focus);
+}
+@media (forced-colors: active) {
+  .lab-account-avatar,
+  .lab-account-upgrade {
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+  }
+  .lab-account-upgrade[data-highlighted] {
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
+.lab-account-profile-trigger {
+  background: var(--lab-surface-soft);
+  border-radius: 16px;
+}
+.lab-account-profile-row {
+  padding: 0;
+  gap: 0;
+}
+.lab-account-profile-trigger:hover {
+  background: var(--lab-control-selected);
+}
+.lab-account-sidebar[data-collapsed='true'] nav {
+  inline-size: 44px;
+  margin-inline: auto;
+}

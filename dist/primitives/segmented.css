@@ -1,0 +1,62 @@
+/* Shared mode group: selected choices use an explicit, high-contrast surface. */
+.lab-segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+  max-width: 100%;
+  flex-wrap: wrap;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-group);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-glass-fill);
+  box-shadow: var(--lab-glass-light);
+}
+.lab-segmented[data-appearance='plain'] {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+html[data-lab-theme] .lab-segmented > .lab-segmented-option {
+  flex: 0 1 auto;
+  min-width: max-content;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: var(--lab-radius-control-compact);
+  font: 400 15px/20px var(--lab-font);
+  color: var(--lab-muted);
+  --lab-control-selected: color-mix(in srgb, var(--lab-primary) 16%, var(--lab-surface));
+  --lab-control-elevation: none;
+}
+html[data-lab-theme] .lab-segmented > .lab-segmented-option[data-state='on'] {
+  color: var(--lab-on-primary);
+  background: var(--lab-primary);
+  --lab-control-selected: var(--lab-primary);
+  --lab-control-edge: transparent;
+  --lab-control-elevation: none;
+  box-shadow: none;
+}
+.lab-segmented-option > span {
+  display: inline-flex;
+}
+.lab-segmented-option svg {
+  width: 18px;
+  height: 18px;
+}
+@media (pointer: coarse) {
+  html[data-lab-theme] .lab-segmented > .lab-segmented-option {
+    min-height: 44px;
+    height: 44px;
+  }
+}
+@media (forced-colors: active) {
+  .lab-segmented {
+    background: Canvas;
+    box-shadow: none;
+  }
+  html[data-lab-theme] .lab-segmented > .lab-segmented-option[data-state='on'] {
+    outline: 1px solid Highlight;
+  }
+}

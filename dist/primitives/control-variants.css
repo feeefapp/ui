@@ -1,0 +1,120 @@
+/* Shared paint recipe. Components retain their own geometry and interaction semantics. */
+html[data-lab-theme] [data-surface-variant] {
+  --lab-variant-fill: transparent;
+  --lab-variant-hover: var(--lab-control-hover);
+  --lab-variant-pressed: var(--lab-control-pressed);
+  --lab-variant-edge: transparent;
+  --lab-variant-shadow: none;
+  --lab-variant-ink: var(--lab-ink);
+  --lab-variant-label: var(--lab-muted);
+  --lab-variant-label-surface: var(--lab-surface);
+}
+html[data-lab-theme] [data-surface-variant='filled'] {
+  --lab-variant-fill: var(--lab-primary);
+  --lab-variant-hover: color-mix(in srgb, var(--lab-primary) 92%, white);
+  --lab-variant-pressed: color-mix(in srgb, var(--lab-primary) 90%, var(--lab-on-primary));
+  --lab-variant-edge: color-mix(in srgb, var(--lab-on-primary) 12%, var(--lab-primary));
+  --lab-variant-ink: var(--lab-on-primary);
+  --lab-variant-label: var(--lab-on-primary);
+  --lab-variant-label-surface: var(--lab-primary);
+}
+html[data-lab-theme] [data-surface-variant='tonal'] {
+  --lab-variant-fill: color-mix(in srgb, var(--lab-primary) 22%, var(--lab-surface));
+  --lab-variant-hover: color-mix(in srgb, var(--lab-primary) 30%, var(--lab-surface));
+  --lab-variant-pressed: color-mix(in srgb, var(--lab-primary) 36%, var(--lab-surface));
+  --lab-variant-label-surface: var(--lab-variant-fill);
+}
+html[data-lab-theme] [data-surface-variant='elevated'] {
+  --lab-variant-fill: var(--lab-control-surface);
+  --lab-variant-edge: var(--lab-control-border);
+  --lab-variant-shadow: var(--lab-control-raised-shadow);
+  --lab-variant-label-surface: var(--lab-control-surface);
+}
+html[data-lab-theme] [data-surface-variant='outlined'] {
+  --lab-variant-edge: var(--lab-control-border);
+}
+/* Adapt the shared recipe to the existing button state engine. */
+html[data-lab-theme] .lab-control[data-surface-variant] {
+  --lab-control-fill: var(--lab-variant-fill);
+  --lab-control-fill-hover: var(--lab-variant-hover);
+  --lab-control-fill-pressed: var(--lab-variant-pressed);
+  --lab-control-edge: var(--lab-variant-edge);
+  --lab-control-elevation: var(--lab-variant-shadow);
+  color: var(--lab-variant-ink);
+}
+html[data-lab-theme]
+  .lab-control[data-surface-variant]:is(
+    [data-surface-variant='outlined'],
+    [data-surface-variant='text']
+  ) {
+  color: var(--lab-focus);
+}
+html[data-lab-theme]
+  .lab-control[data-surface-variant][data-control-appearance='toolbar']:not(
+    [data-surface-variant='filled']
+  ) {
+  --lab-control-fill: transparent;
+  --lab-control-edge: transparent;
+  --lab-control-elevation: none;
+}
+html[data-lab-theme]
+  .lab-control[data-surface-variant]:is([aria-pressed='true'], [data-state='on']) {
+  --lab-control-fill: var(--lab-control-selected);
+  --lab-control-fill-hover: color-mix(in srgb, var(--lab-primary) 30%, var(--lab-surface));
+  --lab-control-fill-pressed: color-mix(in srgb, var(--lab-primary) 36%, var(--lab-surface));
+  --lab-control-edge: color-mix(in srgb, var(--lab-primary) 38%, var(--lab-line));
+  --lab-control-elevation: inset 0 1px 2px rgb(0 0 0 / 6%);
+  color: var(--lab-ink);
+}
+html[data-lab-theme] .lab-select[data-surface-variant] {
+  box-sizing: border-box;
+  height: var(--lab-control-height);
+  min-height: var(--lab-control-height);
+  border: 1px solid var(--lab-variant-edge);
+  background: var(--lab-variant-fill);
+  color: var(--lab-variant-ink);
+  box-shadow: var(--lab-variant-shadow);
+  border-radius: var(--lab-radius-control);
+}
+html[data-lab-theme] .lab-select[data-surface-variant][data-control-size='compact'] {
+  height: var(--lab-control-compact);
+  min-height: var(--lab-control-compact);
+  border-radius: var(--lab-radius-control-compact);
+}
+html[data-lab-theme] .lab-select[data-surface-variant]:hover:not(:disabled) {
+  background: var(--lab-variant-hover);
+}
+html[data-lab-theme] .lab-select[data-surface-variant][data-state='open'] {
+  background: var(--lab-variant-pressed);
+}
+html[data-lab-theme] .lab-select[data-surface-variant][aria-invalid='true'] {
+  border-color: var(--lab-danger);
+}
+@media (pointer: coarse) {
+  html[data-lab-theme] .lab-select[data-surface-variant][data-control-size] {
+    height: var(--lab-control-touch-target);
+    min-height: var(--lab-control-touch-target);
+  }
+}
+@media (forced-colors: active) {
+  html[data-lab-theme] [data-surface-variant] {
+    --lab-variant-fill: Canvas;
+    --lab-variant-ink: CanvasText;
+    --lab-variant-label: CanvasText;
+    --lab-variant-edge: ButtonText;
+    --lab-variant-shadow: none;
+    --lab-variant-label-surface: Canvas;
+  }
+  html[data-lab-theme] .lab-control[data-surface-variant] {
+    color: ButtonText;
+  }
+  html[data-lab-theme] .lab-control[data-surface-variant='filled'] {
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
+/* Filled is the canonical raised primary action; fields keep their own elevation. */
+html[data-lab-theme] .lab-control[data-surface-variant='filled'] {
+  --lab-control-elevation: var(--lab-control-raised-shadow);
+}

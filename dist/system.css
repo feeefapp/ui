@@ -1,0 +1,678 @@
+/* Lab UI contract. Theme owns colors; this file owns shared geometry and controls. */
+html[data-lab-theme] {
+  --lab-space-1: 4px;
+  --lab-space-2: 8px;
+  --lab-space-3: 12px;
+  --lab-space-4: 16px;
+  --lab-space-6: 24px;
+  --lab-space-8: 32px;
+  --lab-radius-control: 18px;
+  --lab-radius-control-compact: 14px;
+  --lab-radius-group: 20px;
+  --lab-radius-panel: 24px;
+  --lab-radius-glass: 32px;
+  --lab-control-height: 44px;
+  --lab-field-height: 40px;
+  --lab-control-compact: 40px;
+  --lab-control-touch-target: 44px;
+  --lab-font:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'IBM Plex Sans Arabic', sans-serif;
+  --lab-font-brand: Outfit, 'IBM Plex Sans Arabic', sans-serif;
+  --lab-duration-fast: 140ms;
+  --lab-duration-normal: 220ms;
+  --lab-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --lab-danger: #a02b2b;
+  --lab-on-danger: #fff;
+  /* Derived control materials use the theme palette. Glass belongs to the
+  enclosing toolbar or dock, never to each control independently. */
+  --lab-control-surface: var(--lab-surface);
+  --lab-control-border: color-mix(in srgb, var(--lab-ink) 15%, var(--lab-surface));
+  --lab-control-hover: color-mix(in srgb, var(--lab-ink) 5%, var(--lab-surface));
+  --lab-control-pressed: color-mix(in srgb, var(--lab-ink) 10%, var(--lab-surface));
+  --lab-glass-fill: color-mix(in srgb, var(--lab-surface) 76%, transparent);
+  --lab-glass-edge-light: rgb(255 255 255 / 76%);
+  --lab-glass-edge-low: rgb(255 255 255 / 20%);
+  --lab-glass-shadow: 0 8px 24px -14px rgb(0 0 0 / 18%);
+  --lab-glass-light: inset 0 1px 0 var(--lab-glass-edge-low), inset 0 -1px 0 rgb(0 0 0 / 6%);
+  --lab-control-selected: color-mix(in srgb, var(--lab-primary) 22%, var(--lab-surface));
+  --lab-control-highlight: rgb(255 255 255 / 76%);
+  --lab-control-depth: 0 2px 6px rgb(0 0 0 / 8%);
+  --lab-control-raised-shadow: inset 0 1px 0 var(--lab-control-highlight), var(--lab-control-depth);
+}
+html[data-lab-theme='dark'] {
+  --lab-glass-edge-light: rgb(255 255 255 / 30%);
+  --lab-glass-edge-low: rgb(255 255 255 / 10%);
+  --lab-glass-shadow: 0 8px 24px -14px rgb(0 0 0 / 40%);
+  --lab-danger: #ffb4ab;
+  --lab-on-danger: #571812;
+  --lab-control-highlight: rgb(255 255 255 / 20%);
+  --lab-control-depth: 0 2px 6px rgb(0 0 0 / 18%);
+}
+:is(.lab-app, .lab-dialog, .lab-floating-root) {
+  font-family: var(--lab-font);
+  color: var(--lab-ink);
+}
+:is(.lab-app, .lab-dialog, .lab-floating-root) :focus-visible {
+  outline: 2px solid var(--lab-focus);
+  outline-offset: 4px;
+}
+/* A static specular rim, shared by floating materials. Only the decorative
+   paint is masked; the host, focus outline and overflowing controls stay free. */
+/* Zero specificity: hosts that float (zoom rail, docks, sheets) set their own `position`. */
+:where(.lab-light-edge) {
+  position: relative;
+}
+@supports (mask-composite: exclude) or (-webkit-mask-composite: xor) {
+  .lab-light-edge::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    z-index: 1;
+    box-sizing: border-box;
+    padding: 1px;
+    border-radius: inherit;
+    corner-shape: inherit;
+    background: linear-gradient(
+      135deg,
+      var(--lab-glass-edge-light),
+      var(--lab-glass-edge-low) 22%,
+      transparent 48%,
+      transparent 72%,
+      var(--lab-glass-edge-low)
+    );
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    clip-path: var(--lab-corner-clip, none);
+    pointer-events: none;
+  }
+}
+/* Lab owns its controls; no generic UI component classes enter this boundary. */
+/* Position at zero specificity so component rules can place a control absolutely. */
+:where(.lab-control) {
+  position: relative;
+}
+.lab-control {
+  box-sizing: border-box;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--lab-radius-control);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.lab-control[data-legacy-size='icon'] {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
+.lab-control[data-legacy-size='sm'] {
+  min-height: 36px;
+}
+.lab-control[data-legacy-size='lg'] {
+  min-height: 44px;
+}
+.lab-input,
+.lab-textarea {
+  box-sizing: border-box;
+  width: 100%;
+}
+.lab-textarea {
+  display: block;
+  resize: vertical;
+}
+.lab-label {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+/* Explicit variants override legacy page classes. New controls must use this API. */
+html[data-lab-theme] .lab-control[data-variant] {
+  --lab-control-fill: transparent;
+  --lab-control-fill-hover: var(--lab-control-hover);
+  --lab-control-fill-pressed: var(--lab-control-pressed);
+  --lab-control-edge: transparent;
+  --lab-control-elevation: none;
+  height: var(--lab-control-height);
+  min-height: var(--lab-control-height);
+  width: auto;
+  min-width: 0;
+  padding: 0 var(--lab-space-4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--lab-control-edge);
+  border-radius: var(--lab-radius-control);
+  corner-shape: superellipse(1.5);
+  font: 400 14px/20px var(--lab-font);
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  color: var(--lab-ink);
+  background: var(--lab-control-fill);
+  box-shadow: var(--lab-control-elevation);
+  overflow: visible;
+  filter: none;
+  cursor: pointer;
+  transition:
+    background-color var(--lab-duration-fast) var(--lab-ease),
+    border-color var(--lab-duration-fast) var(--lab-ease),
+    box-shadow var(--lab-duration-fast) var(--lab-ease),
+    color var(--lab-duration-fast) var(--lab-ease);
+}
+html[data-lab-theme] .lab-control[data-variant='secondary'] {
+  --lab-control-fill: var(--lab-control-surface);
+  --lab-control-edge: var(--lab-control-border);
+  --lab-control-elevation: var(--lab-control-raised-shadow);
+}
+html[data-lab-theme] .lab-control[data-variant='destructive'] {
+  --lab-control-fill: color-mix(in srgb, var(--lab-danger) 7%, var(--lab-surface));
+  --lab-control-fill-hover: color-mix(in srgb, var(--lab-danger) 12%, var(--lab-surface));
+  --lab-control-fill-pressed: color-mix(in srgb, var(--lab-danger) 18%, var(--lab-surface));
+  --lab-control-edge: color-mix(in srgb, var(--lab-danger) 19%, var(--lab-surface));
+  color: var(--lab-danger);
+}
+/* Borderless secondary commands share a toolbar's group material. A primary
+action remains prominent even when it is placed in that same toolbar. */
+html[data-lab-theme]
+  .lab-control[data-control-appearance='toolbar']:not([data-variant='primary']):not(
+    [data-variant='filled']
+  ) {
+  --lab-control-fill: transparent;
+  --lab-control-edge: transparent;
+  --lab-control-elevation: none;
+}
+html[data-lab-theme] .lab-control[data-variant]:is([aria-pressed='true'], [data-state='on']) {
+  --lab-control-fill: var(--lab-control-selected);
+  --lab-control-fill-hover: color-mix(in srgb, var(--lab-primary) 30%, var(--lab-surface));
+  --lab-control-fill-pressed: color-mix(in srgb, var(--lab-primary) 36%, var(--lab-surface));
+  --lab-control-edge: color-mix(in srgb, var(--lab-primary) 38%, var(--lab-line));
+  --lab-control-elevation: inset 0 1px 2px rgb(0 0 0 / 6%);
+  color: var(--lab-ink);
+}
+html[data-lab-theme] .lab-control[data-variant]:hover:not(:disabled, [data-disabled]) {
+  background: var(--lab-control-fill-hover);
+  filter: none;
+}
+html[data-lab-theme] .lab-control[data-variant]:active:not(:disabled, [data-disabled]) {
+  background: var(--lab-control-fill-pressed);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 10%);
+}
+html[data-lab-theme] .lab-control[data-variant]:focus-visible {
+  outline: 2px solid var(--lab-focus);
+  outline-offset: 3px;
+}
+html[data-lab-theme]
+  .lab-control[data-variant]
+  > svg:not(.lab-pixel-texture, .lab-pixel-loader, .lab-pixel-art, .lab-shader) {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+html[data-lab-theme] .lab-control[data-variant] svg.lucide {
+  stroke-width: 1.75;
+}
+html[data-lab-theme]
+  .lab-control[data-control-size='icon']
+  > svg:not(.lab-pixel-texture, .lab-pixel-loader, .lab-pixel-art, .lab-shader) {
+  width: 20px;
+  height: 20px;
+}
+html[data-lab-theme] .lab-control[data-control-size='compact'] {
+  height: var(--lab-control-compact);
+  min-height: var(--lab-control-compact);
+  padding: 0 14px;
+  border-radius: var(--lab-radius-control-compact);
+  font-size: 13px;
+}
+html[data-lab-theme] .lab-control[data-control-size='icon'] {
+  width: var(--lab-control-height);
+  min-width: var(--lab-control-height);
+  padding: 0;
+}
+html[data-lab-theme] .lab-control:is(:disabled, [data-disabled]) {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+html[data-lab-theme] .lab-control[data-loading] {
+  cursor: progress;
+  opacity: 0.78;
+}
+html[data-lab-theme] :is(.lab-input, .lab-textarea, .lab-select) {
+  border-radius: var(--lab-radius-control);
+  corner-shape: superellipse(1.5);
+  font-family: var(--lab-font);
+}
+.lab-system-surface {
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-panel);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface);
+  padding: var(--lab-space-6);
+}
+@media (pointer: coarse) {
+  html[data-lab-theme] .lab-control[data-variant] {
+    height: var(--lab-control-touch-target);
+    min-height: var(--lab-control-touch-target);
+    min-width: var(--lab-control-touch-target);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-lab-theme] {
+    --lab-duration-fast: 0ms;
+    --lab-duration-normal: 0ms;
+  }
+}
+/* Keep opaque materials legible when transparency is unavailable or unwanted. */
+@supports not (backdrop-filter: blur(1px)) {
+  html[data-lab-theme] .lab-glass-group {
+    background: var(--lab-surface);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  html[data-lab-theme] .lab-glass-group {
+    background: var(--lab-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  html[data-lab-theme] .lab-glass-group::before {
+    background: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+@media (forced-colors: active) {
+  .lab-light-edge::after {
+    display: none;
+  }
+  html[data-lab-theme] .lab-glass-group {
+    background: Canvas;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid CanvasText;
+  }
+  html[data-lab-theme] .lab-glass-group::before,
+  html[data-lab-theme] .lab-glass-group::after {
+    display: none;
+  }
+  html[data-lab-theme] .lab-control[data-variant] {
+    border: 1px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+    box-shadow: none;
+    forced-color-adjust: auto;
+  }
+  html[data-lab-theme] .lab-control:is([data-variant='primary'], [data-variant='filled']),
+  html[data-lab-theme] .lab-control[data-variant]:is([aria-pressed='true'], [data-state='on']) {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+  html[data-lab-theme] .lab-control[data-variant]:hover:not(:disabled, [data-disabled]),
+  html[data-lab-theme] .lab-control[data-variant]:active:not(:disabled, [data-disabled]) {
+    background: Highlight;
+    color: HighlightText;
+    box-shadow: none;
+  }
+  html[data-lab-theme] .lab-control[data-variant]:disabled {
+    border-color: GrayText;
+    color: GrayText;
+    opacity: 1;
+  }
+  html[data-lab-theme] .lab-control[data-variant]:focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+/* Standalone primitive styles: consuming the UI system never requires Voice CSS. */
+.lab-app {
+  min-height: 100dvh;
+  position: relative;
+  isolation: isolate;
+  background: var(--lab-ground);
+}
+:is(.lab-app, .lab-dialog, .lab-floating-root) * {
+  box-sizing: border-box;
+}
+:is(.lab-app, .lab-dialog) :is(h1, h2, h3, h4) {
+  margin: 0;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+}
+.lab-app p {
+  margin: 0;
+}
+:is(.lab-app, .lab-dialog) a {
+  color: inherit;
+  text-decoration: none;
+}
+:is(.lab-app, .lab-dialog) .lab-control {
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+  box-shadow: none;
+  font-family: var(--lab-font);
+}
+:is(.lab-app, .lab-dialog) .lab-control > .lab-pixel-texture {
+  z-index: -1;
+  --pixel-texture-opacity: 0.19;
+  clip-path: var(--lab-corner-clip, inset(0 round var(--lab-radius-control)));
+}
+html[data-lab-theme] :is(.lab-input, .lab-textarea, .lab-select) {
+  min-height: var(--lab-field-height);
+  color-scheme: inherit;
+  height: auto;
+  padding: 5px 10px;
+  border: 1px solid var(--lab-line);
+  background: var(--lab-surface);
+  color: var(--lab-ink);
+  box-shadow: inset 0 1px 0 var(--lab-glass-edge-low);
+  font: 400 13px/20px var(--lab-font);
+}
+/* Browser autofill owns an internal background; keep it on the same themed surface. */
+html[data-lab-theme] input.lab-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--lab-ink);
+  caret-color: var(--lab-ink);
+  box-shadow: 0 0 0 1000px var(--lab-surface) inset;
+}
+html[data-lab-theme] :is(.lab-input, .lab-select) {
+  height: var(--lab-field-height);
+}
+html[data-lab-theme] :is(.lab-input, .lab-textarea, .lab-select):focus-visible {
+  border-color: var(--lab-focus);
+  outline: 2px solid var(--lab-focus);
+  outline-offset: 3px;
+}
+html[data-lab-theme] :is(.lab-input, .lab-textarea, .lab-select):is(:disabled, [data-disabled]) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+html[data-lab-theme] :is(.lab-input, .lab-textarea, .lab-select)[aria-invalid='true'] {
+  border-color: var(--lab-danger);
+}
+.lab-select {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: start;
+}
+html[data-lab-theme] .lab-select {
+  border-color: var(--lab-control-border);
+  box-shadow: var(--lab-control-raised-shadow);
+}
+html[data-lab-theme] .lab-select:not(:disabled):hover {
+  background: var(--lab-control-hover);
+}
+html[data-lab-theme] .lab-select[data-state='open'] {
+  background: var(--lab-control-pressed);
+}
+html[data-lab-theme] .lab-select-menu {
+  z-index: 100;
+  min-width: var(--radix-select-trigger-width);
+  max-height: min(320px, var(--radix-select-content-available-height));
+  overflow-y: auto;
+  background: var(--lab-surface);
+  color: var(--lab-ink);
+  border: 1px solid var(--lab-line);
+  isolation: isolate;
+  border-radius: var(--lab-radius-group);
+  corner-shape: superellipse(1.5);
+  padding: var(--lab-space-1);
+  box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
+  font: 14px/20px var(--lab-font);
+}
+.lab-select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--lab-control-compact);
+  padding: 5px 10px;
+  border-radius: calc(var(--lab-radius-group) - var(--lab-space-1) - 1px);
+  corner-shape: superellipse(1.5);
+  cursor: default;
+  outline: none;
+}
+html[data-lab-theme] .lab-select-option[data-highlighted] {
+  background: var(--lab-surface-soft);
+  color: var(--lab-ink);
+}
+html[data-lab-theme] .lab-select-option[data-state='checked'] {
+  color: var(--lab-ink);
+  font-weight: 500;
+}
+html[data-lab-theme] .lab-select-option[data-disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+html[data-lab-theme] .lab-dialog {
+  color: var(--lab-ink);
+  background: var(--lab-surface);
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-panel);
+  corner-shape: superellipse(1.5);
+  padding: 0;
+  width: 560px;
+  max-width: calc(100vw - 28px);
+  max-height: 90dvh;
+  overflow: auto;
+  position: fixed;
+  margin: auto;
+  font: 15px/1.5 var(--lab-font);
+}
+.lab-dialog::backdrop {
+  background: rgb(12 24 17 / 40%);
+}
+html[data-lab-theme] .lab-dialog-wide {
+  width: 980px;
+  max-width: calc(100vw - 40px);
+}
+.lab-dialog .lab-close {
+  position: absolute;
+  top: 12px;
+  inset-inline-end: 12px;
+  z-index: 3;
+}
+html[data-lab-theme] .lab-ui-page .lab-theme-switch:not([data-variant]) {
+  width: var(--lab-control-height);
+  height: var(--lab-control-height);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--lab-ink);
+  border-radius: var(--lab-radius-control);
+  corner-shape: superellipse(1.5);
+  cursor: pointer;
+}
+
+html[data-lab-theme] .lab-select {
+  justify-content: space-between;
+}
+
+/* A scrollable dialog is the enclosing boundary. Only the viewport scrolls; tools float locally. */
+html[data-lab-theme] .lab-dialog--scrollable {
+  height: min(720px, 85dvh);
+  overflow: hidden;
+}
+.lab-modal-floating-top {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-inline-start: 0;
+}
+/* Default text needs opaque backing while content moves behind it. Custom top
+slots keep their own material; this surface adds no border, shadow or blur. */
+.lab-modal-floating-top--default {
+  background: transparent;
+}
+.lab-modal-floating-top--default .lab-modal-title {
+  margin: 0;
+  padding: 0 10px;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+}
+.lab-modal-floating-title > .lab-toolbar-group {
+  width: fit-content;
+  max-width: 100%;
+}
+.lab-modal-floating-title h2 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lab-modal-floating-title {
+  flex: 1;
+  min-width: 0;
+}
+.lab-dialog .lab-modal-title {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.lab-modal-floating-top > .lab-modal-close {
+  flex-shrink: 0;
+}
+html[data-lab-theme] .lab-dialog--scrollable[open] {
+  display: block;
+}
+
+/* Firefox may clear the dialog host radius for SVG paint. Keep its transparent
+scroll boundary rounded while the enclosing dialog alone paints the surface. */
+.lab-dialog--scrollable .lab-scroll-area {
+  border-radius: var(--lab-radius-panel);
+  --lab-scroll-surface: var(--lab-surface);
+}
+
+@media (pointer: coarse) {
+  html[data-lab-theme] :is(.lab-input, .lab-select, .lab-select-option) {
+    min-height: var(--lab-control-touch-target);
+  }
+  html[data-lab-theme] .lab-ui-page .lab-theme-switch:not([data-variant]) {
+    width: var(--lab-control-touch-target);
+    height: var(--lab-control-touch-target);
+  }
+}
+@media (forced-colors: active) {
+  html[data-lab-theme] input.lab-input:-webkit-autofill {
+    -webkit-text-fill-color: CanvasText;
+    box-shadow: none;
+  }
+  html[data-lab-theme] :is(.lab-input, .lab-textarea, .lab-select, .lab-select-menu) {
+    border-color: ButtonText;
+    background: Canvas;
+    color: CanvasText;
+    box-shadow: none;
+  }
+  html[data-lab-theme] .lab-select-option[data-highlighted] {
+    background: Highlight;
+    color: HighlightText;
+  }
+  html[data-lab-theme] :is(.lab-input, .lab-textarea, .lab-select):focus-visible {
+    border-color: Highlight;
+    outline-color: Highlight;
+  }
+}
+
+html[data-lab-theme]
+  .lab-control:is([data-variant='primary'], [data-variant='filled'])
+  > .lab-pixel-texture {
+  --pixel-texture-opacity: 0.08;
+}
+
+/* Directional icons (forward/back arrows, disclosure chevrons, undo/redo)
+   point toward the inline end/start, so they mirror in RTL. */
+[dir='rtl'] .lab-dir-flip {
+  transform: scaleX(-1);
+}
+
+/* Intrinsic dialog body + measured floating chrome. Long content still scrolls to the boundary. */
+html[data-lab-theme] .lab-dialog.lab-dialog--fit-content {
+  height: min(var(--lab-modal-content-height, 240px), calc(100dvh - 32px));
+  max-height: calc(100dvh - 32px);
+}
+.lab-modal-measured-body {
+  display: flow-root;
+  min-inline-size: 0;
+}
+
+/* Opaque Lab menu with quiet, non-interactive pixel decoration. */
+
+html[data-lab-theme] .lab-select-option[data-state='checked'] {
+  background: var(--lab-control-selected);
+}
+html[data-lab-theme] .lab-select-option[data-highlighted] {
+  background: color-mix(in srgb, var(--lab-primary) 14%, var(--lab-surface));
+}
+html[data-lab-theme] .lab-select-option[data-state='checked'][data-highlighted] {
+  background: color-mix(in srgb, var(--lab-primary) 28%, var(--lab-surface));
+}
+.lab-select-option > :first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.lab-select-option > :last-child {
+  flex-shrink: 0;
+}
+@media (pointer: coarse) {
+  .lab-select-option {
+    min-height: var(--lab-control-touch-target);
+  }
+}
+@media (forced-colors: active) {
+  html[data-lab-theme] .lab-select-option[data-state='checked'],
+  html[data-lab-theme] .lab-select-option[data-highlighted],
+  html[data-lab-theme] .lab-select-option[data-state='checked'][data-highlighted] {
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
+html[data-lab-theme] .lab-control[data-control-size='icon'][data-icon-size='compact'] {
+  width: var(--lab-control-compact);
+  min-width: var(--lab-control-compact);
+  height: var(--lab-control-compact);
+  min-height: var(--lab-control-compact);
+  border-radius: var(--lab-radius-control-compact);
+}
+@media (pointer: coarse) {
+  html[data-lab-theme] .lab-control[data-control-size='icon'][data-icon-size='compact'] {
+    width: var(--lab-control-touch-target);
+    min-width: var(--lab-control-touch-target);
+    height: var(--lab-control-touch-target);
+    min-height: var(--lab-control-touch-target);
+  }
+}
+
+.lab-dialog .lab-modal-floating-top--default .lab-modal-title {
+  font-size: 13px;
+  line-height: 20px;
+}
+
+/* Inline text actions follow the surrounding font metrics. */
+html[data-lab-theme] .lab-control[data-control-size='icon'][data-icon-size='inline'] {
+ width: 1em; min-width: 1em; height: 1em; min-height: 1em; padding: 0; border: 0; border-radius: 3px; font-size: inherit;
+}

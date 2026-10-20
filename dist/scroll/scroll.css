@@ -1,0 +1,87 @@
+.lab-scroll-area {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  flex: 1 1 0%;
+  overflow: hidden;
+  border-radius: inherit;
+  corner-shape: inherit;
+  /* The enclosing bordered surface owns opaque paint and continuous corners. */
+  background: transparent;
+}
+.lab-scroll-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scroll-padding-top: calc(var(--lab-scroll-top-reserve) + env(safe-area-inset-top, 0px));
+  scroll-padding-bottom: calc(var(--lab-scroll-bottom-reserve) + env(safe-area-inset-bottom, 0px));
+}
+.lab-scroll-content {
+  min-height: 100%;
+  padding: calc(var(--lab-scroll-top-reserve) + env(safe-area-inset-top, 0px))
+    var(--lab-scroll-padding)
+    calc(var(--lab-scroll-bottom-reserve) + env(safe-area-inset-bottom, 0px));
+}
+.lab-scroll-float {
+  position: absolute;
+  inset-inline: max(var(--lab-scroll-gap), env(safe-area-inset-left, 0px))
+    max(var(--lab-scroll-gap), env(safe-area-inset-right, 0px));
+  z-index: 2;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+}
+.lab-scroll-float > * {
+  pointer-events: auto;
+  max-width: 100%;
+}
+.lab-scroll-float--top {
+  top: calc(var(--lab-scroll-gap) + env(safe-area-inset-top, 0px));
+}
+.lab-scroll-float--bottom {
+  bottom: calc(var(--lab-scroll-gap) + env(safe-area-inset-bottom, 0px));
+}
+.lab-scroll-gradient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  color: var(--lab-scroll-wash-color, var(--lab-scroll-surface, var(--lab-surface)));
+  clip-path: var(--lab-corner-clip, inset(0 round var(--lab-radius-panel)));
+}
+.lab-scroll-wash {
+  position: absolute;
+  inset-inline: 0;
+  pointer-events: none;
+  opacity: var(--lab-scroll-wash-density, 0.8);
+}
+.lab-scroll-wash--top {
+  top: 0;
+}
+.lab-scroll-wash--bottom {
+  bottom: 0;
+
+  transform: rotate(180deg);
+}
+.lab-scroll-wash svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+  shape-rendering: crispEdges;
+}
+@media (forced-colors: active) {
+  .lab-scroll-gradient {
+    display: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .lab-scroll-gradient {
+    display: none;
+  }
+}

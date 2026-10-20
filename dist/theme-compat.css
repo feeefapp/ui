@@ -1,0 +1,302 @@
+/* Existing feature adapters. Preserve selectors while consumers migrate to semantic tokens. */
+html[data-lab-theme] :is(.lab-app, .lab-dialog, .lab-floating-root) {
+  --text-main: var(--lab-ink);
+  --line: var(--lab-line);
+  color: var(--lab-ink);
+}
+html[data-lab-theme] .lab-app {
+  background: var(--lab-ground);
+}
+html[data-lab-theme]
+  :is(.lab-editor, .lab-dialog, .lab-billing-card, .lab-saved-voice, .lab-plan-tile) {
+  background: var(--lab-surface);
+  border-color: var(--lab-line);
+}
+html[data-lab-theme]
+  :is(.lab-input, .lab-textarea, .lab-select, .lab-writing textarea, .lab-writing input) {
+  color: var(--lab-ink);
+  border-color: var(--lab-line);
+}
+html[data-lab-theme] :is(.lab-input, .lab-select) {
+  background: var(--lab-surface);
+}
+html[data-lab-theme] :is(.lab-input, .lab-textarea)::placeholder {
+  color: var(--lab-muted);
+  opacity: 0.7;
+}
+html[data-lab-theme]
+  :is(
+    .lab-heading p,
+    .lab-eyebrow,
+    .lab-pro-label,
+    .lab-auto,
+    .lab-free-note,
+    .lab-quota,
+    .lab-settings p,
+    .lab-settings h4,
+    .lab-results small,
+    .lab-footer,
+    .lab-modal-body > p,
+    .lab-upgrade-content > p,
+    .lab-upgrade-content li,
+    .lab-billing-card p,
+    .lab-account small,
+    .lab-voice-button small,
+    .lab-discover-voice small,
+    .lab-allowance p,
+    .lab-allowance small,
+    .lab-payment-note,
+    .lab-history small
+  ) {
+  color: var(--lab-muted);
+}
+html[data-lab-theme] :is(.lab-app, .lab-dialog) .lab-dark:not([data-variant]) {
+  background: var(--lab-primary) !important;
+  color: var(--lab-on-primary) !important;
+  border-color: transparent;
+}
+html[data-lab-theme] :is(.lab-app, .lab-dialog) .lab-dark:not([data-variant]):hover {
+  background: var(--lab-accent) !important;
+}
+html[data-lab-theme]
+  :is(
+    .lab-outline,
+    .lab-plan-choice button,
+    .lab-payment-choice button,
+    .lab-ready,
+    .lab-allowance
+  ) {
+  border-color: var(--lab-line);
+  background: var(--lab-surface);
+}
+html[data-lab-theme]
+  :is(.lab-app, .lab-dialog)
+  button:not(.lab-dark, [data-variant], [data-surface-variant], .lab-field-select-control):hover {
+  background-color: var(--lab-surface-soft);
+}
+html[data-lab-theme] :is(.lab-app, .lab-dialog) :focus-visible {
+  outline-color: var(--lab-focus);
+}
+html[data-lab-theme] .lab-app .lab-discover-voice {
+  background: var(--lab-surface) !important;
+}
+html[data-lab-theme] .lab-app .lab-discover-voice:hover {
+  background: var(--lab-surface-soft) !important;
+}
+html[data-lab-theme] :is(.lab-plan-choice, .lab-payment-choice) button.selected {
+  background: color-mix(in srgb, var(--lab-primary) 12%, var(--lab-surface));
+  border-color: var(--lab-focus);
+}
+html[data-lab-theme] .lab-glass-group {
+  background: var(--lab-glass-fill);
+  border-color: var(--lab-line);
+}
+html[data-lab-theme] .lab-scaffold :is(.lab-sidebar button.active, .lab-product-nav .active) {
+  background: color-mix(in srgb, var(--lab-primary) 18%, var(--lab-surface));
+}
+html[data-lab-theme] .lab-scaffold :is(.lab-workspace, .lab-allowance) {
+  background: color-mix(in srgb, var(--lab-surface) 70%, transparent);
+}
+html[data-lab-theme] .lab-pro-badge {
+  background: var(--lab-surface-soft);
+  color: var(--lab-muted);
+  border-color: var(--lab-line);
+}
+html[data-lab-theme] .lab-select-menu {
+  background: var(--lab-surface);
+  color: var(--lab-ink);
+  border-color: var(--lab-line);
+}
+html[data-lab-theme] .lab-select-option[data-highlighted] {
+  background: var(--lab-surface-soft);
+  color: var(--lab-ink);
+}
+html[data-lab-theme] .lab-audio-dock {
+  --audio-ink: var(--lab-ink);
+  --audio-muted: var(--lab-muted);
+  --audio-line: var(--lab-line);
+}
+html[data-lab-theme] :is(.lab-audio-dock__art, .lab-audio-dock__tools, .lab-audio-trigger) {
+  background: var(--lab-surface-soft);
+  color: var(--lab-ink);
+  border-color: var(--lab-line);
+}
+html[data-lab-theme] .lab-audio-dock__play {
+  background: var(--lab-primary);
+  color: var(--lab-on-primary);
+}
+html[data-lab-theme] .lab-pixel-tone-sage {
+  color: var(--lab-focus);
+}
+html[data-lab-theme='dark']
+  :is(.lab-close, .lab-expression-menu, .lab-empty, .lab-paragraph-head, .lab-ready) {
+  background: var(--lab-surface-soft);
+  color: var(--lab-ink);
+}
+html[data-lab-theme='dark'] .lab-tab.active {
+  color: var(--lab-ink);
+}
+html[data-lab-theme] {
+  --lab-voice-input-size: var(--lab-control-touch-target, 44px);
+  --lab-voice-input-edge-gap: 4px;
+}
+html[data-lab-theme] .lab-control.lab-voice-input[data-variant] {
+  position: absolute;
+  z-index: 1;
+  width: var(--lab-voice-input-size);
+  min-width: var(--lab-voice-input-size);
+  height: var(--lab-voice-input-size);
+  min-height: var(--lab-voice-input-size);
+  padding: 0;
+  border-radius: var(--lab-radius-control-compact);
+  color: var(--lab-focus);
+  background: var(--lab-surface-soft);
+}
+html[data-lab-theme] .lab-voice-input .lab-swap svg {
+  width: 20px;
+  height: 20px;
+}
+html[data-lab-theme] .lab-control.lab-voice-input.is-recording[data-variant] {
+  color: var(--lab-danger);
+}
+html[data-lab-theme] .lab-theme-switch {
+  padding: 7px !important;
+  min-width: 32px;
+  flex-shrink: 0;
+}
+.lab-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (prefers-reduced-transparency: reduce) {
+  html[data-lab-theme] .lab-glass-group {
+    background: var(--lab-surface);
+  }
+}
+.lab-scaffold .lab-rail-brand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+}
+.lab-scaffold .lab-rail-brand .lab-workspace {
+  flex-basis: 100%;
+}
+html[data-lab-theme='dark']
+  :is(.lab-inline-error, .lab-over-limit, .lab-library-error, .lab-error) {
+  color: #ffb4ab;
+}
+@media (max-width: 720px) {
+  .lab-scaffold .lab-rail-brand {
+    gap: 10px;
+  }
+  .lab-scaffold .lab-header-actions {
+    padding-inline: 4px;
+    gap: 2px;
+  }
+}
+@media (max-width: 360px) {
+  .lab-scaffold .lab-header .lab-brand > span:last-child {
+    font-size: 16px;
+  }
+  .lab-scaffold .lab-header .fo-logo {
+    width: 65px !important;
+  }
+}
+html[data-lab-theme='dark']
+  :is(.lab-app, .lab-dialog, .lab-floating-root)
+  :is(h1, h2, h3, h4, strong, b, label:not(.lab-text-field-label)) {
+  color: var(--lab-ink);
+}
+html[data-lab-theme='dark']
+  :is(.lab-app, .lab-dialog, .lab-floating-root)
+  button:not(
+    .lab-dark,
+    .lab-audio-dock__play,
+    .lab-voice-input,
+    [data-variant],
+    [data-surface-variant],
+    .lab-field-select-control
+  ) {
+  color: var(--lab-ink);
+}
+html[data-lab-theme] .lab-scaffold .lab-sidebar button {
+  color: var(--lab-ink);
+}
+html[data-lab-theme] .lab-scaffold .lab-rail-brand .lab-brand .fo-logo {
+  width: 82px;
+}
+html[data-lab-theme] .lab-scaffold .lab-rail-brand .lab-brand > span:last-child {
+  font-size: 18px;
+}
+html[data-lab-theme='dark'] :is(.lab-script-result, .lab-pending) {
+  background: var(--lab-surface-soft);
+  border-color: var(--lab-line);
+}
+html[data-lab-theme='dark']
+  .lab-app
+  :is(
+    .lab-select,
+    .lab-editor-meta .lab-control:not([data-variant]),
+    .lab-settings .lab-control:not([data-variant]),
+    .lab-outline:not([data-variant])
+  ):not([data-surface-variant]),
+html[data-lab-theme='dark']
+  .lab-dialog
+  :is(.lab-select, .lab-outline:not([data-variant])):not([data-surface-variant]),
+html[data-lab-theme='dark'] .lab-badge {
+  background: var(--lab-surface-soft) !important;
+  color: var(--lab-ink);
+  border-color: var(--lab-line);
+}
+html[data-lab-theme] .lab-scaffold .lab-rail-brand .lab-brand {
+  gap: 6px;
+  padding-inline: 2px;
+}
+html[data-lab-theme] .lab-scaffold .lab-sidebar .lab-theme-switch {
+  width: 32px;
+  flex: 0 0 32px;
+}
+html[data-lab-theme='dark'] .lab-allowance b > span {
+  background: var(--lab-surface-soft);
+  color: var(--lab-ink);
+}
+.lab-control {
+  corner-shape: superellipse(1.5);
+}
+html[data-lab-theme]
+  :is(.lab-app, .lab-dialog)
+  :is(
+    input:not(
+      [type='checkbox'],
+      [type='file'],
+      [type='range'],
+      [type='radio'],
+      .lab-choice-input,
+      .lab-input,
+      .lab-raw-editor
+    ),
+    textarea:not(.lab-textarea, .lab-raw-editor)
+  ) {
+  background-color: var(--lab-surface) !important;
+  color: var(--lab-ink) !important;
+  border-color: var(--lab-line);
+}
+html[data-lab-theme] .lab-app .lab-tabs .lab-tab.active {
+  background: color-mix(in srgb, var(--lab-primary) 18%, var(--lab-surface));
+  color: var(--lab-ink);
+}
+html[data-lab-theme] .lab-app .lab-tabs .lab-tab:hover:not(.active) {
+  background: color-mix(in srgb, var(--lab-primary) 9%, transparent);
+}
+html[data-lab-theme] .lab-app .lab-tabs .lab-tab {
+  color: var(--lab-muted);
+}
+html[data-lab-theme] .lab-app .lab-tabs .lab-tab.active {
+  color: var(--lab-ink);
+}

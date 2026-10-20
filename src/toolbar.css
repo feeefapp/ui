@@ -1,0 +1,53 @@
+.lab-toolbar-layout[role='group'] {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  inline-size: 100%;
+  min-inline-size: 0;
+  container: lab-toolbar / inline-size;
+  /* Empty space between groups must let the manuscript receive pointer input. */
+  pointer-events: none;
+}
+.lab-toolbar-leading {
+  display: flex;
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.lab-toolbar-trailing {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  min-inline-size: 0;
+}
+.lab-toolbar-group {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  --lab-toolbar-control-size: 40px;
+  --lab-control-height: var(--lab-toolbar-control-size);
+  --lab-glass-radius: calc((var(--lab-toolbar-control-size) + 6px) / 2);
+  display: flex;
+  align-items: center;
+  gap: 0;
+  min-inline-size: 0;
+  min-block-size: calc(var(--lab-toolbar-control-size) + 6px);
+  padding: 2px;
+  pointer-events: auto;
+}
+.lab-toolbar-group > .lab-control[data-variant] {
+  border-radius: calc(var(--lab-glass-radius) - 2px);
+}
+
+@media (pointer: coarse), (max-width: 600px) {
+  .lab-toolbar-group {
+    --lab-toolbar-control-size: 44px;
+  }
+}
+
+/* Nested action bars and direct controls share the same inset curve. */
+html[data-lab-theme] .lab-toolbar-group .lab-control[data-variant] {
+  border-radius: calc(var(--lab-glass-radius) - 2px);
+  --lab-radius-control: calc(var(--lab-glass-radius) - 2px);
+}

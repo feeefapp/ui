@@ -1,0 +1,1 @@
+{"version":3,"file":"slider-motion.d.ts","sourceRoot":"","sources":["../../src/primitives/slider-motion.ts"],"names":[],"mappings":"AAEA,OAAO,EAA2B,KAAK,SAAS,EAAE,MAAM,OAAO,CAAA;AAG/D,0FAA0F;AAC1F,wBAAgB,eAAe,CAC7B,IAAI,EAAE,SAAS,CAAC,cAAc,GAAG,IAAI,CAAC,EACtC,MAAM,EAAE,MAAM,EACd,QAAQ,EAAE,OAAO,EACjB,OAAO,EAAE,OAAO,EAChB,IAAI,EAAE,OAAO,EACb,QAAQ,EAAE,OAAO,QAuHlB"}

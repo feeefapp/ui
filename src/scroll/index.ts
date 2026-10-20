@@ -1,0 +1,5 @@
+export { LabScrollArea } from './scroll-area'
+export type { LabScrollAreaProps } from './scroll-area'
+export { LabScrollGradientOverlay } from './gradient-overlay'
+export type { LabScrollGradientOverlayProps } from './gradient-overlay'
+export { revealScrollChild } from './reveal'

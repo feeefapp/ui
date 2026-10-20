@@ -1,0 +1,3 @@
+/* Preserve cascade order: semantic palette, then existing feature adapters. */
+@import './theme-tokens.css';
+@import './theme-compat.css';

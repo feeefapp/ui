@@ -1,0 +1,1 @@
+{"version":3,"file":"spring-core.d.ts","sourceRoot":"","sources":["../../src/primitives/spring-core.ts"],"names":[],"mappings":"AAAA,MAAM,MAAM,WAAW,GAAG;IAAE,QAAQ,EAAE,MAAM,CAAC;IAAC,QAAQ,EAAE,MAAM,CAAA;CAAE,CAAA;AAChE,6FAA6F;AAC7F,wBAAgB,UAAU,CACxB,KAAK,EAAE,WAAW,EAClB,MAAM,EAAE,MAAM,EACd,OAAO,EAAE,MAAM,EACf,SAAS,SAAM,EACf,OAAO,SAAK,GACX,WAAW,CAUb"}
