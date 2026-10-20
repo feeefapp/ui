@@ -21,6 +21,18 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./actions": {
+      "types": "./dist/actions/index.d.ts",
+      "default": "./dist/actions/index.js"
+    },
+    "./dock": {
+      "types": "./dist/dock/index.d.ts",
+      "default": "./dist/dock/index.js"
+    },
+    "./scroll": {
+      "types": "./dist/scroll/index.d.ts",
+      "default": "./dist/scroll/index.js"
+    },
     "./*.css": "./dist/*.css",
     "./*": {
       "types": "./dist/*.d.ts",
