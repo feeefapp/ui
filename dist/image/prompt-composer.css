@@ -1,0 +1,411 @@
+/* Image studio composer (after marchant image_gen_view). Colours come from the --lab-* tokens. */
+.lab-pc,
+.lab-pc-popover,
+.lab-pc-menu {
+  --pc-ink: var(--lab-ink);
+  --pc-muted: var(--lab-muted);
+  --pc-line: var(--lab-line);
+  --pc-surface: var(--lab-surface);
+  --pc-primary: var(--lab-primary);
+  --pc-on-primary: var(--lab-on-primary);
+  --pc-shell-radius: calc(26px * var(--lab-radius-scale, 1));
+  --pc-shell-inset: 6px;
+  --pc-action-radius: calc(var(--pc-shell-radius) - var(--pc-shell-inset));
+  --pc-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  font-family: var(--lab-font);
+}
+.lab-pc {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  max-width: 780px;
+  margin: 0 auto;
+  color: var(--pc-ink);
+}
+.lab-pc[data-dragging='true'] .lab-pc-card .lab-ladder-trigger--chip {
+  height: 40px;
+  max-width: 220px;
+}
+.lab-pc-caption {
+  margin: 0;
+  text-align: center;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--pc-muted) 82%, transparent);
+}
+
+/* Popovers & menus ------------------------------------------------------------------------ */
+.lab-pc-popover {
+  z-index: 60;
+  outline: none;
+  animation: lab-pc-pop 200ms var(--pc-ease);
+}
+.lab-pc-panel,
+.lab-pc-menu {
+  border: 1px solid var(--pc-line);
+  border-radius: 22px;
+  corner-shape: superellipse(1.5);
+  background: color-mix(in srgb, var(--pc-surface) 95%, transparent);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
+  color: var(--pc-ink);
+}
+.lab-pc-panel {
+  display: flex;
+  width: min(360px, calc(100vw - 24px));
+  height: min(
+    var(--lab-pc-settings-height, 420px),
+    70dvh,
+    var(--radix-popover-content-available-height, 420px)
+  );
+  min-height: 0;
+  padding: 0;
+  background: var(--pc-surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  --lab-scroll-surface: var(--pc-surface);
+}
+.lab-pc-panel-head {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-inline-start: 8px;
+  border-radius: var(--lab-radius-control);
+  background: var(--pc-surface);
+}
+.lab-pc-panel-head strong {
+  font-size: 14px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.lab-pc-panel-content {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.lab-pc-panel-title {
+  font-size: 14px;
+  font-weight: 500;
+}
+.lab-pc-menu {
+  z-index: 60;
+  min-width: 220px;
+  max-width: calc(100vw - 24px);
+  max-height: var(--radix-dropdown-menu-content-available-height, calc(100dvh - 24px));
+  overflow-y: auto;
+  padding: 6px;
+  outline: none;
+  animation: lab-pc-pop 180ms var(--pc-ease);
+}
+.lab-pc-menu-label {
+  padding: 6px 10px 4px;
+  font-size: 11px;
+  color: var(--pc-muted);
+}
+.lab-pc-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 13px;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+.lab-pc-menu-item[data-highlighted],
+.lab-pc-menu-item[data-state='open'] {
+  background: color-mix(in srgb, var(--pc-primary) 16%, transparent);
+}
+.lab-pc-menu-item[data-disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+.lab-pc-menu-sep {
+  height: 1px;
+  margin: 5px 6px;
+  background: var(--pc-line);
+}
+.lab-pc-recent {
+  display: grid;
+  grid-template-columns: repeat(4, 56px);
+  gap: 6px;
+  min-width: 0;
+}
+.lab-pc-recent-item {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  outline: none;
+  border: 2px solid transparent;
+}
+.lab-pc-recent-item[data-highlighted] {
+  border-color: var(--pc-primary);
+}
+.lab-pc-recent-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.lab-pc-templates {
+  gap: 4px;
+}
+.lab-pc-template {
+  display: grid;
+  gap: 2px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.lab-pc-template:hover {
+  background: color-mix(in srgb, var(--pc-primary) 14%, transparent);
+}
+.lab-pc-template b {
+  font-size: 13px;
+  font-weight: 500;
+}
+.lab-pc-template small {
+  font-size: 11.5px;
+  color: var(--pc-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Settings panel content (shape + option chips) --------------------------------------------- */
+.lab-pc-setting {
+  display: grid;
+  gap: 7px;
+}
+.lab-pc-setting > b {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pc-muted);
+}
+.lab-pc-options.lab-segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@keyframes lab-pc-word {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes lab-pc-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+@keyframes lab-pc-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+}
+@media (max-width: 720px) {
+  .lab-pc-card .lab-ladder-trigger--chip {
+    max-width: 150px;
+  }
+  .lab-pc-chip {
+    max-width: 120px;
+  }
+  .lab-pc-field textarea,
+  .lab-pc-hint {
+    font-size: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab-pc .lab-pc-send {
+    transition: none;
+  }
+  .lab-pc-send:hover:not(:disabled) {
+    transform: none;
+  }
+  .lab-pc-hint span {
+    animation: none;
+    opacity: 1;
+  }
+  .lab-pc-card,
+  .lab-pc-ref,
+  .lab-pc-popover,
+  .lab-pc-menu {
+    animation: none;
+  }
+}
+.lab-pc .lab-img-proposal {
+  margin: 0;
+  animation: lab-pc-pop 220ms var(--pc-ease);
+}
+
+.lab-pc-slot--add {
+  grid-area: add;
+}
+.lab-pc-attachments[hidden] {
+  display: none;
+}
+/* Unfocused: one quiet line, no caption, softer shadow. */
+.lab-pc:not(:focus-within) .lab-pc-caption {
+  opacity: 0;
+}
+.lab-pc-caption {
+  transition: opacity 200ms;
+}
+html[data-lab-theme] .lab-pc .lab-pc-card[data-expanded='false'] .lab-pc-field textarea.lab-textarea {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+}
+.lab-pc-card:not([data-focused='true']) {
+  box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
+}
+.lab-pc-idea-menu {
+  width: 300px;
+}
+.lab-pc-idea {
+  height: auto !important;
+  display: grid !important;
+  gap: 2px;
+  padding: 8px 10px !important;
+}
+.lab-pc-idea b {
+  font-size: 13px;
+  font-weight: 500;
+}
+.lab-pc-idea small {
+  font-size: 11px;
+  color: var(--pc-muted);
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.lab-pc-template-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 46px;
+  padding-block: 0;
+  padding-inline-start: 10px;
+  padding-inline-end: 6px;
+  border: 1px solid color-mix(in srgb, var(--pc-primary) 45%, var(--pc-line));
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--pc-primary) 14%, transparent);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.lab-pc-template-chip button:hover {
+  color: var(--pc-ink);
+  background: color-mix(in srgb, var(--pc-ink) 8%, transparent);
+}
+
+/* What to make: the Lab tab group (LabGlassGroup + .lab-tab) sits above the card. */
+.lab-pc-modes {
+  justify-self: center;
+}
+.lab-pc-icon[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--pc-primary) 18%, transparent);
+  color: var(--pc-ink);
+}
+
+.lab-pc .lab-pc-icon > svg:not(.lab-pixel-loader),
+.lab-pc .lab-pc-send > svg:not(.lab-pixel-loader) {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .lab-pc-card,
+  .lab-pc-panel,
+  .lab-pc-menu {
+    background: var(--pc-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* A 26px parent with a 6px inset gives the 40px submit child a 20px curve. */
+html[data-lab-theme] .lab-pc .lab-pc-send[data-variant] {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  min-height: 40px;
+  border-radius: var(--pc-action-radius);
+  box-shadow:
+    inset 0 1px 0 var(--lab-control-highlight),
+    0 2px 5px rgb(0 0 0 / 12%);
+}
+
+html[data-lab-theme] .lab-pc .lab-pc-icon[data-variant] {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  min-height: 40px;
+  border-radius: var(--pc-action-radius);
+}
+@media (pointer: coarse) {
+  html[data-lab-theme] .lab-pc :is(.lab-pc-icon, .lab-pc-send)[data-variant],
+  .lab-pc .lab-ladder-trigger--icon {
+    width: var(--lab-control-touch-target);
+    min-width: var(--lab-control-touch-target);
+    height: var(--lab-control-touch-target);
+    min-height: var(--lab-control-touch-target);
+  }
+  html[data-lab-theme] .lab-pc-ref .lab-control[data-variant],
+  html[data-lab-theme] .lab-pc-template-chip .lab-control[data-variant],
+  .lab-pc-menu-item {
+    min-width: var(--lab-control-touch-target);
+    min-height: var(--lab-control-touch-target);
+  }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .lab-pc-card,
+  .lab-pc-menu {
+    background: var(--pc-surface);
+  }
+}
+@media (forced-colors: active) {
+  .lab-pc-panel,
+  .lab-pc-panel-head,
+  .lab-pc-menu {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+  .lab-pc-menu-item[data-highlighted],
+  .lab-pc-menu-item[data-state='open'] {
+    background: Highlight;
+    color: HighlightText;
+  }
+}
