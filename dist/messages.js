@@ -82,7 +82,19 @@ export const LAB_UI_MESSAGES = {
         "lab.imgcomposer.clearField": "Clear {label}",
         "lab.imgcomposer.colour": "{label} colour",
         "lab.imgcomposer.settingsWith": "Settings: {label}",
-        "lab.imgcomposer.outputWith": "Output settings: {label}"
+        "lab.imgcomposer.outputWith": "Output settings: {label}",
+        "lab.ladder.quality": "Quality",
+        "lab.ladder.reset": "Reset to default",
+        "lab.ladder.fast": "Fast",
+        "lab.ladder.balanced": "Balanced",
+        "lab.ladder.best": "Best",
+        "lab.ladder.pickModel": "Choose a model",
+        "lab.ladder.searchModels": "Search models…",
+        "lab.ladder.noMatches": "No models match.",
+        "lab.ladder.back": "Back to quality",
+        "lab.ladder.typical": "Usually about {price}",
+        "lab.common.free": "Free",
+        "lab.common.pro": "Pro"
     },
     "ar": {
         "lab.common.close": "إغلاق",
@@ -166,7 +178,19 @@ export const LAB_UI_MESSAGES = {
         "lab.imgcomposer.clearField": "مسح {label}",
         "lab.imgcomposer.colour": "لون {label}",
         "lab.imgcomposer.settingsWith": "الإعدادات: {label}",
-        "lab.imgcomposer.outputWith": "إعدادات الإخراج: {label}"
+        "lab.imgcomposer.outputWith": "إعدادات الإخراج: {label}",
+        "lab.ladder.quality": "الجودة",
+        "lab.ladder.reset": "إعادة تعيين إلى الافتراضي",
+        "lab.ladder.fast": "سريع",
+        "lab.ladder.balanced": "متوازن",
+        "lab.ladder.best": "الأفضل",
+        "lab.ladder.pickModel": "اختر نموذجًا",
+        "lab.ladder.searchModels": "بحث في النماذج…",
+        "lab.ladder.noMatches": "لا توجد نماذج مطابقة.",
+        "lab.ladder.back": "رجوع إلى الجودة",
+        "lab.ladder.typical": "عادة حوالي {price}",
+        "lab.common.free": "مجاني",
+        "lab.common.pro": "احترافي"
     },
     "fr": {
         "lab.common.close": "Fermer",
@@ -250,7 +274,19 @@ export const LAB_UI_MESSAGES = {
         "lab.imgcomposer.clearField": "Effacer {label}",
         "lab.imgcomposer.colour": "Couleur {label}",
         "lab.imgcomposer.settingsWith": "Paramètres : {label}",
-        "lab.imgcomposer.outputWith": "Paramètres de sortie : {label}"
+        "lab.imgcomposer.outputWith": "Paramètres de sortie : {label}",
+        "lab.ladder.quality": "Qualité",
+        "lab.ladder.reset": "Réinitialiser par défaut",
+        "lab.ladder.fast": "Rapide",
+        "lab.ladder.balanced": "Équilibré",
+        "lab.ladder.best": "Meilleur",
+        "lab.ladder.pickModel": "Choisir un modèle",
+        "lab.ladder.searchModels": "Rechercher des modèles…",
+        "lab.ladder.noMatches": "Aucun modèle ne correspond.",
+        "lab.ladder.back": "Retour à la qualité",
+        "lab.ladder.typical": "Habituellement environ {price}",
+        "lab.common.free": "Gratuit",
+        "lab.common.pro": "Pro"
     }
 };
 //# sourceMappingURL=messages.js.map
