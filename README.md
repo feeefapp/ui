@@ -119,3 +119,13 @@ Then bump each consumer's `"@feeef.dev/ui": "github:feeefapp/ui#vX.Y.Z"` and rei
 See [AGENTS.md](AGENTS.md). In short: change shared look and behaviour here, never by
 copying or overriding kit files inside an app; keep platform access behind `LabServices`;
 update the `/ui` reference in the Lab when a public primitive changes.
+
+## Scaffold brand transitions
+
+`LabMovingBrand` from `@feeef.dev/ui/workspace/moving-brand` keeps one visual wordmark
+following the accessible logo links as `LabScaffold` changes sidebar mode or opens its drawer.
+Mount it under `LabScaffold` and pass a `host` ref for the surrounding workspace. Mark the
+sidebar link `data-tool-brand-anchor="side"` and the compact header link
+`data-tool-brand-anchor="header"`; both retain their accessible names and navigation.
+Anchors reserve 104 × 26 pixels for the logo; product suffixes sit outside the anchor.
+The component follows reduced motion, resize and the native drawer's top layer.

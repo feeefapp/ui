@@ -1,0 +1,15 @@
+.lab-tool-moving-brand {
+  position: fixed;
+  inset: 0 auto auto 0;
+  inline-size: 104px;
+  block-size: 26px;
+  z-index: 200;
+  pointer-events: none;
+  visibility: hidden;
+  color: var(--lab-ink);
+  will-change: transform;
+}
+[data-moving-brand='ready'] [data-tool-brand-anchor] .fo-logo { visibility: hidden; }
+@media (forced-colors: active) {
+  .lab-tool-moving-brand { color: CanvasText; }
+}
