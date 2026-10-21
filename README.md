@@ -150,3 +150,5 @@ Advanced editors can keep their field and controls using `LabComposerCard` with
 `useComposerLayout`; reusable geometry and motion stay in the package.
 
 Composer file-drop outlines appear only with `LabPromptComposer dropActive` (or `LabComposerCard data-dragging`). Focus keeps the normal shared focus treatment.
+
+Measured composers also expand when toolbar slots leave less than eight glyphs of editing space, keeping an empty prompt usable on narrow screens.

@@ -37,7 +37,8 @@ export function useComposerLayout(prompt, contentRevision) {
             context.font = style.font;
             const spacing = Number.parseFloat(style.letterSpacing) || 0;
             const width = context.measureText(prompt).width + Math.max(0, Array.from(prompt).length - 1) * spacing;
-            setExpanded(prompt.includes('\n') || (!!prompt && width > Math.max(0, available) + 0.5));
+            const minimum = context.measureText('MMMMMMMM').width;
+            setExpanded(available < minimum || prompt.includes('\n') || (!!prompt && width > Math.max(0, available) + 0.5));
         };
         measureExpansion.current();
     }, [prompt, contentRevision]);
