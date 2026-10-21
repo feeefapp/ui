@@ -18,7 +18,6 @@
   flex: none;
   box-sizing: border-box;
   width: calc(var(--lab-toolbar-control-size) + 6px);
-  overflow: clip;
   isolation: isolate;
 }
 .lab-toolbar-search[data-expanded='true'] .lab-toolbar-search-surface { width: 100%; }
@@ -38,7 +37,7 @@
   pointer-events: none;
   transition: opacity 180ms ease, visibility 180ms;
 }
-.lab-toolbar-search[data-expanded='true'] .lab-toolbar-search-editor { opacity: 1; visibility: visible; pointer-events: auto; }
+.lab-toolbar-search[data-expanded='true'] .lab-toolbar-search-editor { opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 70ms, 0ms; }
 html[data-lab-theme] .lab-toolbar-search input.lab-toolbar-search-input {
   flex: 1;
   min-width: 0;
