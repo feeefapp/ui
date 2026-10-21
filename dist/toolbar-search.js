@@ -28,7 +28,8 @@ export function LabToolbarSearch({ label, value, onValueChange, placeholder, chi
         setExpanded(next);
         onExpandedChange?.(next);
         if (!next) {
-            onValueChange('');
+            if (value)
+                onValueChange('');
             trigger.current?.focus({ preventScroll: true });
         }
     };
