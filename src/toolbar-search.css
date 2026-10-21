@@ -33,11 +33,10 @@
   flex: 1;
   min-width: 0;
   opacity: 0;
-  visibility: hidden;
   pointer-events: none;
-  transition: opacity 180ms ease, visibility 180ms;
+  transition: opacity 180ms ease;
 }
-.lab-toolbar-search[data-expanded='true'] .lab-toolbar-search-editor { opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 70ms, 0ms; }
+.lab-toolbar-search[data-expanded='true'] .lab-toolbar-search-editor { opacity: 1; pointer-events: auto; transition-delay: 70ms; }
 html[data-lab-theme] .lab-toolbar-search input.lab-toolbar-search-input {
   flex: 1;
   min-width: 0;
