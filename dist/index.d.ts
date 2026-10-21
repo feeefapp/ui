@@ -8,6 +8,8 @@ export { LabServicesProvider, useLabServices } from './services.js';
 export type { LabPreferences, LabServices } from './services.js';
 export { LabThemeProvider, LabThemeSwitch, useLabTheme } from './theme.js';
 export type { LabThemeMode } from './theme.js';
+export { LAB_THEME_DEFAULTS, applyLabThemeConfig, labThemeAttributes } from './theme-config.js';
+export type { LabDensity, LabPalette, LabThemeConfig } from './theme-config.js';
 export { LabButton, LabInput, LabTextarea, LabSelect, LabOption, LabLabel, LabModal, LabBox, LabText, LabLink, LabForm, LabList, LabListItem, LabDivider, } from './ui.js';
 export { LabScaffoldProvider, LabGlassGroup, LabFloatingLayer, LabViewTransition, useLabNavigation, useFloatingReserve, } from './scaffold.js';
 export { LabScrollArea, LabScrollGradientOverlay } from './scroll/index.js';

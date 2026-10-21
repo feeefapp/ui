@@ -4,6 +4,12 @@ export const FO_ANIMATED_LOGO_SVG = `<svg id="animated_full_logo" width="1080" h
           [stroke="#000000"] {
             stroke: currentColor;
           }
+          [stroke="#49D249"] {
+            stroke: var(--lab-brand-1, #49D249);
+          }
+          [stroke="#60EA60"] {
+            stroke: var(--lab-brand-2, #60EA60);
+          }
         </style>
         
         <!-- Group 1: Main container - Position moves X: 974.28 → 540 (t=40-72)-->

@@ -1,16 +1,26 @@
-/* Lab UI contract. Theme owns colors; this file owns shared geometry and controls. */
+/* Lab UI contract. Theme owns colors; this file owns shared geometry and controls.
+Geometry follows the theme config (theme-config.ts): every radius is multiplied by
+--lab-radius-scale, and data-lab-density='compact' swaps the size tokens below. */
 html[data-lab-theme] {
+  --lab-radius-scale: 1;
   --lab-space-1: 4px;
   --lab-space-2: 8px;
   --lab-space-3: 12px;
   --lab-space-4: 16px;
   --lab-space-6: 24px;
   --lab-space-8: 32px;
-  --lab-radius-control: 18px;
-  --lab-radius-control-compact: 14px;
-  --lab-radius-group: 20px;
-  --lab-radius-panel: 24px;
-  --lab-radius-glass: 32px;
+  --lab-radius-control: calc(18px * var(--lab-radius-scale, 1));
+  --lab-radius-control-compact: calc(14px * var(--lab-radius-scale, 1));
+  --lab-radius-group: calc(20px * var(--lab-radius-scale, 1));
+  --lab-radius-panel: calc(24px * var(--lab-radius-scale, 1));
+  --lab-radius-glass: calc(32px * var(--lab-radius-scale, 1));
+  --lab-radius-small: calc(12px * var(--lab-radius-scale, 1));
+  /* Desktop sizes; coarse pointers keep --lab-control-touch-target. */
+  --lab-control-small: 36px;
+  --lab-row-height: 44px;
+  --lab-control-padding: 12px;
+  --lab-sidebar-width: 304px;
+  --lab-rail-width: 64px;
   --lab-control-height: 44px;
   --lab-field-height: 40px;
   --lab-control-compact: 40px;
@@ -105,8 +115,8 @@ html[data-lab-theme='dark'] {
   justify-content: center;
   flex-shrink: 0;
   gap: 8px;
-  min-height: 40px;
-  padding: 0 12px;
+  min-height: var(--lab-control-compact);
+  padding: 0 var(--lab-control-padding);
   border: 1px solid transparent;
   border-radius: var(--lab-radius-control);
   background: transparent;
@@ -115,15 +125,15 @@ html[data-lab-theme='dark'] {
   cursor: pointer;
 }
 .lab-control[data-legacy-size='icon'] {
-  width: 40px;
-  height: 40px;
+  width: var(--lab-control-compact);
+  height: var(--lab-control-compact);
   padding: 0;
 }
 .lab-control[data-legacy-size='sm'] {
-  min-height: 36px;
+  min-height: var(--lab-control-small);
 }
 .lab-control[data-legacy-size='lg'] {
-  min-height: 44px;
+  min-height: var(--lab-control-height);
 }
 .lab-input,
 .lab-textarea {
@@ -267,6 +277,25 @@ html[data-lab-theme] :is(.lab-input, .lab-textarea, .lab-select) {
   corner-shape: superellipse(1.5);
   background: var(--lab-surface);
   padding: var(--lab-space-6);
+}
+/* Compact density: denser desktop chrome for tool-like apps (e.g. the Cloud console).
+Selector names both attributes so it out-specifies the comfortable defaults above. */
+html[data-lab-density='compact'][data-lab-theme] {
+  --lab-space-3: 10px;
+  --lab-space-4: 12px;
+  --lab-space-6: 16px;
+  --lab-space-8: 24px;
+  --lab-control-height: 34px;
+  --lab-field-height: 34px;
+  --lab-control-compact: 30px;
+  --lab-control-small: 28px;
+  --lab-row-height: 32px;
+  --lab-control-padding: 10px;
+  --lab-sidebar-width: 248px;
+  --lab-rail-width: 52px;
+}
+html[data-lab-density='compact'][data-lab-theme] .lab-control[data-variant] {
+  font-size: 13px;
 }
 @media (pointer: coarse) {
   html[data-lab-theme] .lab-control[data-variant] {
@@ -678,5 +707,5 @@ html[data-lab-theme] .lab-control[data-control-size='icon'][data-icon-size='comp
 
 /* Inline text actions follow the surrounding font metrics. */
 html[data-lab-theme] .lab-control[data-control-size='icon'][data-icon-size='inline'] {
- width: 1em; min-width: 1em; height: 1em; min-height: 1em; padding: 0; border: 0; border-radius: 3px; font-size: inherit;
+ width: 1em; min-width: 1em; height: 1em; min-height: 1em; padding: 0; border: 0; border-radius: calc(3px * var(--lab-radius-scale, 1)); font-size: inherit;
 }

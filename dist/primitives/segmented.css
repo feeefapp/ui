@@ -21,9 +21,9 @@
 html[data-lab-theme] .lab-segmented > .lab-segmented-option {
   flex: 0 1 auto;
   min-width: max-content;
-  height: 40px;
-  min-height: 40px;
-  padding: 0 12px;
+  height: var(--lab-control-compact);
+  min-height: var(--lab-control-compact);
+  padding: 0 var(--lab-control-padding);
   border-radius: var(--lab-radius-control-compact);
   font: 400 15px/20px var(--lab-font);
   color: var(--lab-muted);

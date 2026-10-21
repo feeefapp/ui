@@ -9,9 +9,10 @@ import './system.css';
 import { installFoContinuousCorners } from './brand/corners.js';
 import { useLabServices } from './services.js';
 import { useLabI18n } from './i18n.js';
+import { applyLabThemeConfig } from './theme-config.js';
 const Context = createContext(null);
 const layoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
-export function LabThemeProvider({ children, initialMode = 'system', enableCornerFallback = false, }) {
+export function LabThemeProvider({ children, initialMode = 'system', enableCornerFallback = false, config, }) {
     const { preferences } = useLabServices();
     const [mode, setMode] = useState(() => {
         if (typeof window === 'undefined')
@@ -29,6 +30,10 @@ export function LabThemeProvider({ children, initialMode = 'system', enableCorne
         if (enableCornerFallback)
             return installFoContinuousCorners();
     }, [enableCornerFallback]);
+    const { palette, density, radius } = config ?? {};
+    layoutEffect(() => {
+        applyLabThemeConfig(document.documentElement, { palette, density, radius });
+    }, [palette, density, radius]);
     layoutEffect(() => {
         const root = document.documentElement, previous = root.getAttribute('data-lab-theme'), preference = matchMedia('(prefers-color-scheme: dark)');
         const apply = () => {

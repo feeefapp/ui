@@ -39,7 +39,7 @@
   height: 20px;
   box-sizing: border-box;
   border: 1.5px solid var(--lab-muted);
-  border-radius: 7px;
+  border-radius: calc(7px * var(--lab-radius-scale, 1));
   corner-shape: superellipse(1.5);
   background: var(--lab-surface);
   color: var(--lab-on-primary);
@@ -51,7 +51,7 @@
 .lab-choice[data-control-size='compact'] .lab-choice-mark {
   width: 18px;
   height: 18px;
-  border-radius: 6px;
+  border-radius: calc(6px * var(--lab-radius-scale, 1));
 }
 .lab-choice[data-kind='radio'] .lab-choice-mark {
   border-radius: 50%;

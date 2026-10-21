@@ -4,6 +4,7 @@ export { LabI18nProvider, LabLanguageSwitcher, useLabI18n } from './i18n.js';
 export { LAB_LANGUAGES, labDirectionFor } from './i18n-core.js';
 export { LabServicesProvider, useLabServices } from './services.js';
 export { LabThemeProvider, LabThemeSwitch, useLabTheme } from './theme.js';
+export { LAB_THEME_DEFAULTS, applyLabThemeConfig, labThemeAttributes } from './theme-config.js';
 export { LabButton, LabInput, LabTextarea, LabSelect, LabOption, LabLabel, LabModal, LabBox, LabText, LabLink, LabForm, LabList, LabListItem, LabDivider, } from './ui.js';
 export { LabScaffoldProvider, LabGlassGroup, LabFloatingLayer, LabViewTransition, useLabNavigation, useFloatingReserve, } from './scaffold.js';
 export { LabScrollArea, LabScrollGradientOverlay } from './scroll/index.js';

@@ -25,7 +25,7 @@ html[data-lab-theme] .lab-scaffold .lab-app[data-tool-scaffold] {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  min-height: 44px;
+  min-height: var(--lab-row-height);
 }
 .lab-tool-navigation {
   display: grid;

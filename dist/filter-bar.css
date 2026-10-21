@@ -61,13 +61,13 @@ html[data-lab-theme] .lab-control.lab-filter-row-main {
   display: flex;
   flex: 1;
   min-width: 0;
-  min-height: 40px;
+  min-height: var(--lab-control-compact);
   height: auto;
   padding: 8px;
   gap: 10px;
   justify-content: start;
   text-align: start;
-  border-radius: 12px;
+  border-radius: var(--lab-radius-small);
 }
 .lab-filter-row-main > span:not(.lab-filter-row-value) {
   display: grid;
@@ -116,7 +116,7 @@ html[data-lab-theme] .lab-control.lab-filter-row-main {
 html[data-lab-theme] .lab-control.lab-filter-choice {
   width: 100%;
   justify-content: space-between;
-  min-height: 40px;
+  min-height: var(--lab-control-compact);
   text-align: start;
 }
 .lab-filter-options .lab-control[aria-pressed='true'] {
