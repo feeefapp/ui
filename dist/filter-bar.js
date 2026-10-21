@@ -2,7 +2,8 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useRef, useState, useId } from 'react';
 import * as Popover from '@radix-ui/react-popover';
-import { ArrowLeft, ListFilter, Sparkles, Pin, PinOff, Search, SlidersHorizontal, CalendarDays, ToggleLeft, X, } from 'lucide-react';
+import { ArrowLeft, ListFilter, Sparkles, Pin, PinOff, SlidersHorizontal, CalendarDays, ToggleLeft, X, } from 'lucide-react';
+import { LabToolbarSearch } from './toolbar-search.js';
 import { LabToolbarGroup } from './toolbar.js';
 import { LabIconButton, LabButton } from './primitives/button.js';
 import { LabTextField } from './primitives/text-field.js';
@@ -118,7 +119,7 @@ export function LabFilterBar({ label, options, value, onChange, values: controll
                                         }, onCloseAutoFocus: (event) => {
                                             if (editing)
                                                 event.preventDefault();
-                                        }, children: _jsx(LabScrollArea, { label: "Filter catalog rows", contentPadding: 8, edgeGap: 8, top: _jsx(LabTextField, { ref: search, hint: "Find a filter", leadingIcon: _jsx(Search, {}), value: query, onChange: (event) => setQuery(event.target.value), controlSize: "compact" }), bottom: _jsx(LabDock, { label: "Filter catalog actions", content: _jsxs("span", { children: [active, " active \u00B7 ", pins.length, " pinned"] }), children: _jsx(LabButton, { variant: "text", controlSize: "compact", disabled: !active, onClick: clearAll, children: "Clear values" }) }), children: _jsxs("div", { className: "lab-filter-catalog-list", children: [options
+                                        }, children: _jsx(LabScrollArea, { label: "Filter catalog rows", contentPadding: 8, edgeGap: 8, top: _jsx(LabToolbarSearch, { label: "Find a filter", value: query, onValueChange: setQuery, inputRef: search, defaultExpanded: true }), bottom: _jsx(LabDock, { label: "Filter catalog actions", content: _jsxs("span", { children: [active, " active \u00B7 ", pins.length, " pinned"] }), children: _jsx(LabButton, { variant: "text", controlSize: "compact", disabled: !active, onClick: clearAll, children: "Clear values" }) }), children: _jsxs("div", { className: "lab-filter-catalog-list", children: [options
                                                         .filter((option) => `${option.label} ${option.description || ''} ${option.keywords?.join(' ') || ''}`
                                                         .toLowerCase()
                                                         .includes(query.toLowerCase()))
@@ -189,7 +190,7 @@ export function LabFilterBar({ label, options, value, onChange, values: controll
                                 }, onCloseAutoFocus: (event) => {
                                     event.preventDefault();
                                     returnFocus.current?.focus({ preventScroll: true });
-                                }, children: smallSelected && (_jsx(LabScrollArea, { label: `${smallSelected.label} options`, edgeGap: 8, contentPadding: 8, top: smallSelected.type === 'enum' ? (_jsx(LabTextField, { ref: enumSearch, hint: `Search ${smallSelected.label.toLowerCase()}`, leadingIcon: _jsx(Search, {}), value: choiceQuery, onChange: (event) => setChoiceQuery(event.target.value), controlSize: "compact" })) : undefined, bottom: _jsxs(LabDock, { label: "Filter value actions", children: [_jsx(LabButton, { variant: "text", controlSize: "compact", onClick: () => {
+                                }, children: smallSelected && (_jsx(LabScrollArea, { label: `${smallSelected.label} options`, edgeGap: 8, contentPadding: 8, top: smallSelected.type === 'enum' ? (_jsx(LabToolbarSearch, { label: `Search ${smallSelected.label.toLowerCase()}`, value: choiceQuery, onValueChange: setChoiceQuery, inputRef: enumSearch, defaultExpanded: true })) : undefined, bottom: _jsxs(LabDock, { label: "Filter value actions", children: [_jsx(LabButton, { variant: "text", controlSize: "compact", onClick: () => {
                                                     change(smallSelected, null);
                                                     pin(smallSelected.id);
                                                     setEditing(null);

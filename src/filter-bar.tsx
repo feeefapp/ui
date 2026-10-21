@@ -8,12 +8,12 @@ import {
   Sparkles,
   Pin,
   PinOff,
-  Search,
   SlidersHorizontal,
   CalendarDays,
   ToggleLeft,
   X,
 } from 'lucide-react'
+import { LabToolbarSearch } from './toolbar-search'
 import { LabToolbarGroup } from './toolbar'
 import { LabIconButton, LabButton } from './primitives/button'
 import { LabTextField } from './primitives/text-field'
@@ -242,14 +242,8 @@ export function LabFilterBar({
                   contentPadding={8}
                   edgeGap={8}
                   top={
-                    <LabTextField
-                      ref={search}
-                      hint="Find a filter"
-                      leadingIcon={<Search />}
-                      value={query}
-                      onChange={(event) => setQuery(event.target.value)}
-                      controlSize="compact"
-                    />
+                    <LabToolbarSearch label="Find a filter" value={query} onValueChange={setQuery} inputRef={search} defaultExpanded/>
+
                   }
                   bottom={
                     <LabDock
@@ -524,14 +518,8 @@ export function LabFilterBar({
                   contentPadding={8}
                   top={
                     smallSelected.type === 'enum' ? (
-                      <LabTextField
-                        ref={enumSearch}
-                        hint={`Search ${smallSelected.label.toLowerCase()}`}
-                        leadingIcon={<Search />}
-                        value={choiceQuery}
-                        onChange={(event) => setChoiceQuery(event.target.value)}
-                        controlSize="compact"
-                      />
+                      <LabToolbarSearch label={`Search ${smallSelected.label.toLowerCase()}`} value={choiceQuery} onValueChange={setChoiceQuery} inputRef={enumSearch} defaultExpanded/>
+
                     ) : undefined
                   }
                   bottom={

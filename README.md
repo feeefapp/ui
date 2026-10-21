@@ -168,3 +168,14 @@ morph supports interrupted reversals, logical directions, resize and reduced mot
   <LabFilterBar {...filters} />
 </LabToolbarSearch>
 ```
+
+Search across Lab and Cloud uses `LabToolbarSearch`, including list filters, catalogs, sidebar
+history, and model/voice pickers. Command palettes can pass `renderInput` to retain their own
+combobox registration; the shared surface still owns search interaction and geometry.
+`inputRef` and `onInputKeyDown` preserve catalog focus and arrow navigation. `defaultExpanded`
+is available when search is the primary task.
+
+The morph uses the shared bounded spring integrator, retaining velocity on reversal and
+retargeting on resize. Adjacent controls occupy a stable grid cell throughout the transition.
+Their visibility interval never overlaps the editor's; closing text is retained until the
+editor is invisible. Reduced motion snaps to the final geometry.

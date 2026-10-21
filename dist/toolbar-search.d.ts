@@ -1,20 +1,34 @@
-import { type ReactNode } from 'react';
+import { type ReactNode, type Ref, type KeyboardEventHandler } from 'react';
+import { type LabInputElement } from './primitives/raw-input.js';
 import './toolbar-search.css';
+export type LabToolbarSearchInputProps = {
+    ref: Ref<LabInputElement>;
+    id: string;
+    type: 'search';
+    'aria-label': string;
+    placeholder: string;
+    value: string;
+    disabled?: boolean;
+    tabIndex: number;
+    className: string;
+    onValueChange: (value: string) => void;
+    onKeyDown: KeyboardEventHandler<LabInputElement>;
+};
 export type LabToolbarSearchProps = {
     label: string;
     value: string;
     onValueChange: (value: string) => void;
     placeholder?: string;
-    /** Adjacent filter/navigation bubbles. They give way to the same expanding search surface. */
     children?: ReactNode;
-    /** Persistent independent actions, such as dismissing the surrounding dialog. */
     trailing?: ReactNode;
     disabled?: boolean;
     className?: string;
+    defaultExpanded?: boolean;
+    inputRef?: Ref<LabInputElement>;
+    renderInput?: (props: LabToolbarSearchInputProps) => ReactNode;
+    onInputKeyDown?: KeyboardEventHandler<LabInputElement>;
     onExpandedChange?: (expanded: boolean) => void;
 };
-/** One persistent glass surface morphs from a search action into an unpainted native editor.
- * Content reflows at its final width; only the surrounding material changes geometry.
- */
-export declare function LabToolbarSearch({ label, value, onValueChange, placeholder, children, trailing, disabled, className, onExpandedChange }: LabToolbarSearchProps): import("react").JSX.Element;
+/** Persistent material, stable control geometry and a velocity-preserving spring. */
+export declare function LabToolbarSearch({ label, value, onValueChange, placeholder, children, trailing, disabled, className, defaultExpanded, inputRef, renderInput, onInputKeyDown, onExpandedChange }: LabToolbarSearchProps): import("react").JSX.Element;
 //# sourceMappingURL=toolbar-search.d.ts.map
