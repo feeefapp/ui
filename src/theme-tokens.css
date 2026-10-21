@@ -1,5 +1,13 @@
-/* Feeef merchant palette: bright green controls, quiet paper surfaces, forest dark mode. */
+/* Palettes (theme-config.ts `palette`). Default `lab`: the Feeef merchant palette, bright green
+controls, quiet paper surfaces, forest dark mode. Every color the kit paints comes from these
+tokens, so a palette only has to redefine this list. */
 html[data-lab-theme] {
+  --lab-brand-1: #72ce5d;
+  --lab-brand-2: #86e672;
+  --lab-pixel-sage: #647b5c;
+  --lab-pixel-muted: #9da995;
+  --lab-success: #2f6b28;
+  --lab-warning: #8a5300;
   --lab-primary: #72ce5d;
   --lab-accent: #86e672;
   --lab-on-primary: #142512;
@@ -15,6 +23,8 @@ html[data-lab-theme] {
   color-scheme: light;
 }
 html[data-lab-theme='dark'] {
+  --lab-success: #b7e593;
+  --lab-warning: #f2c66d;
   --lab-primary: #b7e593;
   --lab-accent: #b7e593;
   --lab-ground: #101e17;
@@ -27,4 +37,44 @@ html[data-lab-theme='dark'] {
   --lab-field-error: #ffb4ab;
   --lab-pixel-ink: #b7e593;
   color-scheme: dark;
+}
+
+/* `mono`: black and white for developer tools. Color is kept only where it carries meaning
+(danger stays red, warning a muted amber). Selectors name both attributes so they out-specify
+the default palette. */
+html[data-lab-palette='mono'][data-lab-theme] {
+  --lab-primary: #0a0a0a;
+  --lab-accent: #0a0a0a;
+  --lab-on-primary: #ffffff;
+  --lab-ground: #f4f4f4;
+  --lab-surface: #ffffff;
+  --lab-surface-soft: #efefef;
+  --lab-line: #e2e2e2;
+  --lab-ink: #0a0a0a;
+  --lab-muted: #6b6b6b;
+  --lab-focus: #0a0a0a;
+  --lab-pixel-ink: #8a8a8a;
+  --lab-brand-1: var(--lab-ink);
+  --lab-brand-2: var(--lab-ink);
+  --lab-pixel-sage: #6b6b6b;
+  --lab-pixel-muted: #a3a3a3;
+  --lab-success: #0a0a0a;
+  --lab-warning: #7a6234;
+}
+html[data-lab-palette='mono'][data-lab-theme='dark'] {
+  --lab-primary: #f5f5f5;
+  --lab-accent: #f5f5f5;
+  --lab-on-primary: #0a0a0a;
+  --lab-ground: #0a0a0a;
+  --lab-surface: #141414;
+  --lab-surface-soft: #1c1c1c;
+  --lab-line: #2c2c2c;
+  --lab-ink: #f5f5f5;
+  --lab-muted: #a3a3a3;
+  --lab-focus: #f5f5f5;
+  --lab-pixel-ink: #6b6b6b;
+  --lab-pixel-sage: #8a8a8a;
+  --lab-pixel-muted: #5c5c5c;
+  --lab-success: #f5f5f5;
+  --lab-warning: #c9b48a;
 }

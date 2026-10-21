@@ -3,7 +3,7 @@
   --lab-workspace-space: 8px;
   --lab-workspace-gap: 16px;
   --lab-workspace-rail: 288px;
-  --lab-workspace-panel-radius: 28px;
+  --lab-workspace-panel-radius: calc(28px * var(--lab-radius-scale, 1));
   --lab-workspace-composer: 780px;
 }
 .lab-workspace-canvas,
@@ -22,27 +22,27 @@ html[data-lab-theme] .lab-workspace-actions {
   height: 52px;
   padding: 4px;
   gap: 8px;
-  --lab-glass-radius: 26px;
+  --lab-glass-radius: calc(26px * var(--lab-radius-scale, 1));
 }
 html[data-lab-theme] .lab-workspace-actions > :is(button, a),
 html[data-lab-theme] .lab-workspace-actions > .lab-control[data-variant] {
-  height: 44px;
-  min-height: 44px;
-  padding: 0 12px;
+  height: var(--lab-row-height);
+  min-height: var(--lab-row-height);
+  padding: 0 var(--lab-control-padding);
   gap: 8px;
-  border-radius: 18px;
+  border-radius: var(--lab-radius-control);
   font-size: 13px;
   font-weight: 400;
   --lab-control-elevation: none;
 }
 html[data-lab-theme] .lab-workspace-actions > .lab-control[data-control-size='icon'] {
-  width: 44px;
-  min-width: 44px;
+  width: var(--lab-row-height);
+  min-width: var(--lab-row-height);
   padding: 0;
 }
 html[data-lab-theme] .lab-workspace-rail {
   border: 1px solid var(--lab-line);
-  border-radius: var(--lab-workspace-panel-radius, 28px);
+  border-radius: var(--lab-workspace-panel-radius, calc(28px * var(--lab-radius-scale, 1)));
   corner-shape: superellipse(1.5);
   background: color-mix(in srgb, var(--lab-surface) 80%, transparent);
   -webkit-backdrop-filter: blur(20px) saturate(1.2);
@@ -54,15 +54,15 @@ html[data-lab-theme] .lab-workspace-toolgroup {
   align-items: center;
   gap: 2px;
   padding: 4px;
-  --lab-glass-radius: 24px;
+  --lab-glass-radius: calc(24px * var(--lab-radius-scale, 1));
 }
 html[data-lab-theme] .lab-workspace-toolgroup > :is(button, a)[data-variant],
 html[data-lab-theme] .lab-workspace-toolgroup > div > button[data-variant] {
-  height: 40px;
-  min-height: 40px;
-  min-width: 40px;
+  height: var(--lab-control-compact);
+  min-height: var(--lab-control-compact);
+  min-width: var(--lab-control-compact);
   padding: 0 9px;
-  border-radius: 18px;
+  border-radius: var(--lab-radius-control);
   --lab-control-elevation: none;
 }
 @media (pointer: coarse) {

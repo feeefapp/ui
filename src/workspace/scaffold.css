@@ -8,10 +8,10 @@
   height: 100%;
   background: color-mix(in srgb, var(--lab-primary) 3%, var(--lab-ground));
   color: var(--lab-ink);
-  --lab-workspace-side-width: 304px;
+  --lab-workspace-side-width: var(--lab-sidebar-width);
 }
 .lab-workspace-scaffold[data-side-mode='rail'] {
-  --lab-workspace-side-width: 64px;
+  --lab-workspace-side-width: var(--lab-rail-width);
 }
 .lab-workspace-scaffold[data-side-mode='hidden'] {
   --lab-workspace-side-width: 0px;
@@ -166,7 +166,7 @@ html[data-lab-theme] .lab-dialog.lab-workspace-drawer {
   --lab-drawer-offset: -100%;
 }
 html[data-lab-theme] .lab-workspace-drawer:dir(rtl) {
-  border-radius: 20px 0 0 20px;
+  border-radius: calc(20px * var(--lab-radius-scale, 1)) 0 0 calc(20px * var(--lab-radius-scale, 1));
   --lab-drawer-offset: 100%;
 }
 html[data-lab-theme] .lab-workspace-drawer[data-state='open'] {

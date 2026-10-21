@@ -131,7 +131,7 @@ html[data-lab-transition]::view-transition-new(lab-content) {
   }
 
   .lab-glass-group {
-    --lab-glass-radius: 27px;
+    --lab-glass-radius: calc(27px * var(--lab-radius-scale, 1));
   }
 }
 

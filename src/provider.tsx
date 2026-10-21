@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { LabServicesProvider, type LabServices } from './services'
 import { LabThemeProvider, type LabThemeMode } from './theme'
+import type { LabThemeConfig } from './theme-config'
 import { LabScaffoldProvider } from './scaffold'
 import { LabI18nProvider, type LabI18nSource } from './i18n'
 import { FO_FONTS_CSS } from './brand/fonts'
@@ -13,6 +14,7 @@ export function LabProvider({
   i18n,
   initialTheme = 'system',
   enableCornerFallback = false,
+  theme,
 }: {
   children: ReactNode
   services?: Partial<LabServices>
@@ -21,11 +23,17 @@ export function LabProvider({
   initialTheme?: LabThemeMode
   /** Opt in to SVG corners only on browsers without native corner-shape support. */
   enableCornerFallback?: boolean
+  /** App-level look: palette, density, radius. See theme-config.ts. */
+  theme?: LabThemeConfig
 }) {
   return (
     <LabServicesProvider services={services}>
       <LabI18nProvider {...i18n}>
-        <LabThemeProvider initialMode={initialTheme} enableCornerFallback={enableCornerFallback}>
+        <LabThemeProvider
+          initialMode={initialTheme}
+          enableCornerFallback={enableCornerFallback}
+          config={theme}
+        >
           <LabScaffoldProvider>
             <style>{FO_FONTS_CSS}</style>
             {children}

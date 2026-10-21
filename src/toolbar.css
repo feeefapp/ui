@@ -25,9 +25,10 @@
 .lab-toolbar-group {
   inline-size: fit-content;
   max-inline-size: 100%;
-  --lab-toolbar-control-size: 40px;
+  /* Follows density (40px comfortable); the pill radius follows the theme's radius scale. */
+  --lab-toolbar-control-size: var(--lab-control-compact);
   --lab-control-height: var(--lab-toolbar-control-size);
-  --lab-glass-radius: calc((var(--lab-toolbar-control-size) + 6px) / 2);
+  --lab-glass-radius: calc((var(--lab-toolbar-control-size) + 6px) / 2 * var(--lab-radius-scale, 1));
   display: flex;
   align-items: center;
   gap: 0;

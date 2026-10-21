@@ -9,6 +9,11 @@ then `npm run release -- <patch|minor|major>` and bump consumers. The live examp
 lab.feeef.org/ui (Lab repo, `inertia/pages/lab/ui.tsx` + `components/lab/docs/`) and the
 Lab README contract must be updated when a public primitive changes.
 
+Theming is configuration, not code: apps pass `LabThemeConfig` (palette, density, radius;
+README "Theme config") and the kit CSS reads the resulting tokens. Never hard-code a color,
+control height/padding or radius in kit CSS: use `--lab-*` color tokens, the density size
+tokens, and `var(--lab-radius-*)` or `calc(Npx * var(--lab-radius-scale, 1))`.
+
 Keep the kit framework-neutral: no Inertia, Next.js or router imports. Hosts pass locale,
 translations, URL and navigation through `LabProvider` / `LabServices`. Modules using hooks
 start with `'use client'`. Kit strings use the `lab.*` keys in `src/messages.ts` (en/ar/fr);

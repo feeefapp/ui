@@ -75,7 +75,7 @@
   height: 36px;
   padding: 0;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--lab-radius-small);
   background: transparent;
   color: var(--lab-ink);
   cursor: pointer;
@@ -204,7 +204,7 @@ html[data-lab-theme] .lab-calendar-grid .lab-control.lab-calendar-day {
   padding: 0;
   border: 0;
   box-shadow: none;
-  border-radius: 12px;
+  border-radius: var(--lab-radius-small);
   --lab-control-fill: transparent;
   --lab-control-edge: transparent;
   --lab-control-elevation: none;

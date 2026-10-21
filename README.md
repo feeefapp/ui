@@ -58,6 +58,33 @@ export function App({ locale, translations, url, children }) {
 - Modules that use hooks start with `'use client'`, so they work from Next.js server components.
 - Every component imports its own CSS; the host bundler (Vite, Next.js) loads it.
 
+## Theme config
+
+Each app picks its look once and passes it down; components never branch on it.
+
+```tsx
+import type { LabThemeConfig } from '@feeef.dev/ui/theme-config'
+
+export const theme: LabThemeConfig = { palette: 'mono', density: 'compact', radius: 0.35 }
+
+<LabProvider theme={theme}>…</LabProvider>
+// Server-rendered hosts also put it on <html> for the first paint:
+<html {...labThemeAttributes(theme)}>
+```
+
+| Option | Values | What it drives |
+|---|---|---|
+| `palette` | `lab` (default, Feeef green), `mono` (black and white; only danger/warning keep a hue) | every color token in `theme-tokens.css`: surfaces, ink, primary, focus, brand logo strokes, pixel tones, `--lab-success`, `--lab-warning` |
+| `density` | `comfortable` (default), `compact` | `--lab-control-height`, `--lab-control-compact`, `--lab-field-height`, `--lab-control-small`, `--lab-row-height`, `--lab-control-padding`, `--lab-space-3…8`, `--lab-sidebar-width`, `--lab-rail-width` (coarse pointers keep 44px targets) |
+| `radius` | number, `1` default, `0` square, max `1.5` | `--lab-radius-scale`, which multiplies every radius token and component radius (circles such as radios stay round) |
+
+How it works: `labThemeAttributes()` / `applyLabThemeConfig()` set `data-lab-palette`,
+`data-lab-density` and `--lab-radius-scale` on `<html>`; the kit CSS reads them. To add a
+palette or density, add its token block next to the existing ones (`theme-tokens.css`,
+`system.css`) and extend the union in `theme-config.ts`. Kit CSS must use these tokens, never
+literal colors, control sizes or radii, so every theme reaches it. App CSS should do the same
+(derive from `--lab-*` tokens and `--lab-radius-scale`).
+
 ## Develop
 
 ```bash

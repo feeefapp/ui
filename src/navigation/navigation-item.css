@@ -4,8 +4,8 @@ html[data-lab-theme] .lab-navigation-item[data-variant] {
   justify-content: flex-start;
   gap: 8px;
   width: 100%;
-  height: 44px;
-  min-height: 44px;
+  height: var(--lab-row-height);
+  min-height: var(--lab-row-height);
   padding: 0 8px;
   border-radius: var(--lab-radius-control-compact);
   text-align: start;
@@ -41,8 +41,8 @@ html[data-lab-theme] .lab-navigation-item[aria-current='page'] {
   white-space: nowrap;
 }
 html[data-lab-theme] .lab-navigation-item[data-variant][data-compact='true'] {
-  width: 44px;
-  min-width: 44px;
+  width: var(--lab-row-height);
+  min-width: var(--lab-row-height);
   padding: 0;
   justify-content: center;
 }
@@ -52,7 +52,7 @@ html[data-lab-theme] .lab-navigation-item[data-variant][data-compact='true'] {
   background: var(--lab-surface);
   color: var(--lab-ink);
   border: 1px solid var(--lab-line);
-  border-radius: 12px;
+  border-radius: var(--lab-radius-small);
   font: 400 13px/20px var(--lab-font);
   box-shadow: var(--lab-glass-shadow);
   pointer-events: none;

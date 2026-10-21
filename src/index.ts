@@ -8,6 +8,8 @@ export { LabServicesProvider, useLabServices } from './services'
 export type { LabPreferences, LabServices } from './services'
 export { LabThemeProvider, LabThemeSwitch, useLabTheme } from './theme'
 export type { LabThemeMode } from './theme'
+export { LAB_THEME_DEFAULTS, applyLabThemeConfig, labThemeAttributes } from './theme-config'
+export type { LabDensity, LabPalette, LabThemeConfig } from './theme-config'
 export {
   LabButton,
   LabInput,

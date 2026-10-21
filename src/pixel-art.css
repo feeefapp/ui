@@ -18,7 +18,7 @@
 }
 
 .lab-pixel-tone-sage {
-  color: #647b5c;
+  color: var(--lab-pixel-sage, #647b5c);
 }
 
 .lab-pixel-tone-inverse {
@@ -26,7 +26,7 @@
 }
 
 .lab-pixel-tone-muted {
-  color: #9da995;
+  color: var(--lab-pixel-muted, #9da995);
 }
 
 .lab-pixel-texture {

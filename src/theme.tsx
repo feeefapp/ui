@@ -17,6 +17,7 @@ import './system.css'
 import { installFoContinuousCorners } from './brand/corners'
 import { useLabServices } from './services'
 import { useLabI18n } from './i18n'
+import { applyLabThemeConfig, type LabThemeConfig } from './theme-config'
 export type LabThemeMode = 'system' | 'light' | 'dark'
 type Mode = LabThemeMode
 const Context = createContext<{
@@ -29,10 +30,13 @@ export function LabThemeProvider({
   children,
   initialMode = 'system',
   enableCornerFallback = false,
+  config,
 }: {
   children: ReactNode
   initialMode?: Mode
   enableCornerFallback?: boolean
+  /** App-level palette, density and radius (theme-config.ts). */
+  config?: LabThemeConfig
 }) {
   const { preferences } = useLabServices()
   const [mode, setMode] = useState<Mode>(() => {
@@ -50,6 +54,10 @@ export function LabThemeProvider({
   useEffect(() => {
     if (enableCornerFallback) return installFoContinuousCorners()
   }, [enableCornerFallback])
+  const { palette, density, radius } = config ?? {}
+  layoutEffect(() => {
+    applyLabThemeConfig(document.documentElement, { palette, density, radius })
+  }, [palette, density, radius])
   layoutEffect(() => {
     const root = document.documentElement,
       previous = root.getAttribute('data-lab-theme'),
