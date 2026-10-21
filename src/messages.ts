@@ -1,4 +1,4 @@
-/** Built-in strings for the kit widgets. Host translations passed to LabI18nProvider override them. */
+/** Built-in strings for the kit widgets. Host translations override them. */
 export const LAB_UI_MESSAGES: Record<string, Record<string, string>> = {
   "en": {
     "lab.common.close": "Close",
@@ -13,7 +13,14 @@ export const LAB_UI_MESSAGES: Record<string, Record<string, string>> = {
     "lab.nav.labWorkspace": "Lab workspace",
     "lab.nav.viewControls": "View controls",
     "lab.nav.workspaceActions": "Workspace actions",
-    "lab.nav.workspaceNavigation": "Workspace navigation"
+    "lab.nav.workspaceNavigation": "Workspace navigation",
+    "lab.speech.block": "Speech block {index}",
+    "lab.speech.reorder": "Reorder speech block {index}",
+    "lab.speech.hint": "Drag to reorder, or use the up and down arrow keys. Escape cancels a drag.",
+    "lab.speech.picked": "Speech block {index} picked up. Drag to move; Escape cancels.",
+    "lab.speech.position": "Position {index} of {count}. Release to place.",
+    "lab.speech.cancelled": "Reorder cancelled.",
+    "lab.speech.moved": "Speech block moved to position {index} of {count}."
   },
   "ar": {
     "lab.common.close": "إغلاق",
@@ -28,7 +35,14 @@ export const LAB_UI_MESSAGES: Record<string, Record<string, string>> = {
     "lab.nav.labWorkspace": "مساحة عمل Lab",
     "lab.nav.viewControls": "عناصر التحكم بالعرض",
     "lab.nav.workspaceActions": "إجراءات مساحة العمل",
-    "lab.nav.workspaceNavigation": "تنقّل مساحة العمل"
+    "lab.nav.workspaceNavigation": "تنقّل مساحة العمل",
+    "lab.speech.block": "مقطع الكلام {index}",
+    "lab.speech.reorder": "إعادة ترتيب مقطع الكلام {index}",
+    "lab.speech.hint": "اسحب لإعادة الترتيب، أو استخدم سهمي الأعلى والأسفل. اضغط Escape للإلغاء.",
+    "lab.speech.picked": "تم التقاط مقطع الكلام {index}. اسحب للنقل؛ Escape للإلغاء.",
+    "lab.speech.position": "الموضع {index} من {count}. أفلت لوضع المقطع.",
+    "lab.speech.cancelled": "تم إلغاء إعادة الترتيب.",
+    "lab.speech.moved": "تم نقل مقطع الكلام إلى الموضع {index} من {count}."
   },
   "fr": {
     "lab.common.close": "Fermer",
@@ -43,6 +57,13 @@ export const LAB_UI_MESSAGES: Record<string, Record<string, string>> = {
     "lab.nav.labWorkspace": "Espace Lab",
     "lab.nav.viewControls": "Commandes d’affichage",
     "lab.nav.workspaceActions": "Actions de l’espace de travail",
-    "lab.nav.workspaceNavigation": "Navigation de l’espace"
+    "lab.nav.workspaceNavigation": "Navigation de l’espace",
+    "lab.speech.block": "Bloc vocal {index}",
+    "lab.speech.reorder": "Réordonner le bloc vocal {index}",
+    "lab.speech.hint": "Glissez pour réordonner, ou utilisez les flèches haut et bas. Échap annule le déplacement.",
+    "lab.speech.picked": "Bloc vocal {index} saisi. Glissez pour déplacer ; Échap annule.",
+    "lab.speech.position": "Position {index} sur {count}. Relâchez pour placer.",
+    "lab.speech.cancelled": "Déplacement annulé.",
+    "lab.speech.moved": "Bloc vocal déplacé en position {index} sur {count}."
   }
 }

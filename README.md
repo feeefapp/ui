@@ -179,3 +179,5 @@ The morph uses the shared bounded spring integrator, retaining velocity on rever
 retargeting on resize. Adjacent controls occupy a stable grid cell throughout the transition.
 Their visibility interval never overlaps the editor's; closing text is retained until the
 editor is invisible. Reduced motion snaps to the final geometry.
+
+Speech cards are shared through `@feeef.dev/ui/speech/block`. `LabSpeechBlock` owns the Lab voice-page material, typing texture, one-row toolbar and accessible drag handle; hosts supply voice/actions and native editors. Use stable block keys and pass `onMove` as one state edit. `speech/block-order` preserves whole block identity and measured mixed-height slots. Pointer drag auto-scrolls the nearest LabScrollArea; Up/Down reorders from the handle and Escape cancels. Lab `/voice` and `/ui` examples use this same component.
