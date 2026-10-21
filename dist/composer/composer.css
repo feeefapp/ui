@@ -18,7 +18,8 @@
   color: var(--pc-ink);
   font-family: var(--lab-font);
 }
-.lab-pc-card[data-dragging='true'] {
+.lab-pc-card[data-dragging='true'],
+.lab-pc[data-dragging='true'] .lab-pc-card {
   outline: 2px dashed var(--pc-primary);
   outline-offset: 3px;
 }
