@@ -4,6 +4,8 @@ import { Slot } from '@radix-ui/react-slot';
 import { cn } from '../utils.js';
 import { PixelTexture, PixelLoader } from '../pixel-art.js';
 import { legacyButtonHasTexture } from './button-compat.js';
+import '../system.css';
+import './control-variants.css';
 export const LabButton = React.forwardRef(({ className, children, loading, variant, controlSize = 'regular', iconSize = 'regular', appearance = 'default', type = 'button', size, asChild = false, ...props }, ref) => {
     const resolvedVariant = variant === 'primary' ? 'filled' : variant;
     const filled = variant === 'primary' ||

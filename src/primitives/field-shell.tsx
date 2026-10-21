@@ -3,6 +3,8 @@
 import * as React from 'react'
 import { cn } from '../utils'
 import type { LabControlVariant } from './control-variants'
+import '../system.css'
+import './control-variants.css'
 import './text-field.css'
 
 export type LabFieldDecorationProps = {

@@ -4,6 +4,8 @@ import { cn } from '../utils'
 import { PixelTexture, PixelLoader } from '../pixel-art'
 import type { LabControlVariant } from './control-variants'
 import { legacyButtonHasTexture } from './button-compat'
+import '../system.css'
+import './control-variants.css'
 
 /** Material common-button types, rendered with Feeef Lab's visual system. */
 export type LabButtonVariant = LabControlVariant | 'destructive' | 'primary' | 'secondary' | 'ghost'

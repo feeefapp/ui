@@ -1,5 +1,7 @@
 import * as React from 'react';
 import type { LabControlVariant } from './control-variants.js';
+import '../system.css';
+import './control-variants.css';
 /** Material common-button types, rendered with Feeef Lab's visual system. */
 export type LabButtonVariant = LabControlVariant | 'destructive' | 'primary' | 'secondary' | 'ghost';
 export type LabControlSize = 'regular' | 'compact' | 'inline' | 'icon';

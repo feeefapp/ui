@@ -1,5 +1,7 @@
 import * as React from 'react';
 import type { LabControlVariant } from './control-variants.js';
+import '../system.css';
+import './control-variants.css';
 import './text-field.css';
 export type LabFieldDecorationProps = {
     /** Floating field name. Takes precedence over the legacy label prop. */
