@@ -133,3 +133,18 @@ The component follows reduced motion, resize and the native drawer's top layer.
 The navigation rail uses `--lab-navigation-rail-width`; floating media reservations
 retain `--lab-rail-width`. Keep these independent so registering floating surfaces
 cannot collapse the workspace navigation rail.
+
+## Prompt composers
+
+`@feeef.dev/ui/composer/composer` exports `LabPromptComposer`, `LabComposerCard`,
+`LabComposerHint`, and `useComposerLayout`. These are the same measured card and
+input layout used by Lab Chat and Image and the Cloud playground.
+
+Use controlled `value`/`onValueChange`, `onSubmit`, an accessible `label`,
+`tools` for file/record/model controls, `submit` for shared submit/stop actions,
+`above` for references and masks, and `footer` for task hints. `contentRevision`
+remeasures when host tool content changes. Enter sends, Shift+Enter inserts a
+line, and IME composition preserves Enter. Busy, disabled and submitDisabled
+gate keyboard submission. Native selection and the editable node remain stable.
+Advanced editors can keep their field and controls using `LabComposerCard` with
+`useComposerLayout`; reusable geometry and motion stay in the package.
