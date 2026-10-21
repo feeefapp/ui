@@ -140,12 +140,16 @@ html[data-lab-theme='dark'] {
   line-height: 1.5;
 }
 /* Explicit variants override legacy page classes. New controls must use this API. */
-html[data-lab-theme] .lab-control[data-variant] {
+/* Paint defaults sit in :where() so variant recipes (control-variants.css) and page
+overrides win by specificity, whatever order the host bundler emits stylesheets in. */
+html[data-lab-theme] :where(.lab-control[data-variant]) {
   --lab-control-fill: transparent;
   --lab-control-fill-hover: var(--lab-control-hover);
   --lab-control-fill-pressed: var(--lab-control-pressed);
   --lab-control-edge: transparent;
   --lab-control-elevation: none;
+}
+html[data-lab-theme] .lab-control[data-variant] {
   height: var(--lab-control-height);
   min-height: var(--lab-control-height);
   width: auto;
