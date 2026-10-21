@@ -1,4 +1,4 @@
-# @feeef/ui
+# @feeef.dev/ui
 
 The Feeef UI kit: tokens, light/dark theme, workspace scaffold, floating glass chrome and
 controls shared by every Feeef web app. Live reference: <https://lab.feeef.org/ui>.
@@ -16,11 +16,11 @@ built from these pieces.
 Private repo, installed as a git dependency pinned to a tag:
 
 ```bash
-npm install github:feeefapp/ui#v0.1.0
+npm install github:feeefapp/ui#v0.2.0
 ```
 
 The installing machine (and CI / Docker builds) needs read access to `feeefapp/ui` — an SSH key
-or a token in the git URL (`git+https://<token>@github.com/feeefapp/ui.git#v0.1.0`).
+or a token in the git URL (`git+https://<token>@github.com/feeefapp/ui.git#v0.2.0`).
 
 Peer dependencies: `react`, `react-dom` (19), `lucide-react`, `intl-messageformat` and the Radix
 `dropdown-menu`, `popover`, `select`, `slot`, `tooltip` packages.
@@ -28,11 +28,11 @@ Peer dependencies: `react`, `react-dom` (19), `lucide-react`, `intl-messageforma
 ## Use
 
 ```tsx
-import { LabProvider, LabButton, LabTextField } from '@feeef/ui'
+import { LabProvider, LabButton, LabTextField } from '@feeef.dev/ui'
 // Deep imports for everything else, same layout as src/:
-import { LabScaffold } from '@feeef/ui/workspace/scaffold'
-import { LabDock } from '@feeef/ui/dock'
-import '@feeef/ui/workspace.css'
+import { LabScaffold } from '@feeef.dev/ui/workspace/scaffold'
+import { LabDock } from '@feeef.dev/ui/dock'
+import '@feeef.dev/ui/workspace.css'
 
 export function App({ locale, translations, url, children }) {
   return (
@@ -85,7 +85,7 @@ npm run release -- patch      # or minor / major / x.y.z: checks, builds, commit
 git push --follow-tags
 ```
 
-Then bump each consumer's `"@feeef/ui": "github:feeefapp/ui#vX.Y.Z"` and reinstall.
+Then bump each consumer's `"@feeef.dev/ui": "github:feeefapp/ui#vX.Y.Z"` and reinstall.
 
 ## Rules
 

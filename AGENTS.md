@@ -1,4 +1,4 @@
-# @feeef/ui changes
+# @feeef.dev/ui changes
 
 This repo is the single source of the Feeef UI kit. Apps (Lab, Cloud console, …) install it
 from git; never copy kit files into an app or fork them there. App-specific chrome and features
