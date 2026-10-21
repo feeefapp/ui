@@ -59,7 +59,7 @@ html[data-lab-theme] .lab-toolbar-search input.lab-toolbar-search-input {
   grid-area: 1 / 1;
   display: flex;
   min-width: 0;
-  margin-inline-start: calc(var(--lab-control-compact) + 6px + var(--lab-space-2));
+  margin-inline-start: calc(var(--lab-search-compact-width, 46px) + var(--lab-space-2));
   opacity: var(--lab-search-controls-opacity, 1);
   pointer-events: auto;
 }

@@ -95,6 +95,7 @@ export function LabToolbarSearch({ label, value, onValueChange, placeholder, chi
     reduced.current = media.matches
     const measure = (initial = false) => {
       compact.current = (Number.parseFloat(getComputedStyle(material).getPropertyValue('--lab-toolbar-control-size')) || 40) + 6
+      host.style.setProperty('--lab-search-compact-width', `${compact.current}px`)
       wide.current = Math.max(compact.current, host.clientWidth)
       target.current = requested.current ? wide.current : compact.current
       if (initial) { spring.current = { position: target.current, velocity: 0 }; paint() }
@@ -112,6 +113,7 @@ export function LabToolbarSearch({ label, value, onValueChange, placeholder, chi
     requested.current = expanded
     target.current = expanded ? wide.current : compact.current
     if (spring.current.position !== target.current) run.current()
+    else setMoving(false)
     if (expanded) field.current?.focus({ preventScroll: true })
   }, [expanded])
   const change = (next: boolean) => {
