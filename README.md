@@ -148,3 +148,5 @@ line, and IME composition preserves Enter. Busy, disabled and submitDisabled
 gate keyboard submission. Native selection and the editable node remain stable.
 Advanced editors can keep their field and controls using `LabComposerCard` with
 `useComposerLayout`; reusable geometry and motion stay in the package.
+
+Composer file-drop outlines appear only with `LabPromptComposer dropActive` (or `LabComposerCard data-dragging`). Focus keeps the normal shared focus treatment.

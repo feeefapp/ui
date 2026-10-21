@@ -14,11 +14,11 @@ export function LabComposerHint({ text }) {
     return _jsx("span", { className: "lab-pc-hint", "aria-hidden": "true", children: text.split(/(\s+)/).map((word, index) => /\s+/.test(word) ? word : _jsx("span", { style: { animationDelay: `${Math.min(index, 40) * 28}ms` }, children: word }, index)) }, text);
 }
 /** Canonical measured Lab composer with stable caret, growing input and responsive tool slots. */
-export function LabPromptComposer({ value, onValueChange, onSubmit, label, placeholder, disabled, busy, submitDisabled, maxLength, above, tools, submit, footer, contentRevision, className, ...props }) {
+export function LabPromptComposer({ value, onValueChange, onSubmit, label, placeholder, disabled, busy, dropActive, submitDisabled, maxLength, above, tools, submit, footer, contentRevision, className, ...props }) {
     const { card, layout, field, expanded } = useComposerLayout(value, contentRevision);
     const canSubmit = !disabled && !busy && !submitDisabled && !!value.trim();
     return _jsxs("form", { ...props, className: cn('lab-pc lab-prompt-composer', className), "aria-busy": busy || undefined, onSubmit: event => { event.preventDefault(); if (canSubmit)
-            onSubmit(); }, children: [above, _jsxs(LabComposerCard, { ref: card, layoutRef: layout, layoutClassName: "lab-prompt-composer-layout", expanded: expanded, children: [_jsxs("div", { className: "lab-pc-field", children: [!value && placeholder && _jsx(LabComposerHint, { text: placeholder }), _jsx(LabRawInput, { multiline: true, autoResize: false, ref: field, className: "lab-textarea", dir: "auto", rows: 1, value: value, maxLength: maxLength, "aria-label": label, disabled: disabled, readOnly: busy, onValueChange: onValueChange, onKeyDown: event => {
+            onSubmit(); }, children: [above, _jsxs(LabComposerCard, { "data-dragging": dropActive || undefined, ref: card, layoutRef: layout, layoutClassName: "lab-prompt-composer-layout", expanded: expanded, children: [_jsxs("div", { className: "lab-pc-field", children: [!value && placeholder && _jsx(LabComposerHint, { text: placeholder }), _jsx(LabRawInput, { multiline: true, autoResize: false, ref: field, className: "lab-textarea", dir: "auto", rows: 1, value: value, maxLength: maxLength, "aria-label": label, disabled: disabled, readOnly: busy, onValueChange: onValueChange, onKeyDown: event => {
                                     if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
                                         event.preventDefault();
                                         if (canSubmit)

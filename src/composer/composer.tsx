@@ -33,6 +33,8 @@ export type LabPromptComposerProps = Omit<React.FormHTMLAttributes<HTMLFormEleme
   placeholder?: string
   disabled?: boolean
   busy?: boolean
+  /** Highlight the card only while a compatible file is dragged over the drop target. */
+  dropActive?: boolean
   submitDisabled?: boolean
   maxLength?: number
   /** Files, references, mask controls or a contextual note above the input card. */
@@ -46,12 +48,12 @@ export type LabPromptComposerProps = Omit<React.FormHTMLAttributes<HTMLFormEleme
 }
 
 /** Canonical measured Lab composer with stable caret, growing input and responsive tool slots. */
-export function LabPromptComposer({ value, onValueChange, onSubmit, label, placeholder, disabled, busy, submitDisabled, maxLength, above, tools, submit, footer, contentRevision, className, ...props }: LabPromptComposerProps) {
+export function LabPromptComposer({ value, onValueChange, onSubmit, label, placeholder, disabled, busy, dropActive, submitDisabled, maxLength, above, tools, submit, footer, contentRevision, className, ...props }: LabPromptComposerProps) {
   const { card, layout, field, expanded } = useComposerLayout(value, contentRevision)
   const canSubmit = !disabled && !busy && !submitDisabled && !!value.trim()
   return <form {...props} className={cn('lab-pc lab-prompt-composer', className)} aria-busy={busy || undefined} onSubmit={event => { event.preventDefault(); if (canSubmit) onSubmit() }}>
     {above}
-    <LabComposerCard ref={card} layoutRef={layout} layoutClassName="lab-prompt-composer-layout" expanded={expanded}>
+    <LabComposerCard data-dragging={dropActive || undefined} ref={card} layoutRef={layout} layoutClassName="lab-prompt-composer-layout" expanded={expanded}>
       <div className="lab-pc-field">
         {!value && placeholder && <LabComposerHint text={placeholder} />}
         <LabRawInput multiline autoResize={false} ref={field} className="lab-textarea" dir="auto" rows={1} value={value} maxLength={maxLength} aria-label={label} disabled={disabled} readOnly={busy} onValueChange={onValueChange} onKeyDown={event => {

@@ -19,6 +19,8 @@ export type LabPromptComposerProps = Omit<React.FormHTMLAttributes<HTMLFormEleme
     placeholder?: string;
     disabled?: boolean;
     busy?: boolean;
+    /** Highlight the card only while a compatible file is dragged over the drop target. */
+    dropActive?: boolean;
     submitDisabled?: boolean;
     maxLength?: number;
     /** Files, references, mask controls or a contextual note above the input card. */
@@ -31,5 +33,5 @@ export type LabPromptComposerProps = Omit<React.FormHTMLAttributes<HTMLFormEleme
     contentRevision?: unknown;
 };
 /** Canonical measured Lab composer with stable caret, growing input and responsive tool slots. */
-export declare function LabPromptComposer({ value, onValueChange, onSubmit, label, placeholder, disabled, busy, submitDisabled, maxLength, above, tools, submit, footer, contentRevision, className, ...props }: LabPromptComposerProps): React.JSX.Element;
+export declare function LabPromptComposer({ value, onValueChange, onSubmit, label, placeholder, disabled, busy, dropActive, submitDisabled, maxLength, above, tools, submit, footer, contentRevision, className, ...props }: LabPromptComposerProps): React.JSX.Element;
 //# sourceMappingURL=composer.d.ts.map
