@@ -15,4 +15,5 @@ export { LAB_UI_MESSAGES } from './messages.js';
 export { flattenLabTranslations, translateLab } from './i18n-core.js';
 export { labLocaleUrl } from './i18n.js';
 export { cn } from './utils.js';
+export { LabToolbarSearch } from './toolbar-search.js';
 //# sourceMappingURL=index.js.map

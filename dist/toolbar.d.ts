@@ -1,4 +1,4 @@
-import type { HTMLAttributes, ReactNode } from 'react';
+import { type HTMLAttributes, type ReactNode } from 'react';
 import './toolbar.css';
 /** Unpainted layout; only related controls share a material. Normal Tab order is preserved. */
 export declare function LabToolbar({ label, leading, trailing, className, ...props }: Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
@@ -6,7 +6,7 @@ export declare function LabToolbar({ label, leading, trailing, className, ...pro
     leading: ReactNode;
     trailing?: ReactNode;
 }): import("react").JSX.Element;
-export declare function LabToolbarGroup({ label, className, ...props }: HTMLAttributes<HTMLElement> & {
+export declare const LabToolbarGroup: import("react").ForwardRefExoticComponent<HTMLAttributes<HTMLElement> & {
     label: string;
-}): import("react").JSX.Element;
+} & import("react").RefAttributes<HTMLElement>>;
 //# sourceMappingURL=toolbar.d.ts.map

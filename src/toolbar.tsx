@@ -1,4 +1,4 @@
-import type { HTMLAttributes, ReactNode } from 'react'
+import { forwardRef, type HTMLAttributes, type ReactNode } from 'react'
 import { cn } from './utils'
 import { LabGlassGroup } from './scaffold'
 import './toolbar.css'
@@ -23,17 +23,6 @@ export function LabToolbar({
   )
 }
 
-export function LabToolbarGroup({
-  label,
-  className,
-  ...props
-}: HTMLAttributes<HTMLElement> & { label: string }) {
-  return (
-    <LabGlassGroup
-      {...props}
-      className={cn('lab-toolbar-group', className)}
-      role="group"
-      aria-label={label}
-    />
-  )
-}
+export const LabToolbarGroup = forwardRef<HTMLElement, HTMLAttributes<HTMLElement> & { label: string }>(function LabToolbarGroup({ label, className, ...props }, ref) {
+  return <LabGlassGroup {...props} ref={ref} className={cn('lab-toolbar-group', className)} role="group" aria-label={label}/>
+})

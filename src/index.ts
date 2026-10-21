@@ -57,3 +57,6 @@ export { LAB_UI_MESSAGES } from './messages'
 export { flattenLabTranslations, translateLab } from './i18n-core'
 export { labLocaleUrl } from './i18n'
 export { cn } from './utils'
+
+export { LabToolbarSearch } from './toolbar-search'
+export type { LabToolbarSearchProps } from './toolbar-search'

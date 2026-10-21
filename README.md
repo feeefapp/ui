@@ -152,3 +152,19 @@ Advanced editors can keep their field and controls using `LabComposerCard` with
 Composer file-drop outlines appear only with `LabPromptComposer dropActive` (or `LabComposerCard data-dragging`). Focus keeps the normal shared focus treatment.
 
 Measured composers also expand when toolbar slots leave less than eight glyphs of editing space, keeping an empty prompt usable on narrow screens.
+
+### Expanding toolbar search
+
+`LabToolbarSearch` (`@feeef.dev/ui/toolbar-search`) is the reusable toolbar search pattern.
+Put adjacent filter/navigation bubbles in `children` and persistent actions in `trailing`.
+The same glass host grows from its search icon into a full-width `LabRawInput`; never nest a
+painted text field inside it. Input text is not scaled. Closing/Escape clears the query and
+restores the search button's focus. Filter state remains owned by the caller. The material
+morph supports interrupted reversals, logical directions, resize and reduced motion.
+
+```tsx
+<LabToolbarSearch label="Search models" value={query} onValueChange={setQuery}
+  trailing={<LabToolbarGroup label="Close">…</LabToolbarGroup>}>
+  <LabFilterBar {...filters} />
+</LabToolbarSearch>
+```

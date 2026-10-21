@@ -2,6 +2,8 @@
 export const LAB_UI_MESSAGES: Record<string, Record<string, string>> = {
   "en": {
     "lab.common.close": "Close",
+    "lab.search.collapse": "Close search",
+    "lab.search.clear": "Clear search",
     "lab.common.language": "Language",
     "lab.common.loading": "Loading…",
     "lab.common.moreActions": "More actions",
@@ -15,6 +17,8 @@ export const LAB_UI_MESSAGES: Record<string, Record<string, string>> = {
   },
   "ar": {
     "lab.common.close": "إغلاق",
+    "lab.search.collapse": "إغلاق البحث",
+    "lab.search.clear": "مسح البحث",
     "lab.common.language": "اللغة",
     "lab.common.loading": "جارٍ التحميل…",
     "lab.common.moreActions": "إجراءات أخرى",
@@ -28,6 +32,8 @@ export const LAB_UI_MESSAGES: Record<string, Record<string, string>> = {
   },
   "fr": {
     "lab.common.close": "Fermer",
+    "lab.search.collapse": "Fermer la recherche",
+    "lab.search.clear": "Effacer la recherche",
     "lab.common.language": "Langue",
     "lab.common.loading": "Chargement…",
     "lab.common.moreActions": "Plus d’actions",
