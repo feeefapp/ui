@@ -20,7 +20,7 @@ html[data-lab-theme] {
   --lab-row-height: 44px;
   --lab-control-padding: 12px;
   --lab-sidebar-width: 304px;
-  --lab-rail-width: 64px;
+  --lab-navigation-rail-width: 64px;
   --lab-control-height: 44px;
   --lab-field-height: 40px;
   --lab-control-compact: 40px;
@@ -292,7 +292,7 @@ html[data-lab-density='compact'][data-lab-theme] {
   --lab-row-height: 32px;
   --lab-control-padding: 10px;
   --lab-sidebar-width: 248px;
-  --lab-rail-width: 52px;
+  --lab-navigation-rail-width: 52px;
 }
 html[data-lab-density='compact'][data-lab-theme] .lab-control[data-variant] {
   font-size: 13px;

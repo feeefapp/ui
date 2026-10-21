@@ -75,7 +75,7 @@ export const theme: LabThemeConfig = { palette: 'mono', density: 'compact', radi
 | Option | Values | What it drives |
 |---|---|---|
 | `palette` | `lab` (default, Feeef green), `mono` (black and white; only danger/warning keep a hue) | every color token in `theme-tokens.css`: surfaces, ink, primary, focus, brand logo strokes, pixel tones, `--lab-success`, `--lab-warning` |
-| `density` | `comfortable` (default), `compact` | `--lab-control-height`, `--lab-control-compact`, `--lab-field-height`, `--lab-control-small`, `--lab-row-height`, `--lab-control-padding`, `--lab-space-3…8`, `--lab-sidebar-width`, `--lab-rail-width` (coarse pointers keep 44px targets) |
+| `density` | `comfortable` (default), `compact` | `--lab-control-height`, `--lab-control-compact`, `--lab-field-height`, `--lab-control-small`, `--lab-row-height`, `--lab-control-padding`, `--lab-space-3…8`, `--lab-sidebar-width`, `--lab-navigation-rail-width` (coarse pointers keep 44px targets) |
 | `radius` | number, `1` default, `0` square, max `1.5` | `--lab-radius-scale`, which multiplies every radius token and component radius (circles such as radios stay round) |
 
 How it works: `labThemeAttributes()` / `applyLabThemeConfig()` set `data-lab-palette`,
@@ -129,3 +129,7 @@ sidebar link `data-tool-brand-anchor="side"` and the compact header link
 `data-tool-brand-anchor="header"`; both retain their accessible names and navigation.
 Anchors reserve 104 × 26 pixels for the logo; product suffixes sit outside the anchor.
 The component follows reduced motion, resize and the native drawer's top layer.
+
+The navigation rail uses `--lab-navigation-rail-width`; floating media reservations
+retain `--lab-rail-width`. Keep these independent so registering floating surfaces
+cannot collapse the workspace navigation rail.

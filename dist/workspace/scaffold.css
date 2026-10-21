@@ -11,7 +11,7 @@
   --lab-workspace-side-width: var(--lab-sidebar-width);
 }
 .lab-workspace-scaffold[data-side-mode='rail'] {
-  --lab-workspace-side-width: var(--lab-rail-width);
+  --lab-workspace-side-width: var(--lab-navigation-rail-width);
 }
 .lab-workspace-scaffold[data-side-mode='hidden'] {
   --lab-workspace-side-width: 0px;
