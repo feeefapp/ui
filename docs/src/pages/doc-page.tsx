@@ -7,6 +7,8 @@ import { Code } from '../blocks/code'
 import { Example } from '../blocks/example'
 import { ApiTable } from '../blocks/api-table'
 import { Toc } from '../shell/toc'
+import { dartSourceFor } from '../api'
+import { useDocsSettings } from '../settings'
 
 const REPO = 'https://github.com/feeefapp/ui/blob/main/'
 
@@ -14,6 +16,11 @@ export function DocPageView({ route }: { route: Extract<Route, { kind: 'page' }>
   const { page, tab } = route
   const section = SECTIONS.find((s) => s.id === page.section)!
   const { Overview } = page
+  const { settings } = useDocsSettings()
+  const flutter = settings.code === 'flutter'
+  // Flutter apps import the one library; its source mirrors the kit's path in flutter/lib.
+  const importLine = page.importLine && (flutter ? "import 'package:feeef_ui/feeef_ui.dart';" : page.importLine)
+  const source = page.source && (flutter ? dartSourceFor(page.source) : page.source)
   return (
     <div className="docs-layout">
       <article className="docs-page">
@@ -33,12 +40,12 @@ export function DocPageView({ route }: { route: Extract<Route, { kind: 'page' }>
               for completeness and will move to their own package; avoid them in new apps.
             </p>
           )}
-          {(page.importLine || page.source) && (
+          {(importLine || source) && (
             <div className="docs-page-meta">
-              {page.importLine && <Code code={page.importLine} title="Import" />}
-              {page.source && (
+              {importLine && <Code code={importLine} lang={flutter ? 'dart' : 'tsx'} title="Import" />}
+              {source && (
                 <Button variant="text" controlSize="compact" asChild>
-                  <a href={REPO + page.source} target="_blank" rel="noreferrer">
+                  <a href={REPO + source} target="_blank" rel="noreferrer">
                     View source <ExternalLink size={16} />
                   </a>
                 </Button>

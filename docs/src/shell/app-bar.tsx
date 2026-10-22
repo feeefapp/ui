@@ -11,6 +11,7 @@ import { ScaffoldAppBar, ScaffoldToggleButton, useScaffold } from '@feeef.dev/ui
 import { Link, navigate } from '../router'
 import { pageHref, type ComponentTab, type Route } from '../registry'
 import { Customize } from './customize'
+import { PlatformSwitch, VersionMenu } from './platform'
 import { useViewport } from './viewport'
 
 const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
@@ -134,6 +135,12 @@ export function DocsAppBar({
       trailing={
         <>
           {views}
+          {!compact && (
+            <ToolbarGroup label="Docs platform and version" className="docs-app-bar-platform">
+              <PlatformSwitch />
+              <VersionMenu />
+            </ToolbarGroup>
+          )}
           {compact ? (
             <ToolbarGroup label="Appearance" className="docs-app-bar-tools">
               <Customize />

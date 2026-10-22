@@ -2,13 +2,16 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath } from 'node:url'
 import { apiPlugin } from './plugins/api'
+import { dartApiPlugin } from './plugins/dart-api'
+import { versionsPlugin } from './plugins/versions'
 
 const src = fileURLToPath(new URL('../src', import.meta.url))
+const ui = fileURLToPath(new URL('..', import.meta.url))
 
 /** Docs import the kit exactly like consumers do; `@feeef.dev/ui/*` resolves to `src/`. */
 export default defineConfig({
   root: fileURLToPath(new URL('.', import.meta.url)),
-  plugins: [react(), apiPlugin(src)],
+  plugins: [react(), apiPlugin(src), dartApiPlugin(`${ui}flutter/lib`, ui), versionsPlugin(ui)],
   resolve: {
     alias: [
       { find: /^@feeef\.dev\/ui$/, replacement: `${src}/index.ts` },

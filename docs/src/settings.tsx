@@ -19,17 +19,25 @@ type SettingsPatch = { locale?: DocsSettings['locale']; code?: DocsSettings['cod
 const DEFAULTS: DocsSettings = { locale: 'en', code: 'react', theme: { ...THEME_DEFAULTS } }
 const KEY = 'feeef-ui-docs-settings'
 
+/** `?platform=flutter|react` opens the docs on that kit (shareable links). */
+function platformFromUrl(): DocsSettings['code'] | null {
+  if (typeof location === 'undefined') return null
+  const value = new URLSearchParams(location.search).get('platform')
+  return value === 'flutter' || value === 'react' ? value : null
+}
+
 function read(): DocsSettings {
+  const platform = platformFromUrl()
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) ?? 'null')
     if (saved && typeof saved === 'object')
       return {
         locale: saved.locale ?? 'en',
-        code: saved.code === 'flutter' ? 'flutter' : 'react',
+        code: platform ?? (saved.code === 'flutter' ? 'flutter' : 'react'),
         theme: { ...DEFAULTS.theme, ...saved.theme },
       }
   } catch {}
-  return DEFAULTS
+  return platform ? { ...DEFAULTS, code: platform } : DEFAULTS
 }
 
 const Context = createContext<{
@@ -53,7 +61,8 @@ export function DocsSettingsProvider({ children }: { children: ReactNode }) {
       dir,
       update: (patch: SettingsPatch) =>
         setSettings((s) => ({ ...s, ...patch, theme: { ...s.theme, ...patch.theme } })),
-      reset: () => setSettings(DEFAULTS),
+      // The platform is a reading choice, not a demo setting: reset keeps it.
+      reset: () => setSettings((s) => ({ ...DEFAULTS, code: s.code })),
     }),
     [settings, dir]
   )

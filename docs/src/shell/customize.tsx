@@ -8,6 +8,7 @@ import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 import { useTheme, type ThemeMode } from '@feeef.dev/ui/theme'
 import type { Density, GlassRenderer, GlassStyle, Palette } from '@feeef.dev/ui/theme-config'
 import { useDocsSettings, type DocsSettings } from '../settings'
+import { PlatformSwitch, VersionMenu } from './platform'
 
 /** Preset primaries; `null` is the palette's own color (Feeef green, or black in mono). */
 const COLORS: { name: string; value: string | null }[] = [
@@ -113,6 +114,12 @@ export function Customize() {
               Applies to every demo: these are <code>Provider</code>’s <code>theme</code> and{' '}
               <code>i18n</code> props. The demo language also sets the demos’ direction.
             </p>
+            <Row label="Code">
+              <PlatformSwitch appearance="grouped" />
+            </Row>
+            <Row label="Version">
+              <VersionMenu />
+            </Row>
             <Row label="Mode">
               <SegmentedControl<ThemeMode>
                 label="Mode"

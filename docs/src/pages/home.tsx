@@ -7,9 +7,15 @@ import { SlideSwitch, Slider } from '@feeef.dev/ui/primitives/slider'
 import { Checkbox } from '@feeef.dev/ui/primitives/choice'
 import { Code } from '../blocks/code'
 import { navigate } from '../router'
+import { useDocsSettings } from '../settings'
 import pkg from '../../../package.json'
 
-const INSTALL = `npm install "@feeef.dev/ui@github:feeefapp/ui#v${pkg.version}"`
+const INSTALL = {
+  react: `npm install "@feeef.dev/ui@github:feeefapp/ui#v${pkg.version}"`,
+  flutter: `# pubspec.yaml
+feeef_ui:
+  git: { url: git@github.com:feeefapp/ui.git, path: flutter, ref: v${pkg.version} }`,
+}
 
 const FEATURES = [
   {
@@ -29,21 +35,25 @@ const FEATURES = [
   },
   {
     icon: Boxes,
-    title: 'Framework-neutral',
-    text: 'Plain React 19. Routing, storage and clipboard are injected services, so it runs in Inertia, Next.js or Vite.',
+    title: 'React and Flutter',
+    text: 'Every component has a Flutter twin with the same name and props. Each example shows both, and the two are compared pixel by pixel.',
   },
 ]
 
 export function HomePage() {
+  const { settings } = useDocsSettings()
+  const flutter = settings.code === 'flutter'
   return (
     <div className="docs-home">
       <section className="docs-hero">
         <div className="docs-hero-text">
-          <p className="docs-eyebrow">@feeef.dev/ui · v{pkg.version}</p>
-          <h1>The Feeef web UI kit</h1>
+          <p className="docs-eyebrow">
+            {flutter ? 'feeef_ui' : '@feeef.dev/ui'} · v{pkg.version}
+          </p>
+          <h1>The Feeef UI kit</h1>
           <p>
-            The components, tokens and layout system behind Feeef Lab and the Cloud console. One
-            design language for every Feeef web app.
+            The components, tokens and layout system behind Feeef Lab and the Cloud console, for React
+            and for Flutter. One design language for every Feeef app, on the web and on devices.
           </p>
           <div className="docs-hero-actions">
             <Button variant="filled" onClick={() => navigate('/get-started/introduction')}>
@@ -53,7 +63,11 @@ export function HomePage() {
               Browse components
             </Button>
           </div>
-          <Code code={INSTALL} lang="bash" title="Install" />
+          <Code
+            code={INSTALL[settings.code]}
+            lang={flutter ? 'yaml' : 'bash'}
+            title={flutter ? 'Install (Flutter)' : 'Install (React)'}
+          />
         </div>
         <HeroDemo />
       </section>

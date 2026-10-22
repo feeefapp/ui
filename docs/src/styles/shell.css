@@ -274,3 +274,48 @@ html[data-lab-theme] .docs-app-bar-brand.lab-toolbar-group {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ---------- Platform and version (app bar) ---------- */
+.docs-version-trigger {
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.docs-version-next {
+  padding: 1px 6px;
+  border-radius: calc(6px * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
+  background: color-mix(in srgb, var(--lab-primary) 24%, transparent);
+  color: var(--lab-ink);
+  font-size: 11px;
+  line-height: 16px;
+}
+.docs-version-menu {
+  min-width: 220px;
+}
+.docs-version-heading {
+  padding: 8px 12px 4px;
+  color: var(--lab-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.docs-version-separator {
+  height: 1px;
+  margin: 4px 8px;
+  background: var(--lab-line);
+}
+.docs-version-name {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.docs-version-name small {
+  color: var(--lab-muted);
+  font-size: 12px;
+}
+.docs-version-menu [data-disabled] {
+  opacity: 1;
+  color: var(--lab-ink);
+}

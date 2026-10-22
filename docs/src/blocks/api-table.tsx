@@ -1,4 +1,5 @@
-import { API, inheritedLabel, type ApiComponent } from '../api'
+import { API, DART_API, inheritedLabel, type ApiComponent } from '../api'
+import { useDocsSettings } from '../settings'
 import { C } from './code'
 import { Heading } from './prose'
 
@@ -6,14 +7,21 @@ function Type({ value }: { value: string }) {
   return <code className="docs-type">{value.replace(/"/g, "'")}</code>
 }
 
-/** One component's props, generated from its TypeScript source. */
+/**
+ * One component's props, generated from its TypeScript source, or from the Flutter twin's Dart
+ * source when the reader picked Flutter (constructor parameters, their types and doc comments).
+ */
 export function ApiTable({ name }: { name: string }) {
-  const doc: ApiComponent | undefined = API[name]
+  const { settings } = useDocsSettings()
+  const flutter = settings.code === 'flutter'
+  const doc: ApiComponent | undefined = (flutter ? DART_API : API)[name]
   if (!doc) {
     return (
       <section className="docs-api">
         <Heading id={`api-${name}`}>{name}</Heading>
-        <p className="docs-muted">No props found for {name}.</p>
+        <p className="docs-muted">
+          {flutter ? `${name} has no Flutter widget of the same name.` : `No props found for ${name}.`}
+        </p>
       </section>
     )
   }
@@ -26,7 +34,7 @@ export function ApiTable({ name }: { name: string }) {
           <table className="docs-table docs-props">
             <thead>
               <tr>
-                <th scope="col">Prop</th>
+                <th scope="col">{flutter ? 'Parameter' : 'Prop'}</th>
                 <th scope="col">Type</th>
                 <th scope="col">Default</th>
                 <th scope="col">Description</th>

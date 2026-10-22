@@ -2,9 +2,96 @@ import { definePage } from '../../../src/model'
 import { C, Code } from '../../../src/blocks/code'
 import { Callout, Section, Table } from '../../../src/blocks/prose'
 import { Link } from '../../../src/router'
+import { useDocsSettings } from '../../../src/settings'
 import pkg from '../../../../package.json'
 
+/** The same three steps for the Flutter twin (the platform switch at the top picks). */
+function FlutterSteps() {
+  return (
+    <>
+      <Section title="Install">
+        <p>
+          The Flutter package lives in the same repository, in <C>flutter/</C>. Pin the same tag as the
+          web kit; it needs only Flutter’s own <C>widgets</C> library.
+        </p>
+        <Code
+          lang="yaml"
+          title="pubspec.yaml"
+          code={`dependencies:
+  feeef_ui:
+    git:
+      url: git@github.com:feeefapp/ui.git
+      path: flutter
+      ref: v${pkg.version}`}
+        />
+      </Section>
+
+      <Section title="Add the providers">
+        <p>
+          <C>I18nProvider</C> carries the locale and the kit’s strings (and with them the direction);{' '}
+          <C>ThemeProvider</C> carries the same theme config as the React <C>Provider</C>.
+        </p>
+        <Code
+          lang="dart"
+          code={`import 'package:feeef_ui/feeef_ui.dart' as ui;
+import 'package:flutter/widgets.dart';
+
+Widget root(Widget app) => ui.I18nProvider(
+  locale: 'en',
+  child: ui.ThemeProvider(
+    config: const ui.ThemeConfig(palette: .lab, density: .comfortable, radius: 1),
+    child: app,
+  ),
+);`}
+        />
+      </Section>
+
+      <Section title="Use a component">
+        <p>
+          Everything is exported from one library. Labels and icons are widgets, like children in React.
+          See <Link to="/get-started/flutter">Flutter</Link> for how the React props map.
+        </p>
+        <Code
+          lang="dart"
+          code={`class Signup extends StatelessWidget {
+  const Signup({super.key, required this.create});
+  final void Function(Map<String, String> values) create;
+
+  @override
+  Widget build(BuildContext context) => ui.FieldForm(
+    onSubmit: create,
+    child: Builder(
+      builder: (context) => Column(
+        spacing: 16,
+        children: [
+          const ui.TextField(name: 'email', hint: 'Email', keyboardType: TextInputType.emailAddress, required: true),
+          ui.Button(
+            variant: .filled,
+            onClick: () => ui.FieldForm.of(context).submit(),
+            children: const [Text('Create account')],
+          ),
+        ],
+      ),
+    ),
+  );
+}`}
+        />
+      </Section>
+    </>
+  )
+}
+
 function Overview() {
+  const { settings } = useDocsSettings()
+  return (
+    <>
+      {settings.code === 'flutter' ? <FlutterSteps /> : <ReactSteps />}
+      <Rest />
+    </>
+  )
+}
+
+function ReactSteps() {
   return (
     <>
       <Section title="Install">
@@ -69,6 +156,13 @@ export function Signup() {
         />
       </Section>
 
+    </>
+  )
+}
+
+function Rest() {
+  return (
+    <>
       <Section title="What’s in the kit">
         <Table
           head={['Area', 'Modules']}
@@ -100,7 +194,7 @@ export default definePage({
   id: 'introduction',
   title: 'Introduction',
   order: 1,
-  summary: 'Install @feeef.dev/ui, add the provider and render your first component.',
+  summary: 'Install the kit (React or Flutter), add the provider and render your first component.',
   keywords: ['install', 'setup', 'quick start', 'provider'],
   Overview,
 })
