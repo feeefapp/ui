@@ -7,12 +7,11 @@ import '../brand/geometry.dart';
 import '../glass/container.dart';
 import '../glass/member.dart';
 import '../primitives/raw_input.dart';
+import '../scaffold.dart' show GlassSurface;
 import '../theme.dart';
 import '../theme/tokens.dart' show MotionTokens;
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
-import '../theme/light_edge.dart';
-import '../theme/surfaces.dart';
 import 'composer_layout.dart';
 
 export 'composer_layout.dart';
@@ -101,17 +100,8 @@ class _ComposerCardState extends State<ComposerCard> {
       child: GlassMemberBox(
         motion: GlassMotion.follow,
         radius: radius,
-        standalone: (child) => CustomPaint(
-          painter: _CardPainter(
-            radius: radius,
-            fill: mixSrgb(c.surface, 0.88, transparent),
-            line: c.line,
-            edgeLight: c.glassEdgeLight,
-            edgeLow: c.glassEdgeLow,
-            shadow: glassShadowColor(theme.brightness),
-          ),
-          child: child,
-        ),
+        // On its own the card is the kit's glass material, like any other floating glass.
+        standalone: (child) => GlassSurface(radius: radius, child: child),
         child: content,
       ),
     );
@@ -122,41 +112,6 @@ class _ComposerCardState extends State<ComposerCard> {
       child: GlassScope(child: card),
     );
   }
-}
-
-/// `.lab-pc-card` painted on its own (outside a glass container).
-class _CardPainter extends CustomPainter {
-  _CardPainter({
-    required this.radius,
-    required this.fill,
-    required this.line,
-    required this.edgeLight,
-    required this.edgeLow,
-    required this.shadow,
-  });
-  final double radius;
-  final Color fill, line, edgeLight, edgeLow, shadow;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    paintFloatingSurface(
-      canvas,
-      size,
-      radius,
-      fill: fill,
-      line: line,
-      edgeLow: edgeLow,
-      shadow: shadow,
-    );
-    paintLightEdge(canvas, size, radius, light: edgeLight, low: edgeLow);
-  }
-
-  @override
-  bool shouldRepaint(_CardPainter old) =>
-      old.radius != radius ||
-      old.fill != fill ||
-      old.line != line ||
-      old.shadow != shadow;
 }
 
 /// Focus border and 4px ring, and the dashed drop outline (2px, 3px outside).

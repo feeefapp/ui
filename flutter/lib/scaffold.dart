@@ -7,6 +7,7 @@ import 'brand/geometry.dart';
 import 'glass/material.dart';
 import 'glass/container.dart';
 import 'glass/member.dart';
+import 'layout/size_reporter.dart';
 import 'theme.dart';
 import 'theme/light_edge.dart';
 import 'theme/surfaces.dart';
@@ -82,7 +83,7 @@ class _GlassGroupState extends State<GlassGroup> {
       motion: widget.glassMotion,
       hidden: widget.glassHidden,
       radius: radius,
-      standalone: (child) => _StandaloneGlass(radius: radius, child: child),
+      standalone: (child) => GlassSurface(radius: radius, child: child),
       // The CSS border stays in the layout even when the container paints the glass.
       child: Padding(
         padding: const EdgeInsets.all(1),
@@ -105,14 +106,37 @@ class _GlassGroupState extends State<GlassGroup> {
 /// The element a [GlassGroup] stands for (the web kit's `as`).
 enum SurfaceTag { div, header, aside, nav, section, footer }
 
-/// `.lab-glass-group.lab-light-edge` painted by one bubble on its own.
-class _StandaloneGlass extends StatelessWidget {
-  const _StandaloneGlass({required this.radius, required this.child});
+/// The kit's glass material on one surface of its own (outside a [GlassContainer]): blur,
+/// saturation, veil, rim and shadow from the measured model (`glass/material.dart`). It picks
+/// control-sized or panel-sized glass from its shorter side, like the web scene. [GlassGroup]
+/// uses it for a lone bubble; use it for any floating glass surface (a composer card, a rail).
+class GlassSurface extends StatefulWidget {
+  const GlassSurface({super.key, required this.radius, required this.child});
+
+  /// Corner radius (the kit's continuous corners).
   final double radius;
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  State<GlassSurface> createState() => _GlassSurfaceState();
+}
+
+class _GlassSurfaceState extends State<GlassSurface> {
+  double _side = 0;
+
+  @override
+  Widget build(BuildContext context) => SizeReporter(
+    onSize: (size) {
+      final side = math.min(size.width, size.height);
+      if ((side - _side).abs() >= 1) setState(() => _side = side);
+    },
+    child: _material(context),
+  );
+
+  Widget _material(BuildContext context) {
+    final radius = widget.radius;
+    final child = widget.child;
+    final size = glassSize(_side);
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
     final style = theme.config.glass;
@@ -122,7 +146,7 @@ class _StandaloneGlass extends StatelessWidget {
     final fill = style == GlassStyle.solid
         ? c.surface
         : blurred
-        ? c.glassFill
+        ? (size == GlassSize.small ? c.glassFill : c.glassFillLarge)
         : c.glassFillFlat;
     final painted = CustomPaint(
       painter: _GlassGroupPainter(
@@ -144,19 +168,19 @@ class _StandaloneGlass extends StatelessWidget {
           child: ClipPath(
             clipper: _SuperellipseClipper(radius),
             child: BackdropFilter(
-              // `--lab-glass-blur` and `--lab-glass-saturate`: the control-sized material.
+              // `--lab-glass-blur` and `--lab-glass-saturate`, by size.
               filter: ui.ImageFilter.compose(
                 outer: ColorFilter.matrix(
                   saturateMatrix(
                     glassSaturate(
                       dark: theme.brightness == Brightness.dark,
-                      size: GlassSize.small,
+                      size: size,
                     ),
                   ),
                 ),
                 inner: ui.ImageFilter.blur(
-                  sigmaX: glassBlurMin,
-                  sigmaY: glassBlurMin,
+                  sigmaX: glassBlur(_side),
+                  sigmaY: glassBlur(_side),
                 ),
               ),
               child: const SizedBox.expand(),

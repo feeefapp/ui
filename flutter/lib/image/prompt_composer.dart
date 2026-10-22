@@ -951,7 +951,8 @@ class _MenuSurface extends StatelessWidget {
     final c = theme.colors;
     return CustomPaint(
       painter: _MenuPainter(
-        fill: mixSrgb(c.surface, 0.95, transparent),
+        // Solid, like every kit menu (PopoverSurface).
+        fill: c.surface,
         line: c.line,
         edgeLight: c.glassEdgeLight,
         edgeLow: c.glassEdgeLow,

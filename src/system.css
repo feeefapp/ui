@@ -55,6 +55,8 @@ html[data-lab-theme] {
   --lab-glass-saturate: 5.5;
   --lab-glass-saturate-large: 2.2;
   --lab-glass-blur: 2.9px;
+  /* Panel-sized glass (taller than 72px): the measured blur grows to 5.2px. */
+  --lab-glass-blur-large: 5.2px;
   /* Glass without backdrop blur (ThemeConfig glassRenderer 'fill'): denser, so text behind stays quiet. */
   --lab-glass-fill-flat: color-mix(in srgb, var(--lab-surface) 93%, transparent);
   /* Rim light: a base line all round (low) plus light at both ends of the light axis (light). */

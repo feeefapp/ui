@@ -46,9 +46,8 @@
   border: 1px solid var(--pc-line);
   border-radius: calc(22px * var(--lab-corner-scale, 1));
   corner-shape: superellipse(1.5);
-  background: color-mix(in srgb, var(--pc-surface) 95%, transparent);
-  -webkit-backdrop-filter: blur(18px);
-  backdrop-filter: blur(18px);
+  /* Menus are solid, like every kit menu (PopoverSurface): content stays readable over anything. */
+  background: var(--pc-surface);
   box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
   color: var(--pc-ink);
 }

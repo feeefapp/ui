@@ -45,9 +45,10 @@ html[data-lab-theme] .lab-workspace-rail {
   border: 1px solid var(--lab-line);
   border-radius: var(--lab-workspace-panel-radius, calc(28px * var(--lab-corner-scale, 1)));
   corner-shape: superellipse(1.5);
-  background: color-mix(in srgb, var(--lab-surface) 80%, transparent);
-  -webkit-backdrop-filter: blur(20px) saturate(1.2);
-  backdrop-filter: blur(20px) saturate(1.2);
+  /* The kit's panel-sized glass material (research/liquid-glass). */
+  background: var(--lab-glass-fill-large);
+  -webkit-backdrop-filter: blur(var(--lab-glass-blur-large)) saturate(var(--lab-glass-saturate-large));
+  backdrop-filter: blur(var(--lab-glass-blur-large)) saturate(var(--lab-glass-saturate-large));
   box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
 }
 html[data-lab-theme] .lab-workspace-toolgroup {
