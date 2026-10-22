@@ -41,6 +41,7 @@ const VARIANTS = [
   { theme: 'dark', palette: 'lab', density: 'comfortable' },
   { theme: 'light', palette: 'mono', density: 'comfortable' },
   { theme: 'light', palette: 'lab', density: 'compact' },
+  { theme: 'light', palette: 'lab', density: 'comfortable', dir: 'rtl' },
 ]
 
 const react = await serve(join(here, 'dist'))
@@ -58,18 +59,18 @@ const cases = []
 for (const scene of SCENES)
   for (const v of VARIANTS) {
     const query = new URLSearchParams({ scene, ...v }).toString()
-    const name = `${scene}-${v.theme}-${v.palette}-${v.density}`
+    const name = `${scene}-${v.theme}-${v.palette}-${v.density}${v.dir ? `-${v.dir}` : ''}`
     await page.goto(`http://127.0.0.1:${react.address().port}/?${query}`, { waitUntil: 'networkidle0' })
     await page.evaluate(() => document.fonts.ready)
     await new Promise((r) => setTimeout(r, 400))
     const box = VIEWPORT_SCENES.has(scene)
       ? { x: 0, y: 0, width: 800, height: 700 }
       : await page.$eval('#stage', (el) => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height } })
-    await page.screenshot({ path: join(out, `${name}-react.png`), clip: box })
+    await page.screenshot({ path: join(out, `${name}-react.png`), ...(VIEWPORT_SCENES.has(scene) ? {} : { clip: box }) })
     await page.goto(`http://127.0.0.1:${flutter.address().port}/?${query}`, { waitUntil: 'networkidle0' })
     await page.waitForSelector('flutter-view, flt-glass-pane', { timeout: 20000 })
     await new Promise((r) => setTimeout(r, 1500))
-    await page.screenshot({ path: join(out, `${name}-flutter.png`), clip: box })
+    await page.screenshot({ path: join(out, `${name}-flutter.png`), ...(VIEWPORT_SCENES.has(scene) ? {} : { clip: box }) })
     cases.push({ name, height: Math.round(box.height) })
   }
 await browser.close()

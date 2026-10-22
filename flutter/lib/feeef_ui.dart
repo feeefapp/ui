@@ -17,6 +17,8 @@ export 'glass/container.dart';
 export 'glass/member.dart';
 export 'glass/geometry.dart' show GlassShape, GlassPath, glassPaths;
 export 'brand/pixel_loader.dart';
+export 'i18n/i18n.dart';
+export 'i18n/i18n_core.dart';
 export 'icons/lucide.dart';
 export 'primitives/badge.dart';
 export 'primitives/button.dart';

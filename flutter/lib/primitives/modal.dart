@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
 import '../glass/container.dart';
+import '../i18n/i18n.dart';
 import '../icons/lucide.dart';
 import '../scroll/scroll_area.dart';
 import '../theme.dart';
@@ -28,7 +29,6 @@ class Modal extends StatefulWidget {
     this.top,
     this.bottom,
     this.initialFocus,
-    this.closeLabel = 'Close',
     required this.child,
   });
 
@@ -62,8 +62,6 @@ class Modal extends StatefulWidget {
   /// Focused once the dialog opens.
   final FocusNode? initialFocus;
 
-  /// Accessible name of the close button.
-  final String closeLabel;
   final Widget child;
 
   @override
@@ -173,7 +171,7 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
               end: 12,
               child: IconButton(
                 variant: ButtonVariant.ghost,
-                ariaLabel: widget.closeLabel,
+                ariaLabel: I18n.of(context).t('lab.common.close'),
                 onClick: open ? widget.close : null,
                 icon: const LucideX(size: 18),
               ),
@@ -331,7 +329,8 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
               IconButton(
                 appearance: ButtonAppearance.toolbar,
                 controlSize: ControlSize.compact,
-                ariaLabel: '${widget.closeLabel} ${widget.label}',
+                ariaLabel: I18n.of(context)
+                    .t('lab.composer.closeLabel', {'label': widget.label}),
                 onClick: widget.open ? widget.close : null,
                 icon: const LucideX(size: 20),
               ),

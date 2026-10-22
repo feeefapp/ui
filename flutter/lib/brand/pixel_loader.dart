@@ -1,5 +1,7 @@
 import 'package:flutter/widgets.dart';
 
+import '../i18n/i18n.dart';
+
 /// A nine-pixel loading wave: the twin of `PixelLoader` in `@feeef.dev/ui/pixel-art`. Squares in
 /// the current text colour light up in a diagonal wave (1.2s, each square delayed by its column
 /// and row). Use [decorative] when nearby text already announces the work.
@@ -7,7 +9,7 @@ class PixelLoader extends StatefulWidget {
   const PixelLoader({
     super.key,
     this.size = 20,
-    this.label = 'Loading…',
+    this.label,
     this.decorative = false,
     this.color,
   });
@@ -15,8 +17,8 @@ class PixelLoader extends StatefulWidget {
   /// Width and height in pixels.
   final double size;
 
-  /// Accessible status text.
-  final String label;
+  /// Accessible status text; the localized "Loading…" when null.
+  final String? label;
 
   /// Hides the loader from assistive technology.
   final bool decorative;
@@ -74,7 +76,11 @@ class _PixelLoaderState extends State<PixelLoader>
       ),
     );
     if (widget.decorative) return ExcludeSemantics(child: loader);
-    return Semantics(liveRegion: true, label: widget.label, child: loader);
+    return Semantics(
+      liveRegion: true,
+      label: widget.label ?? I18n.of(context).t('lab.common.loading'),
+      child: loader,
+    );
   }
 }
 

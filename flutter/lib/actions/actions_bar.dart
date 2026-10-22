@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' hide Action;
 
+import '../i18n/i18n.dart';
 import '../icons/lucide.dart';
 import '../layout/size_reporter.dart';
 import '../physics/motion_value.dart';
@@ -45,7 +46,7 @@ class ActionsBar extends StatefulWidget {
     this.align = ActionsAlign.end,
     this.size = ControlSize.regular,
     this.gap = 4,
-    this.overflowLabel = 'More actions',
+    this.overflowLabel,
     this.onActionError,
   });
 
@@ -63,7 +64,7 @@ class ActionsBar extends StatefulWidget {
   final double gap;
 
   /// Accessible name of the overflow trigger.
-  final String overflowLabel;
+  final String? overflowLabel;
 
   /// Application effects are injected; this primitive never calls business APIs.
   final void Function(Object error, Action action)? onActionError;
@@ -218,6 +219,8 @@ class _ActionsBarState extends State<ActionsBar> {
     if (widget.actions.isEmpty) return const SizedBox.shrink();
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
+    final overflowLabel =
+        widget.overflowLabel ?? I18n.of(context).t('lab.common.moreActions');
     final s = theme.sizes;
     final inherited = ActionsWidthProvider.maybeOf(context);
     final compact = widget.size == ControlSize.compact;
@@ -283,13 +286,13 @@ class _ActionsBarState extends State<ActionsBar> {
               KeyedSubtree(
                 key: _moreKey,
                 child: _MenuAnchor(
-                  label: widget.overflowLabel,
+                  label: overflowLabel,
                   actions: layout.overflow,
                   pending: _pending,
                   execute: _execute,
                   enabled: true,
                   builder: (open) =>
-                      _moreButton(widget.size, widget.overflowLabel, open),
+                      _moreButton(widget.size, overflowLabel, open),
                 ),
               ),
           ],
@@ -345,7 +348,7 @@ class _ActionsBarState extends State<ActionsBar> {
                                   },
                                   child: _moreButton(
                                     widget.size,
-                                    widget.overflowLabel,
+                                    overflowLabel,
                                     null,
                                   ),
                                 ),
