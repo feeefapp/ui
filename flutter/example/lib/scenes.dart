@@ -827,6 +827,148 @@ final Map<String, List<Widget> Function()> scenes = {
       },
     ),
   ],
+  'scaffold': () => [
+    Builder(
+      builder: (context) {
+        final theme = ThemeProvider.of(context);
+        final c = theme.colors;
+        return Container(
+          height: 420,
+          decoration: ShapeDecoration(
+            color: c.ground,
+            shape: SuperellipseBorder(
+              radius: theme.sizes.radiusPanel,
+              side: BorderSide(color: c.line),
+            ),
+          ),
+          child: ClipPath(
+            clipper: ShapeBorderClipper(
+              shape: SuperellipseBorder(radius: theme.sizes.radiusPanel - 1),
+            ),
+            child: Scaffold(
+              contentLabel: 'Orders',
+              compactBreakpoint: 400,
+              side: ScaffoldSide(
+                leading: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 44),
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(start: 10),
+                    child: Row(
+                      spacing: 8,
+                      children: [
+                        const Expanded(
+                          child: CssBaseline(
+                            lineHeight: 20,
+                            child: Text(
+                              'Atlas Store',
+                              style: TextStyle(
+                                fontSize: 15,
+                                height: 20 / 15,
+                                leadingDistribution:
+                                    TextLeadingDistribution.even,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const ScaffoldToggleButton(),
+                      ],
+                    ),
+                  ),
+                ),
+                child: DefaultTextStyle.merge(
+                  style: const TextStyle(
+                    fontSize: 14,
+                    height: 20 / 14,
+                    leadingDistribution: TextLeadingDistribution.even,
+                  ),
+                  child: Column(
+                    spacing: 2,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: const [
+                      NavigationItem(
+                        compact: false,
+                        label: 'Orders',
+                        icon: LucideShoppingBag(),
+                        active: true,
+                      ),
+                      NavigationItem(
+                        compact: false,
+                        label: 'Products',
+                        icon: LucidePackage(),
+                      ),
+                      NavigationItem(
+                        compact: false,
+                        label: 'Deliveries',
+                        icon: LucideTruck(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              appBar: const ScaffoldAppBar(
+                child: ToolbarGroup(
+                  label: 'Current page',
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: CssBaseline(
+                        lineHeight: 20,
+                        child: Text(
+                          'Orders',
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 20 / 14,
+                            leadingDistribution: TextLeadingDistribution.even,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              child: Column(
+                spacing: 8,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final r in const [
+                    '#1048 · Amina Benali',
+                    '#1047 · Yacine Haddad',
+                    '#1046 · Sara Meziane',
+                  ])
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      decoration: ShapeDecoration(
+                        color: c.surface,
+                        shape: SuperellipseBorder(
+                          radius: theme.sizes.radiusSmall,
+                          side: BorderSide(color: c.line),
+                        ),
+                      ),
+                      child: CssBaseline(
+                        lineHeight: 20,
+                        child: Text(
+                          r,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            height: 20 / 13,
+                            leadingDistribution: TextLeadingDistribution.even,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    ),
+  ],
   'sheet': () => [
     Builder(
       builder: (context) => Sheet(

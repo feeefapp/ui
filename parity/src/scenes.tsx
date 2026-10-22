@@ -18,6 +18,10 @@ import { Modal } from '@feeef.dev/ui/primitives/modal'
 import { Carousel, NavigationPage, NavigationStack, Sheet, SplitView, TabView } from '@feeef.dev/ui/containers'
 import { LucidePackage, LucideUsers, LucideSettings } from 'lucide-react'
 import { Select, Option } from '@feeef.dev/ui/primitives/select'
+import { Scaffold, ScaffoldAppBar, ScaffoldSide, ScaffoldToggleButton } from '@feeef.dev/ui/workspace/scaffold'
+import { NavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
+import * as Tooltip from '@radix-ui/react-tooltip'
+import { LucideShoppingBag, LucideTruck as Truck2 } from 'lucide-react'
 import { ListSection, ListRow } from '@feeef.dev/ui/primitives/list'
 import { LucideStore, LucideArchive } from 'lucide-react'
 import { ActionsBar } from '@feeef.dev/ui/actions'
@@ -378,6 +382,45 @@ export const SCENES: Record<string, () => ReactNode> = {
         }
       />
     </div>
+  ),
+  scaffold: () => (
+    <Tooltip.Provider>
+      <div style={{ alignSelf: 'stretch', height: 420, overflow: 'hidden', border: '1px solid var(--lab-line)', borderRadius: 'var(--lab-radius-panel)', background: 'var(--lab-ground)' } as React.CSSProperties}>
+        <Scaffold
+          contentLabel="Orders"
+          compactBreakpoint={400}
+          side={
+            <ScaffoldSide
+              leading={
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minHeight: 44, paddingInlineStart: 10, font: "600 15px/20px 'Parity Plex'" }}>
+                  <span>Atlas Store</span>
+                  <ScaffoldToggleButton />
+                </div>
+              }
+            >
+              <nav aria-label="Store pages" style={{ display: 'grid', gap: 2, font: "14px/20px 'Parity Plex'" }}>
+                <NavigationItem compact={false} label="Orders" icon={<LucideShoppingBag />} active />
+                <NavigationItem compact={false} label="Products" icon={<LucidePackage />} />
+                <NavigationItem compact={false} label="Deliveries" icon={<Truck2 />} />
+              </nav>
+            </ScaffoldSide>
+          }
+          appBar={
+            <ScaffoldAppBar>
+              <ToolbarGroup label="Current page">
+                <span style={{ paddingInline: 12, font: "600 14px/20px 'Parity Plex'" }}>Orders</span>
+              </ToolbarGroup>
+            </ScaffoldAppBar>
+          }
+        >
+          <div style={{ display: 'grid', gap: 8 }}>
+            {['#1048 · Amina Benali', '#1047 · Yacine Haddad', '#1046 · Sara Meziane'].map((r) => (
+              <div key={r} style={{ padding: '12px 14px', border: '1px solid var(--lab-line)', borderRadius: 'var(--lab-radius-small)', background: 'var(--lab-surface)', font: "13px/20px 'Parity Plex'" }}>{r}</div>
+            ))}
+          </div>
+        </Scaffold>
+      </div>
+    </Tooltip.Provider>
   ),
   sheet: () => (
     <Sheet open onOpenChange={() => {}} label="Order #1042" detents={['medium']} regular="sheet">

@@ -230,6 +230,13 @@ class SizeTokens {
     Density.compact => 34,
     Density.thin => 28,
   };
+
+  /// `--lab-row-height`: navigation rows and list-like controls.
+  double get rowHeight => switch (density) {
+    Density.comfortable => 44,
+    Density.compact => 32,
+    Density.thin => 26,
+  };
   double get controlCompact => switch (density) {
     Density.comfortable => 40,
     Density.compact => 30,

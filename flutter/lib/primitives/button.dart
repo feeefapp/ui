@@ -91,6 +91,7 @@ class Button extends StatefulWidget {
     this.autofocus = false,
     this.padding,
     this.gap = 6,
+    this.alignment,
     required this.children,
   });
 
@@ -129,6 +130,10 @@ class Button extends StatefulWidget {
 
   /// Space between the content's icons and text.
   final double gap;
+
+  /// Fills the available width with the content placed here (a full-width row such as a
+  /// navigation item); null shrink-wraps the content, centred.
+  final AlignmentDirectional? alignment;
 
   /// Content: icons and text, laid out in a row.
   final List<Widget> children;
@@ -264,7 +269,9 @@ class _ButtonState extends State<Button> {
       focus: _focusVisible ? c.focus : null,
       child: SizedBox(
         height: height,
-        width: icon ? height : null,
+        width: icon
+            ? height
+            : (widget.alignment != null ? double.infinity : null),
         child: Padding(
           // CSS boxes are border-box with a 1px border: it adds to the padding.
           padding: icon
@@ -274,8 +281,9 @@ class _ButtonState extends State<Button> {
                       (widget.padding?.start ?? (compact ? 14 : s.space4)) + 1,
                   end: (widget.padding?.end ?? (compact ? 14 : s.space4)) + 1,
                 ),
-          child: Center(
-            widthFactor: 1,
+          child: Align(
+            alignment: widget.alignment ?? Alignment.center,
+            widthFactor: widget.alignment != null ? null : 1,
             child: IconTheme.merge(
               data: IconThemeData(size: icon ? 20 : 18, color: ink),
               child: DefaultTextStyle.merge(
