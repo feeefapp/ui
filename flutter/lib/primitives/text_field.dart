@@ -518,6 +518,8 @@ class TextField extends StatefulWidget {
     this.label,
     this.hint,
     this.placeholder,
+    this.ariaLabel,
+    this.name,
     this.controlSize = ControlSize.regular,
     this.variant = ControlVariant.outlined,
     this.labelStyle = FieldLabelStyle.outlined,
@@ -537,6 +539,8 @@ class TextField extends StatefulWidget {
     this.disabled = false,
     this.readOnly = false,
     this.required = false,
+    this.requiredMessage = 'Fill in this field.',
+    this.minLength,
     this.maxLength,
     this.multiline = false,
     this.minLines = 1,
@@ -557,6 +561,12 @@ class TextField extends StatefulWidget {
 
   /// Shown in the empty field when there is no [hint] or [label].
   final String? placeholder;
+
+  /// Accessible name when the field has no [hint] or [label] (the web `aria-label`).
+  final String? ariaLabel;
+
+  /// Name the value is submitted under in a [FieldForm].
+  final String? name;
   final ControlSize controlSize;
   final ControlVariant variant;
   final FieldLabelStyle labelStyle;
@@ -582,7 +592,15 @@ class TextField extends StatefulWidget {
 
   /// Called with the visible error message, or null when it clears.
   final ValueChanged<String?>? onValidationChange;
+
+  /// [required] marks the hint and makes an empty field invalid.
   final bool disabled, readOnly, required;
+
+  /// Error shown when a required field is empty.
+  final String requiredMessage;
+
+  /// Fewest characters a non-empty value needs.
+  final int? minLength;
   final int? maxLength;
 
   /// A growing multi-line field instead of a single line.
@@ -609,6 +627,7 @@ class TextField extends StatefulWidget {
 }
 
 class _TextFieldState extends State<TextField>
+    with FieldFormMember<TextField>
     implements TextSelectionGestureDetectorBuilderDelegate {
   late final TextEditingController _ownController = TextEditingController(
     text: widget.value ?? widget.defaultValue ?? '',
@@ -665,12 +684,14 @@ class _TextFieldState extends State<TextField>
   }
 
   String _last = '';
+  bool _resetting = false;
   void _changed() {
     final text = _controller.text;
     if (text == _last) return;
     _last = text;
-    if (widget.validationMode == ValidationMode.change ||
-        (_touched && widget.validationMode == ValidationMode.blur)) {
+    if (!_resetting &&
+        (widget.validationMode == ValidationMode.change ||
+            (_touched && widget.validationMode == ValidationMode.blur))) {
       _validate();
     }
     widget.onValueChange?.call(text);
@@ -684,12 +705,61 @@ class _TextFieldState extends State<TextField>
     }
   }
 
-  void _validate() {
-    final next = widget.validator?.call(_controller.text);
-    final error = next == null || next.isEmpty ? null : next;
+  /// The browser's constraint checks (required, minLength, email), then [TextField.validator].
+  String? _check(String text) {
+    if (widget.required && text.isEmpty) return widget.requiredMessage;
+    final min = widget.minLength;
+    if (min != null && text.isNotEmpty && text.length < min) {
+      return 'Use at least $min characters (now ${text.length}).';
+    }
+    if (widget.keyboardType == TextInputType.emailAddress &&
+        text.isNotEmpty &&
+        !RegExp(r'^[^\s@]+@[^\s@]+$').hasMatch(text)) {
+      return 'Enter an email address, like name@example.com.';
+    }
+    final next = widget.validator?.call(text);
+    return next == null || next.isEmpty ? null : next;
+  }
+
+  void _validate() => _show(_check(_controller.text));
+
+  void _show(String? error) {
     if (error == _validationError) return;
     setState(() => _validationError = error);
     widget.onValidationChange?.call(error);
+  }
+
+  @override
+  String? get formName => widget.name;
+  @override
+  String get formValue => _controller.text;
+  @override
+  bool validateForSubmit() {
+    _touched = true;
+    _validate();
+    return widget.error == null && _check(_controller.text) == null;
+  }
+
+  @override
+  void resetField() {
+    _touched = false;
+    _show(null);
+    final initial = widget.defaultValue ?? '';
+    if (widget.value == null) {
+      _resetting = true;
+      _controller.text = initial;
+      _resetting = false;
+    } else {
+      widget.onValueChange?.call(initial);
+    }
+  }
+
+  @override
+  void focusField() => _focus.requestFocus();
+
+  void _submitted(String text) {
+    widget.onSubmitted?.call(text);
+    if (!widget.multiline) form?.submit();
   }
 
   @override
@@ -769,7 +839,7 @@ class _TextFieldState extends State<TextField>
               if (widget.maxLength != null)
                 LengthLimitingTextInputFormatter(widget.maxLength),
             ],
-            onSubmitted: widget.onSubmitted,
+            onSubmitted: _submitted,
             mouseCursor: SystemMouseCursors.text,
           );
           Widget field = CssBaseline(lineHeight: lineHeight, child: editable);
@@ -796,7 +866,7 @@ class _TextFieldState extends State<TextField>
             );
           }
           return Semantics(
-            label: hint,
+            label: hint ?? widget.ariaLabel ?? widget.placeholder,
             hint: message ?? '',
             textField: true,
             enabled: !widget.disabled,
@@ -805,5 +875,130 @@ class _TextFieldState extends State<TextField>
         },
       ),
     );
+  }
+}
+
+/// What a field gives the [FieldForm] it sits in: its name and value for submission, a check that
+/// reveals its error, a reset to its initial value and focus. [TextField], [Select] and
+/// `NumberField` implement it; custom fields can too, registering with [FieldFormState.register].
+abstract interface class FieldFormEntry {
+  /// The submitted name. Fields without one are validated but not submitted.
+  String? get formName;
+
+  /// The value submitted under [formName].
+  String get formValue;
+
+  /// Runs every check, shows the error, and reports whether the field is valid.
+  bool validateForSubmit();
+
+  /// Restores the initial value and hides the error.
+  void resetField();
+
+  /// Moves focus to the field, for the first invalid one on submit.
+  void focusField();
+}
+
+/// A form around kit fields: the twin of a web `<form>` with `onSubmit` and `onReset`. Call
+/// `FieldForm.of(context).submit()` from a submit button (a single-line [TextField] submits on
+/// Enter, like the browser's implicit submission). An invalid field blocks submission, shows its
+/// error and takes focus; otherwise [onSubmit] gets the named values, like `FormData`.
+class FieldForm extends StatefulWidget {
+  const FieldForm({
+    super.key,
+    this.onSubmit,
+    this.onReset,
+    required this.child,
+  });
+
+  /// Called with `{name: value}` of every named field once all fields are valid.
+  final ValueChanged<Map<String, String>>? onSubmit;
+
+  /// Called after every field went back to its initial value.
+  final VoidCallback? onReset;
+  final Widget child;
+
+  /// The nearest form, or null when the field is not in one.
+  static FieldFormState? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_FieldFormScope>()?.form;
+
+  static FieldFormState of(BuildContext context) {
+    final form = maybeOf(context);
+    assert(form != null, 'FieldForm.of() called outside a FieldForm');
+    return form!;
+  }
+
+  @override
+  State<FieldForm> createState() => FieldFormState();
+}
+
+class FieldFormState extends State<FieldForm> {
+  final _fields = <FieldFormEntry>[];
+
+  void register(FieldFormEntry field) {
+    if (!_fields.contains(field)) _fields.add(field);
+  }
+
+  void unregister(FieldFormEntry field) => _fields.remove(field);
+
+  /// Validates every field; submits when all are valid. Returns whether it submitted.
+  bool submit() {
+    FieldFormEntry? firstInvalid;
+    for (final field in _fields) {
+      if (!field.validateForSubmit()) firstInvalid ??= field;
+    }
+    if (firstInvalid != null) {
+      firstInvalid.focusField();
+      return false;
+    }
+    widget.onSubmit?.call({
+      for (final field in _fields)
+        if (field.formName != null) field.formName!: field.formValue,
+    });
+    return true;
+  }
+
+  /// Puts every field back to its initial value, then calls `onReset`.
+  void reset() {
+    for (final field in _fields) {
+      field.resetField();
+    }
+    widget.onReset?.call();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      _FieldFormScope(form: this, child: widget.child);
+}
+
+class _FieldFormScope extends InheritedWidget {
+  const _FieldFormScope({required this.form, required super.child});
+  final FieldFormState form;
+
+  @override
+  bool updateShouldNotify(_FieldFormScope old) => old.form != form;
+}
+
+/// Keeps a field registered with the nearest [FieldForm] while it is mounted.
+mixin FieldFormMember<T extends StatefulWidget> on State<T>
+    implements FieldFormEntry {
+  FieldFormState? _form;
+
+  /// The form this field belongs to, if any.
+  FieldFormState? get form => _form;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final next = FieldForm.maybeOf(context);
+    if (next != _form) {
+      _form?.unregister(this);
+      _form = next?..register(this);
+    }
+  }
+
+  @override
+  void dispose() {
+    _form?.unregister(this);
+    super.dispose();
   }
 }

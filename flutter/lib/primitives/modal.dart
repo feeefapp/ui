@@ -5,12 +5,27 @@ import '../brand/geometry.dart';
 import '../glass/container.dart';
 import '../i18n/i18n.dart';
 import '../icons/lucide.dart';
+import '../layout/size_reporter.dart';
+import '../scroll/metrics.dart';
 import '../scroll/scroll_area.dart';
 import '../theme.dart';
 import '../theme/css_text.dart';
 import '../theme/tokens.dart';
 import '../toolbar.dart';
 import 'button.dart';
+
+/// Spacing a scrollable [Modal] passes to its inner [ScrollArea]: the web kit's `scrollOptions`
+/// (`Pick<ScrollAreaProps, 'edgeGap' | 'contentPadding'>`). A null field keeps the area's default.
+@immutable
+class ScrollOptions {
+  const ScrollOptions({this.edgeGap, this.contentPadding});
+
+  /// See [ScrollArea.edgeGap].
+  final double? edgeGap;
+
+  /// See [ScrollArea.contentPadding].
+  final double? contentPadding;
+}
 
 /// A modal dialog: the twin of `Modal` in `@feeef.dev/ui/primitives/modal`. It shows over
 /// everything in the nearest [Overlay], traps focus, closes on Escape and on a backdrop tap
@@ -23,12 +38,16 @@ class Modal extends StatefulWidget {
     required this.close,
     required this.label,
     this.wide = false,
+    this.width,
     this.scrollable = false,
+    this.fitContent = false,
     this.headerless = false,
     this.showClose = true,
     this.top,
     this.bottom,
     this.initialFocus,
+    this.returnFocus,
+    this.scrollOptions,
     required this.child,
   });
 
@@ -44,8 +63,17 @@ class Modal extends StatefulWidget {
   /// The wider dialog width, for side-by-side content such as two calendars.
   final bool wide;
 
+  /// A fixed dialog width instead of 560px / [wide]'s 980px, still capped by the screen (minus
+  /// [wide]'s margin). The web kit sets it with a class, e.g. the temporal dialog's 400px / 680px.
+  final double? width;
+
   /// Full-bleed content with measured floating chrome (a [ScrollArea]).
   final bool scrollable;
+
+  /// Scrollable dialogs: as tall as the content plus its floating chrome (240px until measured),
+  /// capped at the screen height minus 32px, instead of a fixed `min(720px, 85%)`. Long content
+  /// still scrolls.
+  final bool fitContent;
 
   /// Omit default chrome when the content supplies its own heading and dismiss action.
   final bool headerless;
@@ -62,6 +90,13 @@ class Modal extends StatefulWidget {
   /// Focused once the dialog opens.
   final FocusNode? initialFocus;
 
+  /// Focused after the dialog finishes closing (the web kit's `returnFocusRef`), even if the
+  /// control that opened it is gone. Falls back to whatever had focus before it opened.
+  final FocusNode? returnFocus;
+
+  /// Scrollable dialogs only: spacing passed to the inner [ScrollArea].
+  final ScrollOptions? scrollOptions;
+
   final Widget child;
 
   @override
@@ -73,7 +108,13 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
   final _scope = FocusScopeNode(debugLabel: 'Modal');
   late final _presence = AnimationController(vsync: this);
   FocusNode? _previous;
-  late Widget _content = widget.child;
+
+  /// The props the dialog shows: latched while open so the exit runs on the last open content.
+  late Modal _shown = widget;
+
+  /// Measured heights for [Modal.fitContent]: the body and the floating chrome.
+  double? _body;
+  double _top = 0, _bottom = 0;
 
   /// Whether the dialog is in the overlay (open, or running its exit).
   bool _mounted = false;
@@ -91,7 +132,7 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
   @override
   void didUpdateWidget(Modal old) {
     super.didUpdateWidget(old);
-    if (widget.open) _content = widget.child;
+    if (widget.open) _shown = widget;
     if (widget.open && !old.open) _show();
     if (!widget.open && old.open) _hide();
   }
@@ -107,7 +148,7 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
       ..forward(from: _presence.value);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !widget.open) return;
-      (widget.initialFocus ?? _scope).requestFocus();
+      (_shown.initialFocus ?? _scope).requestFocus();
     });
   }
 
@@ -116,8 +157,11 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
     await _presence.reverse().orCancel.catchError((_) {});
     if (!mounted || widget.open) return;
     setState(() => _mounted = false);
-    final previous = _previous;
-    if (previous != null && previous.context != null) previous.requestFocus();
+    final preferred = _shown.returnFocus;
+    final target = preferred != null && preferred.context != null
+        ? preferred
+        : _previous;
+    if (target != null && target.context != null) target.requestFocus();
   }
 
   @override
@@ -141,32 +185,84 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
         : const SizedBox.shrink(),
   );
 
+  void _measured(void Function() update) {
+    if (mounted) setState(update);
+  }
+
+  /// `--lab-modal-content-height`: body + padding (the floats' reservations) + the 1px borders,
+  /// at least the floats and their edge gaps.
+  double _fitHeight(double gap, double padding) {
+    final body = _body;
+    if (body == null) return 240;
+    final top = _shown.top != null || !_shown.headerless ? _top : 0.0;
+    final bottom = _shown.bottom != null ? _bottom : 0.0;
+    final chrome = top + bottom + (top > 0 ? gap : 0) + (bottom > 0 ? gap : 0);
+    final content =
+        body +
+        scrollContentReserve(top, gap, padding) +
+        scrollContentReserve(bottom, gap, padding) +
+        2;
+    return (content > chrome ? content : chrome).ceilToDouble();
+  }
+
   Widget _dialog(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
     final s = theme.sizes;
     final screen = MediaQuery.sizeOf(context);
-    final width = widget.wide ? 980.0 : 560.0;
-    final margin = widget.wide ? 40.0 : 28.0;
+    final shown = _shown;
+    final width = shown.width ?? (shown.wide ? 980.0 : 560.0);
+    final margin = shown.wide ? 40.0 : 28.0;
     final radius = s.radiusPanel;
     final open = widget.open;
+    final fit = shown.scrollable && shown.fitContent;
+    final maxHeight = fit ? screen.height - 32 : screen.height * 0.9;
     Widget body;
-    if (widget.scrollable) {
+    if (shown.scrollable) {
+      final gap = shown.scrollOptions?.edgeGap ?? 12;
+      final padding = shown.scrollOptions?.contentPadding ?? 24;
+      final top = shown.headerless ? shown.top : _header(context);
+      Widget measure(Widget? child, ValueChanged<double> onHeight) =>
+          child == null || !fit
+          ? child ?? const SizedBox.shrink()
+          : SizeReporter(
+              onSize: (size) => _measured(() => onHeight(size.height)),
+              child: child,
+            );
       body = SizedBox(
-        height: (screen.height * 0.85).clamp(0, 720),
+        height: fit
+            ? _fitHeight(gap, padding).clamp(0, maxHeight)
+            : (screen.height * 0.85).clamp(0, 720),
         child: ScrollArea(
-          label: widget.label,
-          top: widget.headerless ? widget.top : _header(context),
-          bottom: widget.bottom,
+          label: shown.label,
+          top: top == null ? null : measure(top, (h) => _top = h),
+          bottom: shown.bottom == null
+              ? null
+              : measure(shown.bottom, (h) => _bottom = h),
+          edgeGap: gap,
+          contentPadding: padding,
           radius: radius,
-          child: _content,
+          // `.lab-modal-measured-body`: measured at its own height, not stretched to the area's
+          // min-height (which would feed the measurement back into itself).
+          child: fit
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizeReporter(
+                      onSize: (size) => _measured(() => _body = size.height),
+                      child: shown.child,
+                    ),
+                  ],
+                )
+              : shown.child,
         ),
       );
     } else {
       body = Stack(
         children: [
-          SingleChildScrollView(child: _content),
-          if (!widget.headerless && widget.showClose)
+          SingleChildScrollView(child: shown.child),
+          if (!shown.headerless && shown.showClose)
             PositionedDirectional(
               top: 12,
               end: 12,
@@ -184,7 +280,7 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
       constraints: BoxConstraints(
         maxWidth: (screen.width - margin).clamp(0, width),
         minWidth: (screen.width - margin).clamp(0, width),
-        maxHeight: screen.height * 0.9,
+        maxHeight: maxHeight,
       ),
       child: DecoratedBox(
         decoration: ShapeDecoration(
@@ -207,7 +303,15 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
                 leadingDistribution: TextLeadingDistribution.even,
                 color: c.ink,
               ),
-              child: body,
+              // The dialog sits away from the screen edges: no safe-area insets inside it.
+              child: MediaQuery.removePadding(
+                context: context,
+                removeTop: true,
+                removeBottom: true,
+                removeLeft: true,
+                removeRight: true,
+                child: body,
+              ),
             ),
           ),
         ),
@@ -275,7 +379,7 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
               scopesRoute: true,
               namesRoute: true,
               explicitChildNodes: true,
-              label: widget.label,
+              label: shown.label,
               // Taps inside the dialog never reach the backdrop.
               child: GestureDetector(onTap: () {}, child: dialog),
             ),
@@ -294,7 +398,7 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
           child: Align(
             alignment: AlignmentDirectional.centerStart,
             child:
-                widget.top ??
+                _shown.top ??
                 ToolbarGroup(
                   label: 'Dialog title',
                   children: [
@@ -314,7 +418,7 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
                           lineHeight: 20,
                           child: Semantics(
                             header: true,
-                            child: Text(widget.label),
+                            child: Text(_shown.label),
                           ),
                         ),
                       ),
@@ -323,7 +427,7 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
                 ),
           ),
         ),
-        if (widget.showClose)
+        if (_shown.showClose)
           ToolbarGroup(
             label: 'Dialog close action',
             children: [
@@ -331,7 +435,7 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
                 appearance: ButtonAppearance.toolbar,
                 controlSize: ControlSize.compact,
                 ariaLabel: I18n.of(context)
-                    .t('lab.composer.closeLabel', {'label': widget.label}),
+                    .t('lab.composer.closeLabel', {'label': _shown.label}),
                 onClick: widget.open ? widget.close : null,
                 icon: const LucideX(size: 20),
               ),

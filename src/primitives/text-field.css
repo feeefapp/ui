@@ -95,6 +95,10 @@ html[data-lab-theme] .lab-text-field :is(.lab-raw-input, .lab-field-select-contr
 .lab-text-field[data-has-label='true'] .lab-raw-input::placeholder {
   color: transparent;
 }
+/* A select's placeholder (Radix marks the empty trigger) reads like a text field's. */
+.lab-text-field .lab-field-select-control[data-placeholder] .lab-field-select-value {
+  color: var(--lab-variant-label, var(--lab-muted));
+}
 .lab-text-field-shell:dir(rtl) {
   --lab-field-padding-left: var(--lab-field-inset-end);
   --lab-field-padding-right: var(--lab-field-inset-start);

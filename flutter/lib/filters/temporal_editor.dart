@@ -392,6 +392,8 @@ class TemporalEdges extends StatelessWidget {
       return SegmentedControl<TemporalEdge>(
         label: 'Which end you are choosing',
         appearance: appearance,
+        // `.lab-temporal-edges`: both ends share the width.
+        equalWidth: true,
         value: editor.edge,
         onChange: editor.setEdge,
         options: [
@@ -557,7 +559,8 @@ class TemporalBody extends StatelessWidget {
             child: Button(
               controlSize: ControlSize.compact,
               onClick: () => e.setManual(!e.manual),
-              children: [const LucideKeyboard(size: 16), Text(toggleText)],
+              // `size={16}` loses to the kit's `.lab-control > svg` 18px.
+              children: [const LucideKeyboard(), Text(toggleText)],
             ),
           ),
           ?footer,

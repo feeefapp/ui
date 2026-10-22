@@ -92,3 +92,8 @@ html[data-lab-theme] {
 .docs-stage .demo-wide.demo-wide {
   width: min(100%, 560px);
 }
+
+/* docs.css helpers the examples use. */
+.docs-muted {
+  color: var(--lab-muted);
+}

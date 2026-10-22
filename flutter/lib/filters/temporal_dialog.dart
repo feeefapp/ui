@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import '../glass/container.dart';
@@ -20,6 +23,7 @@ class TemporalDialog extends StatelessWidget {
     required this.open,
     required this.label,
     required this.close,
+    this.returnFocus,
     this.onApply,
     this.onClear,
     this.clearLabel = const Text('Clear'),
@@ -44,6 +48,9 @@ class TemporalDialog extends StatelessWidget {
 
   /// Called by Cancel, Escape and the backdrop.
   final VoidCallback close;
+
+  /// Focus target after closing, usually the trigger (the web kit's `returnFocusRef`).
+  final FocusNode? returnFocus;
 
   /// Apply: validate, commit and close (the web kit's form `onSubmit`).
   final VoidCallback? onApply;
@@ -103,46 +110,39 @@ class TemporalDialog extends StatelessWidget {
           : Directionality(textDirection: dir!, child: child);
       final edges = editor.range && editor.hasCalendar;
       final presets = editor.presets.isNotEmpty;
-      final edgesGroup = ToolbarGroup(
-        label: 'Range ends',
-        children: [
-          TemporalEdges(editor: editor, appearance: SegmentedAppearance.plain),
-        ],
-      );
-      final presetsGroup = SizedBox(
-        width: double.infinity,
-        child: ToolbarGroup(
-          label: 'Quick choices',
-          children: [
-            Expanded(
-              child: TemporalPresets(
-                editor: editor,
-                layout: TemporalPresetsLayout.bar,
-              ),
-            ),
-          ],
-        ),
-      );
+      // `.lab-temporal-dialog-bar`: one wrapping row of groups. The start/end switch grows from
+      // its own width, the presets from 240px; both share what is left of their line.
       final Widget top;
       if (edges || presets) {
-        top = LayoutBuilder(
-          builder: (context, constraints) {
-            if (edges && presets && constraints.maxWidth >= 560) {
-              return Row(
-                spacing: 8,
+        top = _DialogBar(
+          gap: 8,
+          bases: [if (edges) null, if (presets) 240],
+          children: [
+            if (edges)
+              ToolbarGroup(
+                label: 'Range ends',
                 children: [
-                  edgesGroup,
-                  Expanded(child: presetsGroup),
+                  Expanded(
+                    child: TemporalEdges(
+                      editor: editor,
+                      appearance: SegmentedAppearance.plain,
+                    ),
+                  ),
                 ],
-              );
-            }
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 8,
-              children: [if (edges) edgesGroup, if (presets) presetsGroup],
-            );
-          },
+              ),
+            if (presets)
+              ToolbarGroup(
+                label: 'Quick choices',
+                children: [
+                  Expanded(
+                    child: TemporalPresets(
+                      editor: editor,
+                      layout: TemporalPresetsLayout.bar,
+                    ),
+                  ),
+                ],
+              ),
+          ],
         );
       } else {
         top = SizedBox(
@@ -155,11 +155,18 @@ class TemporalDialog extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Semantics(
                     header: true,
+                    // `.lab-dialog .lab-modal-title`: 17px / 1.4, 600, -0.02em.
                     child: Text(
                       label,
                       maxLines: 1,
+                      softWrap: false,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        fontSize: 17,
+                        height: 1.4,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 17 * -0.02,
+                      ),
                     ),
                   ),
                 ),
@@ -205,9 +212,17 @@ class TemporalDialog extends StatelessWidget {
         label: label,
         close: close,
         scrollable: true,
+        fitContent: true,
         headerless: true,
         showClose: false,
-        wide: edges,
+        returnFocus: returnFocus,
+        // `.lab-temporal-dialog`: 400px, 680px with two months; nearly full width on phones.
+        width: MediaQuery.sizeOf(context).width < 600
+            ? MediaQuery.sizeOf(context).width - 16
+            : (edges ? 680 : 400),
+        // Content starts where the buttons inside the bars start (bar inset + the group's 2px
+        // padding).
+        scrollOptions: const ScrollOptions(edgeGap: 12, contentPadding: 14),
         top: directed(GlassScope(child: top)),
         bottom: directed(GlassScope(child: bottom)),
         child: directed(
@@ -254,4 +269,146 @@ class TemporalError extends StatelessWidget {
       child: child,
     ),
   );
+}
+
+/// `.lab-temporal-dialog-bar` with its groups' flex rules: a wrapping row ([gap] between items and
+/// lines) whose items start from a basis (their own max-content width when null), share the free
+/// space of their line equally and stretch to the line's height.
+class _DialogBar extends MultiChildRenderObjectWidget {
+  const _DialogBar({
+    required this.gap,
+    required this.bases,
+    required super.children,
+  });
+
+  final double gap;
+  final List<double?> bases;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderDialogBar(gap, bases, Directionality.of(context));
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderDialogBar renderObject) {
+    renderObject
+      ..gap = gap
+      ..bases = bases
+      ..textDirection = Directionality.of(context);
+  }
+}
+
+class _DialogBarData extends ContainerBoxParentData<RenderBox> {}
+
+class _RenderDialogBar extends RenderBox
+    with
+        ContainerRenderObjectMixin<RenderBox, _DialogBarData>,
+        RenderBoxContainerDefaultsMixin<RenderBox, _DialogBarData> {
+  _RenderDialogBar(this._gap, this._bases, this._textDirection);
+
+  double _gap;
+  set gap(double value) {
+    if (value == _gap) return;
+    _gap = value;
+    markNeedsLayout();
+  }
+
+  List<double?> _bases;
+  set bases(List<double?> value) {
+    _bases = value;
+    markNeedsLayout();
+  }
+
+  TextDirection _textDirection;
+  set textDirection(TextDirection value) {
+    if (value == _textDirection) return;
+    _textDirection = value;
+    markNeedsLayout();
+  }
+
+  @override
+  void setupParentData(RenderBox child) {
+    if (child.parentData is! _DialogBarData) {
+      child.parentData = _DialogBarData();
+    }
+  }
+
+  List<RenderBox> get _children {
+    final list = <RenderBox>[];
+    var child = firstChild;
+    while (child != null) {
+      list.add(child);
+      child = childAfter(child);
+    }
+    return list;
+  }
+
+  @override
+  void performLayout() {
+    final width = constraints.maxWidth;
+    final children = _children;
+    final bases = [
+      for (var i = 0; i < children.length; i++)
+        math.min(
+          width,
+          (i < _bases.length ? _bases[i] : null) ??
+              children[i].getMaxIntrinsicWidth(double.infinity),
+        ),
+    ];
+    // Lines, filled greedily like `flex-wrap: wrap`.
+    final lines = <List<int>>[];
+    var used = 0.0;
+    for (var i = 0; i < children.length; i++) {
+      if (lines.isEmpty || used + _gap + bases[i] > width) {
+        lines.add([i]);
+        used = bases[i];
+      } else {
+        lines.last.add(i);
+        used += _gap + bases[i];
+      }
+    }
+    var y = 0.0;
+    for (final line in lines) {
+      final taken =
+          line.fold<double>(0, (sum, i) => sum + bases[i]) +
+          _gap * (line.length - 1);
+      final share = math.max(0.0, width - taken) / line.length;
+      var height = 0.0;
+      for (final i in line) {
+        children[i].layout(
+          BoxConstraints.tightFor(width: bases[i] + share),
+          parentUsesSize: true,
+        );
+        height = math.max(height, children[i].size.height);
+      }
+      var x = 0.0;
+      for (final i in line) {
+        final child = children[i];
+        if (child.size.height != height) {
+          child.layout(
+            BoxConstraints.tightFor(width: bases[i] + share, height: height),
+            parentUsesSize: true,
+          );
+        }
+        (child.parentData! as _DialogBarData).offset = Offset(
+          _textDirection == TextDirection.rtl
+              ? width - x - child.size.width
+              : x,
+          y,
+        );
+        x += child.size.width + _gap;
+      }
+      y += height + _gap;
+    }
+    size = constraints.constrain(
+      Size(width, math.max(0, y - (lines.isEmpty ? 0 : _gap))),
+    );
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) =>
+      defaultPaint(context, offset);
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) =>
+      defaultHitTestChildren(result, position: position);
 }

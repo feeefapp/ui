@@ -152,4 +152,33 @@ void main() {
     expect(tester.getSize(find.byType(ViewThatFits)), const Size(20, 20));
     handle.dispose();
   });
+
+  testWidgets('AdaptiveFlex children share the row room (flex: 1 1 0%)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 400,
+            child: AdaptiveStack(
+              gap: 10,
+              children: [
+                box(60, 'fixed'),
+                AdaptiveFlex(child: box(40, 'a')),
+                AdaptiveFlex(flex: 2, child: box(80, 'b')),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    Rect rectOf(String label) => tester.getRect(find.bySemanticsLabel(label));
+    expect(rectOf('fixed').width, 60);
+    // 400 - 60 - 2 gaps = 320 split 1:2.
+    expect(rectOf('a').width, closeTo(320 / 3, 0.01));
+    expect(rectOf('b').width, closeTo(640 / 3, 0.01));
+    expect(rectOf('b').right, closeTo(400, 0.01));
+  });
 }

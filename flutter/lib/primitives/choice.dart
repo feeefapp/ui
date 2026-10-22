@@ -11,11 +11,13 @@ import '../theme/css_text.dart';
 import 'button.dart' show ControlSize;
 
 /// A checkbox with a label, description, error and indeterminate state: the twin of `Checkbox` in
-/// `@feeef.dev/ui/primitives/choice`. Clicking the label toggles it.
-class Checkbox extends StatelessWidget {
+/// `@feeef.dev/ui/primitives/choice`. Clicking the label toggles it. Pass [checked] to control it,
+/// or leave it null and set [defaultChecked] for a box that keeps its own state.
+class Checkbox extends StatefulWidget {
   const Checkbox({
     super.key,
-    required this.checked,
+    this.checked,
+    this.defaultChecked = false,
     this.onCheckedChange,
     this.label,
     this.description,
@@ -27,7 +29,11 @@ class Checkbox extends StatelessWidget {
     this.focusNode,
   });
 
-  final bool checked;
+  /// The checked state, for a controlled box. Null keeps the state inside the widget.
+  final bool? checked;
+
+  /// The initial state of an uncontrolled box.
+  final bool defaultChecked;
 
   /// Called with the new checked state.
   final ValueChanged<bool>? onCheckedChange;
@@ -53,27 +59,45 @@ class Checkbox extends StatelessWidget {
   final FocusNode? focusNode;
 
   @override
-  Widget build(BuildContext context) => _Choice(
-    radio: false,
-    checked: checked,
-    indeterminate: indeterminate,
-    onToggle: onCheckedChange == null ? null : () => onCheckedChange!(!checked),
-    label: label,
-    description: description,
-    error: error,
-    disabled: disabled,
-    required: required,
-    controlSize: controlSize,
-    focusNode: focusNode,
-  );
+  State<Checkbox> createState() => _CheckboxState();
 }
 
-/// A single radio with a label and description. Prefer [RadioGroup], which names the set.
-class Radio extends StatelessWidget {
+class _CheckboxState extends State<Checkbox> {
+  late bool _own = widget.defaultChecked;
+
+  @override
+  Widget build(BuildContext context) {
+    final controlled = widget.checked != null;
+    final checked = widget.checked ?? _own;
+    return _Choice(
+      radio: false,
+      checked: checked,
+      indeterminate: widget.indeterminate,
+      onToggle: controlled && widget.onCheckedChange == null
+          ? null
+          : () {
+              if (!controlled) setState(() => _own = !checked);
+              widget.onCheckedChange?.call(!checked);
+            },
+      label: widget.label,
+      description: widget.description,
+      error: widget.error,
+      disabled: widget.disabled,
+      required: widget.required,
+      controlSize: widget.controlSize,
+      focusNode: widget.focusNode,
+    );
+  }
+}
+
+/// A single radio with a label and description. Prefer [RadioGroup], which names the set. Like a
+/// native radio, selecting it reports `true` through [onCheckedChange]; it never unchecks itself.
+class Radio extends StatefulWidget {
   const Radio({
     super.key,
-    required this.checked,
-    this.onSelect,
+    this.checked,
+    this.defaultChecked = false,
+    this.onCheckedChange,
     this.label,
     this.description,
     this.error,
@@ -82,8 +106,14 @@ class Radio extends StatelessWidget {
     this.focusNode,
   });
 
-  final bool checked;
-  final VoidCallback? onSelect;
+  /// The checked state, for a controlled radio. Null keeps the state inside the widget.
+  final bool? checked;
+
+  /// The initial state of an uncontrolled radio.
+  final bool defaultChecked;
+
+  /// Called with `true` when the radio is selected.
+  final ValueChanged<bool>? onCheckedChange;
   final Widget? label;
   final Widget? description;
   final String? error;
@@ -92,17 +122,34 @@ class Radio extends StatelessWidget {
   final FocusNode? focusNode;
 
   @override
-  Widget build(BuildContext context) => _Choice(
-    radio: true,
-    checked: checked,
-    onToggle: onSelect,
-    label: label,
-    description: description,
-    error: error,
-    disabled: disabled,
-    controlSize: controlSize,
-    focusNode: focusNode,
-  );
+  State<Radio> createState() => _RadioState();
+}
+
+class _RadioState extends State<Radio> {
+  late bool _own = widget.defaultChecked;
+
+  @override
+  Widget build(BuildContext context) {
+    final controlled = widget.checked != null;
+    final checked = widget.checked ?? _own;
+    return _Choice(
+      radio: true,
+      checked: checked,
+      onToggle: controlled && widget.onCheckedChange == null
+          ? null
+          : () {
+              if (checked) return;
+              if (!controlled) setState(() => _own = true);
+              widget.onCheckedChange?.call(true);
+            },
+      label: widget.label,
+      description: widget.description,
+      error: widget.error,
+      disabled: widget.disabled,
+      controlSize: widget.controlSize,
+      focusNode: widget.focusNode,
+    );
+  }
 }
 
 /// One entry in [RadioGroup]'s options.
@@ -126,7 +173,8 @@ class RadioGroup extends StatefulWidget {
     super.key,
     required this.label,
     required this.options,
-    required this.value,
+    this.value,
+    this.defaultValue,
     this.onValueChange,
     this.description,
     this.error,
@@ -137,7 +185,12 @@ class RadioGroup extends StatefulWidget {
   /// The group's question (the legend).
   final String label;
   final List<RadioOption> options;
+
+  /// The selected value, for a controlled group. Null keeps the selection inside the widget.
   final String? value;
+
+  /// The initially selected value of an uncontrolled group.
+  final String? defaultValue;
   final ValueChanged<String>? onValueChange;
   final Widget? description;
   final String? error;
@@ -149,6 +202,15 @@ class RadioGroup extends StatefulWidget {
 }
 
 class _RadioGroupState extends State<RadioGroup> {
+  late String? _own = widget.defaultValue;
+  String? get _value => widget.value ?? _own;
+  bool get _interactive => widget.value == null || widget.onValueChange != null;
+
+  void _select(String value) {
+    if (widget.value == null) setState(() => _own = value);
+    widget.onValueChange?.call(value);
+  }
+
   final _nodes = <int, FocusNode>{};
   FocusNode _node(int i) => _nodes.putIfAbsent(i, FocusNode.new);
 
@@ -168,7 +230,7 @@ class _RadioGroupState extends State<RadioGroup> {
       for (var i = 0; i < widget.options.length; i++)
         if (!widget.options[i].disabled) i,
     ];
-    if (enabled.isEmpty || widget.onValueChange == null) {
+    if (enabled.isEmpty || !_interactive) {
       return KeyEventResult.ignored;
     }
     final rtl = Directionality.of(context) == TextDirection.rtl;
@@ -181,12 +243,12 @@ class _RadioGroupState extends State<RadioGroup> {
     };
     if (delta == 0) return KeyEventResult.ignored;
     final current = enabled.indexWhere(
-      (i) => widget.options[i].value == widget.value,
+      (i) => widget.options[i].value == _value,
     );
     final next =
         enabled[((current < 0 ? 0 : current) + delta + enabled.length) %
             enabled.length];
-    widget.onValueChange!(widget.options[next].value);
+    _select(widget.options[next].value);
     _node(next).requestFocus();
     return KeyEventResult.handled;
   }
@@ -195,7 +257,7 @@ class _RadioGroupState extends State<RadioGroup> {
   Widget build(BuildContext context) {
     final c = ThemeProvider.of(context).colors;
     final selected = widget.options.indexWhere(
-      (o) => o.value == widget.value && !o.disabled,
+      (o) => o.value == _value && !o.disabled,
     );
     final tabIndex = selected >= 0
         ? selected
@@ -239,10 +301,10 @@ class _RadioGroupState extends State<RadioGroup> {
                 excluding: i != tabIndex,
                 child: _Choice(
                   radio: true,
-                  checked: widget.options[i].value == widget.value,
-                  onToggle: widget.onValueChange == null
+                  checked: widget.options[i].value == _value,
+                  onToggle: !_interactive
                       ? null
-                      : () => widget.onValueChange!(widget.options[i].value),
+                      : () => _select(widget.options[i].value),
                   label: widget.options[i].label,
                   description: widget.options[i].description,
                   disabled: widget.options[i].disabled,
@@ -251,12 +313,16 @@ class _RadioGroupState extends State<RadioGroup> {
                   focusNode: _node(i),
                 ),
               ),
+            // `.lab-radio-group > p` keeps its 6px bottom margin inside the fieldset.
             if (widget.error != null)
-              _css(
-                Text(widget.error!),
-                size: 12,
-                lineHeight: 18,
-                color: c.danger,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: _css(
+                  Text(widget.error!),
+                  size: 12,
+                  lineHeight: 18,
+                  color: c.danger,
+                ),
               ),
           ],
         ),

@@ -61,6 +61,11 @@ export function Carousel({
   const slides = React.Children.toArray(children).filter(React.isValidElement)
   const track = React.useRef<HTMLDivElement>(null)
   const [current, setCurrent] = React.useState(controlled ?? 0)
+  // `auto` controls show while a mouse is over the frame or focus is inside it. CSS fades the
+  // group, but the glass material is drawn by the scope, so hidden controls also drop their glass.
+  const [hovered, setHovered] = React.useState(false)
+  const [focusWithin, setFocusWithin] = React.useState(false)
+  const concealed = controls === 'auto' && !hovered && !focusWithin
   const live = React.useRef({ current, onIndexChange, effect, align })
   live.current = { current, onIndexChange, effect, align }
 
@@ -190,7 +195,15 @@ export function Carousel({
       data-effect={effect}
       style={{ '--lab-carousel-slide': width, '--lab-carousel-gap': `${gap}px` } as React.CSSProperties}
     >
-      <div className="lab-carousel-frame">
+      <div
+        className="lab-carousel-frame"
+        onPointerEnter={(event) => event.pointerType !== 'touch' && setHovered(true)}
+        onPointerLeave={() => setHovered(false)}
+        onFocus={() => setFocusWithin(true)}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocusWithin(false)
+        }}
+      >
         <div
           ref={track}
           className="lab-carousel-track"
@@ -217,7 +230,7 @@ export function Carousel({
               label="Previous slide"
               className="lab-carousel-control"
               data-side="start"
-              data-glass-hidden={current === 0 ? '' : undefined}
+              data-glass-hidden={concealed || current === 0 ? '' : undefined}
             >
               <IconButton variant="text" appearance="toolbar" aria-label="Previous slide" disabled={current === 0} onClick={() => go(current - 1)}>
                 <ChevronLeft className="lab-dir-flip" />
@@ -227,7 +240,7 @@ export function Carousel({
               label="Next slide"
               className="lab-carousel-control"
               data-side="end"
-              data-glass-hidden={current === slides.length - 1 ? '' : undefined}
+              data-glass-hidden={concealed || current === slides.length - 1 ? '' : undefined}
             >
               <IconButton
                 variant="text"

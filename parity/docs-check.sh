@@ -18,6 +18,8 @@ trap 'rmdir "$lock" 2>/dev/null || true' EXIT
 node "$ui/flutter/tool/sync_docs_examples.mjs" --only "$pages"
 (cd "$ui/flutter/example" && flutter build web --release --output "$run/flutter" 2>&1 | tail -2)
 rmdir "$lock"
+# Released: a later exit must not remove a lock another run has taken since.
+trap - EXIT
 
 scenes=()
 IFS=',' read -ra list <<< "$pages"

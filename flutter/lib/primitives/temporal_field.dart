@@ -422,13 +422,17 @@ class _TemporalFieldState extends State<TemporalField> {
         builder: (context) {
           final style = DefaultTextStyle.of(context).style;
           final line = (style.height ?? 1.25) * (style.fontSize ?? 16);
+          // Full width: FieldShell's frame sizes to its child, which an input fills on the web.
           return CssBaseline(
             lineHeight: line,
-            child: Text(
-              shown.isEmpty ? ' ' : shown,
-              maxLines: 1,
-              softWrap: false,
-              overflow: TextOverflow.ellipsis,
+            child: SizedBox(
+              width: double.infinity,
+              child: Text(
+                shown.isEmpty ? ' ' : shown,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           );
         },
@@ -463,6 +467,7 @@ class _TemporalFieldState extends State<TemporalField> {
           open: _open && _asDialog,
           label: _title,
           close: _close,
+          returnFocus: _focus,
           dir: Directionality.of(context),
           onApply: _apply,
           onClear: _clear,

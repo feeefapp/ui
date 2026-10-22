@@ -73,3 +73,12 @@ html[data-lab-theme] .lab-text-field .lab-temporal-field-clear {
   display: flex;
   justify-content: flex-end;
 }
+
+/* The trigger is a kit Button (for its focus and press states) but it reads as a field: the
+   field's ink instead of the outlined/text buttons' focus colour, and no filled-button texture. */
+html[data-lab-theme] .lab-text-field .lab-temporal-field-control.lab-control[data-variant] {
+  color: var(--lab-variant-ink, var(--lab-ink));
+}
+html[data-lab-theme] .lab-text-field .lab-temporal-field-control > .lab-pixel-texture {
+  display: none;
+}

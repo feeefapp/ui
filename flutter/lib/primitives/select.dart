@@ -16,14 +16,15 @@ import '../glass/container.dart';
 
 /// One choice in a [Select] menu. A check marks the selected option.
 class Option {
-  const Option({
-    required this.value,
-    required this.child,
-    this.disabled = false,
-  });
+  const Option({this.value, required this.child, this.disabled = false});
 
-  /// The value passed to `onValueChange`; `''` is the "no selection" option.
-  final String value;
+  /// The value passed to `onValueChange`; `''` is the "no selection" option. Defaults to the text
+  /// of a [Text] child, like the web `Option`.
+  final String? value;
+
+  /// [value], or the child's text when it has none.
+  String get resolvedValue =>
+      value ?? (child is Text ? (child as Text).data ?? '' : '');
 
   /// The option's visible content, also shown in the trigger when selected.
   final Widget child;
@@ -44,6 +45,7 @@ class Select extends StatefulWidget {
     this.hint,
     this.ariaLabel,
     this.placeholder,
+    this.name,
     this.variant = ControlVariant.elevated,
     this.controlSize = ControlSize.regular,
     this.labelStyle = FieldLabelStyle.outlined,
@@ -74,6 +76,9 @@ class Select extends StatefulWidget {
 
   /// Shown while nothing is selected, when there is no hint.
   final String? placeholder;
+
+  /// Name the value is submitted under in a [FieldForm].
+  final String? name;
   final ControlVariant variant;
   final ControlSize controlSize;
   final FieldLabelStyle labelStyle;
@@ -92,7 +97,8 @@ class Select extends StatefulWidget {
   State<Select> createState() => _SelectState();
 }
 
-class _SelectState extends State<Select> with SingleTickerProviderStateMixin {
+class _SelectState extends State<Select>
+    with SingleTickerProviderStateMixin, FieldFormMember<Select> {
   final _portal = OverlayPortalController();
   final _link = LayerLink();
   final _trigger = GlobalKey();
@@ -133,10 +139,33 @@ class _SelectState extends State<Select> with SingleTickerProviderStateMixin {
     widget.onValidationChange?.call(error);
   }
 
+  @override
+  String? get formName => widget.name;
+  @override
+  String get formValue => _value;
+  @override
+  bool validateForSubmit() {
+    _touched = true;
+    _validate(_value);
+    return widget.error == null && _check(_value) == null;
+  }
+
+  @override
+  void resetField() {
+    _touched = false;
+    if (_validationError != null) {
+      setState(() => _validationError = null);
+      widget.onValidationChange?.call(null);
+    }
+  }
+
+  @override
+  void focusField() => _focus.requestFocus();
+
   void _openMenu() {
     if (widget.disabled || _portal.isShowing) return;
     setState(() {
-      _highlight = widget.children.indexWhere((o) => o.value == _value);
+      _highlight = widget.children.indexWhere((o) => o.resolvedValue == _value);
       if (_highlight < 0) {
         _highlight = widget.children.indexWhere((o) => !o.disabled);
       }
@@ -159,10 +188,10 @@ class _SelectState extends State<Select> with SingleTickerProviderStateMixin {
     if (index < 0 || index >= widget.children.length) return;
     final option = widget.children[index];
     if (option.disabled) return;
-    widget.onValueChange(option.value);
+    widget.onValueChange(option.resolvedValue);
     if (widget.validationMode == ValidationMode.change ||
         (_touched && widget.validationMode == ValidationMode.blur)) {
-      _validate(option.value);
+      _validate(option.resolvedValue);
     }
     _closeMenu();
   }
@@ -227,7 +256,7 @@ class _SelectState extends State<Select> with SingleTickerProviderStateMixin {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
     final selected = widget.children.where(
-      (o) => o.value == _value && _value.isNotEmpty,
+      (o) => o.resolvedValue == _value && _value.isNotEmpty,
     );
     final hint = widget.hint ?? widget.label;
     final Widget? shown = selected.isNotEmpty
@@ -325,7 +354,7 @@ class _SelectState extends State<Select> with SingleTickerProviderStateMixin {
 
   String? _semanticValue(Option option) {
     final child = option.child;
-    return child is Text ? child.data : option.value;
+    return child is Text ? child.data : option.resolvedValue;
   }
 
   Widget _pressable(Widget child) => Focus(
@@ -414,7 +443,8 @@ class _SelectState extends State<Select> with SingleTickerProviderStateMixin {
                             for (var i = 0; i < widget.children.length; i++)
                               _OptionRow(
                                 option: widget.children[i],
-                                checked: widget.children[i].value == _value,
+                                checked:
+                                    widget.children[i].resolvedValue == _value,
                                 highlighted: i == _highlight,
                                 radius: optionRadius,
                                 height: theme.coarsePointer(context)

@@ -11,6 +11,7 @@ import '../theme/surfaces.dart';
 import '../theme/tokens.dart';
 import 'button.dart';
 import 'number_field_core.dart';
+import 'text_field.dart' show FieldFormMember;
 
 /// A Blender-style number field: the twin of `NumberField` in
 /// `@feeef.dev/ui/primitives/number-field`. Drag anywhere on it to scrub the value (Shift for
@@ -34,8 +35,13 @@ class NumberField extends StatefulWidget {
     this.variant = ControlVariant.elevated,
     this.controlSize = ControlSize.regular,
     this.disabled = false,
+    this.name,
     this.focusNode,
   });
+
+  /// Name the value is submitted under in a [FieldForm] (a plain number, like the web hidden
+  /// input).
+  final String? name;
 
   /// Shown inside the field at the start; also the accessible name.
   final String label;
@@ -92,7 +98,8 @@ String formatNumber(double value, int decimals) {
   return '$sign$grouped${parts.length > 1 ? '.${parts[1]}' : ''}';
 }
 
-class _NumberFieldState extends State<NumberField> {
+class _NumberFieldState extends State<NumberField>
+    with FieldFormMember<NumberField> {
   late double _local;
   String? _editing;
   bool _dragging = false, _hovered = false, _focusVisible = false;
@@ -138,6 +145,33 @@ class _NumberFieldState extends State<NumberField> {
     if (commit) widget.onValueCommit?.call(clamped);
     return clamped;
   }
+
+  @override
+  String? get formName => widget.name;
+  @override
+  String get formValue {
+    final value = _value;
+    // JavaScript's String(number): no trailing `.0`.
+    return value == value.roundToDouble() && value.abs() < 1e15
+        ? value.toInt().toString()
+        : value.toString();
+  }
+
+  @override
+  bool validateForSubmit() => true;
+
+  @override
+  void resetField() {
+    final initial = widget.defaultValue ?? widget.min ?? 0;
+    if (widget.value == null) {
+      setState(() => _local = clampNumber(initial, _bounds));
+    } else {
+      widget.onValueChange?.call(clampNumber(initial, _bounds));
+    }
+  }
+
+  @override
+  void focusField() => _focus.requestFocus();
 
   void _startEditing([String? initial]) {
     if (widget.disabled) return;
@@ -451,7 +485,9 @@ class _NumberFieldState extends State<NumberField> {
           onExit: (_) => setState(() => _hovered = false),
           child: Listener(
             onPointerDown: (event) {
-              if (widget.disabled || editing || event.buttons != kPrimaryButton) {
+              if (widget.disabled ||
+                  editing ||
+                  event.buttons != kPrimaryButton) {
                 return;
               }
               final box = context.findRenderObject() as RenderBox;

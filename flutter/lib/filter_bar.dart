@@ -6,6 +6,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'dock/dock.dart';
+import 'filters/temporal.dart';
+import 'filters/temporal_dialog.dart';
+import 'filters/temporal_editor.dart';
 import 'glass/container.dart';
 import 'icons/lucide.dart';
 import 'primitives/button.dart';
@@ -129,12 +132,9 @@ class FilterOption {
     this.icon,
     this.keywords = const [],
     this.validate,
-  }) : type = FilterType.boolean,
+  }) : _type = FilterType.boolean,
        choices = const [],
-       min = null,
-       max = null,
-       step = null,
-       allowOvernight = false,
+       config = null,
        renderEditor = null,
        formatValue = null;
 
@@ -147,35 +147,23 @@ class FilterOption {
     this.icon,
     this.keywords = const [],
     this.validate,
-  }) : type = FilterType.enumeration,
-       min = null,
-       max = null,
-       step = null,
-       allowOvernight = false,
+  }) : _type = FilterType.enumeration,
+       config = null,
        renderEditor = null,
        formatValue = null;
 
-  /// A date or time filter (`TemporalConfig`). Range types open a dialog, single values a menu.
+  /// A date or time filter: the web kit's `FilterOption & TemporalConfig`. [config] gives the
+  /// type, bounds, step and presets. Range types open a [TemporalDialog], single values a menu
+  /// with a [TemporalFilterEditor].
   const FilterOption.temporal({
     required this.id,
     required this.label,
-    required this.type,
-    this.min,
-    this.max,
-    this.step,
-    this.allowOvernight = false,
+    required TemporalConfig this.config,
     this.description,
     this.icon,
     this.keywords = const [],
     this.validate,
-  }) : assert(
-         type == FilterType.date ||
-             type == FilterType.time ||
-             type == FilterType.datetime ||
-             type == FilterType.dateRange ||
-             type == FilterType.timeRange ||
-             type == FilterType.datetimeRange,
-       ),
+  }) : _type = FilterType.date,
        choices = const [],
        renderEditor = null,
        formatValue = null;
@@ -190,12 +178,9 @@ class FilterOption {
     this.icon,
     this.keywords = const [],
     this.validate,
-  }) : type = FilterType.custom,
+  }) : _type = FilterType.custom,
        choices = const [],
-       min = null,
-       max = null,
-       step = null,
-       allowOvernight = false;
+       config = null;
 
   /// Stable id; the key in `value` / `values` / `pinned`.
   final String id;
@@ -215,23 +200,24 @@ class FilterOption {
   /// Returns an error message to block Apply, or null. Runs after the built-in temporal checks.
   final String? Function(FilterValue? value)? validate;
 
+  final FilterType _type;
+
   /// The editor this filter uses.
-  final FilterType type;
+  FilterType get type => switch (config?.type) {
+    null => _type,
+    TemporalType.date => FilterType.date,
+    TemporalType.time => FilterType.time,
+    TemporalType.datetime => FilterType.datetime,
+    TemporalType.dateRange => FilterType.dateRange,
+    TemporalType.timeRange => FilterType.timeRange,
+    TemporalType.datetimeRange => FilterType.datetimeRange,
+  };
 
   /// The choices of an `enumeration` filter.
   final List<FilterChoice> choices;
 
-  /// Earliest allowed value, in the same ISO format as the value.
-  final String? min;
-
-  /// Latest allowed value, in the same ISO format as the value.
-  final String? max;
-
-  /// Allowed increment: days for dates, seconds for times and datetimes, counted from [min].
-  final num? step;
-
-  /// Time ranges only: lets the end time be earlier than the start (crossing midnight).
-  final bool allowOvernight;
+  /// A temporal filter's type, bounds, step and presets.
+  final TemporalConfig? config;
 
   /// Renders a custom filter's editor. Call `onChange` with the draft value.
   final FilterEditorBuilder? renderEditor;
@@ -354,6 +340,9 @@ class _FilterBarState extends State<FilterBar> {
   String _editError = '';
   String _text = '', _error = '';
   bool _busy = false;
+
+  /// The last range filter edited in the temporal dialog (latched for its exit transition).
+  FilterOption? _temporalDialog;
 
   Map<String, FilterValue?> get _values => widget.values ?? _localValues;
   List<String> get _pins => widget.pinned ?? _localPins;
@@ -540,6 +529,8 @@ class _FilterBarState extends State<FilterBar> {
     final pinned = widget.options.where((o) => _pins.contains(o.id)).toList();
     final selected = _selected;
     final dialog = selected != null && _isDialog(selected) ? selected : null;
+    // The temporal dialog stays mounted after its first use so its exit can run.
+    if (dialog != null && dialog.type.isTemporal) _temporalDialog = dialog;
 
     final bar = _BarWrap(
       gap: 8,
@@ -634,13 +625,42 @@ class _FilterBarState extends State<FilterBar> {
             label: widget.label,
             child: GlassScope(child: bar),
           ),
+          if (_temporalDialog case final option?)
+            TemporalDialog(
+              open: dialog != null && dialog.type.isTemporal,
+              label: 'Edit ${option.label} filter',
+              close: () => setState(() => _editing = null),
+              returnFocus: _returnFocus,
+              config: option.config!,
+              value: _toTemporal(_draft),
+              onChange: (next) => setState(() {
+                _draft = _fromTemporal(next);
+                _editError = '';
+              }),
+              intro: option.description == null
+                  ? null
+                  : Text(option.description!),
+              error: _editError.isEmpty ? null : Text(_editError),
+              clearLabel: const Text('Clear value'),
+              onClear: () {
+                _change(option, null);
+                _pin(option.id);
+                setState(() => _editing = null);
+              },
+              applyLabel: const Text('Apply filter'),
+              onApply: () => _submitDialog(option),
+            ),
           Modal(
-            open: dialog != null,
+            returnFocus: _returnFocus,
+            open: dialog != null && !dialog.type.isTemporal,
             label: dialog != null
                 ? 'Edit ${dialog.label} filter'
                 : 'Edit filter',
             close: () => setState(() => _editing = null),
             scrollable: true,
+            fitContent: true,
+            // `.lab-filter-editor-dialog`: at most 460px wide.
+            width: 460,
             bottom: Dock(
               label: 'Filter editor actions',
               children: [
@@ -661,7 +681,7 @@ class _FilterBarState extends State<FilterBar> {
                 ),
               ],
             ),
-            child: dialog == null
+            child: dialog == null || dialog.type.isTemporal
                 ? const SizedBox.shrink()
                 : _dialogBody(context, dialog),
           ),
@@ -670,56 +690,43 @@ class _FilterBarState extends State<FilterBar> {
     );
   }
 
+  /// Validates [option]'s draft (the built-in temporal checks, then its own `validate`) and
+  /// commits it, or shows the message and keeps the editor open.
   void _submitDialog(FilterOption option) {
-    if (option.type.isTemporal) {
-      final next = _normalizeTemporal(_draft);
-      final message =
-          _validateTemporal(option, next) ?? option.validate?.call(next);
-      if (message != null) {
-        setState(() {
-          _draft = next;
-          _editError = message;
-        });
-        return;
-      }
-      _commit(option, next);
-      return;
-    }
-    final message = option.validate?.call(_draft);
+    final config = option.config;
+    final next = config != null
+        ? _fromTemporal(normalizeTemporal(_toTemporal(_draft)))
+        : _draft;
+    final message =
+        (config == null ? null : validateTemporal(config, _toTemporal(next))) ??
+        option.validate?.call(next);
     if (message != null) {
-      setState(() => _editError = message);
+      setState(() {
+        _draft = next;
+        _editError = message;
+      });
       return;
     }
-    _commit(option, _draft);
+    _commit(option, next);
   }
 
+  /// `.lab-filter-editor-form`: the description, the custom editor and the error.
   Widget _dialogBody(BuildContext context, FilterOption option) {
     final c = ThemeProvider.of(context).colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 16,
       children: [
-        if (!option.type.isTemporal || option.description != null)
-          Text(
-            option.description ??
-                'Set a value, or clear it while keeping this filter pinned.',
-            style: TextStyle(color: c.muted, fontSize: 13),
-          ),
-        if (option.type == FilterType.custom)
+        Text(
+          option.description ??
+              'Set a value, or clear it while keeping this filter pinned.',
+          style: TextStyle(color: c.muted, fontSize: 13),
+        ),
+        if (option.renderEditor != null)
           option.renderEditor!(
             context,
             _draft,
             (value) => setState(() => _draft = value),
-          )
-        else
-          _TemporalFields(
-            option: option,
-            value: _draft,
-            onChange: (value) => setState(() {
-              _draft = value;
-              _editError = '';
-            }),
-            onSubmit: () => _submitDialog(option),
           ),
         if (_editError.isNotEmpty)
           Semantics(
@@ -1128,14 +1135,14 @@ class _FilterBarState extends State<FilterBar> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 8,
         children: [
-          _TemporalFields(
-            option: option,
-            value: _draft,
+          TemporalFilterEditor(
+            config: option.config!,
+            value: _toTemporal(_draft),
             onChange: (next) => setState(() {
-              _draft = next;
+              _draft = _fromTemporal(next);
               _editError = '';
             }),
-            onSubmit: () => _applySmallTemporal(option),
+            onSubmit: () => _submitDialog(option),
           ),
           if (_editError.isNotEmpty)
             Semantics(
@@ -1173,7 +1180,7 @@ class _FilterBarState extends State<FilterBar> {
             Button(
               variant: ButtonVariant.filled,
               controlSize: ControlSize.compact,
-              onClick: () => _applySmallTemporal(option),
+              onClick: () => _submitDialog(option),
               children: const [Text('Apply')],
             ),
         ],
@@ -1181,182 +1188,23 @@ class _FilterBarState extends State<FilterBar> {
       child: body,
     );
   }
-
-  void _applySmallTemporal(FilterOption option) {
-    final next = _normalizeTemporal(_draft);
-    final message =
-        _validateTemporal(option, next) ?? option.validate?.call(next);
-    if (message != null) {
-      setState(() => _editError = message);
-      return;
-    }
-    _commit(option, next);
-  }
 }
 
 // ---- Temporal values ----------------------------------------------------------------------------
 
-FilterValue? _normalizeTemporal(FilterValue? value) => switch (value) {
-  FilterRange(from: '', to: '') => null,
-  FilterText(value: '') => null,
-  _ => value,
+/// A filter value as the temporal editor's value: text → single, range → range.
+TemporalValue? _toTemporal(FilterValue? value) => switch (value) {
+  FilterText(:final value) => TemporalSingle(value),
+  FilterRange(:final from, :final to) => TemporalRange(from: from, to: to),
+  _ => null,
 };
 
-/// `validateTemporal` from `@feeef.dev/ui/filters/temporal`: ISO format and real calendar dates,
-/// `step`, `min`/`max`, and range order. An English error, or null when valid.
-String? _validateTemporal(FilterOption config, FilterValue? value) {
-  if (value == null) return null;
-  final parts = switch (value) {
-    FilterRange(:final from, :final to) => [
-      from,
-      to,
-    ].where((p) => p.isNotEmpty),
-    FilterText(value: final text) => [text],
-    _ => const <String>[],
-  }.toList();
-  final name = config.type.name;
-  final input = name.startsWith('datetime')
-      ? 'datetime'
-      : name.startsWith('time')
-      ? 'time'
-      : 'date';
-  final timePattern = RegExp(r'^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$');
-  final datePattern = RegExp(
-    r'^(\d{4})-(\d{2})-(\d{2})(?:T([01]\d|2[0-3]):([0-5]\d)(?::[0-5]\d)?)?$',
-  );
-  bool valid(String part) {
-    if (input == 'time') return timePattern.hasMatch(part);
-    final match = datePattern.firstMatch(part);
-    if (match == null || (input == 'datetime') != part.contains('T')) {
-      return false;
-    }
-    final year = int.parse(match[1]!);
-    final month = int.parse(match[2]!);
-    final day = int.parse(match[3]!);
-    final date = DateTime(year, month, day);
-    return date.year == year && date.month == month && date.day == day;
-  }
-
-  if (parts.any((part) => !valid(part))) return 'Enter a valid date or time.';
-  final step = config.step;
-  if (step != null && step > 0) {
-    double units(String part) {
-      if (input == 'time') {
-        final pieces = part.split(':');
-        var total = 0.0;
-        for (var i = 0; i < pieces.length && i < 3; i++) {
-          total +=
-              (double.tryParse(pieces[i]) ?? double.nan) * [3600, 60, 1][i];
-        }
-        return total;
-      }
-      final parsed = DateTime.tryParse(
-        input == 'date' ? '${part}T00:00:00Z' : '${part}Z',
-      );
-      if (parsed == null) return double.nan;
-      return input == 'date'
-          ? parsed.millisecondsSinceEpoch / 86400000
-          : parsed.millisecondsSinceEpoch / 1000;
-    }
-
-    final base = config.min != null ? units(config.min!) : 0.0;
-    if (parts.any((part) {
-      final steps = (units(part) - base) / step;
-      return (steps - steps.roundToDouble()).abs() > 1e-7;
-    })) {
-      return input == 'date'
-          ? 'Choose a date in $step-day steps.'
-          : 'Choose a time in $step-second steps.';
-    }
-  }
-  final shortTime = RegExp(r'^\d{2}:\d{2}$');
-  String comparable(String part) =>
-      input != 'date' && shortTime.hasMatch(part.split('T').last)
-      ? '$part:00'
-      : part;
-  final min = config.min, max = config.max;
-  if (min != null &&
-      parts.any((part) => comparable(part).compareTo(comparable(min)) < 0)) {
-    return 'Use a value on or after $min.';
-  }
-  if (max != null &&
-      parts.any((part) => comparable(part).compareTo(comparable(max)) > 0)) {
-    return 'Use a value on or before $max.';
-  }
-  if (value is FilterRange &&
-      value.from.isNotEmpty &&
-      value.to.isNotEmpty &&
-      comparable(value.from).compareTo(comparable(value.to)) > 0 &&
-      !(config.type == FilterType.timeRange && config.allowOvernight)) {
-    return config.type == FilterType.timeRange
-        ? 'The end time must be on or after the start time.'
-        : 'The end must be on or after the start.';
-  }
-  return null;
-}
-
-/// Text entry for date and time values in their ISO form (one field, or From / To for ranges).
-/// Stands in for the web kit's calendar `TemporalFilterEditor` until that is ported.
-class _TemporalFields extends StatelessWidget {
-  const _TemporalFields({
-    required this.option,
-    required this.value,
-    required this.onChange,
-    required this.onSubmit,
-  });
-  final FilterOption option;
-  final FilterValue? value;
-  final ValueChanged<FilterValue?> onChange;
-  final VoidCallback onSubmit;
-
-  @override
-  Widget build(BuildContext context) {
-    final name = option.type.name;
-    final format = name.startsWith('datetime')
-        ? 'YYYY-MM-DDTHH:MM'
-        : name.startsWith('time')
-        ? 'HH:MM'
-        : 'YYYY-MM-DD';
-    if (option.type.isRange) {
-      final range = value is FilterRange
-          ? value! as FilterRange
-          : const FilterRange();
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 12,
-        children: [
-          TextField(
-            hint: 'From',
-            placeholder: format,
-            value: range.from,
-            onValueChange: (v) => onChange(FilterRange(from: v, to: range.to)),
-            onSubmitted: (_) => onSubmit(),
-          ),
-          TextField(
-            hint: 'To',
-            placeholder: format,
-            value: range.to,
-            onValueChange: (v) =>
-                onChange(FilterRange(from: range.from, to: v)),
-            onSubmitted: (_) => onSubmit(),
-          ),
-        ],
-      );
-    }
-    final text = value is FilterText ? (value! as FilterText).value : '';
-    return TextField(
-      hint: switch (option.type) {
-        FilterType.time => 'Time',
-        FilterType.datetime => 'Date and time',
-        _ => 'Date',
-      },
-      placeholder: format,
-      value: text,
-      onValueChange: (v) => onChange(v.isEmpty ? null : FilterText(v)),
-      onSubmitted: (_) => onSubmit(),
-    );
-  }
-}
+/// The temporal editor's value as a filter value.
+FilterValue? _fromTemporal(TemporalValue? value) => switch (value) {
+  TemporalSingle(:final value) => FilterText(value),
+  TemporalRange(:final from, :final to) => FilterRange(from: from, to: to),
+  null => null,
+};
 
 // ---- Layout -------------------------------------------------------------------------------------
 

@@ -352,7 +352,11 @@ class RawInputState extends State<RawInput>
             canRequestFocus: false,
             skipTraversal: true,
             onKeyEvent: widget.onKeyEvent == null ? null : _key,
-            child: CssBaseline(lineHeight: lineHeight, child: editable),
+            // CssBaseline measures the ambient text style: give it the input's own.
+            child: DefaultTextStyle.merge(
+              style: style,
+              child: CssBaseline(lineHeight: lineHeight, child: editable),
+            ),
           ),
         ),
       ),

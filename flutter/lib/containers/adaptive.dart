@@ -136,8 +136,33 @@ class AdaptiveStack extends MultiChildRenderObjectWidget {
 /// Parent data of an [AdaptiveStack] child: its layout offset plus the FLIP translation it is
 /// springing out of.
 class AdaptiveStackParentData extends ContainerBoxParentData<RenderBox> {
+  /// Share of the row's free room (CSS `flex: <flex> 1 0%`); 0 keeps the natural width.
+  double flex = 0;
   MotionValue? _dx, _dy;
   Offset get _shift => Offset(_dx?.get() ?? 0, _dy?.get() ?? 0);
+}
+
+/// A child of an [AdaptiveStack] that grows, like CSS `flex: 1 1 0%` on a stack item: while the
+/// stack is a row, flex children share the room the other children leave, in proportion to
+/// [flex]. In a column every child takes the full width anyway. Whether the row fits is still
+/// decided by the child's natural width.
+class AdaptiveFlex extends ParentDataWidget<AdaptiveStackParentData> {
+  const AdaptiveFlex({super.key, this.flex = 1, required super.child})
+    : assert(flex > 0);
+
+  /// Weight of this child's share of the free room. Default 1.
+  final double flex;
+
+  @override
+  void applyParentData(RenderObject renderObject) {
+    final data = renderObject.parentData! as AdaptiveStackParentData;
+    if (data.flex == flex) return;
+    data.flex = flex;
+    renderObject.parent?.markNeedsLayout();
+  }
+
+  @override
+  Type get debugTypicalAncestorWidgetClass => AdaptiveStack;
 }
 
 /// The render object behind [AdaptiveStack].
@@ -354,14 +379,30 @@ class RenderAdaptiveStack extends RenderBox
     }
 
     // A row. Children keep their natural width and shrink in proportion when it is too narrow
-    // (flex-shrink: 1 with min-width: 0).
-    final sum = natural.fold(0.0, (a, b) => a + b);
+    // (flex-shrink: 1 with min-width: 0); AdaptiveFlex children start at 0 and share what the
+    // others leave (flex: 1 1 0%).
+    final flexes = [
+      for (final child in children)
+        (child.parentData! as AdaptiveStackParentData).flex,
+    ];
+    final totalFlex = flexes.fold(0.0, (a, b) => a + b);
+    var sum = 0.0;
+    for (var i = 0; i < children.length; i++) {
+      if (flexes[i] == 0) sum += natural[i];
+    }
     final room = available.isFinite ? math.max(0.0, available - _gaps) : sum;
     final shrink = sum > room && sum > 0 ? room / sum : 1.0;
+    final flexRoom = math.max(0.0, room - sum * shrink);
     final widths = <double>[];
     final heights = <double>[];
     for (var i = 0; i < children.length; i++) {
-      final c = shrink < 1
+      final c = flexes[i] > 0
+          ? BoxConstraints.tightFor(
+              width: available.isFinite
+                  ? flexRoom * flexes[i] / totalFlex
+                  : natural[i],
+            )
+          : shrink < 1
           ? BoxConstraints.tightFor(width: natural[i] * shrink)
           : BoxConstraints(
               maxWidth: available.isFinite ? available : double.infinity,

@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:feeef_ui/filter_bar.dart';
+import 'package:feeef_ui/filters/temporal.dart';
+import 'package:feeef_ui/filters/temporal_dialog.dart';
 import 'package:feeef_ui/primitives/button.dart';
 import 'package:feeef_ui/theme.dart';
 import 'package:flutter/services.dart';
@@ -80,13 +82,12 @@ const _options = [
   FilterOption.temporal(
     id: 'created',
     label: 'Created',
-    type: FilterType.dateRange,
+    config: TemporalConfig(type: TemporalType.dateRange),
   ),
   FilterOption.temporal(
     id: 'day',
     label: 'Day',
-    type: FilterType.date,
-    min: '2026-01-01',
+    config: TemporalConfig(type: TemporalType.date, min: '2026-01-01'),
   ),
 ];
 
@@ -217,6 +218,11 @@ void main() {
     await frames(tester);
     await tester.tap(textButton('Created'));
     await frames(tester);
+    // The real temporal dialog: calendars, presets and the start/end switch.
+    expect(find.byType(TemporalDialog), findsOneWidget);
+    expect(find.text('Start · Any'), findsOneWidget);
+    await tester.tap(textButton('Type the dates'));
+    await frames(tester);
     final fields = find.byType(EditableText);
     expect(fields, findsNWidgets(2));
     await tester.enterText(fields.at(0), '2026-05-10');
@@ -246,6 +252,11 @@ void main() {
     await tester.tap(button('Choose filters'));
     await frames(tester);
     await tester.tap(textButton('Day'));
+    await frames(tester);
+    // The menu scrolls: the calendar comes first, the typed-entry toggle below it.
+    await tester.ensureVisible(textButton('Type a date'));
+    await frames(tester);
+    await tester.tap(textButton('Type a date'));
     await frames(tester);
     await tester.enterText(find.byType(EditableText).first, '2025-02-30');
     await tester.pump();
