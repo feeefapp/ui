@@ -241,6 +241,12 @@ class SizeTokens {
   };
 
   /// `--lab-row-height`: navigation rows and list-like controls.
+  /// `--lab-field-height`: text fields and selects.
+  double get fieldHeight => switch (density) {
+    Density.comfortable => 40,
+    Density.compact => 34,
+    Density.thin => 28,
+  };
   double get rowHeight => switch (density) {
     Density.comfortable => 44,
     Density.compact => 32,

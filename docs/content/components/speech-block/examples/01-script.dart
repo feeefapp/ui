@@ -105,10 +105,7 @@ class _ScriptField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
-    // `--lab-field-height`: 40px, or the control height in the denser themes.
-    final fieldHeight = theme.config.density == Density.comfortable
-        ? 40.0
-        : theme.sizes.controlHeight;
+    final fieldHeight = theme.sizes.fieldHeight;
     return CustomPaint(
       foregroundPainter: _TopEdge(
         color: theme.colors.glassEdgeLow,
