@@ -90,11 +90,13 @@ class _ScrollAreaState extends State<ScrollArea> {
       padding,
     );
     final safe = MediaQuery.maybePaddingOf(context) ?? EdgeInsets.zero;
+    // Space a host's own floating chrome (a tab bar) takes over this area's bottom edge.
+    final extra = ScrollExtraBottom.of(context);
     Widget float(Widget child, bool top) => Positioned(
       left: gap > safe.left ? gap : safe.left,
       right: gap > safe.right ? gap : safe.right,
       top: top ? gap + safe.top : null,
-      bottom: top ? null : gap + safe.bottom,
+      bottom: top ? null : gap + extra + safe.bottom,
       child: SizeReporter(
         onSize: (size) => _measured(top, size),
         child: Center(heightFactor: 1, child: child),
@@ -118,9 +120,10 @@ class _ScrollAreaState extends State<ScrollArea> {
                     padding,
                     topReserve + safe.top,
                     padding,
-                    bottomReserve + safe.bottom,
+                    bottomReserve + extra + safe.bottom,
                   ),
-                  child: widget.child,
+                  // Nested areas start from zero (.lab-scroll-content > * resets it).
+                  child: ScrollExtraBottom(value: 0, child: widget.child),
                 ),
               ),
             ),
@@ -143,4 +146,27 @@ class _ScrollAreaState extends State<ScrollArea> {
       ],
     );
   }
+}
+
+/// Extra bottom space a host reserves inside its scroll areas for its own floating chrome (a tab
+/// bar): the twin of the web kit's `--lab-scroll-extra-bottom`. A [TabView] provides it to every
+/// panel; a ScrollArea adds it to its bottom reservation and lifts its bottom float by it, and
+/// resets it to 0 for nested content (`ScrollExtraBottom(value: 0, …)`).
+class ScrollExtraBottom extends InheritedWidget {
+  const ScrollExtraBottom({
+    super.key,
+    required this.value,
+    required super.child,
+  });
+
+  /// Extra bottom space in px, on top of the area's own reserve and the safe area.
+  final double value;
+
+  /// The nearest reservation, or 0 when there is none.
+  static double of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<ScrollExtraBottom>()?.value ??
+      0;
+
+  @override
+  bool updateShouldNotify(ScrollExtraBottom old) => old.value != value;
 }

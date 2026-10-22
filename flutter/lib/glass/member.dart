@@ -83,6 +83,22 @@ class _GlassMemberBoxState extends State<GlassMemberBox> {
     }
   }
 
+  // A bubble taken out of the tree leaves the glass at once, and comes back if it is reinserted
+  // (moved with a GlobalKey): the container must never measure an inactive element.
+  @override
+  void deactivate() {
+    _handle?.unregister();
+    _handle = null;
+    _registry = null;
+    super.deactivate();
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _sync(force: true);
+  }
+
   @override
   void dispose() {
     _handle?.unregister();

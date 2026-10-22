@@ -124,6 +124,35 @@ double rubberBand(
   return overshoot.sign * pulled;
 }
 
+/// Clamps [value] to [min]–[max], letting it stretch past either end with rubber-band
+/// resistance inside a [dimension]-sized container.
+double rubberBandClamp(
+  double value,
+  double min,
+  double max,
+  double dimension, [
+  double coefficient = 0.55,
+]) {
+  if (value < min) return min + rubberBand(value - min, dimension, coefficient);
+  if (value > max) return max + rubberBand(value - max, dimension, coefficient);
+  return value;
+}
+
+/// The target closest to [value] (e.g. a projected position); the first one wins a tie.
+double nearestTarget(double value, List<double> targets) {
+  var best = targets.isEmpty ? value : targets.first;
+  for (final target in targets) {
+    if ((target - value).abs() < (best - value).abs()) best = target;
+  }
+  return best;
+}
+
+/// Maps [value] from [inMin]–[inMax] onto 0–1, clamped.
+double progressBetween(double value, double inMin, double inMax) {
+  if (inMax == inMin) return value >= inMax ? 1 : 0;
+  return ((value - inMin) / (inMax - inMin)).clamp(0.0, 1.0);
+}
+
 /// Linear interpolation; [progress] is not clamped, so springs may overshoot through it.
 double mix(double from, double to, double progress) =>
     from + (to - from) * progress;
