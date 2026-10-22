@@ -824,6 +824,8 @@ class _ActionsMenuState extends State<_ActionsMenu> {
                   leadingDistribution: TextLeadingDistribution.even,
                 ),
                 child: Column(
+                  // The menu hugs its rows: the popover's layout gives it the screen's height.
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     for (var i = 0; i < widget.actions.length; i++)
