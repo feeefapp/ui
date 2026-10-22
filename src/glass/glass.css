@@ -198,9 +198,3 @@ html[data-lab-glass-renderer='fill'] .lab-glass-backdrop {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
-
-/* Circles and capsules (radius at half the shorter side) have round ends, like Liquid Glass; the
-scene marks them, every other glass shape keeps the kit's superellipse. */
-html[data-lab-theme] :is(.lab-glass-group, [data-glass-member])[data-glass-round] {
-  corner-shape: round;
-}

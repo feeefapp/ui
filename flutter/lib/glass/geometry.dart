@@ -59,8 +59,7 @@ final Float64List _norm = Float64List.fromList([
 ]);
 
 /// Signed distance from a point to a rounded box with superellipse corners (the kit's
-/// `corner-shape: superellipse(1.5)`, or circular arcs for circles and capsules): negative
-/// inside, zero on the outline.
+/// `corner-shape: superellipse(1.5)`): negative inside, zero on the outline.
 double shapeDistance(double px, double py, GlassShape shape) {
   final r = clampRadius(shape);
   final hx = shape.width / 2;
@@ -72,8 +71,6 @@ double shapeDistance(double px, double py, GlassShape shape) {
   double outside;
   if (ox == 0 || oy == 0) {
     outside = ox + oy;
-  } else if (isFullRound(shape)) {
-    outside = math.sqrt(ox * ox + oy * oy);
   } else {
     // (a^n + b^n)^(1/n) = max · (1 + (min/max)^n)^(1/n), read from a table: this runs per pixel.
     final high = math.max(ox, oy);
@@ -84,11 +81,6 @@ double shapeDistance(double px, double py, GlassShape shape) {
   }
   return outside + math.min(math.max(qx, qy), 0.0) - r;
 }
-
-/// True when the radius reaches half the shorter side (within half a pixel): a circle or capsule.
-/// Liquid Glass draws those with round ends; every other glass shape keeps the kit's superellipse.
-bool isFullRound(GlassShape shape) =>
-    shape.radius >= math.min(shape.width, shape.height) / 2 - 0.5;
 
 /// Smooth minimum (quadratic). Outlines start to bend toward each other when the gap between
 /// shapes drops below [k] and join below `k / 2`. `k <= 0` is the plain union.
@@ -210,7 +202,7 @@ double _round(double value) => (value * 100 + 0.5).floorToDouble() / 100;
 /// The exact outline of one shape, as the kit draws it elsewhere.
 Path shapePath(GlassShape shape) {
   final r = clampRadius(shape);
-  return superellipsePath(shape.rect, [r, r, r, r], roundEnds: true);
+  return superellipsePath(shape.rect, [r, r, r, r]);
 }
 
 /// Closed outlines of the blended union of [shapes] (marching squares on a [cell]-sized grid with

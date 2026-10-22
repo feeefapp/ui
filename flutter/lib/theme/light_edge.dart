@@ -12,19 +12,13 @@ void paintLightEdge(
   double radius, {
   required Color light,
   required Color low,
-  bool roundEnds = false,
 }) {
   final rect = Offset.zero & size;
   // CSS gradient line length for 135°: |w·sin| + |h·cos|, centred on the box.
   final half = (size.width + size.height) / 2 * 0.7071067811865476;
   const direction = Offset(0.7071067811865476, 0.7071067811865476);
   canvas.drawPath(
-    superellipsePath(
-      rect,
-      [radius, radius, radius, radius],
-      inset: 0.5,
-      roundEnds: roundEnds,
-    ),
+    superellipsePath(rect, [radius, radius, radius, radius], inset: 0.5),
     Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1

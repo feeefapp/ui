@@ -5,7 +5,6 @@
 import { writeFileSync } from 'node:fs'
 import {
   shapeDistance,
-  isFullRound,
   smoothMin,
   unionDistance,
   rectGap,
@@ -31,8 +30,6 @@ import { scrollWashPaths, scrollEdgeOpacities, scrollContentReserve } from '../.
 
 const pill: GlassShape = { x: 10, y: 20, width: 120, height: 46, radius: 23 }
 const square: GlassShape = { x: 0, y: 0, width: 40, height: 40, radius: 12 }
-// Just short of a capsule: keeps the superellipse.
-const nearPill: GlassShape = { x: 4, y: 6, width: 90, height: 46, radius: 22 }
 const points: [number, number][] = [
   [0, 0], [10, 20], [70, 43], [130, 43], [140, 43], [12, 22], [128, 64], [70, 10], [5, 50], [140, 70],
 ]
@@ -42,11 +39,7 @@ const pairs: { a: GlassShape; b: GlassShape; spacing: number }[] = [
   { a: { x: 0, y: 0, width: 60, height: 60, radius: 20 }, b: { x: 50, y: 30, width: 60, height: 60, radius: 20 }, spacing: 8 },
 ]
 const fixture = {
-  // Circles and capsules draw round ends (radius at half the shorter side, 0.5px tolerance).
-  fullRound: [
-    [120, 46, 23], [120, 46, 22.6], [120, 46, 22], [44, 44, 22], [44, 44, 999], [40, 40, 12], [46, 120, 23],
-  ].map(([width, height, radius]) => [width, height, radius, isFullRound({ x: 0, y: 0, width, height, radius })]),
-  distance: [pill, square, nearPill].map((shape) => ({
+  distance: [pill, square].map((shape) => ({
     shape,
     clamped: clampRadius(shape),
     samples: points.map(([x, y]) => [x, y, shapeDistance(x, y, shape)]),

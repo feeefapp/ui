@@ -35,20 +35,6 @@ void main() {
     }
   });
 
-  test('circles and capsules draw round ends, like Liquid Glass', () {
-    for (final entry in fixture['fullRound'] as List) {
-      final [w, h, r, round] = entry as List;
-      final shape = GlassShape(
-        x: 0,
-        y: 0,
-        width: (w as num).toDouble(),
-        height: (h as num).toDouble(),
-        radius: (r as num).toDouble(),
-      );
-      expect(isFullRound(shape), round, reason: '$w x $h, radius $r');
-    }
-  });
-
   test('smooth minimum matches', () {
     for (final row in fixture['smoothMin'] as List) {
       expect(

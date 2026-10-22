@@ -173,12 +173,8 @@ class _SuperellipseClipper extends CustomClipper<Path> {
   _SuperellipseClipper(this.radius);
   final double radius;
   @override
-  Path getClip(Size size) => superellipsePath(Offset.zero & size, [
-    radius,
-    radius,
-    radius,
-    radius,
-  ], roundEnds: true);
+  Path getClip(Size size) =>
+      superellipsePath(Offset.zero & size, [radius, radius, radius, radius]);
   @override
   bool shouldReclip(_SuperellipseClipper old) => old.radius != radius;
 }
@@ -207,17 +203,9 @@ class _GlassGroupPainter extends CustomPainter {
       line: line,
       edgeLow: edgeLow,
       shadow: shadow,
-      roundEnds: true,
     );
     if (rim) {
-      paintLightEdge(
-        canvas,
-        size,
-        radius,
-        light: edgeLight,
-        low: edgeLow,
-        roundEnds: true,
-      );
+      paintLightEdge(canvas, size, radius, light: edgeLight, low: edgeLow);
     }
   }
 

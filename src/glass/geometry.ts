@@ -19,19 +19,6 @@ export function clampRadius(shape: GlassShape) {
   return Math.max(0, Math.min(finite(shape.radius), shape.width / 2, shape.height / 2))
 }
 
-/**
- * True when the radius reaches half the shorter side (within half a pixel): a circle or capsule.
- * Liquid Glass draws those with round ends; every other glass shape keeps the kit's superellipse.
- */
-export function isFullRound(shape: GlassShape) {
-  return finite(shape.radius) >= Math.min(shape.width, shape.height) / 2 - 0.5
-}
-
-/** The corner curve's exponent: 2 (circular arcs) for circles and capsules, else 2^1.5. */
-export function cornerExponent(shape: GlassShape) {
-  return isFullRound(shape) ? 2 : FO_CORNER_EXPONENT
-}
-
 const NORM_STEPS = 512
 const NORM = Float64Array.from({ length: NORM_STEPS + 1 }, (_, i) =>
   (1 + (i / NORM_STEPS) ** FO_CORNER_EXPONENT) ** (1 / FO_CORNER_EXPONENT)
@@ -39,11 +26,11 @@ const NORM = Float64Array.from({ length: NORM_STEPS + 1 }, (_, i) =>
 
 /**
  * Signed distance from a point to a rounded box with superellipse corners (exponent 2^1.5, the
- * kit's `corner-shape: superellipse(1.5)`, or circular arcs for circles and capsules):
- * negative inside, zero on the outline. The zero level is exactly the curve `shapePath` draws;
- * away from it the value is a close approximation, which is all a smooth union needs.
+ * kit's `corner-shape: superellipse(1.5)`): negative inside, zero on the outline. The zero level
+ * is exactly the curve `foSuperellipsePath` draws; away from it the value is a close
+ * approximation, which is all a smooth union needs.
  */
-export function shapeDistance(px: number, py: number, shape: GlassShape, exponent = cornerExponent(shape)) {
+export function shapeDistance(px: number, py: number, shape: GlassShape, exponent = FO_CORNER_EXPONENT) {
   const r = clampRadius(shape)
   const hx = shape.width / 2
   const hy = shape.height / 2
@@ -163,11 +150,7 @@ export function translatePath(d: string, dx: number, dy: number) {
 export function shapePath(shape: GlassShape) {
   const r = clampRadius(shape)
   const corner = { x: r, y: r }
-  return translatePath(
-    foSuperellipsePath(shape.width, shape.height, [corner, corner, corner, corner], 0, cornerExponent(shape)),
-    shape.x,
-    shape.y
-  )
+  return translatePath(foSuperellipsePath(shape.width, shape.height, [corner, corner, corner, corner]), shape.x, shape.y)
 }
 
 export type Point = [number, number]

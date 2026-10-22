@@ -4,7 +4,6 @@ import type { GlassMemberOptions } from './context'
 import {
   boundsOf,
   clampRadius,
-  isFullRound,
   glassPaths,
   hostFrame,
   toLocalPoint,
@@ -388,8 +387,6 @@ export class GlassScene {
       const local = toLocalRect(frame, box)
       const rect = { x: local.x - offset.x, y: local.y - offset.y, width: local.width, height: local.height }
       const radius = radiusOf(element) / this.cornerFit
-      // Circles and capsules get round ends, like Liquid Glass (the CSS corner-shape follows).
-      element.toggleAttribute('data-glass-round', isFullRound({ ...rect, radius }))
       if (options.union) {
         const key = `union:${options.union}`
         unions.set(key, [...(unions.get(key) ?? []), rect])
@@ -554,11 +551,7 @@ export class GlassScene {
       style.height = `${height}px`
       if (path.shapes.length === 1) {
         // A lone shape clips with CSS: hand back the radius CSS would use (the circle fallback's).
-        // Circles and capsules keep their full radius and round ends in every browser.
-        const shape = path.shapes[0]
-        const round = isFullRound(shape)
-        style.borderRadius = `${clampRadius(shape) * (round ? 1 : this.cornerFit)}px`
-        style.setProperty('corner-shape', round ? 'round' : '')
+        style.borderRadius = `${clampRadius(path.shapes[0]) * this.cornerFit}px`
         style.clipPath = ''
       } else {
         style.borderRadius = ''
