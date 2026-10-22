@@ -5,10 +5,29 @@ import 'package:flutter_test/flutter_test.dart';
 import 'widgets_test.dart' show host;
 
 double opacityOf(WidgetTester tester, Finder finder) {
-  final opacities = tester.widgetList<Opacity>(
+  var value = 1.0;
+  for (final o in tester.widgetList<Opacity>(
     find.ancestor(of: finder, matching: find.byType(Opacity)),
-  );
-  return opacities.fold(1.0, (a, o) => a * o.opacity);
+  )) {
+    value *= o.opacity;
+  }
+  for (final f in tester.widgetList<FadeTransition>(
+    find.ancestor(of: finder, matching: find.byType(FadeTransition)),
+  )) {
+    value *= f.opacity.value;
+  }
+  return value;
+}
+
+class _Probe extends StatelessWidget {
+  const _Probe(this.label, this.onState);
+  final String label;
+  final ValueChanged<PresenceState> onState;
+  @override
+  Widget build(BuildContext context) {
+    onState(Presence.stateOf(context));
+    return Text(label);
+  }
 }
 
 void main() {
@@ -67,12 +86,7 @@ void main() {
       Presence(
         open: open,
         exitMs: 160,
-        render: (_) => Builder(
-          builder: (context) {
-            state = Presence.stateOf(context);
-            return Text(label);
-          },
-        ),
+        render: (_) => _Probe(label, (value) => state = value),
       ),
     );
     await tester.pumpWidget(build(true));
@@ -159,9 +173,7 @@ void main() {
   testWidgets('Swap cross-fades the old icon out and drops it after 220ms', (
     tester,
   ) async {
-    Widget build(String key) => host(
-      Swap(swapKey: key, child: Text(key)),
-    );
+    Widget build(String key) => host(Swap(swapKey: key, child: Text(key)));
     await tester.pumpWidget(build('play'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(opacityOf(tester, find.text('play')), 1);

@@ -59,10 +59,8 @@ class SpeechBlock extends StatefulWidget {
   final void Function(int from, int to) onMove;
 
   /// Tells the enclosing block that its editor changed, so it shows the typing state for 420ms.
-  static void noteInput(BuildContext context) => context
-      .getInheritedWidgetOfExactType<_BlockScope>()
-      ?.state
-      ._noteInput();
+  static void noteInput(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<_BlockScope>()?.state._noteInput();
 
   @override
   State<SpeechBlock> createState() => _SpeechBlockState();
@@ -168,8 +166,7 @@ class _SpeechBlockState extends State<SpeechBlock> {
                             hint: i18n.t('lab.speech.hint'),
                           ),
                           Expanded(
-                            child:
-                                widget.toolbar ?? _Caption(text: label),
+                            child: widget.toolbar ?? _Caption(text: label),
                           ),
                         ],
                       ),
@@ -416,7 +413,9 @@ class _BlockPainter extends CustomPainter {
         ..strokeWidth = 1
         ..color = border,
     );
-    if (rim) paintLightEdge(canvas, size, radius, light: edgeLight, low: edgeLow);
+    if (rim) {
+      paintLightEdge(canvas, size, radius, light: edgeLight, low: edgeLow);
+    }
   }
 
   @override

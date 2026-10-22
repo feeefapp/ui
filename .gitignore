@@ -5,3 +5,4 @@ node_modules/
 docs/dist/
 parity/dist
 parity/out
+parity/runs

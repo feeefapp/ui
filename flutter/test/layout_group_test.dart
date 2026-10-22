@@ -1,4 +1,5 @@
 import 'package:feeef_ui/physics/layout_group.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -19,20 +20,23 @@ void main() {
       host(
         SizedBox(
           width: 200,
-          child: LayoutGroup(
-            layoutKey: keyed ? layoutKey : null,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final id in order)
-                  LayoutGroupItem(
-                    key: ValueKey(id),
-                    layoutId: id,
-                    child: SizedBox(height: 40, child: Text(id)),
-                  ),
-              ],
-            ),
-          ),
+          child:
+              (keyed
+              ? (Widget child) =>
+                    LayoutGroup(layoutKey: layoutKey, child: child)
+              : (Widget child) => LayoutGroup(child: child))(
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final id in order)
+                      LayoutGroupItem(
+                        key: ValueKey(id),
+                        layoutId: id,
+                        child: SizedBox(height: 40, child: Text(id)),
+                      ),
+                  ],
+                ),
+              ),
         ),
       );
 

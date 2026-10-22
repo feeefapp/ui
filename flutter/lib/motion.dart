@@ -401,7 +401,8 @@ class _AutoHeightState extends State<AutoHeight>
     if (from == null || to == null) return;
     setState(
       () => _height =
-          from + (to - from) * MotionTokens.easeOut.transform(_controller.value),
+          from +
+          (to - from) * MotionTokens.easeOut.transform(_controller.value),
     );
   }
 
@@ -481,7 +482,9 @@ class _RenderHeightBox extends RenderProxyBox {
     if (natural != _reported) {
       _reported = natural;
       // Like a ResizeObserver: the new height is reported after this layout.
-      WidgetsBinding.instance.addPostFrameCallback((_) => onChildHeight(natural));
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => onChildHeight(natural),
+      );
     }
   }
 

@@ -61,9 +61,10 @@ const VARIANTS = [
   { theme: 'light', palette: 'lab', density: 'comfortable', dir: 'rtl' },
 ]
 
-const react = await serve(join(here, 'dist'))
-const flutter = await serve(join(here, '../flutter/example/build/web'))
-const out = join(here, 'out')
+// PARITY_REACT / PARITY_FLUTTER / PARITY_OUT let parallel runs keep their own builds (docs-check.sh).
+const react = await serve(process.env.PARITY_REACT ?? join(here, 'dist'))
+const flutter = await serve(process.env.PARITY_FLUTTER ?? join(here, '../flutter/example/build/web'))
+const out = process.env.PARITY_OUT ?? join(here, 'out')
 await mkdir(out, { recursive: true })
 const browser = await puppeteer.launch({ executablePath: chrome, headless: true, args: ['--force-device-scale-factor=2', '--font-render-hinting=none', '--hide-scrollbars'] })
 const page = await browser.newPage()

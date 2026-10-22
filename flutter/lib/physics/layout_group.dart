@@ -107,15 +107,14 @@ class LayoutGroupItem extends SingleChildRenderObjectWidget {
   final bool size;
 
   @override
-  RenderObject createRenderObject(BuildContext context) =>
-      _RenderItem(
-        layoutId: layoutId,
-        sized: size,
-        group: context
-            .dependOnInheritedWidgetOfExactType<_LayoutGroupScope>()
-            ?.group,
-        reduceMotion: MediaQuery.maybeDisableAnimationsOf(context) ?? false,
-      );
+  RenderObject createRenderObject(BuildContext context) => _RenderItem(
+    layoutId: layoutId,
+    sized: size,
+    group: context
+        .dependOnInheritedWidgetOfExactType<_LayoutGroupScope>()
+        ?.group,
+    reduceMotion: MediaQuery.maybeDisableAnimationsOf(context) ?? false,
+  );
 
   @override
   void updateRenderObject(
@@ -180,11 +179,11 @@ class _RenderItem extends RenderProxyBox {
   (Rect, bool?, Spring)? _pending;
 
   /// Current FLIP offset and scale (origin top-left), and the enter progress.
-  Offset get _shift => _track == null
-      ? Offset.zero
-      : Offset(_track!.x.get(), _track!.y.get());
-  Size get _scale =>
-      _track == null ? const Size(1, 1) : Size(_track!.sx.get(), _track!.sy.get());
+  Offset get _shift =>
+      _track == null ? Offset.zero : Offset(_track!.x.get(), _track!.y.get());
+  Size get _scale => _track == null
+      ? const Size(1, 1)
+      : Size(_track!.sx.get(), _track!.sy.get());
 
   void _register() {
     final group = _group;
@@ -348,8 +347,7 @@ class _RenderItem extends RenderProxyBox {
     return matrix;
   }
 
-  bool get _identity =>
-      _track == null && _enter == null && _pending == null;
+  bool get _identity => _track == null && _enter == null && _pending == null;
 
   @override
   void paint(PaintingContext context, Offset offset) {
@@ -421,8 +419,7 @@ _RenderItem? _itemOf(GlobalKey key) {
 /// Where each [LayoutGroupItem] (found through its key) is on screen now, transforms included, to
 /// animate from after a change.
 Map<GlobalKey, Rect> snapshotLayout(Iterable<GlobalKey> elements) => {
-  for (final key in elements)
-    if (_itemOf(key)?._visualBox(null) case final box?) key: box, // ignore: use_null_aware_elements
+  for (final key in elements) key: ?_itemOf(key)?._visualBox(null),
 };
 
 /// FLIP on springs: animates each item from its box in [before] to where layout puts it next.

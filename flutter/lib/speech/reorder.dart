@@ -135,7 +135,10 @@ class _GroupState extends State<SpeechReorderGroup>
       _box?.globalToLocal(Offset(0, globalY)).dy ?? globalY;
 
   void _ensureTicking() {
-    if (!_ticker.isActive) _ticker.start();
+    if (_ticker.isActive) return;
+    // A fresh run's elapsed time starts from zero.
+    _now = Duration.zero;
+    _ticker.start();
   }
 
   void _tick(Duration elapsed) {
@@ -193,7 +196,8 @@ class _GroupState extends State<SpeechReorderGroup>
     drag.time = time;
     final owner = drag.owner;
     final index = drag.items.indexOf(owner);
-    if (!drag.active && (drag.y - drag.start).abs() > speechActivationDistance) {
+    if (!drag.active &&
+        (drag.y - drag.start).abs() > speechActivationDistance) {
       drag.active = true;
       owner._dragging.value = true;
       setState(() {});
@@ -233,10 +237,9 @@ class _GroupState extends State<SpeechReorderGroup>
       }
       drag.target = target;
       owner._announce(
-        I18n.of(owner._context!).t('lab.speech.position', {
-          'index': target + 1,
-          'count': owner.count,
-        }),
+        I18n.of(
+          owner._context!,
+        ).t('lab.speech.position', {'index': target + 1, 'count': owner.count}),
       );
     }
     owner._slideStart = null;
@@ -311,7 +314,8 @@ class _GroupState extends State<SpeechReorderGroup>
     }
     final drag = _drag;
     if (drag != null) {
-      if (drag.owner == owner && event.logicalKey == LogicalKeyboardKey.escape) {
+      if (drag.owner == owner &&
+          event.logicalKey == LogicalKeyboardKey.escape) {
         _finish(true);
         return KeyEventResult.handled;
       }
@@ -328,7 +332,8 @@ class _GroupState extends State<SpeechReorderGroup>
     final from = items.indexOf(owner);
     if (from >= 0 && next < items.length) {
       final slots = [
-        for (final block in items) (top: block._top()!, height: block._height()),
+        for (final block in items)
+          (top: block._top()!, height: block._height()),
       ];
       final offsets = speechPreviewOffsets(slots, from, next);
       final predicted = <SpeechReorder, double>{};
@@ -340,10 +345,8 @@ class _GroupState extends State<SpeechReorderGroup>
     }
     owner._onMove(owner.index, next);
     owner._announce(
-      I18n.of(owner._context!).t('lab.speech.moved', {
-        'index': next + 1,
-        'count': owner.count,
-      }),
+      I18n.of(owner._context!)
+          .t('lab.speech.moved', {'index': next + 1, 'count': owner.count}),
     );
     return KeyEventResult.handled;
   }
@@ -433,9 +436,7 @@ class SpeechReorder {
     this.count = count;
     _onMove = onMove;
     _context = context;
-    final group = context
-        .getInheritedWidgetOfExactType<_GroupScope>()
-        ?.state;
+    final group = context.getInheritedWidgetOfExactType<_GroupScope>()?.state;
     if (group != _group) {
       _group?._blocks.remove(this);
       _group = group;
@@ -482,8 +483,7 @@ class SpeechReorder {
       if (_settling.value) _settling.value = false;
       return false;
     }
-    final t =
-        (now - start).inMicroseconds / speechSlideDuration.inMicroseconds;
+    final t = (now - start).inMicroseconds / speechSlideDuration.inMicroseconds;
     if (t >= 1) {
       _slideStart = null;
       _offset.value = _slideTo;
@@ -544,10 +544,8 @@ class SpeechReorder {
     final context = _context;
     if (context != null) {
       _announce(
-        I18n.of(context).t('lab.speech.moved', {
-          'index': next + 1,
-          'count': count,
-        }),
+        I18n.of(context)
+            .t('lab.speech.moved', {'index': next + 1, 'count': count}),
       );
     }
     return KeyEventResult.handled;
@@ -633,10 +631,7 @@ class _RenderSpeechColumn extends RenderBox
   @override
   double computeMaxIntrinsicHeight(double width) {
     final children = _children;
-    return children.fold(
-          0.0,
-          (a, c) => a + c.getMaxIntrinsicHeight(width),
-        ) +
+    return children.fold(0.0, (a, c) => a + c.getMaxIntrinsicHeight(width)) +
         _spacing * math.max(0, children.length - 1);
   }
 

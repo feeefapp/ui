@@ -1,6 +1,7 @@
 // Copies the docs' Dart examples (docs/content/**/examples/*.dart) into the gallery and writes a
 // registry, so `?example=components/button/01-variants` renders the same example the docs show.
-// Run: node flutter/tool/sync_docs_examples.mjs  (output is generated and gitignored)
+// Run: node flutter/tool/sync_docs_examples.mjs [--only components/button,components/toolbar]
+// (output is generated and gitignored; --only keeps the build to those pages).
 import { mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -18,6 +19,8 @@ const walk = (dir) => {
   }
 }
 walk(content)
+const only = process.argv.includes('--only') ? process.argv[process.argv.indexOf('--only') + 1].split(',') : null
+if (only) found.splice(0, found.length, ...found.filter((path) => only.some((p) => relative(content, path).startsWith(`${p}/`))))
 
 rmSync(out, { recursive: true, force: true })
 mkdirSync(out, { recursive: true })

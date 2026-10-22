@@ -193,11 +193,7 @@ class _ModelLadderState extends State<ModelLadder>
     if (widget.stops.isEmpty) return const SizedBox.shrink();
     final copy = ladderCopyOf(context, widget.copy);
     final stops = widget.stops;
-    final safe = clamp(
-      widget.index.toDouble(),
-      0,
-      stops.length - 1.0,
-    ).toInt();
+    final safe = clamp(widget.index.toDouble(), 0, stops.length - 1.0).toInt();
     final current = widget.selectedModel ?? stops[safe];
     final tier = widget.selectedModel != null
         ? displayName(current, safe, stops.length, copy)
@@ -242,7 +238,8 @@ class _ModelLadderState extends State<ModelLadder>
     // Radix: flip to the other side when the popover doesn't fit, shift to stay 12px inside.
     var side = widget.side;
     final height = _popoverHeight ?? 0;
-    final above = rect.top - 8 - 12, below = screen.height - rect.bottom - 8 - 12;
+    final above = rect.top - 8 - 12,
+        below = screen.height - rect.bottom - 8 - 12;
     if (side == ModelLadderSide.top && height > above && below > above) {
       side = ModelLadderSide.bottom;
     } else if (side == ModelLadderSide.bottom &&
@@ -251,10 +248,10 @@ class _ModelLadderState extends State<ModelLadder>
       side = ModelLadderSide.top;
     }
     final start = switch ((widget.align, rtl)) {
-      (ModelLadderAlign.start, false) || (ModelLadderAlign.end, true) =>
-        rect.left,
-      (ModelLadderAlign.end, false) || (ModelLadderAlign.start, true) =>
-        rect.right - width,
+      (ModelLadderAlign.start, false) ||
+      (ModelLadderAlign.end, true) => rect.left,
+      (ModelLadderAlign.end, false) ||
+      (ModelLadderAlign.start, true) => rect.right - width,
       (ModelLadderAlign.center, _) => rect.center.dx - width / 2,
     };
     final left = math.max(12.0, math.min(start, screen.width - 12 - width));
@@ -517,11 +514,12 @@ class _TilePainter extends CustomPainter {
     final shape = superellipsePath(rect, const [12, 12, 12, 12]);
     final paint = Paint();
     if (fire) {
-      paint.shader = _cssLinear(rect, 160, const [
-        Color(0xFFFFD54A),
-        Color(0xFFFF4D0A),
-        Color(0xFFA32008),
-      ], const [0, 0.7, 1]);
+      paint.shader = _cssLinear(
+        rect,
+        160,
+        const [Color(0xFFFFD54A), Color(0xFFFF4D0A), Color(0xFFA32008)],
+        const [0, 0.7, 1],
+      );
     } else if (fill != null) {
       paint.color = fill!;
     } else {
@@ -809,8 +807,7 @@ class _ModelLadderCardState extends State<ModelLadderCard> {
                             ],
                           ),
                         ),
-                        if (opens)
-                          LucideChevronDown(size: 14, color: c.muted),
+                        if (opens) LucideChevronDown(size: 14, color: c.muted),
                       ],
                     ),
                   ),
@@ -917,11 +914,12 @@ class _Tier extends StatelessWidget {
     if (top) {
       label = ShaderMask(
         blendMode: BlendMode.srcIn,
-        shaderCallback: (bounds) => _cssLinear(bounds, 95, const [
-          Color(0xFFFF4D0A),
-          Color(0xFFFF9A1F),
-          Color(0xFFFFD54A),
-        ], const [0, 0.55, 1]),
+        shaderCallback: (bounds) => _cssLinear(
+          bounds,
+          95,
+          const [Color(0xFFFF4D0A), Color(0xFFFF9A1F), Color(0xFFFFD54A)],
+          const [0, 0.55, 1],
+        ),
         child: label,
       );
     }
@@ -942,10 +940,7 @@ class _AccessBadge extends StatelessWidget {
     return DecoratedBox(
       decoration: ShapeDecoration(
         color: free ? c.surfaceSoft : null,
-        shape: SuperellipseBorder(
-          radius: 6,
-          side: BorderSide(color: c.line),
-        ),
+        shape: SuperellipseBorder(radius: 6, side: BorderSide(color: c.line)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
@@ -981,7 +976,8 @@ class _CardFrame extends StatelessWidget {
     final content = list
         ? SizedBox(
             height:
-                scope?.listHeight ?? math.max(120.0, math.min(440.0, screen - 24)),
+                scope?.listHeight ??
+                math.max(120.0, math.min(440.0, screen - 24)),
             child: child,
           )
         : Padding(padding: const EdgeInsets.all(12), child: child);
@@ -1270,7 +1266,9 @@ class _ModelListState extends State<_ModelList> {
     final rows = <_Row>[];
     for (var i = 0; i < widget.items.length; i++) {
       final stop = widget.items[i];
-      final rung = widget.tiers.indexWhere((row) => row.modelId == stop.modelId);
+      final rung = widget.tiers.indexWhere(
+        (row) => row.modelId == stop.modelId,
+      );
       final tier = rung >= 0
           ? visibleLabel(widget.tiers[rung], rung, widget.tiers.length, copy)
           : '';
@@ -1308,8 +1306,7 @@ class _ModelListState extends State<_ModelList> {
   }
 
   KeyEventResult _navigate(List<_Row> rows, String? tabStop, KeyEvent event) {
-    if (rows.isEmpty ||
-        (event is! KeyDownEvent && event is! KeyRepeatEvent)) {
+    if (rows.isEmpty || (event is! KeyDownEvent && event is! KeyRepeatEvent)) {
       return KeyEventResult.ignored;
     }
     final index = math.max(
@@ -1778,7 +1775,9 @@ class _LadderControlState extends State<_LadderControl> {
           behavior: HitTestBehavior.opaque,
           onTapDown: _interactive ? (_) => setState(() => _down = true) : null,
           onTapUp: _interactive ? (_) => setState(() => _down = false) : null,
-          onTapCancel: _interactive ? () => setState(() => _down = false) : null,
+          onTapCancel: _interactive
+              ? () => setState(() => _down = false)
+              : null,
           onTap: _interactive ? widget.onTap : null,
           child: AnimatedOpacity(
             opacity: widget.disabled ? 0.42 : 1,
