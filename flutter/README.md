@@ -20,6 +20,7 @@ Labels and other visible content are widgets (`Text`, `LucideBold()`), on both s
 | `physics/spring`, `motion-value` | `Spring`, `Springs`, `solveSpring`, `MotionValue`, `rubberBand` | vectors |
 | `primitives/popover-surface` | `PopoverSurface` (breathing pixel grain) | `popover` 0.33–0.43% |
 | `scroll` | `ScrollArea`, `ScrollGradientOverlay`, scroll metrics | `scroll` 0.47–0.63% |
+| `actions` | `ActionsBar`, `Action` (`CommandAction`, `ToggleAction`, `GroupAction`), `computeActionsLayout`, `ActionsWidthProvider` | `actions` 0.86–1.20% |
 | `primitives/list`, `list-model` | `ListSection`, `ListRow`, `RowAction` (swipe actions, full swipe, drag and keyboard reorder) | `list` 0.45–0.53% |
 | `primitives/select` | `Select`, `Option` (field or plain trigger, anchored menu, keyboard, validation) | `select` 0.45–0.65% (closed) |
 | `primitives/modal` | `Modal` (OverlayPortal: focus scope, Escape, backdrop, return focus) | `modal` 0.21–0.26% |
@@ -43,7 +44,7 @@ ui.ThemeProvider(
 
 Import paths mirror the web kit (`package:feeef_ui/primitives/button.dart` ↔
 `@feeef.dev/ui/primitives/button`). Names such as `Button` and `RadioGroup` are generic: prefix the
-import when an app also imports Material, or `hide RadioGroup` from `widgets.dart`. Always pass
+import when an app also imports Material, or `hide Action, RadioGroup` from `widgets.dart`. Always pass
 a `variant` to `Button`: the web kit's variant-less button is a legacy unstyled mode with no twin.
 
 ## Parity

@@ -19,6 +19,8 @@ import { SPRINGS, solveSpring, springCoefficients, rubberBand } from '../../src/
 import { glassStretch, pressedShape } from '../../src/glass/press'
 import { planGlassTransition } from '../../src/glass/transitions'
 import { swipeRelease, swipeIsFull, reorderTarget, reorderShifts, reorderLanding } from '../../src/primitives/list-model'
+import { computeActionsLayout } from '../../src/actions/layout'
+import { diffVisibleActions } from '../../src/actions/overflow-motion'
 import { scrollWashPaths, scrollEdgeOpacities, scrollContentReserve } from '../../src/scroll/metrics'
 
 const pill: GlassShape = { x: 10, y: 20, width: 120, height: 46, radius: 23 }
@@ -116,3 +118,22 @@ const list = {
 }
 writeFileSync(new URL('../test/fixtures/list.json', import.meta.url), JSON.stringify(list) + '\n')
 console.log('wrote list.json')
+
+// Actions: which entries fit.
+const fit = (widths: number[], priorities: number[], maxWidth: number) => {
+  const actions = widths.map((w, i) => ({ id: `a${i}`, priority: priorities[i], w }))
+  const layout = computeActionsLayout({ actions, maxWidth, measure: (a) => a.w, overflowWidth: 40, gap: 4 })
+  return { widths, priorities, maxWidth, visible: layout.visible.map((a) => a.id), overflow: layout.overflow.map((a) => a.id), requiredWidth: layout.requiredWidth }
+}
+const actionsFixture = {
+  layouts: [
+    fit([80, 60, 90], [0, 0, 0], 400),
+    fit([80, 60, 90], [0, 0, 0], 200),
+    fit([80, 60, 90], [2, 0, 1], 150),
+    fit([80, 60, 90], [0, 0, 0], 10),
+    fit([], [], 100),
+  ],
+  diff: diffVisibleActions(['a', 'b', 'c'], ['a', 'c', 'd']),
+}
+writeFileSync(new URL('../test/fixtures/actions.json', import.meta.url), JSON.stringify(actionsFixture) + '\n')
+console.log('wrote actions.json')

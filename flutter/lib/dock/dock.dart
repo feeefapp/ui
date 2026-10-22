@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
+import '../actions/actions_bar.dart';
 import '../glass/container.dart';
 import '../scaffold.dart';
 import '../theme.dart';
@@ -75,10 +76,17 @@ class Dock extends StatelessWidget {
                 ),
               ),
             Flexible(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 4,
-                children: children,
+              // An ActionsBar here fits the room the tile leaves.
+              child: ActionsWidthProvider(
+                value: math.max(
+                  0.0,
+                  available - (content == null ? 0 : tileMax + gap),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: 4,
+                  children: children,
+                ),
               ),
             ),
           ],

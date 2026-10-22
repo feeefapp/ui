@@ -6,6 +6,9 @@
 /// Material can prefix this library: `import 'package:feeef_ui/feeef_ui.dart' as ui;`.
 library;
 
+export 'actions/actions_bar.dart';
+export 'actions/layout.dart';
+export 'actions/types.dart';
 export 'brand/geometry.dart'
     show SuperellipseBorder, superellipsePath, superellipsePoints;
 export 'dock/content_swap.dart';
@@ -29,6 +32,7 @@ export 'physics/motion_value.dart';
 export 'physics/spring.dart';
 export 'primitives/spring_core.dart';
 export 'primitives/text_field.dart';
+export 'layout/size_reporter.dart';
 export 'scaffold.dart';
 export 'scroll/gradient_overlay.dart';
 export 'scroll/metrics.dart';

@@ -34,16 +34,43 @@ class ControlOverrides extends InheritedWidget {
     super.key,
     this.height,
     this.radius,
+    this.pressedFill,
+    this.pressedEdge,
     required super.child,
   });
   final double? height, radius;
 
+  /// Fill and edge of toggled-on (pressed) controls, such as an actions bar's checked toggle.
+  final Color? pressedFill, pressedEdge;
+
   static ControlOverrides? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<ControlOverrides>();
 
+  /// These overrides on top of the enclosing ones.
+  static Widget merge(
+    BuildContext context, {
+    double? height,
+    double? radius,
+    Color? pressedFill,
+    Color? pressedEdge,
+    required Widget child,
+  }) {
+    final outer = maybeOf(context);
+    return ControlOverrides(
+      height: height ?? outer?.height,
+      radius: radius ?? outer?.radius,
+      pressedFill: pressedFill ?? outer?.pressedFill,
+      pressedEdge: pressedEdge ?? outer?.pressedEdge,
+      child: child,
+    );
+  }
+
   @override
   bool updateShouldNotify(ControlOverrides old) =>
-      old.height != height || old.radius != radius;
+      old.height != height ||
+      old.radius != radius ||
+      old.pressedFill != pressedFill ||
+      old.pressedEdge != pressedEdge;
 }
 
 /// A button painted by one of the emphasis variants: the Flutter twin of `Button` in
@@ -173,12 +200,14 @@ class _ButtonState extends State<Button> {
       );
       raised = false;
     }
+    final overrides = ControlOverrides.maybeOf(context);
     if (widget.pressed == true) {
+      final fill = overrides?.pressedFill;
       paint = VariantPaint(
-        fill: c.controlSelected,
-        hover: mixSrgb(c.primary, 0.30, c.surface),
-        pressed: mixSrgb(c.primary, 0.36, c.surface),
-        edge: mixSrgb(c.primary, 0.38, c.line),
+        fill: fill ?? c.controlSelected,
+        hover: fill ?? mixSrgb(c.primary, 0.30, c.surface),
+        pressed: fill ?? mixSrgb(c.primary, 0.36, c.surface),
+        edge: overrides?.pressedEdge ?? mixSrgb(c.primary, 0.38, c.line),
         ink: c.ink,
       );
       ink = c.ink;
@@ -191,7 +220,6 @@ class _ButtonState extends State<Button> {
         ? paint.hover
         : paint.fill;
 
-    final overrides = ControlOverrides.maybeOf(context);
     final regular = overrides?.height ?? s.controlHeight;
     double height = switch (widget.controlSize) {
       ControlSize.compact => s.controlCompact,

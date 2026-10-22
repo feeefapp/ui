@@ -1,6 +1,6 @@
 import 'package:feeef_ui/feeef_ui.dart';
 import 'package:feeef_ui/theme/css_text.dart';
-import 'package:flutter/widgets.dart' hide RadioGroup;
+import 'package:flutter/widgets.dart' hide Action, RadioGroup;
 
 /// Scenes shared with parity/src/scenes.tsx: same ids, same content, same layout. Each is a column
 /// of rows (wrapping, 12px gap) in a 720px stage with 24px padding.
@@ -393,6 +393,63 @@ final Map<String, List<Widget> Function()> scenes = {
       },
     ),
   ],
+  'actions': () {
+    final actions = <Action>[
+      CommandAction(
+        id: 'print',
+        label: 'Print',
+        icon: const LucidePrinter(),
+        onAction: _noop,
+      ),
+      CommandAction(
+        id: 'ship',
+        label: 'Ship',
+        icon: const LucideTruck(),
+        variant: .filled,
+        priority: 2,
+        onAction: _noop,
+      ),
+      ToggleAction(
+        id: 'cod',
+        label: 'Cash on delivery',
+        checked: true,
+        onCheckedChange: (_) {},
+      ),
+      CommandAction(
+        id: 'archive',
+        label: 'Archive',
+        icon: const LucideArchive(),
+        priority: -1,
+        onAction: _noop,
+      ),
+      CommandAction(
+        id: 'delete',
+        label: 'Delete',
+        destructive: true,
+        priority: -2,
+        onAction: _noop,
+      ),
+    ];
+    return [
+      SizedBox(
+        width: 672,
+        child: ActionsBar(label: 'Order actions', actions: actions),
+      ),
+      SizedBox(
+        width: 300,
+        child: ActionsBar(label: 'Order actions', actions: actions),
+      ),
+      SizedBox(
+        width: 300,
+        child: ActionsBar(
+          label: 'Order actions',
+          actions: actions,
+          size: .compact,
+          align: .start,
+        ),
+      ),
+    ];
+  },
   'list': () => [
     Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

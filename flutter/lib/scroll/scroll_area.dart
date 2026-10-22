@@ -1,6 +1,6 @@
-import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
+import '../layout/size_reporter.dart';
 import '../theme.dart';
 import 'gradient_overlay.dart';
 import 'metrics.dart';
@@ -95,7 +95,7 @@ class _ScrollAreaState extends State<ScrollArea> {
       right: gap > safe.right ? gap : safe.right,
       top: top ? gap + safe.top : null,
       bottom: top ? null : gap + safe.bottom,
-      child: _SizeReporter(
+      child: SizeReporter(
         onSize: (size) => _measured(top, size),
         child: Center(heightFactor: 1, child: child),
       ),
@@ -142,34 +142,5 @@ class _ScrollAreaState extends State<ScrollArea> {
         if (widget.bottom != null) float(widget.bottom!, false),
       ],
     );
-  }
-}
-
-/// Reports its child's size after every layout that changes it.
-class _SizeReporter extends SingleChildRenderObjectWidget {
-  const _SizeReporter({required this.onSize, super.child});
-  final ValueChanged<Size> onSize;
-
-  @override
-  RenderObject createRenderObject(BuildContext context) =>
-      _RenderSizeReporter(onSize);
-
-  @override
-  void updateRenderObject(BuildContext context, _RenderSizeReporter render) =>
-      render.onSize = onSize;
-}
-
-class _RenderSizeReporter extends RenderProxyBox {
-  _RenderSizeReporter(this.onSize);
-  ValueChanged<Size> onSize;
-  Size? _reported;
-
-  @override
-  void performLayout() {
-    super.performLayout();
-    if (size == _reported) return;
-    _reported = size;
-    final reported = size;
-    WidgetsBinding.instance.addPostFrameCallback((_) => onSize(reported));
   }
 }

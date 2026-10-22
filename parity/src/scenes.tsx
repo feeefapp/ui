@@ -17,7 +17,9 @@ import { ScrollArea } from '@feeef.dev/ui/scroll'
 import { Modal } from '@feeef.dev/ui/primitives/modal'
 import { Select, Option } from '@feeef.dev/ui/primitives/select'
 import { ListSection, ListRow } from '@feeef.dev/ui/primitives/list'
-import { LucideStore } from 'lucide-react'
+import { LucideStore, LucideArchive } from 'lucide-react'
+import { ActionsBar } from '@feeef.dev/ui/actions'
+import type { Action } from '@feeef.dev/ui/actions'
 import { LucidePrinter, LucideTruck, LucideX } from 'lucide-react'
 
 /**
@@ -209,6 +211,28 @@ export const SCENES: Record<string, () => ReactNode> = {
       </ScrollArea>
     </div>
   ),
+  actions: () => {
+    const actions: Action[] = [
+      { type: 'action', id: 'print', label: 'Print', icon: <LucidePrinter />, onAction: () => {} },
+      { type: 'action', id: 'ship', label: 'Ship', icon: <LucideTruck />, variant: 'filled', priority: 2, onAction: () => {} },
+      { type: 'toggle', id: 'cod', label: 'Cash on delivery', checked: true, onCheckedChange: () => {} },
+      { type: 'action', id: 'archive', label: 'Archive', icon: <LucideArchive />, priority: -1, onAction: () => {} },
+      { type: 'action', id: 'delete', label: 'Delete', destructive: true, priority: -2, onAction: () => {} },
+    ]
+    return (
+      <>
+        <div style={{ alignSelf: 'stretch' }}>
+          <ActionsBar label="Order actions" actions={actions} />
+        </div>
+        <div style={{ width: 300 }}>
+          <ActionsBar label="Order actions" actions={actions} />
+        </div>
+        <div style={{ width: 300 }}>
+          <ActionsBar label="Order actions" actions={actions} size="compact" align="start" />
+        </div>
+      </>
+    )
+  },
   list: () => (
     <div style={{ alignSelf: 'stretch' }}>
       <ListSection header="Store" footer="Shown on receipts and the storefront.">
