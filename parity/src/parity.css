@@ -52,3 +52,43 @@ html[data-lab-theme] {
   grid-template-columns: 1fr 1fr;
   gap: 16px 12px;
 }
+
+/* Docs examples render on a copy of the docs stage (docs/src/styles/docs.css), at 720px. */
+#stage.docs-stage {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 168px;
+  padding: 40px 24px;
+  background: var(--lab-ground);
+  /* The docs page's text and box model. */
+  font: 400 15px/1.6 var(--lab-font);
+  -webkit-font-smoothing: antialiased;
+}
+.docs-stage *,
+.docs-stage *::before,
+.docs-stage *::after {
+  box-sizing: border-box;
+}
+.docs-stage > * {
+  max-width: 100%;
+}
+.demo-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+/* Scoped and doubled: a component's own width rule (the toolbar's `.lab-toolbar-layout[role]
+{inline-size: 100%}`) must not win by specificity or bundle order. */
+.docs-stage .demo-column.demo-column {
+  display: grid;
+  gap: 16px;
+  width: min(100%, 360px);
+}
+.docs-stage .demo-wide.demo-wide {
+  width: min(100%, 560px);
+}

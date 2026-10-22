@@ -16,6 +16,7 @@ import '../scroll/scroll_area.dart';
 import '../theme.dart';
 import '../theme/color_mix.dart';
 import 'sheet_model.dart';
+import '../glass/container.dart';
 
 export 'sheet_model.dart';
 
@@ -613,8 +614,9 @@ class _SheetState extends State<Sheet> {
     }
     return OverlayPortal(
       controller: _portal,
-      overlayChildBuilder: (context) =>
-          _mounted ? _hostView(context) : const SizedBox.shrink(),
+      overlayChildBuilder: (context) => _mounted
+          ? GlassLayer(child: _hostView(context))
+          : const SizedBox.shrink(),
     );
   }
 

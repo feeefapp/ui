@@ -65,7 +65,8 @@ export default definePage({
   Overview,
   examples: examplesFrom(
     import.meta.glob('./examples/*.tsx', { eager: true }),
-    import.meta.glob('./examples/*.tsx', { eager: true, query: '?raw', import: 'default' })
+    import.meta.glob('./examples/*.tsx', { eager: true, query: '?raw', import: 'default' }),
+    import.meta.glob('./examples/*.dart', { eager: true, query: '?raw', import: 'default' })
   ),
   Preview: () => (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>

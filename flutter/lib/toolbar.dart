@@ -54,12 +54,16 @@ class ToolbarGroup extends StatelessWidget {
     this.glassId,
     this.glassUnion,
     this.glassHidden = false,
+    this.glassMotion = GlassMotion.spring,
     required this.children,
   });
 
   /// Accessible name of the group.
   final String label;
   final String? glassId, glassUnion;
+
+  /// How its glass follows a size change (`follow` for groups that animate their own size).
+  final GlassMotion glassMotion;
 
   /// Leaves the container's glass while keeping its place (`data-glass-hidden`).
   final bool glassHidden;
@@ -82,6 +86,7 @@ class ToolbarGroup extends StatelessWidget {
         glassId: glassId,
         glassUnion: glassUnion,
         glassHidden: glassHidden,
+        glassMotion: glassMotion,
         radius: radius,
         // 2px padding inside the 1px border; at least the control size + 6px tall.
         padding: const EdgeInsets.all(2),

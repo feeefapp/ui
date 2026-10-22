@@ -70,7 +70,10 @@ class GlassScope extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType<_GlassRegistryScope>() != null
+      context
+              .dependOnInheritedWidgetOfExactType<_GlassRegistryScope>()
+              ?.registry !=
+          null
       ? child
       : GlassContainer(
           spacing: spacing,
@@ -118,9 +121,20 @@ class GlassMemberRegistry {
   }
 }
 
+/// Starts a new glass layer: bubbles below it never join a container above it. Overlays (dialogs,
+/// sheets, menus, tooltips) wrap their content in one, because an overlay inherits from the widget
+/// that opened it but paints in the browser's top layer, apart from that widget's glass.
+class GlassLayer extends StatelessWidget {
+  const GlassLayer({super.key, required this.child});
+  final Widget child;
+  @override
+  Widget build(BuildContext context) =>
+      _GlassRegistryScope(registry: null, child: child);
+}
+
 class _GlassRegistryScope extends InheritedWidget {
   const _GlassRegistryScope({required this.registry, required super.child});
-  final GlassMemberRegistry registry;
+  final GlassMemberRegistry? registry;
   @override
   bool updateShouldNotify(_GlassRegistryScope old) => old.registry != registry;
 }

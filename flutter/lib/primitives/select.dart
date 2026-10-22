@@ -12,6 +12,7 @@ import 'button.dart' show ControlSize;
 import '../theme/surfaces.dart';
 import 'popover_surface.dart';
 import 'text_field.dart';
+import '../glass/container.dart';
 
 /// One choice in a [Select] menu. A check marks the selected option.
 class Option {
@@ -309,7 +310,7 @@ class _SelectState extends State<Select> with SingleTickerProviderStateMixin {
       link: _link,
       child: OverlayPortal(
         controller: _portal,
-        overlayChildBuilder: (context) => _menu(context),
+        overlayChildBuilder: (context) => GlassLayer(child: _menu(context)),
         child: Semantics(
           button: true,
           enabled: !widget.disabled,

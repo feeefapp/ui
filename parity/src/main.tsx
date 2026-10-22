@@ -1,3 +1,4 @@
+import { lazy, Suspense, type ComponentType } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Provider } from '@feeef.dev/ui/provider'
 import type { Density, Palette } from '@feeef.dev/ui/theme-config'
@@ -5,7 +6,24 @@ import { SCENES } from './scenes'
 import './parity.css'
 
 const query = new URLSearchParams(location.search)
-const scene = SCENES[query.get('scene') ?? 'buttons'] ?? (() => 'Unknown scene')
+const sceneId = query.get('scene') ?? 'buttons'
+
+// `docs:<section>/<page>/<example>` renders a docs example on the docs stage, so its Dart sibling
+// (flutter/tool/sync_docs_examples.mjs) can be compared with it.
+const docsExamples = import.meta.glob<{ default: ComponentType }>('../../docs/content/**/examples/*.tsx')
+function docsScene(id: string) {
+  const [section, page, example] = id.split('/')
+  const load = docsExamples[`../../docs/content/${section}/${page}/examples/${example}.tsx`]
+  if (!load) return () => 'Unknown example'
+  const Example = lazy(load)
+  return () => (
+    <Suspense>
+      <Example />
+    </Suspense>
+  )
+}
+const docs = sceneId.startsWith('docs:')
+const scene = docs ? docsScene(sceneId.slice(5)) : (SCENES[sceneId] ?? (() => 'Unknown scene'))
 const mode = query.get('theme') === 'dark' ? 'dark' : 'light'
 
 createRoot(document.getElementById('root')!).render(
@@ -18,7 +36,9 @@ createRoot(document.getElementById('root')!).render(
   >
     {/* Apps render under .lab-app (it scopes control details such as the texture clip). */}
     <div className="lab-app">
-      <div id="stage">{scene()}</div>
+      <div id="stage" className={docs ? 'docs-stage' : undefined}>
+        {scene()}
+      </div>
     </div>
   </Provider>
 )

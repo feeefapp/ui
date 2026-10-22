@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { Code as CodeIcon } from 'lucide-react'
 import { Button } from '@feeef.dev/ui/primitives/button'
 import { Toolbar, ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 import type { DocExample } from '../model'
 import { Code, CopyButton } from './code'
 import { Heading } from './prose'
@@ -10,7 +11,11 @@ import { useDocsSettings } from '../settings'
 /** A live demo on a quiet stage, with its source one click away. */
 export function Example({ example, headingLevel = 2 }: { example: DocExample; headingLevel?: 2 | 3 }) {
   const [open, setOpen] = useState(false)
+  const { settings, update } = useDocsSettings()
   const { Demo } = example
+  // The reader's kit choice is remembered across examples; React when there is no Flutter version.
+  const flutter = settings.code === 'flutter' && !!example.dart
+  const shown = flutter ? example.dart! : example.source
   return (
     <section className="docs-example" aria-labelledby={`example-${example.id}`}>
       <Heading level={headingLevel} id={`example-${example.id}`}>
@@ -27,6 +32,21 @@ export function Example({ example, headingLevel = 2 }: { example: DocExample; he
           leading={null}
           trailing={
             <ToolbarGroup label="Example actions">
+              {example.dart && (
+                <SegmentedControl<'react' | 'flutter'>
+                  label="Example code"
+                  appearance="plain"
+                  value={flutter ? 'flutter' : 'react'}
+                  onChange={(code) => {
+                    update({ code })
+                    setOpen(true)
+                  }}
+                  options={[
+                    { value: 'react', label: 'React' },
+                    { value: 'flutter', label: 'Flutter' },
+                  ]}
+                />
+              )}
               <Button
                 variant="text"
                 appearance="toolbar"
@@ -37,11 +57,19 @@ export function Example({ example, headingLevel = 2 }: { example: DocExample; he
                 <CodeIcon size={18} />
                 {open ? 'Hide code' : 'Show code'}
               </Button>
-              <CopyButton text={example.source} label="Copy example code" />
+              <CopyButton text={shown} label="Copy example code" />
             </ToolbarGroup>
           }
         />
-        {open && <Code code={example.source} copy={false} className="docs-example-code" />}
+        {open && (
+          <Code
+            code={shown}
+            lang={flutter ? 'dart' : 'tsx'}
+            title={flutter ? 'Dart' : 'React'}
+            copy={false}
+            className="docs-example-code"
+          />
+        )}
       </div>
     </section>
   )

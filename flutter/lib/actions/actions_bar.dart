@@ -14,6 +14,7 @@ import '../theme.dart';
 import '../theme/css_text.dart';
 import 'layout.dart';
 import 'types.dart';
+import '../glass/container.dart';
 
 /// The width a shrink-wrapping parent (a Dock) offers its actions, before fitting. Without it,
 /// each bar fits its own host. The twin of `ActionsWidthProvider` in the web kit.
@@ -611,35 +612,37 @@ class _MenuAnchorState extends State<_MenuAnchor> {
     link: _link,
     child: OverlayPortal(
       controller: _portal,
-      overlayChildBuilder: (context) => Stack(
-        children: [
-          Positioned.fill(
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTap: _close,
+      overlayChildBuilder: (context) => GlassLayer(
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: _close,
+              ),
             ),
-          ),
-          CompositedTransformFollower(
-            link: _link,
-            targetAnchor: AlignmentDirectional.bottomEnd.resolve(
-              Directionality.of(context),
+            CompositedTransformFollower(
+              link: _link,
+              targetAnchor: AlignmentDirectional.bottomEnd.resolve(
+                Directionality.of(context),
+              ),
+              followerAnchor: AlignmentDirectional.topEnd.resolve(
+                Directionality.of(context),
+              ),
+              offset: const Offset(0, 8),
+              child: _ActionsMenu(
+                label: widget.label,
+                actions: widget.actions,
+                pending: widget.pending,
+                execute: (action, [checked]) {
+                  _close();
+                  widget.execute(action, checked);
+                },
+                close: _close,
+              ),
             ),
-            followerAnchor: AlignmentDirectional.topEnd.resolve(
-              Directionality.of(context),
-            ),
-            offset: const Offset(0, 8),
-            child: _ActionsMenu(
-              label: widget.label,
-              actions: widget.actions,
-              pending: widget.pending,
-              execute: (action, [checked]) {
-                _close();
-                widget.execute(action, checked);
-              },
-              close: _close,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
       child: widget.builder(widget.enabled ? _toggle : null),
     ),

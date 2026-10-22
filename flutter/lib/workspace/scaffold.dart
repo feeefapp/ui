@@ -603,8 +603,9 @@ class _WorkspaceDrawerState extends State<_WorkspaceDrawer>
   @override
   Widget build(BuildContext context) => OverlayPortal(
     controller: _portal,
-    overlayChildBuilder: (context) =>
-        _mounted ? _drawer(context) : const SizedBox.shrink(),
+    overlayChildBuilder: (context) => _mounted
+        ? GlassLayer(child: _drawer(context))
+        : const SizedBox.shrink(),
   );
 
   Widget _drawer(BuildContext context) {

@@ -1,6 +1,7 @@
 import 'package:feeef_ui/feeef_ui.dart';
 import 'package:flutter/widgets.dart';
 
+import 'docs_examples/registry.dart';
 import 'scenes.dart';
 
 /// The Flutter side of the parity harness: `?scene=<id>&theme=light|dark&palette=lab|mono&density=…`
@@ -13,9 +14,12 @@ class Gallery extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final query = Uri.base.queryParameters;
-    final scene =
-        scenes[query['scene'] ?? 'buttons'] ??
-        () => [const Text('Unknown scene')];
+    final id = query['scene'] ?? 'buttons';
+    // `docs:<section>/<page>/<example>`: a docs example on the docs stage.
+    final example = id.startsWith('docs:')
+        ? docsExamples[id.substring(5)]
+        : null;
+    final scene = scenes[id] ?? () => [const Text('Unknown scene')];
     return WidgetsApp(
       color: const Color(0xFFFFFFFF),
       // ?dir=rtl renders the Arabic, right-to-left page, like the React harness.
@@ -46,18 +50,20 @@ class Gallery extends StatelessWidget {
                           fontFamily: kitFontFamily,
                           fontSize: 16,
                         ),
-                        child: Container(
-                          key: const ValueKey('stage'),
-                          width: 720,
-                          color: ThemeProvider.of(context).colors.surface,
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            spacing: 24,
-                            children: scene(),
-                          ),
-                        ),
+                        child: example != null
+                            ? _DocsStage(child: example())
+                            : Container(
+                                key: const ValueKey('stage'),
+                                width: 720,
+                                color: ThemeProvider.of(context).colors.surface,
+                                padding: const EdgeInsets.all(24),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  spacing: 24,
+                                  children: scene(),
+                                ),
+                              ),
                       ),
                     ),
                   ),
@@ -69,4 +75,28 @@ class Gallery extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The docs page's example stage (docs/src/styles/docs.css `.docs-stage`): ground colour, 40/24
+/// padding, at least 168px tall, the example centred, in the docs' 15px / 1.6 text.
+class _DocsStage extends StatelessWidget {
+  const _DocsStage({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    key: const ValueKey('stage'),
+    width: 720,
+    color: ThemeProvider.of(context).colors.ground,
+    padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+    constraints: const BoxConstraints(minHeight: 168),
+    child: DefaultTextStyle.merge(
+      style: const TextStyle(fontSize: 15, height: 1.6),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [child],
+      ),
+    ),
+  );
 }

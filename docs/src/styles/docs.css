@@ -255,12 +255,14 @@ h3.docs-heading {
   justify-content: center;
   gap: 12px;
 }
-.demo-column {
+/* Scoped and doubled: a component's own width rule (the toolbar's `.lab-toolbar-layout[role]
+{inline-size: 100%}`) must not win by specificity or bundle order. */
+.docs-stage .demo-column.demo-column {
   display: grid;
   gap: 16px;
   width: min(100%, 360px);
 }
-.demo-wide {
+.docs-stage .demo-wide.demo-wide {
   width: min(100%, 560px);
 }
 

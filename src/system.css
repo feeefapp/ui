@@ -213,10 +213,13 @@ html[data-lab-theme] .lab-control[data-variant='destructive'] {
   color: var(--lab-danger);
 }
 /* Borderless secondary commands share a toolbar's group material. A primary
-action remains prominent even when it is placed in that same toolbar. */
+action remains prominent even when it is placed in that same toolbar, and a toggle that is on keeps
+its selected fill. */
 html[data-lab-theme]
   .lab-control[data-control-appearance='toolbar']:not([data-variant='primary']):not(
-    [data-variant='filled']
+    [data-variant='filled'],
+    [aria-pressed='true'],
+    [data-state='on']
   ) {
   --lab-control-fill: transparent;
   --lab-control-edge: transparent;

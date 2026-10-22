@@ -1,0 +1,4552 @@
+{
+ "runs": [
+  {
+   "compact": 46,
+   "wide": 400,
+   "from": 46,
+   "to": 400,
+   "dt": 0.016666666666666666,
+   "velocity": 0,
+   "frames": [
+    {
+     "position": 69.82124999999999,
+     "velocity": 1796.5499999999997,
+     "progress": 0.06729166666666664,
+     "editor": 0,
+     "controls": 0.40930287762760975,
+     "settled": false
+    },
+    {
+     "position": 110.19008967013887,
+     "velocity": 2566.1970104166667,
+     "progress": 0.18132793692129626,
+     "editor": 0,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 155.61819371007545,
+     "velocity": 2742.834896337529,
+     "progress": 0.3096559144352414,
+     "editor": 0.04806373310409813,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 199.7739391126524,
+     "velocity": 2599.8456870642335,
+     "progress": 0.4343896585103176,
+     "editor": 0.36610214441208133,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 239.5137495089187,
+     "velocity": 2304.8763224938793,
+     "progress": 0.5466490099121997,
+     "editor": 0.7307572545753124,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 273.5993236091508,
+     "velocity": 1956.9821094339952,
+     "progress": 0.6429359423987311,
+     "editor": 0.9558367312852265,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 301.87644416310144,
+     "velocity": 1611.548592207161,
+     "progress": 0.7228148140200605,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 324.7608321234412,
+     "velocity": 1296.8127299816153,
+     "progress": 0.787459977749834,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 342.9255121469975,
+     "velocity": 1024.6616427102558,
+     "progress": 0.8387726331836087,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 357.11831562268196,
+     "velocity": 797.5721095807797,
+     "progress": 0.878865298369158,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 368.0617740419272,
+     "velocity": 612.9766119779172,
+     "progress": 0.9097790227173085,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 376.4038588835448,
+     "velocity": 465.93559786905087,
+     "progress": 0.9333442341343073,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 382.69903420566243,
+     "velocity": 350.7121034985994,
+     "progress": 0.9511272152702328,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 387.40649265788704,
+     "velocity": 261.64844270994394,
+     "progress": 0.9644251205025057,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 390.89736739548607,
+     "velocity": 193.60972921008295,
+     "progress": 0.9742863485748194,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 393.4659396013903,
+     "velocity": 142.16712762773957,
+     "progress": 0.9815422022638144,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 395.34194322249874,
+     "velocity": 103.63181187063915,
+     "progress": 0.9868416475211829,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 396.70238478136764,
+     "velocity": 75.00935155780658,
+     "progress": 0.990684702772225,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 397.6821069787743,
+     "velocity": 53.9171160831442,
+     "progress": 0.9934522796010573,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 398.3828069863482,
+     "velocity": 38.48972198560117,
+     "progress": 0.9954316581535261,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 398.8804926171654,
+     "velocity": 27.28639590075649,
+     "progress": 0.9968375497660039,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 399.2315008452391,
+     "velocity": 19.20721482480234,
+     "progress": 0.9978290984328788,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 399.4772651034145,
+     "velocity": 13.421042892316972,
+     "progress": 0.9985233477497584,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 399.64803372644053,
+     "velocity": 9.305616000543695,
+     "progress": 0.999005744989945,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 399.7657328482154,
+     "velocity": 6.398970991917222,
+     "progress": 0.9993382283847893,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 399.84614593848534,
+     "velocity": 4.360840166161342,
+     "progress": 0.9995653840070208,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 399.900556643285,
+     "velocity": 2.9424536056632116,
+     "progress": 0.9997190865629519,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 399.9369759885202,
+     "velocity": 1.9632329406915514,
+     "progress": 0.9998219660692661,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 399.9610515398706,
+     "velocity": 1.2930105201110456,
+     "progress": 0.9998899761013293,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 399.9767357439238,
+     "velocity": 0.8386015665839268,
+     "progress": 0.9999342817624967,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 399.986773633881,
+     "velocity": 0.5337562372446145,
+     "progress": 0.9999626373838446,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.9930562023082,
+     "velocity": 0.3317038095435819,
+     "progress": 0.999980384752283,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.99687466868704,
+     "velocity": 0.1996635088776951,
+     "progress": 0.9999911713804719,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.9991021797189,
+     "velocity": 0.11483314852226556,
+     "progress": 0.9999974637845166,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.00032275590473,
+     "velocity": 0.06147859168732149,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.000922155903,
+     "velocity": 0.028836610135154598,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0011514390346,
+     "velocity": 0.009614206232738108,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0011710891975,
+     "velocity": -0.0010778444832079065,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0010813951808,
+     "velocity": -0.006477559199561495,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0009431834562,
+     "velocity": -0.00869897065125598,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0007918292884,
+     "velocity": -0.009098687464369409,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0006466216522,
+     "velocity": -0.008528702466541664,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.00051694384354,
+     "velocity": -0.0075092353158611475,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.00040629195684,
+     "velocity": -0.0063457762340978635,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.00031484045786,
+     "velocity": -0.005207497705844468,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0002410429212,
+     "velocity": -0.00417914300590087,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0001826008208,
+     "velocity": -0.0032948707955213095,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.00013702519703,
+     "velocity": -0.0025599483139332802,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.00010194136166,
+     "velocity": -0.0019643550322908463,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.00007523566046,
+     "velocity": -0.0014910722868867383,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.00005510861035,
+     "velocity": -0.0011209372256840693,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.00004007542094,
+     "velocity": -0.0008353185528916664,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.000028939448,
+     "velocity": -0.0006174455273201792,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0000207540064,
+     "velocity": -0.00045293201619126444,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0000147814584,
+     "velocity": -0.00032984246672099866,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0000104543879,
+     "velocity": -0.000238516979566412,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0000073411555,
+     "velocity": -0.00017128756035631945,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.00000511663706,
+     "velocity": -0.00012216265608382164,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0000035381196,
+     "velocity": -0.00008652228305792815,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0000024258982,
+     "velocity": -0.00006084457193877853,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0000016479422,
+     "velocity": -0.0000424717495934818,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.00000110795696,
+     "velocity": -0.00002941631712234541,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.00000073620737,
+     "velocity": -0.00002020438649308111,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0000004825416,
+     "velocity": -0.000013751454546342302,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0000003111395,
+     "velocity": -0.000009265418353586733,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.00000019659376,
+     "velocity": -0.000006171849311750345,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0000001210104,
+     "velocity": -0.0000040570647080852725,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.00000007187884,
+     "velocity": -0.000002625192110703289,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.00000004051964,
+     "velocity": -0.0000016660782793495998,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0000000209606,
+     "velocity": -0.0000010315029605179345,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.0000000091288,
+     "velocity": -6.176853731288232e-7,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 400.000000002274,
+     "velocity": -3.525119420993253e-7,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.99999999855953,
+     "velocity": -1.8627879889530655e-7,
+     "progress": 0.9999999999959309,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.9999999967745,
+     "velocity": -8.502694312954222e-8,
+     "progress": 0.9999999999908884,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.9999999961325,
+     "velocity": -2.577780461376441e-8,
+     "progress": 0.9999999999890749,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.9999999961323,
+     "velocity": 6.849646640823863e-9,
+     "progress": 0.9999999999890743,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.9999999964618,
+     "velocity": 2.302376864367341e-8,
+     "progress": 0.999999999990005,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.9999999969325,
+     "velocity": 2.9369231451130748e-8,
+     "progress": 0.9999999999913347,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.9999999974356,
+     "velocity": 3.012567792548552e-8,
+     "progress": 0.999999999992756,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.99999999791254,
+     "velocity": 2.7947338869374047e-8,
+     "progress": 0.9999999999941033,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.99999999833534,
+     "velocity": 2.444726364518037e-8,
+     "progress": 0.9999999999952975,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.99999999869436,
+     "velocity": 2.0566462402343408e-8,
+     "progress": 0.9999999999963117,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.99999999899,
+     "velocity": 1.682079126658114e-8,
+     "progress": 0.999999999997147,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.9999999992279,
+     "velocity": 1.3463771306435082e-8,
+     "progress": 0.999999999997819,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.9999999994159,
+     "velocity": 1.0592368886088177e-8,
+     "progress": 0.99999999999835,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.9999999995622,
+     "velocity": 8.214965208264955e-9,
+     "progress": 0.9999999999987632,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.9999999996747,
+     "velocity": 6.293928719544652e-9,
+     "progress": 0.9999999999990811,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.9999999997601,
+     "velocity": 4.770897060230275e-9,
+     "progress": 0.9999999999993223,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.99999999982447,
+     "velocity": 3.5822518964580146e-9,
+     "progress": 0.9999999999995042,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 399.9999999998725,
+     "velocity": 2.6664558991584672e-9,
+     "progress": 0.9999999999996398,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    }
+   ]
+  },
+  {
+   "compact": 46,
+   "wide": 400,
+   "from": 400,
+   "to": 46,
+   "dt": 0.016666666666666666,
+   "velocity": 0,
+   "frames": [
+    {
+     "position": 376.17875,
+     "velocity": -1796.5499999999997,
+     "progress": 0.9327083333333333,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 335.8099103298611,
+     "velocity": -2566.197010416666,
+     "progress": 0.8186720630787037,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 290.3818062899245,
+     "velocity": -2742.834896337529,
+     "progress": 0.6903440855647585,
+     "editor": 0.9986384751500007,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 246.22606088734756,
+     "velocity": -2599.8456870642335,
+     "progress": 0.5656103414896824,
+     "editor": 0.785706743674417,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 206.48625049108125,
+     "velocity": -2304.876322493879,
+     "progress": 0.45335099008780017,
+     "editor": 0.4280593266292242,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 172.40067639084916,
+     "velocity": -1956.9821094339948,
+     "progress": 0.3570640576012688,
+     "editor": 0.14288255443412565,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 144.12355583689856,
+     "velocity": -1611.5485922071605,
+     "progress": 0.27718518597993946,
+     "editor": 0.01050770680768489,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 121.23916787655875,
+     "velocity": -1296.8127299816151,
+     "progress": 0.21254002225016597,
+     "editor": 0,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 103.07448785300247,
+     "velocity": -1024.6616427102556,
+     "progress": 0.16122736681639116,
+     "editor": 0,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 88.881684377318,
+     "velocity": -797.5721095807795,
+     "progress": 0.12113470163084179,
+     "editor": 0,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 77.93822595807275,
+     "velocity": -612.9766119779168,
+     "progress": 0.09022097728269138,
+     "editor": 0,
+     "controls": 0.15418343702208837,
+     "settled": false
+    },
+    {
+     "position": 69.59614111645517,
+     "velocity": -465.93559786905047,
+     "progress": 0.06665576586569258,
+     "editor": 0,
+     "controls": 0.41714418273372744,
+     "settled": false
+    },
+    {
+     "position": 63.30096579433753,
+     "velocity": -350.71210349859905,
+     "progress": 0.04887278472976703,
+     "editor": 0,
+     "controls": 0.6374956130250928,
+     "settled": false
+    },
+    {
+     "position": 58.59350734211293,
+     "velocity": -261.64844270994354,
+     "progress": 0.03557487949749415,
+     "editor": 0,
+     "controls": 0.7884486157314738,
+     "settled": false
+    },
+    {
+     "position": 55.10263260451392,
+     "velocity": -193.6097292100826,
+     "progress": 0.02571365142518057,
+     "editor": 0,
+     "controls": 0.8819295378815243,
+     "settled": false
+    },
+    {
+     "position": 52.5340603986097,
+     "velocity": -142.16712762773938,
+     "progress": 0.018457797736185583,
+     "editor": 0,
+     "controls": 0.9363010869086813,
+     "settled": false
+    },
+    {
+     "position": 50.658056777501244,
+     "velocity": -103.63181187063891,
+     "progress": 0.013158352478817073,
+     "editor": 0,
+     "controls": 0.9665655826737279,
+     "settled": false
+    },
+    {
+     "position": 49.297615218632345,
+     "velocity": -75.00935155780634,
+     "progress": 0.009315297227774985,
+     "editor": 0,
+     "controls": 0.9828574947505697,
+     "settled": false
+    },
+    {
+     "position": 48.31789302122566,
+     "velocity": -53.91711608314398,
+     "progress": 0.006547720398942535,
+     "editor": 0,
+     "controls": 0.9913931046750657,
+     "settled": false
+    },
+    {
+     "position": 47.617193013651786,
+     "velocity": -38.48972198560088,
+     "progress": 0.004568341846473971,
+     "editor": 0,
+     "controls": 0.9957624833783042,
+     "settled": false
+    },
+    {
+     "position": 47.11950738283463,
+     "velocity": -27.286395900756357,
+     "progress": 0.0031624502339961205,
+     "editor": 0,
+     "controls": 0.9979530457028342,
+     "settled": false
+    },
+    {
+     "position": 46.76849915476089,
+     "velocity": -19.207214824802318,
+     "progress": 0.002170901567121155,
+     "editor": 0,
+     "controls": 0.9990300053286079,
+     "settled": false
+    },
+    {
+     "position": 46.52273489658554,
+     "velocity": -13.421042892316983,
+     "progress": 0.001476652250241638,
+     "editor": 0,
+     "controls": 0.9995494554475977,
+     "settled": false
+    },
+    {
+     "position": 46.351966273559476,
+     "velocity": -9.305616000543747,
+     "progress": 0.0009942550100550181,
+     "editor": 0,
+     "controls": 0.9997951911103609,
+     "settled": false
+    },
+    {
+     "position": 46.23426715178459,
+     "velocity": -6.3989709919172,
+     "progress": 0.0006617716152107144,
+     "editor": 0,
+     "controls": 0.9999090975887049,
+     "settled": false
+    },
+    {
+     "position": 46.153854061514686,
+     "velocity": -4.360840166161331,
+     "progress": 0.0004346159929793382,
+     "editor": 0,
+     "controls": 0.9999607427130006,
+     "settled": false
+    },
+    {
+     "position": 46.09944335671504,
+     "velocity": -2.94245360566338,
+     "progress": 0.0002809134370481422,
+     "editor": 0,
+     "controls": 0.9999835855820619,
+     "settled": false
+    },
+    {
+     "position": 46.063024011479804,
+     "velocity": -1.9632329406917108,
+     "progress": 0.00017803393073391013,
+     "editor": 0,
+     "controls": 0.9999934031811217,
+     "settled": false
+    },
+    {
+     "position": 46.03894846012941,
+     "velocity": -1.2930105201112065,
+     "progress": 0.0001100238986706538,
+     "editor": 0,
+     "controls": 0.9999974796127055,
+     "settled": false
+    },
+    {
+     "position": 46.0232642560762,
+     "velocity": -0.83860156658411,
+     "progress": 0.00006571823750339854,
+     "editor": 0,
+     "controls": 0.9999991005604356,
+     "settled": false
+    },
+    {
+     "position": 46.01322636611904,
+     "velocity": -0.5337562372448763,
+     "progress": 0.00003736261615548631,
+     "editor": 0,
+     "controls": 0.9999997092343073,
+     "settled": true
+    },
+    {
+     "position": 46.006943797691875,
+     "velocity": -0.3317038095439998,
+     "progress": 0.00001961524771716079,
+     "editor": 0,
+     "controls": 0.9999999198508303,
+     "settled": true
+    },
+    {
+     "position": 46.003125331313036,
+     "velocity": -0.19966350887827566,
+     "progress": 0.000008828619528351366,
+     "editor": 0,
+     "controls": 0.9999999837623542,
+     "settled": true
+    },
+    {
+     "position": 46.00089782028116,
+     "velocity": -0.11483314852290233,
+     "progress": 0.0000025362154835041734,
+     "editor": 0,
+     "controls": 0.9999999986599378,
+     "settled": true
+    },
+    {
+     "position": 45.999677244095274,
+     "velocity": -0.06147859168774625,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.999077844096966,
+     "velocity": -0.02883661013540935,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.998848560965406,
+     "velocity": -0.00961420623283236,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.998828910802516,
+     "velocity": 0.0010778444832053279,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.998918604819224,
+     "velocity": 0.006477559199529618,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.999056816543835,
+     "velocity": 0.008698970651209054,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99920817071161,
+     "velocity": 0.009098687464223449,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99935337834784,
+     "velocity": 0.008528702466329563,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99948305615651,
+     "velocity": 0.0075092353155813245,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99959370804323,
+     "velocity": 0.006345776233691953,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.999685159542196,
+     "velocity": 0.0052074977053492835,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99975895707887,
+     "velocity": 0.004179143005353794,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99981739917925,
+     "velocity": 0.0032948707950420843,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.999862974802966,
+     "velocity": 0.0025599483135620893,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.999898058638365,
+     "velocity": 0.00196435503203625,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99992476433957,
+     "velocity": 0.001491072286588287,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99994489138967,
+     "velocity": 0.0011209372254270423,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99995992457907,
+     "velocity": 0.0008353185526498756,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99997106055201,
+     "velocity": 0.0006174455271014905,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99997924599357,
+     "velocity": 0.0004529320160942201,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99998521854161,
+     "velocity": 0.0003298424667017089,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.999989545612074,
+     "velocity": 0.00023851697962045345,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999265884451,
+     "velocity": 0.00017128756042990572,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999488336291,
+     "velocity": 0.0001221626562008419,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999646188039,
+     "velocity": 0.00008652228323704697,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999757410179,
+     "velocity": 0.000060844572119238516,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.9999983520578,
+     "velocity": 0.00004247174978386769,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999889204306,
+     "velocity": 0.000029416317061678688,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999926379265,
+     "velocity": 0.000020204386416091997,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999951745837,
+     "velocity": 0.000013751454397020986,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999968886048,
+     "velocity": 0.000009265418313486596,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999980340618,
+     "velocity": 0.000006171849464882168,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.999999878989556,
+     "velocity": 0.00000405706512211165,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999992812111,
+     "velocity": 0.0000026251926466487816,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999995948031,
+     "velocity": 0.0000016660787528585827,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999997903936,
+     "velocity": 0.0000010315033959192193,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.999999990871125,
+     "velocity": 6.176857644438466e-7,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999999772591,
+     "velocity": 3.5251244186628964e-7,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000144037,
+     "velocity": 1.8627948545952756e-7,
+     "progress": 4.068840681832569e-12,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000322543,
+     "velocity": 8.50278293741492e-8,
+     "progress": 9.111385845429494e-12,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000386743,
+     "velocity": 2.5778756823485385e-8,
+     "progress": 1.0924935783399335e-11,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.000000003867626,
+     "velocity": -6.848803725048653e-9,
+     "progress": 1.0925497794602761e-11,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000353817,
+     "velocity": -2.3023106918004618e-8,
+     "progress": 9.994827313557887e-12,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000306748,
+     "velocity": -2.9368635430818506e-8,
+     "progress": 8.665189093566584e-12,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000256435,
+     "velocity": -3.012530465654217e-8,
+     "progress": 7.24392297558814e-12,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000208743,
+     "velocity": -2.7947022098775817e-8,
+     "progress": 5.89670183366108e-12,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000166462,
+     "velocity": -2.4446911943913732e-8,
+     "progress": 4.702307595408523e-12,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.000000001305615,
+     "velocity": -2.056612615580594e-8,
+     "progress": 3.6881784506548775e-12,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000100998,
+     "velocity": -1.682050878777075e-8,
+     "progress": 2.853049874192434e-12,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000077208,
+     "velocity": -1.3463489087431412e-8,
+     "progress": 2.1810249776957133e-12,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.0000000005841,
+     "velocity": -1.0592092840137377e-8,
+     "progress": 1.6500046777728541e-12,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000043779,
+     "velocity": -8.214756281708919e-9,
+     "progress": 1.2366855813103688e-12,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.000000000325336,
+     "velocity": -6.293775582537609e-9,
+     "progress": 9.190288204024775e-13,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000023986,
+     "velocity": -4.770864237368392e-9,
+     "progress": 6.775647212162063e-13,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000017552,
+     "velocity": -3.5821678919829233e-9,
+     "progress": 4.958143123939546e-13,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000012752,
+     "velocity": -2.6664248327531853e-9,
+     "progress": 3.602291095674158e-13,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    }
+   ]
+  },
+  {
+   "compact": 50,
+   "wide": 320.5,
+   "from": 50,
+   "to": 320.5,
+   "dt": 0.008333333333333333,
+   "velocity": 0,
+   "frames": [
+    {
+     "position": 56.7625,
+     "velocity": 811.5,
+     "progress": 0.025000000000000012,
+     "editor": 0,
+     "controls": 0.8878761574074073,
+     "settled": false
+    },
+    {
+     "position": 68.20239583333334,
+     "velocity": 1372.7875,
+     "progress": 0.0672916666666667,
+     "editor": 0,
+     "controls": 0.4093028776276091,
+     "settled": false
+    },
+    {
+     "position": 82.7084279513889,
+     "velocity": 1740.7238541666666,
+     "progress": 0.12091840277777781,
+     "editor": 0,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 99.04920693721066,
+     "velocity": 1960.893478298611,
+     "progress": 0.1813279369212963,
+     "editor": 0,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 116.29636837028599,
+     "velocity": 2069.659371969039,
+     "progress": 0.24508823796778553,
+     "editor": 0,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 133.76192485473283,
+     "velocity": 2095.86677813362,
+     "progress": 0.3096559144352415,
+     "editor": 0.048063733104098304,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 150.9473588805514,
+     "velocity": 2062.252083098229,
+     "progress": 0.3731880180427039,
+     "editor": 0.1837894240171241,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 167.50240262704094,
+     "velocity": 1986.605249578743,
+     "progress": 0.4343896585103177,
+     "editor": 0.3661021444120818,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 183.19179057968242,
+     "velocity": 1882.7265543169765,
+     "progress": 0.49239109271601633,
+     "editor": 0.5578548646016362,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 197.86855718125008,
+     "velocity": 1761.2119921881192,
+     "progress": 0.5466490099121999,
+     "editor": 0.7307572545753129,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 211.45269264950898,
+     "velocity": 1630.0962561910685,
+     "progress": 0.5968676253216598,
+     "editor": 0.8665010036487383,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 223.9141724188568,
+     "velocity": 1495.3775723217389,
+     "progress": 0.6429359423987312,
+     "editor": 0.9558367312852266,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 235.25954527641798,
+     "velocity": 1361.4447429073425,
+     "progress": 0.6848781710773308,
+     "editor": 0.9966881942388267,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 245.52140719242638,
+     "velocity": 1231.4234299210082,
+     "progress": 0.7228148140200605,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 254.75020638575506,
+     "velocity": 1107.4559031994434,
+     "progress": 0.7569323711118486,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 263.00792398133007,
+     "velocity": 990.9261114690025,
+     "progress": 0.7874599777498339,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 270.36325682529224,
+     "velocity": 882.6399412754616,
+     "progress": 0.8146515963966441,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 276.8879972761662,
+     "velocity": 782.9688541048708,
+     "progress": 0.8387726331836087,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 282.654361334055,
+     "velocity": 691.963686946659,
+     "progress": 0.8600900603846766,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 287.7330632088573,
+     "velocity": 609.4442249762739,
+     "progress": 0.8788652983691582,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 292.1919729722442,
+     "velocity": 535.0691716064243,
+     "progress": 0.8953492531321411,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 296.095225645032,
+     "velocity": 468.39032073453825,
+     "progress": 0.9097790227173086,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 299.5026760860708,
+     "velocity": 408.8940529246565,
+     "progress": 0.922375882018746,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 302.4696153333301,
+     "velocity": 356.0327096711248,
+     "progress": 0.9333442341343073,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 305.04668141053276,
+     "velocity": 309.24792926431576,
+     "progress": 0.9428712806304353,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 307.279911730598,
+     "velocity": 267.98763840782806,
+     "progress": 0.9511272152702328,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 309.2108956667131,
+     "velocity": 231.7180723338162,
+     "progress": 0.9582657880469985,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 310.8769950959278,
+     "velocity": 199.93193150576232,
+     "progress": 0.9644251205025056,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 312.31160814280014,
+     "velocity": 172.15356562467966,
+     "progress": 0.9697286807497233,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 313.54445728948866,
+     "velocity": 147.94189760262,
+     "progress": 0.9742863485748194,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 314.60188774571157,
+     "velocity": 126.89165474674502,
+     "progress": 0.9781955184684347,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 315.5071657123618,
+     "velocity": 108.63335599803257,
+     "progress": 0.9815422022638145,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 316.2807691123188,
+     "velocity": 92.83240799483787,
+     "progress": 0.9844021039272415,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 316.94066565448003,
+     "velocity": 79.18758505934404,
+     "progress": 0.9868416475211831,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 317.50257486833357,
+     "velocity": 67.42910566242315,
+     "progress": 0.9889189459088117,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 317.9802120998869,
+     "velocity": 57.316467786402555,
+     "progress": 0.9906847027722251,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 318.38551348000294,
+     "velocity": 48.6361656139278,
+     "progress": 0.9921830442883658,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 318.7288416320861,
+     "velocity": 41.19937824997277,
+     "progress": 0.9934522796010575,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 319.01917243361015,
+     "velocity": 34.83969618288893,
+     "progress": 0.9945255912517935,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 319.2642635305288,
+     "velocity": 29.410931630239944,
+     "progress": 0.9954316581535261,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 319.470805561724,
+     "velocity": 24.785043743418868,
+     "progress": 0.9961952146459296,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 319.64455721170407,
+     "velocity": 20.850197997611588,
+     "progress": 0.9968375497660039,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 319.7904652972305,
+     "velocity": 17.5089702631761,
+     "progress": 0.9973769511912404,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 319.91277112609373,
+     "velocity": 14.676699463584628,
+     "progress": 0.9978290984328788,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 320.0151043586267,
+     "velocity": 12.279987903954458,
+     "progress": 0.9982074098285644,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 320.1005655663096,
+     "velocity": 10.255344921954011,
+     "progress": 0.9985233477497584,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 320.17179862599136,
+     "velocity": 8.547967161804829,
+     "progress": 0.99878668623287,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 320.2310540197801,
+     "velocity": 7.110647254652722,
+     "progress": 0.999005744989945,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 320.28024403483425,
+     "velocity": 5.902801806494098,
+     "progress": 0.9991875934744334,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 320.3209907780855,
+     "velocity": 4.889609190151341,
+     "progress": 0.9993382283847893,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 320.35466784129676,
+     "velocity": 4.041247585351956,
+     "progress": 0.9994627276942579,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 320.38243637389905,
+     "velocity": 3.3322239122786232,
+     "progress": 0.9995653840070206,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 320.4052762462499,
+     "velocity": 2.7407846821025177,
+     "progress": 0.999649819764325,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 320.42401291527847,
+     "velocity": 2.2484002834237358,
+     "progress": 0.9997190865629518,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 320.4393405385336,
+     "velocity": 1.8393147906182747,
+     "progress": 0.9997757506045605,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 320.4518418217365,
+     "velocity": 1.5001539843422982,
+     "progress": 0.9998219660692661,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 320.46200502915514,
+     "velocity": 1.2195848902358746,
+     "progress": 0.9998595380005735,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 320.47023853540964,
+     "velocity": 0.9880207505369671,
+     "progress": 0.9998899761013296,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 320.47688325150676,
+     "velocity": 0.7973659316559214,
+     "progress": 0.9999145406710047,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 320.48222321675536,
+     "velocity": 0.6407958298331216,
+     "progress": 0.9999342817624967,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 320.4864946114313,
+     "velocity": 0.5125673611143299,
+     "progress": 0.9999500725006701,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.48989341232993,
+     "velocity": 0.4078561078380877,
+     "progress": 0.9999626373838445,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.49258188433237,
+     "velocity": 0.3226166402941605,
+     "progress": 0.9999725762821899,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.4946940754925,
+     "velocity": 0.25346293921371454,
+     "progress": 0.9999803847522827,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.4963404606032,
+     "velocity": 0.1975662132924027,
+     "progress": 0.9999864712037088,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.49761185841754,
+     "velocity": 0.1525677377165579,
+     "progress": 0.9999911713804716,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.4985827303907,
+     "velocity": 0.11650463677757261,
+     "progress": 0.999994760555973,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.4993139537117,
+     "velocity": 0.08774679851851036,
+     "progress": 0.9999974637845164,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.49985514824897,
+     "velocity": 0.06494334446985721,
+     "progress": 0.999999464503693,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.50024662562777,
+     "velocity": 0.04697728545649121,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.5005210187752,
+     "velocity": 0.03292717769385069,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.50070464172813,
+     "velocity": 0.022034754354984833,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.50081862213455,
+     "velocity": 0.013677648770002455,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.5008798425391,
+     "velocity": 0.007346448548198828,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.5009017210989,
+     "velocity": 0.0026254271755141896,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.50089485770593,
+     "velocity": -0.0008236071542440642,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.50086756749835,
+     "velocity": -0.003274824911664936,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.50082632032877,
+     "velocity": -0.004949660348399337,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.500776101849,
+     "velocity": -0.006026217569328701,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.5007207093923,
+     "velocity": -0.006647094805014937,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.50066299373015,
+     "velocity": -0.0069258794537762815,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.5006050559957,
+     "velocity": -0.006952528132309336,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.5005484075528,
+     "velocity": -0.006797813148649106,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.50049409931324,
+     "velocity": -0.006516988748261698,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.5004428259254,
+     "velocity": -0.006152806542651754,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.5003950093493,
+     "velocity": -0.005737989131779457,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.5003508655694,
+     "velocity": -0.005297253592313073,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.5003104575545,
+     "velocity": -0.004848961782611781,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.50027373703836,
+     "velocity": -0.004406461941096692,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 320.5002405772425,
+     "velocity": -0.00397917550618624,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    }
+   ]
+  },
+  {
+   "compact": 46,
+   "wide": 46,
+   "from": 46,
+   "to": 46,
+   "dt": 0.016666666666666666,
+   "velocity": 0,
+   "frames": [
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": 0,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    }
+   ]
+  },
+  {
+   "compact": 36,
+   "wide": 600,
+   "from": 36,
+   "to": 600,
+   "dt": 0.1,
+   "velocity": 0,
+   "frames": [
+    {
+     "position": 165.8013118883221,
+     "velocity": 4274.139222220978,
+     "progress": 0.23014417001475548,
+     "editor": 0,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 331.2304838521997,
+     "velocity": 3780.9595265895387,
+     "progress": 0.5234583047024818,
+     "editor": 0.6590302306085318,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 451.0291530780246,
+     "velocity": 2470.698125969783,
+     "progress": 0.735867292691533,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 523.1771955567741,
+     "velocity": 1412.4705242310838,
+     "progress": 0.8637893538240675,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 562.5035250193143,
+     "velocity": 744.2745198304065,
+     "progress": 0.9335168883321177,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 582.5390734606284,
+     "velocity": 369.5689836431992,
+     "progress": 0.9690409103911851,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 592.2212219223165,
+     "velocity": 174.7341850441584,
+     "progress": 0.9862078402877953,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 596.6892511281433,
+     "velocity": 79.0016279963791,
+     "progress": 0.9941298778867789,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 598.6618949296723,
+     "velocity": 34.15572993796566,
+     "progress": 0.9976274732795607,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 599.4932861079625,
+     "velocity": 14.06012766993134,
+     "progress": 0.9991015711134087,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 599.8253737983996,
+     "velocity": 5.453511942214784,
+     "progress": 0.9996903790751765,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 599.949137677757,
+     "velocity": 1.9491930549914052,
+     "progress": 0.9999098185775833,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 599.990714587658,
+     "velocity": 0.6091320189899313,
+     "progress": 0.9999835365029397,
+     "editor": 1,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 600.0021864754262,
+     "velocity": 0.1402696031606559,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.003832892404,
+     "velocity": -0.00047272547191792164,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0029435300793,
+     "velocity": -0.029100907829187513,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.001820124479,
+     "velocity": -0.025646379894362782,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0010082045196,
+     "velocity": -0.01673648683172374,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0005196866738,
+     "velocity": -0.009561070481380123,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0002535611,
+     "velocity": -0.005035523568664595,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0001180364555,
+     "velocity": -0.002499415116558763,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000525676971,
+     "velocity": -0.0011813371148115277,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.000022365642,
+     "velocity": -0.0005339387475086411,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000090357471,
+     "velocity": -0.0002307660235210295,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.00000341975,
+     "velocity": -0.00009495732829761859,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000011775002,
+     "velocity": -0.00003681280099294247,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000003423519,
+     "velocity": -0.00001314794019219616,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000620703,
+     "velocity": -0.0000041032534901974584,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 599.9999999849032,
+     "velocity": -9.412629004683079e-7,
+     "progress": 0.9999999999732326,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 599.9999999739529,
+     "velocity": 6.390754483305064e-9,
+     "progress": 0.9999999999538172,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 599.9999999800455,
+     "velocity": 1.9812527281682123e-7,
+     "progress": 0.9999999999646196,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 599.9999999876742,
+     "velocity": 1.7395659706841162e-7,
+     "progress": 0.9999999999781457,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 599.9999999931767,
+     "velocity": 1.1337158585777843e-7,
+     "progress": 0.999999999987902,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 599.9999999964845,
+     "velocity": 6.471856906761375e-8,
+     "progress": 0.9999999999937668,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 599.9999999982854,
+     "velocity": 3.40682525148068e-8,
+     "progress": 0.9999999999969599,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 599.999999999202,
+     "velocity": 1.6903283341775945e-8,
+     "progress": 0.9999999999985851,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 599.9999999996447,
+     "velocity": 7.98677170376148e-9,
+     "progress": 0.9999999999993701,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 599.9999999998489,
+     "velocity": 3.6089426805092998e-9,
+     "progress": 0.9999999999997321,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 599.9999999999391,
+     "velocity": 1.5586513590528625e-9,
+     "progress": 0.999999999999892,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 599.9999999999769,
+     "velocity": 6.40969313715851e-10,
+     "progress": 0.999999999999959,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 599.999999999992,
+     "velocity": 2.480611809183382e-10,
+     "progress": 0.9999999999999859,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 599.9999999999977,
+     "velocity": 8.848849602841189e-11,
+     "progress": 0.999999999999996,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 599.9999999999995,
+     "velocity": 2.7608793066895392e-11,
+     "progress": 0.9999999999999992,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": 6.112152163809794e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": 2.922321274181677e-13,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -8.978417276380931e-13,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.1411914251653062e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.1909522656669125e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.201127504315604e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.2032081661475616e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.203633625815726e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.203720625022639e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.203738414868704e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.2037420525871874e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.2037427964382424e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.2037429485430286e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.2037429796458492e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.2037429860058426e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.203742987306352e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.2037429875722842e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.2037429876266626e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.2037429876377821e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.2037429876400558e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.2037429876405207e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.2037429876406158e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.2037429876406352e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.2037429876406395e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    },
+    {
+     "position": 600.0000000000001,
+     "velocity": -1.20374298764064e-12,
+     "progress": 1,
+     "editor": 1,
+     "controls": 0,
+     "settled": true
+    }
+   ]
+  },
+  {
+   "compact": 46,
+   "wide": 400,
+   "from": 200,
+   "to": 46,
+   "dt": 0.03333333333333333,
+   "velocity": 900,
+   "frames": [
+    {
+     "position": 185.06354755497688,
+     "velocity": -941.3720017361111,
+     "progress": 0.39283488009880474,
+     "editor": 0.2382908735306869,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 146.26234528994806,
+     "velocity": -1191.132264849597,
+     "progress": 0.2832269640958985,
+     "editor": 0.015550889841319498,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 110.89255304216577,
+     "velocity": -958.420196559903,
+     "progress": 0.18331229672928184,
+     "editor": 0,
+     "controls": 0,
+     "settled": false
+    },
+    {
+     "position": 85.2945988536924,
+     "velocity": -656.7708923780822,
+     "progress": 0.1110016916770972,
+     "editor": 0,
+     "controls": 0.016025382501846708,
+     "settled": false
+    },
+    {
+     "position": 68.69142021781319,
+     "velocity": -412.5548797411421,
+     "progress": 0.06410005711246664,
+     "editor": 0,
+     "controls": 0.448829059103683,
+     "settled": false
+    },
+    {
+     "position": 58.62318364816236,
+     "velocity": -244.71063249117378,
+     "progress": 0.03565871087051514,
+     "editor": 0,
+     "controls": 0.7875737833269516,
+     "settled": false
+    },
+    {
+     "position": 52.802787920548134,
+     "velocity": -139.0888640662437,
+     "progress": 0.01921691502979699,
+     "editor": 0,
+     "controls": 0.9312782904719494,
+     "settled": false
+    },
+    {
+     "position": 49.562037867379274,
+     "velocity": -76.35885787308743,
+     "progress": 0.010062253862653317,
+     "editor": 0,
+     "controls": 0.980085626346064,
+     "settled": false
+    },
+    {
+     "position": 47.814193498711255,
+     "velocity": -40.66895816063017,
+     "progress": 0.005124840391839703,
+     "editor": 0,
+     "controls": 0.9946841212087532,
+     "settled": false
+    },
+    {
+     "position": 46.898329028229504,
+     "velocity": -21.05903086830511,
+     "progress": 0.002537652622117244,
+     "editor": 0,
+     "controls": 0.9986773138002873,
+     "settled": false
+    },
+    {
+     "position": 46.431530498288936,
+     "velocity": -10.606838962307766,
+     "progress": 0.0012190127070308922,
+     "editor": 0,
+     "controls": 0.9996925149151893,
+     "settled": false
+    },
+    {
+     "position": 46.2002129043196,
+     "velocity": -5.190622762492579,
+     "progress": 0.0005655731760440657,
+     "editor": 0,
+     "controls": 0.9999335691764532,
+     "settled": false
+    },
+    {
+     "position": 46.08900197016281,
+     "velocity": -2.460637974867683,
+     "progress": 0.0002514179948102033,
+     "editor": 0,
+     "controls": 0.9999868494339402,
+     "settled": false
+    },
+    {
+     "position": 46.037353550244724,
+     "velocity": -1.12363507185971,
+     "progress": 0.00010551850351616942,
+     "editor": 0,
+     "controls": 0.9999976817442525,
+     "settled": false
+    },
+    {
+     "position": 46.01436494324633,
+     "velocity": -0.4892611078973898,
+     "progress": 0.0000405789357240897,
+     "editor": 0,
+     "controls": 0.9999996570252487,
+     "settled": true
+    },
+    {
+     "position": 46.00469956921841,
+     "velocity": -0.19926557623381164,
+     "progress": 0.00001327561926104449,
+     "editor": 0,
+     "controls": 0.9999999632856108,
+     "settled": true
+    },
+    {
+     "position": 46.000971771321296,
+     "velocity": -0.07281309500008776,
+     "progress": 0.000002745116726826113,
+     "editor": 0,
+     "controls": 0.9999999984300936,
+     "settled": true
+    },
+    {
+     "position": 45.999744784135856,
+     "velocity": -0.021202303839278888,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.9994850879253,
+     "velocity": -0.002272483841490206,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99954566127685,
+     "velocity": 0.0032908095908970605,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.999675535801266,
+     "velocity": 0.003933432581891563,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99979113424549,
+     "velocity": 0.00311690518930698,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99987398801957,
+     "velocity": 0.0021201496517821356,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99992743374462,
+     "velocity": 0.0013257213481793185,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.999959723739494,
+     "velocity": 0.0007838167795597655,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.999978338341165,
+     "velocity": 0.00044437391553614003,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.999988679039035,
+     "velocity": 0.000243432643831228,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999424486254,
+     "velocity": 0.0001294003718094049,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.999997155828055,
+     "velocity": 0.00006688045625068079,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.999998636718885,
+     "velocity": 0.00003362206225387612,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999936912541,
+     "velocity": 0.00001642010211041575,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999972048183,
+     "velocity": 0.000007766028880133175,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999988323914,
+     "velocity": 0.0000035362957762249985,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999995544402,
+     "velocity": 0.0000015340144003116605,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999998566088,
+     "velocity": 6.212668158973336e-7,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 45.99999999722656,
+     "velocity": 2.2474561918225673e-7,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.000000000972804,
+     "velocity": 6.380466178326403e-8,
+     "progress": 2.7480340664665345e-12,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.000000001717176,
+     "velocity": 5.354210764462644e-9,
+     "progress": 4.8507789122564735e-12,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000148307,
+     "velocity": -1.1406992888170995e-8,
+     "progress": 4.1894723722822356e-12,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.000000001049536,
+     "velocity": -1.2968982386106383e-8,
+     "progress": 2.9647897445307527e-12,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000067207,
+     "velocity": -1.0129950077752942e-8,
+     "progress": 1.8984939170019512e-12,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.000000000404015,
+     "velocity": -6.8415834204363926e-9,
+     "progress": 1.1412841795287936e-12,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000023203,
+     "velocity": -4.2590511706541466e-9,
+     "progress": 6.554455659956517e-13,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.000000000128495,
+     "velocity": -2.5101495742985516e-9,
+     "progress": 3.629789500984647e-13,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000006897,
+     "velocity": -1.4195573374718942e-9,
+     "progress": 1.9483724113060148e-13,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.000000000035975,
+     "velocity": -7.759845260329033e-10,
+     "progress": 1.0162366867664936e-13,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.000000000018254,
+     "velocity": -4.116735388171753e-10,
+     "progress": 5.1564527914341736e-14,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.000000000009,
+     "velocity": -2.1237391202132133e-10,
+     "progress": 2.5431006955029574e-14,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.000000000004306,
+     "velocity": -1.0656268989931253e-10,
+     "progress": 1.2163528188435614e-14,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000000198,
+     "velocity": -5.19075769163292e-11,
+     "progress": 5.600040205566891e-15,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000000087,
+     "velocity": -2.4438565673821773e-11,
+     "progress": 2.448763100642153e-15,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.000000000000355,
+     "velocity": -1.1026763533118462e-11,
+     "progress": 1.003591434689407e-15,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000000013,
+     "velocity": -4.6766910190347035e-12,
+     "progress": 3.6129291648818656e-16,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000000004,
+     "velocity": -1.8667764579015614e-12,
+     "progress": 1.2043097216272884e-16,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46.00000000000001,
+     "velocity": -6.717821486084894e-13,
+     "progress": 2.007182869378814e-17,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -1.8505996140205196e-13,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -4.8818146689914864e-14,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -1.2878050055681143e-14,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -3.3971829018837e-15,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -8.961645294863345e-16,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -2.3640495289910574e-16,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -6.236276924200737e-17,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -1.64510723647642e-17,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -4.339733229300016e-18,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -1.1448058876592688e-18,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -3.019956414764966e-19,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -7.966535502125681e-20,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -2.101543174475523e-20,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -5.543794680895134e-21,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -1.4624329320091793e-21,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -3.85784503887802e-22,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -1.0176855306142913e-22,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -2.6846175229549916e-23,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -7.08192366674078e-24,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -1.868185780384031e-24,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -4.928206338088507e-25,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -1.300042959634516e-25,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -3.429466180896175e-26,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -9.04680741413119e-27,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -2.3865149872098087e-27,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -6.295539988262253e-28,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -1.6607406178557855e-28,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -4.380973522427451e-29,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -1.1556849274265811e-29,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -3.0486549271380576e-30,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -8.042241137001944e-31,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -2.121514046406125e-31,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -5.596477116795761e-32,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -1.476330367544635e-32,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    },
+    {
+     "position": 46,
+     "velocity": -3.894505969824047e-33,
+     "progress": 0,
+     "editor": 0,
+     "controls": 1,
+     "settled": true
+    }
+   ]
+  }
+ ],
+ "elapsed": [
+  {
+   "dt": -1,
+   "state": {
+    "position": 10,
+    "velocity": -30
+   }
+  },
+  {
+   "dt": 0,
+   "state": {
+    "position": 10,
+    "velocity": -30
+   }
+  },
+  {
+   "dt": 0.001,
+   "state": {
+    "position": 10.05742,
+    "velocity": 57.42
+   }
+  },
+  {
+   "dt": 0.008333333333333333,
+   "state": {
+    "position": 15.820833333333333,
+    "velocity": 698.5
+   }
+  },
+  {
+   "dt": 0.02,
+   "state": {
+    "position": 29.119290633481484,
+    "velocity": 1320.4397283555556
+   }
+  },
+  {
+   "dt": 0.04,
+   "state": {
+    "position": 64.77485296758137,
+    "velocity": 1815.3399297978322
+   }
+  },
+  {
+   "dt": 0.5,
+   "state": {
+    "position": 64.77485296758137,
+    "velocity": 1815.3399297978322
+   }
+  },
+  {
+   "dt": 10,
+   "state": {
+    "position": 64.77485296758137,
+    "velocity": 1815.3399297978322
+   }
+  }
+ ],
+ "visibility": [
+  {
+   "progress": -0.5,
+   "editor": 0,
+   "controls": 1
+  },
+  {
+   "progress": 0,
+   "editor": 0,
+   "controls": 1
+  },
+  {
+   "progress": 0.05,
+   "editor": 0,
+   "controls": 0.6238425925925926
+  },
+  {
+   "progress": 0.06,
+   "editor": 0,
+   "controls": 0.5
+  },
+  {
+   "progress": 0.12,
+   "editor": 0,
+   "controls": 0
+  },
+  {
+   "progress": 0.2,
+   "editor": 0,
+   "controls": 0
+  },
+  {
+   "progress": 0.25,
+   "editor": 0,
+   "controls": 0
+  },
+  {
+   "progress": 0.3,
+   "editor": 0.03429355281207131,
+   "controls": 0
+  },
+  {
+   "progress": 0.475,
+   "editor": 0.4999999999999999,
+   "controls": 0
+  },
+  {
+   "progress": 0.5,
+   "editor": 0.5829903978052127,
+   "controls": 0
+  },
+  {
+   "progress": 0.7,
+   "editor": 1,
+   "controls": 0
+  },
+  {
+   "progress": 0.9,
+   "editor": 1,
+   "controls": 0
+  },
+  {
+   "progress": 1,
+   "editor": 1,
+   "controls": 0
+  },
+  {
+   "progress": 1.5,
+   "editor": 1,
+   "controls": 0
+  }
+ ],
+ "progress": [
+  {
+   "position": 46,
+   "compact": 46,
+   "wide": 400,
+   "value": 0
+  },
+  {
+   "position": 223,
+   "compact": 46,
+   "wide": 400,
+   "value": 0.5
+  },
+  {
+   "position": 500,
+   "compact": 46,
+   "wide": 400,
+   "value": 1
+  },
+  {
+   "position": 10,
+   "compact": 46,
+   "wide": 400,
+   "value": 0
+  },
+  {
+   "position": 46.5,
+   "compact": 46,
+   "wide": 46.4,
+   "value": 0.5
+  },
+  {
+   "position": 47,
+   "compact": 46,
+   "wide": 46,
+   "value": 1
+  }
+ ]
+}

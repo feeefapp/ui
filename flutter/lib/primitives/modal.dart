@@ -136,8 +136,9 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) => OverlayPortal(
     controller: _portal,
-    overlayChildBuilder: (context) =>
-        _mounted ? _dialog(context) : const SizedBox.shrink(),
+    overlayChildBuilder: (context) => _mounted
+        ? GlassLayer(child: _dialog(context))
+        : const SizedBox.shrink(),
   );
 
   Widget _dialog(BuildContext context) {

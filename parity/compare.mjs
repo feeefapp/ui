@@ -8,7 +8,8 @@
  */
 import { createServer } from 'node:http'
 import { readFile, mkdir, writeFile } from 'node:fs/promises'
-import { extname, join, normalize } from 'node:path'
+import { extname, join, normalize, relative } from 'node:path'
+import { readdirSync, statSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
@@ -35,7 +36,23 @@ function serve(root) {
   })
 }
 
-const SCENES = process.argv.slice(2).length ? process.argv.slice(2) : ['buttons', 'button-states', 'segmented', 'icons', 'choices', 'sliders', 'fields', 'glass', 'dock', 'popover', 'scroll', 'numbers', 'actions', 'list', 'select', 'carousel', 'tabs', 'stack', 'split', 'scaffold', 'sheet', 'modal', 'text', 'corners']
+// `docs` (or `docs:components/button`) expands to every docs example that has a Dart sibling.
+function docsScenes(prefix) {
+  const ids = []
+  const content = join(here, '../docs/content')
+  const walk = (dir) => {
+    for (const name of readdirSync(dir).sort()) {
+      const path = join(dir, name)
+      if (statSync(path).isDirectory()) walk(path)
+      else if (name.endsWith('.dart') && dir.endsWith('/examples'))
+        ids.push(relative(content, path).replace('/examples/', '/').replace(/\.dart$/, ''))
+    }
+  }
+  walk(content)
+  return ids.filter((id) => id.startsWith(prefix)).map((id) => `docs:${id}`)
+}
+const ARGS = process.argv.slice(2).flatMap((a) => (a === 'docs' || a.startsWith('docs:') && a.split('/').length < 3 ? docsScenes(a.slice(5)) : [a]))
+const SCENES = ARGS.length ? ARGS : ['buttons', 'button-states', 'segmented', 'icons', 'choices', 'sliders', 'fields', 'glass', 'dock', 'popover', 'scroll', 'numbers', 'actions', 'list', 'select', 'carousel', 'tabs', 'stack', 'split', 'scaffold', 'sheet', 'modal', 'text', 'corners']
 const VARIANTS = [
   { theme: 'light', palette: 'lab', density: 'comfortable' },
   { theme: 'dark', palette: 'lab', density: 'comfortable' },
@@ -59,7 +76,7 @@ const cases = []
 for (const scene of SCENES)
   for (const v of VARIANTS) {
     const query = new URLSearchParams({ scene, ...v }).toString()
-    const name = `${scene}-${v.theme}-${v.palette}-${v.density}${v.dir ? `-${v.dir}` : ''}`
+    const name = `${scene.replace(/[:/]/g, '_')}-${v.theme}-${v.palette}-${v.density}${v.dir ? `-${v.dir}` : ''}`
     await page.goto(`http://127.0.0.1:${react.address().port}/?${query}`, { waitUntil: 'networkidle0' })
     await page.evaluate(() => document.fonts.ready)
     await new Promise((r) => setTimeout(r, 400))

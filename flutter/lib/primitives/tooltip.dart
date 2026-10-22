@@ -6,6 +6,7 @@ import '../brand/geometry.dart';
 import '../theme.dart';
 import '../theme/css_text.dart';
 import '../theme/surfaces.dart';
+import '../glass/container.dart';
 
 /// Which side of its target a [Tooltip] opens on.
 enum TooltipSide { top, right, bottom, left }
@@ -95,16 +96,18 @@ class _TooltipState extends State<Tooltip> {
       link: _link,
       child: OverlayPortal(
         controller: _portal,
-        overlayChildBuilder: (context) => CompositedTransformFollower(
-          link: _link,
-          targetAnchor: target,
-          followerAnchor: follower,
-          offset: offset,
-          child: Align(
-            alignment: follower,
-            child: IgnorePointer(
-              child: ExcludeSemantics(
-                child: _TooltipSurface(label: widget.label),
+        overlayChildBuilder: (context) => GlassLayer(
+          child: CompositedTransformFollower(
+            link: _link,
+            targetAnchor: target,
+            followerAnchor: follower,
+            offset: offset,
+            child: Align(
+              alignment: follower,
+              child: IgnorePointer(
+                child: ExcludeSemantics(
+                  child: _TooltipSurface(label: widget.label),
+                ),
               ),
             ),
           ),

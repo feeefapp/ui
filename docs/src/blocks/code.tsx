@@ -8,11 +8,11 @@ import { useServices } from '@feeef.dev/ui/services'
 import { cn } from '@feeef.dev/ui/utils'
 import { GlassScope } from '@feeef.dev/ui/glass'
 
-export type CodeLang = 'tsx' | 'bash' | 'css' | 'json' | 'html'
+export type CodeLang = 'tsx' | 'bash' | 'css' | 'json' | 'html' | 'dart'
 
 let highlighter: Promise<HighlighterCore> | null = null
 
-/** One small Shiki instance (five grammars, JS regex engine) shared by every code block. */
+/** One small Shiki instance (six grammars, JS regex engine) shared by every code block. */
 function load() {
   highlighter ??= Promise.all([
     import('shiki/core'),
@@ -26,6 +26,7 @@ function load() {
         import('shiki/langs/css.mjs'),
         import('shiki/langs/json.mjs'),
         import('shiki/langs/html.mjs'),
+        import('shiki/langs/dart.mjs'),
       ],
       engine: createJavaScriptRegexEngine(),
     })

@@ -9,19 +9,25 @@ import { directionFor } from '@feeef.dev/ui/i18n-core'
  */
 export interface DocsSettings {
   locale: 'en' | 'ar' | 'fr'
+  /** Which kit the example code shows: the React kit or its Flutter twin. */
+  code: 'react' | 'flutter'
   theme: typeof THEME_DEFAULTS & { primary?: string }
 }
 
-type SettingsPatch = { locale?: DocsSettings['locale']; theme?: ThemeConfig }
+type SettingsPatch = { locale?: DocsSettings['locale']; code?: DocsSettings['code']; theme?: ThemeConfig }
 
-const DEFAULTS: DocsSettings = { locale: 'en', theme: { ...THEME_DEFAULTS } }
+const DEFAULTS: DocsSettings = { locale: 'en', code: 'react', theme: { ...THEME_DEFAULTS } }
 const KEY = 'feeef-ui-docs-settings'
 
 function read(): DocsSettings {
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) ?? 'null')
     if (saved && typeof saved === 'object')
-      return { locale: saved.locale ?? 'en', theme: { ...DEFAULTS.theme, ...saved.theme } }
+      return {
+        locale: saved.locale ?? 'en',
+        code: saved.code === 'flutter' ? 'flutter' : 'react',
+        theme: { ...DEFAULTS.theme, ...saved.theme },
+      }
   } catch {}
   return DEFAULTS
 }

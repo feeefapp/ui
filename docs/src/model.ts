@@ -34,6 +34,8 @@ export interface DocExample extends ExampleMeta {
   id: string
   Demo: ComponentType
   source: string
+  /** The same example for the Flutter twin (`feeef_ui`), when the component has one. */
+  dart?: string
 }
 
 export interface DocPage {
@@ -80,9 +82,17 @@ function demoSource(source: string) {
  * Builds a page's examples from two `import.meta.glob` calls over `./examples/*.tsx`:
  * the modules (for the live demo) and the same files as raw text (for the code panel).
  */
+/** A Flutter example without its file header (imports), trimmed; undefined when there is none. */
+function dartSource(source: unknown) {
+  if (typeof source !== 'string') return undefined
+  return source.replace(/^(\/\/[^\n]*\n)+/, '').trim()
+}
+
 export function examplesFrom(
   modules: Record<string, unknown>,
-  sources: Record<string, unknown>
+  sources: Record<string, unknown>,
+  /** `./examples/*.dart` raw sources: the Flutter version of each example, same file name. */
+  dart: Record<string, unknown> = {}
 ): DocExample[] {
   return Object.entries(modules)
     .map(([path, mod], index) => {
@@ -94,6 +104,7 @@ export function examplesFrom(
         order: meta.order ?? index,
         Demo,
         source: demoSource(String(sources[path] ?? '')),
+        dart: dartSource(dart[path.replace(/\.tsx$/, '.dart')]),
       }
     })
     .sort((a, b) => a.order! - b.order!)
