@@ -8,6 +8,7 @@ import { usePresence, useLatched, type PresenceState } from '../motion'
 import { Button, IconButton } from './button'
 import { ToolbarGroup } from '../toolbar'
 import { ScrollArea, type ScrollAreaProps } from '../scroll'
+import { GlassScope } from '../glass/container'
 
 /**
  * A modal dialog on the native `<dialog>`: focus is trapped, Escape and a backdrop click call
@@ -219,7 +220,8 @@ function Dialog({
             headerless ? (
               top
             ) : (
-              <header
+              <GlassScope
+                as="header"
                 className={cn(
                   'lab-modal-floating-top',
                   defaultTitle && 'lab-modal-floating-top--default'
@@ -249,7 +251,7 @@ function Dialog({
                     </IconButton>
                   </ToolbarGroup>
                 )}
-              </header>
+              </GlassScope>
             )
           }
           bottom={bottom}

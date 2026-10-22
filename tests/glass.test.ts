@@ -245,5 +245,36 @@ test('the displacement map is neutral outside and in the middle, shifted on the 
   const right = at(128, 33)
   assert.ok(left[0] > 128, 'left rim samples further right (inward)')
   assert.ok(right[0] < 128, 'right rim samples further left (inward)')
-  assert.equal(map.data[3], 255)
+  const alpha = (x: number, y: number) => map.data[(y * map.width + x) * 4 + 3]
+  assert.equal(alpha(2, 2), 0, 'outside the glass is masked out')
+  assert.equal(alpha(70, 33), 255, 'inside is kept')
+})
+
+import { hostFrame, toLocalPoint, toLocalRect, toScreenPoint } from '../src/glass/geometry.ts'
+import { movesGeometry } from '../src/glass/scene.ts'
+
+test('a container scaled by an ancestor measures bubbles in its own pixels', () => {
+  // A 400×100 container drawn at half size (a zoomed-out demo frame) at (50, 20).
+  const frame = hostFrame({ left: 50, top: 20, width: 200, height: 50 }, 400, 100)
+  assert.equal(frame.scaleX, 0.5)
+  assert.deepEqual(toLocalRect(frame, { left: 60, top: 25, width: 40, height: 23 }), { x: 20, y: 10, width: 80, height: 46 })
+  const point = toLocalPoint(frame, 150, 45)
+  assert.deepEqual(toScreenPoint(frame, point.x, point.y), { x: 150, y: 45 })
+})
+
+test('an unscaled or empty container keeps a scale of 1', () => {
+  assert.deepEqual(hostFrame({ left: 0, top: 0, width: 300, height: 40 }, 300, 40), { left: 0, top: 0, scaleX: 1, scaleY: 1 })
+  assert.equal(hostFrame({ left: 0, top: 0, width: 0, height: 0 }, 0, 0).scaleX, 1)
+})
+
+test('only running animations that move or resize count as geometry', () => {
+  const transition = (property: string, playState = 'running') => ({ playState, transitionProperty: property }) as unknown as Animation
+  const keyframes = (frames: Record<string, unknown>[]) => ({ playState: 'running', effect: { getKeyframes: () => frames } }) as unknown as Animation
+  assert.equal(movesGeometry(transition('translate')), true)
+  assert.equal(movesGeometry(transition('all')), true)
+  assert.equal(movesGeometry(transition('opacity')), false)
+  assert.equal(movesGeometry(transition('transform', 'finished')), false)
+  assert.equal(movesGeometry(keyframes([{ offset: 0, opacity: 0 }, { offset: 1, opacity: 1 }])), false, 'our fade-in')
+  assert.equal(movesGeometry(keyframes([{ offset: 0, transform: 'scale(0.9)' }])), true)
+  assert.equal(movesGeometry(keyframes([{ offset: 0, maxHeight: '0px' }])), true)
 })

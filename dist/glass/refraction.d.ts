@@ -20,7 +20,9 @@ export declare function refractionAt(d: number, nx: number, ny: number, bezel?: 
 };
 /**
  * RGBA displacement map for `width` × `height` px (material coordinates) holding the blended
- * outlines of `clusters`. Pixels outside the glass and in its flat middle stay neutral.
+ * outlines of `clusters`. Red/green carry the shift (neutral in the flat middle); alpha is the
+ * glass shape itself (anti-aliased), so the filter can clip its own output: Chromium ignores an
+ * element's clip-path for `backdrop-filter: url()`.
  */
 export declare function displacementMap(width: number, height: number, clusters: readonly (readonly GlassShape[])[], spacing: number, bezel?: number): {
     width: number;

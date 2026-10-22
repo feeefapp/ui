@@ -154,8 +154,8 @@ export function DocsAppBar({
               label="Page title"
               className="docs-app-bar-title"
               data-state={state}
-              // Closing hides it from the glass too, so its bubble shrinks away with the text.
-              aria-hidden={state === 'closed' || undefined}
+              // Closing takes it out of the glass too, so its bubble shrinks away with the text.
+              data-glass-hidden={state === 'closed' ? '' : undefined}
             >
               <span>{title}</span>
             </ToolbarGroup>

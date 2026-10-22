@@ -67,3 +67,9 @@ html[data-lab-theme] .lab-text-field .lab-temporal-field-clear {
 .lab-temporal-fields-demo-form > .lab-control {
   flex: none;
 }
+
+/* The popover footer's glass row (a GlassScope around the actions group). */
+.lab-temporal-actions-row {
+  display: flex;
+  justify-content: flex-end;
+}

@@ -60,7 +60,7 @@ function Overview() {
         <Callout title="Keep the backdrop visible">
           Don't put <C>filter</C>, <C>opacity</C>, <C>mask</C> or <C>clip-path</C> on the container or its
           ancestors: the blur would stop seeing the page behind it. Fade bubbles out by making them{' '}
-          <C>inert</C> or removing them; the container dematerializes them.
+          <C>inert</C>, setting <C>data-glass-hidden</C> or removing them; the container dematerializes them.
         </Callout>
       </Section>
 
@@ -82,10 +82,11 @@ function Overview() {
         </p>
       </Section>
 
-      <Section title="CSS or canvas">
+      <Section title="Fill, blur or refraction">
         <p>
           On the web, <C>ThemeConfig</C> <C>glassRenderer</C> picks how much work the glass does.{' '}
-          <C>css</C> (default) is the blur, light and shadow above, cheap on any device. <C>canvas</C>{' '}
+          <C>fill</C> (default) paints a filled glass colour with the light and shadow but no backdrop
+          blur, the fastest on any phone. <C>css</C> adds the backdrop blur. <C>canvas</C>{' '}
           also bends what is behind the glass at its edges, like a lens: whenever the glass settles, the
           kit builds a displacement map of its outline on a canvas and applies it as an SVG backdrop
           filter. While bubbles move it falls back to CSS, so morphs stay smooth. Refraction works in

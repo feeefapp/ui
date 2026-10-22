@@ -33,7 +33,7 @@ export function useGlassStyle(): GlassStyle {
 
 /** The app's glass renderer (ThemeConfig `glassRenderer`, on `<html data-lab-glass-renderer>`), live. */
 export function useGlassRenderer(): GlassRenderer {
-  return useRootChoice<GlassRenderer>('data-lab-glass-renderer', ['css', 'canvas'], 'css')
+  return useRootChoice<GlassRenderer>('data-lab-glass-renderer', ['fill', 'css', 'canvas'], 'fill')
 }
 
 type ContainerTag = 'div' | 'header' | 'footer' | 'nav' | 'section' | 'aside'
@@ -172,7 +172,7 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
     { ...props, 'ref': setHost, 'className': cn('lab-glass-container', className), 'data-glass-container': '' },
     <div className="lab-glass-material" aria-hidden="true">
       <svg ref={shadow} className="lab-glass-shadow" />
-      <div ref={backdrop} className="lab-glass-backdrop" />
+      <div ref={backdrop} className="lab-glass-backdrops" />
       <svg ref={paint} className="lab-glass-paint" />
     </div>,
     <GlassContext.Provider value={registry}>{children}</GlassContext.Provider>

@@ -181,6 +181,11 @@ clip-path on a container or its ancestors (they cut the backdrop). One container
 never nest containers or put one inside a bubble.
 Kit rows (ScaffoldAppBar, ScaffoldTopBar, Toolbar, Dock host, ToolbarSearch) are GlassScopes:
 a container unless one encloses them. Wrap any other standalone ToolbarGroup row in GlassScope.
-Bubbles leave the glass when they or an ancestor are `inert`, `hidden` or `aria-hidden="true"`.
+Bubbles leave the glass when they or an ancestor are `inert`, `hidden` or `data-glass-hidden`
+(use it for a bubble that fades out but stays mounted).
 ThemeConfig `glass` (liquid/frosted/solid) and `glassRenderer` (css/canvas) are read live from
 `<html>`; canvas refraction (glass/refraction.ts, pure) only runs on settled glass in Chromium.
+The glass scene measures in the container's own pixels (`hostFrame`), so scaled ancestors (demo
+frames, receding sheets) stay exact; bubbles moved by a running transform/transition/WAAPI animation
+(on them or an ancestor below the container) are followed every frame; departed glass is removed
+within 900 ms even when frames are paused; dispose clears every painted piece.

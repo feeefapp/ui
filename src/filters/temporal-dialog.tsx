@@ -13,6 +13,7 @@ import {
   type TemporalEditorOptions,
 } from './temporal-editor'
 import './temporal-dialog.css'
+import { GlassScope } from '../glass/container'
 
 /**
  * A temporal picker as a dialog, two levels deep and nothing more: the dialog, then one row of
@@ -86,7 +87,7 @@ export function TemporalDialog({
       )}
       top={
         bar ? (
-          <div className="lab-temporal-dialog-bar" dir={dir}>
+          <GlassScope className="lab-temporal-dialog-bar" dir={dir}>
             {editor.range && editor.hasCalendar && (
               <ToolbarGroup label="Range ends" className="lab-temporal-dialog-edges">
                 <TemporalEdges editor={editor} appearance="plain" />
@@ -97,17 +98,17 @@ export function TemporalDialog({
                 <TemporalPresets editor={editor} layout="bar" />
               </ToolbarGroup>
             )}
-          </div>
+          </GlassScope>
         ) : (
-          <div className="lab-temporal-dialog-bar" dir={dir}>
+          <GlassScope className="lab-temporal-dialog-bar" dir={dir}>
             <ToolbarGroup label="Dialog title" className="lab-temporal-dialog-title">
               <h2 className="lab-modal-title">{label}</h2>
             </ToolbarGroup>
-          </div>
+          </GlassScope>
         )
       }
       bottom={
-        <div className="lab-temporal-dialog-bar" dir={dir}>
+        <GlassScope className="lab-temporal-dialog-bar" dir={dir}>
           <ToolbarGroup label={`${label} actions`} className="lab-temporal-dialog-actions">
             <Button variant="text" appearance="toolbar" controlSize="compact" onClick={close}>
               Cancel
@@ -130,7 +131,7 @@ export function TemporalDialog({
               </Button>
             )}
           </ToolbarGroup>
-        </div>
+        </GlassScope>
       }
     >
       <form id={formId} className="lab-temporal-dialog-form" dir={dir} onSubmit={onSubmit}>

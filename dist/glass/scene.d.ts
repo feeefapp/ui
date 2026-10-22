@@ -1,6 +1,8 @@
 import type { GlassMemberOptions } from './context.js';
 /** How far (px) the material may reach past the container, for overshoot and growing bubbles. */
 export declare const GLASS_MARGIN = 32;
+/** True when `animation` is running and changes geometry (CSS transition, keyframes or WAAPI). */
+export declare function movesGeometry(animation: Animation): boolean;
 /**
  * The engine behind GlassContainer: tracks bubbles, springs their glass between layouts, plans
  * splits and merges, and paints one material (a backdrop clipped to the blended outline, plus an
@@ -32,15 +34,25 @@ export declare class GlassScene {
     /** Small glass flips light/dark to stay legible over what is behind it. */
     adaptive: boolean;
     /** `canvas` adds refraction (displacement maps) once the glass settles, where supported. */
-    renderer: 'css' | 'canvas';
+    renderer: 'fill' | 'css' | 'canvas';
     private refractKey;
     private refractTimer;
-    private filter;
+    private filters;
+    private filterHost;
+    private disposed;
+    private mountedAt;
+    /** True while some bubble (or an ancestor up to the container) runs a geometric animation. */
+    private tracking;
+    /** One backdrop element per cluster: a lone bubble clips with border-radius, which every
+     * browser applies to backdrop-filter; only merging bubbles need a path clip, in their own box. */
+    private pieces;
     private sampleFrame;
     private themeObserver;
     private visibility;
     private sampleTimer;
     constructor(host: HTMLElement, backdrop: HTMLElement, paint: SVGSVGElement, shadow: SVGSVGElement, uid: string);
+    /** Any scroll changes what is behind the glass; a scroller inside the container also moves bubbles. */
+    private onScroll;
     /** Re-reads what is behind the glass on the next frame (scroll, theme or layout changed). */
     requestSample: () => void;
     private sampleBackdrop;
@@ -60,6 +72,7 @@ export declare class GlassScene {
     private scheduleDraw;
     /** Paints the current frame: element offsets, backdrop clip, edge, light and shadow. */
     draw(): void;
+    private syncBackdrops;
     /**
      * Canvas renderer: CSS glass while anything moves; once the outline has been still for a moment,
      * build a displacement map for it and bend the backdrop at the glass edges (Chromium).
@@ -67,5 +80,9 @@ export declare class GlassScene {
     private updateRefraction;
     private applyRefraction;
     private lightFor;
+    /** True when `element`, or an ancestor below the container, runs a geometric animation. */
+    private animatedBetween;
+    /** The container on screen and the scale its ancestors apply to it. */
+    private frame;
 }
 //# sourceMappingURL=scene.d.ts.map

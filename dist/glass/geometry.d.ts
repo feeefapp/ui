@@ -37,6 +37,8 @@ export declare function rectGap(a: GlassRect, b: GlassRect): number;
 export declare function glassClusters<T extends GlassShape>(shapes: readonly T[], spacing: number): T[][];
 /** Bounding box of several rects. */
 export declare function boundsOf(rects: readonly GlassRect[]): GlassRect;
+/** Moves every point of an SVG path made of `M`/`L` commands by `dx`, `dy`. */
+export declare function translatePath(d: string, dx: number, dy: number): string;
 /** The exact outline of one shape, as the kit draws it elsewhere (SVG path, absolute coordinates). */
 export declare function shapePath(shape: GlassShape): string;
 export type Point = [number, number];
@@ -56,4 +58,39 @@ export declare function glassPaths(shapes: readonly GlassShape[], spacing: numbe
     bounds: GlassRect;
     d: string;
 }[];
+/**
+ * Where a container sits on screen and how much its ancestors scale it (a zoomed demo frame, a
+ * sheet scaling back, `zoom`-like transforms). Glass is drawn in the container's own pixels, so
+ * every screen measurement goes through this.
+ */
+export type HostFrame = {
+    left: number;
+    top: number;
+    scaleX: number;
+    scaleY: number;
+};
+/** The frame of a container from its screen box and its own layout size (`offsetWidth/Height`). */
+export declare function hostFrame(box: {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+}, layoutWidth: number, layoutHeight: number): HostFrame;
+/** A screen point in the container's own pixels. */
+export declare function toLocalPoint(frame: HostFrame, x: number, y: number): {
+    x: number;
+    y: number;
+};
+/** A container-local point on screen. */
+export declare function toScreenPoint(frame: HostFrame, x: number, y: number): {
+    x: number;
+    y: number;
+};
+/** A screen box (getBoundingClientRect) in the container's own pixels. */
+export declare function toLocalRect(frame: HostFrame, box: {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+}): GlassRect;
 //# sourceMappingURL=geometry.d.ts.map

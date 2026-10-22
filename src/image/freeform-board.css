@@ -126,12 +126,14 @@
   color: var(--lab-muted);
   line-height: 1.5;
 }
-.lab-ff-zoom {
-  --lab-glass-radius: 24px;
+.lab-ff-zoom-layer {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   z-index: 5;
+}
+.lab-ff-zoom {
+  --lab-glass-radius: 24px;
   display: flex;
   flex-direction: column;
   align-items: center;

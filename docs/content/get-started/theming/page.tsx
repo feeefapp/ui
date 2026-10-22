@@ -68,8 +68,8 @@ export function Root({ children }: { children: React.ReactNode }) {
             ],
             [
               <C>glassRenderer</C>,
-              <><C>css</C> (default) or <C>canvas</C></>,
-              <>How glass is drawn on the web. CSS is blur, light and shadow, cheap everywhere. Canvas also bends the content behind the glass at its edges, with displacement maps built whenever the glass settles: heavier, Chromium only (other browsers keep CSS), off with reduced transparency or increased contrast.</>,
+              <><C>fill</C> (default), <C>css</C> or <C>canvas</C></>,
+              <>How much work glass does on the web. Fill paints a filled glass colour with light and shadow but no backdrop blur, the cheapest. CSS adds the blur. Canvas also bends the content behind the glass at its edges, with displacement maps built whenever the glass settles: heavier, Chromium only (other browsers keep CSS), off with reduced transparency or increased contrast.</>,
             ],
           ]}
         />

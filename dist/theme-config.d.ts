@@ -9,7 +9,7 @@ import type { CSSProperties } from 'react';
  * - `data-lab-density`  → control/row heights, padding and spacing (system.css)
  * - `--lab-radius-scale` → every corner radius (system.css and component CSS)
  * - `data-lab-glass`    → how floating glass behaves (glass/glass.css, GlassContainer)
- * - `data-lab-glass-renderer` → CSS glass or canvas-built refraction (GlassContainer)
+ * - `data-lab-glass-renderer` → filled glass, blurred CSS glass or canvas refraction (glass/glass.css)
  *
  * Server-rendered hosts also spread `themeAttributes(config)` onto `<html>` so the first
  * paint is already themed; the provider keeps the attributes in sync on the client.
@@ -34,9 +34,10 @@ export interface ThemeConfig {
      */
     glass?: GlassStyle;
     /**
-     * How glass is drawn on the web: `css` (default) is blur, light and shadow in CSS and SVG, cheap
-     * everywhere. `canvas` also bends the content behind the glass at its edges (refraction) with
-     * displacement maps built on a canvas whenever the glass settles: heavier, Chromium only, other
+     * How much work glass does on the web. `fill` (default) paints a filled glass colour with the
+     * light and shadow but no backdrop blur: the cheapest, smooth on any phone. `css` adds the
+     * backdrop blur. `canvas` also bends the content behind the glass at its edges (refraction) with
+     * displacement maps built on a canvas whenever the glass settles: heaviest, Chromium only, other
      * browsers keep `css`.
      */
     glassRenderer?: GlassRenderer;
@@ -47,8 +48,8 @@ export type Palette = 'lab' | 'mono';
 export type Density = 'comfortable' | 'compact' | 'thin';
 /** How floating glass behaves: moving liquid glass, still frosted glass, or opaque surfaces. */
 export type GlassStyle = 'liquid' | 'frosted' | 'solid';
-/** How glass is drawn on the web: CSS only, or CSS plus canvas-built refraction. */
-export type GlassRenderer = 'css' | 'canvas';
+/** How glass is drawn on the web: filled (no blur), blurred in CSS, or blurred plus canvas-built refraction. */
+export type GlassRenderer = 'fill' | 'css' | 'canvas';
 /** The config every unset option falls back to. `primary` unset means the palette's own color. */
 export declare const THEME_DEFAULTS: Required<Omit<ThemeConfig, 'primary'>>;
 /** `#abc` / `#aabbcc` → [r, g, b] in 0–255, or null for anything else. */

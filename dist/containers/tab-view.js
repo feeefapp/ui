@@ -2,11 +2,11 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
 import { GlassGroup } from '../scaffold.js';
-import { animateLayoutFrom, snapshotLayout } from '../physics/layout-group.js';
 import { MotionValue, prefersReducedMotion } from '../physics/motion-value.js';
 import { SPRINGS, springTiming } from '../physics/spring.js';
 import { cn } from '../utils.js';
 import './tab-view.css';
+import { GlassScope } from '../glass/container.js';
 const SNAPPY = springTiming(SPRINGS.snappy);
 /**
  * App-level tabs, like iOS: each tab keeps its own content (and stack) alive, a floating glass
@@ -23,7 +23,6 @@ export function TabView({ tabs, value, onChange, onReselect, minimize = 'scroll'
     const [visited, setVisited] = React.useState(() => new Set([value]));
     if (!visited.has(value))
         setVisited(new Set(visited).add(value));
-    const pending = React.useRef(null);
     // The bar's own height becomes extra bottom space for every scroll area inside the tabs.
     React.useLayoutEffect(() => {
         const el = chrome.current, host = root.current;
@@ -40,19 +39,11 @@ export function TabView({ tabs, value, onChange, onReselect, minimize = 'scroll'
         observer.observe(el);
         return () => observer.disconnect();
     }, [Boolean(accessory)]);
-    /** Minimizing morphs the chrome: snapshot the pieces, change state, spring them to their new place. */
+    /** Minimizing changes the layout; the chrome's glass container springs the bubbles and their content. */
     const setMinimizedMorph = (next) => {
-        if (next === minimized)
-            return;
-        const pieces = chrome.current?.querySelectorAll('[data-lab-tab-piece]');
-        pending.current = pieces ? snapshotLayout(pieces) : null;
-        setMinimized(next);
+        if (next !== minimized)
+            setMinimized(next);
     };
-    React.useLayoutEffect(() => {
-        if (pending.current)
-            animateLayoutFrom(pending.current, { spring: SPRINGS.snappy });
-        pending.current = null;
-    }, [minimized]);
     // Shrink while the person reads down; come back when they scroll up or reach the top.
     const live = React.useRef({ minimized, minimize, value });
     live.current = { minimized, minimize, value };
@@ -138,7 +129,7 @@ export function TabView({ tabs, value, onChange, onReselect, minimize = 'scroll'
                         panels.current.set(tab.id, el);
                     else
                         panels.current.delete(tab.id);
-                }, id: `${id}-panel-${tab.id}`, role: "tabpanel", "aria-labelledby": `${id}-tab-${tab.id}`, className: "lab-tab-panel", "data-active": tab.id === value || undefined, inert: tab.id !== value || undefined, children: tab.content }, tab.id)) : null), _jsxs("div", { ref: chrome, className: "lab-tab-chrome", "data-minimized": minimized || undefined, children: [accessory && (_jsx(GlassGroup, { className: "lab-tab-accessory", "data-lab-tab-piece": "", children: accessory })), _jsx(GlassGroup, { ref: bar, className: "lab-tab-bar", role: "tablist", "aria-label": label, "data-lab-tab-piece": "", onKeyDown: onKeyDown, onClick: () => minimized && setMinimizedMorph(false), children: tabs.map((tab) => {
+                }, id: `${id}-panel-${tab.id}`, role: "tabpanel", "aria-labelledby": `${id}-tab-${tab.id}`, className: "lab-tab-panel", "data-active": tab.id === value || undefined, inert: tab.id !== value || undefined, children: tab.content }, tab.id)) : null), _jsxs(GlassScope, { ref: chrome, className: "lab-tab-chrome", "data-minimized": minimized || undefined, children: [accessory && (_jsx(GlassGroup, { className: "lab-tab-accessory", "data-lab-tab-piece": "", glassId: "accessory", children: accessory })), _jsx(GlassGroup, { ref: bar, glassId: "tabs", className: "lab-tab-bar", role: "tablist", "aria-label": label, "data-lab-tab-piece": "", onKeyDown: onKeyDown, onClick: () => minimized && setMinimizedMorph(false), children: tabs.map((tab) => {
                             const selected = tab.id === value;
                             return (_jsxs("button", { id: `${id}-tab-${tab.id}`, type: "button", role: "tab", className: "lab-tab", "aria-selected": selected, "aria-controls": `${id}-panel-${tab.id}`, tabIndex: selected ? 0 : -1, "data-selected": selected || undefined, onClick: (event) => {
                                     if (minimized) {

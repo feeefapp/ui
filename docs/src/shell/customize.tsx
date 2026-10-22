@@ -169,8 +169,9 @@ export function Customize() {
                 value={settings.theme.glassRenderer}
                 onChange={(glassRenderer) => update({ theme: { glassRenderer } })}
                 options={[
-                  { value: 'css', label: 'CSS' },
-                  { value: 'canvas', label: 'Canvas refraction' },
+                  { value: 'fill', label: 'Fill' },
+                  { value: 'css', label: 'Blur' },
+                  { value: 'canvas', label: 'Refraction' },
                 ]}
               />
             </Row>

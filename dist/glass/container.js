@@ -24,7 +24,7 @@ export function useGlassStyle() {
 }
 /** The app's glass renderer (ThemeConfig `glassRenderer`, on `<html data-lab-glass-renderer>`), live. */
 export function useGlassRenderer() {
-    return useRootChoice('data-lab-glass-renderer', ['css', 'canvas'], 'css');
+    return useRootChoice('data-lab-glass-renderer', ['fill', 'css', 'canvas'], 'fill');
 }
 /**
  * Draws ONE glass material for every bubble inside it (GlassGroup, ToolbarGroup, Dock, …), like
@@ -126,7 +126,7 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
             document.documentElement.removeEventListener('pointerleave', leave);
         };
     }, [light, reduced, liquid]);
-    return React.createElement(as, { ...props, 'ref': setHost, 'className': cn('lab-glass-container', className), 'data-glass-container': '' }, _jsxs("div", { className: "lab-glass-material", "aria-hidden": "true", children: [_jsx("svg", { ref: shadow, className: "lab-glass-shadow" }), _jsx("div", { ref: backdrop, className: "lab-glass-backdrop" }), _jsx("svg", { ref: paint, className: "lab-glass-paint" })] }), _jsx(GlassContext.Provider, { value: registry, children: children }));
+    return React.createElement(as, { ...props, 'ref': setHost, 'className': cn('lab-glass-container', className), 'data-glass-container': '' }, _jsxs("div", { className: "lab-glass-material", "aria-hidden": "true", children: [_jsx("svg", { ref: shadow, className: "lab-glass-shadow" }), _jsx("div", { ref: backdrop, className: "lab-glass-backdrops" }), _jsx("svg", { ref: paint, className: "lab-glass-paint" })] }), _jsx(GlassContext.Provider, { value: registry, children: children }));
 });
 /**
  * A GlassContainer unless one already encloses it, then a plain element. Kit rows (app bar,

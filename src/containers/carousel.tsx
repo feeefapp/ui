@@ -10,6 +10,7 @@ import { SPRINGS } from '../physics/spring'
 import { centeredIndex, flickTarget, slideEffect, slideProgress } from './carousel-model'
 import { cn } from '../utils'
 import './carousel.css'
+import { GlassScope } from '../glass/container'
 
 export type CarouselProps = {
   /** The slides. Each child becomes one slide. */
@@ -204,13 +205,23 @@ export function Carousel({
           ))}
         </div>
         {controls !== 'never' && slides.length > 1 && (
-          <>
-            <ToolbarGroup label="Previous slide" className="lab-carousel-control" data-side="start">
+          <GlassScope className="lab-carousel-controls">
+            <ToolbarGroup
+              label="Previous slide"
+              className="lab-carousel-control"
+              data-side="start"
+              data-glass-hidden={current === 0 ? '' : undefined}
+            >
               <IconButton variant="text" appearance="toolbar" aria-label="Previous slide" disabled={current === 0} onClick={() => go(current - 1)}>
                 <ChevronLeft className="lab-dir-flip" />
               </IconButton>
             </ToolbarGroup>
-            <ToolbarGroup label="Next slide" className="lab-carousel-control" data-side="end">
+            <ToolbarGroup
+              label="Next slide"
+              className="lab-carousel-control"
+              data-side="end"
+              data-glass-hidden={current === slides.length - 1 ? '' : undefined}
+            >
               <IconButton
                 variant="text"
                 appearance="toolbar"
@@ -221,7 +232,7 @@ export function Carousel({
                 <ChevronRight className="lab-dir-flip" />
               </IconButton>
             </ToolbarGroup>
-          </>
+          </GlassScope>
         )}
       </div>
       {dots && slides.length > 1 && (

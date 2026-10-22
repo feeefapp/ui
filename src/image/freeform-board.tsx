@@ -19,6 +19,7 @@ import { revealCovered } from './freeform-frame'
 import { elapsed, stageRatio, takeErrorText } from './board-utils'
 import type { ImageTake } from './types'
 import './freeform-board.css'
+import { GlassScope } from '../glass/container'
 
 export type Insets = { top: number; right: number; bottom: number; left: number }
 type View = { x: number; y: number; scale: number }
@@ -401,9 +402,9 @@ export function FreeformBoard({
         </div>
       )}
       {cards.length > 0 && (
+        <GlassScope className="lab-ff-zoom-layer" style={{ right: insets.right + 14 }}>
         <GlassGroup
           className="lab-ff-zoom"
-          style={{ right: insets.right + 14 }}
           onPointerDown={(e) => e.stopPropagation()}
           role="toolbar"
           aria-label={t('lab.board.zoom')}
@@ -453,6 +454,7 @@ export function FreeformBoard({
             <Maximize size={20} />
           </Button>
         </GlassGroup>
+        </GlassScope>
       )}
     </div>
   )

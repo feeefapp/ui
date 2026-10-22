@@ -75,7 +75,7 @@ export const theme: ThemeConfig = { palette: 'mono', density: 'compact', radius:
 | Option | Values | What it drives |
 |---|---|---|
 | `palette` | `lab` (default, Feeef green), `mono` (black and white; only danger/warning keep a hue) | every color token in `theme-tokens.css`: surfaces, ink, primary, focus, brand logo strokes, pixel tones, `--lab-success`, `--lab-warning` |
-| `glassRenderer` | `css` (default), `canvas` | `data-lab-glass-renderer`: canvas adds edge refraction from displacement maps built when glass settles (Chromium only; others keep CSS) |
+| `glassRenderer` | `fill` (default), `css`, `canvas` | `data-lab-glass-renderer`: fill has no backdrop blur (fastest), css blurs, canvas adds edge refraction from displacement maps built when glass settles (Chromium only; others keep CSS) |
 | `glass` | `liquid` (default), `frosted`, `solid` | `data-lab-glass`: GlassContainer pointer light and press response (liquid only), opaque chrome (solid) |
 | `density` | `comfortable` (default), `compact` | `--lab-control-height`, `--lab-control-compact`, `--lab-field-height`, `--lab-control-small`, `--lab-row-height`, `--lab-control-padding`, `--lab-space-3…8`, `--lab-sidebar-width`, `--lab-navigation-rail-width` (coarse pointers keep 44px targets) |
 | `radius` | number, `1` default, `0` square, max `1.5` | `--lab-radius-scale`, which multiplies every radius token and component radius (circles such as radios stay round) |

@@ -86,11 +86,15 @@ export function boundsOf(rects) {
     return { x, y, width: right - x, height: bottom - y };
 }
 const round = (value) => Math.round(value * 100) / 100;
+/** Moves every point of an SVG path made of `M`/`L` commands by `dx`, `dy`. */
+export function translatePath(d, dx, dy) {
+    return d.replace(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g, (_, x, y) => `${round(Number(x) + dx)},${round(Number(y) + dy)}`);
+}
 /** The exact outline of one shape, as the kit draws it elsewhere (SVG path, absolute coordinates). */
 export function shapePath(shape) {
     const r = clampRadius(shape);
     const corner = { x: r, y: r };
-    return foSuperellipsePath(shape.width, shape.height, [corner, corner, corner, corner]).replace(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g, (_, x, y) => `${round(Number(x) + shape.x)},${round(Number(y) + shape.y)}`);
+    return translatePath(foSuperellipsePath(shape.width, shape.height, [corner, corner, corner, corner]), shape.x, shape.y);
 }
 /**
  * Closed outlines of the blended union of `shapes` (marching squares on a `cell`-sized grid with
@@ -224,5 +228,24 @@ export function glassPaths(shapes, spacing, cell = 2) {
         bounds: boundsOf(cluster),
         d: clusterPath(cluster, spacing, cell),
     }));
+}
+/** The frame of a container from its screen box and its own layout size (`offsetWidth/Height`). */
+export function hostFrame(box, layoutWidth, layoutHeight) {
+    const scaleX = layoutWidth > 0 && box.width > 0 ? box.width / layoutWidth : 1;
+    const scaleY = layoutHeight > 0 && box.height > 0 ? box.height / layoutHeight : 1;
+    return { left: box.left, top: box.top, scaleX, scaleY };
+}
+/** A screen point in the container's own pixels. */
+export function toLocalPoint(frame, x, y) {
+    return { x: (x - frame.left) / frame.scaleX, y: (y - frame.top) / frame.scaleY };
+}
+/** A container-local point on screen. */
+export function toScreenPoint(frame, x, y) {
+    return { x: frame.left + x * frame.scaleX, y: frame.top + y * frame.scaleY };
+}
+/** A screen box (getBoundingClientRect) in the container's own pixels. */
+export function toLocalRect(frame, box) {
+    const { x, y } = toLocalPoint(frame, box.left, box.top);
+    return { x, y, width: box.width / frame.scaleX, height: box.height / frame.scaleY };
 }
 //# sourceMappingURL=geometry.js.map

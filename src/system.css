@@ -42,6 +42,8 @@ html[data-lab-theme] {
   --lab-control-hover: color-mix(in srgb, var(--lab-ink) 5%, var(--lab-surface));
   --lab-control-pressed: color-mix(in srgb, var(--lab-ink) 10%, var(--lab-surface));
   --lab-glass-fill: color-mix(in srgb, var(--lab-surface) 76%, transparent);
+  /* Glass without backdrop blur (ThemeConfig glassRenderer 'fill'): denser, so text behind stays quiet. */
+  --lab-glass-fill-flat: color-mix(in srgb, var(--lab-surface) 93%, transparent);
   --lab-glass-edge-light: rgb(255 255 255 / 76%);
   --lab-glass-edge-low: rgb(255 255 255 / 20%);
   --lab-glass-shadow: 0 8px 24px -14px rgb(0 0 0 / 18%);
@@ -340,6 +342,12 @@ html[data-lab-density='thin'][data-lab-theme] .lab-control[data-variant] {
     --lab-duration-fast: 0ms;
     --lab-duration-normal: 0ms;
   }
+}
+/* ThemeConfig glassRenderer: 'fill' (default) paints glass without backdrop blur, for speed. */
+html[data-lab-theme][data-lab-glass-renderer='fill'] .lab-glass-group {
+  background: var(--lab-glass-fill-flat);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 /* ThemeConfig glass: 'solid' makes every glass group an opaque surface without the light rim. */
 html[data-lab-theme][data-lab-glass='solid'] .lab-glass-group {

@@ -305,3 +305,13 @@ html[data-lab-theme] .lab-pc .lab-pc-field textarea.lab-textarea {
 @media (prefers-reduced-transparency: reduce) { .lab-pc-card { background: var(--lab-surface); backdrop-filter: none; -webkit-backdrop-filter: none; } }
 @supports not (backdrop-filter: blur(1px)) { .lab-pc-card { background: var(--lab-surface); } }
 @media (forced-colors: active) { .lab-pc-card { background: Canvas; border-color: CanvasText; box-shadow: none; } .lab-pc-card:focus-within { outline: 2px solid Highlight; } }
+
+/* Inside a glass container the card's material is painted by the container; keep its focus ring. */
+.lab-pc-glass {
+  display: grid;
+  min-width: 0;
+}
+.lab-glass-container[data-glass-ready] .lab-pc-card[data-glass-member]:is([data-focused='true'], :focus-within) {
+  border-color: color-mix(in srgb, var(--pc-primary) 55%, var(--pc-line));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--pc-primary) 14%, transparent);
+}

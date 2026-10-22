@@ -4,11 +4,16 @@ import * as React from 'react'
 import { cn } from '../utils'
 import { RawInput } from '../primitives/raw-input'
 import { useComposerLayout } from './use-composer-layout'
+import { GlassScope } from '../glass/container'
+import { useGlassMember } from '../glass/member'
 import './composer.css'
 
 export { useComposerLayout } from './use-composer-layout'
 
-/** Shared Chat/Image card. Domain-specific controls remain in named layout slots. */
+/**
+ * Shared Chat/Image card. Domain-specific controls remain in named layout slots. Its glass is
+ * painted by a glass container (its own, or the row it sits in), so it shares light, press and tint.
+ */
 export const ComposerCard = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement> & {
   /** Two-row layout (field above, tools below) instead of one line. Sets `data-expanded`. */
   expanded?: boolean
@@ -19,10 +24,23 @@ export const ComposerCard = React.forwardRef<HTMLDivElement, React.HTMLAttribute
   /** Content inside the card, above the layout grid. */
   above?: React.ReactNode
 }>(function ComposerCard({ expanded, layoutRef, layoutClassName, above, children, className, ...props }, ref) {
-  return <div {...props} ref={ref} className={cn('lab-pc-card lab-light-edge', className)} data-expanded={expanded}>
-    {above}
-    <div ref={layoutRef} className={cn('lab-pc-layout', layoutClassName)}>{children}</div>
-  </div>
+  return <GlassScope className="lab-pc-glass">
+    <GlassCard {...props} ref={ref} className={cn('lab-pc-card lab-light-edge', className)} data-expanded={expanded}>
+      {above}
+      <div ref={layoutRef} className={cn('lab-pc-layout', layoutClassName)}>{children}</div>
+    </GlassCard>
+  </GlassScope>
+})
+
+/** The card element, registered with the glass container; it animates its own height. */
+const GlassCard = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(function GlassCard(props, ref) {
+  const element = React.useRef<HTMLDivElement | null>(null)
+  const member = useGlassMember(element, undefined, { motion: 'follow' })
+  return <div {...props} ref={(node) => {
+    element.current = node
+    if (typeof ref === 'function') ref(node)
+    else if (ref) ref.current = node
+  }} data-glass-member={member ? '' : undefined}/>
 })
 
 /** Placeholder that fades in word by word. Decorative (`aria-hidden`); label the field separately. */

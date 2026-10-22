@@ -29,7 +29,9 @@ export function refractionAt(d: number, nx: number, ny: number, bezel = GLASS_BE
 
 /**
  * RGBA displacement map for `width` × `height` px (material coordinates) holding the blended
- * outlines of `clusters`. Pixels outside the glass and in its flat middle stay neutral.
+ * outlines of `clusters`. Red/green carry the shift (neutral in the flat middle); alpha is the
+ * glass shape itself (anti-aliased), so the filter can clip its own output: Chromium ignores an
+ * element's clip-path for `backdrop-filter: url()`.
  */
 export function displacementMap(
   width: number,
@@ -44,7 +46,6 @@ export function displacementMap(
   for (let i = 0; i < data.length; i += 4) {
     data[i] = 128
     data[i + 1] = 128
-    data[i + 3] = 255
   }
   for (const shapes of clusters) {
     if (!shapes.length) continue
@@ -59,12 +60,14 @@ export function displacementMap(
         const px = x + 0.5
         const py = y + 0.5
         const d = distance(px, py)
-        if (d >= 0 || d <= -band) continue
+        const i = (y * w + x) * 4
+        // Clusters' boxes can overlap: only ever add coverage.
+        data[i + 3] = Math.max(data[i + 3], Math.round(Math.min(1, Math.max(0, 0.5 - d)) * 255))
+        if (d >= 0.5 || d <= -band) continue
         const gx = distance(px + 1, py) - distance(px - 1, py)
         const gy = distance(px, py + 1) - distance(px, py - 1)
         const length = Math.hypot(gx, gy) || 1
         const bend = refractionAt(d, gx / length, gy / length, band)
-        const i = (y * w + x) * 4
         data[i] = Math.round(128 + bend.x * 127)
         data[i + 1] = Math.round(128 + bend.y * 127)
       }

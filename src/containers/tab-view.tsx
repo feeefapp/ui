@@ -2,11 +2,11 @@
 
 import * as React from 'react'
 import { GlassGroup } from '../scaffold'
-import { animateLayoutFrom, snapshotLayout } from '../physics/layout-group'
 import { MotionValue, prefersReducedMotion } from '../physics/motion-value'
 import { SPRINGS, springTiming } from '../physics/spring'
 import { cn } from '../utils'
 import './tab-view.css'
+import { GlassScope } from '../glass/container'
 
 export type Tab = {
   /** Stable id; also the value of `value`. */
@@ -70,7 +70,6 @@ export function TabView({
   const [minimized, setMinimized] = React.useState(false)
   const [visited, setVisited] = React.useState(() => new Set([value]))
   if (!visited.has(value)) setVisited(new Set(visited).add(value))
-  const pending = React.useRef<ReturnType<typeof snapshotLayout> | null>(null)
 
   // The bar's own height becomes extra bottom space for every scroll area inside the tabs.
   React.useLayoutEffect(() => {
@@ -88,17 +87,10 @@ export function TabView({
     return () => observer.disconnect()
   }, [Boolean(accessory)])
 
-  /** Minimizing morphs the chrome: snapshot the pieces, change state, spring them to their new place. */
+  /** Minimizing changes the layout; the chrome's glass container springs the bubbles and their content. */
   const setMinimizedMorph = (next: boolean) => {
-    if (next === minimized) return
-    const pieces = chrome.current?.querySelectorAll<HTMLElement>('[data-lab-tab-piece]')
-    pending.current = pieces ? snapshotLayout(pieces) : null
-    setMinimized(next)
+    if (next !== minimized) setMinimized(next)
   }
-  React.useLayoutEffect(() => {
-    if (pending.current) animateLayoutFrom(pending.current, { spring: SPRINGS.snappy })
-    pending.current = null
-  }, [minimized])
 
   // Shrink while the person reads down; come back when they scroll up or reach the top.
   const live = React.useRef({ minimized, minimize, value })
@@ -195,14 +187,15 @@ export function TabView({
           </div>
         ) : null
       )}
-      <div ref={chrome} className="lab-tab-chrome" data-minimized={minimized || undefined}>
+      <GlassScope ref={chrome} className="lab-tab-chrome" data-minimized={minimized || undefined}>
         {accessory && (
-          <GlassGroup className="lab-tab-accessory" data-lab-tab-piece="">
+          <GlassGroup className="lab-tab-accessory" data-lab-tab-piece="" glassId="accessory">
             {accessory}
           </GlassGroup>
         )}
         <GlassGroup
           ref={bar as React.Ref<HTMLElement>}
+          glassId="tabs"
           className="lab-tab-bar"
           role="tablist"
           aria-label={label}
@@ -246,7 +239,7 @@ export function TabView({
             )
           })}
         </GlassGroup>
-      </div>
+      </GlassScope>
     </div>
   )
 }

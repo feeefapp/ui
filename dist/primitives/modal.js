@@ -8,6 +8,7 @@ import { usePresence, useLatched } from '../motion.js';
 import { Button, IconButton } from './button.js';
 import { ToolbarGroup } from '../toolbar.js';
 import { ScrollArea } from '../scroll/index.js';
+import { GlassScope } from '../glass/container.js';
 /**
  * A modal dialog on the native `<dialog>`: focus is trapped, Escape and a backdrop click call
  * `close`, and focus returns to the opener after the exit transition.
@@ -102,6 +103,6 @@ function Dialog({ state, children, close, label, wide, className, scrollable, to
         }, onClick: (e) => {
             if (e.target === e.currentTarget && state === 'open')
                 close();
-        }, children: scrollable ? (_jsx(ScrollArea, { ...scrollOptions, label: label, top: headerless ? (top) : (_jsxs("header", { className: cn('lab-modal-floating-top', defaultTitle && 'lab-modal-floating-top--default'), children: [_jsx("div", { className: "lab-modal-floating-title", children: top ?? (_jsx(ToolbarGroup, { label: "Dialog title", children: _jsx("h2", { id: titleId, className: "lab-modal-title", children: label }) })) }), showClose && (_jsx(ToolbarGroup, { label: "Dialog close action", children: _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", className: "lab-modal-close", "aria-label": t('lab.composer.closeLabel', { label }), disabled: state !== 'open', onClick: close, children: _jsx(X, { size: 20, "aria-hidden": "true" }) }) }))] })), bottom: bottom, children: fitContent ? (_jsx("div", { ref: bodyRef, className: "lab-modal-measured-body", children: children })) : (children) })) : (_jsxs(_Fragment, { children: [!headerless && showClose && (_jsx(Button, { variant: "ghost", controlSize: "icon", className: "lab-close", "aria-label": t('lab.common.close'), onClick: close, children: _jsx(X, { size: 18 }) })), children] })) }));
+        }, children: scrollable ? (_jsx(ScrollArea, { ...scrollOptions, label: label, top: headerless ? (top) : (_jsxs(GlassScope, { as: "header", className: cn('lab-modal-floating-top', defaultTitle && 'lab-modal-floating-top--default'), children: [_jsx("div", { className: "lab-modal-floating-title", children: top ?? (_jsx(ToolbarGroup, { label: "Dialog title", children: _jsx("h2", { id: titleId, className: "lab-modal-title", children: label }) })) }), showClose && (_jsx(ToolbarGroup, { label: "Dialog close action", children: _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", className: "lab-modal-close", "aria-label": t('lab.composer.closeLabel', { label }), disabled: state !== 'open', onClick: close, children: _jsx(X, { size: 20, "aria-hidden": "true" }) }) }))] })), bottom: bottom, children: fitContent ? (_jsx("div", { ref: bodyRef, className: "lab-modal-measured-body", children: children })) : (children) })) : (_jsxs(_Fragment, { children: [!headerless && showClose && (_jsx(Button, { variant: "ghost", controlSize: "icon", className: "lab-close", "aria-label": t('lab.common.close'), onClick: close, children: _jsx(X, { size: 18 }) })), children] })) }));
 }
 //# sourceMappingURL=modal.js.map

@@ -732,6 +732,7 @@ export function NavigationPage({
         label="Page title"
         className="lab-nav-bar-title"
         data-shown={titleShown}
+        data-glass-hidden={titleShown ? undefined : ''}
         aria-hidden={display === 'large' ? true : undefined}
       >
         {display === 'inline' ? (

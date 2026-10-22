@@ -16,6 +16,7 @@ import { formatTemporalValue } from '../filters/temporal-format.js';
 import { useI18n } from '../i18n.js';
 import { cn } from '../utils.js';
 import './temporal-field.css';
+import { GlassScope } from '../glass/container.js';
 /** Phones: every picker opens as a dialog (full width, 44px targets) instead of an anchored popover. */
 const COMPACT_QUERY = '(max-width: 599px)';
 function useCompactViewport() {
@@ -145,7 +146,7 @@ export const TemporalField = React.forwardRef(function TemporalField({ type, val
     };
     // Popovers end their footer row with one glass group. A date with nothing to clear has no
     // actions at all: the day itself is the action.
-    const actions = instant && normalizeTemporal(draft) == null ? null : (_jsxs(ToolbarGroup, { label: `${title} actions`, className: "lab-temporal-actions", children: [_jsx(Button, { variant: "text", appearance: "toolbar", controlSize: "compact", disabled: normalizeTemporal(draft) == null, onClick: clear, children: "Clear" }), !instant && (_jsx(Button, { variant: "filled", appearance: "toolbar", controlSize: "compact", type: "submit", form: formId, children: "Apply" }))] }));
+    const actions = instant && normalizeTemporal(draft) == null ? null : (_jsx(GlassScope, { className: "lab-temporal-actions-row", children: _jsxs(ToolbarGroup, { label: `${title} actions`, className: "lab-temporal-actions", children: [_jsx(Button, { variant: "text", appearance: "toolbar", controlSize: "compact", disabled: normalizeTemporal(draft) == null, onClick: clear, children: "Clear" }), !instant && (_jsx(Button, { variant: "filled", appearance: "toolbar", controlSize: "compact", type: "submit", form: formId, children: "Apply" }))] }) }));
     const popoverEditor = (_jsxs("form", { id: formId, className: "lab-temporal-field-editor", onSubmit: apply, children: [_jsx(TemporalFilterEditor, { config: config, locale: locale, value: draft, resetKey: open, onChange: changeDraft, footer: actions, onPick: pick }), draftError && (_jsx("p", { role: "alert", className: "lab-filter-error", children: draftError }))] }));
     return (_jsxs(Popover.Root, { open: open && !asDialog, onOpenChange: (next) => (next ? begin() : close()), children: [_jsx(FieldShell, { id: id, hint: hint, label: label, labelStyle: labelStyle, leadingIcon: leadingIcon === undefined ? type.startsWith('time') ? _jsx(Clock, {}) : _jsx(CalendarDays, {}) : leadingIcon, leading: leading, trailing: _jsxs(_Fragment, { children: [trailing, clearable && populated && !disabled && !readOnly && (_jsx(IconButton, { variant: "text", controlSize: "compact", className: "lab-temporal-field-clear", "aria-label": `Clear ${title}`, onClick: () => {
                                 trigger.current?.focus();

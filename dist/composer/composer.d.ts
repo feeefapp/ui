@@ -1,7 +1,10 @@
 import * as React from 'react';
 import './composer.css';
 export { useComposerLayout } from './use-composer-layout.js';
-/** Shared Chat/Image card. Domain-specific controls remain in named layout slots. */
+/**
+ * Shared Chat/Image card. Domain-specific controls remain in named layout slots. Its glass is
+ * painted by a glass container (its own, or the row it sits in), so it shares light, press and tint.
+ */
 export declare const ComposerCard: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLDivElement> & {
     /** Two-row layout (field above, tools below) instead of one line. Sets `data-expanded`. */
     expanded?: boolean;

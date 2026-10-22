@@ -15,6 +15,7 @@ import { TemporalFilterEditor } from './filters/temporal-editor.js';
 import { TemporalDialog } from './filters/temporal-dialog.js';
 import { isTemporalType, isTemporalRange, validateTemporal, readTemporalForm, } from './filters/temporal.js';
 import './filter-bar.css';
+import { GlassScope } from './glass/container.js';
 function summary(option, value) {
     if (value == null)
         return 'Any';
@@ -113,7 +114,7 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
         setLocalValues(cleared);
         onValuesChange?.(cleared);
     };
-    return (_jsxs("div", { ref: host, className: "lab-filter-bar", role: "group", "aria-label": label, children: [onBack && (_jsx(ToolbarGroup, { label: "Filter navigation", children: _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": "Back from filtered view", onClick: onBack, children: _jsx(ArrowLeft, { className: "lab-dir-flip" }) }) })), _jsxs(ToolbarGroup, { label: "Filter controls", children: [_jsxs(Popover.Root, { open: catalog, onOpenChange: (open) => {
+    return (_jsxs(GlassScope, { ref: host, className: "lab-filter-bar", role: "group", "aria-label": label, children: [onBack && (_jsx(ToolbarGroup, { label: "Filter navigation", children: _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": "Back from filtered view", onClick: onBack, children: _jsx(ArrowLeft, { className: "lab-dir-flip" }) }) })), _jsxs(ToolbarGroup, { label: "Filter controls", children: [_jsxs(Popover.Root, { open: catalog, onOpenChange: (open) => {
                             prepare(open);
                             setCatalog(open);
                             if (open)

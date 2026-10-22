@@ -105,14 +105,19 @@ export function boundsOf(rects: readonly GlassRect[]): GlassRect {
 
 const round = (value: number) => Math.round(value * 100) / 100
 
+/** Moves every point of an SVG path made of `M`/`L` commands by `dx`, `dy`. */
+export function translatePath(d: string, dx: number, dy: number) {
+  return d.replace(
+    /(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g,
+    (_, x: string, y: string) => `${round(Number(x) + dx)},${round(Number(y) + dy)}`
+  )
+}
+
 /** The exact outline of one shape, as the kit draws it elsewhere (SVG path, absolute coordinates). */
 export function shapePath(shape: GlassShape) {
   const r = clampRadius(shape)
   const corner = { x: r, y: r }
-  return foSuperellipsePath(shape.width, shape.height, [corner, corner, corner, corner]).replace(
-    /(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g,
-    (_, x: string, y: string) => `${round(Number(x) + shape.x)},${round(Number(y) + shape.y)}`
-  )
+  return translatePath(foSuperellipsePath(shape.width, shape.height, [corner, corner, corner, corner]), shape.x, shape.y)
 }
 
 export type Point = [number, number]
@@ -242,4 +247,38 @@ export function glassPaths(shapes: readonly GlassShape[], spacing: number, cell 
     bounds: boundsOf(cluster),
     d: clusterPath(cluster, spacing, cell),
   }))
+}
+
+/**
+ * Where a container sits on screen and how much its ancestors scale it (a zoomed demo frame, a
+ * sheet scaling back, `zoom`-like transforms). Glass is drawn in the container's own pixels, so
+ * every screen measurement goes through this.
+ */
+export type HostFrame = { left: number; top: number; scaleX: number; scaleY: number }
+
+/** The frame of a container from its screen box and its own layout size (`offsetWidth/Height`). */
+export function hostFrame(
+  box: { left: number; top: number; width: number; height: number },
+  layoutWidth: number,
+  layoutHeight: number
+): HostFrame {
+  const scaleX = layoutWidth > 0 && box.width > 0 ? box.width / layoutWidth : 1
+  const scaleY = layoutHeight > 0 && box.height > 0 ? box.height / layoutHeight : 1
+  return { left: box.left, top: box.top, scaleX, scaleY }
+}
+
+/** A screen point in the container's own pixels. */
+export function toLocalPoint(frame: HostFrame, x: number, y: number) {
+  return { x: (x - frame.left) / frame.scaleX, y: (y - frame.top) / frame.scaleY }
+}
+
+/** A container-local point on screen. */
+export function toScreenPoint(frame: HostFrame, x: number, y: number) {
+  return { x: frame.left + x * frame.scaleX, y: frame.top + y * frame.scaleY }
+}
+
+/** A screen box (getBoundingClientRect) in the container's own pixels. */
+export function toLocalRect(frame: HostFrame, box: { left: number; top: number; width: number; height: number }): GlassRect {
+  const { x, y } = toLocalPoint(frame, box.left, box.top)
+  return { x, y, width: box.width / frame.scaleX, height: box.height / frame.scaleY }
 }

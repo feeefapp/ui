@@ -4,7 +4,7 @@ export const THEME_DEFAULTS = {
     density: 'comfortable',
     radius: 1,
     glass: 'liquid',
-    glassRenderer: 'css',
+    glassRenderer: 'fill',
 };
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 /** `#abc` / `#aabbcc` → [r, g, b] in 0–255, or null for anything else. */

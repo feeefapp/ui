@@ -1,7 +1,19 @@
 import { MotionValue, onAnimationFrame } from '../physics/motion-value'
 import { SPRINGS, type Spring } from '../physics/spring'
 import type { GlassMemberOptions } from './context'
-import { boundsOf, glassPaths, type GlassRect, type GlassShape } from './geometry'
+import {
+  boundsOf,
+  clampRadius,
+  glassPaths,
+  hostFrame,
+  toLocalPoint,
+  toLocalRect,
+  toScreenPoint,
+  translatePath,
+  type GlassRect,
+  type GlassShape,
+  type HostFrame,
+} from './geometry'
 import { DEFAULT_GLASS_LIGHT, glassLightToward, rimGradient, type GlassLight } from './light'
 import { planGlassTransition, sameRect } from './transitions'
 import { adaptiveGlassTone, backdropTone, type BackdropSample, type GlassTone } from './adaptive'
@@ -83,6 +95,22 @@ class Shape {
   }
 }
 
+/** Animated properties that move or resize a box (opacity and colour don't). */
+const GEOMETRY = /^(all|transform|translate|scale|rotate|width|height|min-|max-|top|left|right|bottom|inset|margin|padding|offset|grid|flex|zoom)/
+
+/** True when `animation` is running and changes geometry (CSS transition, keyframes or WAAPI). */
+export function movesGeometry(animation: Animation) {
+  if (animation.playState !== 'running') return false
+  const transition = (animation as Animation & { transitionProperty?: string }).transitionProperty
+  if (transition) return GEOMETRY.test(transition)
+  const effect = animation.effect as KeyframeEffect | null
+  // Keyframe objects also carry bookkeeping keys (offset, easing, composite); skip those.
+  const properties = (effect?.getKeyframes?.().flatMap((frame) => Object.keys(frame)) ?? []).filter(
+    (name) => !['offset', 'computedOffset', 'easing', 'composite'].includes(name)
+  )
+  return properties.some((name) => GEOMETRY.test(name.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase())))
+}
+
 const radiusOf = (element: HTMLElement) => {
   const value = Number.parseFloat(getComputedStyle(element).borderTopLeftRadius)
   return Number.isFinite(value) ? value : 0
@@ -115,10 +143,18 @@ export class GlassScene {
   /** Small glass flips light/dark to stay legible over what is behind it. */
   adaptive = true
   /** `canvas` adds refraction (displacement maps) once the glass settles, where supported. */
-  renderer: 'css' | 'canvas' = 'css'
+  renderer: 'fill' | 'css' | 'canvas' = 'fill'
   private refractKey = ''
   private refractTimer: ReturnType<typeof setTimeout> | null = null
-  private filter: SVGFilterElement | null = null
+  private filters: SVGFilterElement[] = []
+  private filterHost: SVGSVGElement | null = null
+  private disposed = false
+  private mountedAt = typeof performance === 'undefined' ? 0 : performance.now()
+  /** True while some bubble (or an ancestor up to the container) runs a geometric animation. */
+  private tracking = false
+  /** One backdrop element per cluster: a lone bubble clips with border-radius, which every
+   * browser applies to backdrop-filter; only merging bubbles need a path clip, in their own box. */
+  private pieces: HTMLDivElement[] = []
   private sampleFrame = 0
   private themeObserver: MutationObserver | null = null
   private visibility: IntersectionObserver | null = null
@@ -132,18 +168,19 @@ export class GlassScene {
     uid: string
   ) {
     this.uid = uid.replace(/[^a-zA-Z0-9_-]/g, '')
+    backdrop.replaceChildren()
     if (typeof ResizeObserver !== 'undefined') {
       this.resize = new ResizeObserver(() => this.measure())
       this.resize.observe(host)
     }
     if (typeof MutationObserver !== 'undefined') {
-      // Bubbles hidden with `inert`, `hidden` or `aria-hidden` (collapsed toolbars, search taking
-      // over, a title scrolled away) leave the glass.
+      // Bubbles hidden with `inert`, `hidden` or `data-glass-hidden` (collapsed toolbars, search
+      // taking over, a title scrolled away) leave the glass.
       this.mutations = new MutationObserver(() => this.requestMeasure())
-      this.mutations.observe(host, { subtree: true, attributes: true, attributeFilter: ['inert', 'hidden', 'aria-hidden'] })
+      this.mutations.observe(host, { subtree: true, attributes: true, attributeFilter: ['inert', 'hidden', 'data-glass-hidden'] })
     }
     host.addEventListener('pointerdown', this.onPressStart, { passive: true })
-    window.addEventListener('scroll', this.requestSample, { passive: true, capture: true })
+    window.addEventListener('scroll', this.onScroll, { passive: true, capture: true })
     if (typeof MutationObserver !== 'undefined') {
       this.themeObserver = new MutationObserver(this.requestSample)
       this.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-lab-theme'] })
@@ -163,6 +200,12 @@ export class GlassScene {
     }
   }
 
+  /** Any scroll changes what is behind the glass; a scroller inside the container also moves bubbles. */
+  private onScroll = (event: Event) => {
+    this.requestSample()
+    if (event.target instanceof Node && event.target !== this.host && this.host.contains(event.target)) this.requestMeasure()
+  }
+
   /** Re-reads what is behind the glass on the next frame (scroll, theme or layout changed). */
   requestSample = () => {
     if (this.sampleFrame || typeof requestAnimationFrame === 'undefined') return
@@ -176,10 +219,13 @@ export class GlassScene {
     const paths = this.cache.paths
     let tone: GlassTone | null = null
     if (this.adaptive && paths.length && typeof document.elementsFromPoint === 'function') {
-      const origin = this.host.getBoundingClientRect()
+      const frame = this.frame()
       const tones = paths.map((path) => {
-        const x = origin.left - GLASS_MARGIN + path.bounds.x + path.bounds.width / 2
-        const y = origin.top - GLASS_MARGIN + path.bounds.y + path.bounds.height / 2
+        const { x, y } = toScreenPoint(
+          frame,
+          path.bounds.x - GLASS_MARGIN + path.bounds.width / 2,
+          path.bounds.y - GLASS_MARGIN + path.bounds.height / 2
+        )
         const samples: BackdropSample[] = document
           .elementsFromPoint(x, y)
           .filter((element) => !this.host.contains(element))
@@ -207,8 +253,8 @@ export class GlassScene {
     this.pressed = { id, pointer: event.pointerId, x: event.clientX, y: event.clientY }
     // Large surfaces (docks, panels) glow but don't swell.
     if (shape.height.get() <= 64) void shape.press.animateTo(GLASS_PRESS_SCALE, { spring: SPRING })
-    const origin = this.host.getBoundingClientRect()
-    const glow = { x: event.clientX - origin.left, y: event.clientY - origin.top, radius: new MotionValue(8, 0.5), opacity: new MotionValue(1, 0.005) }
+    const point = toLocalPoint(this.frame(), event.clientX, event.clientY)
+    const glow = { x: point.x, y: point.y, radius: new MotionValue(8, 0.5), opacity: new MotionValue(1, 0.005) }
     this.glow = glow
     void glow.radius.animateTo(Math.max(120, shape.width.get()), { spring: SPRINGS.smooth })
     window.addEventListener('pointermove', this.onPressMove, { passive: true })
@@ -222,13 +268,14 @@ export class GlassScene {
     if (!pressed || event.pointerId !== pressed.pointer) return
     const shape = this.shapes.get(pressed.id)
     if (!shape) return
-    const stretch = glassStretch(event.clientX - pressed.x, event.clientY - pressed.y)
+    const frame = this.frame()
+    const stretch = glassStretch((event.clientX - pressed.x) / frame.scaleX, (event.clientY - pressed.y) / frame.scaleY)
     shape.stretchX.track(stretch.x, event.timeStamp)
     shape.stretchY.track(stretch.y, event.timeStamp)
     if (this.glow) {
-      const origin = this.host.getBoundingClientRect()
-      this.glow.x = event.clientX - origin.left
-      this.glow.y = event.clientY - origin.top
+      const point = toLocalPoint(frame, event.clientX, event.clientY)
+      this.glow.x = point.x
+      this.glow.y = point.y
     }
     this.scheduleDraw()
   }
@@ -283,11 +330,11 @@ export class GlassScene {
 
   dispose() {
     this.host.removeEventListener('pointerdown', this.onPressStart)
-    window.removeEventListener('scroll', this.requestSample, { capture: true })
+    window.removeEventListener('scroll', this.onScroll, { capture: true })
     this.themeObserver?.disconnect()
     this.visibility?.disconnect()
     if (this.refractTimer) clearTimeout(this.refractTimer)
-    this.filter?.ownerSVGElement?.remove()
+    this.filterHost?.remove()
     if (this.sampleTimer) clearInterval(this.sampleTimer)
     if (this.sampleFrame) cancelAnimationFrame(this.sampleFrame)
     window.removeEventListener('pointermove', this.onPressMove)
@@ -296,38 +343,56 @@ export class GlassScene {
     this.resize?.disconnect()
     this.mutations?.disconnect()
     this.drawHook?.()
+    this.drawHook = null
     for (const shape of this.shapes.values()) for (const value of shape.values()) value.stop()
+    // Leave nothing painted behind: a remounted container (hot reload, React's development
+    // double mount, a parent remount) starts from a clean layer.
+    for (const piece of this.pieces) piece.remove()
+    this.pieces = []
+    this.paint.replaceChildren()
+    this.shadow.replaceChildren()
+    for (const member of this.members.values()) {
+      member.element.style.translate = ''
+      member.element.style.scale = ''
+    }
+    this.host.removeAttribute('data-glass-backdrop')
+    this.disposed = true
   }
 
   /** Reads every bubble's layout box and moves the glass toward it. */
   measure() {
-    const origin = this.host.getBoundingClientRect()
-    const targets = new Map<string, { rect: GlassRect; radius: number; member: Member | null }>()
+    if (this.disposed) return
+    const frame = this.frame()
+    let tracking = false
+    const targets = new Map<string, { rect: GlassRect; radius: number; member: Member | null; animated?: boolean }>()
     const unions = new Map<string, GlassRect[]>()
     const unionRadius = new Map<string, number>()
     for (const [id, member] of this.members) {
       const { element, options } = member
-      if (!element.isConnected || element.closest('[inert],[hidden],[aria-hidden="true"]')) continue
+      if (!element.isConnected || element.closest('[inert],[hidden],[data-glass-hidden]')) continue
+      // Never a bubble inside a bubble: a grouped control inside a toolbar group joins its glass.
+      if (element.parentElement?.closest('[data-glass-member]')) continue
       const box = element.getBoundingClientRect()
       if (!box.width || !box.height) continue
       const shape = this.shapes.get(id)
       const offset = shape?.offset ?? { x: 0, y: 0 }
-      const rect = {
-        x: box.left - origin.left - offset.x,
-        y: box.top - origin.top - offset.y,
-        width: box.width,
-        height: box.height,
-      }
+      const animated = this.animatedBetween(element)
+      if (animated) tracking = true
+      // In the container's own pixels (ancestors may scale it), minus our own content offset.
+      const local = toLocalRect(frame, box)
+      const rect = { x: local.x - offset.x, y: local.y - offset.y, width: local.width, height: local.height }
       const radius = radiusOf(element)
       if (options.union) {
         const key = `union:${options.union}`
         unions.set(key, [...(unions.get(key) ?? []), rect])
         unionRadius.set(key, Math.min(unionRadius.get(key) ?? Infinity, radius))
-      } else targets.set(id, { rect, radius, member })
+      } else targets.set(id, { rect, radius, member, animated })
     }
     for (const [key, rects] of unions) targets.set(key, { rect: boundsOf(rects), radius: unionRadius.get(key)!, member: null })
 
-    const instant = this.reduceMotion || !this.measured
+    // Bubbles present when the page appears just appear: no growing in on load, even when they
+    // register a little after the container (lazy or conditional content).
+    const instant = this.reduceMotion || !this.measured || performance.now() - this.mountedAt < 300
     const previous = new Map([...this.shapes].map(([id, shape]) => [id, shape.rect()]))
     const next = new Map([...targets].map(([id, target]) => [id, target.rect]))
     const plan = planGlassTransition(previous, next, this.spacing)
@@ -347,18 +412,25 @@ export class GlassScene {
       this.release(shape, death.id)
       const token = ++shape.token
       const done = () => {
-        if (shape.token === token && shape.leaving) this.shapes.delete(death.id)
+        if (shape.token === token && shape.leaving && this.shapes.get(death.id) === shape) this.shapes.delete(death.id)
         this.scheduleDraw()
       }
       if (instant) this.shapes.delete(death.id)
-      else if (death.kind === 'absorb') void shape.animate(death.into, false).then(done)
-      else void shape.scale.animateTo(0, { spring: SPRING }).then(done)
+      else {
+        if (death.kind === 'absorb') void shape.animate(death.into, false).then(done)
+        else void shape.scale.animateTo(0, { spring: SPRING }).then(done)
+        // Springs only advance on animation frames, which a hidden or background tab pauses:
+        // never leave a departed bubble's glass behind for longer than this.
+        setTimeout(done, 900)
+      }
     }
     for (const [id, target] of targets) {
       const shape = this.shapes.get(id)!
       shape.leaving = false
       shape.radius = target.radius
-      const follow = target.member?.options.motion === 'follow'
+      // Bubbles that animate their own size, or that something else is animating right now, are
+      // followed exactly instead of sprung, so the glass never lags behind them.
+      const follow = target.member?.options.motion === 'follow' || !!target.animated
       const changed = !shape.layout || !sameRect(shape.layout, target.rect)
       shape.layout = target.rect
       if (shape.scale.getTarget() !== 1) void shape.scale.animateTo(1, { spring: SPRING, instant })
@@ -372,6 +444,7 @@ export class GlassScene {
       }
     }
     this.measured = true
+    this.tracking = tracking
     this.draw()
     this.scheduleDraw()
     this.requestSample()
@@ -391,6 +464,11 @@ export class GlassScene {
       const moving =
         [...this.shapes.values()].some((shape) => shape.values().some((v) => v.isAnimating())) ||
         (glow !== null && (glow.radius.isAnimating() || glow.opacity.isAnimating()))
+      // Transforms and transitions don't fire ResizeObserver: re-measure every frame while they run.
+      if (this.tracking) {
+        this.measure()
+        return
+      }
       if (this.dirty || moving) {
         this.dirty = false
         this.draw()
@@ -403,6 +481,7 @@ export class GlassScene {
 
   /** Paints the current frame: element offsets, backdrop clip, edge, light and shadow. */
   draw() {
+    if (this.disposed) return
     const visuals: (GlassShape & { id: string })[] = []
     for (const [id, shape] of this.shapes) {
       visuals.push({ ...shape.visual(), id })
@@ -428,10 +507,10 @@ export class GlassScene {
     if (key !== this.cache.key) this.cache = { key, paths: glassPaths(placed, this.spacing) }
     const paths = this.cache.paths
     const d = paths.map((p) => p.d).join('')
-    this.backdrop.style.clipPath = d ? `path("${d}")` : 'inset(50%)'
+    this.syncBackdrops(paths)
 
-    const origin = this.host.getBoundingClientRect()
-    const lights = paths.map((p) => this.lightFor(p.bounds, origin))
+    const frame = this.frame()
+    const lights = paths.map((p) => this.lightFor(p.bounds, frame))
     const glow = this.glow
     renderPaint(
       this.paint,
@@ -443,6 +522,31 @@ export class GlassScene {
     renderShadow(this.shadow, d, this.uid)
     this.host.toggleAttribute('data-glass-ready', true)
     this.updateRefraction(key)
+  }
+
+  private syncBackdrops(paths: ReturnType<typeof glassPaths>) {
+    while (this.pieces.length < paths.length) {
+      const piece = document.createElement('div')
+      piece.className = 'lab-glass-backdrop'
+      this.backdrop.append(piece)
+      this.pieces.push(piece)
+    }
+    while (this.pieces.length > paths.length) this.pieces.pop()!.remove()
+    paths.forEach((path, i) => {
+      const { x, y, width, height } = path.bounds
+      const style = this.pieces[i].style
+      style.left = `${x}px`
+      style.top = `${y}px`
+      style.width = `${width}px`
+      style.height = `${height}px`
+      if (path.shapes.length === 1) {
+        style.borderRadius = `${clampRadius(path.shapes[0])}px`
+        style.clipPath = ''
+      } else {
+        style.borderRadius = ''
+        style.clipPath = `path("${translatePath(path.d, -x, -y)}")`
+      }
+    })
   }
 
   /**
@@ -457,10 +561,11 @@ export class GlassScene {
       !window.matchMedia?.('(prefers-reduced-transparency: reduce), (prefers-contrast: more)').matches
     const moving = [...this.shapes.values()].some((shape) => shape.values().some((v) => v.isAnimating()))
     if (!wanted || moving || key !== this.refractKey) {
-      if (this.backdrop.style.backdropFilter) {
-        this.backdrop.style.backdropFilter = ''
-        this.backdrop.style.removeProperty('-webkit-backdrop-filter')
-      }
+      for (const piece of this.pieces)
+        if (piece.style.backdropFilter) {
+          piece.style.backdropFilter = ''
+          piece.style.removeProperty('-webkit-backdrop-filter')
+        }
       if (this.refractKey !== key || !wanted) this.refractKey = ''
     }
     if (!wanted || moving || this.refractKey === key) return
@@ -472,45 +577,65 @@ export class GlassScene {
   }
 
   private applyRefraction(key: string) {
-    const box = this.backdrop.getBoundingClientRect()
-    if (!box.width || !box.height) return
-    const map = displacementMap(box.width, box.height, this.cache.paths.map((path) => path.shapes), this.spacing)
-    const canvas = document.createElement('canvas')
-    canvas.width = map.width
-    canvas.height = map.height
-    const context = canvas.getContext('2d')
-    if (!context) return
-    context.putImageData(new ImageData(map.data, map.width, map.height), 0, 0)
-    const url = canvas.toDataURL()
-    if (!this.filter) {
-      this.filter = node('filter', { 'id': `${this.uid}-r`, 'color-interpolation-filters': 'sRGB', 'filterUnits': 'userSpaceOnUse' }) as SVGFilterElement
-      this.filter.append(
-        node('feImage', { result: 'map', preserveAspectRatio: 'none' }),
-        node('feDisplacementMap', { in: 'SourceGraphic', in2: 'map', xChannelSelector: 'R', yChannelSelector: 'G', scale: GLASS_REFRACTION * 2 })
-      )
+    if (!this.filterHost) {
       // Its own hidden SVG: the paint and shadow layers are rebuilt every frame.
-      const holder = node('svg', { 'width': 0, 'height': 0, 'aria-hidden': 'true', 'class': 'lab-glass-filters' })
-      holder.append(this.filter)
-      this.backdrop.parentElement?.append(holder)
+      this.filterHost = node('svg', { 'width': 0, 'height': 0, 'aria-hidden': 'true', 'class': 'lab-glass-filters' }) as SVGSVGElement
+      this.backdrop.parentElement?.append(this.filterHost)
     }
-    for (const [name, value] of [['x', 0], ['y', 0], ['width', map.width], ['height', map.height]] as const) {
-      this.filter.setAttribute(name, String(value))
-      this.filter.firstElementChild!.setAttribute(name, String(value))
-    }
-    this.filter.firstElementChild!.setAttribute('href', url)
-    const value = `url(#${this.uid}-r) blur(12px) saturate(1.15)`
-    this.backdrop.style.backdropFilter = value
-    this.backdrop.style.setProperty('-webkit-backdrop-filter', value)
+    this.cache.paths.forEach((path, i) => {
+      const piece = this.pieces[i]
+      if (!piece) return
+      const { x, y, width, height } = path.bounds
+      const shifted = path.shapes.map((shape) => ({ ...shape, x: shape.x - x, y: shape.y - y }))
+      const map = displacementMap(Math.ceil(width), Math.ceil(height), [shifted], this.spacing)
+      const canvas = document.createElement('canvas')
+      canvas.width = map.width
+      canvas.height = map.height
+      const context = canvas.getContext('2d')
+      if (!context) return
+      context.putImageData(new ImageData(map.data, map.width, map.height), 0, 0)
+      let filter = this.filters[i]
+      if (!filter) {
+        filter = node('filter', { 'id': `${this.uid}-r${i}`, 'color-interpolation-filters': 'sRGB', 'filterUnits': 'userSpaceOnUse', 'x': 0, 'y': 0 }) as SVGFilterElement
+        // Bend, blur and tint the backdrop, then keep only the glass shape (the map's alpha).
+        filter.append(
+          node('feImage', { result: 'map', preserveAspectRatio: 'none', x: 0, y: 0 }),
+          node('feDisplacementMap', { in: 'SourceGraphic', in2: 'map', xChannelSelector: 'R', yChannelSelector: 'G', scale: GLASS_REFRACTION * 2, result: 'bent' }),
+          node('feGaussianBlur', { in: 'bent', stdDeviation: 6, result: 'soft' }),
+          node('feColorMatrix', { in: 'soft', type: 'saturate', values: 1.15, result: 'tone' }),
+          node('feComposite', { in: 'tone', in2: 'map', operator: 'in' })
+        )
+        this.filterHost!.append(filter)
+        this.filters[i] = filter
+      }
+      for (const element of [filter, filter.firstElementChild!]) {
+        element.setAttribute('width', String(map.width))
+        element.setAttribute('height', String(map.height))
+      }
+      filter.firstElementChild!.setAttribute('href', canvas.toDataURL())
+      const value = `url(#${this.uid}-r${i})`
+      piece.style.backdropFilter = value
+      piece.style.setProperty('-webkit-backdrop-filter', value)
+    })
     this.refractKey = key
   }
 
-  private lightFor(bounds: GlassRect, origin: DOMRect): GlassLight {
+  private lightFor(bounds: GlassRect, frame: HostFrame): GlassLight {
     if (!this.followPointer || this.reduceMotion || !this.pointer) return DEFAULT_GLASS_LIGHT
-    const centre = {
-      x: origin.left - GLASS_MARGIN + bounds.x + bounds.width / 2,
-      y: origin.top - GLASS_MARGIN + bounds.y + bounds.height / 2,
-    }
+    const centre = toScreenPoint(frame, bounds.x - GLASS_MARGIN + bounds.width / 2, bounds.y - GLASS_MARGIN + bounds.height / 2)
     return glassLightToward(centre, this.pointer)
+  }
+
+  /** True when `element`, or an ancestor below the container, runs a geometric animation. */
+  private animatedBetween(element: HTMLElement) {
+    for (let node: Element | null = element; node && node !== this.host; node = node.parentElement)
+      if (node.getAnimations?.().some(movesGeometry)) return true
+    return false
+  }
+
+  /** The container on screen and the scale its ancestors apply to it. */
+  private frame(): HostFrame {
+    return hostFrame(this.host.getBoundingClientRect(), this.host.offsetWidth, this.host.offsetHeight)
   }
 }
 

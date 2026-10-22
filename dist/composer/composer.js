@@ -4,11 +4,28 @@ import * as React from 'react';
 import { cn } from '../utils.js';
 import { RawInput } from '../primitives/raw-input.js';
 import { useComposerLayout } from './use-composer-layout.js';
+import { GlassScope } from '../glass/container.js';
+import { useGlassMember } from '../glass/member.js';
 import './composer.css';
 export { useComposerLayout } from './use-composer-layout.js';
-/** Shared Chat/Image card. Domain-specific controls remain in named layout slots. */
+/**
+ * Shared Chat/Image card. Domain-specific controls remain in named layout slots. Its glass is
+ * painted by a glass container (its own, or the row it sits in), so it shares light, press and tint.
+ */
 export const ComposerCard = React.forwardRef(function ComposerCard({ expanded, layoutRef, layoutClassName, above, children, className, ...props }, ref) {
-    return _jsxs("div", { ...props, ref: ref, className: cn('lab-pc-card lab-light-edge', className), "data-expanded": expanded, children: [above, _jsx("div", { ref: layoutRef, className: cn('lab-pc-layout', layoutClassName), children: children })] });
+    return _jsx(GlassScope, { className: "lab-pc-glass", children: _jsxs(GlassCard, { ...props, ref: ref, className: cn('lab-pc-card lab-light-edge', className), "data-expanded": expanded, children: [above, _jsx("div", { ref: layoutRef, className: cn('lab-pc-layout', layoutClassName), children: children })] }) });
+});
+/** The card element, registered with the glass container; it animates its own height. */
+const GlassCard = React.forwardRef(function GlassCard(props, ref) {
+    const element = React.useRef(null);
+    const member = useGlassMember(element, undefined, { motion: 'follow' });
+    return _jsx("div", { ...props, ref: (node) => {
+            element.current = node;
+            if (typeof ref === 'function')
+                ref(node);
+            else if (ref)
+                ref.current = node;
+        }, "data-glass-member": member ? '' : undefined });
 });
 /** Placeholder that fades in word by word. Decorative (`aria-hidden`); label the field separately. */
 export function ComposerHint({ text }) {

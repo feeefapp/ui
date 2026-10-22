@@ -32,6 +32,7 @@ import {
   type TemporalValue,
 } from './filters/temporal'
 import './filter-bar.css'
+import { GlassScope } from './glass/container'
 
 /** A filter's value: `true` for on/off filters, a string, a `{from, to}` range, or `null` (any). */
 export type FilterValue = string | boolean | { from: string; to: string } | null
@@ -222,7 +223,7 @@ export function FilterBar({
     onValuesChange?.(cleared)
   }
   return (
-    <div ref={host} className="lab-filter-bar" role="group" aria-label={label}>
+    <GlassScope ref={host} className="lab-filter-bar" role="group" aria-label={label}>
       {onBack && (
         <ToolbarGroup label="Filter navigation">
           <IconButton
@@ -770,6 +771,6 @@ export function FilterBar({
           </form>
         )}
       </Modal>
-    </div>
+    </GlassScope>
   )
 }

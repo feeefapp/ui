@@ -43,7 +43,7 @@
   gap: 8px;
   pointer-events: none;
 }
-.lab-tab-chrome > * {
+.lab-tab-chrome > :not(.lab-glass-material) {
   pointer-events: auto;
 }
 .lab-tab-chrome[data-minimized] {

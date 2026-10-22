@@ -22,6 +22,7 @@ import { formatTemporalValue } from '../filters/temporal-format'
 import { useI18n } from '../i18n'
 import { cn } from '../utils'
 import './temporal-field.css'
+import { GlassScope } from '../glass/container'
 
 /** Phones: every picker opens as a dialog (full width, 44px targets) instead of an anchored popover. */
 const COMPACT_QUERY = '(max-width: 599px)'
@@ -251,6 +252,7 @@ export const TemporalField = React.forwardRef<HTMLButtonElement, TemporalFieldPr
     // actions at all: the day itself is the action.
     const actions =
       instant && normalizeTemporal(draft) == null ? null : (
+        <GlassScope className="lab-temporal-actions-row">
         <ToolbarGroup label={`${title} actions`} className="lab-temporal-actions">
           <Button
             variant="text"
@@ -267,6 +269,7 @@ export const TemporalField = React.forwardRef<HTMLButtonElement, TemporalFieldPr
             </Button>
           )}
         </ToolbarGroup>
+        </GlassScope>
       )
     const popoverEditor = (
       <form id={formId} className="lab-temporal-field-editor" onSubmit={apply}>
