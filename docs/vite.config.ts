@@ -28,6 +28,8 @@ export default defineConfig({
       'shiki/langs/css.mjs',
       'shiki/langs/json.mjs',
       'shiki/langs/html.mjs',
+      'shiki/langs/dart.mjs',
+      'shiki/langs/yaml.mjs',
     ],
   },
   server: { port: 4180 },
