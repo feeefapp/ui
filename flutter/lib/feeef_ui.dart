@@ -17,6 +17,8 @@ export 'icons/lucide.dart';
 export 'primitives/badge.dart';
 export 'primitives/button.dart';
 export 'primitives/choice.dart';
+export 'primitives/list.dart';
+export 'primitives/list_model.dart';
 export 'primitives/modal.dart';
 export 'primitives/popover_surface.dart';
 export 'primitives/segmented.dart';

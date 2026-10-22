@@ -393,6 +393,48 @@ final Map<String, List<Widget> Function()> scenes = {
       },
     ),
   ],
+  'list': () => [
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ListSection(
+          header: const Text('Store'),
+          footer: const Text('Shown on receipts and the storefront.'),
+          children: [
+            ListRow(
+              leading: const LucideStore(),
+              title: const Text('Name'),
+              trailing: const Text('Amina shop'),
+              chevron: true,
+              onClick: _noop,
+            ),
+            ListRow(
+              leading: const LucidePhone(),
+              title: const Text('Phone'),
+              subtitle: const Text('Shown to couriers'),
+              trailing: const Text('0555 12 34 56'),
+              chevron: true,
+              onClick: _noop,
+            ),
+            ListRow(
+              title: const Text('Payments'),
+              selected: true,
+              onClick: _noop,
+            ),
+          ],
+        ),
+        // .lab-list-section margin-block-end: 24px between sections.
+        const SizedBox(height: 24),
+        const ListSection(
+          label: 'About',
+          children: [
+            ListRow(title: Text('Version'), trailing: Text('0.10.0')),
+            ListRow(title: Text('Region'), trailing: Text('Algeria')),
+          ],
+        ),
+      ],
+    ),
+  ],
   'select': () => [
     grid([
       Select(

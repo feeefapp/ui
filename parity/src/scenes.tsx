@@ -16,6 +16,8 @@ import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
 import { ScrollArea } from '@feeef.dev/ui/scroll'
 import { Modal } from '@feeef.dev/ui/primitives/modal'
 import { Select, Option } from '@feeef.dev/ui/primitives/select'
+import { ListSection, ListRow } from '@feeef.dev/ui/primitives/list'
+import { LucideStore } from 'lucide-react'
 import { LucidePrinter, LucideTruck, LucideX } from 'lucide-react'
 
 /**
@@ -205,6 +207,26 @@ export const SCENES: Record<string, () => ReactNode> = {
           </div>
         ))}
       </ScrollArea>
+    </div>
+  ),
+  list: () => (
+    <div style={{ alignSelf: 'stretch' }}>
+      <ListSection header="Store" footer="Shown on receipts and the storefront.">
+        <ListRow leading={<LucideStore />} title="Name" trailing="Amina shop" chevron onClick={() => {}} />
+        <ListRow
+          leading={<LucidePhone />}
+          title="Phone"
+          subtitle="Shown to couriers"
+          trailing="0555 12 34 56"
+          chevron
+          onClick={() => {}}
+        />
+        <ListRow title="Payments" selected onClick={() => {}} />
+      </ListSection>
+      <ListSection label="About">
+        <ListRow static title="Version" trailing="0.10.0" />
+        <ListRow static title="Region" trailing="Algeria" />
+      </ListSection>
     </div>
   ),
   select: () => (

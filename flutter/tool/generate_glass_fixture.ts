@@ -18,6 +18,7 @@ import { glassLightToward, rimGradient, DEFAULT_GLASS_LIGHT } from '../../src/gl
 import { SPRINGS, solveSpring, springCoefficients, rubberBand } from '../../src/physics/spring'
 import { glassStretch, pressedShape } from '../../src/glass/press'
 import { planGlassTransition } from '../../src/glass/transitions'
+import { swipeRelease, swipeIsFull, reorderTarget, reorderShifts, reorderLanding } from '../../src/primitives/list-model'
 import { scrollWashPaths, scrollEdgeOpacities, scrollContentReserve } from '../../src/scroll/metrics'
 
 const pill: GlassShape = { x: 10, y: 20, width: 120, height: 46, radius: 23 }
@@ -97,3 +98,21 @@ const scroll = {
 }
 writeFileSync(new URL('../test/fixtures/scroll.json', import.meta.url), JSON.stringify(scroll) + '\n')
 console.log('wrote scroll.json')
+
+// List rows: swipe landings and reorder targets.
+const sides = { leading: 76, trailing: 152, row: 360, fullLeading: true, fullTrailing: true }
+const list = {
+  release: [[10, 0], [50, 0], [30, 800], [-90, 0], [-60, -900], [250, 0], [-250, 0], [-250, 0, false]].map(
+    ([o, v, full]) => {
+      const s = { ...sides, fullTrailing: full !== false }
+      return [o, v, full !== false, swipeRelease(o as number, v as number, s), swipeIsFull(o as number, s)]
+    }
+  ),
+  reorder: [[0, 30], [0, 90], [2, -70], [3, 0], [1, 200]].map(([from, delta]) => {
+    const heights = [56, 64, 56, 72]
+    const to = reorderTarget(heights, from, delta)
+    return [from, delta, to, reorderShifts(heights, from, to), reorderLanding(heights, from, to)]
+  }),
+}
+writeFileSync(new URL('../test/fixtures/list.json', import.meta.url), JSON.stringify(list) + '\n')
+console.log('wrote list.json')
