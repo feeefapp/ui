@@ -6,6 +6,8 @@ import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 import { Checkbox, RadioGroup } from '@feeef.dev/ui/primitives/choice'
 import { ProBadge } from '@feeef.dev/ui/primitives/badge'
 import { Slider, SlideSwitch } from '@feeef.dev/ui/primitives/slider'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
+import { LucidePhone } from 'lucide-react'
 
 /**
  * Scenes shared with flutter/example/lib/scenes.dart: same ids, same content, same layout.
@@ -70,6 +72,38 @@ export const SCENES: Record<string, () => ReactNode> = {
       <div className="row">
         <span>Voice cloning</span>
         <ProBadge />
+      </div>
+    </>
+  ),
+  text: () => (
+    <div className="row">
+      {[[12, 14], [14, 20], [15, 20], [16, 20], [16, 24], [13, 20], [17, 24], [18, 24], [20, 28], [24, 32], [11, 16], [10, 12]].map(([size, line]) => (
+        <div key={`${size}/${line}`} style={{ font: `${size}px/${line}px 'Parity Plex'`, background: 'var(--lab-line)' }}>
+          Amina {size}/{line}
+        </div>
+      ))}
+    </div>
+  ),
+  fields: () => (
+    <>
+      <div className="grid">
+        <TextField label="Customer name" />
+        <TextField label="Customer name" defaultValue="Amina Benali" />
+        <TextField label="Phone" leadingIcon={<LucidePhone />} leading="+213" defaultValue="555 12 34 56" />
+        <TextField label="Price" trailing="DZD" defaultValue="2500" />
+        <TextField label="Email" defaultValue="amina@" error="Enter a full email address." />
+        <TextField label="Note" supportingText="Shown to the courier." showCounter maxLength={80} defaultValue="Call before" />
+        <TextField label="City" labelStyle="inside" defaultValue="Oran" />
+        <TextField label="City" labelStyle="inside" />
+        <TextField placeholder="Search orders" />
+        <TextField label="Compact" controlSize="compact" defaultValue="Small" />
+        <TextField label="Tonal" variant="tonal" defaultValue="Soft" />
+        <TextField label="Elevated" variant="elevated" defaultValue="Raised" />
+        <TextField label="Filled" variant="filled" defaultValue="Strong" />
+        <TextField label="Disabled" disabled defaultValue="Locked" />
+      </div>
+      <div style={{ alignSelf: 'stretch' }}>
+        <TextField label="Address" multiline minLines={3} defaultValue="Rue Larbi Ben M'hidi, Oran" />
       </div>
     </>
   ),

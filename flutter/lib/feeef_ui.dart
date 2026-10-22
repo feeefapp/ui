@@ -16,4 +16,5 @@ export 'primitives/segmented.dart';
 export 'primitives/slider.dart';
 export 'primitives/slider_core.dart';
 export 'primitives/spring_core.dart';
+export 'primitives/text_field.dart';
 export 'theme.dart';

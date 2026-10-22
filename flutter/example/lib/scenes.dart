@@ -1,4 +1,5 @@
 import 'package:feeef_ui/feeef_ui.dart';
+import 'package:feeef_ui/theme/css_text.dart';
 import 'package:flutter/widgets.dart' hide RadioGroup;
 
 /// Scenes shared with parity/src/scenes.tsx: same ids, same content, same layout. Each is a column
@@ -80,6 +81,99 @@ final Map<String, List<Widget> Function()> scenes = {
     ]),
   ],
   'segmented': () => [const _Segmented()],
+  'text': () => [
+    Builder(
+      builder: (context) => row([
+        for (final (size, line) in const [
+          (12.0, 14.0),
+          (14.0, 20.0),
+          (15.0, 20.0),
+          (16.0, 20.0),
+          (16.0, 24.0),
+          (13.0, 20.0),
+          (17.0, 24.0),
+          (18.0, 24.0),
+          (20.0, 28.0),
+          (24.0, 32.0),
+          (11.0, 16.0),
+          (10.0, 12.0),
+        ])
+          ColoredBox(
+            color: ThemeProvider.of(context).colors.line,
+            child: DefaultTextStyle.merge(
+              style: TextStyle(
+                fontSize: size,
+                height: line / size,
+                leadingDistribution: TextLeadingDistribution.even,
+              ),
+              child: CssBaseline(
+                lineHeight: line,
+                child: Text('Amina ${size.round()}/${line.round()}'),
+              ),
+            ),
+          ),
+      ]),
+    ),
+  ],
+  'fields': () => [
+    grid([
+      const TextField(label: 'Customer name'),
+      const TextField(label: 'Customer name', defaultValue: 'Amina Benali'),
+      const TextField(
+        label: 'Phone',
+        leadingIcon: LucidePhone(),
+        leading: Text('+213'),
+        defaultValue: '555 12 34 56',
+      ),
+      const TextField(
+        label: 'Price',
+        trailing: Text('DZD'),
+        defaultValue: '2500',
+      ),
+      const TextField(
+        label: 'Email',
+        defaultValue: 'amina@',
+        error: 'Enter a full email address.',
+      ),
+      const TextField(
+        label: 'Note',
+        supportingText: Text('Shown to the courier.'),
+        showCounter: true,
+        maxLength: 80,
+        defaultValue: 'Call before',
+      ),
+      const TextField(label: 'City', labelStyle: .inside, defaultValue: 'Oran'),
+      const TextField(label: 'City', labelStyle: .inside),
+      const TextField(placeholder: 'Search orders'),
+      const TextField(
+        label: 'Compact',
+        controlSize: .compact,
+        defaultValue: 'Small',
+      ),
+      const TextField(label: 'Tonal', variant: .tonal, defaultValue: 'Soft'),
+      const TextField(
+        label: 'Elevated',
+        variant: .elevated,
+        defaultValue: 'Raised',
+      ),
+      const TextField(
+        label: 'Filled',
+        variant: .filled,
+        defaultValue: 'Strong',
+      ),
+      const TextField(
+        label: 'Disabled',
+        disabled: true,
+        defaultValue: 'Locked',
+      ),
+    ]),
+    const TextField(
+      label: 'Address',
+      multiline: true,
+      minLines: 3,
+      defaultValue: "Rue Larbi Ben M'hidi, Oran",
+    ),
+  ],
   'sliders': () => [
     const Slider(label: 'Volume', defaultValue: 40),
     const Slider(
@@ -267,6 +361,27 @@ final Map<String, List<Widget> Function()> scenes = {
 };
 
 void _noop() {}
+
+/// `.grid`: two equal columns, 16px rows apart, 12px columns apart.
+Widget grid(List<Widget> children) => Column(
+  spacing: 16,
+  crossAxisAlignment: CrossAxisAlignment.stretch,
+  children: [
+    for (var i = 0; i < children.length; i += 2)
+      Row(
+        spacing: 12,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: children[i]),
+          Expanded(
+            child: i + 1 < children.length
+                ? children[i + 1]
+                : const SizedBox.shrink(),
+          ),
+        ],
+      ),
+  ],
+);
 
 Widget row(List<Widget> children) => Wrap(
   spacing: 12,

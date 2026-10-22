@@ -3,9 +3,9 @@ import 'package:flutter/widgets.dart';
 final _shifts = <(String?, double, FontWeight?, double, double), double>{};
 
 /// How far (px) Flutter's text baseline sits from where a browser puts it in a CSS line box of
-/// [lineHeight]. Browsers round the font's ascent and descent to whole pixels before splitting the
-/// line height; Flutter uses exact values, so text can land up to a device pixel lower. Shift the
-/// label by this to sit exactly where the web kit's text sits.
+/// [lineHeight]. Browsers round the font's ascent and descent to whole device pixels before
+/// splitting the line height; Flutter uses exact values, so text can land up to a device pixel
+/// off. Shift the label by this to sit exactly where the web kit's text sits.
 double cssBaselineShift(
   TextStyle style,
   double lineHeight,
@@ -38,11 +38,13 @@ double cssBaselineShift(
     final ascent = metrics.first.ascent;
     final descent = metrics.first.descent;
     final flutter = (lineHeight - (ascent + descent)) / 2 + ascent;
-    // Blink rounds ascent and descent to whole CSS pixels, then rounds the half leading away from
-    // zero (measured against Chrome: -0.5 → -1 at 14px, +0.5 → +1 at 13px).
-    final a = ascent.round();
-    final d = descent.round();
-    final browser = ((lineHeight - (a + d)) / 2).round() + a;
+    // Blink lays text out in device pixels: it rounds the font's ascent and descent at the
+    // device scale, floors the half leading, and paints there (measured against Chrome at 1x and
+    // 2x for 10-24px in parity/: 16/20 at 2x lands on 31 device px, not 30).
+    final a = (ascent * devicePixelRatio).round();
+    final d = (descent * devicePixelRatio).round();
+    final line = lineHeight * devicePixelRatio;
+    final browser = (((line - (a + d)) / 2).floor() + a) / devicePixelRatio;
     return browser - flutter;
   });
 }
