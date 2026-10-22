@@ -393,6 +393,72 @@ final Map<String, List<Widget> Function()> scenes = {
       },
     ),
   ],
+  'modal': () => [
+    Builder(
+      builder: (context) => Modal(
+        label: 'Delete order',
+        close: _noop,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: DefaultTextStyle.merge(
+            style: const TextStyle(
+              fontSize: 15,
+              height: 22 / 15,
+              leadingDistribution: TextLeadingDistribution.even,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: CssBaseline(
+                    lineHeight: 28,
+                    child: Text(
+                      'Delete order #1042?',
+                      style: TextStyle(
+                        fontSize: 20,
+                        height: 28 / 20,
+                        leadingDistribution: TextLeadingDistribution.even,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: CssBaseline(
+                    lineHeight: 22,
+                    child: Text(
+                      "The customer won't be notified. You can't undo this.",
+                      style: TextStyle(
+                        color: ThemeProvider.of(context).colors.muted,
+                      ),
+                    ),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  spacing: 12,
+                  children: [
+                    Button(
+                      variant: .text,
+                      onClick: _noop,
+                      children: const [Text('Cancel')],
+                    ),
+                    Button(
+                      variant: .destructive,
+                      onClick: _noop,
+                      children: const [Text('Delete')],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  ],
   'text': () => [
     Builder(
       builder: (context) => row([

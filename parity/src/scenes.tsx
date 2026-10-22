@@ -14,6 +14,7 @@ import { GlassContainer } from '@feeef.dev/ui/glass'
 import { Dock } from '@feeef.dev/ui/dock'
 import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
 import { ScrollArea } from '@feeef.dev/ui/scroll'
+import { Modal } from '@feeef.dev/ui/primitives/modal'
 import { LucidePrinter, LucideTruck, LucideX } from 'lucide-react'
 
 /**
@@ -204,6 +205,20 @@ export const SCENES: Record<string, () => ReactNode> = {
         ))}
       </ScrollArea>
     </div>
+  ),
+  modal: () => (
+    <Modal label="Delete order" close={() => {}}>
+      <div style={{ padding: 24, font: "15px/22px 'Parity Plex'" }}>
+        <div style={{ font: "500 20px/28px 'Parity Plex'", marginBottom: 8 }}>Delete order #1042?</div>
+        <div style={{ color: 'var(--lab-muted)', marginBottom: 20 }}>
+          The customer won't be notified. You can't undo this.
+        </div>
+        <div className="row" style={{ justifyContent: 'flex-end' }}>
+          <Button variant="text">Cancel</Button>
+          <Button variant="destructive">Delete</Button>
+        </div>
+      </div>
+    </Modal>
   ),
   text: () => (
     <div className="row">

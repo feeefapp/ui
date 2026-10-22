@@ -35,7 +35,7 @@ function serve(root) {
   })
 }
 
-const SCENES = process.argv.slice(2).length ? process.argv.slice(2) : ['buttons', 'button-states', 'segmented', 'icons', 'choices', 'sliders', 'fields', 'glass', 'dock', 'popover', 'scroll', 'text', 'corners']
+const SCENES = process.argv.slice(2).length ? process.argv.slice(2) : ['buttons', 'button-states', 'segmented', 'icons', 'choices', 'sliders', 'fields', 'glass', 'dock', 'popover', 'scroll', 'modal', 'text', 'corners']
 const VARIANTS = [
   { theme: 'light', palette: 'lab', density: 'comfortable' },
   { theme: 'dark', palette: 'lab', density: 'comfortable' },
@@ -52,6 +52,8 @@ const page = await browser.newPage()
 await page.setViewport({ width: 800, height: 700, deviceScaleFactor: 2 })
 await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
 
+// Scenes that draw in the top layer (dialogs) are compared over the whole viewport.
+const VIEWPORT_SCENES = new Set(['modal'])
 const cases = []
 for (const scene of SCENES)
   for (const v of VARIANTS) {
@@ -60,7 +62,9 @@ for (const scene of SCENES)
     await page.goto(`http://127.0.0.1:${react.address().port}/?${query}`, { waitUntil: 'networkidle0' })
     await page.evaluate(() => document.fonts.ready)
     await new Promise((r) => setTimeout(r, 400))
-    const box = await page.$eval('#stage', (el) => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height } })
+    const box = VIEWPORT_SCENES.has(scene)
+      ? { x: 0, y: 0, width: 800, height: 700 }
+      : await page.$eval('#stage', (el) => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height } })
     await page.screenshot({ path: join(out, `${name}-react.png`), clip: box })
     await page.goto(`http://127.0.0.1:${flutter.address().port}/?${query}`, { waitUntil: 'networkidle0' })
     await page.waitForSelector('flutter-view, flt-glass-pane', { timeout: 20000 })

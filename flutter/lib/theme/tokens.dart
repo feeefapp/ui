@@ -268,4 +268,8 @@ abstract final class MotionTokens {
   static const durationFast = Duration(milliseconds: 140);
   static const durationNormal = Duration(milliseconds: 220);
   static const ease = Cubic(0.2, 0.8, 0.2, 1);
+
+  /// `--lab-ease-out` / `--lab-ease-in` from `motion.css`: entrances and exits.
+  static const easeOut = Cubic(0.22, 1, 0.36, 1);
+  static const easeIn = Cubic(0.55, 0, 0.75, 0.2);
 }

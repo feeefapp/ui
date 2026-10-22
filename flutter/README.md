@@ -20,10 +20,11 @@ Labels and other visible content are widgets (`Text`, `LucideBold()`), on both s
 | `physics/spring`, `motion-value` | `Spring`, `Springs`, `solveSpring`, `MotionValue`, `rubberBand` | vectors |
 | `primitives/popover-surface` | `PopoverSurface` (breathing pixel grain) | `popover` 0.33–0.43% |
 | `scroll` | `ScrollArea`, `ScrollGradientOverlay`, scroll metrics | `scroll` 0.47–0.63% |
+| `primitives/modal` | `Modal` (OverlayPortal: focus scope, Escape, backdrop, return focus) | `modal` 0.21–0.26% |
 | `dock` | `Dock`, `DockContentSwap` | `dock` 0.52–1.05% |
 | `lucide-react` | `LucideIcon` + all 1,895 icons (generated) | `icons` 0.43–0.63% |
 
-Not yet: modal, select, navigation containers, workspace scaffold.
+Not yet: select, navigation containers, workspace scaffold.
 Glass on Flutter has no adaptive tint (it can't sample what is behind it) and no refraction yet;
 `GlassRenderer.canvas` blurs like `css` until the Impeller shader lands.
 
