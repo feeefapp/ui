@@ -81,6 +81,103 @@ final Map<String, List<Widget> Function()> scenes = {
     ]),
   ],
   'segmented': () => [const _Segmented()],
+  'glass': () => [
+    GlassGroup(
+      padding: const EdgeInsets.all(6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 4,
+        children: [
+          Button(
+            appearance: .toolbar,
+            variant: .ghost,
+            onClick: _noop,
+            children: const [Text('Drafts')],
+          ),
+          Button(
+            appearance: .toolbar,
+            variant: .filled,
+            onClick: _noop,
+            children: const [Text('Publish')],
+          ),
+        ],
+      ),
+    ),
+    Toolbar(
+      label: 'Editor',
+      leading: ToolbarGroup(
+        label: 'Format',
+        children: [
+          for (final (label, icon) in const [
+            ('Undo', LucideUndo2()),
+            ('Redo', LucideRedo2()),
+            ('Bold', LucideBold()),
+            ('Italic', LucideItalic()),
+            ('Underline', LucideUnderline()),
+          ])
+            IconButton(
+              appearance: .toolbar,
+              controlSize: .compact,
+              ariaLabel: label,
+              onClick: _noop,
+              icon: icon,
+            ),
+        ],
+      ),
+      trailing: ToolbarGroup(
+        label: 'Share',
+        children: [
+          Button(
+            appearance: .toolbar,
+            controlSize: .compact,
+            variant: .filled,
+            onClick: _noop,
+            children: const [LucideShare(size: 18), Text('Share')],
+          ),
+        ],
+      ),
+    ),
+    GlassContainer(
+      spacing: 16,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 10,
+        children: [
+          ToolbarGroup(
+            label: 'Zoom',
+            children: [
+              IconButton(
+                appearance: .toolbar,
+                controlSize: .compact,
+                ariaLabel: 'Undo',
+                onClick: _noop,
+                icon: const LucideUndo2(),
+              ),
+              IconButton(
+                appearance: .toolbar,
+                controlSize: .compact,
+                ariaLabel: 'Redo',
+                onClick: _noop,
+                icon: const LucideRedo2(),
+              ),
+            ],
+          ),
+          ToolbarGroup(
+            label: 'Style',
+            children: [
+              IconButton(
+                appearance: .toolbar,
+                controlSize: .compact,
+                ariaLabel: 'Bold',
+                onClick: _noop,
+                icon: const LucideBold(),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  ],
   'text': () => [
     Builder(
       builder: (context) => row([

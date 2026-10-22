@@ -49,17 +49,19 @@ ancestors: they would stop the backdrop blur from seeing the page. */
 }
 
 /* Once the container has measured, its bubbles stop painting their own glass. Layout (the 1px
-border) is unchanged, so nothing moves when the container takes over. */
+border) is unchanged, so nothing moves when the container takes over. The html[data-lab-theme]
+prefix out-specifies the theme's glass rules (renderer fill, solid), which would otherwise keep
+painting each bubble over the container's edge and light. */
 @media not (forced-colors: active) {
-  .lab-glass-container[data-glass-ready] [data-glass-member] {
+  html[data-lab-theme] .lab-glass-container[data-glass-ready] [data-glass-member] {
     background: transparent;
     border-color: transparent;
     box-shadow: none;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
-  .lab-glass-container[data-glass-ready] [data-glass-member]::before,
-  .lab-glass-container[data-glass-ready] [data-glass-member]::after {
+  html[data-lab-theme] .lab-glass-container[data-glass-ready] [data-glass-member]::before,
+  html[data-lab-theme] .lab-glass-container[data-glass-ready] [data-glass-member]::after {
     display: none;
   }
 }

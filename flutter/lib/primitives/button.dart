@@ -26,6 +26,26 @@ enum ControlSize { regular, compact, inline, icon }
 /// Toolbar controls share their enclosing material instead of adding another raised surface.
 enum ButtonAppearance { defaultAppearance, toolbar }
 
+/// Sizes a host imposes on the controls inside it, like the CSS custom properties a toolbar group
+/// sets (`--lab-control-height`, the control radius): regular controls take [height], every
+/// control takes [radius].
+class ControlOverrides extends InheritedWidget {
+  const ControlOverrides({
+    super.key,
+    this.height,
+    this.radius,
+    required super.child,
+  });
+  final double? height, radius;
+
+  static ControlOverrides? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<ControlOverrides>();
+
+  @override
+  bool updateShouldNotify(ControlOverrides old) =>
+      old.height != height || old.radius != radius;
+}
+
 /// A button painted by one of the emphasis variants: the Flutter twin of `Button` in
 /// `@feeef.dev/ui/primitives/button`. Same props, same sizes, same colours (checked against the
 /// browser in `test/tokens_test.dart`), same superellipse corners.
@@ -171,18 +191,20 @@ class _ButtonState extends State<Button> {
         ? paint.hover
         : paint.fill;
 
+    final overrides = ControlOverrides.maybeOf(context);
+    final regular = overrides?.height ?? s.controlHeight;
     double height = switch (widget.controlSize) {
       ControlSize.compact => s.controlCompact,
       ControlSize.icon =>
-        widget.iconSize == ControlSize.compact
-            ? s.controlCompact
-            : s.controlHeight,
-      _ => s.controlHeight,
+        widget.iconSize == ControlSize.compact ? s.controlCompact : regular,
+      _ => regular,
     };
     if (coarse) height = s.touchTarget;
-    final radius = compact || (icon && widget.iconSize == ControlSize.compact)
-        ? s.radiusControlCompact
-        : s.radiusControl;
+    final radius =
+        overrides?.radius ??
+        (compact || (icon && widget.iconSize == ControlSize.compact)
+            ? s.radiusControlCompact
+            : s.radiusControl);
     final fontSize = compact ? 13.0 : s.controlFont;
 
     final content = Row(
@@ -244,6 +266,8 @@ class _ButtonState extends State<Button> {
       child: result,
     );
     return Semantics(
+      // Its own node: a group's name never merges into the button's.
+      container: true,
       button: true,
       enabled: interactive,
       toggled: widget.pressed,

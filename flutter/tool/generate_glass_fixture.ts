@@ -15,6 +15,9 @@ import {
   type GlassShape,
 } from '../../src/glass/geometry'
 import { glassLightToward, rimGradient, DEFAULT_GLASS_LIGHT } from '../../src/glass/light'
+import { SPRINGS, solveSpring, springCoefficients, rubberBand } from '../../src/physics/spring'
+import { glassStretch, pressedShape } from '../../src/glass/press'
+import { planGlassTransition } from '../../src/glass/transitions'
 
 const pill: GlassShape = { x: 10, y: 20, width: 120, height: 46, radius: 23 }
 const square: GlassShape = { x: 0, y: 0, width: 40, height: 40, radius: 12 }
@@ -55,3 +58,25 @@ const fixture = {
 }
 writeFileSync(new URL('../test/fixtures/glass.json', import.meta.url), JSON.stringify(fixture, null, 1) + '\n')
 console.log('wrote glass.json')
+
+// Springs and press response, shared by the glass engine.
+const springs = Object.entries(SPRINGS).map(([name, spring]) => {
+  const at = solveSpring(spring, 0, 100, 40)
+  return { name, coefficients: springCoefficients(spring), samples: [0, 0.05, 0.1, 0.2, 0.35, 0.6, 1].map((t) => [t, at(t).position, at(t).velocity]) }
+})
+const overdamped = solveSpring({ duration: 0.5, bounce: -0.4 }, 10, -5, 0)
+const motion = {
+  springs,
+  overdamped: [0, 0.1, 0.3, 0.8].map((t) => [t, overdamped(t).position, overdamped(t).velocity]),
+  rubberBand: [[0, 100], [10, 100], [-40, 100], [500, 48], [3, 0]].map(([o, d]) => [o, d, rubberBand(o, d)]),
+  stretch: [[0, 0], [20, -8], [-300, 120]].map(([dx, dy]) => [dx, dy, glassStretch(dx, dy)]),
+  pressed: pressedShape({ x: 10, y: 10, width: 100, height: 40, radius: 20 }, 1.06, 6, -3),
+  plan: (() => {
+    const r = (x: number, y: number, width: number, height: number) => ({ x, y, width, height })
+    const previous = new Map([['pair', r(0, 0, 120, 44)], ['far', r(400, 0, 44, 44)]])
+    const next = new Map([['left', r(0, 0, 56, 44)], ['right', r(64, 0, 56, 44)], ['new', r(250, 0, 44, 44)]])
+    return planGlassTransition(previous, next, 12)
+  })(),
+}
+writeFileSync(new URL('../test/fixtures/motion.json', import.meta.url), JSON.stringify(motion, null, 1) + '\n')
+console.log('wrote motion.json')

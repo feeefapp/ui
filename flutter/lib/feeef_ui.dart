@@ -8,6 +8,8 @@ library;
 
 export 'brand/geometry.dart'
     show SuperellipseBorder, superellipsePath, superellipsePoints;
+export 'glass/container.dart';
+export 'glass/geometry.dart' show GlassShape, GlassPath, glassPaths;
 export 'icons/lucide.dart';
 export 'primitives/badge.dart';
 export 'primitives/button.dart';
@@ -15,6 +17,10 @@ export 'primitives/choice.dart';
 export 'primitives/segmented.dart';
 export 'primitives/slider.dart';
 export 'primitives/slider_core.dart';
+export 'physics/motion_value.dart';
+export 'physics/spring.dart';
 export 'primitives/spring_core.dart';
 export 'primitives/text_field.dart';
+export 'scaffold.dart';
 export 'theme.dart';
+export 'toolbar.dart';

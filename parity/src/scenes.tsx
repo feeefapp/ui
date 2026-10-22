@@ -7,7 +7,10 @@ import { Checkbox, RadioGroup } from '@feeef.dev/ui/primitives/choice'
 import { ProBadge } from '@feeef.dev/ui/primitives/badge'
 import { Slider, SlideSwitch } from '@feeef.dev/ui/primitives/slider'
 import { TextField } from '@feeef.dev/ui/primitives/text-field'
-import { LucidePhone } from 'lucide-react'
+import { LucidePhone, LucideUndo2, LucideRedo2, LucideBold, LucideItalic, LucideUnderline, LucideShare } from 'lucide-react'
+import { GlassGroup } from '@feeef.dev/ui/scaffold'
+import { Toolbar, ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { GlassContainer } from '@feeef.dev/ui/glass'
 
 /**
  * Scenes shared with flutter/example/lib/scenes.dart: same ids, same content, same layout.
@@ -73,6 +76,42 @@ export const SCENES: Record<string, () => ReactNode> = {
         <span>Voice cloning</span>
         <ProBadge />
       </div>
+    </>
+  ),
+  glass: () => (
+    <>
+      <GlassGroup style={{ display: 'flex', gap: 4, padding: 6 }}>
+        <Button appearance="toolbar" variant="ghost">Drafts</Button>
+        <Button appearance="toolbar" variant="filled">Publish</Button>
+      </GlassGroup>
+      <div style={{ alignSelf: 'stretch' }}>
+        <Toolbar
+          label="Editor"
+          leading={
+            <ToolbarGroup label="Format">
+              <IconButton appearance="toolbar" controlSize="compact" aria-label="Undo"><LucideUndo2 /></IconButton>
+              <IconButton appearance="toolbar" controlSize="compact" aria-label="Redo"><LucideRedo2 /></IconButton>
+              <IconButton appearance="toolbar" controlSize="compact" aria-label="Bold"><LucideBold /></IconButton>
+              <IconButton appearance="toolbar" controlSize="compact" aria-label="Italic"><LucideItalic /></IconButton>
+              <IconButton appearance="toolbar" controlSize="compact" aria-label="Underline"><LucideUnderline /></IconButton>
+            </ToolbarGroup>
+          }
+          trailing={
+            <ToolbarGroup label="Share">
+              <Button appearance="toolbar" controlSize="compact" variant="filled"><LucideShare size={18} />Share</Button>
+            </ToolbarGroup>
+          }
+        />
+      </div>
+      <GlassContainer spacing={16} style={{ display: 'flex', gap: 10 }}>
+        <ToolbarGroup label="Zoom">
+          <IconButton appearance="toolbar" controlSize="compact" aria-label="Undo"><LucideUndo2 /></IconButton>
+          <IconButton appearance="toolbar" controlSize="compact" aria-label="Redo"><LucideRedo2 /></IconButton>
+        </ToolbarGroup>
+        <ToolbarGroup label="Style">
+          <IconButton appearance="toolbar" controlSize="compact" aria-label="Bold"><LucideBold /></IconButton>
+        </ToolbarGroup>
+      </GlassContainer>
     </>
   ),
   text: () => (
