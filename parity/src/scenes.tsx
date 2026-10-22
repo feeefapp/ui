@@ -12,6 +12,7 @@ import { GlassGroup } from '@feeef.dev/ui/scaffold'
 import { Toolbar, ToolbarGroup } from '@feeef.dev/ui/toolbar'
 import { GlassContainer } from '@feeef.dev/ui/glass'
 import { Dock } from '@feeef.dev/ui/dock'
+import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
 import { LucidePrinter, LucideTruck, LucideX } from 'lucide-react'
 
 /**
@@ -158,6 +159,16 @@ export const SCENES: Record<string, () => ReactNode> = {
         </Dock>
       </div>
     </>
+  ),
+  popover: () => (
+    <div className="row" style={{ alignItems: 'flex-start' }}>
+      <PopoverSurface style={{ width: 240, padding: 8, font: "14px/20px 'Parity Plex'" }}>
+        <div style={{ padding: '10px 12px' }}>Duplicate</div>
+        <div style={{ padding: '10px 12px' }}>Move to archive</div>
+        <div style={{ padding: '10px 12px', color: 'var(--lab-danger)' }}>Delete order</div>
+      </PopoverSurface>
+      <PopoverSurface seed="lab-popover-2" style={{ width: 200, height: 120 }} />
+    </div>
   ),
   text: () => (
     <div className="row">

@@ -258,6 +258,57 @@ final Map<String, List<Widget> Function()> scenes = {
       ],
     ),
   ],
+  'popover': () => [
+    Builder(
+      builder: (context) {
+        Widget item(String label, [Color? color]) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: CssBaseline(
+            lineHeight: 20,
+            child: Text(label, style: TextStyle(color: color)),
+          ),
+        );
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 12,
+          children: [
+            SizedBox(
+              width: 240,
+              child: PopoverSurface(
+                padding: const EdgeInsets.all(8),
+                child: DefaultTextStyle.merge(
+                  style: const TextStyle(
+                    fontSize: 14,
+                    height: 20 / 14,
+                    leadingDistribution: TextLeadingDistribution.even,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      item('Duplicate'),
+                      item('Move to archive'),
+                      item(
+                        'Delete order',
+                        ThemeProvider.of(context).colors.danger,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(
+              width: 200,
+              height: 120,
+              child: PopoverSurface(
+                seed: 'lab-popover-2',
+                child: SizedBox.expand(),
+              ),
+            ),
+          ],
+        );
+      },
+    ),
+  ],
   'text': () => [
     Builder(
       builder: (context) => row([
