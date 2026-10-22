@@ -333,6 +333,24 @@ class RawInputState extends State<RawInput>
       onSubmitted: widget.onSubmitted,
       mouseCursor: SystemMouseCursors.text,
     );
+    // The editor lays text out 2px narrower than its box (cursor width + 1px gap) and paints it
+    // from the left, so text aligned to the right edge would stop 2px short of it; the browser's
+    // input ends at the edge. Shift by that margin, or half of it for centred text.
+    const caretMargin = 1 + 1.0;
+    final rightShare = switch (widget.textAlign) {
+      TextAlign.left => 0.0,
+      TextAlign.right => 1.0,
+      TextAlign.center => 0.5,
+      TextAlign.end => direction == TextDirection.ltr ? 1.0 : 0.0,
+      TextAlign.start ||
+      TextAlign.justify => direction == TextDirection.rtl ? 1.0 : 0.0,
+    };
+    final placed = rightShare == 0
+        ? editable
+        : Transform.translate(
+            offset: Offset(caretMargin * rightShare, 0),
+            child: editable,
+          );
     return Semantics(
       label: widget.label,
       hint: _message ?? '',
@@ -355,7 +373,7 @@ class RawInputState extends State<RawInput>
             // CssBaseline measures the ambient text style: give it the input's own.
             child: DefaultTextStyle.merge(
               style: style,
-              child: CssBaseline(lineHeight: lineHeight, child: editable),
+              child: CssBaseline(lineHeight: lineHeight, child: placed),
             ),
           ),
         ),

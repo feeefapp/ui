@@ -312,6 +312,10 @@ class _ComposerHintState extends State<ComposerHint>
           // The hint takes its own text's direction (web `dir="auto"`), so an English hint on an
           // Arabic page keeps its word order, and aligns to the page's start (`match-parent`).
           final rtl = Directionality.of(context) == TextDirection.rtl;
+          final direction = autoTextDirection(
+            _parts.join(),
+            Directionality.of(context),
+          );
           return Text.rich(
             TextSpan(
               children: [
@@ -328,8 +332,11 @@ class _ComposerHintState extends State<ComposerHint>
                         opacity: shown(i),
                         child: Transform.translate(
                           offset: Offset(0, 3 * (1 - shown(i))),
+                          // Each word is its own run: give it the hint's direction too, or a
+                          // trailing comma flips to the front on a right-to-left page.
                           child: Text(
                             _parts[i],
+                            textDirection: direction,
                             style: TextStyle(color: color),
                           ),
                         ),
@@ -337,7 +344,7 @@ class _ComposerHintState extends State<ComposerHint>
                     ),
               ],
             ),
-            textDirection: autoTextDirection(_parts.join(), Directionality.of(context)),
+            textDirection: direction,
             textAlign: rtl ? TextAlign.right : TextAlign.left,
             maxLines: 1,
             softWrap: false,

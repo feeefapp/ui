@@ -273,8 +273,9 @@ html[data-lab-theme] .lab-pc .lab-pc-field textarea.lab-textarea {
 }
 .lab-pc-hint {
   position: absolute;
-  /* dir="auto" follows the hint's text; the alignment still follows the page. */
-  text-align: match-parent;
+  /* dir="auto" follows the hint's text; the alignment still follows the page (set from the
+  field's direction below: Chrome resolves match-parent against the hint's own dir). */
+  text-align: left;
   inset: 8px 8px auto;
   overflow: hidden;
   color: var(--pc-muted);
@@ -283,6 +284,9 @@ html[data-lab-theme] .lab-pc .lab-pc-field textarea.lab-textarea {
   white-space: nowrap;
   text-overflow: ellipsis;
   pointer-events: none;
+}
+.lab-pc-field:dir(rtl) > .lab-pc-hint {
+  text-align: right;
 }
 .lab-pc-hint span {
   display: inline-block;

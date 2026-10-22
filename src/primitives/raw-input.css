@@ -10,6 +10,10 @@
   color: inherit;
   font: inherit;
   line-height: 1.5;
+  /* Inputs and textareas are inline blocks on the text baseline: in a block they would leave a
+  descender gap below themselves (7px under a 36px title). Top alignment keeps them inline without
+  it; inside flex or grid parents (TextField, composers) this has no effect. */
+  vertical-align: top;
 }
 /* Standalone raw editors must retain a keyboard focus indicator. */
 .lab-raw-editor:focus-visible {
