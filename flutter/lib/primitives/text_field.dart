@@ -1,4 +1,4 @@
-import 'dart:ui' as ui show BoxHeightStyle;
+import 'dart:ui' as ui show BoxHeightStyle, ClipOp;
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -124,12 +124,6 @@ class _FieldShellState extends State<FieldShell> {
     final paint = c.variant(widget.variant);
     final filled = widget.variant == ControlVariant.filled;
     final labelInk = filled ? c.onPrimary : c.muted;
-    final labelSurface = switch (widget.variant) {
-      ControlVariant.filled => c.primary,
-      ControlVariant.tonal => paint.fill,
-      ControlVariant.elevated => c.controlSurface,
-      _ => c.surface,
-    };
     final invalid = (widget.error?.isNotEmpty ?? false) || widget.invalid;
     final hint = widget.hint ?? widget.label;
     final hasLabel = hint != null;
@@ -160,9 +154,8 @@ class _FieldShellState extends State<FieldShell> {
     final borderLabel =
         widget.labelStyle == FieldLabelStyle.outlined ||
         (widget.labelStyle == FieldLabelStyle.inside && dense);
-    final restTop = widget.labelStyle == FieldLabelStyle.inside && dense
-        ? centered
-        : (compact && !touchCompact && insideLabel ? 10.0 : 12.0);
+    // The resting hint sits where one line of value sits: centred at every size and density.
+    final restTop = (height - line) / 2;
     final floatTop = borderLabel
         ? -6.0
         : (compact && !touchCompact ? 3.0 : 4.0);
@@ -173,6 +166,29 @@ class _FieldShellState extends State<FieldShell> {
         ? (widget.labelStyle == FieldLabelStyle.inside ? 12.0 : 14.0)
         : 12.0;
     final floated = widget.populated || widget.alwaysFloat || _focused;
+    final labelText = hint == null
+        ? null
+        : (widget.required ? '$hint *' : hint);
+    // A hint floated onto the border cuts a notch in the edge (a fieldset legend), not a patch.
+    double? notchWidth;
+    if (labelText != null && borderLabel && floated) {
+      final base = DefaultTextStyle.of(context).style;
+      final painter = TextPainter(
+        text: TextSpan(
+          text: labelText,
+          style: TextStyle(
+            fontFamily: base.fontFamily,
+            fontFamilyFallback: base.fontFamilyFallback,
+            fontSize: floatFont,
+            height: floatLine / floatFont,
+          ),
+        ),
+        maxLines: 1,
+        textDirection: Directionality.of(context),
+      )..layout();
+      notchWidth = painter.width + 8;
+      painter.dispose();
+    }
     final radius = compact ? s.radiusControlCompact : s.radiusControl;
     final insetStart = (widget.leadingIcon != null || widget.leading != null)
         ? _leadingWidth + 24
@@ -200,6 +216,10 @@ class _FieldShellState extends State<FieldShell> {
         raised: widget.variant == ControlVariant.elevated && !_focused,
         highlight: c.controlHighlight,
         depth: theme.brightness == Brightness.dark ? 0.18 : 0.08,
+        notch: notchWidth == null
+            ? null
+            : (start: insetStart - 4, width: notchWidth),
+        rtl: Directionality.of(context) == TextDirection.rtl,
       ),
       child: ConstrainedBox(
         constraints: BoxConstraints(minHeight: frameHeight),
@@ -276,10 +296,12 @@ class _FieldShellState extends State<FieldShell> {
               ),
             ),
           ),
-        if (hint != null)
+        if (labelText != null)
           _FloatingLabel(
-            text: widget.required ? '$hint *' : hint,
+            text: labelText,
             floated: floated,
+            restFont: font,
+            restLine: line,
             restTop: restTop,
             floatTop: floatTop,
             floatFont: floatFont,
@@ -287,7 +309,6 @@ class _FieldShellState extends State<FieldShell> {
             start: borderLabel ? insetStart - 4 : insetStart,
             end: borderLabel ? null : insetEnd,
             padded: borderLabel,
-            surface: borderLabel && floated ? labelSurface : null,
             color: labelColor,
           ),
       ],
@@ -352,6 +373,8 @@ class _FloatingLabel extends StatelessWidget {
   const _FloatingLabel({
     required this.text,
     required this.floated,
+    required this.restFont,
+    required this.restLine,
     required this.restTop,
     required this.floatTop,
     required this.floatFont,
@@ -359,14 +382,15 @@ class _FloatingLabel extends StatelessWidget {
     required this.start,
     required this.end,
     required this.padded,
-    required this.surface,
     required this.color,
   });
   final String text;
   final bool floated, padded;
+
+  /// The resting hint reads like the value: the field's font and line height.
+  final double restFont, restLine;
   final double restTop, floatTop, floatFont, floatLine, start;
   final double? end;
-  final Color? surface;
   final Color color;
 
   @override
@@ -379,15 +403,15 @@ class _FloatingLabel extends StatelessWidget {
       fontFamilyFallback: base.fontFamilyFallback,
       fontSize: size,
     );
-    final restShift = cssBaselineShift(style(16), 20, dpr);
+    final restShift = cssBaselineShift(style(restFont), restLine, dpr);
     final floatShift = cssBaselineShift(style(floatFont), floatLine, dpr);
     return TweenAnimationBuilder<double>(
       tween: Tween(end: floated ? 1 : 0),
       duration: reduced ? Duration.zero : const Duration(milliseconds: 140),
       curve: Curves.ease,
       builder: (context, t, _) {
-        final size = 16 + (floatFont - 16) * t;
-        final line = 20 + (floatLine - 20) * t;
+        final size = restFont + (floatFont - restFont) * t;
+        final line = restLine + (floatLine - restLine) * t;
         final top = restTop + (floatTop - restTop) * t;
         final shift = restShift + (floatShift - restShift) * t;
         return PositionedDirectional(
@@ -399,28 +423,25 @@ class _FloatingLabel extends StatelessWidget {
               child: Align(
                 alignment: AlignmentDirectional.centerStart,
                 widthFactor: end == null ? 1 : null,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(color: surface),
-                  child: Padding(
-                    padding: EdgeInsetsDirectional.symmetric(
-                      horizontal: padded ? 4 : 0,
-                    ),
-                    child: SizedBox(
-                      height: line,
-                      child: Transform.translate(
-                        offset: Offset(0, shift),
-                        child: Text(
-                          text,
-                          maxLines: 1,
-                          softWrap: false,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: size,
-                            height: line / size,
-                            leadingDistribution: TextLeadingDistribution.even,
-                            fontWeight: FontWeight.w400,
-                            color: color,
-                          ),
+                child: Padding(
+                  padding: EdgeInsetsDirectional.symmetric(
+                    horizontal: padded ? 4 : 0,
+                  ),
+                  child: SizedBox(
+                    height: line,
+                    child: Transform.translate(
+                      offset: Offset(0, shift),
+                      child: Text(
+                        text,
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: size,
+                          height: line / size,
+                          leadingDistribution: TextLeadingDistribution.even,
+                          fontWeight: FontWeight.w400,
+                          color: color,
                         ),
                       ),
                     ),
@@ -444,11 +465,17 @@ class _FieldPainter extends CustomPainter {
     required this.raised,
     required this.highlight,
     required this.depth,
+    this.notch,
+    this.rtl = false,
   });
   final Color fill, edge, highlight;
   final Color? ring;
   final double radius, depth;
   final bool raised;
+
+  /// Where a hint floated onto the border cuts the edge and ring: its inline start and width.
+  final ({double start, double width})? notch;
+  final bool rtl;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -478,6 +505,16 @@ class _FieldPainter extends CustomPainter {
       );
       canvas.restore();
     }
+    if (notch case final n?) {
+      // The outline's notch (text-field.css masks a 3px band from 1px outside the control).
+      final width = n.width.clamp(0.0, size.width);
+      final x = rtl ? size.width - n.start - width : n.start;
+      canvas.save();
+      canvas.clipRect(
+        Rect.fromLTWH(x, -1, width, 3),
+        clipOp: ui.ClipOp.difference,
+      );
+    }
     if (ring != null) {
       // box-shadow: 0 0 0 1px — a 1px band just outside the border.
       final outer = rect.inflate(1);
@@ -498,6 +535,7 @@ class _FieldPainter extends CustomPainter {
           ..color = edge,
       );
     }
+    if (notch != null) canvas.restore();
   }
 
   @override
@@ -506,7 +544,9 @@ class _FieldPainter extends CustomPainter {
       old.edge != edge ||
       old.ring != ring ||
       old.radius != radius ||
-      old.raised != raised;
+      old.raised != raised ||
+      old.notch != notch ||
+      old.rtl != rtl;
 }
 
 /// A labelled text input: an editable line (or growing lines) inside the field frame, with a

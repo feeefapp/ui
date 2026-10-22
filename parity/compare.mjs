@@ -58,6 +58,7 @@ const VARIANTS = [
   { theme: 'dark', palette: 'lab', density: 'comfortable' },
   { theme: 'light', palette: 'mono', density: 'comfortable' },
   { theme: 'light', palette: 'lab', density: 'compact' },
+  { theme: 'light', palette: 'lab', density: 'thin' },
   { theme: 'light', palette: 'lab', density: 'comfortable', dir: 'rtl' },
 ]
 

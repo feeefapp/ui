@@ -93,6 +93,8 @@ export function FieldShell({
   const shellRef = React.useRef<HTMLDivElement>(null)
   const leadingRef = React.useRef<HTMLSpanElement>(null)
   const trailingRef = React.useRef<HTMLSpanElement>(null)
+  const editRef = React.useRef<HTMLDivElement>(null)
+  const labelRef = React.useRef<HTMLLabelElement>(null)
   React.useLayoutEffect(() => {
     const shell = shellRef.current
     if (!shell) return
@@ -112,6 +114,25 @@ export function FieldShell({
     if (trailingRef.current) observer?.observe(trailingRef.current)
     return () => observer?.disconnect()
   }, [leadingIcon, leading, trailing])
+  // The floated hint cuts a notch in the outline (like a fieldset legend) instead of covering the
+  // border with a patch: the outline's mask needs the label's place and width.
+  React.useLayoutEffect(() => {
+    const edit = editRef.current
+    const label = labelRef.current
+    if (!edit || !label) return
+    const measure = () => {
+      const box = edit.getBoundingClientRect()
+      const rect = label.getBoundingClientRect()
+      // The outline sits 1px outside the control.
+      edit.style.setProperty('--lab-field-notch-x', `${rect.left - box.left + 1}px`)
+      edit.style.setProperty('--lab-field-notch-width', `${rect.width}px`)
+    }
+    measure()
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
+    observer?.observe(label)
+    observer?.observe(edit)
+    return () => observer?.disconnect()
+  }, [floatingHint, required])
   const generatedId = React.useId()
   const id = suppliedId || generatedId
   const feedbackId = `${id}-feedback`
@@ -144,12 +165,14 @@ export function FieldShell({
           </span>
         )}
         <div
+          ref={editRef}
           className="lab-text-field-edit"
           data-always-float={populated || alwaysFloat || undefined}
         >
           {children({ id, describedBy: description, invalid: isInvalid })}
+          <span className="lab-text-field-outline" aria-hidden="true" />
           {floatingHint && (
-            <label htmlFor={id} className="lab-text-field-label">
+            <label ref={labelRef} htmlFor={id} className="lab-text-field-label">
               {floatingHint}
               {required && <span aria-hidden="true"> *</span>}
             </label>
