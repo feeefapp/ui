@@ -23,6 +23,8 @@ export 'primitives/choice.dart';
 export 'primitives/list.dart';
 export 'primitives/list_model.dart';
 export 'primitives/modal.dart';
+export 'primitives/number_field.dart';
+export 'primitives/number_field_core.dart';
 export 'primitives/popover_surface.dart';
 export 'primitives/segmented.dart';
 export 'primitives/select.dart';

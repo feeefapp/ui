@@ -9,6 +9,7 @@ import '../theme.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
 import 'button.dart' show ControlSize;
+import '../theme/surfaces.dart';
 import 'popover_surface.dart';
 import 'text_field.dart';
 
@@ -550,7 +551,7 @@ class _PlainTrigger extends StatelessWidget {
     final raised =
         variant == ControlVariant.elevated || variant == ControlVariant.filled;
     return CustomPaint(
-      painter: _TriggerPainter(
+      painter: ControlSurfacePainter(
         fill: open ? paint.pressed : (hovered ? paint.hover : paint.fill),
         edge: paint.edge,
         radius: radius,
@@ -584,75 +585,4 @@ class _PlainTrigger extends StatelessWidget {
       ),
     );
   }
-}
-
-class _TriggerPainter extends CustomPainter {
-  _TriggerPainter({
-    required this.fill,
-    required this.edge,
-    required this.radius,
-    required this.raised,
-    required this.highlight,
-    required this.depth,
-    required this.focus,
-  });
-  final Color fill, edge, highlight;
-  final double radius, depth;
-  final bool raised;
-  final Color? focus;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final r = [radius, radius, radius, radius];
-    final shape = superellipsePath(rect, r);
-    if (raised) {
-      canvas.drawPath(
-        shape.shift(const Offset(0, 2)),
-        Paint()
-          ..color = Color.from(alpha: depth, red: 0, green: 0, blue: 0)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
-      );
-    }
-    canvas.drawPath(shape, Paint()..color = fill);
-    if (raised) {
-      final inner = superellipsePath(rect, r, inset: 1);
-      canvas.save();
-      canvas.clipPath(inner);
-      canvas.drawPath(
-        Path.combine(
-          PathOperation.difference,
-          inner,
-          inner.shift(const Offset(0, 1)),
-        ),
-        Paint()..color = highlight,
-      );
-      canvas.restore();
-    }
-    if (edge.a > 0) {
-      canvas.drawPath(
-        superellipsePath(rect, r, inset: 0.5),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
-          ..color = edge,
-      );
-    }
-    if (focus != null) {
-      canvas.drawPath(
-        superellipsePath(rect.inflate(4), [for (final v in r) v + 4], inset: 1),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = focus!,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_TriggerPainter old) =>
-      old.fill != fill ||
-      old.edge != edge ||
-      old.focus != focus ||
-      old.radius != radius;
 }

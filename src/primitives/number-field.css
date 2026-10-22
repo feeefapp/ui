@@ -35,6 +35,11 @@ html[data-lab-theme] .lab-number-field[data-control-size='compact'] {
   border-radius: var(--lab-radius-control-compact);
   font-size: 13px;
 }
+/* The field is also a .lab-control: out-specify the compact button rule's 0 14px padding, which
+would otherwise inset the steppers and the row (bundle order must not decide this). */
+html[data-lab-theme] .lab-number-field.lab-control[data-control-size] {
+  padding: 0;
+}
 @media (hover: hover) {
   html[data-lab-theme] .lab-number-field:not([data-disabled], [data-editing]):hover {
     background: var(--lab-variant-hover);

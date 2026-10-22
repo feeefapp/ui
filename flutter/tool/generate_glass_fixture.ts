@@ -19,6 +19,7 @@ import { SPRINGS, solveSpring, springCoefficients, rubberBand } from '../../src/
 import { glassStretch, pressedShape } from '../../src/glass/press'
 import { planGlassTransition } from '../../src/glass/transitions'
 import { swipeRelease, swipeIsFull, reorderTarget, reorderShifts, reorderLanding } from '../../src/primitives/list-model'
+import { parseNumberExpression, stepDecimals, clampNumber, dragValue, keyValue, fillFraction } from '../../src/primitives/number-field-core'
 import { computeActionsLayout } from '../../src/actions/layout'
 import { diffVisibleActions } from '../../src/actions/overflow-motion'
 import { scrollWashPaths, scrollEdgeOpacities, scrollContentReserve } from '../../src/scroll/metrics'
@@ -137,3 +138,22 @@ const actionsFixture = {
 }
 writeFileSync(new URL('../test/fixtures/actions.json', import.meta.url), JSON.stringify(actionsFixture) + '\n')
 console.log('wrote actions.json')
+
+// Number field: parsing, clamping, scrubbing and keys.
+const nb = { min: 0, max: 100, step: 5 }
+const open = { step: 0.25 }
+const numbers = {
+  parse: ['12', '1,5', '1,250.75', '2000*15%', '(3+4)*2', '10 / 4', '−3', '٣٫', '١٢٣', '2e3', 'abc', '', '1+', '3×4÷2', '50%'].map((t) => [t, parseNumberExpression(t)]),
+  decimals: [1, 0.25, 0.1, 0.001, 1e-7, 5].map((s) => [s, stepDecimals(s)]),
+  clamp: [[37, nb], [-4, nb], [1e9, nb], [1.13, open], [Number.NaN, nb], [7.3, { min: 2, step: 0.5 }], [7.3, { max: 2, step: 0.5 }]].map(([v, b]) => [v, b, clampNumber(v as number, b as never)]),
+  drag: [
+    [{ ...nb, startValue: 50, dx: 20, width: 200 }],
+    [{ ...nb, startValue: 50, dx: 20, width: 200, fine: true }],
+    [{ ...nb, startValue: 50, dx: 20, width: 200, rtl: true }],
+    [{ ...open, startValue: 1, dx: 33, width: 200 }],
+  ].map(([o]) => [o, dragValue(o as never)]),
+  keys: [['ArrowUp', 50], ['ArrowLeft', 50], ['PageDown', 50], ['Home', 50], ['End', 50], ['Tab', 50]].map(([k, v]) => [k, v, keyValue(k as string, v as number, nb), keyValue(k as string, v as number, nb, { rtl: true })]),
+  fill: [[25, nb], [5, open]].map(([v, b]) => [v, b, fillFraction(v as number, b as never)]),
+}
+writeFileSync(new URL('../test/fixtures/numbers.json', import.meta.url), JSON.stringify(numbers) + '\n')
+console.log('wrote numbers.json')

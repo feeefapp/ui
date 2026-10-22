@@ -1,6 +1,6 @@
 import 'dart:ui' show Brightness;
 
-import 'package:flutter/painting.dart';
+import 'package:flutter/rendering.dart';
 
 import '../brand/geometry.dart';
 
@@ -76,4 +76,77 @@ void paintFloatingSurface(
       ..strokeWidth = 1
       ..color = line,
   );
+}
+
+/// A control surface in the web kit's variant recipe: the raised shadow (`0 2px 6px`), fill, the
+/// inset top highlight, the 1px edge and an optional 2px focus ring just outside.
+class ControlSurfacePainter extends CustomPainter {
+  ControlSurfacePainter({
+    required this.fill,
+    required this.edge,
+    required this.radius,
+    required this.raised,
+    required this.highlight,
+    required this.depth,
+    required this.focus,
+  });
+  final Color fill, edge, highlight;
+  final double radius, depth;
+  final bool raised;
+  final Color? focus;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final r = [radius, radius, radius, radius];
+    final shape = superellipsePath(rect, r);
+    if (raised) {
+      canvas.drawPath(
+        shape.shift(const Offset(0, 2)),
+        Paint()
+          ..color = Color.from(alpha: depth, red: 0, green: 0, blue: 0)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+      );
+    }
+    canvas.drawPath(shape, Paint()..color = fill);
+    if (raised) {
+      final inner = superellipsePath(rect, r, inset: 1);
+      canvas.save();
+      canvas.clipPath(inner);
+      canvas.drawPath(
+        Path.combine(
+          PathOperation.difference,
+          inner,
+          inner.shift(const Offset(0, 1)),
+        ),
+        Paint()..color = highlight,
+      );
+      canvas.restore();
+    }
+    if (edge.a > 0) {
+      canvas.drawPath(
+        superellipsePath(rect, r, inset: 0.5),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..color = edge,
+      );
+    }
+    if (focus != null) {
+      canvas.drawPath(
+        superellipsePath(rect.inflate(4), [for (final v in r) v + 4], inset: 1),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..color = focus!,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(ControlSurfacePainter old) =>
+      old.fill != fill ||
+      old.edge != edge ||
+      old.focus != focus ||
+      old.radius != radius;
 }

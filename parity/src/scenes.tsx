@@ -19,6 +19,7 @@ import { Select, Option } from '@feeef.dev/ui/primitives/select'
 import { ListSection, ListRow } from '@feeef.dev/ui/primitives/list'
 import { LucideStore, LucideArchive } from 'lucide-react'
 import { ActionsBar } from '@feeef.dev/ui/actions'
+import { NumberField } from '@feeef.dev/ui/primitives/number-field'
 import type { Action } from '@feeef.dev/ui/actions'
 import { LucidePrinter, LucideTruck, LucideX } from 'lucide-react'
 
@@ -209,6 +210,15 @@ export const SCENES: Record<string, () => ReactNode> = {
           </div>
         ))}
       </ScrollArea>
+    </div>
+  ),
+  numbers: () => (
+    <div className="grid">
+      <NumberField label="Quantity" defaultValue={3} min={1} />
+      <NumberField label="Discount" defaultValue={25} min={0} max={100} step={5} unit="%" />
+      <NumberField label="Price" defaultValue={2500} step={50} unit="DZD" variant="outlined" />
+      <NumberField label="Weight" defaultValue={1.25} step={0.25} unit="kg" controlSize="compact" steppers={false} />
+      <NumberField label="Volume" defaultValue={40} min={0} max={100} disabled />
     </div>
   ),
   actions: () => {

@@ -20,6 +20,7 @@ Labels and other visible content are widgets (`Text`, `LucideBold()`), on both s
 | `physics/spring`, `motion-value` | `Spring`, `Springs`, `solveSpring`, `MotionValue`, `rubberBand` | vectors |
 | `primitives/popover-surface` | `PopoverSurface` (breathing pixel grain) | `popover` 0.33–0.43% |
 | `scroll` | `ScrollArea`, `ScrollGradientOverlay`, scroll metrics | `scroll` 0.47–0.63% |
+| `primitives/number-field`, core | `NumberField` (scrub, steppers, typed expressions, range fill), number core | `numbers` 0.61–0.71% |
 | `actions` | `ActionsBar`, `Action` (`CommandAction`, `ToggleAction`, `GroupAction`), `computeActionsLayout`, `ActionsWidthProvider` | `actions` 0.86–1.20% |
 | `primitives/list`, `list-model` | `ListSection`, `ListRow`, `RowAction` (swipe actions, full swipe, drag and keyboard reorder) | `list` 0.45–0.53% |
 | `primitives/select` | `Select`, `Option` (field or plain trigger, anchored menu, keyboard, validation) | `select` 0.45–0.65% (closed) |

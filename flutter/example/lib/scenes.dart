@@ -393,6 +393,41 @@ final Map<String, List<Widget> Function()> scenes = {
       },
     ),
   ],
+  'numbers': () => [
+    grid(const [
+      NumberField(label: 'Quantity', defaultValue: 3, min: 1),
+      NumberField(
+        label: 'Discount',
+        defaultValue: 25,
+        min: 0,
+        max: 100,
+        step: 5,
+        unit: '%',
+      ),
+      NumberField(
+        label: 'Price',
+        defaultValue: 2500,
+        step: 50,
+        unit: 'DZD',
+        variant: .outlined,
+      ),
+      NumberField(
+        label: 'Weight',
+        defaultValue: 1.25,
+        step: 0.25,
+        unit: 'kg',
+        controlSize: .compact,
+        steppers: false,
+      ),
+      NumberField(
+        label: 'Volume',
+        defaultValue: 40,
+        min: 0,
+        max: 100,
+        disabled: true,
+      ),
+    ]),
+  ],
   'actions': () {
     final actions = <Action>[
       CommandAction(
