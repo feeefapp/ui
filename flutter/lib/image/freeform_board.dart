@@ -513,7 +513,13 @@ class _FreeformBoardState extends State<FreeformBoard>
           '${size.width}x${size.height}',
           '${insets.left},${insets.top},${insets.right},${insets.bottom}',
         ].join('|');
-        if (key != _fitKey) {
+        // Unmeasured or hidden (a viewport no bigger than the chrome around it): nothing to fit
+        // yet, so the first real layout snaps straight to the right view instead of gliding from
+        // a fit made for a zero-size board.
+        final degenerate =
+            size.width - insets.left - insets.right <= 56 ||
+            size.height - insets.top - insets.bottom <= 56;
+        if (!degenerate && key != _fitKey) {
           _fitKey = key;
           final target = selected != null ? _fitted(selected) : _home();
           if (_view == null) {

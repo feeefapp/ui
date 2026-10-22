@@ -108,7 +108,9 @@ export function FreeformBoard({
 }) {
   const { t } = useI18n()
   const root = useRef<HTMLDivElement>(null)
-  const [size, setSize] = useState({ w: 1280, h: 800 })
+  // 0 × 0 until the board is measured: nothing is fitted to a guessed size.
+  const [size, setSize] = useState({ w: 0, h: 0 })
+  const fittedOnce = useRef(false)
   const [view, setView] = useState<View>({ x: 0, y: 0, scale: 1 })
   const [animate, setAnimate] = useState(false)
   const [ratios, setRatios] = useState<Record<string, number>>({})
@@ -136,17 +138,17 @@ export function FreeformBoard({
     return () => observer.disconnect()
   }, [])
 
-  const glide = useCallback((next: View) => {
-    setAnimate(!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
+  const glide = useCallback((next: View, instant = false) => {
+    setAnimate(!instant && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
     setView(next)
   }, [])
   const fitCard = useCallback(
-    (card: Card | undefined) => {
+    (card: Card | undefined, instant = false) => {
       if (!card) return
       const fitted = fitView(card, size, insets, 28, card.take.status === 'completed' ? 1.4 : 1)
       // Centering the selection leaves the poster beside it under the rail
       // whenever the free area is wider than the card. Pull that neighbor clear.
-      glide(revealCovered(fitted, cards, card, size, insets, 28))
+      glide(revealCovered(fitted, cards, card, size, insets, 28), instant)
     },
     [glide, size, insets, cards]
   )
@@ -160,13 +162,21 @@ export function FreeformBoard({
   const layoutKey = cards.map((card) => `${card.take.id}:${card.x}:${card.w}`).join('|')
   const key = `${selected?.take.id}:${layoutKey}:${size.w}x${size.h}:${insets.left},${insets.top},${insets.right},${insets.bottom}`
   useEffect(() => {
-    if (selected) fitCard(selected)
+    // Unmeasured or hidden (a viewport no bigger than the chrome around it): nothing to fit yet. The
+    // first real fit snaps into place; later ones glide.
+    if (size.w - insets.left - insets.right <= 56 || size.h - insets.top - insets.bottom <= 56) return
+    const instant = !fittedOnce.current
+    fittedOnce.current = true
+    if (selected) fitCard(selected, instant)
     else
-      glide({
-        x: insets.left + (size.w - insets.left - insets.right) / 2,
-        y: insets.top + (size.h - insets.top - insets.bottom) / 2,
-        scale: 1,
-      })
+      glide(
+        {
+          x: insets.left + (size.w - insets.left - insets.right) / 2,
+          y: insets.top + (size.h - insets.top - insets.bottom) / 2,
+          scale: 1,
+        },
+        instant
+      )
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 

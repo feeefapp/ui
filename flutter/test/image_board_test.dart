@@ -71,6 +71,33 @@ void main() {
     await finish(tester);
   }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
 
+  testWidgets('a board laid out at zero size first fits its real size', (
+    tester,
+  ) async {
+    await tester.pumpWidget(app(board(), width: 800));
+    await settle(tester);
+    final expected = percent(tester);
+    // Same board, first laid out with no room (a hidden host, a page still sizing itself).
+    final height = ValueNotifier<double>(0);
+    await tester.pumpWidget(
+      app(
+        ValueListenableBuilder<double>(
+          valueListenable: height,
+          builder: (context, value, child) =>
+              SizedBox(height: value, child: child),
+          child: KeyedSubtree(key: const ValueKey('fresh'), child: board()),
+        ),
+        width: 800,
+      ),
+    );
+    await tester.pump();
+    height.value = 500;
+    // The first real fit snaps: right on the next frame, no glide from a zero-size fit.
+    await tester.pump();
+    expect(percent(tester), expected);
+    await finish(tester);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+
   testWidgets('a click selects a card; a drag pans without selecting', (
     tester,
   ) async {
