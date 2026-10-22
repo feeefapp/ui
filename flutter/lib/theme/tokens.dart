@@ -30,7 +30,11 @@ class ColorTokens {
     required this.glassShadowColor,
     required this.glassGlow,
     required this.controlHighlight,
+    this.backdropTone,
   });
+
+  /// Set on the neutral tokens glass takes over a contrasting backdrop ([backdrop]).
+  final Brightness? backdropTone;
 
   /// `--lab-pixel-ink`: the colour of the ambient pixel field.
   final Color pixelInk;
@@ -53,11 +57,54 @@ class ColorTokens {
 
   Color get controlSurface => surface;
   Color get controlBorder => mixSrgb(ink, 0.15, surface);
-  Color get controlHover => mixSrgb(ink, 0.05, surface);
-  Color get controlPressed => mixSrgb(ink, 0.10, surface);
-  Color get controlSelected => mixSrgb(primary, 0.22, surface);
-  Color get glassFill => mixSrgb(surface, 0.76, transparent);
-  Color get glassFillFlat => mixSrgb(surface, 0.93, transparent);
+  // Over a backdrop, glass.css redeclares the control mixes and glass fills.
+  Color get controlHover =>
+      mixSrgb(ink, backdropTone == null ? 0.05 : 0.06, surface);
+  Color get controlPressed =>
+      mixSrgb(ink, backdropTone == null ? 0.10 : 0.12, surface);
+  Color get controlSelected =>
+      mixSrgb(primary, backdropTone == null ? 0.22 : 0.24, surface);
+  Color get glassFill => mixSrgb(surface, switch (backdropTone) {
+    null => 0.76,
+    Brightness.dark => 0.62,
+    Brightness.light => 0.72,
+  }, transparent);
+  Color get glassFillFlat => mixSrgb(surface, switch (backdropTone) {
+    null => 0.93,
+    Brightness.dark => 0.90,
+    Brightness.light => 0.93,
+  }, transparent);
+
+  /// The neutral glass and ink for small glass over content of [tone] (glass.css
+  /// `[data-glass-backdrop]`): fixed greys rather than the palette's own dark or light theme, the
+  /// focus colour becomes the ink. Ground, primary and status colours stay the palette's.
+  ColorTokens backdrop(Brightness tone) {
+    final dark = tone == Brightness.dark;
+    final ink = hex(dark ? 0xf2f5f0 : 0x151a16);
+    return ColorTokens._(
+      ground: ground,
+      pixelInk: pixelInk,
+      surface: hex(dark ? 0x1d211e : 0xfbfcfa),
+      surfaceSoft: hex(dark ? 0x262b27 : 0xeef1ec),
+      line: dark ? white(0.16) : black(0.12),
+      ink: ink,
+      muted: hex(dark ? 0xb7c0b4 : 0x5d675a),
+      focus: ink,
+      primary: primary,
+      onPrimary: onPrimary,
+      accent: accent,
+      success: success,
+      warning: warning,
+      danger: danger,
+      onDanger: onDanger,
+      glassEdgeLight: white(dark ? 0.34 : 0.80),
+      glassEdgeLow: white(dark ? 0.10 : 0.22),
+      glassShadowColor: black(dark ? 0.30 : 0.12),
+      glassGlow: white(dark ? 0.18 : 0.45),
+      controlHighlight: white(dark ? 0.20 : 0.76),
+      backdropTone: tone,
+    );
+  }
 
   /// The five emphasis recipes shared by buttons, fields and selects (`control-variants.css`).
   VariantPaint variant(ControlVariant variant) => switch (variant) {

@@ -110,4 +110,25 @@ void main() {
       }
     });
   }
+
+  test('glass over a contrasting backdrop takes glass.css neutral tokens', () {
+    final base = ColorTokens.resolve(Palette.lab, Brightness.light);
+    final dark = base.backdrop(Brightness.dark);
+    expect(dark.surface, const Color(0xFF1D211E));
+    expect(dark.ink, const Color(0xFFF2F5F0));
+    expect(dark.focus, dark.ink);
+    expect(dark.muted, const Color(0xFFB7C0B4));
+    expect(dark.glassFill.a, closeTo(0.62, 1e-3));
+    // The palette's own colours stay.
+    expect(dark.primary, base.primary);
+    expect(dark.ground, base.ground);
+    final light = ColorTokens.resolve(
+      Palette.lab,
+      Brightness.dark,
+    ).backdrop(Brightness.light);
+    expect(light.surface, const Color(0xFFFBFCFA));
+    expect(light.ink, const Color(0xFF151A16));
+    expect(light.glassFill.a, closeTo(0.72, 1e-3));
+    expect(light.backdropTone, Brightness.light);
+  });
 }

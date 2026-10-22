@@ -16,9 +16,12 @@ const brandFontFamily = 'packages/feeef_ui/Outfit';
 /// The resolved theme: config, colours for the current brightness and sizes for the density.
 @immutable
 class ThemeData {
-  ThemeData({required this.config, required this.brightness})
-    : colors = ColorTokens.resolve(config.palette, brightness),
-      sizes = SizeTokens.of(config);
+  ThemeData({
+    required this.config,
+    required this.brightness,
+    ColorTokens? colors,
+  }) : colors = colors ?? ColorTokens.resolve(config.palette, brightness),
+       sizes = SizeTokens.of(config);
 
   final ThemeConfig config;
   final Brightness brightness;
@@ -36,6 +39,7 @@ class ThemeData {
   bool operator ==(Object other) =>
       other is ThemeData &&
       other.brightness == brightness &&
+      other.colors.backdropTone == colors.backdropTone &&
       other.config.palette == config.palette &&
       other.config.density == config.density &&
       other.config.radius == config.radius &&
@@ -45,6 +49,7 @@ class ThemeData {
   @override
   int get hashCode => Object.hash(
     brightness,
+    colors.backdropTone,
     config.palette,
     config.density,
     config.radius,
@@ -60,8 +65,13 @@ class ThemeProvider extends StatelessWidget {
     super.key,
     this.config = ThemeConfig.defaults,
     this.brightness,
+    this.colors,
     required this.child,
   });
+
+  /// Explicit colour tokens instead of the palette's for [brightness] (adaptive glass passes
+  /// [ColorTokens.backdrop]).
+  final ColorTokens? colors;
 
   /// App-level palette, density, radius and glass.
   final ThemeConfig config;
@@ -83,7 +93,7 @@ class ThemeProvider extends StatelessWidget {
         brightness ??
         MediaQuery.maybePlatformBrightnessOf(context) ??
         Brightness.light;
-    final data = ThemeData(config: config, brightness: mode);
+    final data = ThemeData(config: config, brightness: mode, colors: colors);
     return _ThemeScope(
       data: data,
       child: DefaultTextStyle.merge(

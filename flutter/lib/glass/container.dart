@@ -232,11 +232,15 @@ class _GlassContainerState extends State<GlassContainer> {
         ? GlassTone.dark
         : GlassTone.light;
     final flip = backdrop != mode && (_height ?? 0) <= glassAdaptMaxHeight;
+    if (!flip) return _build(context);
+    final tone = backdrop == GlassTone.dark
+        ? Brightness.dark
+        : Brightness.light;
     return ThemeProvider(
       config: theme.config,
-      brightness: flip
-          ? (backdrop == GlassTone.dark ? Brightness.dark : Brightness.light)
-          : theme.brightness,
+      brightness: tone,
+      // glass.css's neutral backdrop tokens, not the palette's whole dark or light theme.
+      colors: theme.colors.backdrop(tone),
       child: Builder(builder: _build),
     );
   }
