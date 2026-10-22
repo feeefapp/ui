@@ -14,7 +14,7 @@ const useIsomorphicLayoutEffect = typeof window === 'undefined' ? React.useEffec
  * materialize. Bubbles keep their layout, focus and semantics; only the paint moves here. Without
  * JavaScript, or in forced colors, every bubble paints its own glass as before.
  */
-export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'div', spacing = 8, light = 'pointer', className, children, ...props }, ref) {
+export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'div', spacing = 8, light = 'pointer', interactive = true, className, children, ...props }, ref) {
     const host = React.useRef(null);
     const backdrop = React.useRef(null);
     const paint = React.useRef(null);
@@ -71,6 +71,7 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
         current.spacing = Math.max(0, spacing);
         current.reduceMotion = reduced;
         current.followPointer = light === 'pointer';
+        current.interactive = interactive;
         current.requestMeasure();
     });
     React.useEffect(() => {

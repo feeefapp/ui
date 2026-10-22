@@ -22,10 +22,17 @@ export declare class GlassScene {
     private pointer;
     private cache;
     private uid;
+    private pressed;
+    private glow;
     spacing: number;
     reduceMotion: boolean;
     followPointer: boolean;
+    /** Bubbles swell, stretch and glow under a press (Apple's interactive glass). */
+    interactive: boolean;
     constructor(host: HTMLElement, backdrop: HTMLElement, paint: SVGSVGElement, shadow: SVGSVGElement, uid: string);
+    private onPressStart;
+    private onPressMove;
+    private onPressEnd;
     register(id: string, element: HTMLElement, options: GlassMemberOptions): () => void;
     requestMeasure(): void;
     setPointer(point: {

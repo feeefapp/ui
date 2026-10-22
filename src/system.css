@@ -47,6 +47,8 @@ html[data-lab-theme] {
   --lab-glass-shadow: 0 8px 24px -14px rgb(0 0 0 / 18%);
   /* Shadow under a GlassContainer's merged outline (offset 6px, blur 7px). */
   --lab-glass-shadow-color: rgb(0 0 0 / 10%);
+  /* Light that spreads from a finger pressing glass. */
+  --lab-glass-glow: rgb(255 255 255 / 45%);
   --lab-glass-light: inset 0 1px 0 var(--lab-glass-edge-low), inset 0 -1px 0 rgb(0 0 0 / 6%);
   --lab-control-selected: color-mix(in srgb, var(--lab-primary) 22%, var(--lab-surface));
   --lab-control-highlight: rgb(255 255 255 / 76%);
@@ -58,6 +60,7 @@ html[data-lab-theme='dark'] {
   --lab-glass-edge-low: rgb(255 255 255 / 10%);
   --lab-glass-shadow: 0 8px 24px -14px rgb(0 0 0 / 40%);
   --lab-glass-shadow-color: rgb(0 0 0 / 26%);
+  --lab-glass-glow: rgb(255 255 255 / 16%);
   --lab-danger: #ffb4ab;
   --lab-on-danger: #571812;
   --lab-control-highlight: rgb(255 255 255 / 20%);

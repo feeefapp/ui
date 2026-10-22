@@ -93,3 +93,11 @@ border) is unchanged, so nothing moves when the container takes over. */
     display: none;
   }
 }
+.lab-glass-glow-stop {
+  stop-color: var(--lab-glass-glow);
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .lab-glass-glow-stop {
+    stop-color: transparent;
+  }
+}

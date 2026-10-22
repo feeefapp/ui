@@ -3,6 +3,7 @@ import { SPRINGS } from '../physics/spring.js';
 import { boundsOf, glassPaths } from './geometry.js';
 import { DEFAULT_GLASS_LIGHT, glassLightToward, rimGradient } from './light.js';
 import { planGlassTransition, sameRect } from './transitions.js';
+import { GLASS_CONTENT_FOLLOW, GLASS_PRESS_SCALE, glassStretch, pressedShape } from './press.js';
 /** How far (px) the material may reach past the container, for overshoot and growing bubbles. */
 export const GLASS_MARGIN = 32;
 const SPRING = SPRINGS.snappy;
@@ -14,6 +15,10 @@ class Shape {
     width;
     height;
     scale;
+    /** Press response: swell and stretch toward a dragging finger. */
+    press = new MotionValue(1, 0.0005);
+    stretchX = new MotionValue(0, 0.05);
+    stretchY = new MotionValue(0, 0.05);
     radius = 0;
     layout = null;
     /** Translation written to the element so its content rides with the glass. */
@@ -37,16 +42,17 @@ class Shape {
         const s = Math.max(0, this.scale.get());
         const w = this.width.get() * s;
         const h = this.height.get() * s;
-        return {
+        const base = {
             x: this.x.get() + (this.width.get() - w) / 2,
             y: this.y.get() + (this.height.get() - h) / 2,
             width: w,
             height: h,
             radius: this.radius * s,
         };
+        return pressedShape(base, this.press.get(), this.stretchX.get(), this.stretchY.get());
     }
     values() {
-        return [this.x, this.y, this.width, this.height, this.scale];
+        return [this.x, this.y, this.width, this.height, this.scale, this.press, this.stretchX, this.stretchY];
     }
     set(rect) {
         this.x.set(rect.x);
@@ -88,9 +94,13 @@ export class GlassScene {
     pointer = null;
     cache = { key: '', paths: [] };
     uid;
+    pressed = null;
+    glow = null;
     spacing = 8;
     reduceMotion = false;
     followPointer = true;
+    /** Bubbles swell, stretch and glow under a press (Apple's interactive glass). */
+    interactive = true;
     constructor(host, backdrop, paint, shadow, uid) {
         this.host = host;
         this.backdrop = backdrop;
@@ -106,7 +116,72 @@ export class GlassScene {
             this.mutations = new MutationObserver(() => this.requestMeasure());
             this.mutations.observe(host, { subtree: true, attributes: true, attributeFilter: ['inert', 'hidden'] });
         }
+        host.addEventListener('pointerdown', this.onPressStart, { passive: true });
     }
+    onPressStart = (event) => {
+        if (!this.interactive || this.reduceMotion || event.button > 0 || this.pressed)
+            return;
+        const target = event.target;
+        if (!target || target.closest('input, textarea, select, [contenteditable="true"]'))
+            return;
+        const element = target.closest('[data-glass-member]');
+        const id = element && [...this.members].find(([, member]) => member.element === element)?.[0];
+        const shape = id ? this.shapes.get(id) : undefined;
+        if (!id || !shape || shape.leaving)
+            return;
+        this.pressed = { id, pointer: event.pointerId, x: event.clientX, y: event.clientY };
+        // Large surfaces (docks, panels) glow but don't swell.
+        if (shape.height.get() <= 64)
+            void shape.press.animateTo(GLASS_PRESS_SCALE, { spring: SPRING });
+        const origin = this.host.getBoundingClientRect();
+        const glow = { x: event.clientX - origin.left, y: event.clientY - origin.top, radius: new MotionValue(8, 0.5), opacity: new MotionValue(1, 0.005) };
+        this.glow = glow;
+        void glow.radius.animateTo(Math.max(120, shape.width.get()), { spring: SPRINGS.smooth });
+        window.addEventListener('pointermove', this.onPressMove, { passive: true });
+        window.addEventListener('pointerup', this.onPressEnd, { passive: true });
+        window.addEventListener('pointercancel', this.onPressEnd, { passive: true });
+        this.scheduleDraw();
+    };
+    onPressMove = (event) => {
+        const pressed = this.pressed;
+        if (!pressed || event.pointerId !== pressed.pointer)
+            return;
+        const shape = this.shapes.get(pressed.id);
+        if (!shape)
+            return;
+        const stretch = glassStretch(event.clientX - pressed.x, event.clientY - pressed.y);
+        shape.stretchX.track(stretch.x, event.timeStamp);
+        shape.stretchY.track(stretch.y, event.timeStamp);
+        if (this.glow) {
+            const origin = this.host.getBoundingClientRect();
+            this.glow.x = event.clientX - origin.left;
+            this.glow.y = event.clientY - origin.top;
+        }
+        this.scheduleDraw();
+    };
+    onPressEnd = (event) => {
+        const pressed = this.pressed;
+        if (!pressed || event.pointerId !== pressed.pointer)
+            return;
+        this.pressed = null;
+        window.removeEventListener('pointermove', this.onPressMove);
+        window.removeEventListener('pointerup', this.onPressEnd);
+        window.removeEventListener('pointercancel', this.onPressEnd);
+        const shape = this.shapes.get(pressed.id);
+        if (shape) {
+            void shape.press.animateTo(1, { spring: SPRINGS.bouncy });
+            void shape.stretchX.animateTo(0, { spring: SPRINGS.bouncy });
+            void shape.stretchY.animateTo(0, { spring: SPRINGS.bouncy });
+        }
+        const glow = this.glow;
+        if (glow)
+            void glow.opacity.animateTo(0, { spring: SPRINGS.smooth }).then(() => {
+                if (this.glow === glow)
+                    this.glow = null;
+                this.scheduleDraw();
+            });
+        this.scheduleDraw();
+    };
     register(id, element, options) {
         this.members.set(id, { element, options });
         this.resize?.observe(element);
@@ -133,6 +208,10 @@ export class GlassScene {
         this.scheduleDraw();
     }
     dispose() {
+        this.host.removeEventListener('pointerdown', this.onPressStart);
+        window.removeEventListener('pointermove', this.onPressMove);
+        window.removeEventListener('pointerup', this.onPressEnd);
+        window.removeEventListener('pointercancel', this.onPressEnd);
         this.resize?.disconnect();
         this.mutations?.disconnect();
         this.drawHook?.();
@@ -240,7 +319,9 @@ export class GlassScene {
         if (this.drawHook)
             return;
         this.drawHook = onAnimationFrame(() => {
-            const moving = [...this.shapes.values()].some((shape) => shape.values().some((v) => v.isAnimating()));
+            const glow = this.glow;
+            const moving = [...this.shapes.values()].some((shape) => shape.values().some((v) => v.isAnimating())) ||
+                (glow !== null && (glow.radius.isAnimating() || glow.opacity.isAnimating()));
             if (this.dirty || moving) {
                 this.dirty = false;
                 this.draw();
@@ -262,12 +343,16 @@ export class GlassScene {
             // Content rides with its glass (centre to centre) while the bubble moves.
             const dx = shape.carry ? shape.x.get() + shape.width.get() / 2 - (shape.layout.x + shape.layout.width / 2) : 0;
             const dy = shape.carry ? shape.y.get() + shape.height.get() / 2 - (shape.layout.y + shape.layout.height / 2) : 0;
-            const x = Math.abs(dx) < 0.05 ? 0 : dx;
-            const y = Math.abs(dy) < 0.05 ? 0 : dy;
+            const fx = dx + shape.stretchX.get() * GLASS_CONTENT_FOLLOW;
+            const fy = dy + shape.stretchY.get() * GLASS_CONTENT_FOLLOW;
+            const x = Math.abs(fx) < 0.05 ? 0 : fx;
+            const y = Math.abs(fy) < 0.05 ? 0 : fy;
             if (x !== shape.offset.x || y !== shape.offset.y) {
                 member.element.style.translate = x || y ? `${x}px ${y}px` : '';
                 shape.offset = { x, y };
             }
+            const press = shape.press.get();
+            member.element.style.scale = Math.abs(press - 1) < 0.001 ? '' : String(press);
         }
         const m = GLASS_MARGIN;
         const placed = visuals.map((v) => ({ ...v, x: v.x + m, y: v.y + m }));
@@ -279,7 +364,8 @@ export class GlassScene {
         this.backdrop.style.clipPath = d ? `path("${d}")` : 'inset(50%)';
         const origin = this.host.getBoundingClientRect();
         const lights = paths.map((p) => this.lightFor(p.bounds, origin));
-        renderPaint(this.paint, paths, lights, this.uid);
+        const glow = this.glow;
+        renderPaint(this.paint, paths, lights, this.uid, glow ? { x: glow.x + m, y: glow.y + m, radius: glow.radius.get(), opacity: glow.opacity.get() } : null);
         renderShadow(this.shadow, d, this.uid);
         this.host.toggleAttribute('data-glass-ready', true);
     }
@@ -303,7 +389,7 @@ const node = (tag, attrs) => {
     return el;
 };
 /** Edge and light, one clipped group per cluster so each bubble is lit on its own. */
-function renderPaint(svg, paths, lights, uid) {
+function renderPaint(svg, paths, lights, uid, glow) {
     const defs = node('defs', {});
     const parts = [defs];
     paths.forEach((path, i) => {
@@ -324,6 +410,17 @@ function renderPaint(svg, paths, lights, uid) {
         group.append(node('path', { d: path.d, class: 'lab-glass-edge' }), node('path', { d: path.d, class: 'lab-glass-rim', stroke: `url(#${uid}-g${i})` }));
         parts.push(group);
     });
+    if (glow && glow.opacity > 0.01 && paths.length) {
+        // Light from under the finger, spilling onto every bubble it reaches (clipped to all glass).
+        const clip = node('clipPath', { id: `${uid}-gc` });
+        clip.append(node('path', { d: paths.map((p) => p.d).join('') }));
+        const gradient = node('radialGradient', { id: `${uid}-gg`, gradientUnits: 'userSpaceOnUse', cx: glow.x, cy: glow.y, r: Math.max(1, glow.radius) });
+        gradient.append(node('stop', { offset: 0, class: 'lab-glass-glow-stop' }), node('stop', { offset: 1, class: 'lab-glass-glow-stop', 'stop-opacity': 0 }));
+        defs.append(clip, gradient);
+        const group = node('g', { 'clip-path': `url(#${uid}-gc)`, opacity: glow.opacity });
+        group.append(node('circle', { cx: glow.x, cy: glow.y, r: Math.max(1, glow.radius), fill: `url(#${uid}-gg)` }));
+        parts.push(group);
+    }
     svg.replaceChildren(...parts);
 }
 /** A soft shadow outside the glass only (masked), like CSS box-shadow. */

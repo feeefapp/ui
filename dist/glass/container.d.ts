@@ -11,6 +11,12 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
     spacing?: number;
     /** `pointer` (default) turns the light toward a mouse or pen; `static` keeps it at the top-left. */
     light?: 'pointer' | 'static';
+    /**
+     * Bubbles respond to a press like Apple's interactive glass: they swell, stretch toward a
+     * dragging finger, glow from the touch point onto nearby bubbles and spring back. Default true;
+     * off with reduced motion.
+     */
+    interactive?: boolean;
 };
 /**
  * Draws ONE glass material for every bubble inside it (GlassGroup, ToolbarGroup, Dock, …), like
@@ -29,6 +35,12 @@ export declare const GlassContainer: React.ForwardRefExoticComponent<React.HTMLA
     spacing?: number;
     /** `pointer` (default) turns the light toward a mouse or pen; `static` keeps it at the top-left. */
     light?: "pointer" | "static";
+    /**
+     * Bubbles respond to a press like Apple's interactive glass: they swell, stretch toward a
+     * dragging finger, glow from the touch point onto nearby bubbles and spring back. Default true;
+     * off with reduced motion.
+     */
+    interactive?: boolean;
 } & React.RefAttributes<HTMLElement>>;
 export {};
 //# sourceMappingURL=container.d.ts.map

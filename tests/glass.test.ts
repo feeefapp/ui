@@ -168,3 +168,30 @@ test('the rim gradient spans the bounds along the light, lit end first', () => {
   // Like CSS: the projection of the bounds onto the gradient line.
   assert.ok(near(Math.hypot(g.x2 - g.x1, g.y2 - g.y1), (100 + 40) * Math.SQRT1_2, 1e-9))
 })
+
+import { GLASS_STRETCH_LIMIT, glassStretch, pressedShape } from '../src/glass/press.ts'
+
+test('a press swells the bubble around its centre', () => {
+  const shape = pill(100)
+  const pressed = pressedShape(shape, 1.1, 0, 0)
+  assert.ok(near(pressed.x + pressed.width / 2, shape.x + shape.width / 2, 1e-9))
+  assert.ok(near(pressed.width, shape.width * 1.1, 1e-9))
+  assert.ok(near(pressed.radius, shape.radius * 1.1, 1e-9))
+})
+
+test('a drag stretches the bubble toward the finger and narrows it across', () => {
+  const shape = pill(0)
+  const pressed = pressedShape(shape, 1, 8, 0)
+  assert.ok(pressed.width > shape.width && pressed.height < shape.height)
+  assert.ok(pressed.x + pressed.width > shape.x + shape.width, 'grows on the drag side')
+  assert.ok(near(pressed.x, shape.x, 1e-9), 'the far edge stays put')
+})
+
+test('stretch resists and never passes its limit', () => {
+  const small = glassStretch(10, 0)
+  const large = glassStretch(2000, 0)
+  assert.ok(small.x > 0 && small.x < 10)
+  assert.ok(large.x < GLASS_STRETCH_LIMIT && large.x > GLASS_STRETCH_LIMIT * 0.9)
+  assert.ok(glassStretch(-50, 0).x < 0)
+  assert.equal(glassStretch(0, 0).y, 0)
+})

@@ -32,7 +32,9 @@ function Overview() {
         />
         <p>
           The rim light follows a mouse or pen, so the edge facing the pointer brightens. Touch keeps the
-          default light from the top-left.
+          default light from the top-left. Pressing a bubble swells it a little; dragging stretches it
+          toward the finger with growing resistance, and light spreads from the touch point onto nearby
+          bubbles. Releasing springs it back.
         </p>
       </Section>
 
@@ -48,6 +50,7 @@ function Overview() {
           rows={[
             [<C>spacing</C>, 'GlassContainer', 'Blend distance in px (default 8). Keep it below the gap between bubbles at rest.'],
             [<C>light</C>, 'GlassContainer', <><C>pointer</C> (default) or <C>static</C>.</>],
+            [<C>interactive</C>, 'GlassContainer', 'Press response: swell, stretch and glow (default true).'],
             [<C>glassId</C>, 'GlassGroup, ToolbarGroup', 'Stable identity across renders and layouts.'],
             [<C>glassUnion</C>, 'GlassGroup, ToolbarGroup', 'Groups with the same name share one shape.'],
             [<C>glassMotion</C>, 'GlassGroup, ToolbarGroup', <><C>follow</C> for bubbles that animate their own size (Dock, search do this already).</>],
@@ -78,7 +81,7 @@ function Overview() {
       <Section title="Accessibility">
         <p>
           The material is decorative (<C>aria-hidden</C>) and ignores the pointer; focus, Tab order and
-          group names never change during a morph. With reduced motion, layouts change at once. With
+          group names never change during a morph. With reduced motion, layouts change at once and presses don't swell, stretch or glow. With
           reduced transparency or increased contrast the material is opaque, without the light rim. In forced
           colors every bubble draws its own system border. Without JavaScript bubbles paint themselves.
         </p>

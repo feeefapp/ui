@@ -21,6 +21,12 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
   spacing?: number
   /** `pointer` (default) turns the light toward a mouse or pen; `static` keeps it at the top-left. */
   light?: 'pointer' | 'static'
+  /**
+   * Bubbles respond to a press like Apple's interactive glass: they swell, stretch toward a
+   * dragging finger, glow from the touch point onto nearby bubbles and spring back. Default true;
+   * off with reduced motion.
+   */
+  interactive?: boolean
 }
 
 /**
@@ -31,7 +37,7 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
  * JavaScript, or in forced colors, every bubble paints its own glass as before.
  */
 export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>(function GlassContainer(
-  { as = 'div', spacing = 8, light = 'pointer', className, children, ...props },
+  { as = 'div', spacing = 8, light = 'pointer', interactive = true, className, children, ...props },
   ref
 ) {
   const host = React.useRef<HTMLElement | null>(null)
@@ -93,6 +99,7 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
     current.spacing = Math.max(0, spacing)
     current.reduceMotion = reduced
     current.followPointer = light === 'pointer'
+    current.interactive = interactive
     current.requestMeasure()
   })
 
