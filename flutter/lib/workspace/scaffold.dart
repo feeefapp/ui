@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
+import '../brand/pixel_shader.dart';
 import '../brand/pixel_noise.dart' show TextureDensity, TextureVariant;
 import '../brand/pixel_texture.dart';
 import '../glass/container.dart';
@@ -289,6 +290,17 @@ class _ScaffoldWidgetState extends State<Scaffold> {
         child: Stack(
           fit: StackFit.expand,
           children: [
+            // Ambient texture, not content: kept quiet so it never competes with the page.
+            const Positioned.fill(
+              child: IgnorePointer(
+                child: ExcludeSemantics(
+                  child: Opacity(
+                    opacity: 0.18,
+                    child: PixelShader(density: 0.8, speed: 0.18),
+                  ),
+                ),
+              ),
+            ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

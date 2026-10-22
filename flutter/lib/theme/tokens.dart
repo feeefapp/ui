@@ -11,6 +11,7 @@ import 'color_mix.dart';
 class ColorTokens {
   const ColorTokens._({
     required this.ground,
+    required this.pixelInk,
     required this.surface,
     required this.surfaceSoft,
     required this.line,
@@ -31,6 +32,8 @@ class ColorTokens {
     required this.controlHighlight,
   });
 
+  /// `--lab-pixel-ink`: the colour of the ambient pixel field.
+  final Color pixelInk;
   final Color ground,
       surface,
       surfaceSoft,
@@ -108,6 +111,7 @@ class ColorTokens {
     );
     ColorTokens make({
       required int ground,
+      required int pixelInk,
       required int surface,
       required int surfaceSoft,
       required int line,
@@ -121,6 +125,7 @@ class ColorTokens {
       required int warning,
     }) => ColorTokens._(
       ground: hex(ground),
+      pixelInk: hex(pixelInk),
       surface: hex(surface),
       surfaceSoft: hex(surfaceSoft),
       line: hex(line),
@@ -143,6 +148,7 @@ class ColorTokens {
     return switch ((palette, dark)) {
       (Palette.lab, false) => make(
         ground: 0xf3f6ef,
+        pixelInk: 0x86e672,
         surface: 0xfcfdf9,
         surfaceSoft: 0xe8eee2,
         line: 0xd6e1cf,
@@ -157,6 +163,7 @@ class ColorTokens {
       ),
       (Palette.lab, true) => make(
         ground: 0x101e17,
+        pixelInk: 0xb7e593,
         surface: 0x23372a,
         surfaceSoft: 0x1a2a21,
         line: 0x405744,
@@ -171,6 +178,7 @@ class ColorTokens {
       ),
       (Palette.mono, false) => make(
         ground: 0xf4f4f4,
+        pixelInk: 0x8a8a8a,
         surface: 0xffffff,
         surfaceSoft: 0xefefef,
         line: 0xe2e2e2,
@@ -185,6 +193,7 @@ class ColorTokens {
       ),
       (Palette.mono, true) => make(
         ground: 0x0a0a0a,
+        pixelInk: 0x6b6b6b,
         surface: 0x141414,
         surfaceSoft: 0x1c1c1c,
         line: 0x2c2c2c,
