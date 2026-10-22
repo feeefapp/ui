@@ -1,0 +1,456 @@
+import 'dart:ui' show lerpDouble;
+
+import 'package:flutter/widgets.dart';
+
+import '../brand/geometry.dart';
+import '../theme.dart';
+import '../theme/color_mix.dart';
+
+/// Emphasis. Use filled for primary actions (the twin of `ButtonVariant` in the web kit).
+enum ButtonVariant {
+  filled,
+  tonal,
+  elevated,
+  outlined,
+  text,
+  destructive,
+  ghost,
+}
+
+/// Height: `regular` 44px, `compact` 40px, `inline` fits running text; `icon` is square.
+enum ControlSize { regular, compact, inline, icon }
+
+/// Toolbar controls share their enclosing material instead of adding another raised surface.
+enum ButtonAppearance { defaultAppearance, toolbar }
+
+/// A button painted by one of the emphasis variants: the Flutter twin of `Button` in
+/// `@feeef.dev/ui/primitives/button`. Same props, same sizes, same colours (checked against the
+/// browser in `test/tokens_test.dart`), same superellipse corners.
+class Button extends StatefulWidget {
+  const Button({
+    super.key,
+    this.variant = ButtonVariant.text,
+    this.controlSize = ControlSize.regular,
+    this.iconSize = ControlSize.regular,
+    this.appearance = ButtonAppearance.defaultAppearance,
+    this.loading = false,
+    this.disabled = false,
+    this.pressed,
+    this.onClick,
+    this.ariaLabel,
+    this.focusNode,
+    this.autofocus = false,
+    required this.children,
+  });
+
+  /// Emphasis. Use filled for primary actions.
+  final ButtonVariant variant;
+
+  /// Height: `regular` 44px, `compact` 40px, `inline` fits running text; `icon` is square.
+  final ControlSize controlSize;
+
+  /// Square icon geometry when [controlSize] is `icon`: `regular` 44px, `compact` 40px.
+  final ControlSize iconSize;
+
+  /// Toolbar controls share their enclosing material instead of adding another raised surface.
+  final ButtonAppearance appearance;
+
+  /// Shows a loader, sets busy semantics and blocks activation until it clears.
+  final bool loading;
+
+  /// Blocks activation and dims the button.
+  final bool disabled;
+
+  /// Toggle state (`aria-pressed` / `data-state="on"`): paints the selected surface.
+  final bool? pressed;
+
+  final VoidCallback? onClick;
+
+  /// Accessible name when the content is not text (icon-only buttons).
+  final String? ariaLabel;
+
+  final FocusNode? focusNode;
+  final bool autofocus;
+
+  /// Content: icons and text, laid out in a row with a 6px gap.
+  final List<Widget> children;
+
+  @override
+  State<Button> createState() => _ButtonState();
+}
+
+class _ButtonState extends State<Button> {
+  bool _hovered = false;
+  bool _down = false;
+  bool _focusVisible = false;
+
+  bool get _blocked =>
+      widget.disabled || widget.loading || widget.onClick == null;
+
+  void _activate() {
+    if (_blocked) return;
+    widget.onClick?.call();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ThemeProvider.of(context);
+    final c = theme.colors;
+    final s = theme.sizes;
+    final compact = widget.controlSize == ControlSize.compact;
+    final icon = widget.controlSize == ControlSize.icon;
+    final coarse = theme.coarsePointer(context);
+    final toolbar = widget.appearance == ButtonAppearance.toolbar;
+
+    // Paint recipe: the shared variants, plus destructive and ghost from system.css.
+    late VariantPaint paint;
+    var ink = c.ink;
+    var raised = false;
+    switch (widget.variant) {
+      case ButtonVariant.filled:
+        paint = c.variant(ControlVariant.filled);
+        ink = paint.ink;
+        raised = true;
+      case ButtonVariant.tonal:
+        paint = c.variant(ControlVariant.tonal);
+      case ButtonVariant.elevated:
+        paint = c.variant(ControlVariant.elevated);
+        raised = true;
+      case ButtonVariant.outlined:
+        paint = c.variant(ControlVariant.outlined);
+        ink = c.focus;
+      case ButtonVariant.text:
+        paint = c.variant(ControlVariant.text);
+        ink = c.focus;
+      case ButtonVariant.destructive:
+        paint = VariantPaint(
+          fill: mixSrgb(c.danger, 0.07, c.surface),
+          hover: mixSrgb(c.danger, 0.12, c.surface),
+          pressed: mixSrgb(c.danger, 0.18, c.surface),
+          edge: mixSrgb(c.danger, 0.19, c.surface),
+          ink: c.danger,
+        );
+        ink = c.danger;
+      case ButtonVariant.ghost:
+        paint = VariantPaint(
+          fill: transparent,
+          hover: c.controlHover,
+          pressed: c.controlPressed,
+          edge: transparent,
+          ink: c.ink,
+        );
+    }
+    if (toolbar && widget.variant != ButtonVariant.filled) {
+      paint = VariantPaint(
+        fill: transparent,
+        hover: paint.hover,
+        pressed: paint.pressed,
+        edge: transparent,
+        ink: paint.ink,
+      );
+      raised = false;
+    }
+    if (widget.pressed == true) {
+      paint = VariantPaint(
+        fill: c.controlSelected,
+        hover: mixSrgb(c.primary, 0.30, c.surface),
+        pressed: mixSrgb(c.primary, 0.36, c.surface),
+        edge: mixSrgb(c.primary, 0.38, c.line),
+        ink: c.ink,
+      );
+      ink = c.ink;
+      raised = false;
+    }
+    final interactive = !widget.disabled && !widget.loading;
+    final fill = interactive && _down
+        ? paint.pressed
+        : interactive && _hovered
+        ? paint.hover
+        : paint.fill;
+
+    double height = switch (widget.controlSize) {
+      ControlSize.compact => s.controlCompact,
+      ControlSize.icon =>
+        widget.iconSize == ControlSize.compact
+            ? s.controlCompact
+            : s.controlHeight,
+      _ => s.controlHeight,
+    };
+    if (coarse) height = s.touchTarget;
+    final radius = compact || (icon && widget.iconSize == ControlSize.compact)
+        ? s.radiusControlCompact
+        : s.radiusControl;
+    final fontSize = compact ? 13.0 : s.controlFont;
+
+    final content = Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 6,
+      children: [
+        if (widget.loading) _Loader(color: ink),
+        if (!(widget.loading && icon)) ...widget.children,
+      ],
+    );
+
+    Widget result = _ButtonPaint(
+      fill: fill,
+      edge: paint.edge,
+      radius: radius,
+      raised: raised && !(interactive && _down),
+      pressedInset: interactive && _down,
+      highlight: c.controlHighlight,
+      depth: theme.brightness == Brightness.dark ? 0.18 : 0.08,
+      focus: _focusVisible ? c.focus : null,
+      child: SizedBox(
+        height: height,
+        width: icon ? height : null,
+        child: Padding(
+          padding: EdgeInsetsDirectional.symmetric(
+            horizontal: icon ? 0 : (compact ? 14 : s.space4),
+          ),
+          child: Center(
+            widthFactor: 1,
+            child: IconTheme.merge(
+              data: IconThemeData(size: icon ? 20 : 18, color: ink),
+              child: DefaultTextStyle.merge(
+                style: TextStyle(
+                  fontSize: fontSize,
+                  height: 20 / fontSize,
+                  leadingDistribution: TextLeadingDistribution.even,
+                  fontWeight: FontWeight.w400,
+                  color: ink,
+                ),
+                maxLines: 1,
+                softWrap: false,
+                child: content,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    result = AnimatedOpacity(
+      opacity: widget.disabled ? 0.42 : 1,
+      duration: const Duration(milliseconds: 140),
+      child: result,
+    );
+    return Semantics(
+      button: true,
+      enabled: interactive,
+      toggled: widget.pressed,
+      label: widget.ariaLabel,
+      child: FocusableActionDetector(
+        focusNode: widget.focusNode,
+        autofocus: widget.autofocus,
+        enabled: !widget.disabled,
+        mouseCursor: _blocked
+            ? SystemMouseCursors.forbidden
+            : SystemMouseCursors.click,
+        onShowHoverHighlight: (value) => setState(() => _hovered = value),
+        onShowFocusHighlight: (value) => setState(() => _focusVisible = value),
+        actions: {
+          ActivateIntent: CallbackAction<ActivateIntent>(
+            onInvoke: (_) => _activate(),
+          ),
+        },
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: interactive ? (_) => setState(() => _down = true) : null,
+          onTapUp: interactive ? (_) => setState(() => _down = false) : null,
+          onTapCancel: interactive ? () => setState(() => _down = false) : null,
+          onTap: interactive ? _activate : null,
+          child: result,
+        ),
+      ),
+    );
+  }
+}
+
+/// Paints the button surface like the CSS: superellipse fill, 1px inside edge, the raised shadow
+/// (`inset 0 1px 0 highlight, 0 2px 6px depth`, CSS blur → sigma = blur / 2), the pressed inset
+/// shadow and the 2px focus ring 3px outside. Colours ease over 140ms like the CSS transitions.
+class _ButtonPaint extends StatelessWidget {
+  const _ButtonPaint({
+    required this.fill,
+    required this.edge,
+    required this.radius,
+    required this.raised,
+    required this.pressedInset,
+    required this.highlight,
+    required this.depth,
+    required this.focus,
+    required this.child,
+  });
+
+  final Color fill, edge, highlight;
+  final double radius, depth;
+  final bool raised, pressedInset;
+  final Color? focus;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<Color?>(
+      tween: ColorTween(end: fill),
+      duration: const Duration(milliseconds: 140),
+      curve: const Cubic(0.2, 0.8, 0.2, 1),
+      builder: (context, animated, child) => CustomPaint(
+        painter: _SurfacePainter(
+          fill: animated ?? fill,
+          edge: edge,
+          radius: radius,
+          raised: raised,
+          pressedInset: pressedInset,
+          highlight: highlight,
+          depth: depth,
+          focus: focus,
+        ),
+        child: child,
+      ),
+      child: child,
+    );
+  }
+}
+
+class _SurfacePainter extends CustomPainter {
+  _SurfacePainter({
+    required this.fill,
+    required this.edge,
+    required this.radius,
+    required this.raised,
+    required this.pressedInset,
+    required this.highlight,
+    required this.depth,
+    required this.focus,
+  });
+
+  final Color fill, edge, highlight;
+  final double radius, depth;
+  final bool raised, pressedInset;
+  final Color? focus;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final radii = [radius, radius, radius, radius];
+    final shape = superellipsePath(rect, radii);
+    if (raised) {
+      canvas.drawPath(
+        shape.shift(const Offset(0, 2)),
+        Paint()
+          ..color = Color.from(alpha: depth, red: 0, green: 0, blue: 0)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+      );
+    }
+    canvas.drawPath(shape, Paint()..color = fill);
+    canvas.save();
+    canvas.clipPath(shape);
+    if (raised) {
+      // inset 0 1px 0 highlight: the band between the shape and itself moved down 1px.
+      canvas.drawPath(
+        Path.combine(
+          PathOperation.difference,
+          shape,
+          shape.shift(const Offset(0, 1)),
+        ),
+        Paint()..color = highlight,
+      );
+    }
+    if (pressedInset) {
+      // inset 0 1px 2px rgb(0 0 0 / 10%).
+      canvas.drawPath(
+        Path.combine(
+          PathOperation.difference,
+          Path()..addRect(rect.inflate(8)),
+          shape.shift(const Offset(0, 1)),
+        ),
+        Paint()
+          ..color = const Color.from(alpha: 0.10, red: 0, green: 0, blue: 0)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1),
+      );
+    }
+    canvas.restore();
+    if (edge.a > 0) {
+      canvas.drawPath(
+        superellipsePath(rect, radii, inset: 0.5),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..color = edge,
+      );
+    }
+    if (focus != null) {
+      final ring = rect.inflate(4);
+      canvas.drawPath(
+        superellipsePath(ring, [for (final _ in radii) radius + 4], inset: 1),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..color = focus!,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SurfacePainter old) =>
+      old.fill != fill ||
+      old.edge != edge ||
+      old.radius != radius ||
+      old.raised != raised ||
+      old.pressedInset != pressedInset ||
+      old.focus != focus ||
+      old.highlight != highlight ||
+      old.depth != depth;
+}
+
+/// A small three-dot loader standing in for the web kit's pixel loader (the pixel art port is a
+/// later step). Decorative: busy state is announced through the button's semantics.
+class _Loader extends StatefulWidget {
+  const _Loader({required this.color});
+  final Color color;
+  @override
+  State<_Loader> createState() => _LoaderState();
+}
+
+class _LoaderState extends State<_Loader> with SingleTickerProviderStateMixin {
+  late final AnimationController _clock = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _clock.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: SizedBox(
+      width: 16,
+      height: 16,
+      child: AnimatedBuilder(
+        animation: _clock,
+        builder: (context, _) => Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            for (var i = 0; i < 3; i++)
+              Opacity(
+                opacity: lerpDouble(
+                  0.3,
+                  1,
+                  (1 - ((_clock.value * 3 - i) % 3).abs().clamp(0, 1))
+                      .toDouble(),
+                )!,
+                child: SizedBox(
+                  width: 4,
+                  height: 4,
+                  child: ColoredBox(color: widget.color),
+                ),
+              ),
+          ],
+        ),
+      ),
+    ),
+  );
+}

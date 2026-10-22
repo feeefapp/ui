@@ -1,0 +1,13 @@
+/// Feeef UI kit for Flutter: the Dart twin of `@feeef.dev/ui`. Same component names and props,
+/// same tokens and geometry (tested against the web kit), built on `widgets.dart` only.
+///
+/// Import paths mirror the web kit's: `package:feeef_ui/primitives/button.dart` is
+/// `@feeef.dev/ui/primitives/button`. Names like `Button` are generic, so apps that also import
+/// Material can prefix this library: `import 'package:feeef_ui/feeef_ui.dart' as ui;`.
+library;
+
+export 'brand/geometry.dart'
+    show SuperellipseBorder, superellipsePath, superellipsePoints;
+export 'primitives/button.dart';
+export 'primitives/segmented.dart';
+export 'theme.dart';
