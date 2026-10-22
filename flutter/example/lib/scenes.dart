@@ -675,6 +675,52 @@ final Map<String, List<Widget> Function()> scenes = {
       ),
     ),
   ],
+  'sheet': () => [
+    Builder(
+      builder: (context) => Sheet(
+        open: true,
+        onOpenChange: (_) {},
+        label: 'Order #1042',
+        detents: const [SheetDetent.medium],
+        regular: SheetRegular.sheet,
+        child: DefaultTextStyle.merge(
+          style: const TextStyle(
+            fontSize: 15,
+            height: 22 / 15,
+            leadingDistribution: TextLeadingDistribution.even,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: CssBaseline(
+                  lineHeight: 28,
+                  child: Text(
+                    'Order #1042',
+                    style: TextStyle(
+                      fontSize: 20,
+                      height: 28 / 20,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+              CssBaseline(
+                lineHeight: 22,
+                child: Text(
+                  '3 items · 4,500 DZD · Oran',
+                  style: TextStyle(
+                    color: ThemeProvider.of(context).colors.muted,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  ],
   'modal': () => [
     Builder(
       builder: (context) => Modal(

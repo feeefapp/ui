@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
 import '../layout/size_reporter.dart';
+import '../i18n/i18n.dart';
 import '../physics/motion_value.dart';
 import '../physics/spring.dart';
 import '../scroll/metrics.dart';
@@ -117,7 +118,6 @@ class Sheet extends StatefulWidget {
     this.container = false,
     this.recede = true,
     this.contentPadding,
-    this.grabberLabel = 'Drag to resize, or press to change the height',
   });
 
   /// Shows the sheet. It animates in and out; keep it mounted and toggle this.
@@ -175,9 +175,6 @@ class Sheet extends StatefulWidget {
 
   /// Inline content padding in px (the [ScrollArea] default, 24, when null).
   final double? contentPadding;
-
-  /// Accessible name of the grabber (`lab.sheet.grabber`).
-  final String grabberLabel;
 
   @override
   State<Sheet> createState() => _SheetState();
@@ -863,7 +860,7 @@ class _SheetState extends State<Sheet> {
       child: Center(
         child: Semantics(
           button: true,
-          label: widget.grabberLabel,
+          label: I18n.of(context).t('lab.sheet.grabber'),
           onIncrease: () => _cycle(1),
           onDecrease: () => _cycle(-1),
           child: FocusableActionDetector(

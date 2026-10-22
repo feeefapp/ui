@@ -35,7 +35,7 @@ function serve(root) {
   })
 }
 
-const SCENES = process.argv.slice(2).length ? process.argv.slice(2) : ['buttons', 'button-states', 'segmented', 'icons', 'choices', 'sliders', 'fields', 'glass', 'dock', 'popover', 'scroll', 'numbers', 'actions', 'list', 'select', 'carousel', 'tabs', 'modal', 'text', 'corners']
+const SCENES = process.argv.slice(2).length ? process.argv.slice(2) : ['buttons', 'button-states', 'segmented', 'icons', 'choices', 'sliders', 'fields', 'glass', 'dock', 'popover', 'scroll', 'numbers', 'actions', 'list', 'select', 'carousel', 'tabs', 'sheet', 'modal', 'text', 'corners']
 const VARIANTS = [
   { theme: 'light', palette: 'lab', density: 'comfortable' },
   { theme: 'dark', palette: 'lab', density: 'comfortable' },
@@ -54,7 +54,7 @@ await page.setViewport({ width: 800, height: 700, deviceScaleFactor: 2 })
 await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
 
 // Scenes that draw in the top layer (dialogs) are compared over the whole viewport.
-const VIEWPORT_SCENES = new Set(['modal'])
+const VIEWPORT_SCENES = new Set(['modal', 'sheet'])
 const cases = []
 for (const scene of SCENES)
   for (const v of VARIANTS) {

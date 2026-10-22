@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
 import '../glass/container.dart';
+import '../i18n/i18n.dart';
 import '../icons/lucide.dart';
 import '../physics/motion_value.dart';
 import '../physics/spring.dart';
@@ -1264,8 +1265,6 @@ class NavigationPage extends StatefulWidget {
     this.zoomSource,
     this.contentPadding,
     this.contentLabel,
-    this.backText = 'Back',
-    this.backToText = 'Back to {title}',
     this.child,
   });
 
@@ -1303,12 +1302,6 @@ class NavigationPage extends StatefulWidget {
 
   /// Accessible name of the scrolling content. Defaults to the title.
   final String? contentLabel;
-
-  /// The back button's text without a previous title (`lab.nav.back`).
-  final String backText;
-
-  /// The back button's accessible name; `{title}` is the previous title (`lab.nav.backTo`).
-  final String backToText;
   final Widget? child;
 
   @override
@@ -1388,8 +1381,8 @@ class _NavigationPageState extends State<NavigationPage> {
     final titleShown = display == TitleDisplay.inline || _collapsed;
     final previous = page.previousTitle;
     final backLabel = previous != null
-        ? widget.backToText.replaceAll('{title}', previous)
-        : widget.backText;
+        ? I18n.of(context).t('lab.nav.backTo', {'title': previous})
+        : I18n.of(context).t('lab.nav.back');
     final narrow = stackWidth <= 560;
     Widget? header;
     if (!widget.hideBar) {
@@ -1432,7 +1425,8 @@ class _NavigationPageState extends State<NavigationPage> {
                             Flexible(
                               child: ExcludeSemantics(
                                 child: Text(
-                                  previous ?? widget.backText,
+                                  previous ??
+                                      I18n.of(context).t('lab.nav.back'),
                                   maxLines: 1,
                                   softWrap: false,
                                   overflow: TextOverflow.ellipsis,
