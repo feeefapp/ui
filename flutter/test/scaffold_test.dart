@@ -66,7 +66,8 @@ void main() {
 
     await tester.tap(find.bySemanticsLabel('Hide workspace sidebar'));
     await settle(tester);
-    expect(tester.getTopLeft(find.text('Page content')).dx, 8 + 1 + 24);
+    // Nothing frames the content any more: no card margin (1px border + 24px padding).
+    expect(tester.getTopLeft(find.text('Page content')).dx, 1 + 24);
     expect(find.text('Nav item').hitTestable(), findsNothing, reason: 'inert');
 
     await tester.tap(find.bySemanticsLabel('Expand workspace sidebar'));
@@ -109,7 +110,8 @@ void main() {
       await tester.pumpWidget(app(workspace()));
       await settle(tester);
       expect(find.text('Nav item'), findsNothing);
-      expect(tester.getTopLeft(find.text('Page content')).dx, 8 + 1 + 16);
+      // Compact: the sidebar is a drawer, so the content fills the window edge to edge.
+      expect(tester.getTopLeft(find.text('Page content')).dx, 1 + 16);
 
       await tester.tap(find.bySemanticsLabel('Open workspace navigation'));
       await settle(tester);

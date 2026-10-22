@@ -327,7 +327,12 @@ class _ScaffoldWidgetState extends State<Scaffold> {
                         ),
                       ),
                       Expanded(
-                        child: _MainPanel(focusNode: _main, child: viewport),
+                        child: _MainPanel(
+                          focusNode: _main,
+                          // A card only when a top row or a visible sidebar frames it.
+                          framed: widget.topSide != null || visibleSide,
+                          child: viewport,
+                        ),
                       ),
                     ],
                   ),
@@ -433,10 +438,16 @@ class _SideBoundaryState extends State<_SideBoundary> {
 }
 
 /// `.lab-workspace-main`: 8px margin, 1px line border, panel radius, surface fill, programmatically
-/// focusable with a 2px focus ring 3px inside its edge when focused from the keyboard.
+/// focusable with a 2px focus ring 3px inside its edge when focused from the keyboard. Unframed
+/// (nothing beside or above it) it eases to the window's edges: no margin, border or radius.
 class _MainPanel extends StatefulWidget {
-  const _MainPanel({required this.focusNode, required this.child});
+  const _MainPanel({
+    required this.focusNode,
+    required this.framed,
+    required this.child,
+  });
   final FocusNode focusNode;
+  final bool framed;
   final Widget child;
 
   @override
@@ -457,9 +468,23 @@ class _MainPanelState extends State<_MainPanel> {
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
-    final radius = theme.sizes.radiusPanel;
+    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: widget.framed ? 1 : 0),
+      duration: reduced ? Duration.zero : MotionTokens.durationNormal,
+      curve: MotionTokens.ease,
+      builder: (context, t, _) => _panel(
+        c,
+        theme.sizes.radiusPanel * t,
+        c.line.withValues(alpha: c.line.a * t),
+        8 * t,
+      ),
+    );
+  }
+
+  Widget _panel(ColorTokens c, double radius, Color line, double margin) {
     return Padding(
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(margin),
       child: Focus(
         focusNode: widget.focusNode,
         skipTraversal: true,
@@ -473,14 +498,14 @@ class _MainPanelState extends State<_MainPanel> {
               color: c.surface,
               shape: SuperellipseBorder(
                 radius: radius,
-                side: BorderSide(color: c.line),
+                side: BorderSide(color: line),
               ),
             ),
             child: Padding(
               padding: const EdgeInsets.all(1),
               child: ClipPath(
                 clipper: ShapeBorderClipper(
-                  shape: SuperellipseBorder(radius: radius - 1),
+                  shape: SuperellipseBorder(radius: math.max(0, radius - 1)),
                 ),
                 child: widget.child,
               ),

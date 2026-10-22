@@ -149,6 +149,9 @@ export function Scaffold({
   )
   const render = (slot: ScaffoldSlot) => (typeof slot === 'function' ? slot(state) : slot)
   const visibleSide = Boolean(side) && !compact && !drawerOpen && sideMode !== 'hidden'
+  // The content is a card only when something frames it (a top row or a visible sidebar);
+  // otherwise it fills the window edge to edge.
+  const framed = Boolean(topSide) || visibleSide
   return (
     <WorkspaceScaffoldContext.Provider value={state}>
       <div
@@ -157,6 +160,7 @@ export function Scaffold({
         style={style}
         dir={dir}
         data-side-mode={visibleSide ? sideMode : 'hidden'}
+        data-framed={framed}
         data-compact={compact}
         // A full-height Sheet makes the workspace recede behind it.
         data-lab-sheet-backdrop=""
