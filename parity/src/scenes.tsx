@@ -15,6 +15,7 @@ import { Dock } from '@feeef.dev/ui/dock'
 import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
 import { ScrollArea } from '@feeef.dev/ui/scroll'
 import { Modal } from '@feeef.dev/ui/primitives/modal'
+import { Select, Option } from '@feeef.dev/ui/primitives/select'
 import { LucidePrinter, LucideTruck, LucideX } from 'lucide-react'
 
 /**
@@ -205,6 +206,33 @@ export const SCENES: Record<string, () => ReactNode> = {
         ))}
       </ScrollArea>
     </div>
+  ),
+  select: () => (
+    <>
+      <div className="grid">
+        <Select label="Wilaya" value="oran" onValueChange={() => {}}>
+          <Option value="alger">Alger</Option>
+          <Option value="oran">Oran</Option>
+        </Select>
+        <Select label="Courier" value={null} onValueChange={() => {}}>
+          <Option value="yalidine">Yalidine</Option>
+        </Select>
+        <Select label="Status" value={null} required error="Choose an option." onValueChange={() => {}}>
+          <Option value="open">Open</Option>
+        </Select>
+        <Select label="Compact" controlSize="compact" variant="outlined" value="a" onValueChange={() => {}}>
+          <Option value="a">Small</Option>
+        </Select>
+      </div>
+      <div className="row">
+        <Select aria-label="Sort" value="new" onValueChange={() => {}}>
+          <Option value="new">Newest first</Option>
+        </Select>
+        <Select aria-label="Size" controlSize="compact" value="20" onValueChange={() => {}}>
+          <Option value="20">20 per page</Option>
+        </Select>
+      </div>
+    </>
   ),
   modal: () => (
     <Modal label="Delete order" close={() => {}}>

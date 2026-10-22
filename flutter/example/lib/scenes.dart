@@ -393,6 +393,56 @@ final Map<String, List<Widget> Function()> scenes = {
       },
     ),
   ],
+  'select': () => [
+    grid([
+      Select(
+        label: 'Wilaya',
+        value: 'oran',
+        onValueChange: (_) {},
+        children: const [
+          Option(value: 'alger', child: Text('Alger')),
+          Option(value: 'oran', child: Text('Oran')),
+        ],
+      ),
+      Select(
+        label: 'Courier',
+        value: null,
+        onValueChange: (_) {},
+        children: const [Option(value: 'yalidine', child: Text('Yalidine'))],
+      ),
+      Select(
+        label: 'Status',
+        value: null,
+        required: true,
+        error: 'Choose an option.',
+        onValueChange: (_) {},
+        children: const [Option(value: 'open', child: Text('Open'))],
+      ),
+      Select(
+        label: 'Compact',
+        controlSize: .compact,
+        variant: .outlined,
+        value: 'a',
+        onValueChange: (_) {},
+        children: const [Option(value: 'a', child: Text('Small'))],
+      ),
+    ]),
+    row([
+      Select(
+        ariaLabel: 'Sort',
+        value: 'new',
+        onValueChange: (_) {},
+        children: const [Option(value: 'new', child: Text('Newest first'))],
+      ),
+      Select(
+        ariaLabel: 'Size',
+        controlSize: .compact,
+        value: '20',
+        onValueChange: (_) {},
+        children: const [Option(value: '20', child: Text('20 per page'))],
+      ),
+    ]),
+  ],
   'modal': () => [
     Builder(
       builder: (context) => Modal(

@@ -20,6 +20,7 @@ export 'primitives/choice.dart';
 export 'primitives/modal.dart';
 export 'primitives/popover_surface.dart';
 export 'primitives/segmented.dart';
+export 'primitives/select.dart';
 export 'primitives/slider.dart';
 export 'primitives/slider_core.dart';
 export 'physics/motion_value.dart';
