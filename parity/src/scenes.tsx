@@ -3,6 +3,8 @@ import { useState, type ReactNode } from 'react'
 import { LucideArrowRight, LucideDownload, LucidePlus, LucideSearch, LucideTrash2 } from 'lucide-react'
 import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
 import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { Checkbox, RadioGroup } from '@feeef.dev/ui/primitives/choice'
+import { ProBadge } from '@feeef.dev/ui/primitives/badge'
 
 /**
  * Scenes shared with flutter/example/lib/scenes.dart: same ids, same content, same layout.
@@ -36,6 +38,40 @@ export const SCENES: Record<string, () => ReactNode> = {
     </>
   ),
   segmented: () => <Segmented />,
+  choices: () => (
+    <>
+      <div className="row">
+        <Checkbox label="Cash on delivery" checked onChange={() => {}} />
+        <Checkbox label="Stop desk" onChange={() => {}} />
+        <Checkbox label="Some orders" indeterminate onChange={() => {}} />
+        <Checkbox label="Disabled" disabled onChange={() => {}} />
+      </div>
+      <Checkbox
+        label="Product reviews"
+        description="Ask delivered customers to rate what they bought."
+        checked
+        onChange={() => {}}
+      />
+      <div className="row">
+        <Checkbox label="Compact" controlSize="compact" checked onChange={() => {}} />
+        <Checkbox label="Accept terms" error="Accept the terms to continue." onChange={() => {}} />
+      </div>
+      <RadioGroup
+        label="Delivery speed"
+        value="express"
+        onValueChange={() => {}}
+        options={[
+          { value: 'standard', label: 'Standard', description: '2 to 4 days' },
+          { value: 'express', label: 'Express', description: 'Next day' },
+          { value: 'pickup', label: 'Pickup', disabled: true },
+        ]}
+      />
+      <div className="row">
+        <span>Voice cloning</span>
+        <ProBadge />
+      </div>
+    </>
+  ),
   icons: () => (
     <>
       <div className="row">

@@ -13,11 +13,15 @@ class Gallery extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final query = Uri.base.queryParameters;
-    final scene = scenes[query['scene'] ?? 'buttons'] ?? () => [const Text('Unknown scene')];
+    final scene =
+        scenes[query['scene'] ?? 'buttons'] ??
+        () => [const Text('Unknown scene')];
     return WidgetsApp(
       color: const Color(0xFFFFFFFF),
       builder: (context, _) => ThemeProvider(
-        brightness: query['theme'] == 'dark' ? Brightness.dark : Brightness.light,
+        brightness: query['theme'] == 'dark'
+            ? Brightness.dark
+            : Brightness.light,
         config: ThemeConfig(
           palette: Palette.values.byName(query['palette'] ?? 'lab'),
           density: Density.values.byName(query['density'] ?? 'comfortable'),
@@ -28,7 +32,8 @@ class Gallery extends StatelessWidget {
             child: Align(
               alignment: Alignment.topLeft,
               child: DefaultTextStyle.merge(
-                style: const TextStyle(fontFamily: kitFontFamily),
+                // The browser's default text: 16px, normal line height.
+                style: const TextStyle(fontFamily: kitFontFamily, fontSize: 16),
                 child: Container(
                   key: const ValueKey('stage'),
                   width: 720,

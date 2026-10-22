@@ -3,7 +3,8 @@ import 'dart:ui' show CheckedState;
 import 'package:feeef_ui/feeef_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
+// The kit's RadioGroup (same name as the web kit's) shadows Flutter's.
+import 'package:flutter/widgets.dart' hide RadioGroup;
 import 'package:flutter_test/flutter_test.dart';
 
 /// A real app shell, as apps provide it: WidgetsApp brings the Tab traversal and Enter/Space
@@ -280,6 +281,68 @@ void main() {
         CheckedState.isFalse,
       );
       handle.dispose();
+    });
+  });
+
+  group('Checkbox and RadioGroup', () {
+    testWidgets('clicking the row toggles; Space toggles; disabled ignores', (
+      tester,
+    ) async {
+      var checked = false;
+      Widget box({bool disabled = false}) => host(
+        StatefulBuilder(
+          builder: (context, setState) => Checkbox(
+            checked: checked,
+            disabled: disabled,
+            onCheckedChange: (v) => setState(() => checked = v),
+            label: const Text('Send SMS'),
+          ),
+        ),
+      );
+      await tester.pumpWidget(box());
+      await tester.tap(find.text('Send SMS'));
+      await tester.pump();
+      expect(checked, isTrue);
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pump();
+      expect(checked, isFalse);
+      await tester.pumpWidget(box(disabled: true));
+      await tester.tap(find.text('Send SMS'), warnIfMissed: false);
+      expect(checked, isFalse);
+    });
+
+    testWidgets('radio arrows select the next enabled option', (tester) async {
+      var value = 'standard';
+      await tester.pumpWidget(
+        host(
+          StatefulBuilder(
+            builder: (context, setState) => RadioGroup(
+              label: 'Delivery speed',
+              value: value,
+              onValueChange: (v) => setState(() => value = v),
+              options: const [
+                RadioOption(value: 'standard', label: Text('Standard')),
+                RadioOption(
+                  value: 'pickup',
+                  label: Text('Pickup'),
+                  disabled: true,
+                ),
+                RadioOption(value: 'express', label: Text('Express')),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pump();
+      expect(value, 'express');
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pump();
+      expect(value, 'standard', reason: 'wraps around');
     });
   });
 }

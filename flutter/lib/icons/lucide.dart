@@ -34,7 +34,14 @@ class LucideNodeEllipse extends LucideElement {
 }
 
 class LucideNodeRect extends LucideElement {
-  const LucideNodeRect(this.x, this.y, this.width, this.height, this.rx, this.ry);
+  const LucideNodeRect(
+    this.x,
+    this.y,
+    this.width,
+    this.height,
+    this.rx,
+    this.ry,
+  );
   final double x, y, width, height, rx, ry;
   @override
   void addTo(Path path) => path.addRRect(

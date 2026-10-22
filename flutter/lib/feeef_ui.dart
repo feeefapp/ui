@@ -9,6 +9,8 @@ library;
 export 'brand/geometry.dart'
     show SuperellipseBorder, superellipsePath, superellipsePoints;
 export 'icons/lucide.dart';
+export 'primitives/badge.dart';
 export 'primitives/button.dart';
+export 'primitives/choice.dart';
 export 'primitives/segmented.dart';
 export 'theme.dart';
