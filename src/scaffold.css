@@ -29,7 +29,7 @@
 .lab-floating-root {
   z-index: 40;
   color: var(--lab-ink);
-  font: 13px/1.5 var(--lab-font);
+  font: 13px/20px var(--lab-font);
 }
 
 .lab-floating-root *,
@@ -71,8 +71,8 @@
   border-radius: var(--lab-glass-radius);
   corner-shape: superellipse(1.5);
   background: var(--lab-glass-fill);
-  backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate));
-  -webkit-backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate));
+  backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate)) var(--lab-glass-lift);
+  -webkit-backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate)) var(--lab-glass-lift);
   box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
 }
 .lab-glass-group::before {

@@ -17,7 +17,7 @@ import {
 import { glassLightToward, rimGradient, DEFAULT_GLASS_LIGHT } from '../../src/glass/light'
 import { mergeWidth } from '../../src/glass/geometry'
 import { refractionAt, refractionScale } from '../../src/glass/refraction'
-import { glassBlur, glassSize, rimAlpha, GLASS_RIM_STOPS } from '../../src/glass/material'
+import { glassBlur, glassMaterial, glassSize, rimAlpha, GLASS_RIM_STOPS } from '../../src/glass/material'
 import { SPRINGS, solveSpring, springCoefficients, rubberBand } from '../../src/physics/spring'
 import { glassStretch, pressedShape } from '../../src/glass/press'
 import { planGlassTransition } from '../../src/glass/transitions'
@@ -71,6 +71,12 @@ const fixture = {
   material: [20, 44, 64, 72, 73, 100, 160, 400].map((side) => [side, glassBlur(side), glassSize(side)]),
   rimAlpha: [0, 0.4, Math.PI / 2, 2.5, Math.PI].map((a) => [a, rimAlpha(a, 'light'), rimAlpha(a, 'dark')]),
   rimStops: GLASS_RIM_STOPS,
+  // The tint curve (ThemeConfig glassTint): [tint, scheme, size, material].
+  tint: [0, 0.25, 0.5, 0.75, 1, -1, 3].flatMap((tint) =>
+    (['light', 'dark'] as const).flatMap((scheme) =>
+      (['small', 'large'] as const).map((size) => [tint, scheme, size, glassMaterial(tint, scheme, size)])
+    )
+  ),
 }
 writeFileSync(new URL('../test/fixtures/glass.json', import.meta.url), JSON.stringify(fixture, null, 1) + '\n')
 console.log('wrote glass.json')

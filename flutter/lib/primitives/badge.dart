@@ -31,14 +31,14 @@ class ProBadge extends StatelessWidget {
           child: DefaultTextStyle.merge(
             style: TextStyle(
               fontSize: 9,
-              height: 1.5,
+              height: 14 / 9,
               leadingDistribution: TextLeadingDistribution.even,
               fontWeight: FontWeight.w500,
               letterSpacing: 9 * 0.025,
               color: c.focus,
             ),
             child: const CssBaseline(
-              lineHeight: 13.5,
+              lineHeight: 14,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 spacing: 3,

@@ -820,7 +820,7 @@ class _ActionsMenuState extends State<_ActionsMenu> {
               child: DefaultTextStyle.merge(
                 style: const TextStyle(
                   fontSize: 14,
-                  height: 1.4,
+                  height: 20 / 14,
                   leadingDistribution: TextLeadingDistribution.even,
                 ),
                 child: Column(
@@ -905,7 +905,7 @@ class _MenuRow extends StatelessWidget {
                 children: [
                   SizedBox.square(dimension: 18, child: Center(child: leading)),
                   Expanded(
-                    child: CssBaseline(lineHeight: 19.6, child: Text(a.label)),
+                    child: CssBaseline(lineHeight: 20, child: Text(a.label)),
                   ),
                   if (a is GroupAction)
                     const Padding(

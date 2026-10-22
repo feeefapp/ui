@@ -17,7 +17,7 @@ const chrome = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/M
 const TOKENS = [
   'ground', 'surface', 'surface-soft', 'line', 'ink', 'muted', 'focus', 'primary', 'on-primary',
   'accent', 'success', 'warning', 'danger', 'on-danger', 'control-surface', 'control-border',
-  'control-hover', 'control-pressed', 'control-selected', 'glass-fill', 'glass-fill-flat',
+  'control-hover', 'control-pressed', 'control-selected', 'glass-fill',
   'glass-edge-light', 'glass-edge-low', 'glass-shadow-color', 'glass-glow', 'control-highlight',
   'glass-fill-large', 'glass-shadow-small',
 ]

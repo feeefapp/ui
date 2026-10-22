@@ -64,14 +64,15 @@ html[data-lab-theme] .lab-control.lab-ladder-trigger[data-state='open'] {
   display: grid;
   min-width: 0;
   text-align: start;
-  line-height: 1.15;
 }
 .lab-ladder-trigger-text b {
   font-size: 13px;
   font-weight: 500;
+  line-height: 15px;
 }
 .lab-ladder-trigger-text small {
   font-size: 10px;
+  line-height: 12px;
   color: var(--ladder-muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -397,7 +398,7 @@ html[data-lab-theme] .lab-control.lab-ladder-option[aria-selected='true'] {
 .lab-ladder-option small {
   font-size: 11px;
   color: var(--ladder-muted);
-  line-height: 1.35;
+  line-height: 15px;
 }
 .lab-ladder-option > svg {
   flex: none;
@@ -532,7 +533,7 @@ html[data-lab-theme] .lab-ladder-shape-options > .lab-segmented-option[data-stat
   color: var(--lab-muted);
   font-size: 11px;
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 17px;
 }
 .lab-model-access[data-access='free'] {
   background: var(--lab-surface-soft);

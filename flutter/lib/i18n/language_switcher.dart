@@ -234,7 +234,7 @@ class _LanguageMenuState extends State<_LanguageMenu> {
               child: DefaultTextStyle.merge(
                 style: TextStyle(
                   fontSize: 14,
-                  height: 1.4,
+                  height: 20 / 14,
                   color: c.ink,
                   leadingDistribution: TextLeadingDistribution.even,
                 ),
@@ -297,7 +297,7 @@ class _LanguageMenuState extends State<_LanguageMenu> {
                     ),
                     Expanded(
                       child: CssBaseline(
-                        lineHeight: 19.6,
+                        lineHeight: 20,
                         child: _LanguageName(language),
                       ),
                     ),

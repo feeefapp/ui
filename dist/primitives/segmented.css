@@ -1,9 +1,11 @@
 /* Shared mode group: selected choices use an explicit, high-contrast surface. */
 .lab-segmented {
+  /* Options sit as far from each other as from the edge: a gap wider than the inset looks loose. */
+  --lab-segmented-inset: 4px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px;
+  gap: var(--lab-segmented-inset);
+  padding: var(--lab-segmented-inset);
   max-width: 100%;
   flex-wrap: wrap;
   border: 1px solid var(--lab-line);

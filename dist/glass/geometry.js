@@ -12,7 +12,7 @@ const NORM = Float64Array.from({ length: NORM_STEPS + 1 }, (_, i) => (1 + (i / N
  * is exactly the curve `foSuperellipsePath` draws; away from it the value is a close
  * approximation, which is all a smooth union needs.
  */
-export function shapeDistance(px, py, shape, exponent = FO_CORNER_EXPONENT) {
+export function shapeDistance(px, py, shape, exponent = shape.cornerExponent ?? FO_CORNER_EXPONENT) {
     const r = clampRadius(shape);
     const hx = shape.width / 2;
     const hy = shape.height / 2;
@@ -45,12 +45,45 @@ export function smoothMin(a, b, k) {
     const h = Math.max(k - Math.abs(a - b), 0) / k;
     return Math.min(a, b) - (h * h * k) / 4;
 }
-/** Distance to the union of `shapes`, blended with `spacing`. */
+/** Share of `spacing` two touching shapes blend with (measured on rendered Liquid Glass). */
+export const GLASS_MERGE_BASE = 0.65;
+/** How much the blend widens per unit of gap / spacing, up to the full `spacing`. */
+export const GLASS_MERGE_GAP = 0.65;
+/**
+ * Blend width for two shapes `gap` px apart in a container with `spacing`: the full spacing while
+ * they approach (so they start to bend at `spacing` and join at half of it, like Apple's
+ * GlassEffectContainer), then narrower as they close in, so the neck between touching shapes
+ * stays slim instead of swelling into one blob.
+ */
+export function mergeWidth(gap, spacing) {
+    if (!(spacing > 0))
+        return 0;
+    return spacing * Math.min(1, GLASS_MERGE_BASE + (GLASS_MERGE_GAP * Math.max(0, gap)) / spacing);
+}
+const widths = new WeakMap();
+/** Each shape's blend width against the shapes before it (its nearest one), cached per array. */
+function blendWidths(shapes, spacing) {
+    const cached = widths.get(shapes);
+    if (cached && cached.spacing === spacing && cached.k.length === shapes.length)
+        return cached.k;
+    const k = shapes.map((shape, i) => {
+        if (i === 0)
+            return 0;
+        let gap = Infinity;
+        for (let j = 0; j < i; j++)
+            gap = Math.min(gap, rectGap(shape, shapes[j]));
+        return mergeWidth(gap, spacing);
+    });
+    widths.set(shapes, { spacing, k });
+    return k;
+}
+/** Distance to the union of `shapes`, blended by `spacing` (see `mergeWidth`). */
 export function unionDistance(px, py, shapes, spacing) {
+    const k = shapes.length > 1 ? blendWidths(shapes, spacing) : null;
     let d = Infinity;
-    for (const shape of shapes) {
-        const s = shapeDistance(px, py, shape);
-        d = d === Infinity ? s : smoothMin(d, s, spacing);
+    for (let i = 0; i < shapes.length; i++) {
+        const s = shapeDistance(px, py, shapes[i]);
+        d = d === Infinity ? s : smoothMin(d, s, k[i]);
     }
     return d;
 }
@@ -94,7 +127,7 @@ export function translatePath(d, dx, dy) {
 export function shapePath(shape) {
     const r = clampRadius(shape);
     const corner = { x: r, y: r };
-    return translatePath(foSuperellipsePath(shape.width, shape.height, [corner, corner, corner, corner]), shape.x, shape.y);
+    return translatePath(foSuperellipsePath(shape.width, shape.height, [corner, corner, corner, corner], 0, shape.cornerExponent ?? FO_CORNER_EXPONENT), shape.x, shape.y);
 }
 /**
  * Closed outlines of the blended union of `shapes` (marching squares on a `cell`-sized grid with

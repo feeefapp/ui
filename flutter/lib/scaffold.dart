@@ -139,28 +139,33 @@ class _GlassSurfaceState extends State<GlassSurface> {
     final size = glassSize(_side);
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
-    final style = theme.config.glass;
-    final blurred =
-        style != GlassStyle.solid &&
-        theme.config.glassRenderer != GlassRenderer.fill;
-    final fill = style == GlassStyle.solid
-        ? c.surface
-        : blurred
+    final style = glassStyleOf(context);
+    final translucent = style != GlassStyle.solid;
+    final fill = translucent
         ? (size == GlassSize.small ? c.glassFill : c.glassFillLarge)
-        : c.glassFillFlat;
+        : c.surface;
     final painted = CustomPaint(
       painter: _GlassGroupPainter(
         fill: fill,
-        line: c.line,
+        line: glassHighContrastOf(context) ? c.ink : c.line,
         edgeLight: c.glassEdgeLight,
         edgeLow: c.glassEdgeLow,
         shadow: glassShadowColor(theme.brightness),
         radius: radius,
-        rim: style != GlassStyle.solid,
+        rim: translucent,
       ),
       child: child,
     );
-    if (!blurred) return painted;
+    if (!translucent) return painted;
+    // `--lab-glass-saturate` and `--lab-glass-lift` at the tint, after `--lab-glass-blur` when
+    // ThemeConfig glassBlur is on. (Refraction needs a GlassContainer.)
+    final material = glassMaterial(
+      theme.colors.glassTint,
+      dark: theme.brightness == Brightness.dark,
+      size: size,
+    );
+    final colour = ColorFilter.matrix(glassBackdropMatrix(material));
+    final blur = glassBlur(_side);
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -168,21 +173,12 @@ class _GlassSurfaceState extends State<GlassSurface> {
           child: ClipPath(
             clipper: _SuperellipseClipper(radius),
             child: BackdropFilter(
-              // `--lab-glass-blur` and `--lab-glass-saturate`, by size.
-              filter: ui.ImageFilter.compose(
-                outer: ColorFilter.matrix(
-                  saturateMatrix(
-                    glassSaturate(
-                      dark: theme.brightness == Brightness.dark,
-                      size: size,
-                    ),
-                  ),
-                ),
-                inner: ui.ImageFilter.blur(
-                  sigmaX: glassBlur(_side),
-                  sigmaY: glassBlur(_side),
-                ),
-              ),
+              filter: theme.config.glassBlur
+                  ? ui.ImageFilter.compose(
+                      outer: colour,
+                      inner: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+                    )
+                  : colour,
               child: const SizedBox.expand(),
             ),
           ),
@@ -443,10 +439,10 @@ class _FloatingLayerState extends State<FloatingLayer> {
       }
       return GlassLayer(
         child: DefaultTextStyle.merge(
-          // `.lab-floating-root`: 13px / 1.5 in the ink colour.
+          // `.lab-floating-root`: 13px / 20px in the ink colour.
           style: TextStyle(
             fontSize: 13,
-            height: 1.5,
+            height: 20 / 13,
             color: ThemeProvider.of(context).colors.ink,
           ),
           child: Stack(fit: StackFit.expand, children: [surface]),

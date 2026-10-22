@@ -91,7 +91,7 @@ html[data-lab-theme] .lab-nav-back.lab-control {
   font: inherit;
   font-size: 15px;
   font-weight: 600;
-  line-height: 1.3;
+  line-height: 20px;
   letter-spacing: normal;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -118,6 +118,7 @@ html[data-lab-theme] .lab-nav-back.lab-control {
   font-size: clamp(28px, 6cqi, 34px);
   font-weight: 600;
   line-height: 1.15;
+  line-height: round(1.15em, 1px);
   letter-spacing: -0.015em;
   outline: none;
   overflow-wrap: anywhere;
@@ -125,7 +126,7 @@ html[data-lab-theme] .lab-nav-back.lab-control {
 .lab-nav-subtitle {
   color: var(--lab-muted);
   font-size: 15px;
-  line-height: 1.45;
+  line-height: 22px;
 }
 
 @container lab-nav-stack (max-width: 560px) {

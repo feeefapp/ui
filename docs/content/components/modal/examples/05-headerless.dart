@@ -46,7 +46,7 @@ class _HeaderlessState extends State<Headerless> {
                     fontSize: 20,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 20 * -0.035,
-                    height: 1.12,
+                    height: 22 / 20,
                   ),
                 ),
               ),

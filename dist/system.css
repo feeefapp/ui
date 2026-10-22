@@ -1,8 +1,14 @@
 /* Lab UI contract. Theme owns colors; this file owns shared geometry and controls.
 Geometry follows the theme config (theme-config.ts): every radius is multiplied by
---lab-radius-scale, and data-lab-density='compact' or 'thin' swaps the size tokens below. */
+--lab-corner-scale (--lab-radius-scale × the corner fit), and data-lab-density='compact' or 'thin' swaps the size tokens below. */
 html[data-lab-theme] {
   --lab-radius-scale: 1;
+  /* Corners are superellipse(1.5). A browser without corner-shape draws quarter circles, which look
+  rounder at the same radius; 0.76 × the radius is the circle closest to the superellipse (measured
+  in Chrome against corner-shape at 12–44px). Radii multiply by --lab-corner-scale, never by the
+  raw --lab-radius-scale, so both renderings show the same corner. */
+  --lab-corner-fit: 1;
+  --lab-corner-scale: calc(var(--lab-radius-scale, 1) * var(--lab-corner-fit));
   /* Opacity of the scaffold's ambient pixel field (0 turns it off). */
   --lab-ground-pixels-opacity: 0.18;
   --lab-space-1: 4px;
@@ -11,12 +17,12 @@ html[data-lab-theme] {
   --lab-space-4: 16px;
   --lab-space-6: 24px;
   --lab-space-8: 32px;
-  --lab-radius-control: calc(18px * var(--lab-radius-scale, 1));
-  --lab-radius-control-compact: calc(14px * var(--lab-radius-scale, 1));
-  --lab-radius-group: calc(20px * var(--lab-radius-scale, 1));
-  --lab-radius-panel: calc(24px * var(--lab-radius-scale, 1));
-  --lab-radius-glass: calc(32px * var(--lab-radius-scale, 1));
-  --lab-radius-small: calc(12px * var(--lab-radius-scale, 1));
+  --lab-radius-control: calc(18px * var(--lab-corner-scale, 1));
+  --lab-radius-control-compact: calc(14px * var(--lab-corner-scale, 1));
+  --lab-radius-group: calc(20px * var(--lab-corner-scale, 1));
+  --lab-radius-panel: calc(24px * var(--lab-corner-scale, 1));
+  --lab-radius-glass: calc(32px * var(--lab-corner-scale, 1));
+  --lab-radius-small: calc(12px * var(--lab-corner-scale, 1));
   /* Desktop sizes; coarse pointers keep --lab-control-touch-target. */
   --lab-control-small: 36px;
   --lab-row-height: 44px;
@@ -41,14 +47,39 @@ html[data-lab-theme] {
   --lab-control-border: color-mix(in srgb, var(--lab-ink) 15%, var(--lab-surface));
   --lab-control-hover: color-mix(in srgb, var(--lab-ink) 5%, var(--lab-surface));
   --lab-control-pressed: color-mix(in srgb, var(--lab-ink) 10%, var(--lab-surface));
-  --lab-glass-fill: color-mix(in srgb, var(--lab-surface) 76%, transparent);
-  /* Glass without backdrop blur (ThemeConfig glassRenderer 'fill'): denser, so text behind stays quiet. */
-  --lab-glass-fill-flat: color-mix(in srgb, var(--lab-surface) 93%, transparent);
-  --lab-glass-edge-light: rgb(255 255 255 / 76%);
-  --lab-glass-edge-low: rgb(255 255 255 / 20%);
+  /* Glass material, fitted to rendered Liquid Glass (research/liquid-glass/FINDINGS.md): the surface
+  veils the saturated, lifted backdrop. --lab-glass-tint (ThemeConfig glassTint, 0 clear … 1 tinted,
+  set on <html> by themeAttributes) moves it from measured clear glass to the measured regular
+  material; the anchors below are regular glass for this scheme, control-sized (up to 72px) and
+  panel-sized. glass/material.ts glassMaterial is the same curve: veil = tint · veil₁, colour kept
+  1 - tint · colour-loss₁ (colour-loss₁ = 1 - (1 - veil₁) · saturate₁), saturate = colour / (1 - veil),
+  shadow = tint · shadow₁, and the clear lift 1.03 · x + 0.076 fades out as tint grows. */
+  --lab-glass-tint: 0.5;
+  --lab-glass-veil: 0.87;
+  --lab-glass-veil-large: 0.71;
+  --lab-glass-colour-loss: 0.285;
+  --lab-glass-colour-loss-large: 0.362;
+  --lab-glass-shadow-alpha: 0.095;
+  --lab-glass-shadow-alpha-small: 0.066;
+  --lab-glass-fill: color-mix(in srgb, var(--lab-surface) calc(var(--lab-glass-tint) * var(--lab-glass-veil) * 100%), transparent);
+  --lab-glass-fill-large: color-mix(in srgb, var(--lab-surface) calc(var(--lab-glass-tint) * var(--lab-glass-veil-large) * 100%), transparent);
+  --lab-glass-saturate: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil)));
+  --lab-glass-saturate-large: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss-large)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil-large)));
+  /* The clear lift gain · x + offset (gain 1.03 → 1, offset 0.076 → 0) as contrast() then brightness(). */
+  --lab-glass-lift: contrast(calc((1.03 - 0.03 * var(--lab-glass-tint)) / (1.182 - 0.182 * var(--lab-glass-tint))))
+    brightness(calc(1.182 - 0.182 * var(--lab-glass-tint)));
+  /* Backdrop blur only with ThemeConfig glassBlur (data-lab-glass-blur='on'). */
+  --lab-glass-blur: 0px;
+  --lab-glass-blur-large: 0px;
+  /* Rim light: a base line all round (low) plus light at both ends of the light axis (light). */
+  --lab-glass-edge-light: rgb(255 255 255 / 62%);
+  --lab-glass-edge-low: rgb(255 255 255 / 27%);
+  --lab-glass-rim-base: 0.27;
+  --lab-glass-rim-peak: 0.718;
   --lab-glass-shadow: 0 8px 24px -14px rgb(0 0 0 / 18%);
-  /* Shadow under a GlassContainer's merged outline (offset 6px, blur 7px). */
-  --lab-glass-shadow-color: rgb(0 0 0 / 10%);
+  /* Shadow under a GlassContainer's merged outline (7.5px down, blur 19.5px); lighter under controls. */
+  --lab-glass-shadow-color: rgb(0 0 0 / calc(var(--lab-glass-tint) * var(--lab-glass-shadow-alpha)));
+  --lab-glass-shadow-small: rgb(0 0 0 / calc(var(--lab-glass-tint) * var(--lab-glass-shadow-alpha-small)));
   /* Light that spreads from a finger pressing glass. */
   --lab-glass-glow: rgb(255 255 255 / 45%);
   --lab-glass-light: inset 0 1px 0 var(--lab-glass-edge-low), inset 0 -1px 0 rgb(0 0 0 / 6%);
@@ -57,11 +88,23 @@ html[data-lab-theme] {
   --lab-control-depth: 0 2px 6px rgb(0 0 0 / 8%);
   --lab-control-raised-shadow: inset 0 1px 0 var(--lab-control-highlight), var(--lab-control-depth);
 }
+@supports not (corner-shape: superellipse(1.5)) {
+  html[data-lab-theme] {
+    --lab-corner-fit: 0.76;
+  }
+}
 html[data-lab-theme='dark'] {
-  --lab-glass-edge-light: rgb(255 255 255 / 30%);
-  --lab-glass-edge-low: rgb(255 255 255 / 10%);
+  --lab-glass-veil: 0.75;
+  --lab-glass-veil-large: 0.72;
+  --lab-glass-colour-loss: 0.275;
+  --lab-glass-colour-loss-large: 0.328;
+  --lab-glass-edge-light: rgb(255 255 255 / 13%);
+  --lab-glass-edge-low: rgb(255 255 255 / 14%);
+  --lab-glass-rim-base: 0.139;
+  --lab-glass-rim-peak: 0.246;
   --lab-glass-shadow: 0 8px 24px -14px rgb(0 0 0 / 40%);
-  --lab-glass-shadow-color: rgb(0 0 0 / 26%);
+  --lab-glass-shadow-alpha: 0.14;
+  --lab-glass-shadow-alpha-small: 0.033;
   --lab-glass-glow: rgb(255 255 255 / 16%);
   --lab-danger: #ffb4ab;
   --lab-on-danger: #571812;
@@ -159,7 +202,7 @@ html[data-lab-theme='dark'] {
 .lab-label {
   font-size: 13px;
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 20px;
 }
 /* Explicit variants override legacy page classes. New controls must use this API. */
 /* Paint defaults sit in :where() so variant recipes (control-variants.css) and page
@@ -213,10 +256,13 @@ html[data-lab-theme] .lab-control[data-variant='destructive'] {
   color: var(--lab-danger);
 }
 /* Borderless secondary commands share a toolbar's group material. A primary
-action remains prominent even when it is placed in that same toolbar. */
+action remains prominent even when it is placed in that same toolbar, and a toggle that is on keeps
+its selected fill. */
 html[data-lab-theme]
   .lab-control[data-control-appearance='toolbar']:not([data-variant='primary']):not(
-    [data-variant='filled']
+    [data-variant='filled'],
+    [aria-pressed='true'],
+    [data-state='on']
   ) {
   --lab-control-fill: transparent;
   --lab-control-edge: transparent;
@@ -343,11 +389,10 @@ html[data-lab-density='thin'][data-lab-theme] .lab-control[data-variant] {
     --lab-duration-normal: 0ms;
   }
 }
-/* ThemeConfig glassRenderer: 'fill' (default) paints glass without backdrop blur, for speed. */
-html[data-lab-theme][data-lab-glass-renderer='fill'] .lab-glass-group {
-  background: var(--lab-glass-fill-flat);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+/* ThemeConfig glassBlur: the measured blur (2.9px on controls, 5.2px on panels). */
+html[data-lab-theme][data-lab-glass-blur='on'] {
+  --lab-glass-blur: 2.9px;
+  --lab-glass-blur-large: 5.2px;
 }
 /* ThemeConfig glass: 'solid' makes every glass group an opaque surface without the light rim. */
 html[data-lab-theme][data-lab-glass='solid'] .lab-glass-group {
@@ -362,6 +407,18 @@ html[data-lab-glass='solid'] .lab-light-edge::after {
 @supports not (backdrop-filter: blur(1px)) {
   html[data-lab-theme] .lab-glass-group {
     background: var(--lab-surface);
+  }
+}
+/* Increased contrast: opaque chrome with a contrasting outline, no rim light. */
+@media (prefers-contrast: more) {
+  html[data-lab-theme] .lab-glass-group {
+    background: var(--lab-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-color: var(--lab-ink);
+  }
+  .lab-light-edge::after {
+    display: none;
   }
 }
 @media (prefers-reduced-transparency: reduce) {
@@ -433,7 +490,9 @@ html[data-lab-glass='solid'] .lab-light-edge::after {
   margin: 0;
   font-weight: 500;
   letter-spacing: -0.035em;
+  /* 1.12em snapped to whole px: Flutter rounds every line box, so fractional ones drift. */
   line-height: 1.12;
+  line-height: round(1.12em, 1px);
 }
 .lab-app p {
   margin: 0;
@@ -558,7 +617,7 @@ html[data-lab-theme] .lab-dialog {
   overflow: auto;
   position: fixed;
   margin: auto;
-  font: 15px/1.5 var(--lab-font);
+  font: 15px/23px var(--lab-font);
 }
 .lab-dialog::backdrop {
   background: rgb(12 24 17 / 40%);
@@ -630,7 +689,7 @@ slots keep their own material; this surface adds no border, shadow or blur. */
 .lab-dialog .lab-modal-title {
   font-size: 17px;
   font-weight: 600;
-  line-height: 1.4;
+  line-height: 24px;
   letter-spacing: -0.02em;
   overflow-wrap: anywhere;
 }
@@ -755,7 +814,7 @@ html[data-lab-theme] .lab-control[data-control-size='icon'][data-icon-size='comp
 
 /* Inline text actions follow the surrounding font metrics. */
 html[data-lab-theme] .lab-control[data-control-size='icon'][data-icon-size='inline'] {
- width: 1em; min-width: 1em; height: 1em; min-height: 1em; padding: 0; border: 0; border-radius: calc(3px * var(--lab-radius-scale, 1)); font-size: inherit;
+ width: 1em; min-width: 1em; height: 1em; min-height: 1em; padding: 0; border: 0; border-radius: calc(3px * var(--lab-corner-scale, 1)); font-size: inherit;
 }
 
 /* Text for assistive technology only. */

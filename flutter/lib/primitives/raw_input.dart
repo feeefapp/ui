@@ -42,7 +42,7 @@ bool _isLtrStrong(int c) =>
 /// toolbar search); use `TextField` everywhere else.
 ///
 /// It inherits the surrounding text style; its line height is the style's (`line-height: 1.5`
-/// when the style sets none).
+/// when the style sets none), rounded to whole pixels like the web kit's.
 class RawInput extends StatefulWidget {
   const RawInput({
     super.key,
@@ -280,8 +280,9 @@ class RawInputState extends State<RawInput>
     final inherited = DefaultTextStyle.of(context).style;
     var style = inherited.merge(widget.style);
     final fontSize = style.fontSize ?? 14;
-    // `.lab-raw-editor { line-height: 1.5 }` unless the host sets one.
-    final lineHeight = (style.height ?? 1.5) * fontSize;
+    // `.lab-raw-editor { line-height: round(1.5em, 1px) }` unless the host sets one. Whole px:
+    // Flutter rounds every line box, so a fractional one would drift from the web kit.
+    final lineHeight = ((style.height ?? 1.5) * fontSize).roundToDouble();
     style = style.copyWith(
       height: lineHeight / fontSize,
       leadingDistribution: TextLeadingDistribution.even,

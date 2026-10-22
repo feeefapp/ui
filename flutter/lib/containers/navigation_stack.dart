@@ -1388,7 +1388,7 @@ class _NavigationPageState extends State<NavigationPage> {
       final heading = DefaultTextStyle.merge(
         style: const TextStyle(
           fontSize: 15,
-          height: 1.3,
+          height: 20 / 15,
           leadingDistribution: TextLeadingDistribution.even,
           fontWeight: FontWeight.w600,
         ),
@@ -1397,7 +1397,7 @@ class _NavigationPageState extends State<NavigationPage> {
         overflow: TextOverflow.ellipsis,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: CssBaseline(lineHeight: 19.5, child: Text(widget.title)),
+          child: CssBaseline(lineHeight: 20, child: Text(widget.title)),
         ),
       );
       header = ScaffoldAppBar(
@@ -1490,7 +1490,8 @@ class _NavigationPageState extends State<NavigationPage> {
                           key: _heading,
                           style: TextStyle(
                             fontSize: size,
-                            height: 1.15,
+                            // `line-height: round(1.15em, 1px)`.
+                            height: (size * 1.15).roundToDouble() / size,
                             leadingDistribution: TextLeadingDistribution.even,
                             fontWeight: FontWeight.w600,
                             letterSpacing: size * -0.015,
@@ -1506,7 +1507,7 @@ class _NavigationPageState extends State<NavigationPage> {
                     style: TextStyle(
                       color: c.muted,
                       fontSize: 15,
-                      height: 1.45,
+                      height: 22 / 15,
                       leadingDistribution: TextLeadingDistribution.even,
                     ),
                     child: widget.subtitle!,

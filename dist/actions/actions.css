@@ -105,7 +105,7 @@ html[data-lab-theme]
   background: var(--lab-surface);
   color: var(--lab-ink);
   box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
-  font: 400 14px/1.4 var(--lab-font);
+  font: 400 14px/20px var(--lab-font);
   transform-origin: var(--radix-dropdown-menu-content-transform-origin);
   animation: lab-actions-menu-enter var(--lab-duration-fast) var(--lab-ease);
 }
@@ -116,7 +116,7 @@ html[data-lab-theme]
   gap: var(--lab-space-2);
   min-block-size: var(--lab-control-compact);
   padding: var(--lab-space-2) var(--lab-space-3);
-  border-radius: calc(10px * var(--lab-radius-scale, 1));
+  border-radius: calc(10px * var(--lab-corner-scale, 1));
   corner-shape: superellipse(1.5);
   outline: none;
   cursor: default;

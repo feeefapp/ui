@@ -21,6 +21,11 @@ export function Carousel({ children, label, slideWidth = 0.82, gap = 12, align =
     const slides = React.Children.toArray(children).filter(React.isValidElement);
     const track = React.useRef(null);
     const [current, setCurrent] = React.useState(controlled ?? 0);
+    // `auto` controls show while a mouse is over the frame or focus is inside it. CSS fades the
+    // group, but the glass material is drawn by the scope, so hidden controls also drop their glass.
+    const [hovered, setHovered] = React.useState(false);
+    const [focusWithin, setFocusWithin] = React.useState(false);
+    const concealed = controls === 'auto' && !hovered && !focusWithin;
     const live = React.useRef({ current, onIndexChange, effect, align });
     live.current = { current, onIndexChange, effect, align };
     const slideEls = () => (track.current ? Array.from(track.current.children) : []);
@@ -137,7 +142,16 @@ export function Carousel({ children, label, slideWidth = 0.82, gap = 12, align =
             return;
         event.preventDefault();
     };
-    const width = typeof slideWidth === 'number' ? `${slideWidth * 100}%` : slideWidth;
-    return (_jsxs("section", { className: cn('lab-carousel', className), "aria-roledescription": "carousel", "aria-label": label, "data-controls": controls, "data-effect": effect, style: { '--lab-carousel-slide': width, '--lab-carousel-gap': `${gap}px` }, children: [_jsxs("div", { className: "lab-carousel-frame", children: [_jsx("div", { ref: track, className: "lab-carousel-track", "data-align": align, tabIndex: 0, "aria-label": `${label}, slide ${current + 1} of ${slides.length}`, onKeyDown: onKeyDown, children: slides.map((slide, i) => (_jsx("div", { className: "lab-carousel-slide", role: "group", "aria-roledescription": "slide", "aria-label": `${i + 1} of ${slides.length}`, children: _jsx("div", { className: "lab-carousel-slide-body", children: slide }) }, slide.key ?? i))) }), controls !== 'never' && slides.length > 1 && (_jsxs(GlassScope, { className: "lab-carousel-controls", children: [_jsx(ToolbarGroup, { label: "Previous slide", className: "lab-carousel-control", "data-side": "start", "data-glass-hidden": current === 0 ? '' : undefined, children: _jsx(IconButton, { variant: "text", appearance: "toolbar", "aria-label": "Previous slide", disabled: current === 0, onClick: () => go(current - 1), children: _jsx(ChevronLeft, { className: "lab-dir-flip" }) }) }), _jsx(ToolbarGroup, { label: "Next slide", className: "lab-carousel-control", "data-side": "end", "data-glass-hidden": current === slides.length - 1 ? '' : undefined, children: _jsx(IconButton, { variant: "text", appearance: "toolbar", "aria-label": "Next slide", disabled: current === slides.length - 1, onClick: () => go(current + 1), children: _jsx(ChevronRight, { className: "lab-dir-flip" }) }) })] }))] }), dots && slides.length > 1 && (_jsx("div", { className: "lab-carousel-dots", role: "group", "aria-label": `${label} slides`, children: slides.map((_, i) => (_jsx("button", { type: "button", className: "lab-carousel-dot", "aria-label": `Go to slide ${i + 1}`, "aria-current": i === current || undefined, onClick: () => go(i) }, i))) }))] }));
+    // Fractions and percentages are of the frame (cqw), not of the padded track's content box, so a
+    // centred slide really is centred.
+    const width = typeof slideWidth === 'number'
+        ? `${slideWidth * 100}cqw`
+        : slideWidth.trim().endsWith('%')
+            ? `${Number.parseFloat(slideWidth)}cqw`
+            : slideWidth;
+    return (_jsxs("section", { className: cn('lab-carousel', className), "aria-roledescription": "carousel", "aria-label": label, "data-controls": controls, "data-effect": effect, style: { '--lab-carousel-slide': width, '--lab-carousel-gap': `${gap}px` }, children: [_jsxs("div", { className: "lab-carousel-frame", onPointerEnter: (event) => event.pointerType !== 'touch' && setHovered(true), onPointerLeave: () => setHovered(false), onFocus: () => setFocusWithin(true), onBlur: (event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget))
+                        setFocusWithin(false);
+                }, children: [_jsx("div", { ref: track, className: "lab-carousel-track", "data-align": align, tabIndex: 0, "aria-label": `${label}, slide ${current + 1} of ${slides.length}`, onKeyDown: onKeyDown, children: slides.map((slide, i) => (_jsx("div", { className: "lab-carousel-slide", role: "group", "aria-roledescription": "slide", "aria-label": `${i + 1} of ${slides.length}`, children: _jsx("div", { className: "lab-carousel-slide-body", children: slide }) }, slide.key ?? i))) }), controls !== 'never' && slides.length > 1 && (_jsxs(GlassScope, { className: "lab-carousel-controls", children: [_jsx(ToolbarGroup, { label: "Previous slide", className: "lab-carousel-control", "data-side": "start", "data-glass-hidden": concealed || current === 0 ? '' : undefined, children: _jsx(IconButton, { variant: "text", appearance: "toolbar", "aria-label": "Previous slide", disabled: current === 0, onClick: () => go(current - 1), children: _jsx(ChevronLeft, { className: "lab-dir-flip" }) }) }), _jsx(ToolbarGroup, { label: "Next slide", className: "lab-carousel-control", "data-side": "end", "data-glass-hidden": concealed || current === slides.length - 1 ? '' : undefined, children: _jsx(IconButton, { variant: "text", appearance: "toolbar", "aria-label": "Next slide", disabled: current === slides.length - 1, onClick: () => go(current + 1), children: _jsx(ChevronRight, { className: "lab-dir-flip" }) }) })] }))] }), dots && slides.length > 1 && (_jsx("div", { className: "lab-carousel-dots", role: "group", "aria-label": `${label} slides`, children: slides.map((_, i) => (_jsx("button", { type: "button", className: "lab-carousel-dot", "aria-label": `Go to slide ${i + 1}`, "aria-current": i === current || undefined, onClick: () => go(i) }, i))) }))] }));
 }
 //# sourceMappingURL=carousel.js.map

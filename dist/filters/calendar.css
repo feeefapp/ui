@@ -113,7 +113,7 @@ html[data-lab-theme] .lab-calendar-heading .lab-calendar-title.lab-control {
   margin: 0;
   padding: 0;
   border: 0;
-  border-radius: calc(20px * var(--lab-radius-scale, 1));
+  border-radius: calc(20px * var(--lab-corner-scale, 1));
   corner-shape: superellipse(1.5);
   background: transparent;
   color: var(--lab-ink);
@@ -192,7 +192,7 @@ html[data-lab-theme] .lab-calendar-heading .lab-calendar-title.lab-control {
   margin: 0;
   color: var(--lab-muted);
   font-size: 13px;
-  line-height: 1.4;
+  line-height: 18px;
 }
 html[data-lab-theme] .lab-temporal-actions.lab-toolbar-group {
   margin-inline-start: auto;

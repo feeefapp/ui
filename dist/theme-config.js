@@ -1,10 +1,13 @@
+import { clampGlassTint, GLASS_TINT_DEFAULT } from './glass/material.js';
 /** The config every unset option falls back to. `primary` unset means the palette's own color. */
 export const THEME_DEFAULTS = {
     palette: 'lab',
     density: 'comfortable',
     radius: 1,
     glass: 'liquid',
-    glassRenderer: 'fill',
+    glassTint: GLASS_TINT_DEFAULT,
+    glassBlur: false,
+    glassRefraction: true,
 };
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 /** `#abc` / `#aabbcc` → [r, g, b] in 0–255, or null for anything else. */
@@ -40,14 +43,19 @@ function resolve(config = {}) {
         palette: config.palette ?? THEME_DEFAULTS.palette,
         density: config.density ?? THEME_DEFAULTS.density,
         glass: config.glass ?? THEME_DEFAULTS.glass,
-        glassRenderer: config.glassRenderer ?? THEME_DEFAULTS.glassRenderer,
+        glassTint: clampGlassTint(config.glassTint),
+        glassBlur: config.glassBlur ?? THEME_DEFAULTS.glassBlur,
+        glassRefraction: config.glassRefraction ?? THEME_DEFAULTS.glassRefraction,
         radius,
         primary: config.primary && parseHexColor(config.primary) ? config.primary.toLowerCase() : null,
     };
 }
 /** The CSS variables a config sets on `<html>`. */
 function variables(theme) {
-    const vars = { '--lab-radius-scale': String(theme.radius) };
+    const vars = {
+        '--lab-radius-scale': String(theme.radius),
+        '--lab-glass-tint': String(theme.glassTint),
+    };
     const rgb = theme.primary && parseHexColor(theme.primary);
     if (rgb) {
         vars['--lab-seed'] = theme.primary;
@@ -58,8 +66,10 @@ function variables(theme) {
 }
 /**
  * Attributes for the root `<html>` element (React props), e.g. in a Next.js root layout:
- * `data-lab-palette`, `data-lab-density`, `data-lab-glass`, `data-lab-glass-renderer`, `data-lab-primary` (when set) and the style variables.
- * Unset options use `THEME_DEFAULTS`; `radius` is clamped to 0–1.5 and an invalid `primary`
+ * `data-lab-palette`, `data-lab-density`, `data-lab-glass`, `data-lab-glass-blur`,
+ * `data-lab-glass-refraction`, `data-lab-primary` (when set) and the style variables
+ * (`--lab-radius-scale`, `--lab-glass-tint`, the seed colours).
+ * Unset options use `THEME_DEFAULTS`; `radius` is clamped to 0–1.5, `glassTint` to 0–1, and an invalid `primary`
  * is ignored. Color mode (`data-lab-theme`) is not included; `ThemeProvider` sets it.
  */
 export function themeAttributes(config) {
@@ -68,7 +78,8 @@ export function themeAttributes(config) {
         'data-lab-palette': theme.palette,
         'data-lab-density': theme.density,
         'data-lab-glass': theme.glass,
-        'data-lab-glass-renderer': theme.glassRenderer,
+        'data-lab-glass-blur': theme.glassBlur ? 'on' : 'off',
+        'data-lab-glass-refraction': theme.glassRefraction ? 'on' : 'off',
         ...(theme.primary ? { 'data-lab-primary': '' } : {}),
         style: variables(theme),
     };
@@ -83,7 +94,8 @@ export function applyThemeConfig(element, config) {
     element.setAttribute('data-lab-palette', theme.palette);
     element.setAttribute('data-lab-density', theme.density);
     element.setAttribute('data-lab-glass', theme.glass);
-    element.setAttribute('data-lab-glass-renderer', theme.glassRenderer);
+    element.setAttribute('data-lab-glass-blur', theme.glassBlur ? 'on' : 'off');
+    element.setAttribute('data-lab-glass-refraction', theme.glassRefraction ? 'on' : 'off');
     if (theme.primary)
         element.setAttribute('data-lab-primary', '');
     else

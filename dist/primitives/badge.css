@@ -6,11 +6,11 @@
   gap: 3px;
   padding: 1px 4px;
   border: 1px solid color-mix(in srgb, var(--lab-primary) 22%, var(--lab-surface));
-  border-radius: calc(5px * var(--lab-radius-scale, 1));
+  border-radius: calc(5px * var(--lab-corner-scale, 1));
   corner-shape: superellipse(1.5);
   background: color-mix(in srgb, var(--lab-primary) 8%, var(--lab-surface));
   color: var(--lab-focus);
-  font: 500 9px/1.5 var(--lab-font, inherit);
+  font: 500 9px/14px var(--lab-font, inherit);
   letter-spacing: 0.025em;
   vertical-align: middle;
   white-space: nowrap;

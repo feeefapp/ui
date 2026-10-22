@@ -23,11 +23,13 @@ ancestors: they would stop the backdrop blur from seeing the page. */
   position: absolute;
   box-sizing: border-box;
   corner-shape: superellipse(1.5);
-  /* Our fit of rendered Liquid Glass (research/liquid-glass): a light blur (the scene sets
-  --lab-glass-blur per cluster from its size), strong saturation, then the surface veil. */
+  /* Our fit of rendered Liquid Glass (research/liquid-glass), at the theme's tint: the blur when
+  ThemeConfig glassBlur is on (the scene sets --lab-glass-blur per cluster from its size, 0 when
+  off), saturation, the clear lift, then the surface veil. Refraction (Chromium) replaces this
+  backdrop-filter with an SVG filter doing the same plus the bend once the glass settles. */
   background: var(--lab-glass-fill);
-  backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate));
-  -webkit-backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate));
+  backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate)) var(--lab-glass-lift);
+  -webkit-backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate)) var(--lab-glass-lift);
 }
 .lab-glass-backdrop[data-glass-size='large'] {
   --lab-glass-saturate: var(--lab-glass-saturate-large);
@@ -92,6 +94,8 @@ painting each bubble over the container's edge and light. */
 @media (prefers-contrast: more) {
   .lab-glass-backdrop {
     background: var(--lab-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
   .lab-glass-edge {
     stroke: var(--lab-ink);
@@ -129,9 +133,16 @@ html[data-lab-glass='solid'] .lab-glass-edge {
 }
 
 /* Adaptive tint: the scene sets data-glass-backdrop when small glass sits over content of the
-opposite tone. Neutral tokens, then every token derived from them is declared again here, because
-custom properties derived on <html> keep the values computed there. */
+opposite tone. Neutral tokens and that tone's measured anchors, then every token derived from them
+is declared again here, because custom properties derived on <html> keep the values computed there.
+The material formulas are system.css's (glass/material.ts glassMaterial). */
 .lab-glass-container[data-glass-backdrop] {
+  --lab-glass-fill: color-mix(in srgb, var(--lab-surface) calc(var(--lab-glass-tint) * var(--lab-glass-veil) * 100%), transparent);
+  --lab-glass-fill-large: color-mix(in srgb, var(--lab-surface) calc(var(--lab-glass-tint) * var(--lab-glass-veil-large) * 100%), transparent);
+  --lab-glass-saturate: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil)));
+  --lab-glass-saturate-large: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss-large)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil-large)));
+  --lab-glass-shadow-color: rgb(0 0 0 / calc(var(--lab-glass-tint) * var(--lab-glass-shadow-alpha)));
+  --lab-glass-shadow-small: rgb(0 0 0 / calc(var(--lab-glass-tint) * var(--lab-glass-shadow-alpha-small)));
   --lab-control-surface: var(--lab-surface);
   --lab-control-border: color-mix(in srgb, var(--lab-ink) 15%, var(--lab-surface));
   --lab-control-hover: color-mix(in srgb, var(--lab-ink) 6%, var(--lab-surface));
@@ -146,14 +157,16 @@ custom properties derived on <html> keep the values computed there. */
   --lab-ink: #f2f5f0;
   --lab-muted: #b7c0b4;
   --lab-line: rgb(255 255 255 / 16%);
-  --lab-glass-fill: color-mix(in srgb, #1d211e 75%, transparent);
-  --lab-glass-fill-large: color-mix(in srgb, #1d211e 72%, transparent);
-  --lab-glass-saturate: 2.9;
-  --lab-glass-fill-flat: color-mix(in srgb, #1d211e 90%, transparent);
+  --lab-glass-veil: 0.75;
+  --lab-glass-veil-large: 0.72;
+  --lab-glass-colour-loss: 0.275;
+  --lab-glass-colour-loss-large: 0.328;
+  --lab-glass-shadow-alpha: 0.14;
+  --lab-glass-shadow-alpha-small: 0.033;
   --lab-glass-edge-light: rgb(255 255 255 / 13%);
   --lab-glass-edge-low: rgb(255 255 255 / 14%);
-  --lab-glass-shadow-color: rgb(0 0 0 / 14%);
-  --lab-glass-shadow-small: rgb(0 0 0 / 3.3%);
+  --lab-glass-rim-base: 0.139;
+  --lab-glass-rim-peak: 0.246;
   --lab-glass-glow: rgb(255 255 255 / 18%);
   --lab-control-highlight: rgb(255 255 255 / 20%);
 }
@@ -163,14 +176,16 @@ custom properties derived on <html> keep the values computed there. */
   --lab-ink: #151a16;
   --lab-muted: #5d675a;
   --lab-line: rgb(0 0 0 / 12%);
-  --lab-glass-fill: color-mix(in srgb, #fbfcfa 87%, transparent);
-  --lab-glass-fill-large: color-mix(in srgb, #fbfcfa 71%, transparent);
-  --lab-glass-saturate: 5.5;
-  --lab-glass-fill-flat: color-mix(in srgb, #fbfcfa 93%, transparent);
+  --lab-glass-veil: 0.87;
+  --lab-glass-veil-large: 0.71;
+  --lab-glass-colour-loss: 0.285;
+  --lab-glass-colour-loss-large: 0.362;
+  --lab-glass-shadow-alpha: 0.095;
+  --lab-glass-shadow-alpha-small: 0.066;
   --lab-glass-edge-light: rgb(255 255 255 / 62%);
   --lab-glass-edge-low: rgb(255 255 255 / 27%);
-  --lab-glass-shadow-color: rgb(0 0 0 / 9.5%);
-  --lab-glass-shadow-small: rgb(0 0 0 / 6.6%);
+  --lab-glass-rim-base: 0.27;
+  --lab-glass-rim-peak: 0.718;
   --lab-glass-glow: rgb(255 255 255 / 45%);
   --lab-control-highlight: rgb(255 255 255 / 76%);
 }
@@ -192,9 +207,58 @@ custom properties derived on <html> keep the values computed there. */
   }
 }
 
-/* ThemeConfig glassRenderer: 'fill' (default) skips the backdrop blur, the costly part. */
-html[data-lab-glass-renderer='fill'] .lab-glass-backdrop {
-  background: var(--lab-glass-fill-flat);
+
+/* Each reflected segment is shaded by its surface normal, not its position in the box. */
+.lab-glass-rim-reflection {
+  stroke: var(--lab-glass-edge-light);
+}
+
+/* A convex bevel catches light across a soft band, rather than a one-pixel outline. */
+.lab-glass-surface-highlight {
+  fill: var(--lab-glass-edge-light);
+  fill: rgb(from var(--lab-glass-edge-light) r g b / calc(alpha * 2.5 + 0.24));
+  stroke: none;
+}
+
+.lab-glass-surface-shade {
+  fill: var(--lab-glass-shadow-color);
+  fill: rgb(from var(--lab-glass-shadow-color) r g b / calc(alpha * 2));
+  stroke: none;
+}
+
+/* Recompute derived colours locally: root custom-property formulas otherwise keep root tint. */
+.lab-glass-container[data-glass-local-tint] {
+  --lab-glass-fill: color-mix(in srgb, var(--lab-surface) calc(var(--lab-glass-tint) * var(--lab-glass-veil) * 100%), transparent);
+  --lab-glass-fill-large: color-mix(in srgb, var(--lab-surface) calc(var(--lab-glass-tint) * var(--lab-glass-veil-large) * 100%), transparent);
+  --lab-glass-saturate: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil)));
+  --lab-glass-saturate-large: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss-large)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil-large)));
+  --lab-glass-lift: contrast(calc((0.924 + 0.076 * var(--lab-glass-tint)) / (1.076 - 0.076 * var(--lab-glass-tint)))) brightness(calc(1.076 - 0.076 * var(--lab-glass-tint)));
+  --lab-glass-shadow-color: rgb(0 0 0 / calc(var(--lab-glass-tint) * var(--lab-glass-shadow-alpha)));
+  --lab-glass-shadow-small: rgb(0 0 0 / calc(var(--lab-glass-tint) * var(--lab-glass-shadow-alpha-small)));
+}
+
+.lab-glass-reflection-layer { pointer-events: none; }
+.lab-glass-reflection-canvas { position: absolute; pointer-events: none; }
+
+/* Firefox samples a separate live paint layer; the shared SVG optics run as a normal filter. */
+.lab-glass-backdrop[data-glass-source] {
+  background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
+.lab-glass-source { position: absolute; inset: 0; background-repeat: no-repeat; pointer-events: none; }
+.lab-glass-backdrop[data-glass-source]::after {
+  content: ''; position: absolute; inset: 0; background: var(--lab-glass-fill); pointer-events: none;
+}
+.lab-glass-backdrop[data-glass-source][data-glass-size='large']::after { background: var(--lab-glass-fill-large); }
+.lab-glass-backdrop[data-glass-source]::after { border-radius: inherit; corner-shape: inherit; }
+
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .lab-glass-source { display: none; }
+  .lab-glass-backdrop[data-glass-source]::after { background: var(--lab-surface); }
+}
+html[data-lab-glass='solid'] .lab-glass-source { display: none; }
+html[data-lab-glass='solid'] .lab-glass-backdrop[data-glass-source]::after { background: var(--lab-surface); }
+
+/* Circular glass must share its profile with the native member and the optical renderer. */
+.lab-glass-container[data-glass-corners='round'] [data-glass-member] { corner-shape: round; }

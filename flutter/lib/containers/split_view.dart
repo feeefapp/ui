@@ -385,7 +385,7 @@ class SplitPlaceholder extends StatelessWidget {
                   child: DefaultTextStyle.merge(
                     style: const TextStyle(
                       fontSize: 14,
-                      height: 1.45,
+                      height: 20 / 14,
                       leadingDistribution: TextLeadingDistribution.even,
                     ),
                     child: child!,

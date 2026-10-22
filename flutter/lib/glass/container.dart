@@ -31,7 +31,8 @@ const _spring = Springs.snappy;
 /// Apple's GlassEffectContainer: the twin of `GlassContainer` in `@feeef.dev/ui/glass`. Bubbles
 /// that come within [spacing] bend toward each other and merge; a bubble that splits grows its
 /// parts out of itself; new and removed bubbles materialize. Bubbles keep their layout, focus and
-/// semantics; only the paint moves here. The theme's `glass` and `glassRenderer` set the style.
+/// semantics; only the paint moves here. The theme's `glass` sets the style; `glassTint`,
+/// `glassBlur` and `glassRefraction` set the material. More contrast (MediaQuery) makes it solid.
 class GlassContainer extends StatefulWidget {
   const GlassContainer({
     super.key,
@@ -250,7 +251,8 @@ class _GlassContainerState extends State<GlassContainer> {
   Widget _build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    final liquid = theme.config.glass == GlassStyle.liquid;
+    final style = glassStyleOf(context);
+    final liquid = style == GlassStyle.liquid;
     _scene
       ..spacing = math.max(0, widget.spacing)
       ..reduceMotion = reduced
@@ -259,8 +261,11 @@ class _GlassContainerState extends State<GlassContainer> {
     _scene._requestMeasure();
     final material = _GlassMaterial(
       colors: theme.colors,
-      style: theme.config.glass,
-      renderer: theme.config.glassRenderer,
+      style: style,
+      tint: theme.colors.glassTint,
+      blur: theme.config.glassBlur,
+      refraction: theme.config.glassRefraction,
+      highContrast: glassHighContrastOf(context),
       brightness: theme.brightness,
     );
     return _GlassRegistryScope(
@@ -287,23 +292,25 @@ class _GlassMaterial {
   const _GlassMaterial({
     required this.colors,
     required this.style,
-    required this.renderer,
+    required this.tint,
+    required this.blur,
+    required this.refraction,
+    required this.highContrast,
     required this.brightness,
   });
   final ColorTokens colors;
   final GlassStyle style;
-  final GlassRenderer renderer;
+  final double tint;
+  final bool blur, refraction, highContrast;
   final Brightness brightness;
 
-  bool get blurred =>
-      style != GlassStyle.solid && renderer != GlassRenderer.fill;
+  /// Every glass but solid reads the backdrop (saturation and lift, then blur and bend if on).
+  bool get translucent => style != GlassStyle.solid;
   bool get dark => brightness == Brightness.dark;
 
   /// The veil over a cluster whose smallest bubble's shorter side is [side] px.
   Color fillFor(double side) => style == GlassStyle.solid
       ? colors.surface
-      : !blurred
-      ? colors.glassFillFlat
       : glassSize(side) == GlassSize.small
       ? colors.glassFill
       : colors.glassFillLarge;
@@ -311,6 +318,24 @@ class _GlassMaterial {
 
   /// The drawn outline: only solid glass keeps it; liquid glass is defined by rim light and shadow.
   bool get outline => style == GlassStyle.solid;
+
+  /// The outline's colour: the ink when the platform asks for more contrast.
+  Color get outlineColor => highContrast ? colors.ink : colors.line;
+
+  /// The backdrop filter for a cluster whose smallest bubble's shorter side is [side] px:
+  /// saturation and the clear lift, after the blur when it is on.
+  ui.ImageFilter backdropFor(double side) {
+    final colour = ColorFilter.matrix(glassBackdropMatrix(materialFor(side)));
+    if (!blur) return colour;
+    final sigma = glassBlur(side);
+    return ui.ImageFilter.compose(
+      outer: colour,
+      inner: ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+    );
+  }
+
+  GlassMaterial materialFor(double side) =>
+      glassMaterial(tint, dark: dark, size: glassSize(side));
 }
 
 /// Shorter side of the smallest bubble in a cluster: the material and bend follow it.
@@ -330,13 +355,11 @@ class _GlassLayers extends StatelessWidget {
       painter: _GlassPainter(scene, material),
       size: Size.infinite,
     );
-    if (!material.blurred) return paint;
-    // Blurred renderers: one backdrop per cluster, clipped to its outline: a light blur sized to
-    // the cluster, strong saturation, and (canvas renderer on Impeller) the measured refraction.
-    final refract =
-        material.renderer == GlassRenderer.canvas &&
-        GlassRefraction.supported &&
-        !(MediaQuery.maybeHighContrastOf(context) ?? false);
+    if (!material.translucent) return paint;
+    // One backdrop per cluster, clipped to its outline: saturation and the clear lift at the
+    // theme's tint, the blur sized to the cluster when it is on, and (Impeller) the measured
+    // refraction.
+    final refract = material.refraction && GlassRefraction.supported;
     return ListenableBuilder(
       listenable: scene,
       builder: (context, _) => Stack(
@@ -350,28 +373,15 @@ class _GlassLayers extends StatelessWidget {
                     ? GlassRefraction(
                         path: path,
                         spacing: scene.spacing,
-                        blur: glassBlur(_smallestSide(path)),
-                        saturate: glassSaturate(
-                          dark: material.dark,
-                          size: glassSize(_smallestSide(path)),
+                        blur: material.blur
+                            ? glassBlur(_smallestSide(path))
+                            : 0,
+                        colour: glassBackdropMatrix(
+                          material.materialFor(_smallestSide(path)),
                         ),
                       )
                     : BackdropFilter(
-                        // blur() then saturate(): the CSS blur length is the standard deviation.
-                        filter: ui.ImageFilter.compose(
-                          outer: ColorFilter.matrix(
-                            saturateMatrix(
-                              glassSaturate(
-                                dark: material.dark,
-                                size: glassSize(_smallestSide(path)),
-                              ),
-                            ),
-                          ),
-                          inner: ui.ImageFilter.blur(
-                            sigmaX: glassBlur(_smallestSide(path)),
-                            sigmaY: glassBlur(_smallestSide(path)),
-                          ),
-                        ),
+                        filter: material.backdropFor(_smallestSide(path)),
                         child: const SizedBox.expand(),
                       ),
               ),
@@ -449,7 +459,7 @@ class _GlassPainter extends CustomPainter {
           Paint()
             ..style = PaintingStyle.stroke
             ..strokeWidth = 2
-            ..color = c.line,
+            ..color = material.outlineColor,
         );
       }
       if (material.rim) {
@@ -505,7 +515,8 @@ class _GlassPainter extends CustomPainter {
   bool shouldRepaint(_GlassPainter old) =>
       old.scene != scene ||
       old.material.style != material.style ||
-      old.material.renderer != material.renderer ||
+      old.material.tint != material.tint ||
+      old.material.highContrast != material.highContrast ||
       old.material.rim != material.rim ||
       old.material.colors != material.colors;
 }

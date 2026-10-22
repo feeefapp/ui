@@ -187,8 +187,11 @@ The material (blur, saturation, veil, rim, shadow), the refraction profile and t
 our own fit to measured Liquid Glass (`research/liquid-glass/FINDINGS.md`, `data/model.json`); change
 them there first and keep `material.ts`/`refraction.ts`/`geometry.ts`, their Dart twins,
 `shaders/glass_refraction.frag` and the tokens in step.
-ThemeConfig `glass` (liquid/frosted/solid) and `glassRenderer` (css/canvas) are read live from
-`<html>`; canvas refraction (glass/refraction.ts, pure) only runs on settled glass in Chromium.
+ThemeConfig `glass` (liquid/still/solid), `glassTint` (0 clear … 1 tinted, `--lab-glass-tint`),
+`glassBlur` and `glassRefraction` (`data-lab-glass-blur|refraction` on/off) are read live from
+`<html>`; the tint curve is `glassMaterial()` (material.ts / material.dart) and the
+`--lab-glass-*` calc() formulas in system.css + glass.css (tests/glass-tint.test.ts checks the
+anchors); refraction (glass/refraction.ts, pure) only runs on settled glass in Chromium.
 The glass scene measures in the container's own pixels (`hostFrame`), so scaled ancestors (demo
 frames, receding sheets) stay exact; bubbles moved by a running transform/transition/WAAPI animation
 (on them or an ancestor below the container) are followed every frame; departed glass is removed

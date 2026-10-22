@@ -44,13 +44,21 @@ Uint8List backgroundPixels(String kind, int width, int height) {
         final u = x / width, v = y / height;
         var r = 0.55 + 0.25 * v, g = 0.65 + 0.15 * v, b = 0.85 - 0.2 * v;
         for (final (cx, cy, s, c) in blobs) {
-          final d2 = ((u - cx) * (u - cx) * 0.25 + (v - cy) * (v - cy) * 0.25 * 4.6) / (s * s * 0.25);
+          final d2 =
+              ((u - cx) * (u - cx) * 0.25 + (v - cy) * (v - cy) * 0.25 * 4.6) /
+              (s * s * 0.25);
           final w = math.exp(-d2 * 2.2);
           r = r * (1 - w) + c.$1 * w;
           g = g * (1 - w) + c.$2 * w;
           b = b * (1 - w) + c.$3 * w;
         }
-        put(x, y, math.min(255.0, r * 255).truncate(), math.min(255.0, g * 255).truncate(), math.min(255.0, b * 255).truncate());
+        put(
+          x,
+          y,
+          math.min(255.0, r * 255).truncate(),
+          math.min(255.0, g * 255).truncate(),
+          math.min(255.0, b * 255).truncate(),
+        );
       }
     }
   } else if (kind.startsWith('stripes')) {
@@ -63,7 +71,10 @@ Uint8List backgroundPixels(String kind, int width, int height) {
       }
     }
   } else {
-    final value = int.parse(kind.startsWith('flat-') ? kind.substring(5) : '808080', radix: 16);
+    final value = int.parse(
+      kind.startsWith('flat-') ? kind.substring(5) : '808080',
+      radix: 16,
+    );
     for (var y = 0; y < height; y++) {
       for (var x = 0; x < width; x++) {
         put(x, y, (value >> 16) & 255, (value >> 8) & 255, value & 255);
@@ -106,7 +117,9 @@ class _CompareAppState extends State<CompareApp> {
 
   void _load() {
     final pixels = backgroundPixels(_scene['bg'] ?? 'flat-808080', 1206, 2622);
-    ui.decodeImageFromPixels(pixels, 1206, 2622, ui.PixelFormat.rgba8888, (image) {
+    ui.decodeImageFromPixels(pixels, 1206, 2622, ui.PixelFormat.rgba8888, (
+      image,
+    ) {
       if (!mounted) return;
       setState(() => _image = image);
       final shown = _last;
@@ -125,12 +138,27 @@ class _CompareAppState extends State<CompareApp> {
   @override
   Widget build(BuildContext context) {
     final dark = _scene['theme'] == 'dark';
-    final renderer = GlassRenderer.values.byName(_scene['renderer'] ?? 'canvas');
+    // `renderer` names a ThemeConfig preset, as in compare/main.tsx.
+    final renderer = _scene['renderer'] ?? 'canvas';
+    final preset = switch (renderer) {
+      'default' => const ThemeConfig(palette: Palette.mono),
+      'css' => const ThemeConfig(
+        palette: Palette.mono,
+        glassTint: 1,
+        glassBlur: true,
+        glassRefraction: false,
+      ),
+      _ => const ThemeConfig(
+        palette: Palette.mono,
+        glassTint: 1,
+        glassBlur: true,
+      ),
+    };
     return WidgetsApp(
       color: const Color(0xFF000000),
       builder: (context, _) => ThemeProvider(
         brightness: dark ? Brightness.dark : Brightness.light,
-        config: ThemeConfig(palette: Palette.mono, glassRenderer: renderer),
+        config: preset,
         child: Stack(
           children: [
             if (_image != null)
@@ -139,7 +167,11 @@ class _CompareAppState extends State<CompareApp> {
                 top: 0,
                 width: 402,
                 height: 874,
-                child: RawImage(image: _image, fit: BoxFit.fill, filterQuality: FilterQuality.none),
+                child: RawImage(
+                  image: _image,
+                  fit: BoxFit.fill,
+                  filterQuality: FilterQuality.none,
+                ),
               ),
             Positioned(
               left: 0,
@@ -159,7 +191,9 @@ class _CompareAppState extends State<CompareApp> {
                         width: s.w,
                         height: s.h,
                         child: GlassGroup(
-                          radius: s.kind == 'rect' ? s.r : math.min(s.w, s.h) / 2,
+                          radius: s.kind == 'rect'
+                              ? s.r
+                              : math.min(s.w, s.h) / 2,
                           child: const SizedBox.expand(),
                         ),
                       ),

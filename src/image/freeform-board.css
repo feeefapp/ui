@@ -72,7 +72,7 @@
 }
 .lab-ff-state b {
   font:
-    500 22px/1.2 var(--lab-font);
+    500 22px/26px var(--lab-font);
 }
 .lab-ff-state small {
   max-width: 320px;
@@ -118,13 +118,13 @@
 }
 .lab-ff-empty b {
   font:
-    500 26px/1.15 var(--lab-font);
+    500 26px/30px var(--lab-font);
   letter-spacing: -0.03em;
 }
 .lab-ff-empty small {
   font-size: 14px;
   color: var(--lab-muted);
-  line-height: 1.5;
+  line-height: 21px;
 }
 .lab-ff-zoom-layer {
   position: absolute;
@@ -190,6 +190,7 @@
 }
 .lab-ff-empty-frame .lab-ff-empty b {
   font-size: clamp(20px, 3vw, 26px);
+  line-height: round(1.15em, 1px);
 }
 /* Narrow cards (posters are tall): keep the loading copy inside the card. */
 .lab-ff-card .lab-ff-state {
@@ -199,10 +200,11 @@
 .lab-ff-card .lab-ff-state b {
   font-size: clamp(14px, 2.4vw, 22px);
   line-height: 1.2;
+  line-height: round(1.2em, 1px);
 }
 .lab-ff-card .lab-ff-state small {
   font-size: 12px;
-  line-height: 1.35;
+  line-height: 16px;
   overflow-wrap: anywhere;
 }
 

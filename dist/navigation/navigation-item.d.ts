@@ -11,7 +11,7 @@ export type WorkspaceAction = {
 /**
  * One row of sidebar navigation: icon and label, a link with `href` or a button without. In
  * `compact` (rail) mode only the icon shows and the label moves into a tooltip. Needs a Radix
- * Tooltip.Provider above it.
+ * Tooltip.Provider above it in compact mode.
  */
 export declare function NavigationItem({ label, icon, href, onSelect, active, compact, }: {
     /** Visible label; also the accessible name and the rail tooltip. */

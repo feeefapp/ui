@@ -83,6 +83,16 @@
   border-radius: var(--lab-radius-panel);
   corner-shape: superellipse(1.5);
   background: var(--lab-surface);
+  transition:
+    margin 220ms var(--lab-ease),
+    border-color 220ms var(--lab-ease),
+    border-radius 220ms var(--lab-ease);
+}
+/* Nothing around the content (no top row, sidebar hidden or in the compact drawer): no card. */
+.lab-workspace-scaffold[data-framed='false'] .lab-workspace-main {
+  margin: 0;
+  border-color: transparent;
+  border-radius: 0;
 }
 .lab-workspace-main:focus {
   outline: none;
@@ -167,7 +177,7 @@ html[data-lab-theme] .lab-dialog.lab-workspace-drawer {
   --lab-drawer-offset: -100%;
 }
 html[data-lab-theme] .lab-workspace-drawer:dir(rtl) {
-  border-radius: calc(20px * var(--lab-radius-scale, 1)) 0 0 calc(20px * var(--lab-radius-scale, 1));
+  border-radius: calc(20px * var(--lab-corner-scale, 1)) 0 0 calc(20px * var(--lab-corner-scale, 1));
   --lab-drawer-offset: 100%;
 }
 html[data-lab-theme] .lab-workspace-drawer[data-state='open'] {
@@ -208,7 +218,8 @@ html[data-lab-theme] .lab-workspace-drawer[data-state='closed'] {
 }
 @media (prefers-reduced-motion: reduce) {
   .lab-workspace-scaffold-row,
-  .lab-workspace-side-content {
+  .lab-workspace-side-content,
+  .lab-workspace-main {
     transition: none;
   }
 }

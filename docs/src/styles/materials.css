@@ -245,6 +245,23 @@ html[data-lab-theme] .docs-search-field.lab-toolbar-group {
 .docs-customize-row .lab-segmented > .lab-segmented-option {
   flex: 1;
 }
+.docs-customize-scale,
+.docs-customize-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-inline: 4px;
+  color: var(--lab-muted);
+  font-size: 12px;
+}
+.docs-customize-scale {
+  margin-top: -2px;
+}
+.docs-customize-switch {
+  color: var(--lab-ink);
+  font-size: 13px;
+}
 .docs-swatches {
   display: flex;
   flex-wrap: wrap;

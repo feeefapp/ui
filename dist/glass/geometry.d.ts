@@ -13,6 +13,8 @@ export type GlassRect = {
 export type GlassShape = GlassRect & {
     /** Corner radius before clamping to half the shorter side. */
     radius: number;
+    /** Optional corner exponent; 2 draws true circular corners, omitted keeps the kit superellipse. */
+    cornerExponent?: number;
 };
 /** Corner radius a shape actually draws with: never more than half its shorter side. */
 export declare function clampRadius(shape: GlassShape): number;
@@ -29,7 +31,18 @@ export declare function shapeDistance(px: number, py: number, shape: GlassShape,
  * `k <= 0` is the plain union.
  */
 export declare function smoothMin(a: number, b: number, k: number): number;
-/** Distance to the union of `shapes`, blended with `spacing`. */
+/** Share of `spacing` two touching shapes blend with (measured on rendered Liquid Glass). */
+export declare const GLASS_MERGE_BASE = 0.65;
+/** How much the blend widens per unit of gap / spacing, up to the full `spacing`. */
+export declare const GLASS_MERGE_GAP = 0.65;
+/**
+ * Blend width for two shapes `gap` px apart in a container with `spacing`: the full spacing while
+ * they approach (so they start to bend at `spacing` and join at half of it, like Apple's
+ * GlassEffectContainer), then narrower as they close in, so the neck between touching shapes
+ * stays slim instead of swelling into one blob.
+ */
+export declare function mergeWidth(gap: number, spacing: number): number;
+/** Distance to the union of `shapes`, blended by `spacing` (see `mergeWidth`). */
 export declare function unionDistance(px: number, py: number, shapes: readonly GlassShape[], spacing: number): number;
 /** Gap between two boxes (0 when they touch or overlap). */
 export declare function rectGap(a: GlassRect, b: GlassRect): number;

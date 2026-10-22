@@ -13,19 +13,24 @@ test('defaults render the Lab look', () => {
     'data-lab-palette': THEME_DEFAULTS.palette,
     'data-lab-density': THEME_DEFAULTS.density,
     'data-lab-glass': THEME_DEFAULTS.glass,
-    'data-lab-glass-renderer': THEME_DEFAULTS.glassRenderer,
-    style: { '--lab-radius-scale': '1' },
+    'data-lab-glass-blur': 'off',
+    'data-lab-glass-refraction': 'on',
+    style: { '--lab-radius-scale': '1', '--lab-glass-tint': '0.5' },
   })
 })
 
 test('config maps to root attributes and the radius variable', () => {
-  assert.deepEqual(themeAttributes({ palette: 'mono', density: 'compact', radius: 0.4, glass: 'solid', glassRenderer: 'canvas' }), {
-    'data-lab-palette': 'mono',
-    'data-lab-density': 'compact',
-    'data-lab-glass': 'solid',
-    'data-lab-glass-renderer': 'canvas',
-    style: { '--lab-radius-scale': '0.4' },
-  })
+  assert.deepEqual(
+    themeAttributes({ palette: 'mono', density: 'compact', radius: 0.4, glass: 'solid', glassTint: 0.8, glassBlur: true, glassRefraction: false }),
+    {
+      'data-lab-palette': 'mono',
+      'data-lab-density': 'compact',
+      'data-lab-glass': 'solid',
+      'data-lab-glass-blur': 'on',
+      'data-lab-glass-refraction': 'off',
+      style: { '--lab-radius-scale': '0.4', '--lab-glass-tint': '0.8' },
+    }
+  )
 })
 
 test('radius is clamped and non-numbers fall back to the default', () => {
@@ -36,13 +41,33 @@ test('radius is clamped and non-numbers fall back to the default', () => {
 
 test('explicitly undefined options fall back to the defaults', () => {
   // Provider forwards unset options as `undefined`; they must not override the defaults.
-  assert.deepEqual(themeAttributes({ palette: undefined, density: undefined, radius: undefined, glass: undefined, glassRenderer: undefined }), {
-    'data-lab-palette': THEME_DEFAULTS.palette,
-    'data-lab-density': THEME_DEFAULTS.density,
-    'data-lab-glass': THEME_DEFAULTS.glass,
-    'data-lab-glass-renderer': THEME_DEFAULTS.glassRenderer,
-    style: { '--lab-radius-scale': '1' },
-  })
+  assert.deepEqual(
+    themeAttributes({
+      palette: undefined,
+      density: undefined,
+      radius: undefined,
+      glass: undefined,
+      glassTint: undefined,
+      glassBlur: undefined,
+      glassRefraction: undefined,
+    }),
+    {
+      'data-lab-palette': THEME_DEFAULTS.palette,
+      'data-lab-density': THEME_DEFAULTS.density,
+      'data-lab-glass': THEME_DEFAULTS.glass,
+      'data-lab-glass-blur': 'off',
+      'data-lab-glass-refraction': 'on',
+      style: { '--lab-radius-scale': '1', '--lab-glass-tint': '0.5' },
+    }
+  )
+})
+
+test('glass tint is clamped to 0–1 and non-numbers fall back to the default', () => {
+  const tint = (glassTint: number) => (themeAttributes({ glassTint }).style as Record<string, string>)['--lab-glass-tint']
+  assert.equal(tint(-0.3), '0')
+  assert.equal(tint(4), '1')
+  assert.equal(tint(Number.NaN), '0.5')
+  assert.equal(tint(0.25), '0.25')
 })
 
 test('thin density maps to the root attribute', () => {

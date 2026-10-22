@@ -75,10 +75,16 @@ export const theme: ThemeConfig = { palette: 'mono', density: 'compact', radius:
 | Option | Values | What it drives |
 |---|---|---|
 | `palette` | `lab` (default, Feeef green), `mono` (black and white; only danger/warning keep a hue) | every color token in `theme-tokens.css`: surfaces, ink, primary, focus, brand logo strokes, pixel tones, `--lab-success`, `--lab-warning` |
-| `glassRenderer` | `fill` (default), `css`, `canvas` | `data-lab-glass-renderer`: fill has no backdrop blur (fastest), css blurs, canvas adds edge refraction from displacement maps built when glass settles (Chromium only; others keep CSS) |
-| `glass` | `liquid` (default), `frosted`, `solid` | `data-lab-glass`: GlassContainer pointer light and press response (liquid only), opaque chrome (solid) |
+| `glass` | `liquid` (default), `still`, `solid` | `data-lab-glass`: GlassContainer pointer light and press response (liquid only; still keeps a fixed light), opaque chrome (solid) |
+| `glassTint` | number `0` clear … `1` tinted, `0.5` default | `--lab-glass-tint`: the Liquid Glass slider. 0 = measured clear glass (no veil, no shadow, brightness lift), 1 = measured regular material (veil 71–87 %), 0.5 = light veil (~40 %). Curve: `glassMaterial()` in `glass/material.ts` |
+| `glassBlur` | `false` (default), `true` | `data-lab-glass-blur`: the measured backdrop blur (2.9px → 5.2px by size); off = no blur |
+| `glassRefraction` | `true` (default), `false` | `data-lab-glass-refraction`: bend the backdrop at glass edges (SVG displacement map built when glass settles; Chromium only, other browsers show the same glass unbent) |
 | `density` | `comfortable` (default), `compact` | `--lab-control-height`, `--lab-control-compact`, `--lab-field-height`, `--lab-control-small`, `--lab-row-height`, `--lab-control-padding`, `--lab-space-3…8`, `--lab-sidebar-width`, `--lab-navigation-rail-width` (coarse pointers keep 44px targets) |
 | `radius` | number, `1` default, `0` square, max `1.5` | `--lab-radius-scale`, which multiplies every radius token and component radius (circles such as radios stay round) |
+
+Accessibility always wins over the glass options: `prefers-reduced-transparency` and
+`prefers-contrast: more` paint glass as an opaque surface (more contrast adds an ink outline), both
+turn refraction off, and `prefers-reduced-motion` stops the moving light and press response.
 
 How it works: `themeAttributes()` / `applyThemeConfig()` set `data-lab-palette`,
 `data-lab-density` and `--lab-radius-scale` on `<html>`; the kit CSS reads them. To add a

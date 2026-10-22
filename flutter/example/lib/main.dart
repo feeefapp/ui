@@ -32,6 +32,10 @@ class Gallery extends StatelessWidget {
           config: ThemeConfig(
             palette: Palette.values.byName(query['palette'] ?? 'lab'),
             density: Density.values.byName(query['density'] ?? 'comfortable'),
+            // ?glassTint=0…1&glassBlur=true&glassRefraction=false, like the React harness.
+            glassTint: double.tryParse(query['glassTint'] ?? '') ?? 0.5,
+            glassBlur: query['glassBlur'] == 'true',
+            glassRefraction: query['glassRefraction'] != 'false',
           ),
           // An overlay for dialogs and popovers, like the browser's top layer.
           child: Overlay(

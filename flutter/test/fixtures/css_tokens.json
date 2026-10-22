@@ -20,15 +20,14 @@
    "control-hover": "color(srgb 0.943333 0.95 0.932941)",
    "control-pressed": "color(srgb 0.898431 0.907843 0.889412)",
    "control-selected": "color(srgb 0.869176 0.951608 0.841882)",
-   "glass-fill": "color(srgb 0.988235 0.992157 0.976471 / 0.87)",
-   "glass-fill-flat": "color(srgb 0.988235 0.992157 0.976471 / 0.93)",
+   "glass-fill": "color(srgb 0.988235 0.992157 0.976471 / 0.435)",
    "glass-edge-light": "rgba(255, 255, 255, 0.62)",
    "glass-edge-low": "rgba(255, 255, 255, 0.27)",
-   "glass-shadow-color": "rgba(0, 0, 0, 0.094)",
+   "glass-shadow-color": "rgba(0, 0, 0, 0.047)",
    "glass-glow": "rgba(255, 255, 255, 0.45)",
    "control-highlight": "rgba(255, 255, 255, 0.76)",
-   "glass-fill-large": "color(srgb 0.988235 0.992157 0.976471 / 0.71)",
-   "glass-shadow-small": "rgba(0, 0, 0, 0.067)"
+   "glass-fill-large": "color(srgb 0.988235 0.992157 0.976471 / 0.355)",
+   "glass-shadow-small": "rgba(0, 0, 0, 0.03)"
   },
   "variants": {
    "filled": {
@@ -89,15 +88,14 @@
    "control-hover": "color(srgb 0.176863 0.252745 0.201961)",
    "control-pressed": "color(srgb 0.216471 0.289804 0.239216)",
    "control-selected": "color(srgb 0.264941 0.365804 0.255294)",
-   "glass-fill": "color(srgb 0.137255 0.215686 0.164706 / 0.75)",
-   "glass-fill-flat": "color(srgb 0.137255 0.215686 0.164706 / 0.93)",
+   "glass-fill": "color(srgb 0.137255 0.215686 0.164706 / 0.375)",
    "glass-edge-light": "rgba(255, 255, 255, 0.13)",
    "glass-edge-low": "rgba(255, 255, 255, 0.14)",
-   "glass-shadow-color": "rgba(0, 0, 0, 0.14)",
+   "glass-shadow-color": "rgba(0, 0, 0, 0.07)",
    "glass-glow": "rgba(255, 255, 255, 0.16)",
    "control-highlight": "rgba(255, 255, 255, 0.2)",
-   "glass-fill-large": "color(srgb 0.137255 0.215686 0.164706 / 0.72)",
-   "glass-shadow-small": "rgba(0, 0, 0, 0.03)"
+   "glass-fill-large": "color(srgb 0.137255 0.215686 0.164706 / 0.36)",
+   "glass-shadow-small": "rgba(0, 0, 0, 0.016)"
   },
   "variants": {
    "filled": {
@@ -158,15 +156,14 @@
    "control-hover": "color(srgb 0.951961 0.951961 0.951961)",
    "control-pressed": "color(srgb 0.903922 0.903922 0.903922)",
    "control-selected": "color(srgb 0.788627 0.788627 0.788627)",
-   "glass-fill": "color(srgb 1 1 1 / 0.87)",
-   "glass-fill-flat": "color(srgb 1 1 1 / 0.93)",
+   "glass-fill": "color(srgb 1 1 1 / 0.435)",
    "glass-edge-light": "rgba(255, 255, 255, 0.62)",
    "glass-edge-low": "rgba(255, 255, 255, 0.27)",
-   "glass-shadow-color": "rgba(0, 0, 0, 0.094)",
+   "glass-shadow-color": "rgba(0, 0, 0, 0.047)",
    "glass-glow": "rgba(255, 255, 255, 0.45)",
    "control-highlight": "rgba(255, 255, 255, 0.76)",
-   "glass-fill-large": "color(srgb 1 1 1 / 0.71)",
-   "glass-shadow-small": "rgba(0, 0, 0, 0.067)"
+   "glass-fill-large": "color(srgb 1 1 1 / 0.355)",
+   "glass-shadow-small": "rgba(0, 0, 0, 0.03)"
   },
   "variants": {
    "filled": {
@@ -227,15 +224,14 @@
    "control-hover": "color(srgb 0.122549 0.122549 0.122549)",
    "control-pressed": "color(srgb 0.166667 0.166667 0.166667)",
    "control-selected": "color(srgb 0.272549 0.272549 0.272549)",
-   "glass-fill": "color(srgb 0.0784314 0.0784314 0.0784314 / 0.75)",
-   "glass-fill-flat": "color(srgb 0.0784314 0.0784314 0.0784314 / 0.93)",
+   "glass-fill": "color(srgb 0.0784314 0.0784314 0.0784314 / 0.375)",
    "glass-edge-light": "rgba(255, 255, 255, 0.13)",
    "glass-edge-low": "rgba(255, 255, 255, 0.14)",
-   "glass-shadow-color": "rgba(0, 0, 0, 0.14)",
+   "glass-shadow-color": "rgba(0, 0, 0, 0.07)",
    "glass-glow": "rgba(255, 255, 255, 0.16)",
    "control-highlight": "rgba(255, 255, 255, 0.2)",
-   "glass-fill-large": "color(srgb 0.0784314 0.0784314 0.0784314 / 0.72)",
-   "glass-shadow-small": "rgba(0, 0, 0, 0.03)"
+   "glass-fill-large": "color(srgb 0.0784314 0.0784314 0.0784314 / 0.36)",
+   "glass-shadow-small": "rgba(0, 0, 0, 0.016)"
   },
   "variants": {
    "filled": {

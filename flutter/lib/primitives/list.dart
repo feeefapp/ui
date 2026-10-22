@@ -191,7 +191,7 @@ class _ListSectionState extends State<ListSection> {
                     fontWeight: FontWeight.w500,
                     // The web kit's h3 tracking (-0.035em) applies to the header too.
                     letterSpacing: 13 * -0.035,
-                    height: 1.3,
+                    height: 17 / 13,
                     leadingDistribution: TextLeadingDistribution.even,
                   ),
                   child: widget.header!,
@@ -206,7 +206,7 @@ class _ListSectionState extends State<ListSection> {
                 style: TextStyle(
                   color: c.muted,
                   fontSize: 13,
-                  height: 1.45,
+                  height: 19 / 13,
                   leadingDistribution: TextLeadingDistribution.even,
                 ),
                 child: widget.footer!,
@@ -666,7 +666,7 @@ class _ListRowState extends State<ListRow> {
               DefaultTextStyle.merge(
                 style: const TextStyle(
                   fontSize: 15,
-                  height: 1.3,
+                  height: 20 / 15,
                   leadingDistribution: TextLeadingDistribution.even,
                 ),
                 maxLines: 1,
@@ -678,7 +678,7 @@ class _ListRowState extends State<ListRow> {
                 DefaultTextStyle.merge(
                   style: TextStyle(
                     fontSize: 13,
-                    height: 1.35,
+                    height: 18 / 13,
                     leadingDistribution: TextLeadingDistribution.even,
                     color: c.muted,
                   ),

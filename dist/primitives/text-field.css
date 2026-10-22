@@ -2,7 +2,9 @@
   --lab-text-field-height: var(--lab-control-height);
   --lab-text-field-padding-top: 17px;
   --lab-text-field-padding-bottom: 5px;
-  --lab-text-field-label-top: 12px;
+  /* The resting hint sits where a single line of value sits: centred in the field at every size and
+  density (44 → 12px, 40 → 10px, 34 → 7px, 28 → 5px). */
+  --lab-text-field-label-top: calc((var(--lab-text-field-height) - var(--lab-text-field-line)) / 2);
   --lab-text-field-float-top: 4px;
   --lab-text-field-font: 16px;
   --lab-text-field-line: 20px;
@@ -38,7 +40,8 @@ html[data-lab-theme] .lab-text-field :is(.lab-raw-input, .lab-field-select-contr
   padding-left: var(--lab-field-padding-left);
   padding-right: var(--lab-field-padding-right);
   text-align: start;
-  border: 1px solid var(--lab-variant-edge, var(--lab-line));
+  /* Keeps its 1px for metrics; .lab-text-field-outline draws the edge and the focus ring. */
+  border: 1px solid transparent;
   border-radius: var(--lab-text-field-radius);
   corner-shape: superellipse(1.5);
   outline: none;
@@ -47,16 +50,29 @@ html[data-lab-theme] .lab-text-field :is(.lab-raw-input, .lab-field-select-contr
   caret-color: var(--lab-focus);
   font: 400 var(--lab-text-field-font) / var(--lab-text-field-line) var(--lab-font);
   box-shadow: var(--lab-variant-shadow, none);
-  transition:
-    border-color 140ms,
-    box-shadow 140ms;
 }
 html[data-lab-theme] .lab-text-field textarea.lab-raw-input {
   height: auto;
 }
-html[data-lab-theme] .lab-text-field :is(.lab-raw-input, .lab-field-select-control):focus {
+/* The field's edge and focus ring, on their own layer so the floated hint can cut a notch in them
+(a mask, like a fieldset legend) instead of covering the border with a patch of colour. It sits
+1px outside the control: the transparent border is the ring, the inset shadow the edge. */
+.lab-text-field-outline {
+  position: absolute;
+  inset: -1px;
+  z-index: 1;
+  border: 1px solid transparent;
+  border-radius: calc(var(--lab-text-field-radius) + 1px);
+  corner-shape: superellipse(1.5);
+  box-shadow: inset 0 0 0 1px var(--lab-variant-edge, var(--lab-line));
+  pointer-events: none;
+  transition:
+    border-color 140ms,
+    box-shadow 140ms;
+}
+.lab-text-field-edit:focus-within .lab-text-field-outline {
   border-color: var(--lab-focus);
-  box-shadow: 0 0 0 1px var(--lab-focus);
+  box-shadow: inset 0 0 0 1px var(--lab-focus);
 }
 /* A trailing action focuses independently; its own ring is never suppressed. */
 .lab-text-field-label {
@@ -69,7 +85,7 @@ html[data-lab-theme] .lab-text-field :is(.lab-raw-input, .lab-field-select-contr
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--lab-variant-label, var(--lab-muted));
-  font: 400 16px/20px var(--lab-font);
+  font: 400 var(--lab-text-field-font) / var(--lab-text-field-line) var(--lab-font);
   transition:
     top 140ms,
     font-size 140ms,
@@ -94,6 +110,10 @@ html[data-lab-theme] .lab-text-field :is(.lab-raw-input, .lab-field-select-contr
 }
 .lab-text-field[data-has-label='true'] .lab-raw-input::placeholder {
   color: transparent;
+}
+/* A select's placeholder (Radix marks the empty trigger) reads like a text field's. */
+.lab-text-field .lab-field-select-control[data-placeholder] .lab-field-select-value {
+  color: var(--lab-variant-label, var(--lab-muted));
 }
 .lab-text-field-shell:dir(rtl) {
   --lab-field-padding-left: var(--lab-field-inset-end);
@@ -153,15 +173,11 @@ html[data-lab-theme] .lab-text-field :is(.lab-raw-input, .lab-field-select-contr
   flex: none;
   white-space: nowrap;
 }
-html[data-lab-theme]
-  .lab-text-field[data-invalid='true']
-  :is(.lab-raw-input, .lab-field-select-control) {
-  border-color: var(--lab-field-error, var(--lab-danger));
+.lab-text-field[data-invalid='true'] .lab-text-field-outline {
+  box-shadow: inset 0 0 0 1px var(--lab-field-error, var(--lab-danger));
 }
-html[data-lab-theme]
-  .lab-text-field[data-invalid='true']
-  :is(.lab-raw-input, .lab-field-select-control):focus {
-  box-shadow: 0 0 0 1px var(--lab-field-error, var(--lab-danger));
+.lab-text-field[data-invalid='true'] .lab-text-field-edit:focus-within .lab-text-field-outline {
+  border-color: var(--lab-field-error, var(--lab-danger));
 }
 .lab-text-field[data-invalid='true'] :is(.lab-text-field-label, .lab-text-field-details) {
   color: var(--lab-field-error, var(--lab-danger));
@@ -180,7 +196,6 @@ html[data-lab-theme]
   --lab-text-field-height: var(--lab-control-compact);
   --lab-text-field-padding-top: 14px;
   --lab-text-field-padding-bottom: 4px;
-  --lab-text-field-label-top: 10px;
   --lab-text-field-float-top: 3px;
   --lab-text-field-radius: var(--lab-radius-control-compact);
 }
@@ -212,7 +227,6 @@ height, so every size and density fits (44 → 11px, 40 → 9px, 28 → 4px). */
   top: -6px;
   font-size: 12px;
   line-height: 14px;
-  background: var(--lab-variant-label-surface, var(--lab-surface));
 }
 .lab-text-field[data-surface-variant='filled']:not([data-invalid='true'])
   .lab-text-field-edit:focus-within
@@ -247,7 +261,6 @@ html[data-lab-theme] .lab-text-field .lab-field-select-control {
     --lab-text-field-height: var(--lab-control-touch-target);
     --lab-text-field-padding-top: 17px;
     --lab-text-field-padding-bottom: 5px;
-    --lab-text-field-label-top: 12px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -260,18 +273,15 @@ html[data-lab-theme] .lab-text-field .lab-field-select-control {
   html[data-lab-theme] .lab-text-field :is(.lab-raw-input, .lab-field-select-control) {
     background: Canvas;
     color: CanvasText;
-    border-color: ButtonText;
   }
-  html[data-lab-theme] .lab-text-field :is(.lab-raw-input, .lab-field-select-control):focus {
-    outline: 2px solid Highlight;
-    outline-offset: 1px;
+  .lab-text-field-edit:focus-within .lab-text-field-outline {
+    border-color: Highlight;
+    box-shadow: inset 0 0 0 1px Highlight;
   }
-  .lab-text-field[data-label-style='outlined'] .lab-text-field-label {
-    background: Canvas;
+  .lab-text-field-outline {
+    box-shadow: inset 0 0 0 1px ButtonText;
   }
-  html[data-lab-theme]
-    .lab-text-field[data-invalid='true']
-    :is(.lab-raw-input, .lab-field-select-control) {
+  .lab-text-field[data-invalid='true'] .lab-text-field-outline {
     border-style: dashed;
   }
 }
@@ -287,7 +297,6 @@ html[data-lab-density='thin'] .lab-text-field {
 html:is([data-lab-density='compact'], [data-lab-density='thin']) .lab-text-field[data-label-style='inside'][data-control-size] {
   --lab-text-field-padding-top: max(0px, calc((var(--lab-text-field-height) - var(--lab-text-field-line) - 2px) / 2));
   --lab-text-field-padding-bottom: var(--lab-text-field-padding-top);
-  --lab-text-field-label-top: var(--lab-text-field-padding-top);
 }
 html:is([data-lab-density='compact'], [data-lab-density='thin']) .lab-text-field[data-label-style='inside'] .lab-text-field-label {
   inset-inline-start: calc(var(--lab-field-inset-start) - 4px);
@@ -305,5 +314,28 @@ html:is([data-lab-density='compact'], [data-lab-density='thin'])
   top: -6px;
   font-size: 11px;
   line-height: 12px;
-  background: var(--lab-variant-label-surface, var(--lab-surface));
+}
+/* A hint floated onto the border cuts a notch in the outline (position and width measured by
+FieldShell). The second mask layer is the notch, excluded from the full layer. */
+.lab-text-field[data-label-style='outlined']
+  :is(
+    .lab-text-field-edit:focus-within,
+    .lab-text-field-edit:has(.lab-raw-input:not(:placeholder-shown)),
+    .lab-text-field-edit:has(.lab-raw-input:autofill),
+    .lab-text-field-edit[data-always-float]
+  )
+  .lab-text-field-outline,
+html:is([data-lab-density='compact'], [data-lab-density='thin'])
+  .lab-text-field[data-label-style='inside']
+  :is(
+    .lab-text-field-edit:focus-within,
+    .lab-text-field-edit:has(.lab-raw-input:not(:placeholder-shown)),
+    .lab-text-field-edit[data-always-float]
+  )
+  .lab-text-field-outline {
+  mask:
+    linear-gradient(#000 0 0),
+    linear-gradient(#000 0 0) var(--lab-field-notch-x, 0px) 0 / var(--lab-field-notch-width, 0px) 3px
+      no-repeat;
+  mask-composite: exclude;
 }

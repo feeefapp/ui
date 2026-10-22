@@ -1,4 +1,4 @@
-import { unionDistance, type GlassShape } from './geometry'
+import { unionDistance, type GlassShape, type GlassRect } from './geometry'
 
 /**
  * Refraction for the canvas renderer: glass that bends the content behind it near its edges, as a
@@ -6,7 +6,7 @@ import { unionDistance, type GlassShape } from './geometry'
  * bevel bends; the flat middle shows the backdrop straight. The profile is our own fit to
  * measurements of rendered Liquid Glass (ui/research/liquid-glass/FINDINGS.md): at depth `t` from
  * the edge a pixel shows the backdrop from `shift · (1 - t / bezel)^4` deeper inside, so the rim
- * shows a compressed, mirrored band of what lies further in. Pure, so the Flutter twin (a fragment
+ * compresses the background. The web map caps the shift to prevent mirrored folds. Pure, so the Flutter twin (a fragment
  * shader there) follows the same profile.
  */
 
@@ -47,6 +47,16 @@ export function refractionAt(d: number, nx: number, ny: number, bezel = GLASS_BE
  * (anti-aliased), so the filter can clip its own output: Chromium ignores an element's clip-path
  * for `backdrop-filter: url()`. Each cluster bends by its own size (its smallest shape).
  */
+/**
+ * Web transport cap: for the quartic bezel, max |d(shift)/d(depth)| = 4 × shift / bezel.
+ * Keep it below one so the sampled background cannot reverse direction along an edge.
+ */
+export function webRefractionShift(side: number, bezel = GLASS_BEZEL) {
+  const size = refractionScale(side)
+  const band = Math.min(bezel * size, side / 2)
+  return Math.max(0, Math.min(GLASS_REFRACTION * size, band * 0.8 / GLASS_BEZEL_POWER))
+}
+
 export function displacementMap(
   width: number,
   height: number,
@@ -62,12 +72,13 @@ export function displacementMap(
     data[i + 1] = 128
   }
   const sizes = clusters.map((shapes) => (shapes.length ? refractionScale(Math.min(...shapes.map((s) => Math.min(s.width, s.height)))) : 0))
-  const largest = Math.max(0, ...sizes)
+  const shifts = clusters.map(shapes => shapes.length ? webRefractionShift(Math.min(...shapes.map(s => Math.min(s.width, s.height))), bezel) : 0)
+  const largest = Math.max(0, ...shifts)
   clusters.forEach((shapes, index) => {
     if (!shapes.length) return
     const size = sizes[index]
     // This cluster's shift as a share of the map's (the largest cluster's) shift.
-    const share = largest > 0 ? size / largest : 0
+    const share = largest > 0 ? shifts[index] / largest : 0
     const x0 = Math.max(0, Math.floor(Math.min(...shapes.map((s) => s.x))) - 1)
     const y0 = Math.max(0, Math.floor(Math.min(...shapes.map((s) => s.y))) - 1)
     const x1 = Math.min(w, Math.ceil(Math.max(...shapes.map((s) => s.x + s.width))) + 1)
@@ -91,7 +102,7 @@ export function displacementMap(
         data[i + 1] = Math.round(128 + bend.y * share * 127)
       }
   })
-  return { width: w, height: h, data, scale: 2 * GLASS_REFRACTION * largest }
+  return { width: w, height: h, data, scale: 2 * largest }
 }
 
 /**
@@ -102,4 +113,16 @@ export function supportsRefraction() {
   if (typeof navigator === 'undefined' || typeof document === 'undefined') return false
   const brands = (navigator as Navigator & { userAgentData?: { brands?: { brand: string }[] } }).userAgentData?.brands
   return !!brands?.some((entry) => /Chromium/i.test(entry.brand))
+}
+
+
+/** Firefox can refract an explicitly supplied live element image with a regular SVG filter. */
+export function supportsElementRefraction() {
+  return typeof CSS !== 'undefined' && CSS.supports('background-image', '-moz-element(#glass-source)')
+}
+
+
+/** Place a live background image in a glass piece, with both boxes in material coordinates. */
+export function elementImagePlacement(source: GlassRect, piece: GlassRect) {
+  return { width: source.width, height: source.height, x: source.x - piece.x, y: source.y - piece.y }
 }

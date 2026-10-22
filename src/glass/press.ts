@@ -39,5 +39,6 @@ export function pressedShape(shape: GlassShape, scale: number, stretchX: number,
     height: Math.max(0, h),
     // Drawing clamps the radius to half the shorter side, so a narrowed drop stays round.
     radius: shape.radius * scale,
+    ...(shape.cornerExponent === undefined ? {} : { cornerExponent: shape.cornerExponent }),
   }
 }

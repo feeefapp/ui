@@ -155,7 +155,7 @@ class TemporalDialog extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Semantics(
                     header: true,
-                    // `.lab-dialog .lab-modal-title`: 17px / 1.4, 600, -0.02em.
+                    // `.lab-dialog .lab-modal-title`: 17px / 24px, 600, -0.02em.
                     child: Text(
                       label,
                       maxLines: 1,
@@ -163,7 +163,7 @@ class TemporalDialog extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 17,
-                        height: 1.4,
+                        height: 24 / 17,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 17 * -0.02,
                       ),
@@ -236,7 +236,7 @@ class TemporalDialog extends StatelessWidget {
                   style: TextStyle(
                     color: colors.muted,
                     fontSize: 13,
-                    height: 1.45,
+                    height: 19 / 13,
                   ),
                   child: intro!,
                 ),

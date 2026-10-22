@@ -10,6 +10,8 @@ export type GlassRect = { x: number; y: number; width: number; height: number }
 export type GlassShape = GlassRect & {
   /** Corner radius before clamping to half the shorter side. */
   radius: number
+  /** Optional corner exponent; 2 draws true circular corners, omitted keeps the kit superellipse. */
+  cornerExponent?: number
 }
 
 const finite = (value: number) => (Number.isFinite(value) ? value : 0)
@@ -30,7 +32,7 @@ const NORM = Float64Array.from({ length: NORM_STEPS + 1 }, (_, i) =>
  * is exactly the curve `foSuperellipsePath` draws; away from it the value is a close
  * approximation, which is all a smooth union needs.
  */
-export function shapeDistance(px: number, py: number, shape: GlassShape, exponent = FO_CORNER_EXPONENT) {
+export function shapeDistance(px: number, py: number, shape: GlassShape, exponent = shape.cornerExponent ?? FO_CORNER_EXPONENT) {
   const r = clampRadius(shape)
   const hx = shape.width / 2
   const hy = shape.height / 2
@@ -150,7 +152,7 @@ export function translatePath(d: string, dx: number, dy: number) {
 export function shapePath(shape: GlassShape) {
   const r = clampRadius(shape)
   const corner = { x: r, y: r }
-  return translatePath(foSuperellipsePath(shape.width, shape.height, [corner, corner, corner, corner]), shape.x, shape.y)
+  return translatePath(foSuperellipsePath(shape.width, shape.height, [corner, corner, corner, corner], 0, shape.cornerExponent ?? FO_CORNER_EXPONENT), shape.x, shape.y)
 }
 
 export type Point = [number, number]

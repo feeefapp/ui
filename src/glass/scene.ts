@@ -14,11 +14,11 @@ import {
   type GlassShape,
   type HostFrame,
 } from './geometry'
-import { DEFAULT_GLASS_LIGHT, glassLightToward, rimGradient, type GlassLight } from './light'
+import { DEFAULT_GLASS_LIGHT, glassLightToward, surfaceReflection, measuredRimReflection, surfaceShade, highlightSurface, type GlassLight } from './light'
 import { planGlassTransition, sameRect } from './transitions'
-import { adaptiveGlassTone, backdropTone, type BackdropSample, type GlassTone } from './adaptive'
-import { displacementMap, supportsRefraction } from './refraction'
-import { GLASS_RIM_STOPS, GLASS_SHADOW, glassBlur, glassSize } from './material'
+import { adaptiveGlassTone, backdropTone, parseCssColor, type BackdropSample, type GlassTone } from './adaptive'
+import { displacementMap, elementImagePlacement, supportsElementRefraction, supportsRefraction } from './refraction'
+import { GLASS_SHADOW, glassBlur, glassMaterial, glassSize } from './material'
 import { GLASS_CONTENT_FOLLOW, GLASS_PRESS_SCALE, glassStretch, pressedShape } from './press'
 import { cornerFit } from '../brand/corner-fit'
 
@@ -41,6 +41,7 @@ class Shape {
   stretchX = new MotionValue(0, 0.05)
   stretchY = new MotionValue(0, 0.05)
   radius = 0
+  cornerExponent?: number
   layout: GlassRect | null = null
   /** Translation written to the element so its content rides with the glass. */
   offset = { x: 0, y: 0 }
@@ -72,6 +73,7 @@ class Shape {
       width: w,
       height: h,
       radius: this.radius * s,
+      ...(this.cornerExponent === undefined ? {} : { cornerExponent: this.cornerExponent }),
     }
     return pressedShape(base, this.press.get(), this.stretchX.get(), this.stretchY.get())
   }
@@ -145,8 +147,19 @@ export class GlassScene {
   interactive = true
   /** Small glass flips light/dark to stay legible over what is behind it. */
   adaptive = true
-  /** `canvas` adds refraction (displacement maps) once the glass settles, where supported. */
-  renderer: 'fill' | 'css' | 'canvas' = 'fill'
+  /** ThemeConfig `glassTint`: 0 clear … 1 tinted (the CSS reads `--lab-glass-tint`; the refraction filter needs the numbers). */
+  cornerShape: 'superellipse' | 'round' = 'superellipse'
+  tint = 0.5
+  preserveHighlights = false
+  /** ThemeConfig `glassBlur`: the measured backdrop blur, sized per cluster. */
+  blur = false
+  /** ThemeConfig `glassRefraction`: bend the backdrop at the edges once the glass settles, where supported. */
+  refraction = true
+  backdropSource?: string
+  highlightWidth = 5
+  highlightProfile: 'surface' | 'rim' = 'surface'
+  highlightStrength = 1
+  refractionStrength = 1
   private refractKey = ''
   private refractTimer: ReturnType<typeof setTimeout> | null = null
   private filters: SVGFilterElement[] = []
@@ -206,6 +219,7 @@ export class GlassScene {
   /** Any scroll changes what is behind the glass; a scroller inside the container also moves bubbles. */
   private onScroll = (event: Event) => {
     this.requestSample()
+    if (this.backdropSource) this.scheduleDraw()
     if (event.target instanceof Node && event.target !== this.host && this.host.contains(event.target)) this.requestMeasure()
   }
 
@@ -241,8 +255,11 @@ export class GlassScene {
       const mode: GlassTone = document.documentElement.getAttribute('data-lab-theme') === 'dark' ? 'dark' : 'light'
       tone = adaptiveGlassTone(tones, mode, Math.max(...paths.map((path) => path.bounds.height)))
     }
+    if ((tone ?? null) === this.host.getAttribute('data-glass-backdrop')) return
     if (tone) this.host.setAttribute('data-glass-backdrop', tone)
     else this.host.removeAttribute('data-glass-backdrop')
+    // The refraction filter bakes the tone's material in: rebuild it.
+    this.requestMeasure()
   }
 
   private onPressStart = (event: PointerEvent) => {
@@ -352,6 +369,8 @@ export class GlassScene {
     // double mount, a parent remount) starts from a clean layer.
     for (const piece of this.pieces) piece.remove()
     this.pieces = []
+    reflectionLayers.get(this.paint)?.remove()
+    reflectionLayers.delete(this.paint)
     this.paint.replaceChildren()
     this.shadow.replaceChildren()
     for (const member of this.members.values()) {
@@ -371,7 +390,7 @@ export class GlassScene {
     const unions = new Map<string, GlassRect[]>()
     const unionRadius = new Map<string, number>()
     // Shapes keep the true superellipse radius; without corner-shape the CSS radius is shrunk.
-    this.cornerFit = cornerFit()
+    this.cornerFit = this.cornerShape === 'round' ? 1 : cornerFit()
     for (const [id, member] of this.members) {
       const { element, options } = member
       if (!element.isConnected || element.closest('[inert],[hidden],[data-glass-hidden]')) continue
@@ -433,6 +452,7 @@ export class GlassScene {
       const shape = this.shapes.get(id)!
       shape.leaving = false
       shape.radius = target.radius
+      shape.cornerExponent = this.cornerShape === 'round' ? 2 : undefined
       // Bubbles that animate their own size, or that something else is animating right now, are
       // followed exactly instead of sprung, so the glass never lags behind them.
       const follow = target.member?.options.motion === 'follow' || !!target.animated
@@ -508,7 +528,7 @@ export class GlassScene {
     }
     const m = GLASS_MARGIN
     const placed = visuals.map((v) => ({ ...v, x: v.x + m, y: v.y + m }))
-    const key = `${this.spacing}|${placed.map((v) => `${v.x.toFixed(1)},${v.y.toFixed(1)},${v.width.toFixed(1)},${v.height.toFixed(1)},${v.radius.toFixed(1)}`).join(';')}`
+    const key = `${this.cornerShape}|${this.spacing}|${placed.map((v) => `${v.x.toFixed(1)},${v.y.toFixed(1)},${v.width.toFixed(1)},${v.height.toFixed(1)},${v.radius.toFixed(1)}`).join(';')}`
     if (key !== this.cache.key) this.cache = { key, paths: glassPaths(placed, this.spacing) }
     const paths = this.cache.paths
     this.syncBackdrops(paths)
@@ -521,6 +541,10 @@ export class GlassScene {
       paths,
       lights,
       this.uid,
+      this.spacing,
+      this.highlightWidth,
+      this.highlightStrength,
+      this.highlightProfile,
       glow ? { x: glow.x + m, y: glow.y + m, radius: glow.radius.get(), opacity: glow.opacity.get() } : null
     )
     renderShadow(this.shadow, paths, this.uid)
@@ -540,15 +564,18 @@ export class GlassScene {
       const { x, y, width, height } = path.bounds
       const piece = this.pieces[i]
       const style = piece.style
+      style.setProperty('corner-shape', this.cornerShape === 'round' ? 'round' : 'superellipse(1.5)')
       // The material follows the cluster's smallest bubble: control-sized glass is denser.
       const side = smallestSide(path.shapes)
       const size = glassSize(side)
       if (piece.dataset.glassSize !== size) piece.dataset.glassSize = size
-      style.setProperty('--lab-glass-blur', `${glassBlur(side).toFixed(2)}px`)
+      style.setProperty('--lab-glass-blur', this.blur ? `${glassBlur(side).toFixed(2)}px` : '0px')
       style.left = `${x}px`
       style.top = `${y}px`
       style.width = `${width}px`
       style.height = `${height}px`
+      const sourceImage = piece.querySelector<HTMLElement>('.lab-glass-source')
+      if (sourceImage) this.positionElementSource(piece, sourceImage)
       if (path.shapes.length === 1) {
         // A lone shape clips with CSS: hand back the radius CSS would use (the circle fallback's).
         style.borderRadius = `${clampRadius(path.shapes[0]) * this.cornerFit}px`
@@ -561,15 +588,21 @@ export class GlassScene {
   }
 
   /**
-   * Canvas renderer: CSS glass while anything moves; once the outline has been still for a moment,
-   * build a displacement map for it and bend the backdrop at the glass edges (Chromium).
+   * Refraction: CSS glass while anything moves; once the outline has been still for a moment,
+   * build a displacement map for it and bend the backdrop (native in Chromium, a live source in Firefox).
    */
-  private updateRefraction(key: string) {
+  private updateRefraction(outline: string) {
+    // The filter bakes in the material too: any change of tint, blur or tone rebuilds it.
+    const key = `${outline}|${this.tint}|${this.blur}|${this.scheme()}|${this.refractionStrength}|${this.preserveHighlights}|${this.backdropSource ?? ''}`
     const wanted =
-      this.renderer === 'canvas' &&
-      supportsRefraction() &&
+      this.refraction && this.refractionStrength > 0 &&
+      (supportsRefraction() || (supportsElementRefraction() && !!this.elementSource())) &&
       document.documentElement.getAttribute('data-lab-glass') !== 'solid' &&
       !window.matchMedia?.('(prefers-reduced-transparency: reduce), (prefers-contrast: more)').matches
+    if (this.refractTimer && (!wanted || key !== this.refractKey)) {
+      clearTimeout(this.refractTimer)
+      this.refractTimer = null
+    }
     const moving = [...this.shapes.values()].some((shape) => shape.values().some((v) => v.isAnimating()))
     if (!wanted || moving || key !== this.refractKey) {
       for (const piece of this.pieces)
@@ -577,14 +610,39 @@ export class GlassScene {
           piece.style.backdropFilter = ''
           piece.style.removeProperty('-webkit-backdrop-filter')
         }
+      for (const piece of this.pieces) {
+        piece.querySelector('.lab-glass-source')?.remove()
+        piece.removeAttribute('data-glass-source')
+      }
       if (this.refractKey !== key || !wanted) this.refractKey = ''
     }
     if (!wanted || moving || this.refractKey === key) return
     if (this.refractTimer) clearTimeout(this.refractTimer)
     this.refractTimer = setTimeout(() => {
       this.refractTimer = null
-      if (this.cache.key === key) this.applyRefraction(key)
+      if (!this.disposed && this.cache.key === outline && this.refraction && this.refractionStrength > 0) this.applyRefraction(key)
     }, 120)
+  }
+
+  /** Sampling a separate paint layer avoids Firefox's recursive element-image prohibition. */
+  private elementSource() {
+    const source = this.backdropSource ? document.getElementById(this.backdropSource) : null
+    return source && !source.contains(this.host) && !this.host.contains(source) ? source : null
+  }
+
+  private positionElementSource(piece: HTMLElement, image: HTMLElement) {
+    const source = this.elementSource()
+    if (!source) return
+    const frame = this.frame()
+    const box = toLocalRect(frame, source.getBoundingClientRect())
+    const x = Number.parseFloat(piece.style.left) || 0
+    const y = Number.parseFloat(piece.style.top) || 0
+    const placement = elementImagePlacement(
+      { ...box, x: box.x + GLASS_MARGIN, y: box.y + GLASS_MARGIN },
+      { x, y, width: Number.parseFloat(piece.style.width) || 0, height: Number.parseFloat(piece.style.height) || 0 }
+    )
+    image.style.backgroundSize = `${placement.width}px ${placement.height}px`
+    image.style.backgroundPosition = `${placement.x}px ${placement.y}px`
   }
 
   private applyRefraction(key: string) {
@@ -599,9 +657,9 @@ export class GlassScene {
       const { x, y, width, height } = path.bounds
       const shifted = path.shapes.map((shape) => ({ ...shape, x: shape.x - x, y: shape.y - y }))
       const map = displacementMap(Math.ceil(width), Math.ceil(height), [shifted], this.spacing)
-      const computed = getComputedStyle(piece)
-      const saturate = Number.parseFloat(computed.getPropertyValue('--lab-glass-saturate')) || 1
-      const blur = glassBlur(smallestSide(path.shapes))
+      const side = smallestSide(path.shapes)
+      const material = glassMaterial(this.tint, this.scheme(), glassSize(side))
+      const blur = this.blur ? glassBlur(side) : 0
       const canvas = document.createElement('canvas')
       canvas.width = map.width
       canvas.height = map.height
@@ -611,14 +669,17 @@ export class GlassScene {
       let filter = this.filters[i]
       if (!filter) {
         filter = node('filter', { 'id': `${this.uid}-r${i}`, 'color-interpolation-filters': 'sRGB', 'filterUnits': 'userSpaceOnUse', 'x': 0, 'y': 0 }) as SVGFilterElement
-        // Blur, bend and saturate the backdrop, then keep only the glass shape (the map's alpha).
-        // The element's own background lays the veil over the result.
+        // (Blur,) bend, saturate and lift the backdrop, then keep only the glass shape (the map's
+        // alpha). The element's own background lays the veil over the result.
+        const lift = node('feComponentTransfer', { in: 'tone', result: 'lifted' })
+        for (const channel of ['feFuncR', 'feFuncG', 'feFuncB'] as const) lift.append(node(channel, { type: 'linear', slope: 1, intercept: 0 }))
         filter.append(
           node('feImage', { result: 'map', preserveAspectRatio: 'none', x: 0, y: 0 }),
-          node('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: 3, edgeMode: 'duplicate', result: 'soft' }),
+          node('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: 0, edgeMode: 'duplicate', result: 'soft' }),
           node('feDisplacementMap', { in: 'soft', in2: 'map', xChannelSelector: 'R', yChannelSelector: 'G', scale: 0, result: 'bent' }),
           node('feColorMatrix', { in: 'bent', type: 'saturate', values: 1, result: 'tone' }),
-          node('feComposite', { in: 'tone', in2: 'map', operator: 'in' })
+          lift,
+          node('feComposite', { in: 'lifted', in2: 'map', operator: 'in' })
         )
         this.filterHost!.append(filter)
         this.filters[i] = filter
@@ -628,16 +689,41 @@ export class GlassScene {
         element.setAttribute('height', String(map.height))
       }
       filter.firstElementChild!.setAttribute('href', canvas.toDataURL())
-      const [, soft, bent, tone] = Array.from(filter.children)
+      const [, soft, bent, tone, lift] = Array.from(filter.children)
       soft.setAttribute('stdDeviation', blur.toFixed(2))
-      bent.setAttribute('scale', map.scale.toFixed(2))
+      // Without blur the bend reads the backdrop itself: no blur stage at all.
+      bent.setAttribute('in', blur > 0 ? 'soft' : 'SourceGraphic')
+      bent.setAttribute('scale', (map.scale * this.refractionStrength).toFixed(2))
       // feColorMatrix saturate takes 0–1 in older engines; above 1 it is the same matrix as CSS.
-      tone.setAttribute('values', String(saturate))
+      tone.setAttribute('values', material.saturate.toFixed(4))
+      for (const channel of Array.from(lift.children)) {
+        channel.setAttribute('slope', (this.preserveHighlights ? Math.min(material.gain, 1 - material.offset) : material.gain).toFixed(4))
+        channel.setAttribute('intercept', material.offset.toFixed(4))
+      }
       const value = `url(#${this.uid}-r${i})`
-      piece.style.backdropFilter = value
-      piece.style.setProperty('-webkit-backdrop-filter', value)
+      if (supportsRefraction()) {
+        piece.style.backdropFilter = value
+        piece.style.setProperty('-webkit-backdrop-filter', value)
+      } else {
+        const source = this.elementSource()
+        if (!source) return
+        const image = document.createElement('div')
+        image.className = 'lab-glass-source'
+        image.style.backgroundImage = `-moz-element(#${CSS.escape(source.id)})`
+        image.style.filter = value
+        this.positionElementSource(piece, image)
+        piece.setAttribute('data-glass-source', '')
+        piece.replaceChildren(image)
+      }
     })
     this.refractKey = key
+  }
+
+  /** The colour scheme the glass paints in: the adaptive tone when it flipped, else the page's. */
+  private scheme(): 'light' | 'dark' {
+    const tone = this.host.getAttribute('data-glass-backdrop')
+    if (tone === 'light' || tone === 'dark') return tone
+    return document.documentElement.getAttribute('data-lab-theme') === 'dark' ? 'dark' : 'light'
   }
 
   private lightFor(bounds: GlassRect, frame: HostFrame): GlassLight {
@@ -674,33 +760,86 @@ const node = <K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string
   return el
 }
 
+// Canvas pixels stay in the document: no PNG encode/decode or SVG image masks on pointer moves.
+const rimSurfaces = new WeakMap<object, { width: number; surface: ReturnType<typeof highlightSurface>; canvas: HTMLCanvasElement; key: string }>()
+const reflectionLayers = new WeakMap<SVGSVGElement, HTMLDivElement>()
+
 /** Edge and light, one clipped group per cluster so each bubble is lit on its own. */
 function renderPaint(
   svg: SVGSVGElement,
   paths: ReturnType<typeof glassPaths>,
   lights: GlassLight[],
   uid: string,
+  spacing: number,
+  highlightWidth: number,
+  highlightStrength: number,
+  highlightProfile: 'surface' | 'rim',
   glow: { x: number; y: number; radius: number; opacity: number } | null
 ) {
+  let layer = reflectionLayers.get(svg)
+  if (!layer) {
+    layer = document.createElement('div')
+    layer.className = 'lab-glass-reflection-layer'
+    svg.parentElement?.insertBefore(layer, svg)
+    reflectionLayers.set(svg, layer)
+  }
+  const styles = getComputedStyle(svg)
+  const lightColor = parseCssColor(styles.getPropertyValue('--lab-glass-edge-light')) ?? { r: 1, g: 1, b: 1, a: 0.2 }
+  const lightAlpha = Math.min(1, lightColor.a * 2.5 + 0.24)
+  const rimBase = Number.parseFloat(styles.getPropertyValue('--lab-glass-rim-base')) || 0.27
+  const rimPeak = Number.parseFloat(styles.getPropertyValue('--lab-glass-rim-peak')) || 0.718
+  const shadowAlpha = Math.min(1, (Number.parseFloat(styles.getPropertyValue('--lab-glass-shadow-alpha')) || 0.1) * (Number.parseFloat(styles.getPropertyValue('--lab-glass-tint')) || 0) * 2)
+  const canvases: HTMLCanvasElement[] = []
   const defs = node('defs', {})
   const parts: SVGElement[] = [defs]
   paths.forEach((path, i) => {
     const clip = node('clipPath', { id: `${uid}-c${i}` })
     clip.append(node('path', { d: path.d }))
-    const g = rimGradient(path.bounds, lights[i])
-    // Lit at both ends of the light axis (cos² of the edge's angle to it), over a base rim.
-    const gradient = node('linearGradient', { id: `${uid}-g${i}`, gradientUnits: 'userSpaceOnUse', x1: g.x1, y1: g.y1, x2: g.x2, y2: g.y2 })
-    for (const [offset, share] of GLASS_RIM_STOPS)
-      gradient.append(node('stop', { offset, 'class': 'lab-glass-stop-light', 'stop-opacity': share }))
-    defs.append(clip, gradient)
+    defs.append(clip)
     const group = node('g', { 'clip-path': `url(#${uid}-c${i})` })
-    group.append(
-      node('path', { d: path.d, class: 'lab-glass-edge' }),
-      node('path', { d: path.d, class: 'lab-glass-rim lab-glass-rim-base' }),
-      node('path', { d: path.d, class: 'lab-glass-rim', stroke: `url(#${uid}-g${i})` })
-    )
+    group.append(node('path', { d: path.d, class: 'lab-glass-edge' }))
+    let cached = rimSurfaces.get(path)
+    if (!cached || cached.width !== highlightWidth) {
+      const surface = highlightSurface(path.shapes, spacing, path.bounds, highlightWidth)
+      const canvas = document.createElement('canvas')
+      canvas.width = surface.width
+      canvas.height = surface.height
+      canvas.className = 'lab-glass-rim lab-glass-reflection-canvas'
+      cached = { width: highlightWidth, surface, canvas, key: '' }
+      rimSurfaces.set(path, cached)
+    }
+    const light = lights[i]
+    const key = `${light.x.toFixed(3)},${light.y.toFixed(3)}|${highlightProfile}|${rimBase},${rimPeak}|${highlightStrength}|${lightColor.r},${lightColor.g},${lightColor.b},${lightAlpha}|${shadowAlpha}`
+    if (cached.key !== key) {
+      const { surface, canvas } = cached
+      const context = canvas.getContext('2d')
+      if (context) {
+        const image = context.createImageData(surface.width, surface.height)
+        for (const sample of surface.samples) {
+          const reflection = highlightProfile === 'rim'
+            ? measuredRimReflection(sample.depth, sample.nx, sample.ny, light, surface.bezel, rimBase, rimPeak)
+            : surfaceReflection(sample.depth, sample.nx, sample.ny, light, surface.bezel) * lightAlpha
+          const highlight = Math.min(1, reflection * highlightStrength) * sample.coverage
+          const shade = (highlightProfile === 'rim' ? 0 : 1) * surfaceShade(sample.depth, sample.nx, sample.ny, light, surface.bezel) * Math.min(1, highlightStrength) * shadowAlpha * sample.coverage
+          const alpha = highlight + shade * (1 - highlight)
+          const share = alpha > 0 ? highlight / alpha : 0
+          image.data[sample.index] = Math.round(lightColor.r * share * 255)
+          image.data[sample.index + 1] = Math.round(lightColor.g * share * 255)
+          image.data[sample.index + 2] = Math.round(lightColor.b * share * 255)
+          image.data[sample.index + 3] = Math.round(alpha * 255)
+        }
+        context.putImageData(image, 0, 0)
+        cached.key = key
+      }
+    }
+    const { x, y, width, height } = path.bounds
+    Object.assign(cached.canvas.style, { left: `${x}px`, top: `${y}px`, width: `${width}px`, height: `${height}px` })
+    canvases.push(cached.canvas)
     parts.push(group)
   })
+  // Keep live canvases attached between frames; remove only departed geometry.
+  for (const child of Array.from(layer.children)) if (!canvases.includes(child as HTMLCanvasElement)) child.remove()
+  for (const canvas of canvases) if (canvas.parentElement !== layer) layer.append(canvas)
   if (glow && glow.opacity > 0.01 && paths.length) {
     // Light from under the finger, spilling onto every bubble it reaches (clipped to all glass).
     const clip = node('clipPath', { id: `${uid}-gc` })

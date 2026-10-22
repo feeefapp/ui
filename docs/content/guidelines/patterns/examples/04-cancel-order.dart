@@ -74,7 +74,7 @@ class _CancelOrderState extends State<CancelOrder> {
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 18 * -0.035,
-                      height: 1.12,
+                      height: 20 / 18,
                       leadingDistribution: TextLeadingDistribution.even,
                     ),
                   ),

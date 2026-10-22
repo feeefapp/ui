@@ -517,7 +517,8 @@ class _TabButtonState extends State<_TabButton> {
     final maxWidth = math.max(0.0, _max.get());
     final minWidth = math.min(maxWidth, math.max(0.0, _min.get()));
     final labelSize = widget.wide ? 14.0 : 11.0;
-    final lineHeight = labelSize * 1.2;
+    // `.lab-tab-label`: 11px / 13px, wide 14px / 17px.
+    final lineHeight = widget.wide ? 17.0 : 13.0;
 
     final icon = SizedBox.square(
       dimension: 24,

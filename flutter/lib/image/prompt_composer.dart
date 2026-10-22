@@ -515,10 +515,10 @@ class _ImagePromptComposerState extends State<ImagePromptComposer> {
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 11.5,
-          height: 1.4,
+          height: 16 / 11.5,
           color: mixSrgb(c.muted, 0.82, transparent),
         ),
-        child: CssBaseline(lineHeight: 11.5 * 1.4, child: widget.caption),
+        child: CssBaseline(lineHeight: 16, child: widget.caption),
       ),
     );
 

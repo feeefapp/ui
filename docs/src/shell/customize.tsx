@@ -5,8 +5,9 @@ import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
 import { NumberField } from '@feeef.dev/ui/primitives/number-field'
 import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
 import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { SlideSwitch, Slider } from '@feeef.dev/ui/primitives/slider'
 import { useTheme, type ThemeMode } from '@feeef.dev/ui/theme'
-import type { Density, GlassRenderer, GlassStyle, Palette } from '@feeef.dev/ui/theme-config'
+import { THEME_DEFAULTS, type Density, type GlassStyle, type Palette } from '@feeef.dev/ui/theme-config'
 import { useDocsSettings, type DocsSettings } from '../settings'
 import { PlatformSwitch, VersionMenu } from './platform'
 
@@ -25,6 +26,54 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
     <div className="docs-customize-row">
       <span aria-hidden="true">{label}</span>
       {children}
+    </div>
+  )
+}
+
+/** An on/off option: its name, then the switch. */
+function SwitchRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
+  return (
+    <div className="docs-customize-switch">
+      <span aria-hidden="true">{label}</span>
+      <SlideSwitch label={label} controlSize="compact" checked={checked} onCheckedChange={onChange} />
+    </div>
+  )
+}
+
+/**
+ * The Liquid Glass setting, like iOS 27's: one slider from clear to tinted (the midpoint is the
+ * default), then blur and refraction.
+ */
+function GlassSettings() {
+  const { settings, update } = useDocsSettings()
+  const tint = settings.theme.glassTint
+  return (
+    <div className="docs-customize-row">
+      <span aria-hidden="true">Liquid Glass</span>
+      <Slider
+        label="Liquid Glass"
+        controlSize="compact"
+        trackStyle="thin"
+        min={0}
+        max={1}
+        step={0.05}
+        value={tint}
+        marks={[{ value: THEME_DEFAULTS.glassTint }]}
+        getValueText={(value) =>
+          value === THEME_DEFAULTS.glassTint ? 'Standard' : `${Math.round(value * 100)}% tinted`
+        }
+        onValueChange={(glassTint) => update({ theme: { glassTint } })}
+      />
+      <div className="docs-customize-scale" aria-hidden="true">
+        <span>Clear</span>
+        <span>Tinted</span>
+      </div>
+      <SwitchRow label="Blur" checked={settings.theme.glassBlur} onChange={(glassBlur) => update({ theme: { glassBlur } })} />
+      <SwitchRow
+        label="Refraction"
+        checked={settings.theme.glassRefraction}
+        onChange={(glassRefraction) => update({ theme: { glassRefraction } })}
+      />
     </div>
   )
 }
@@ -165,23 +214,12 @@ export function Customize() {
                 onChange={(glass) => update({ theme: { glass } })}
                 options={[
                   { value: 'liquid', label: 'Liquid' },
-                  { value: 'frosted', label: 'Frosted' },
+                  { value: 'still', label: 'Still' },
                   { value: 'solid', label: 'Solid' },
                 ]}
               />
             </Row>
-            <Row label="Glass renderer">
-              <SegmentedControl<GlassRenderer>
-                label="Glass renderer"
-                value={settings.theme.glassRenderer}
-                onChange={(glassRenderer) => update({ theme: { glassRenderer } })}
-                options={[
-                  { value: 'fill', label: 'Fill' },
-                  { value: 'css', label: 'Blur' },
-                  { value: 'canvas', label: 'Refraction' },
-                ]}
-              />
-            </Row>
+            <GlassSettings />
             <NumberField
               label="Corner radius"
               controlSize="compact"

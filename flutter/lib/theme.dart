@@ -20,7 +20,13 @@ class ThemeData {
     required this.config,
     required this.brightness,
     ColorTokens? colors,
-  }) : colors = colors ?? ColorTokens.resolve(config.palette, brightness),
+  }) : colors =
+           colors ??
+           ColorTokens.resolve(
+             config.palette,
+             brightness,
+             glassTint: config.tint,
+           ),
        sizes = SizeTokens.of(config);
 
   final ThemeConfig config;
@@ -44,7 +50,9 @@ class ThemeData {
       other.config.density == config.density &&
       other.config.radius == config.radius &&
       other.config.glass == config.glass &&
-      other.config.glassRenderer == config.glassRenderer;
+      other.config.tint == config.tint &&
+      other.config.glassBlur == config.glassBlur &&
+      other.config.glassRefraction == config.glassRefraction;
 
   @override
   int get hashCode => Object.hash(
@@ -54,7 +62,9 @@ class ThemeData {
     config.density,
     config.radius,
     config.glass,
-    config.glassRenderer,
+    config.tint,
+    config.glassBlur,
+    config.glassRefraction,
   );
 }
 
@@ -113,3 +123,15 @@ class _ThemeScope extends InheritedWidget {
   @override
   bool updateShouldNotify(_ThemeScope old) => old.data != data;
 }
+
+/// The glass style to paint with: the app's [ThemeConfig.glass], or `solid` when the platform asks
+/// for more contrast (`MediaQuery.highContrast`, the web kit's `prefers-contrast: more`; the kit
+/// then also outlines glass in the ink colour, see [glassHighContrastOf]). Flutter exposes no
+/// reduce-transparency setting: apps that read one from the platform pass `GlassStyle.solid`.
+GlassStyle glassStyleOf(BuildContext context) => glassHighContrastOf(context)
+    ? GlassStyle.solid
+    : ThemeProvider.of(context).config.glass;
+
+/// True when the platform asks for more contrast: glass turns opaque with an ink outline.
+bool glassHighContrastOf(BuildContext context) =>
+    MediaQuery.maybeHighContrastOf(context) ?? false;

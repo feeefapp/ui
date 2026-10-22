@@ -408,7 +408,7 @@ class _Section extends StatelessWidget {
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 15 * -0.035,
-                  height: 1.12,
+                  height: 17 / 15,
                   leadingDistribution: TextLeadingDistribution.even,
                 ),
               ),

@@ -133,8 +133,9 @@ class _Column extends StatelessWidget {
                     color: theme.colors.muted,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    // The kit's heading rhythm (system.css h3): tight lines, tighter letters.
-                    height: 1.12,
+                    // The kit's heading rhythm (system.css h3): tight lines (1.12em snapped to
+                    // whole px), tighter letters.
+                    height: 15 / 13,
                     letterSpacing: -0.035 * 13,
                   ),
                 ),

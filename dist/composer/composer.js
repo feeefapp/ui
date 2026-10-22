@@ -27,9 +27,13 @@ const GlassCard = React.forwardRef(function GlassCard(props, ref) {
                 ref.current = node;
         }, "data-glass-member": member ? '' : undefined });
 });
-/** Placeholder that fades in word by word. Decorative (`aria-hidden`); label the field separately. */
+/**
+ * Placeholder that fades in word by word. Decorative (`aria-hidden`); label the field separately.
+ * Its words are inline blocks, so it takes the direction of its own text (`dir="auto"`): an English
+ * hint on an Arabic page keeps its word order, still aligned to the page's start.
+ */
 export function ComposerHint({ text }) {
-    return _jsx("span", { className: "lab-pc-hint", "aria-hidden": "true", children: text.split(/(\s+)/).map((word, index) => /\s+/.test(word) ? word : _jsx("span", { style: { animationDelay: `${Math.min(index, 40) * 28}ms` }, children: word }, index)) }, text);
+    return _jsx("span", { className: "lab-pc-hint", "aria-hidden": "true", dir: "auto", children: text.split(/(\s+)/).map((word, index) => /\s+/.test(word) ? word : _jsx("span", { style: { animationDelay: `${Math.min(index, 40) * 28}ms` }, children: word }, index)) }, text);
 }
 /** Canonical measured Lab composer with stable caret, growing input and responsive tool slots. */
 export function PromptComposer({ value, onValueChange, onSubmit, label, placeholder, disabled, busy, dropActive, submitDisabled, maxLength, above, tools, submit, footer, contentRevision, className, ...props }) {

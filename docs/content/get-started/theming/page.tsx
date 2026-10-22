@@ -63,19 +63,29 @@ export function Root({ children }: { children: React.ReactNode }) {
             ],
             [
               <C>glass</C>,
-              <><C>liquid</C> (default), <C>frosted</C> or <C>solid</C></>,
-              <>Floating chrome. Liquid glass merges, lights up toward the pointer and responds to presses; frosted keeps the blur and the morphs with a still light; solid paints opaque surfaces, for dense tools. See <Link to="/components/glass-container">Glass container</Link>.</>,
+              <><C>liquid</C> (default), <C>still</C> or <C>solid</C></>,
+              <>Floating chrome. Liquid glass merges, lights up toward the pointer and responds to presses; still glass keeps the material and the morphs with a fixed light; solid paints opaque surfaces, for dense tools. See <Link to="/components/glass-container">Glass container</Link>.</>,
             ],
             [
-              <C>glassRenderer</C>,
-              <><C>fill</C> (default), <C>css</C> or <C>canvas</C></>,
-              <>How much work glass does on the web. Fill paints a filled glass colour with light and shadow but no backdrop blur, the cheapest. CSS adds the blur. Canvas also bends the content behind the glass at its edges, with displacement maps built whenever the glass settles: heavier, Chromium only (other browsers keep CSS), off with reduced transparency or increased contrast.</>,
+              <C>glassTint</C>,
+              <>A number: <C>0</C> clear … <C>1</C> tinted, <C>0.5</C> default, clamped to 0–1</>,
+              <>The Liquid Glass slider: how much of the surface veils the backdrop. Clear has no veil and no shadow; tinted is the measured regular material; the default is a light veil (~40%). Sets <C>--lab-glass-tint</C>.</>,
+            ],
+            [
+              <C>glassBlur</C>,
+              <><C>false</C> (default) or <C>true</C></>,
+              <>The measured backdrop blur (2.9px on controls → 5.2px on panels). Off, what is behind the glass stays sharp.</>,
+            ],
+            [
+              <C>glassRefraction</C>,
+              <><C>true</C> (default) or <C>false</C></>,
+              <>Bends the backdrop at the glass edges, built when the glass settles. Chromium only; Firefox and Safari (and reduced transparency or increased contrast) show the same glass without the bend.</>,
             ],
           ]}
         />
         <p>
           Unset options fall back to <C>THEME_DEFAULTS</C>:{' '}
-          <C>{"{ palette: 'lab', density: 'comfortable', radius: 1 }"}</C>. Try every combination live in
+          <C>{"{ palette: 'lab', density: 'comfortable', radius: 1, glass: 'liquid', glassTint: 0.5, glassBlur: false, glassRefraction: true }"}</C>. Try every combination live in
           Customize, in the top bar.
         </p>
       </Section>
@@ -125,8 +135,8 @@ function DarkModeToggle() {
         </p>
         <ul>
           <li>
-            <C>themeAttributes(theme)</C>: <C>data-lab-palette</C>, <C>data-lab-density</C>, <C>data-lab-glass</C>, <C>data-lab-glass-renderer</C> and the{' '}
-            <C>--lab-radius-scale</C> style.
+            <C>themeAttributes(theme)</C>: <C>data-lab-palette</C>, <C>data-lab-density</C>, <C>data-lab-glass</C>, <C>data-lab-glass-blur</C>,{' '}
+            <C>data-lab-glass-refraction</C> and the <C>--lab-radius-scale</C> and <C>--lab-glass-tint</C> styles.
           </li>
           <li>
             <C>data-lab-theme</C>: the color mode. Every color token hangs off this attribute, so set it

@@ -105,7 +105,7 @@ html[data-lab-theme]
   background: var(--lab-surface);
   color: var(--lab-ink);
   box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
-  font: 400 14px/1.4 var(--lab-font);
+  font: 400 14px/20px var(--lab-font);
   transform-origin: var(--radix-dropdown-menu-content-transform-origin);
   animation: lab-actions-menu-enter var(--lab-duration-fast) var(--lab-ease);
 }

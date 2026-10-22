@@ -40,14 +40,14 @@ class _ConfirmState extends State<Confirm> {
               children: [
                 Semantics(
                   header: true,
-                  // A dialog `h2`: 500 weight, -0.035em, line-height 1.12.
+                  // A dialog `h2`: 500 weight, -0.035em, line-height round(1.12em, 1px).
                   child: const Text(
                     'Cancel order #10482?',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 18 * -0.035,
-                      height: 1.12,
+                      height: 20 / 18,
                     ),
                   ),
                 ),

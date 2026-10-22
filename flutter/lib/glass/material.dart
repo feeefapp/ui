@@ -74,3 +74,67 @@ List<double> saturateMatrix(double s) => [
   0.213 - 0.213 * s, 0.715 - 0.715 * s, 0.072 + 0.928 * s, 0, 0, //
   0, 0, 0, 1, 0,
 ];
+
+/// Measured clear glass (FINDINGS §3): no veil, no shadow, full colour, and a slight brightness
+/// lift on what is behind it, `out = gain · backdrop + offset` in sRGB.
+const double glassClearGain = 1.03;
+const double glassClearOffset = 0.076;
+
+/// The default tint: the midpoint between clear and tinted, a light veil over the bent backdrop.
+const double glassTintDefault = 0.5;
+
+/// A tint clamped to 0–1; anything not finite is the default.
+double clampGlassTint(double tint) =>
+    tint.isFinite ? tint.clamp(0.0, 1.0) : glassTintDefault;
+
+/// The material at one tint, for one brightness and glass size. Mixed in sRGB over the backdrop:
+/// `out = veil · surface + (1 - veil) · (gain · saturate(backdrop) + offset)`.
+typedef GlassMaterial = ({
+  double veil,
+  double saturate,
+  double gain,
+  double offset,
+  double shadow,
+});
+
+/// The tint curve, the twin of `glassMaterial` in `@feeef.dev/ui/glass/material`. Clear (0) and
+/// regular (1) are the measured materials; between them every parameter follows the tint in a
+/// straight line, except saturation: the share of the backdrop's colour that reaches the eye,
+/// `(1 - veil) · saturate`, is what stays linear (1 for clear glass, 0.64–0.73 for regular), so
+/// saturation is derived from it and the veil. At the default 0.5 the veil is 36–44 %.
+GlassMaterial glassMaterial(
+  double tint, {
+  required bool dark,
+  required GlassSize size,
+}) {
+  final t = clampGlassTint(tint);
+  final regularVeil = glassVeil(dark: dark, size: size);
+  final regularColour =
+      (1 - regularVeil) * glassSaturate(dark: dark, size: size);
+  final veil = t * regularVeil;
+  final colour = 1 - t * (1 - regularColour);
+  return (
+    veil: veil,
+    saturate: colour / (1 - veil),
+    gain: 1 + (glassClearGain - 1) * (1 - t),
+    offset: glassClearOffset * (1 - t),
+    shadow: t,
+  );
+}
+
+/// The backdrop's colour treatment for [material] as one `ColorFilter.matrix`: saturation, then
+/// the lift `gain · x + offset` (Flutter's bias column is in 0–255).
+List<double> glassBackdropMatrix(GlassMaterial material) {
+  final s = saturateMatrix(material.saturate);
+  final g = material.gain;
+  final bias = material.offset * 255;
+  return [
+    for (var row = 0; row < 4; row++)
+      for (var col = 0; col < 5; col++)
+        row == 3
+            ? s[row * 5 + col]
+            : col == 4
+            ? s[row * 5 + col] * g + bias
+            : s[row * 5 + col] * g,
+  ];
+}

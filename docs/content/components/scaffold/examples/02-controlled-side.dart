@@ -83,7 +83,7 @@ class _ControlledSideState extends State<ControlledSide> {
                   'Orders',
                   style: TextStyle(
                     fontSize: 18,
-                    height: 1.12,
+                    height: 20 / 18,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

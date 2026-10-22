@@ -1,6 +1,8 @@
 /**
  * The kit's glass over the LGLab backgrounds, laid out like the iOS reference scenes
- * (app/layouts.json): ?layout=shapes-a&bg=photo&theme=light&renderer=css|canvas|fill.
+ * (app/layouts.json): ?layout=shapes-a&bg=photo&theme=light&renderer=css|canvas|default.
+ * `renderer` names a ThemeConfig preset: `css` = the measured regular material (tint 1) with blur,
+ * `canvas` = the same plus refraction (what the iOS captures show), `default` = the kit defaults.
  * tools/compare_kit.mjs screenshots it at 3x and diffs it against the iOS captures.
  */
 import { useEffect, useRef } from 'react'
@@ -8,6 +10,7 @@ import { createRoot } from 'react-dom/client'
 import { Provider } from '@feeef.dev/ui/provider'
 import { GlassGroup } from '@feeef.dev/ui/scaffold'
 import { GlassContainer } from '@feeef.dev/ui/glass'
+import type { ThemeConfig } from '@feeef.dev/ui/theme-config'
 import layouts from '../app/layouts.json'
 import { backgroundPixels } from './backgrounds'
 
@@ -18,6 +21,11 @@ const layout = (layouts.layouts as Record<string, Shape[]>)[query.get('layout') 
 const bg = query.get('bg') ?? 'photo'
 const mode = query.get('theme') === 'dark' ? 'dark' : 'light'
 const renderer = query.get('renderer') ?? 'css'
+const PRESETS: Record<string, ThemeConfig> = {
+  css: { glassTint: 1, glassBlur: true, glassRefraction: false },
+  canvas: { glassTint: 1, glassBlur: true, glassRefraction: true },
+  default: {},
+}
 
 function Background() {
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -36,9 +44,8 @@ const radius = (s: Shape) => (s.kind === 'circle' || s.kind === 'capsule' ? Math
 
 function Scene() {
   useEffect(() => {
-    // The provider sets the theme attributes in its own effect; the renderer goes on after it.
+    // The provider sets the theme attributes in its own effect; mark ready after it.
     const id = setTimeout(() => {
-      document.documentElement.setAttribute('data-lab-glass-renderer', renderer)
       document.documentElement.setAttribute('data-scene-ready', '')
     }, 50)
     return () => clearTimeout(id)
@@ -72,7 +79,7 @@ createRoot(document.getElementById('root')!).render(
     services={{ preferences: { get: () => null, set: () => {}, remove: () => {} } }}
     i18n={{ locale: 'en', dir: 'ltr' }}
     initialTheme={mode}
-    theme={{ palette: 'mono', density: 'comfortable' }}
+    theme={{ palette: 'mono', density: 'comfortable', ...(PRESETS[renderer] ?? PRESETS.css) }}
   >
     <Scene />
   </Provider>

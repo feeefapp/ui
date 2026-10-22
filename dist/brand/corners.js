@@ -1,3 +1,4 @@
+import { cornerFit } from './corner-fit.js';
 import { FO_CORNER_EXPONENT, foSuperellipsePath } from './geometry.js';
 const selector = '[data-lab-corners], :is([class^="lab-"], [class*=" lab-"]), .lab-app :is(button, a, input, textarea, select), .lab-dialog :is(button, a, input, textarea, select)';
 const ownedProperties = [
@@ -35,9 +36,9 @@ const restore = (host, property, value) => {
     else
         host.style.removeProperty(property);
 };
-const radius = (value, width, height) => {
+const radius = (value, width, height, fit) => {
     const [horizontal, vertical = horizontal] = value.split(' ');
-    const length = (part, size) => part.endsWith('%') ? (Number.parseFloat(part) * size) / 100 : Number.parseFloat(part) || 0;
+    const length = (part, size) => part.endsWith('%') ? (Number.parseFloat(part) * size) / 100 : (Number.parseFloat(part) || 0) / fit;
     return { x: length(horizontal, width), y: length(vertical, height) };
 };
 /**
@@ -86,6 +87,7 @@ export function installFoContinuousCorners(root) {
             restore(host, property, entry.original.get(property));
         });
         const style = getComputedStyle(host);
+        const fit = cornerFit();
         const width = host.offsetWidth;
         const height = host.offsetHeight;
         const radii = [
@@ -93,7 +95,9 @@ export function installFoContinuousCorners(root) {
             style.borderTopRightRadius,
             style.borderBottomRightRadius,
             style.borderBottomLeftRadius,
-        ].map((value) => radius(value, width, height));
+        ]
+            // CSS radii are shrunk to look right as circles (--lab-corner-fit); the SVG draws the real curve.
+            .map((value) => radius(value, width, height, fit));
         const image = style.backgroundImage;
         if (!width ||
             !height ||

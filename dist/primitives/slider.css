@@ -32,7 +32,7 @@
   width: 100%;
   min-width: var(--lab-slider-size);
   height: var(--lab-slider-size);
-  border-radius: calc(var(--lab-slider-size) / 2);
+  border-radius: calc(var(--lab-slider-size) / 2 * var(--lab-corner-fit, 1));
   corner-shape: superellipse(1.5);
   cursor: pointer;
   touch-action: pan-y pinch-zoom;
@@ -45,7 +45,7 @@
   inset-block: 0;
   margin-block: auto;
   height: var(--lab-slider-track-height);
-  border-radius: calc(var(--lab-slider-track-height) / 2);
+  border-radius: calc(var(--lab-slider-track-height) / 2 * var(--lab-corner-fit, 1));
   corner-shape: superellipse(1.5);
   pointer-events: none;
 }
@@ -87,7 +87,7 @@
   place-items: center;
   width: var(--lab-slider-thumb-size);
   height: var(--lab-slider-thumb-size);
-  border-radius: calc(var(--lab-slider-thumb-size) * 0.45);
+  border-radius: calc(var(--lab-slider-thumb-size) * 0.45 * var(--lab-corner-fit, 1));
   corner-shape: superellipse(1.5);
   background: var(--lab-surface);
   color: var(--lab-ink);

@@ -360,7 +360,7 @@ class _NoResults extends StatelessWidget {
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 17 * -0.035,
-                  height: 1.12,
+                  height: 19 / 17,
                   leadingDistribution: TextLeadingDistribution.even,
                 ),
               ),

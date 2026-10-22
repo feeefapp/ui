@@ -113,11 +113,44 @@ void main() {
       expect(rimAlpha(n(row[0]), dark: false), closeTo(n(row[1]), 1e-12));
       expect(rimAlpha(n(row[0]), dark: true), closeTo(n(row[2]), 1e-12));
     }
+    for (final row in fixture['tint'] as List) {
+      final m = glassMaterial(
+        n(row[0]),
+        dark: row[1] == 'dark',
+        size: GlassSize.values.byName(row[2] as String),
+      );
+      final expected = row[3] as Map<String, dynamic>;
+      final label = '${row[0]} ${row[1]} ${row[2]}';
+      expect(m.veil, closeTo(n(expected['veil']), 1e-12), reason: label);
+      expect(
+        m.saturate,
+        closeTo(n(expected['saturate']), 1e-12),
+        reason: label,
+      );
+      expect(m.gain, closeTo(n(expected['gain']), 1e-12), reason: label);
+      expect(m.offset, closeTo(n(expected['offset']), 1e-12), reason: label);
+      expect(m.shadow, closeTo(n(expected['shadow']), 1e-12), reason: label);
+    }
     final stops = fixture['rimStops'] as List;
     expect(glassRimStops.length, stops.length);
     for (var i = 0; i < stops.length; i++) {
       expect(glassRimStops[i].$1, closeTo(n(stops[i][0]), 1e-12));
       expect(glassRimStops[i].$2, closeTo(n(stops[i][1]), 1e-12));
     }
+  });
+
+  test('the backdrop matrix saturates, then lifts by gain · x + offset', () {
+    final m = glassMaterial(0.25, dark: false, size: GlassSize.small);
+    final matrix = glassBackdropMatrix(m);
+    for (final x in [0.0, 0.4, 0.9]) {
+      // A grey: saturation leaves it alone, so only the lift shows (bias in 0–255).
+      for (var row = 0; row < 3; row++) {
+        final out =
+            (matrix[row * 5] + matrix[row * 5 + 1] + matrix[row * 5 + 2]) * x +
+            matrix[row * 5 + 4] / 255;
+        expect(out, closeTo(m.gain * x + m.offset, 1e-9));
+      }
+    }
+    expect(matrix.sublist(15), [0, 0, 0, 1, 0]);
   });
 }

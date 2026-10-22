@@ -51,7 +51,9 @@ html[data-lab-theme]
 }
 html[data-lab-theme]
   .lab-control[data-surface-variant][data-control-appearance='toolbar']:not(
-    [data-surface-variant='filled']
+    [data-surface-variant='filled'],
+    [aria-pressed='true'],
+    [data-state='on']
   ) {
   --lab-control-fill: transparent;
   --lab-control-edge: transparent;

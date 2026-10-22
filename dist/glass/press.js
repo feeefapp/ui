@@ -34,6 +34,7 @@ export function pressedShape(shape, scale, stretchX, stretchY) {
         height: Math.max(0, h),
         // Drawing clamps the radius to half the shorter side, so a narrowed drop stays round.
         radius: shape.radius * scale,
+        ...(shape.cornerExponent === undefined ? {} : { cornerExponent: shape.cornerExponent }),
     };
 }
 //# sourceMappingURL=press.js.map

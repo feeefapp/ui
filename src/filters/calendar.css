@@ -192,7 +192,7 @@ html[data-lab-theme] .lab-calendar-heading .lab-calendar-title.lab-control {
   margin: 0;
   color: var(--lab-muted);
   font-size: 13px;
-  line-height: 1.4;
+  line-height: 18px;
 }
 html[data-lab-theme] .lab-temporal-actions.lab-toolbar-group {
   margin-inline-start: auto;

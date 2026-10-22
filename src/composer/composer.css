@@ -200,8 +200,8 @@ html[data-lab-theme] .lab-pc-template-chip .lab-control[data-variant] {
   corner-shape: superellipse(1.5);
   /* The kit's control-sized glass material (research/liquid-glass). */
   background: var(--lab-glass-fill);
-  -webkit-backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate));
-  backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate)) var(--lab-glass-lift);
+  backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate)) var(--lab-glass-lift);
   box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
   transition:
     border-color 200ms,

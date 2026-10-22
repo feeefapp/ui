@@ -299,7 +299,7 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
             child: DefaultTextStyle.merge(
               style: TextStyle(
                 fontSize: 15,
-                height: 1.5,
+                height: 23 / 15,
                 leadingDistribution: TextLeadingDistribution.even,
                 color: c.ink,
               ),

@@ -33,14 +33,18 @@ class ShaderBackground extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // `<h3>`: 1.17em, bold.
+                  // `<h3>`: 1.17em; the kit's heading rule (system.css): 500 weight, -0.035em,
+                  // line-height round(1.12em, 1px) = 20px.
                   const Padding(
                     padding: EdgeInsets.only(bottom: 12),
                     child: Text(
                       'Turn a script into a voiceover',
                       style: TextStyle(
                         fontSize: 17.55,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 17.55 * -0.035,
+                        height: 20 / 17.55,
+                        leadingDistribution: TextLeadingDistribution.even,
                       ),
                     ),
                   ),

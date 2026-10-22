@@ -619,7 +619,7 @@ class _Note extends StatelessWidget {
     style: TextStyle(
       color: ThemeProvider.of(context).colors.muted,
       fontSize: 13,
-      height: 1.4,
+      height: 18 / 13,
     ),
   );
 }

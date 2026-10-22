@@ -5,35 +5,45 @@ import { cn } from '../utils'
 import { useReducedMotion } from '../physics/react'
 import { GlassContext, type GlassRegistry } from './context'
 import { GlassScene } from './scene'
-import type { GlassRenderer, GlassStyle } from '../theme-config'
+import { clampGlassTint } from './material'
+import type { GlassStyle } from '../theme-config'
 import './glass.css'
 
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect
 
-/** A theme attribute on `<html>`, live, limited to `allowed` values. */
-function useRootChoice<T extends string>(attribute: string, allowed: readonly T[], fallback: T): T {
+/** A value read from `<html>`, live: `read` runs again whenever one of `attributes` changes. */
+function useRootValue(attributes: string[], read: (root: HTMLElement) => string, fallback: string): string {
   return React.useSyncExternalStore(
     (notify) => {
       const observer = new MutationObserver(notify)
-      observer.observe(document.documentElement, { attributes: true, attributeFilter: [attribute] })
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: attributes })
       return () => observer.disconnect()
     },
-    () => {
-      const value = document.documentElement.getAttribute(attribute) as T | null
-      return value && allowed.includes(value) ? value : fallback
-    },
+    () => read(document.documentElement),
     () => fallback
   )
 }
 
 /** The app's glass style (ThemeConfig `glass`, on `<html data-lab-glass>`), live. */
 export function useGlassStyle(): GlassStyle {
-  return useRootChoice<GlassStyle>('data-lab-glass', ['liquid', 'frosted', 'solid'], 'liquid')
+  const value = useRootValue(['data-lab-glass'], (root) => root.getAttribute('data-lab-glass') ?? '', 'liquid')
+  return value === 'still' || value === 'solid' ? value : 'liquid'
 }
 
-/** The app's glass renderer (ThemeConfig `glassRenderer`, on `<html data-lab-glass-renderer>`), live. */
-export function useGlassRenderer(): GlassRenderer {
-  return useRootChoice<GlassRenderer>('data-lab-glass-renderer', ['fill', 'css', 'canvas'], 'fill')
+/**
+ * The app's glass material options (ThemeConfig `glassTint`, `glassBlur`, `glassRefraction`, on
+ * `<html>` as `--lab-glass-tint`, `data-lab-glass-blur` and `data-lab-glass-refraction`), live.
+ */
+export function useGlassOptions(): { tint: number; blur: boolean; refraction: boolean } {
+  const blur = useRootValue(['data-lab-glass-blur'], (root) => root.getAttribute('data-lab-glass-blur') ?? '', 'off') === 'on'
+  const refraction = useRootValue(['data-lab-glass-refraction'], (root) => root.getAttribute('data-lab-glass-refraction') ?? '', 'on') !== 'off'
+  const tint = useRootValue(
+    ['style'],
+    // The inline variable (themeAttributes / applyThemeConfig), else the stylesheet's default.
+    (root) => root.style.getPropertyValue('--lab-glass-tint') || getComputedStyle(root).getPropertyValue('--lab-glass-tint'),
+    ''
+  )
+  return { tint: clampGlassTint(Number.parseFloat(tint)), blur, refraction }
 }
 
 type ContainerTag = 'div' | 'header' | 'footer' | 'nav' | 'section' | 'aside'
@@ -46,6 +56,8 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
    * Keep it below the gap between bubbles at rest so separate bubbles stay apart. Default 8.
    */
   spacing?: number
+  /** Corner profile of the glass: kit superellipse (default) or circular `round` corners. */
+  cornerShape?: 'superellipse' | 'round'
   /** `pointer` (default) turns the light toward a mouse or pen; `static` keeps it at the top-left. */
   light?: 'pointer' | 'static'
   /**
@@ -60,18 +72,31 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
    * colour. Glass taller than 72px never flips. Default true.
    */
   adaptive?: boolean
+  /** Reflective bevel width in CSS px, 0–20; default 5. Small bubbles cap it to fit. */
+  highlightWidth?: number
+  /** `surface` (default) uses a convex bevel; `rim` uses the thin, symmetric screenshot-fitted highlight. */
+  highlightProfile?: 'surface' | 'rim'
+  /** Local material tint, 0 clear–1 tinted, preserving bright backdrop detail; omitted inherits ThemeConfig glassTint. */
+  tint?: number
+  /** Surface highlight opacity multiplier, 0–3; default 1. */
+  highlightStrength?: number
+  /** Backdrop bend multiplier, 0–3; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
+  refractionStrength?: number
+  /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
+  backdropSource?: string
 }
 
 /**
  * Draws ONE glass material for every bubble inside it (GlassGroup, ToolbarGroup, Dock, …), like
  * Apple's GlassEffectContainer. The app's ThemeConfig `glass` sets the style: `liquid` (moving
- * light, press response), `frosted` (still light, no press) or `solid` (opaque). Bubbles that come within `spacing` bend toward each other and
+ * light, press response), `still` (fixed light, no press) or `solid` (opaque); `glassTint`,
+ * `glassBlur` and `glassRefraction` set the material. Bubbles that come within `spacing` bend toward each other and
  * merge; a bubble that splits into several grows them out of itself; new and removed bubbles
  * materialize. Bubbles keep their layout, focus and semantics; only the paint moves here. Without
  * JavaScript, or in forced colors, every bubble paints its own glass as before.
  */
 export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>(function GlassContainer(
-  { as = 'div', spacing = 8, light = 'pointer', interactive = true, adaptive = true, className, children, ...props },
+  { as = 'div', spacing = 8, cornerShape = 'superellipse', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 5, highlightProfile = 'surface', highlightStrength = 1, refractionStrength = 1, tint, backdropSource, className, children, ...props },
   ref
 ) {
   const host = React.useRef<HTMLElement | null>(null)
@@ -83,7 +108,7 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
   const uid = React.useId()
   const reduced = useReducedMotion()
   const style = useGlassStyle()
-  const renderer = useGlassRenderer()
+  const options = useGlassOptions()
   const liquid = style === 'liquid'
 
   const setHost = React.useCallback(
@@ -133,14 +158,31 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
   useIsomorphicLayoutEffect(() => {
     const current = scene.current
     if (!current) return
+    current.cornerShape = cornerShape
     current.spacing = Math.max(0, spacing)
     current.reduceMotion = reduced
     current.followPointer = light === 'pointer' && liquid
     current.interactive = interactive && liquid
     current.adaptive = adaptive
-    current.renderer = renderer
+    current.preserveHighlights = tint !== undefined
+    current.tint = tint === undefined ? options.tint : clampGlassTint(tint)
+    current.blur = options.blur
+    current.highlightWidth = Number.isFinite(highlightWidth) ? Math.min(20, Math.max(0, highlightWidth)) : 5
+    current.highlightProfile = highlightProfile
+    current.highlightStrength = Number.isFinite(highlightStrength) ? Math.min(3, Math.max(0, highlightStrength)) : 1
+    current.refractionStrength = Number.isFinite(refractionStrength) ? Math.min(3, Math.max(0, refractionStrength)) : 1
+    current.backdropSource = backdropSource
+    current.refraction = options.refraction
     current.requestMeasure()
   })
+
+  React.useEffect(() => {
+    const source = backdropSource ? document.getElementById(backdropSource) : null
+    if (!source || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(() => scene.current?.requestMeasure())
+    observer.observe(source)
+    return () => observer.disconnect()
+  }, [backdropSource])
 
   React.useEffect(() => {
     if (light !== 'pointer' || reduced || !liquid) return
@@ -169,7 +211,7 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
 
   return React.createElement(
     as,
-    { ...props, 'ref': setHost, 'className': cn('lab-glass-container', className), 'data-glass-container': '' },
+    { ...props, 'ref': setHost, 'className': cn('lab-glass-container', className), 'data-glass-container': '', 'data-glass-corners': cornerShape, 'data-glass-local-tint': tint === undefined ? undefined : '', style: { ...props.style, ...(tint === undefined ? {} : { '--lab-glass-tint': clampGlassTint(tint) }) } as React.CSSProperties },
     <div className="lab-glass-material" aria-hidden="true">
       <svg ref={shadow} className="lab-glass-shadow" />
       <div ref={backdrop} className="lab-glass-backdrops" />
@@ -184,10 +226,10 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
  * toolbar, dock, search) use it so they share one material without ever nesting containers.
  */
 export const GlassScope = React.forwardRef<HTMLElement, GlassContainerProps>(function GlassScope(
-  { as = 'div', spacing, light, interactive, adaptive, ...props },
+  { as = 'div', spacing, cornerShape, light, interactive, adaptive, tint, highlightWidth, highlightProfile, highlightStrength, refractionStrength, backdropSource, ...props },
   ref
 ) {
   const outer = React.useContext(GlassContext)
   if (outer) return React.createElement(as, { ...props, ref })
-  return <GlassContainer {...props} as={as} spacing={spacing} light={light} interactive={interactive} adaptive={adaptive} ref={ref} />
+  return <GlassContainer {...props} as={as} spacing={spacing} cornerShape={cornerShape} light={light} interactive={interactive} adaptive={adaptive} tint={tint} highlightWidth={highlightWidth} highlightProfile={highlightProfile} highlightStrength={highlightStrength} refractionStrength={refractionStrength} backdropSource={backdropSource} ref={ref} />
 })

@@ -14,6 +14,7 @@ export declare class GlassScene {
     private paint;
     private shadow;
     private members;
+    private cornerFit;
     private shapes;
     private measured;
     private measureQueued;
@@ -33,8 +34,19 @@ export declare class GlassScene {
     interactive: boolean;
     /** Small glass flips light/dark to stay legible over what is behind it. */
     adaptive: boolean;
-    /** `canvas` adds refraction (displacement maps) once the glass settles, where supported. */
-    renderer: 'fill' | 'css' | 'canvas';
+    /** ThemeConfig `glassTint`: 0 clear … 1 tinted (the CSS reads `--lab-glass-tint`; the refraction filter needs the numbers). */
+    cornerShape: 'superellipse' | 'round';
+    tint: number;
+    preserveHighlights: boolean;
+    /** ThemeConfig `glassBlur`: the measured backdrop blur, sized per cluster. */
+    blur: boolean;
+    /** ThemeConfig `glassRefraction`: bend the backdrop at the edges once the glass settles, where supported. */
+    refraction: boolean;
+    backdropSource?: string;
+    highlightWidth: number;
+    highlightProfile: 'surface' | 'rim';
+    highlightStrength: number;
+    refractionStrength: number;
     private refractKey;
     private refractTimer;
     private filters;
@@ -74,11 +86,16 @@ export declare class GlassScene {
     draw(): void;
     private syncBackdrops;
     /**
-     * Canvas renderer: CSS glass while anything moves; once the outline has been still for a moment,
-     * build a displacement map for it and bend the backdrop at the glass edges (Chromium).
+     * Refraction: CSS glass while anything moves; once the outline has been still for a moment,
+     * build a displacement map for it and bend the backdrop (native in Chromium, a live source in Firefox).
      */
     private updateRefraction;
+    /** Sampling a separate paint layer avoids Firefox's recursive element-image prohibition. */
+    private elementSource;
+    private positionElementSource;
     private applyRefraction;
+    /** The colour scheme the glass paints in: the adaptive tone when it flipped, else the page's. */
+    private scheme;
     private lightFor;
     /** True when `element`, or an ancestor below the container, runs a geometric animation. */
     private animatedBetween;

@@ -148,7 +148,7 @@ html[data-lab-theme] .lab-tab-bar.lab-glass-group {
   overflow: hidden;
   font-size: 11px;
   font-weight: 500;
-  line-height: 1.2;
+  line-height: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -167,6 +167,7 @@ html[data-lab-theme] .lab-tab-bar.lab-glass-group {
   }
   .lab-tab-label {
     font-size: 14px;
+    line-height: 17px;
   }
 }
 

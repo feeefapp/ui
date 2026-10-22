@@ -74,7 +74,7 @@ class _Banner extends StatelessWidget {
                       fontSize: 22,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 22 * -0.035,
-                      height: 1.12,
+                      height: 25 / 22,
                       leadingDistribution: TextLeadingDistribution.even,
                     ),
                   ),

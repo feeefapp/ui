@@ -106,11 +106,14 @@ class _ZoomGalleryState extends State<ZoomGallery> {
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
                     product.name,
+                    // `.stack-demo-body h2` under the kit's heading rule: line-height
+                    // round(1.12em, 1px), -0.035em.
                     style: const TextStyle(
                       fontSize: 24,
-                      height: 1.6,
+                      height: 27 / 24,
                       leadingDistribution: TextLeadingDistribution.even,
                       fontWeight: FontWeight.w600,
+                      letterSpacing: 24 * -0.035,
                     ),
                   ),
                 ),
@@ -121,7 +124,8 @@ class _ZoomGalleryState extends State<ZoomGallery> {
                     'wilayas, delivered in two to four days.',
                     style: TextStyle(
                       color: c.muted,
-                      height: 1.5,
+                      fontSize: 15,
+                      height: 23 / 15,
                       leadingDistribution: TextLeadingDistribution.even,
                     ),
                   ),

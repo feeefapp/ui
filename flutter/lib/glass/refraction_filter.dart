@@ -6,27 +6,30 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import 'geometry.dart';
-import 'material.dart';
 import 'refraction.dart';
 
-/// The canvas renderer's backdrop on Impeller: blur sized to the cluster, the measured refraction
-/// (`shaders/glass_refraction.frag`, the twin of the web kit's displacement map) and saturation.
-/// Where shader filters are unsupported (Skia, Flutter web) or the shader is still loading it is a
-/// plain blurred, saturated backdrop, like the `css` renderer.
+/// The refracting backdrop on Impeller: the blur sized to the cluster when it is on, the measured
+/// refraction (`shaders/glass_refraction.frag`, the twin of the web kit's displacement map), then
+/// the material's colour (saturation and lift). Where shader filters are unsupported (Skia,
+/// Flutter web) or the shader is still loading it is the same backdrop without the bend.
 class GlassRefraction extends StatefulWidget {
   const GlassRefraction({
     super.key,
     required this.path,
     required this.spacing,
     required this.blur,
-    required this.saturate,
+    required this.colour,
   });
 
   /// The cluster to bend: its shapes in the container's own coordinates.
   final GlassPath path;
   final double spacing;
+
+  /// Blur sigma before the bend; 0 for none.
   final double blur;
-  final double saturate;
+
+  /// The colour matrix after the bend (`glassBackdropMatrix`).
+  final List<double> colour;
 
   /// Shapes the shader can blend in one cluster; larger clusters bend their first six.
   static const maxShapes = 6;
@@ -61,10 +64,16 @@ class _GlassRefractionState extends State<GlassRefraction> {
   @override
   Widget build(BuildContext context) {
     final program = GlassRefraction._loaded;
-    final fallback = ui.ImageFilter.compose(
-      outer: ColorFilter.matrix(saturateMatrix(widget.saturate)),
-      inner: ui.ImageFilter.blur(sigmaX: widget.blur, sigmaY: widget.blur),
-    );
+    final colour = ColorFilter.matrix(widget.colour);
+    final fallback = widget.blur > 0
+        ? ui.ImageFilter.compose(
+            outer: colour,
+            inner: ui.ImageFilter.blur(
+              sigmaX: widget.blur,
+              sigmaY: widget.blur,
+            ),
+          )
+        : colour;
     if (program == null) {
       return BackdropFilter(filter: fallback, child: const SizedBox.expand());
     }
@@ -73,7 +82,7 @@ class _GlassRefractionState extends State<GlassRefraction> {
       path: widget.path,
       spacing: widget.spacing,
       blur: widget.blur,
-      saturate: widget.saturate,
+      colour: widget.colour,
       dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
     );
   }
@@ -85,12 +94,13 @@ class _RefractionBackdrop extends LeafRenderObjectWidget {
     required this.path,
     required this.spacing,
     required this.blur,
-    required this.saturate,
+    required this.colour,
     required this.dpr,
   });
   final ui.FragmentProgram program;
   final GlassPath path;
-  final double spacing, blur, saturate, dpr;
+  final double spacing, blur, dpr;
+  final List<double> colour;
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
@@ -168,12 +178,19 @@ class _RenderRefraction extends RenderBox {
     for (var i = 0; i < 8; i++) {
       set(i < shapes.length ? blends[i] : 0);
     }
+    final bend = ui.ImageFilter.shader(_shader);
     final filter = ui.ImageFilter.compose(
-      outer: ColorFilter.matrix(saturateMatrix(config.saturate)),
-      inner: ui.ImageFilter.compose(
-        outer: ui.ImageFilter.shader(_shader),
-        inner: ui.ImageFilter.blur(sigmaX: config.blur, sigmaY: config.blur),
-      ),
+      outer: ColorFilter.matrix(config.colour),
+      // Without blur the shader reads the backdrop itself: no blur stage at all.
+      inner: config.blur > 0
+          ? ui.ImageFilter.compose(
+              outer: bend,
+              inner: ui.ImageFilter.blur(
+                sigmaX: config.blur,
+                sigmaY: config.blur,
+              ),
+            )
+          : bend,
     );
     _layer.layer = (_layer.layer ?? BackdropFilterLayer())..filter = filter;
     context.pushLayer(_layer.layer!, (context, offset) {}, offset);

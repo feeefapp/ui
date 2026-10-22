@@ -22,7 +22,7 @@
   gap: 2px;
   padding: var(--lab-space-2) var(--lab-space-3) var(--lab-space-3);
   font-size: 13px;
-  line-height: 1.4;
+  line-height: 18px;
 }
 .fd-swatch figcaption code {
   font-size: 12px;

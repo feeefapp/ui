@@ -26,6 +26,18 @@ function platformFromUrl(): DocsSettings['code'] | null {
   return value === 'flutter' || value === 'react' ? value : null
 }
 
+/** A stored theme, keeping only today's options with valid values (older saves had other keys). */
+function savedTheme(saved: unknown): DocsSettings['theme'] {
+  const theme: DocsSettings['theme'] = { ...DEFAULTS.theme }
+  if (!saved || typeof saved !== 'object') return theme
+  const value = saved as Record<string, unknown>
+  for (const key of Object.keys(DEFAULTS.theme) as (keyof typeof DEFAULTS.theme)[])
+    if (typeof value[key] === typeof DEFAULTS.theme[key]) (theme as Record<string, unknown>)[key] = value[key]
+  if (!['liquid', 'still', 'solid'].includes(theme.glass)) theme.glass = DEFAULTS.theme.glass
+  if (typeof value.primary === 'string') theme.primary = value.primary
+  return theme
+}
+
 function read(): DocsSettings {
   const platform = platformFromUrl()
   try {
@@ -34,7 +46,7 @@ function read(): DocsSettings {
       return {
         locale: saved.locale ?? 'en',
         code: platform ?? (saved.code === 'flutter' ? 'flutter' : 'react'),
-        theme: { ...DEFAULTS.theme, ...saved.theme },
+        theme: savedTheme(saved.theme),
       }
   } catch {}
   return platform ? { ...DEFAULTS, code: platform } : DEFAULTS

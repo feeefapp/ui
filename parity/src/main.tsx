@@ -33,7 +33,14 @@ createRoot(document.getElementById('root')!).render(
     services={{ preferences: { get: () => null, set: () => {}, remove: () => {} } }}
     i18n={{ locale: query.get('dir') === 'rtl' ? 'ar' : 'en', dir: query.get('dir') === 'rtl' ? 'rtl' : 'ltr' }}
     initialTheme={mode}
-    theme={{ palette: (query.get('palette') ?? 'lab') as Palette, density: (query.get('density') ?? 'comfortable') as Density }}
+    theme={{
+      palette: (query.get('palette') ?? 'lab') as Palette,
+      density: (query.get('density') ?? 'comfortable') as Density,
+      // ?glassTint=0…1&glassBlur=true&glassRefraction=false; unset = the kit's defaults.
+      glassTint: query.has('glassTint') ? Number(query.get('glassTint')) : undefined,
+      glassBlur: query.has('glassBlur') ? query.get('glassBlur') === 'true' : undefined,
+      glassRefraction: query.has('glassRefraction') ? query.get('glassRefraction') !== 'false' : undefined,
+    }}
   >
     {/* Like the docs app: rail navigation items need a tooltip provider. */}
     <Tooltip.Provider delayDuration={300}>

@@ -68,3 +68,70 @@ export const GLASS_RIM_STOPS: readonly (readonly [number, number])[] = [0, 0.1, 
 
 /** Shadow under the glass: black at the token's alpha, `dy` px down, blurred by `blur` (std dev). */
 export const GLASS_SHADOW = { dy: 7.5, blur: 19.5 } as const
+
+/**
+ * Measured clear glass (FINDINGS §3): no veil, no shadow, full colour, and a slight brightness
+ * lift on what is behind it, `out = gain · backdrop + offset` in sRGB.
+ */
+export const GLASS_CLEAR = { gain: 1.03, offset: 0.076 } as const
+
+/**
+ * The tint (ThemeConfig `glassTint`, 0 clear … 1 tinted) an app gets by default: the midpoint,
+ * like the Liquid Glass setting's default, a light veil over the bent backdrop.
+ */
+export const GLASS_TINT_DEFAULT = 0.5
+
+/** A tint clamped to 0–1; anything that is not a finite number is the default. */
+export function clampGlassTint(tint: unknown) {
+  return typeof tint === 'number' && Number.isFinite(tint) ? Math.min(1, Math.max(0, tint)) : GLASS_TINT_DEFAULT
+}
+
+/**
+ * The material at one tint, for one colour scheme and glass size. Mixed in sRGB over the backdrop:
+ * `out = veil · surface + (1 - veil) · (gain · saturate(backdrop) + offset)`.
+ */
+export interface GlassMaterial {
+  /** Share of the theme surface laid over the backdrop (`--lab-glass-fill*`). */
+  veil: number
+  /** Saturation of the backdrop under the veil (`--lab-glass-saturate*`). */
+  saturate: number
+  /** Brightness lift of the backdrop (clear glass): `gain · backdrop + offset`. */
+  gain: number
+  offset: number
+  /** Share of the measured regular shadow's alpha (`--lab-glass-shadow-*`). */
+  shadow: number
+}
+
+/**
+ * The tint curve. Clear (0) and regular (1) are the measured materials; between them every
+ * parameter follows the tint in a straight line, except saturation: what stays linear is the
+ * share of the backdrop's colour that reaches the eye, `(1 - veil) · saturate`, which is 1 for
+ * clear glass and 0.64–0.73 for regular glass (FINDINGS §3), so saturation is derived from it
+ * and the veil. At the default 0.5 the veil is 36–44 % (light small 43.5 %, light large 35.5 %,
+ * dark small 37.5 %, dark large 36 %), saturation 1.27–1.52, half the regular shadow, half the
+ * clear lift. `glass/material.dart` and the `--lab-glass-*` formulas in system.css and glass.css
+ * follow the same curve.
+ */
+export function glassMaterial(tint: number, scheme: 'light' | 'dark', size: GlassSize): GlassMaterial {
+  const t = clampGlassTint(tint)
+  const regularVeil = GLASS_VEIL[scheme][size]
+  const regularColour = (1 - regularVeil) * GLASS_SATURATE[scheme][size]
+  const veil = t * regularVeil
+  const colour = 1 - t * (1 - regularColour)
+  return {
+    veil,
+    saturate: colour / (1 - veil),
+    gain: 1 + (GLASS_CLEAR.gain - 1) * (1 - t),
+    offset: GLASS_CLEAR.offset * (1 - t),
+    shadow: t,
+  }
+}
+
+/**
+ * The lift `gain · x + offset` as CSS filter functions, `contrast(c) brightness(b)` (applied in
+ * that order: contrast maps x to `c · x + (1 - c) / 2`, brightness multiplies by b).
+ */
+export function liftFilter(gain: number, offset: number) {
+  const brightness = gain + 2 * offset
+  return { contrast: gain / brightness, brightness }
+}

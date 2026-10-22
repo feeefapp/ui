@@ -279,7 +279,7 @@ test('only running animations that move or resize count as geometry', () => {
   assert.equal(movesGeometry(keyframes([{ offset: 0, maxHeight: '0px' }])), true)
 })
 
-import { GLASS_REFRACTION, refractionScale } from '../src/glass/refraction.ts'
+import { webRefractionShift, refractionScale } from '../src/glass/refraction.ts'
 import { GLASS_BLUR, GLASS_RIM, GLASS_RIM_STOPS, glassBlur, glassSize, rimAlpha } from '../src/glass/material.ts'
 import { mergeWidth } from '../src/glass/geometry.ts'
 
@@ -290,7 +290,7 @@ test('the bend follows the fitted profile: (1 - t)^4 of the bezel, smaller glass
   assert.equal(refractionScale(88), 1)
   assert.ok(Math.abs(refractionScale(44) - 0.5 ** 0.78) < 1e-9)
   const small = displacementMap(60, 60, [[{ x: 8, y: 8, width: 44, height: 44, radius: 22 }]], 8)
-  assert.ok(Math.abs(small.scale - 2 * GLASS_REFRACTION * refractionScale(44)) < 1e-9, 'filter scale follows the size')
+  assert.ok(Math.abs(small.scale - 2 * webRefractionShift(44)) < 1e-9, 'filter scale follows the size')
 })
 
 test('material: denser control glass, blur grows with size, rim lit at both ends of the axis', () => {
@@ -324,4 +324,140 @@ test('merging: full spacing while apart, a slimmer blend as shapes touch', () =>
   const neck = neckOf((y) => unionDistance(72, y, [a, b], 40))
   const constant = neckOf((y) => smoothMin(shapeDistance(72, y, a), shapeDistance(72, y, b), 40))
   assert.ok(neck > 4 && neck < constant - 2, `neck ${neck} vs ${constant}`)
+})
+
+
+import { rimReflection, rimSurface } from '../src/glass/light.ts'
+
+test('rim reflection follows normals, not the position or aspect ratio', () => {
+  const light = { x: 0, y: -1 }
+  assert.equal(rimReflection(0, -1, light), 1)
+  assert.equal(rimReflection(0, 1, light), 1)
+  assert.equal(rimReflection(1, 0, light), 0)
+  assert.ok(near(rimReflection(1, -1, light), 0.5, 1e-9))
+  assert.equal(rimReflection(0, 0, light), 0)
+  for (const width of [96, 240]) {
+    const segments = rimSurface([{ x: 0, y: 0, width, height: 48, radius: 24 }], 8)
+    const top = segments.filter((s) => Math.abs(s.nx) < 1e-6 && s.ny < 0)
+    assert.ok(top.length > 0)
+    assert.ok(top.every((s) => rimReflection(s.nx, s.ny, light) === 1))
+  }
+})
+
+test('merged rim normals follow the union including its concave neck', () => {
+  const shapes = [{ x: 0, y: 0, width: 48, height: 48, radius: 24 }, { x: 52, y: 0, width: 48, height: 48, radius: 24 }]
+  const segments = rimSurface(shapes, 16)
+  assert.ok(segments.length > 0)
+  assert.ok(segments.every((s) => Number.isFinite(rimReflection(s.nx, s.ny, DEFAULT_GLASS_LIGHT))))
+  assert.ok(segments.some((s) => s.d.startsWith('M49') || s.d.startsWith('M50')))
+})
+
+
+import { surfaceReflection, highlightSurface } from '../src/glass/light.ts'
+
+test('convex highlight has a finite soft band and a weaker opposite reflection', () => {
+  const light = { x: 0, y: -1 }
+  assert.equal(surfaceReflection(0, 0, -1, light), 0)
+  assert.equal(surfaceReflection(5, 0, -1, light), 0)
+  assert.equal(surfaceReflection(9, 0, -1, light), 0)
+  const band = Array.from({ length: 51 }, (_, i) => surfaceReflection(i / 10, 0, -1, light))
+  const peak = Math.max(...band)
+  assert.ok(peak > 0.8)
+  assert.ok(band.indexOf(peak) > 2 && band.indexOf(peak) < 30)
+  assert.ok(band.filter(v => v > 0.1).length > 10)
+  assert.ok(surfaceReflection(1, 0, 1, light) < surfaceReflection(1, 0, -1, light) * 0.7)
+  assert.ok(surfaceReflection(1, 1, 0, light) < 0.01)
+})
+
+test('highlight samples stay within the blended bevel and remain finite at merge necks', () => {
+  const shapes = [{ x: 0, y: 0, width: 48, height: 48, radius: 24 }, { x: 52, y: 0, width: 48, height: 48, radius: 24 }]
+  const field = highlightSurface(shapes, 16, { x: 0, y: 0, width: 100, height: 48 })
+  assert.ok(field.samples.length > 0)
+  assert.ok(field.samples.every(s => s.depth >= 0 && s.depth < field.bezel && Number.isFinite(surfaceReflection(s.depth, s.nx, s.ny, DEFAULT_GLASS_LIGHT))))
+})
+
+
+test('web bezel transport never reverses straight background lines', () => {
+  for (const side of [28, 44, 88, 180]) {
+    const shape = { x: 0, y: 0, width: 240, height: side, radius: 12 }
+    const map = displacementMap(240, side, [[shape]], 8)
+    let previous = -Infinity
+    for (let y = 0; y < side / 2; y++) {
+      const green = map.data[(y * map.width + 120) * 4 + 1]
+      const sampled = y + 0.5 + (green / 255 - 0.5) * map.scale
+      assert.ok(sampled > previous, `fold at depth ${y} in ${side}px glass`)
+      previous = sampled
+    }
+  }
+})
+
+
+import { surfaceShade } from '../src/glass/light.ts'
+test('inner bevel shade belongs to the unlit side and fades at both boundaries', () => {
+  const light = { x: 0, y: -1 }
+  assert.equal(surfaceShade(0, 0, 1, light), 0)
+  assert.equal(surfaceShade(5, 0, 1, light), 0)
+  assert.equal(surfaceShade(2.5, 0, -1, light), 0)
+  assert.ok(surfaceShade(2.5, 0, 1, light) > 0.5)
+  assert.equal(surfaceShade(2, 0, 0, light), 0)
+})
+
+
+import { elementImagePlacement } from '../src/glass/refraction.ts'
+test('Firefox live source landmarks stay aligned through scaled hosts and inset pieces', () => {
+  const frame = { left: 100, top: 200, scaleX: 0.5, scaleY: 0.75 }
+  const screenSource = { left: 80, top: 170, width: 300, height: 225 }
+  const source = toLocalRect(frame, screenSource)
+  const piece = { x: 52, y: 60, width: 100, height: 50 }
+  const image = elementImagePlacement({ ...source, x: source.x + 32, y: source.y + 32 }, piece)
+  for (const [px, py] of [[0, 0], [40, 20], [99, 49]]) {
+    const sampledX = screenSource.left + (px - image.x) * frame.scaleX
+    const sampledY = screenSource.top + (py - image.y) * frame.scaleY
+    assert.equal(sampledX, frame.left + (piece.x - 32 + px) * frame.scaleX)
+    assert.equal(sampledY, frame.top + (piece.y - 32 + py) * frame.scaleY)
+  }
+  assert.equal(image.width * frame.scaleX, screenSource.width)
+  assert.equal(image.height * frame.scaleY, screenSource.height)
+})
+
+
+test('circular glass stays a circle at every angle instead of a maximal-radius squircle', () => {
+  const circle = { x: 0, y: 0, width: 72, height: 72, radius: 36, cornerExponent: 2 }
+  for (let angle = 0; angle < 2 * Math.PI; angle += Math.PI / 16) {
+    const x = 36 + 36 * Math.cos(angle)
+    const y = 36 + 36 * Math.sin(angle)
+    assert.ok(Math.abs(shapeDistance(x, y, circle)) < 1e-8)
+  }
+  const diagonal = 36 - 36 / Math.sqrt(2)
+  assert.ok(shapeDistance(diagonal, diagonal, { ...circle, cornerExponent: undefined }) < -1)
+  assert.equal(pressedShape(circle, 1.06, 3, 0).cornerExponent, 2)
+})
+
+test('round glass corner radius follows its full visible range and clamps at a capsule', () => {
+  const shape = { x: 0, y: 0, width: 180, height: 72, radius: 0, cornerExponent: 2 }
+  const distances = [0, 0.25, 0.5, 0.75, 1].map(value => shapeDistance(2, 2, { ...shape, radius: 36 * value }))
+  assert.ok(distances.every((value, index) => index === 0 || value > distances[index - 1]))
+  assert.equal(shapeDistance(2, 2, { ...shape, radius: 36 }), shapeDistance(2, 2, { ...shape, radius: 100 }))
+})
+
+
+import { measuredRimReflection } from '../src/glass/light.ts'
+
+test('reference rim matches measured angular endpoints and fades inward without a second peak', () => {
+  const light = { x: 0, y: -1 }
+  for (const [base, peak] of [[0.27, 0.718], [0.139, 0.246]]) {
+    assert.equal(measuredRimReflection(0, 0, -1, light, 1, base, peak), peak)
+    assert.equal(measuredRimReflection(0, 0, 1, light, 1, base, peak), peak)
+    assert.equal(measuredRimReflection(0, 1, 0, light, 1, base, peak), base)
+    let previous = peak
+    for (let i = 1; i <= 100; i++) {
+      const alpha = measuredRimReflection(i / 100, 0, -1, light, 1, base, peak)
+      assert.ok(alpha <= previous && alpha >= 0)
+      previous = alpha
+    }
+    assert.equal(previous, 0)
+    assert.equal(measuredRimReflection(0, 0, -1, light, 0, base, peak), 0)
+    assert.equal(measuredRimReflection(-1, 0, -1, light, 1, base, peak), 0)
+    assert.equal(measuredRimReflection(1, 0, -1, light, 1, base, peak), 0)
+  }
 })

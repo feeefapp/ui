@@ -8,7 +8,7 @@
   --pc-surface: var(--lab-surface);
   --pc-primary: var(--lab-primary);
   --pc-on-primary: var(--lab-on-primary);
-  --pc-shell-radius: calc(26px * var(--lab-radius-scale, 1));
+  --pc-shell-radius: calc(26px * var(--lab-corner-scale, 1));
   --pc-shell-inset: 6px;
   --pc-action-radius: calc(var(--pc-shell-radius) - var(--pc-shell-inset));
   --pc-ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -31,7 +31,7 @@
   margin: 0;
   text-align: center;
   font-size: 11.5px;
-  line-height: 1.4;
+  line-height: 16px;
   color: color-mix(in srgb, var(--pc-muted) 82%, transparent);
 }
 
@@ -44,11 +44,10 @@
 .lab-pc-panel,
 .lab-pc-menu {
   border: 1px solid var(--pc-line);
-  border-radius: 22px;
+  border-radius: calc(22px * var(--lab-corner-scale, 1));
   corner-shape: superellipse(1.5);
-  background: color-mix(in srgb, var(--pc-surface) 95%, transparent);
-  -webkit-backdrop-filter: blur(18px);
-  backdrop-filter: blur(18px);
+  /* Menus are solid, like every kit menu (PopoverSurface): content stays readable over anything. */
+  background: var(--pc-surface);
   box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
   color: var(--pc-ink);
 }
@@ -113,7 +112,7 @@
   gap: 9px;
   min-height: 40px;
   padding: 0 10px;
-  border-radius: 13px;
+  border-radius: calc(13px * var(--lab-corner-scale, 1));
   font-size: 13px;
   cursor: pointer;
   outline: none;
@@ -141,7 +140,7 @@
 .lab-pc-recent-item {
   width: 56px;
   height: 56px;
-  border-radius: 14px;
+  border-radius: calc(14px * var(--lab-corner-scale, 1));
   overflow: hidden;
   cursor: pointer;
   outline: none;
@@ -164,7 +163,7 @@
   gap: 2px;
   padding: 9px 10px;
   border: 0;
-  border-radius: 14px;
+  border-radius: calc(14px * var(--lab-corner-scale, 1));
   background: transparent;
   color: inherit;
   font: inherit;
@@ -316,7 +315,7 @@ html[data-lab-theme] .lab-pc .lab-pc-card[data-expanded='false'] .lab-pc-field t
   padding-inline-start: 10px;
   padding-inline-end: 6px;
   border: 1px solid color-mix(in srgb, var(--pc-primary) 45%, var(--pc-line));
-  border-radius: 18px;
+  border-radius: calc(18px * var(--lab-corner-scale, 1));
   background: color-mix(in srgb, var(--pc-primary) 14%, transparent);
   font-size: 12px;
   white-space: nowrap;

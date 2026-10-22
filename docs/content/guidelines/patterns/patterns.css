@@ -1,4 +1,5 @@
 /* Bounded screens for the Page patterns guideline. Layout only; colors, radii and sizes are kit tokens. */
+/* Whole-px line heights (the stage's 1.6, rounded): Flutter rounds every line box. */
 .pt-frame {
   position: relative;
   width: 100%;
@@ -9,6 +10,7 @@
   corner-shape: superellipse(1.5);
   background: var(--lab-surface);
   font-size: 14px;
+  line-height: 22px;
 }
 .pt-title {
   overflow: hidden;
@@ -39,6 +41,7 @@
   padding-inline: 4px;
   color: var(--lab-muted);
   font-size: 13px;
+  line-height: 21px;
 }
 .pt-row {
   display: flex;
@@ -61,6 +64,7 @@
   gap: 2px;
   flex-shrink: 0;
   font-size: 13px;
+  line-height: 21px;
 }
 .pt-tag {
   padding: 2px 8px;
@@ -68,6 +72,7 @@
   background: var(--lab-surface-soft);
   color: var(--lab-muted);
   font-size: 12px;
+  line-height: 19px;
   white-space: nowrap;
 }
 .pt-tag[data-tone='success'] {
@@ -155,6 +160,7 @@
 .pt-facts dt {
   color: var(--lab-muted);
   font-size: 13px;
+  line-height: 21px;
 }
 .pt-facts dd {
   margin: 0;
@@ -183,6 +189,7 @@
   margin: -8px 0 0;
   color: var(--lab-muted);
   font-size: 13px;
+  line-height: 21px;
 }
 .pt-fields {
   display: grid;
@@ -202,6 +209,7 @@
 .pt-switch-row small {
   color: var(--lab-muted);
   font-size: 13px;
+  line-height: 21px;
 }
 
 /* Dialog body */
@@ -255,6 +263,7 @@
 .pt-edit-row small {
   color: var(--lab-muted);
   font-size: 13px;
+  line-height: 21px;
 }
 .pt-inline-form {
   display: flex;

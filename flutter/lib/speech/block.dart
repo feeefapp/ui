@@ -334,7 +334,7 @@ class _BlockSurface extends StatelessWidget {
               textureOpacity: opacity,
               textureShift: shift,
               lifted: dragging,
-              rim: theme.config.glass != GlassStyle.solid,
+              rim: glassStyleOf(context) != GlassStyle.solid,
               edgeLight: c.glassEdgeLight,
               edgeLow: c.glassEdgeLow,
             ),

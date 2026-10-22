@@ -1,10 +1,17 @@
 import * as React from 'react';
-import type { GlassRenderer, GlassStyle } from '../theme-config.js';
+import type { GlassStyle } from '../theme-config.js';
 import './glass.css';
 /** The app's glass style (ThemeConfig `glass`, on `<html data-lab-glass>`), live. */
 export declare function useGlassStyle(): GlassStyle;
-/** The app's glass renderer (ThemeConfig `glassRenderer`, on `<html data-lab-glass-renderer>`), live. */
-export declare function useGlassRenderer(): GlassRenderer;
+/**
+ * The app's glass material options (ThemeConfig `glassTint`, `glassBlur`, `glassRefraction`, on
+ * `<html>` as `--lab-glass-tint`, `data-lab-glass-blur` and `data-lab-glass-refraction`), live.
+ */
+export declare function useGlassOptions(): {
+    tint: number;
+    blur: boolean;
+    refraction: boolean;
+};
 type ContainerTag = 'div' | 'header' | 'footer' | 'nav' | 'section' | 'aside';
 export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
     /** Element to render; the container is the row itself and keeps your layout. */
@@ -14,6 +21,8 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
      * Keep it below the gap between bubbles at rest so separate bubbles stay apart. Default 8.
      */
     spacing?: number;
+    /** Corner profile of the glass: kit superellipse (default) or circular `round` corners. */
+    cornerShape?: 'superellipse' | 'round';
     /** `pointer` (default) turns the light toward a mouse or pen; `static` keeps it at the top-left. */
     light?: 'pointer' | 'static';
     /**
@@ -28,11 +37,24 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
      * colour. Glass taller than 72px never flips. Default true.
      */
     adaptive?: boolean;
+    /** Reflective bevel width in CSS px, 0–20; default 5. Small bubbles cap it to fit. */
+    highlightWidth?: number;
+    /** `surface` (default) uses a convex bevel; `rim` uses the thin, symmetric screenshot-fitted highlight. */
+    highlightProfile?: 'surface' | 'rim';
+    /** Local material tint, 0 clear–1 tinted, preserving bright backdrop detail; omitted inherits ThemeConfig glassTint. */
+    tint?: number;
+    /** Surface highlight opacity multiplier, 0–3; default 1. */
+    highlightStrength?: number;
+    /** Backdrop bend multiplier, 0–3; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
+    refractionStrength?: number;
+    /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
+    backdropSource?: string;
 };
 /**
  * Draws ONE glass material for every bubble inside it (GlassGroup, ToolbarGroup, Dock, …), like
  * Apple's GlassEffectContainer. The app's ThemeConfig `glass` sets the style: `liquid` (moving
- * light, press response), `frosted` (still light, no press) or `solid` (opaque). Bubbles that come within `spacing` bend toward each other and
+ * light, press response), `still` (fixed light, no press) or `solid` (opaque); `glassTint`,
+ * `glassBlur` and `glassRefraction` set the material. Bubbles that come within `spacing` bend toward each other and
  * merge; a bubble that splits into several grows them out of itself; new and removed bubbles
  * materialize. Bubbles keep their layout, focus and semantics; only the paint moves here. Without
  * JavaScript, or in forced colors, every bubble paints its own glass as before.
@@ -45,6 +67,8 @@ export declare const GlassContainer: React.ForwardRefExoticComponent<React.HTMLA
      * Keep it below the gap between bubbles at rest so separate bubbles stay apart. Default 8.
      */
     spacing?: number;
+    /** Corner profile of the glass: kit superellipse (default) or circular `round` corners. */
+    cornerShape?: "superellipse" | "round";
     /** `pointer` (default) turns the light toward a mouse or pen; `static` keeps it at the top-left. */
     light?: "pointer" | "static";
     /**
@@ -59,6 +83,18 @@ export declare const GlassContainer: React.ForwardRefExoticComponent<React.HTMLA
      * colour. Glass taller than 72px never flips. Default true.
      */
     adaptive?: boolean;
+    /** Reflective bevel width in CSS px, 0–20; default 5. Small bubbles cap it to fit. */
+    highlightWidth?: number;
+    /** `surface` (default) uses a convex bevel; `rim` uses the thin, symmetric screenshot-fitted highlight. */
+    highlightProfile?: "surface" | "rim";
+    /** Local material tint, 0 clear–1 tinted, preserving bright backdrop detail; omitted inherits ThemeConfig glassTint. */
+    tint?: number;
+    /** Surface highlight opacity multiplier, 0–3; default 1. */
+    highlightStrength?: number;
+    /** Backdrop bend multiplier, 0–3; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
+    refractionStrength?: number;
+    /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
+    backdropSource?: string;
 } & React.RefAttributes<HTMLElement>>;
 /**
  * A GlassContainer unless one already encloses it, then a plain element. Kit rows (app bar,
@@ -72,6 +108,8 @@ export declare const GlassScope: React.ForwardRefExoticComponent<React.HTMLAttri
      * Keep it below the gap between bubbles at rest so separate bubbles stay apart. Default 8.
      */
     spacing?: number;
+    /** Corner profile of the glass: kit superellipse (default) or circular `round` corners. */
+    cornerShape?: "superellipse" | "round";
     /** `pointer` (default) turns the light toward a mouse or pen; `static` keeps it at the top-left. */
     light?: "pointer" | "static";
     /**
@@ -86,6 +124,18 @@ export declare const GlassScope: React.ForwardRefExoticComponent<React.HTMLAttri
      * colour. Glass taller than 72px never flips. Default true.
      */
     adaptive?: boolean;
+    /** Reflective bevel width in CSS px, 0–20; default 5. Small bubbles cap it to fit. */
+    highlightWidth?: number;
+    /** `surface` (default) uses a convex bevel; `rim` uses the thin, symmetric screenshot-fitted highlight. */
+    highlightProfile?: "surface" | "rim";
+    /** Local material tint, 0 clear–1 tinted, preserving bright backdrop detail; omitted inherits ThemeConfig glassTint. */
+    tint?: number;
+    /** Surface highlight opacity multiplier, 0–3; default 1. */
+    highlightStrength?: number;
+    /** Backdrop bend multiplier, 0–3; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
+    refractionStrength?: number;
+    /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
+    backdropSource?: string;
 } & React.RefAttributes<HTMLElement>>;
 export {};
 //# sourceMappingURL=container.d.ts.map

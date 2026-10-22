@@ -336,7 +336,8 @@ class _ModelLadderState extends State<ModelLadder>
                     autofocus: true,
                     listHeight: listHeight,
                     child: CustomPaint(
-                      foregroundPainter: theme.config.glass == GlassStyle.solid
+                      foregroundPainter:
+                          glassStyleOf(context) == GlassStyle.solid
                           ? null
                           : _RimPainter(
                               theme.sizes.radiusGroup,
@@ -448,7 +449,7 @@ class _Trigger extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            height: 1.15,
+                            height: 15 / 13,
                             leadingDistribution: TextLeadingDistribution.even,
                           ),
                         ),
@@ -460,7 +461,7 @@ class _Trigger extends StatelessWidget {
                         softWrap: false,
                         style: TextStyle(
                           fontSize: 10,
-                          height: 1.15,
+                          height: 12 / 10,
                           leadingDistribution: TextLeadingDistribution.even,
                           color: c.muted,
                         ),
@@ -949,7 +950,7 @@ class _AccessBadge extends StatelessWidget {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w500,
-            height: 1.5,
+            height: 17 / 11,
             leadingDistribution: TextLeadingDistribution.even,
             color: free ? c.ink : c.muted,
           ),
@@ -989,7 +990,7 @@ class _CardFrame extends StatelessWidget {
         edgeLow: c.glassEdgeLow,
         edgeLight: c.glassEdgeLight,
         shadow: glassShadowColor(theme.brightness),
-        rim: theme.config.glass != GlassStyle.solid,
+        rim: glassStyleOf(context) != GlassStyle.solid,
       ),
       child: Padding(padding: const EdgeInsets.all(1), child: content),
     );
@@ -1561,7 +1562,7 @@ class _OptionRow extends StatelessWidget {
                       small,
                       style: TextStyle(
                         fontSize: 11,
-                        height: 1.35,
+                        height: 15 / 11,
                         leadingDistribution: TextLeadingDistribution.even,
                         color: c.muted,
                       ),

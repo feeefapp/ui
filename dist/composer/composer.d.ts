@@ -15,7 +15,11 @@ export declare const ComposerCard: React.ForwardRefExoticComponent<React.HTMLAtt
     /** Content inside the card, above the layout grid. */
     above?: React.ReactNode;
 } & React.RefAttributes<HTMLDivElement>>;
-/** Placeholder that fades in word by word. Decorative (`aria-hidden`); label the field separately. */
+/**
+ * Placeholder that fades in word by word. Decorative (`aria-hidden`); label the field separately.
+ * Its words are inline blocks, so it takes the direction of its own text (`dir="auto"`): an English
+ * hint on an Arabic page keeps its word order, still aligned to the page's start.
+ */
 export declare function ComposerHint({ text }: {
     /** The hint text. Changing it replays the animation. */
     text: string;

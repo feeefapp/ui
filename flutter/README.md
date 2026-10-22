@@ -41,8 +41,14 @@ pixels per docs page: median / worst variant. Almost all of what remains is glyp
 
 Not ported on purpose: `brand/corners.ts` (Flutter always draws the true superellipse), a
 `List`/`ListItem` pair (a Dart `List` would shadow `dart:core`; use `ListSection`/`ListRow`).
-Glass refraction needs Impeller; Flutter web and Skia use the blurred material. Glass is fitted to
-iOS 26 Liquid Glass measured from the outside: `../research/liquid-glass/FINDINGS.md`.
+Glass is configured like the web kit: `ThemeConfig(glass: liquid|still|solid, glassTint: 0…1
+(0.5 default, the Liquid Glass slider: 0 clear, 1 tinted), glassBlur: false, glassRefraction: true)`.
+The tint curve is `glassMaterial()` in `glass/material.dart` (same vectors as the web, via
+`test/fixtures/glass.json`). Refraction needs Impeller; Flutter web and Skia show the same glass
+without the bend. `MediaQuery.highContrast` makes glass solid with an ink outline
+(`glassStyleOf(context)`), `disableAnimations` stops the moving light and press response; Flutter
+has no reduce-transparency flag, so apps that read one pass `glass: GlassStyle.solid`. Glass is
+fitted to iOS 26 Liquid Glass measured from the outside: `../research/liquid-glass/FINDINGS.md`.
 
 ## Use
 
@@ -94,10 +100,13 @@ node parity/compare.mjs
 Text sits on Chrome's baseline: `CssBaseline` reproduces Blink's line layout (ascent and descent
 rounded at the device scale, half leading floored). What remains in the diffs is glyph
 rasterization (CoreText on macOS draws heavier, slightly differently hinted glyphs than Skia); the
-`text` scene measures it. Flutter's paragraph layout rounds every line's height up to a whole
-pixel, so text with `line-height: normal` (a Plex line is 1.5em, 19.5px at 13px) can come out up
-to 1px taller per line than Chrome's; kit components set explicit line heights, so this only
-affects free content such as a dock tile.
+`text` scene measures it. Flutter's paragraph layout rounds every line's height to the nearest
+whole pixel (19.5px → 20, 20.8px → 21, 19.2px → 19) and there is no API to turn that off, while
+Chrome keeps fractional line heights. So every line height in the kit is a whole number of pixels
+on both sides (`font: 14px/20px`, `height: 20 / 14`); where the font size varies, CSS uses
+`round(1.12em, 1px)` and Dart `(size * 1.12).roundToDouble() / size`. Text that inherits a
+unitless line height from the host (a dock tile in a `line-height: 1.6` page) can still differ
+by a fraction of a pixel per line.
 
 ```bash
 flutter test

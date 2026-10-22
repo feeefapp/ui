@@ -78,6 +78,19 @@ angle `a` between edge normal and light axis:
 No dark outline: the kit's 1 px `--lab-line` stroke is gone from liquid/frosted container glass
 (kept for solid glass and `prefers-contrast: more`).
 
+Web reflection now shades a convex quarter-circle cross-section over a 5 CSS px bevel,
+using local blended-field normals and an elevated-light half vector (specular exponent 18).
+A weaker opposite light supplies a 32% bounce. Both ends of the band fade to transparent,
+so it has width without an extra inner contour. A 2× alpha mask replaces segmented strokes;
+geometry and the last light mask are cached per outline. This is an art-directed surface
+highlight, not a claim of measured Apple parity. Flutter retains its previous rim model.
+Reference: https://kube.io/blog/liquid-glass-css-svg/ (surface function / specular highlight).
+The original 47px displacement over a 27px quartic bezel has slope > 1 and folds
+background lines back on themselves. Web displacement now caps the shift at 0.8 × bezel / 4,
+keeping the inward sampling monotonic on straight edges. This deliberately supersedes the
+measured mirrored-band fit on web; Flutter retains that fit pending separate visual review.
+Inspect the web result at `/foundations/glass-reflections`.
+
 ### 5. Shadow
 
 Wide, soft, outside only: dy ≈ 7.5 pt, σ ≈ 19.5 pt; black at 9.5 % (light, large), 6.6 % (light,
@@ -99,9 +112,14 @@ circles → one circle), which matches the kit's bounds + smallest-radius union.
 - Web tokens: `--lab-glass-fill` (small) / `--lab-glass-fill-large`, `--lab-glass-saturate(-large)`,
   `--lab-glass-blur` (set per cluster by the scene), `--lab-glass-edge-light` (lit-end light over
   the base) / `--lab-glass-edge-low` (base rim), `--lab-glass-shadow-color` / `-small`.
-  `css` renderer: `blur() saturate()` + veil. `canvas` (Chromium): SVG filter blur → displacement
-  from the fitted profile (`displacementMap(...).scale`) → saturate, clipped by the map's alpha.
-  `fill` keeps its dense flat fill (no backdrop access) with the new rim, shadow and outline rules.
+  ThemeConfig (both twins): `glassTint` 0 clear … 1 tinted (default 0.5) interpolates between the
+  measured clear and regular materials (`glassMaterial()`: veil = tint · veil₁, colour kept
+  `(1 − veil) · saturate` linear from 1 to its regular value, shadow = tint · shadow₁, the clear
+  lift 1.03 · x + 0.076 fading out; CSS reads `--lab-glass-tint` in calc() formulas), `glassBlur`
+  (default off: no blur stage; on: σ 2.9 → 5.2), `glassRefraction` (default on). CSS glass:
+  `blur(0 | σ) saturate() contrast() brightness()` + veil. Refraction (Chromium): SVG filter
+  [blur →] displacement from the fitted profile → saturate → lift, clipped by the map's alpha.
+  (The comparison numbers below were measured with the regular material, tint 1 + blur.)
 - Flutter: same tokens (`glassFill`, `glassFillLarge`, `glassShadowSmall`, …), `glass/material.dart`,
   `glass/refraction.dart`; on Impeller `GlassRefraction` runs `shaders/glass_refraction.frag` (same
   profile, rounded-box SDF, per-shape blend widths) as a backdrop filter; Skia and web fall back to
@@ -158,3 +176,84 @@ Python needs numpy, scipy, Pillow, matplotlib (`/usr/bin/python3` on macOS has t
 - Not modelled: interactive press, the clear variant (numbers above, no API for it yet), tints,
   the small-dark adaptive tone curve, motion timing.
 - Full-radius shapes: superellipse corners vs Apple's circles.
+
+
+### Web polish pass
+
+The web surface highlight now combines a grazing edge lobe, a broader environment lobe and
+an elevated key reflection (exponent 14), with a 28% opposite bounce. A separate alpha mask
+adds soft occlusion on the unlit inner bevel; both layers fade at the flat interior. These are
+art-directed approximations, informed by Apple's layered highlights/lensing description in
+https://developer.apple.com/videos/play/wwdc2025/219/ — not measured optical parity.
+The inspection page includes a landscape contrast scene alongside the plain/grid backgrounds.
+
+
+### Browser-reviewed clear preset
+
+The inspection demo now starts at local tint 0.22, highlight width 7px and strength 1.2.
+This separates material opacity from highlight intensity without changing the host theme.
+The specular key exponent is 20 and the broad environment contribution is 0.1, reducing the
+frosted/plastic shoulder while keeping a crisp edge. The landscape specimens declare their
+local backdrop tone (bright sky / dark ridge) and use control-sized geometry so the kit's
+existing adaptive foreground can keep labels legible. Tint is an optional GlassContainer
+configuration; its local derived CSS and SVG material parameters share the same value.
+
+For explicit local tint, the clear lift preserves the white point: gain is capped at
+`1 - offset`. This keeps pale backgrounds from clipping to white when tint approaches clear.
+CSS fallback uses gain `0.924 + 0.076t`, offset `0.076(1-t)`; the SVG filter uses the same
+white-preserving cap. Theme-inherited material retains the measured lift for compatibility.
+
+A final browser pass raised the opposite specular bounce to 55% (45% for the grazing lobe):
+the earlier 28% bounce left the lower silhouette too weak on the dark landscape ridge.
+
+### Browser stability
+
+Curved highlights now paint into persistent canvas elements instead of encoding PNGs and
+replacing SVG image masks on every pointer frame. Firefox uses this same highlight renderer
+with the CSS backdrop material; SVG backdrop refraction remains Chromium-only. The inspection
+page disables its unavailable refraction control and removes the shell's pixel scroll wash.
+A pending refraction rebuild is canceled when settings change, preventing a stale filter from
+being applied after refraction is disabled. Firefox was checked through its native browser UI.
+
+
+### Firefox live-source refraction
+
+Firefox's `-moz-element(#id)` provides a live image of an explicit background-only DOM layer.
+`GlassContainer backdropSource` aligns that image to each cluster in host-local coordinates and
+runs the same SVG displacement / tone / alpha-clip filter through CSS `filter` rather than
+`backdrop-filter`. The source must be separate from the glass (ancestor / descendant sources
+are rejected to prevent recursive painting). The docs stage uses a separate paint layer shared
+by both containers. Resize and scroll update image alignment; source changes repaint live.
+Reference: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/element
+This enables real refraction for authored background layers; it does not capture arbitrary page
+content behind an unconfigured Firefox glass container. Chromium retains native backdrop capture.
+
+
+### Bending and roundness controls
+
+The inspection page exposes light bending from 0 to 3× the normal lens. The 1× normal transport
+cap remains unchanged; higher strengths intentionally permit optical edge reversal. Container
+`refractionStrength` accepts 0–3 on both render paths. A local roundness slider (0–1.5) scales the
+kit's `--lab-radius-glass` starting radius, default 1. The measured member radius feeds geometry,
+highlights and both refraction maps together; the existing half-short-side clamp produces full
+capsules at the upper end. The starting point is iOS-inspired, not an exact iOS 27 measurement.
+
+### Round outline correction
+
+The earlier maximum-radius outline was still a superellipse, so a nominally round bubble
+remained a squircle. `GlassContainer cornerShape="round"` now carries exponent 2 through the
+shape distance field, SVG outline, pressed geometry, highlights and both lens render paths;
+CSS clipping uses circular corners and does not apply the superellipse fallback radius fit.
+The inspection page uses this explicit circular profile. Its slider now maps 0–100% directly
+to 0–half-height corner radius, defaulting to a true circle/capsule with no dead upper range.
+The kit's normal superellipse profile remains the default for other containers.
+
+### Reference rim preset (October 2026)
+
+The inspection page now distinguishes the earlier broad, art-directed surface bevel from
+a rim fitted to §4: approximately 1pt wide, with symmetric cos² angular lighting and
+light alpha 0.27–0.718 / dark alpha 0.139–0.246. The finite inward cosine falloff is our
+interpolation, not an Apple shader formula. Regular and Clear presets use tint endpoints
+1 and 0; both retain the conservative web refraction scale (not the measured 47pt shift).
+These are iOS 26.2 screenshot-derived approximations, not official parameters or an
+iOS 27 match. The existing surface mode remains available for wider water-drop bevels.

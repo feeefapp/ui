@@ -63,10 +63,10 @@ export function ThemeProvider({
   useEffect(() => {
     if (enableCornerFallback) return installFoContinuousCorners()
   }, [enableCornerFallback])
-  const { palette, density, radius, primary, glass, glassRenderer } = config ?? {}
+  const { palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction } = config ?? {}
   layoutEffect(() => {
-    applyThemeConfig(document.documentElement, { palette, density, radius, primary, glass, glassRenderer })
-  }, [palette, density, radius, primary, glass, glassRenderer])
+    applyThemeConfig(document.documentElement, { palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction })
+  }, [palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction])
   layoutEffect(() => {
     const root = document.documentElement,
       previous = root.getAttribute('data-lab-theme'),

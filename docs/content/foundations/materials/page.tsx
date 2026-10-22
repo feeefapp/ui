@@ -11,7 +11,12 @@ import { Tok } from '../_lib/live'
 import '../_lib/foundations.css'
 
 const ROLES: Record<string, string> = {
-  '--lab-glass-fill': 'Translucent fill: surface at 76%.',
+  '--lab-glass-tint': 'ThemeConfig glassTint: 0 clear … 1 tinted (0.5 by default).',
+  '--lab-glass-fill': 'Veil over control-sized glass: the surface at tint × --lab-glass-veil (43.5% by default in light).',
+  '--lab-glass-fill-large': 'Veil over panel-sized glass: tint × --lab-glass-veil-large.',
+  '--lab-glass-saturate': 'Backdrop saturation, derived from the tint so the colour kept stays on the measured curve.',
+  '--lab-glass-lift': 'Clear glass brightness lift (1.03 · x + 0.076), fading out toward tinted.',
+  '--lab-glass-blur': 'Backdrop blur: 0 unless ThemeConfig glassBlur is on (then 2.9px → 5.2px by size).',
   '--lab-glass-edge-light': 'Bright end of the diagonal rim highlight.',
   '--lab-glass-edge-low': 'Quiet end of the rim and the inner top highlight.',
   '--lab-glass-shadow': 'Soft neutral drop shadow under floating groups.',
@@ -62,8 +67,11 @@ function Overview() {
       <Section title="Glass groups">
         <p>
           <Link to="/components/glass-group">GlassGroup</Link> paints the glass material once around a
-          related group of controls: a translucent fill, an 18px backdrop blur, a static diagonal rim
-          highlight and a soft shadow. Controls inside it stay borderless and share the material.
+          related group of controls: a light veil of the surface over the backdrop (how much is the
+          app’s <C>glassTint</C>, from clear to tinted), the backdrop bent at the edges where the browser
+          can (Chromium), an optional blur (<C>glassBlur</C>), a two-sided rim light and a soft shadow.
+          Controls inside it stay borderless and share the material. Try the Liquid Glass slider in
+          Customize.
         </p>
         <div className="fd-glass-stage">
           <GlassGroup role="toolbar" aria-label="Text style">
@@ -102,7 +110,9 @@ function Overview() {
         <Table
           head={['Condition', 'Result']}
           rows={[
-            [<C>prefers-reduced-transparency: reduce</C>, <>Solid <C>--lab-surface</C>, no backdrop blur.</>],
+            [<C>prefers-reduced-transparency: reduce</C>, <>Solid <C>--lab-surface</C>, no backdrop filter, no refraction.</>],
+            [<C>prefers-contrast: more</C>, <>Solid <C>--lab-surface</C> with an <C>--lab-ink</C> outline; no rim light, no refraction.</>],
+            [<C>prefers-reduced-motion: reduce</C>, <>The light stays still and presses don’t swell the glass.</>],
             [<>No <C>backdrop-filter</C> support</>, <>Solid <C>--lab-surface</C>.</>],
             [<C>forced-colors: active</C>, <><C>Canvas</C> fill with a <C>CanvasText</C> border; rim highlight hidden.</>],
           ]}

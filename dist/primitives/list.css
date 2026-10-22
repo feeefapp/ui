@@ -14,14 +14,14 @@
   color: var(--lab-muted);
   font-size: 13px;
   font-weight: 500;
-  line-height: 1.3;
+  line-height: 17px;
 }
 .lab-list-section > .lab-list-footer {
   margin: 0;
   padding-inline: 16px;
   color: var(--lab-muted);
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 19px;
 }
 .lab-list-card {
   --lab-list-card-bg: color-mix(in srgb, var(--lab-ink) 4%, var(--lab-surface));
@@ -38,7 +38,8 @@
 .lab-list-item + .lab-list-item::before {
   content: '';
   position: absolute;
-  z-index: 1;
+  /* Above a swipeable row, which is lifted to z-index 1 over its actions. */
+  z-index: 2;
   inset-block-start: 0;
   inset-inline: 16px 0;
   height: 1px;
@@ -116,7 +117,7 @@
 .lab-list-row-title {
   overflow: hidden;
   font-size: 15px;
-  line-height: 1.3;
+  line-height: 20px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -124,7 +125,7 @@
   overflow: hidden;
   color: var(--lab-muted);
   font-size: 13px;
-  line-height: 1.35;
+  line-height: 18px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

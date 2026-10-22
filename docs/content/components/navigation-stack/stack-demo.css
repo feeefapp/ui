@@ -31,11 +31,13 @@
 .stack-demo-card-name {
   margin-top: 4px;
   font-size: 14px;
+  line-height: 22px;
   font-weight: 500;
 }
 .stack-demo-card-price {
   color: var(--lab-muted);
   font-size: 13px;
+  line-height: 21px;
 }
 /* Full bleed: the hero pulls itself up under the floating bar by the area's measured reserve. */
 .stack-demo-hero {
@@ -53,5 +55,6 @@
 .stack-demo-body p {
   margin: 0 0 20px;
   color: var(--lab-muted);
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 23px;
 }

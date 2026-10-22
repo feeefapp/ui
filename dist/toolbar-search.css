@@ -25,6 +25,9 @@
 
 .lab-toolbar-search-surface:has(input:focus-visible) { outline: 2px solid var(--lab-focus); outline-offset: 2px; }
 .lab-toolbar-search-glyph { display: grid; place-items: center; }
+/* The glyphs sit in a span, out of reach of the kit's `.lab-control > svg` size: give them the icon
+   button's 20px instead of lucide's 24px default. */
+html[data-lab-theme] .lab-toolbar-search-glyph > svg { width: 20px; height: 20px; }
 .lab-toolbar-search-glyph > svg { grid-area: 1 / 1; transition: opacity 160ms ease, transform 300ms var(--lab-ease); }
 .lab-toolbar-search-glyph > svg:last-child { opacity: 0; transform: rotate(-45deg) scale(.75); }
 .lab-toolbar-search-glyph[data-expanded='true'] > svg:first-child { opacity: 0; transform: rotate(45deg) scale(.75); }

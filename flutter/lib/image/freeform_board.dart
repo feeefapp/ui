@@ -1124,15 +1124,15 @@ class _StateView extends StatelessWidget {
     final c = ThemeProvider.of(context).colors;
     final t = I18n.of(context).t;
     final vw = MediaQuery.maybeSizeOf(context)?.width ?? 800;
-    // `font-size: clamp(14px, 2.4vw, 22px); line-height: 1.2`.
+    // `font-size: clamp(14px, 2.4vw, 22px); line-height: round(1.2em, 1px)`.
     final title = _clamp(vw * 0.024, 14, 22);
     final titleStyle = TextStyle(
       fontSize: title,
-      height: 1.2,
+      height: (title * 1.2).roundToDouble() / title,
       fontWeight: FontWeight.w500,
       color: c.ink,
     );
-    final smallStyle = TextStyle(fontSize: 12, height: 1.35, color: c.muted);
+    final smallStyle = TextStyle(fontSize: 12, height: 16 / 12, color: c.muted);
     final children = busy
         ? <Widget>[
             Semantics(
@@ -1246,7 +1246,8 @@ class _Welcome extends StatelessWidget {
               t('lab.board.endless'),
               style: TextStyle(
                 fontSize: title,
-                height: 1.15,
+                // `line-height: round(1.15em, 1px)`.
+                height: (title * 1.15).roundToDouble() / title,
                 fontWeight: FontWeight.w500,
                 letterSpacing: -0.03 * title,
               ),

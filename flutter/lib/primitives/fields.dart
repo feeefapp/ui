@@ -410,7 +410,7 @@ class _RingPainter extends CustomPainter {
       old.color != color || old.radius != radius;
 }
 
-/// Field label text (`<label class="lab-label">`): 13px, medium weight, 1.5 line height.
+/// Field label text (`<label class="lab-label">`): 13px, medium weight, 20px line height.
 class Label extends StatelessWidget {
   const Label({super.key, required this.child});
 
@@ -422,8 +422,8 @@ class Label extends StatelessWidget {
     style: const TextStyle(
       fontSize: 13,
       fontWeight: FontWeight.w500,
-      height: 1.5,
+      height: 20 / 13,
     ),
-    child: CssBaseline(lineHeight: 19.5, child: child),
+    child: CssBaseline(lineHeight: 20, child: child),
   );
 }

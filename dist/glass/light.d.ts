@@ -1,4 +1,4 @@
-import type { GlassRect } from './geometry.js';
+import { type GlassRect, type GlassShape } from './geometry.js';
 /**
  * Where light comes from, as a unit vector pointing from a bubble toward the light (screen
  * coordinates, y down). The default matches the kit's rim: light from the top-left (135°).
@@ -31,4 +31,38 @@ export declare function rimGradient(bounds: GlassRect, light: GlassLight): {
     x2: number;
     y2: number;
 };
+/** Rim reflection strength from the local surface normal, independent of bubble proportions. */
+export declare function rimReflection(nx: number, ny: number, light: GlassLight): number;
+/** A short outline segment and the outward normal of the blended surface at its midpoint. */
+export declare function rimSurface(shapes: readonly GlassShape[], spacing: number): {
+    d: string;
+    nx: number;
+    ny: number;
+}[];
+/** Width in CSS pixels of the rounded, reflective bevel on control-sized glass. */
+export declare const GLASS_HIGHLIGHT_WIDTH = 5;
+/**
+ * Specular reflection on a convex quarter-circle cross-section. Depth runs inward from the
+ * outline. The surface normal rotates from horizontal at the edge to vertical at the flat
+ * interior; a fixed elevated light produces a finite-width highlight within that bevel.
+ */
+export declare function surfaceReflection(depth: number, nx: number, ny: number, light: GlassLight, width?: number): number;
+/** Cached bevel samples, at 2× resolution to keep the reflection smooth at browser zoom. */
+export declare function highlightSurface(shapes: readonly GlassShape[], spacing: number, bounds: GlassRect, highlightWidth?: number): {
+    width: number;
+    height: number;
+    bezel: number;
+    samples: {
+        index: number;
+        depth: number;
+        nx: number;
+        ny: number;
+        coverage: number;
+    }[];
+};
+/** Soft occlusion on the unlit inner bevel, paired with the reflected light for optical depth. */
+export declare function surfaceShade(depth: number, nx: number, ny: number, light: GlassLight, width?: number): number;
+/** Screenshot-fitted rim: an outer-edge peak with symmetric lighting and a smooth inward fade.
+ * Width and falloff are our reconstruction; base/peak come from theme rim tokens. */
+export declare function measuredRimReflection(depth: number, nx: number, ny: number, light: GlassLight, width: number, base: number, peak: number): number;
 //# sourceMappingURL=light.d.ts.map
