@@ -200,8 +200,9 @@ class _GlassGroupPainter extends CustomPainter {
         ..strokeWidth = 1
         ..color = line,
     );
-    if (rim)
+    if (rim) {
       paintLightEdge(canvas, size, radius, light: edgeLight, low: edgeLow);
+    }
   }
 
   @override

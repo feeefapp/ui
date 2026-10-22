@@ -1,3 +1,5 @@
+import 'package:flutter/animation.dart' show Cubic;
+
 import 'dart:ui';
 
 import '../theme_config.dart';
@@ -259,4 +261,11 @@ class SizeTokens {
   double get radiusPanel => 24 * radiusScale;
   double get radiusGlass => 32 * radiusScale;
   double get radiusSmall => 12 * radiusScale;
+}
+
+/// Motion tokens from `system.css`: `--lab-duration-fast`, `--lab-duration-normal`, `--lab-ease`.
+abstract final class MotionTokens {
+  static const durationFast = Duration(milliseconds: 140);
+  static const durationNormal = Duration(milliseconds: 220);
+  static const ease = Cubic(0.2, 0.8, 0.2, 1);
 }

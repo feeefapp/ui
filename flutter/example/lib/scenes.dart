@@ -208,6 +208,56 @@ final Map<String, List<Widget> Function()> scenes = {
       ),
     ),
   ],
+  'dock': () => [
+    Builder(
+      builder: (context) => Dock(
+        label: 'Order',
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Order #1042',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+            Text(
+              '3 items · 4,500 DZD',
+              style: TextStyle(
+                fontSize: 11,
+                color: ThemeProvider.of(context).colors.muted,
+              ),
+            ),
+          ],
+        ),
+        children: [
+          Button(
+            variant: .tonal,
+            controlSize: .compact,
+            onClick: _noop,
+            children: const [LucidePrinter(size: 18), Text('Print')],
+          ),
+          Button(
+            variant: .filled,
+            controlSize: .compact,
+            onClick: _noop,
+            children: const [LucideTruck(size: 18), Text('Ship')],
+          ),
+        ],
+      ),
+    ),
+    Dock(
+      label: 'Selection',
+      align: .start,
+      content: const Text('2 selected'),
+      children: [
+        IconButton(
+          controlSize: .compact,
+          ariaLabel: 'Clear',
+          onClick: _noop,
+          icon: const LucideX(),
+        ),
+      ],
+    ),
+  ],
   'text': () => [
     Builder(
       builder: (context) => row([

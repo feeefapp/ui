@@ -28,6 +28,7 @@ class Toolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Semantics(
     container: true,
+    explicitChildNodes: true,
     label: label,
     child: GlassScope(
       child: Row(
@@ -71,6 +72,7 @@ class ToolbarGroup extends StatelessWidget {
     final radius = (size + 6) / 2 * s.radiusScale;
     return Semantics(
       container: true,
+      explicitChildNodes: true,
       label: label,
       child: GlassGroup(
         glassId: glassId,

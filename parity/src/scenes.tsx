@@ -11,6 +11,8 @@ import { LucidePhone, LucideUndo2, LucideRedo2, LucideBold, LucideItalic, Lucide
 import { GlassGroup } from '@feeef.dev/ui/scaffold'
 import { Toolbar, ToolbarGroup } from '@feeef.dev/ui/toolbar'
 import { GlassContainer } from '@feeef.dev/ui/glass'
+import { Dock } from '@feeef.dev/ui/dock'
+import { LucidePrinter, LucideTruck, LucideX } from 'lucide-react'
 
 /**
  * Scenes shared with flutter/example/lib/scenes.dart: same ids, same content, same layout.
@@ -126,6 +128,35 @@ export const SCENES: Record<string, () => ReactNode> = {
           <IconButton appearance="toolbar" controlSize="compact" aria-label="Bold"><LucideBold /></IconButton>
         </ToolbarGroup>
       </GlassContainer>
+    </>
+  ),
+  dock: () => (
+    <>
+      <div style={{ alignSelf: 'stretch' }}>
+        <Dock
+          label="Order"
+          content={
+            <>
+              <strong>Order #1042</strong>
+              <small>3 items · 4,500 DZD</small>
+            </>
+          }
+        >
+          <Button variant="tonal" controlSize="compact">
+            <LucidePrinter size={18} />
+            Print
+          </Button>
+          <Button variant="filled" controlSize="compact">
+            <LucideTruck size={18} />
+            Ship
+          </Button>
+        </Dock>
+      </div>
+      <div style={{ alignSelf: 'stretch' }}>
+        <Dock label="Selection" align="start" content={<span>2 selected</span>}>
+          <IconButton controlSize="compact" aria-label="Clear"><LucideX /></IconButton>
+        </Dock>
+      </div>
     </>
   ),
   text: () => (
