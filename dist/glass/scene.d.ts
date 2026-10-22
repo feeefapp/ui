@@ -29,7 +29,16 @@ export declare class GlassScene {
     followPointer: boolean;
     /** Bubbles swell, stretch and glow under a press (Apple's interactive glass). */
     interactive: boolean;
+    /** Small glass flips light/dark to stay legible over what is behind it. */
+    adaptive: boolean;
+    private sampleFrame;
+    private themeObserver;
+    private visibility;
+    private sampleTimer;
     constructor(host: HTMLElement, backdrop: HTMLElement, paint: SVGSVGElement, shadow: SVGSVGElement, uid: string);
+    /** Re-reads what is behind the glass on the next frame (scroll, theme or layout changed). */
+    requestSample: () => void;
+    private sampleBackdrop;
     private onPressStart;
     private onPressMove;
     private onPressEnd;

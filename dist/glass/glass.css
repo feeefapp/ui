@@ -101,3 +101,53 @@ border) is unchanged, so nothing moves when the container takes over. */
     stop-color: transparent;
   }
 }
+
+/* ThemeConfig glass: 'solid' paints chrome on opaque surfaces, for dense tools and consoles. */
+html[data-lab-glass='solid'] .lab-glass-backdrop {
+  background: var(--lab-surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+html[data-lab-glass='solid'] .lab-glass-rim,
+html[data-lab-glass='solid'] .lab-glass-glow-stop {
+  display: none;
+}
+
+/* Adaptive tint: the scene sets data-glass-backdrop when small glass sits over content of the
+opposite tone. Neutral tokens, then every token derived from them is declared again here, because
+custom properties derived on <html> keep the values computed there. */
+.lab-glass-container[data-glass-backdrop] {
+  --lab-control-surface: var(--lab-surface);
+  --lab-control-border: color-mix(in srgb, var(--lab-ink) 15%, var(--lab-surface));
+  --lab-control-hover: color-mix(in srgb, var(--lab-ink) 6%, var(--lab-surface));
+  --lab-control-pressed: color-mix(in srgb, var(--lab-ink) 12%, var(--lab-surface));
+  --lab-control-selected: color-mix(in srgb, var(--lab-primary) 24%, var(--lab-surface));
+  --lab-focus: var(--lab-ink);
+  color: var(--lab-ink);
+}
+.lab-glass-container[data-glass-backdrop='dark'] {
+  --lab-surface: #1d211e;
+  --lab-surface-soft: #262b27;
+  --lab-ink: #f2f5f0;
+  --lab-muted: #b7c0b4;
+  --lab-line: rgb(255 255 255 / 16%);
+  --lab-glass-fill: color-mix(in srgb, #1d211e 62%, transparent);
+  --lab-glass-edge-light: rgb(255 255 255 / 34%);
+  --lab-glass-edge-low: rgb(255 255 255 / 10%);
+  --lab-glass-shadow-color: rgb(0 0 0 / 30%);
+  --lab-glass-glow: rgb(255 255 255 / 18%);
+  --lab-control-highlight: rgb(255 255 255 / 20%);
+}
+.lab-glass-container[data-glass-backdrop='light'] {
+  --lab-surface: #fbfcfa;
+  --lab-surface-soft: #eef1ec;
+  --lab-ink: #151a16;
+  --lab-muted: #5d675a;
+  --lab-line: rgb(0 0 0 / 12%);
+  --lab-glass-fill: color-mix(in srgb, #fbfcfa 72%, transparent);
+  --lab-glass-edge-light: rgb(255 255 255 / 80%);
+  --lab-glass-edge-low: rgb(255 255 255 / 22%);
+  --lab-glass-shadow-color: rgb(0 0 0 / 12%);
+  --lab-glass-glow: rgb(255 255 255 / 45%);
+  --lab-control-highlight: rgb(255 255 255 / 76%);
+}

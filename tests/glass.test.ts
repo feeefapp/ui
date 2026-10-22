@@ -195,3 +195,30 @@ test('stretch resists and never passes its limit', () => {
   assert.ok(glassStretch(-50, 0).x < 0)
   assert.equal(glassStretch(0, 0).y, 0)
 })
+
+import { adaptiveGlassTone, backdropTone, parseCssColor } from '../src/glass/adaptive.ts'
+
+test('computed colours parse in rgb, rgba and color(srgb) forms', () => {
+  assert.deepEqual(parseCssColor('rgb(255, 0, 0)'), { r: 1, g: 0, b: 0, a: 1 })
+  assert.equal(parseCssColor('rgba(0, 0, 0, 0)')!.a, 0)
+  assert.equal(parseCssColor('rgb(0 0 0 / 50%)')!.a, 0.5)
+  assert.deepEqual(parseCssColor('color(srgb 0.5 0.25 1 / 0.8)'), { r: 0.5, g: 0.25, b: 1, a: 0.8 })
+  assert.equal(parseCssColor('transparent'), null)
+})
+
+test('a named region wins over colours, then the first solid colour decides', () => {
+  assert.equal(backdropTone([{ color: 'rgb(255, 255, 255)' }, { tone: 'dark' }]), 'light')
+  assert.equal(backdropTone([{ tone: 'dark' }, { color: 'rgb(255, 255, 255)' }]), 'dark')
+  assert.equal(backdropTone([{ color: 'rgba(0, 0, 0, 0)' }, { color: 'rgb(16, 30, 23)' }]), 'dark')
+  assert.equal(backdropTone([{ color: 'rgb(128, 128, 128)' }]), null, 'mid grey is undecided')
+  assert.equal(backdropTone([]), null)
+})
+
+test('only small glass flips, only on agreement, only against the color mode', () => {
+  assert.equal(adaptiveGlassTone(['dark', 'dark'], 'light', 46), 'dark')
+  assert.equal(adaptiveGlassTone(['dark', 'dark'], 'dark', 46), null, 'already dark')
+  assert.equal(adaptiveGlassTone(['dark', 'light'], 'light', 46), null, 'disagreement')
+  assert.equal(adaptiveGlassTone(['dark'], 'light', 200), null, 'large glass does not flip')
+  assert.equal(adaptiveGlassTone([null], 'light', 46), null)
+  assert.equal(adaptiveGlassTone(['light'], 'dark', 46), 'light')
+})

@@ -51,6 +51,7 @@ function Overview() {
             [<C>spacing</C>, 'GlassContainer', 'Blend distance in px (default 8). Keep it below the gap between bubbles at rest.'],
             [<C>light</C>, 'GlassContainer', <><C>pointer</C> (default) or <C>static</C>.</>],
             [<C>interactive</C>, 'GlassContainer', 'Press response: swell, stretch and glow (default true).'],
+            [<C>adaptive</C>, 'GlassContainer', 'Flip small glass light or dark over contrasting content (default true).'],
             [<C>glassId</C>, 'GlassGroup, ToolbarGroup', 'Stable identity across renders and layouts.'],
             [<C>glassUnion</C>, 'GlassGroup, ToolbarGroup', 'Groups with the same name share one shape.'],
             [<C>glassMotion</C>, 'GlassGroup, ToolbarGroup', <><C>follow</C> for bubbles that animate their own size (Dock, search do this already).</>],
@@ -61,6 +62,24 @@ function Overview() {
           ancestors: the blur would stop seeing the page behind it. Fade bubbles out by making them{' '}
           <C>inert</C> or removing them; the container dematerializes them.
         </Callout>
+      </Section>
+
+      <Section title="Adapting to what is behind">
+        <p>
+          Small glass (up to 72px tall) flips between light and dark to stay legible over what scrolls
+          under it, like Apple's bars over photos. The browser can't read pixels, so mark media regions
+          with <C>{'data-lab-backdrop="dark"'}</C> or <C>"light"</C>; elsewhere the first solid background
+          colour behind the glass decides. Taller glass keeps the theme's colours. Turn it off with{' '}
+          <C>{'adaptive={false}'}</C>.
+        </p>
+      </Section>
+
+      <Section title="Glass style">
+        <p>
+          The app's <C>ThemeConfig</C> <C>glass</C> option sets how all of it behaves: <C>liquid</C>{' '}
+          (default) has the moving light and press response, <C>frosted</C> keeps the blur and the morphs
+          with a still light, <C>solid</C> paints opaque chrome for dense tools. Try it in Customize.
+        </p>
       </Section>
 
       <Section title="Guidelines">

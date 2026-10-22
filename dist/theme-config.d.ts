@@ -8,6 +8,7 @@ import type { CSSProperties } from 'react';
  * - `data-lab-primary` + `--lab-seed*` → a custom primary color the tokens derive from
  * - `data-lab-density`  → control/row heights, padding and spacing (system.css)
  * - `--lab-radius-scale` → every corner radius (system.css and component CSS)
+ * - `data-lab-glass`    → how floating glass behaves (glass/glass.css, GlassContainer)
  *
  * Server-rendered hosts also spread `themeAttributes(config)` onto `<html>` so the first
  * paint is already themed; the provider keeps the attributes in sync on the client.
@@ -25,11 +26,19 @@ export interface ThemeConfig {
     density?: Density;
     /** Corner scale: `1` (default) is the Lab's rounding, `0.5` half, `0` square. Clamped to 0–1.5. */
     radius?: number;
+    /**
+     * Floating glass: `liquid` (default) moves, lights up toward the pointer and responds to presses;
+     * `frosted` keeps the blurred material and its morphs with a still light and no press response;
+     * `solid` paints chrome on opaque surfaces (like reduced transparency) for dense tools.
+     */
+    glass?: GlassStyle;
 }
 /** Color palette: `lab` (Feeef green) or `mono` (black and white). */
 export type Palette = 'lab' | 'mono';
 /** Size scale for controls, rows, spacing and sidebars. */
 export type Density = 'comfortable' | 'compact' | 'thin';
+/** How floating glass behaves: moving liquid glass, still frosted glass, or opaque surfaces. */
+export type GlassStyle = 'liquid' | 'frosted' | 'solid';
 /** The config every unset option falls back to. `primary` unset means the palette's own color. */
 export declare const THEME_DEFAULTS: Required<Omit<ThemeConfig, 'primary'>>;
 /** `#abc` / `#aabbcc` → [r, g, b] in 0–255, or null for anything else. */
@@ -40,13 +49,14 @@ export declare function readableTextOn(rgb: [number, number, number]): string;
 export declare function darkModePrimary([r, g, b]: [number, number, number]): [number, number, number];
 /**
  * Attributes for the root `<html>` element (React props), e.g. in a Next.js root layout:
- * `data-lab-palette`, `data-lab-density`, `data-lab-primary` (when set) and the style variables.
+ * `data-lab-palette`, `data-lab-density`, `data-lab-glass`, `data-lab-primary` (when set) and the style variables.
  * Unset options use `THEME_DEFAULTS`; `radius` is clamped to 0–1.5 and an invalid `primary`
  * is ignored. Color mode (`data-lab-theme`) is not included; `ThemeProvider` sets it.
  */
 export declare function themeAttributes(config?: ThemeConfig): {
     'data-lab-palette': Palette;
     'data-lab-density': Density;
+    'data-lab-glass': GlassStyle;
     'data-lab-primary'?: '';
     style: CSSProperties;
 };

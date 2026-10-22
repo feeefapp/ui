@@ -4,6 +4,7 @@ import type { GlassMemberOptions } from './context'
 import { boundsOf, glassPaths, type GlassRect, type GlassShape } from './geometry'
 import { DEFAULT_GLASS_LIGHT, glassLightToward, rimGradient, type GlassLight } from './light'
 import { planGlassTransition, sameRect } from './transitions'
+import { adaptiveGlassTone, backdropTone, type BackdropSample, type GlassTone } from './adaptive'
 import { GLASS_CONTENT_FOLLOW, GLASS_PRESS_SCALE, glassStretch, pressedShape } from './press'
 
 /** How far (px) the material may reach past the container, for overshoot and growing bubbles. */
@@ -110,6 +111,12 @@ export class GlassScene {
   followPointer = true
   /** Bubbles swell, stretch and glow under a press (Apple's interactive glass). */
   interactive = true
+  /** Small glass flips light/dark to stay legible over what is behind it. */
+  adaptive = true
+  private sampleFrame = 0
+  private themeObserver: MutationObserver | null = null
+  private visibility: IntersectionObserver | null = null
+  private sampleTimer: ReturnType<typeof setInterval> | null = null
 
   constructor(
     private host: HTMLElement,
@@ -129,6 +136,57 @@ export class GlassScene {
       this.mutations.observe(host, { subtree: true, attributes: true, attributeFilter: ['inert', 'hidden'] })
     }
     host.addEventListener('pointerdown', this.onPressStart, { passive: true })
+    window.addEventListener('scroll', this.requestSample, { passive: true, capture: true })
+    if (typeof MutationObserver !== 'undefined') {
+      this.themeObserver = new MutationObserver(this.requestSample)
+      this.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-lab-theme'] })
+    }
+    // Content can change behind still glass (a photo loads, a tab switches): re-check twice a
+    // second, only while the glass is on screen and the page visible.
+    if (typeof IntersectionObserver !== 'undefined') {
+      this.visibility = new IntersectionObserver(([entry]) => {
+        if (this.sampleTimer) clearInterval(this.sampleTimer)
+        this.sampleTimer = entry?.isIntersecting
+          ? setInterval(() => {
+              if (this.adaptive && document.visibilityState === 'visible') this.requestSample()
+            }, 500)
+          : null
+      })
+      this.visibility.observe(host)
+    }
+  }
+
+  /** Re-reads what is behind the glass on the next frame (scroll, theme or layout changed). */
+  requestSample = () => {
+    if (this.sampleFrame || typeof requestAnimationFrame === 'undefined') return
+    this.sampleFrame = requestAnimationFrame(() => {
+      this.sampleFrame = 0
+      this.sampleBackdrop()
+    })
+  }
+
+  private sampleBackdrop() {
+    const paths = this.cache.paths
+    let tone: GlassTone | null = null
+    if (this.adaptive && paths.length && typeof document.elementsFromPoint === 'function') {
+      const origin = this.host.getBoundingClientRect()
+      const tones = paths.map((path) => {
+        const x = origin.left - GLASS_MARGIN + path.bounds.x + path.bounds.width / 2
+        const y = origin.top - GLASS_MARGIN + path.bounds.y + path.bounds.height / 2
+        const samples: BackdropSample[] = document
+          .elementsFromPoint(x, y)
+          .filter((element) => !this.host.contains(element))
+          .map((element) => ({
+            tone: element.closest('[data-lab-backdrop]')?.getAttribute('data-lab-backdrop') as GlassTone | null,
+            color: getComputedStyle(element).backgroundColor,
+          }))
+        return backdropTone(samples)
+      })
+      const mode: GlassTone = document.documentElement.getAttribute('data-lab-theme') === 'dark' ? 'dark' : 'light'
+      tone = adaptiveGlassTone(tones, mode, Math.max(...paths.map((path) => path.bounds.height)))
+    }
+    if (tone) this.host.setAttribute('data-glass-backdrop', tone)
+    else this.host.removeAttribute('data-glass-backdrop')
   }
 
   private onPressStart = (event: PointerEvent) => {
@@ -218,6 +276,11 @@ export class GlassScene {
 
   dispose() {
     this.host.removeEventListener('pointerdown', this.onPressStart)
+    window.removeEventListener('scroll', this.requestSample, { capture: true })
+    this.themeObserver?.disconnect()
+    this.visibility?.disconnect()
+    if (this.sampleTimer) clearInterval(this.sampleTimer)
+    if (this.sampleFrame) cancelAnimationFrame(this.sampleFrame)
     window.removeEventListener('pointermove', this.onPressMove)
     window.removeEventListener('pointerup', this.onPressEnd)
     window.removeEventListener('pointercancel', this.onPressEnd)
@@ -302,6 +365,7 @@ export class GlassScene {
     this.measured = true
     this.draw()
     this.scheduleDraw()
+    this.requestSample()
   }
 
   private release(shape: Shape, id: string) {

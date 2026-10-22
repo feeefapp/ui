@@ -7,14 +7,28 @@ import { GlassContext } from './context.js';
 import { GlassScene } from './scene.js';
 import './glass.css';
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
+const STYLES = ['liquid', 'frosted', 'solid'];
+const readGlassStyle = () => {
+    const value = document.documentElement.getAttribute('data-lab-glass');
+    return value && STYLES.includes(value) ? value : 'liquid';
+};
+/** The app's glass style (ThemeConfig `glass`, on `<html data-lab-glass>`), live. */
+export function useGlassStyle() {
+    return React.useSyncExternalStore((notify) => {
+        const observer = new MutationObserver(notify);
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-lab-glass'] });
+        return () => observer.disconnect();
+    }, readGlassStyle, () => 'liquid');
+}
 /**
  * Draws ONE glass material for every bubble inside it (GlassGroup, ToolbarGroup, Dock, …), like
- * Apple's GlassEffectContainer. Bubbles that come within `spacing` bend toward each other and
+ * Apple's GlassEffectContainer. The app's ThemeConfig `glass` sets the style: `liquid` (moving
+ * light, press response), `frosted` (still light, no press) or `solid` (opaque). Bubbles that come within `spacing` bend toward each other and
  * merge; a bubble that splits into several grows them out of itself; new and removed bubbles
  * materialize. Bubbles keep their layout, focus and semantics; only the paint moves here. Without
  * JavaScript, or in forced colors, every bubble paints its own glass as before.
  */
-export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'div', spacing = 8, light = 'pointer', interactive = true, className, children, ...props }, ref) {
+export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'div', spacing = 8, light = 'pointer', interactive = true, adaptive = true, className, children, ...props }, ref) {
     const host = React.useRef(null);
     const backdrop = React.useRef(null);
     const paint = React.useRef(null);
@@ -23,6 +37,8 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
     const pending = React.useRef([]);
     const uid = React.useId();
     const reduced = useReducedMotion();
+    const style = useGlassStyle();
+    const liquid = style === 'liquid';
     const setHost = React.useCallback((element) => {
         host.current = element;
         if (typeof ref === 'function')
@@ -70,12 +86,13 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
             return;
         current.spacing = Math.max(0, spacing);
         current.reduceMotion = reduced;
-        current.followPointer = light === 'pointer';
-        current.interactive = interactive;
+        current.followPointer = light === 'pointer' && liquid;
+        current.interactive = interactive && liquid;
+        current.adaptive = adaptive;
         current.requestMeasure();
     });
     React.useEffect(() => {
-        if (light !== 'pointer' || reduced)
+        if (light !== 'pointer' || reduced || !liquid)
             return;
         const fine = window.matchMedia?.('(hover: hover) and (pointer: fine)');
         if (!fine?.matches)
@@ -100,7 +117,7 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
             window.removeEventListener('pointermove', move);
             document.documentElement.removeEventListener('pointerleave', leave);
         };
-    }, [light, reduced]);
+    }, [light, reduced, liquid]);
     return React.createElement(as, { ...props, 'ref': setHost, 'className': cn('lab-glass-container', className), 'data-glass-container': '' }, _jsxs("div", { className: "lab-glass-material", "aria-hidden": "true", children: [_jsx("svg", { ref: shadow, className: "lab-glass-shadow" }), _jsx("div", { ref: backdrop, className: "lab-glass-backdrop" }), _jsx("svg", { ref: paint, className: "lab-glass-paint" })] }), _jsx(GlassContext.Provider, { value: registry, children: children }));
 });
 //# sourceMappingURL=container.js.map

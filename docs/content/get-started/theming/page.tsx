@@ -61,6 +61,11 @@ export function Root({ children }: { children: React.ReactNode }) {
               <>A number: <C>1</C> default, <C>0</C> square, clamped to 0–1.5</>,
               <>Every corner, through <C>--lab-radius-scale</C>. See <Link to="/foundations/shape">Shape and corners</Link>.</>,
             ],
+            [
+              <C>glass</C>,
+              <><C>liquid</C> (default), <C>frosted</C> or <C>solid</C></>,
+              <>Floating chrome. Liquid glass merges, lights up toward the pointer and responds to presses; frosted keeps the blur and the morphs with a still light; solid paints opaque surfaces, for dense tools. See <Link to="/components/glass-container">Glass container</Link>.</>,
+            ],
           ]}
         />
         <p>
@@ -115,7 +120,7 @@ function DarkModeToggle() {
         </p>
         <ul>
           <li>
-            <C>themeAttributes(theme)</C>: <C>data-lab-palette</C>, <C>data-lab-density</C> and the{' '}
+            <C>themeAttributes(theme)</C>: <C>data-lab-palette</C>, <C>data-lab-density</C>, <C>data-lab-glass</C> and the{' '}
             <C>--lab-radius-scale</C> style.
           </li>
           <li>

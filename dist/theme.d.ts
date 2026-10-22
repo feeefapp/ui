@@ -17,7 +17,7 @@ export declare function ThemeProvider({ children, initialMode, enableCornerFallb
     initialMode?: Mode;
     /** Start the SVG superellipse fallback on browsers without `corner-shape` support. */
     enableCornerFallback?: boolean;
-    /** App-level palette, density and radius (theme-config.ts). */
+    /** App-level palette, density, radius and glass (theme-config.ts). */
     config?: ThemeConfig;
 }): import("react").JSX.Element;
 /**
