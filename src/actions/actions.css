@@ -7,6 +7,7 @@
   font-family: var(--lab-font);
 }
 .lab-actions-bar__row {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -188,4 +189,11 @@ html[data-lab-theme]
   .lab-actions-menu__item[data-destructive] {
     color: LinkText;
   }
+}
+
+/* An action on its way into the More menu: the real element, inert, shrinking into the button. */
+.lab-actions-bar__ghost {
+  position: absolute;
+  margin: 0;
+  pointer-events: none;
 }

@@ -3,7 +3,7 @@
  * lists preserve source order. A host narrower than the overflow trigger still
  * receives that trigger, so every action remains reachable.
  */
-export function computeLabActionsLayout({ actions, maxWidth, measure, overflowWidth = 40, gap = 4, }) {
+export function computeActionsLayout({ actions, maxWidth, measure, overflowWidth = 40, gap = 4, }) {
     if (Number.isNaN(maxWidth) || maxWidth < 0) {
         throw new RangeError('Actions maxWidth must be non-negative.');
     }

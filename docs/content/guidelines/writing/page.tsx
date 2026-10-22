@@ -1,7 +1,7 @@
 import { PackageOpen } from 'lucide-react'
 import { Button } from '@feeef.dev/ui/primitives/button'
 import { TextField } from '@feeef.dev/ui/primitives/text-field'
-import { formatLabMessage } from '@feeef.dev/ui/i18n-core'
+import { formatMessage } from '@feeef.dev/ui/i18n-core'
 import { definePage } from '../../../src/model'
 import { Link } from '../../../src/router'
 import { C, Code } from '../../../src/blocks/code'
@@ -49,14 +49,14 @@ function PluralGood() {
     <ul className="gw-lines">
       {[0, 1, 2].map((count) => (
         <li key={`fr-${count}`}>
-          <span lang="fr">{formatLabMessage(ORDERS_PLURAL.fr, 'fr', { count })}</span>
+          <span lang="fr">{formatMessage(ORDERS_PLURAL.fr, 'fr', { count })}</span>
           <small>fr · {count}</small>
         </li>
       ))}
       {[2, 3, 11, 100].map((count) => (
         <li key={`ar-${count}`}>
           <span lang="ar" dir="rtl">
-            {formatLabMessage(ORDERS_PLURAL.ar, 'ar', { count })}
+            {formatMessage(ORDERS_PLURAL.ar, 'ar', { count })}
           </span>
           <small>ar · {count}</small>
         </li>

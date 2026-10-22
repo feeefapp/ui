@@ -1,4 +1,5 @@
 export { ActionsBar } from './actions-bar.js';
 export { ActionsWidthProvider } from './width-context.js';
-export { computeLabActionsLayout } from './layout.js';
+export { computeActionsLayout } from './layout.js';
+export { diffVisibleActions, useOverflowMotion } from './overflow-motion.js';
 //# sourceMappingURL=index.js.map

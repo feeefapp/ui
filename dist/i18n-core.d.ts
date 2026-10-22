@@ -24,12 +24,12 @@ export type LanguageCode = (typeof LANGUAGES)[number]['code'];
 /** `rtl` for Arabic, Persian, Hebrew and Urdu (any region subtag), otherwise `ltr`. */
 export declare function directionFor(locale: string): 'rtl' | 'ltr';
 /** Format one ICU message; falls back to the raw pattern on any error. */
-export declare function formatLabMessage(message: string, locale: string, params?: Record<string, string | number | Date>): string;
+export declare function formatMessage(message: string, locale: string, params?: Record<string, string | number | Date>): string;
 /**
  * Resolve `key` against a flat translations map. Returns the key itself when
  * unknown, mirroring the server and the global React `LanguageProvider`.
  */
 export declare function translateLab(translations: Record<string, string>, locale: string, key: string, params?: Record<string, string | number | Date>): string;
 /** Flatten nested lab JSON (`{voice:{title:"…"}}`) into `lab.voice.title` keys. */
-export declare function flattenLabTranslations(nested: Record<string, unknown>, prefix?: string): Record<string, string>;
+export declare function flattenTranslations(nested: Record<string, unknown>, prefix?: string): Record<string, string>;
 //# sourceMappingURL=i18n-core.d.ts.map

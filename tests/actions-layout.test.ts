@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { computeLabActionsLayout } from '../src/actions/layout.ts'
+import { computeActionsLayout } from '../src/actions/layout.ts'
 
 const actions = [
   { id: 'back', width: 70, priority: 2 },
@@ -9,7 +9,7 @@ const actions = [
   { id: 'save', width: 100, priority: 10 },
 ]
 const fit = (maxWidth: number) =>
-  computeLabActionsLayout({
+  computeActionsLayout({
     actions,
     maxWidth,
     gap: 8,
@@ -60,12 +60,12 @@ test('a single fitting action needs no overflow, but a non-fitting action spills
     overflowWidth: 40,
     measure: (action: (typeof actions)[number]) => action.width,
   }
-  assert.deepEqual(ids(computeLabActionsLayout({ ...options, maxWidth: 100 }).visible), ['save'])
-  assert.deepEqual(ids(computeLabActionsLayout({ ...options, maxWidth: 99 }).overflow), ['save'])
+  assert.deepEqual(ids(computeActionsLayout({ ...options, maxWidth: 100 }).visible), ['save'])
+  assert.deepEqual(ids(computeActionsLayout({ ...options, maxWidth: 99 }).overflow), ['save'])
 })
 
 test('an empty or unbounded bar handles its natural width', () => {
-  assert.deepEqual(computeLabActionsLayout({ actions: [], maxWidth: 0, measure: () => 0 }), {
+  assert.deepEqual(computeActionsLayout({ actions: [], maxWidth: 0, measure: () => 0 }), {
     visible: [],
     overflow: [],
     requiredWidth: 0,
@@ -81,7 +81,7 @@ test('groups spill atomically and input arrays remain unchanged', () => {
     children: Object.freeze(['download', 'copy']),
   })
   const items = Object.freeze([group, Object.freeze({ id: 'submit', width: 100, priority: 1 })])
-  const result = computeLabActionsLayout({
+  const result = computeActionsLayout({
     actions: items,
     maxWidth: 145,
     measure: (action) => action.width,
@@ -94,7 +94,7 @@ test('groups spill atomically and input arrays remain unchanged', () => {
 
 test('each measured width is read once per fitting pass', () => {
   const reads = new Map<string, number>()
-  computeLabActionsLayout({
+  computeActionsLayout({
     actions,
     maxWidth: 100,
     measure: (action) => {
@@ -106,7 +106,7 @@ test('each measured width is read once per fitting pass', () => {
 })
 
 test('fractional browser measurements do not silently exceed the available width', () => {
-  const result = computeLabActionsLayout({
+  const result = computeActionsLayout({
     actions: [{ id: 'first' }, { id: 'second' }],
     maxWidth: 100,
     gap: 0.25,
@@ -121,12 +121,12 @@ test('invalid geometry is rejected before it can silently hide controls', () => 
   assert.throws(() => fit(Number.NaN), RangeError)
   assert.throws(() => fit(-1), RangeError)
   assert.throws(
-    () => computeLabActionsLayout({ actions, maxWidth: 100, gap: -1, measure: () => 20 }),
+    () => computeActionsLayout({ actions, maxWidth: 100, gap: -1, measure: () => 20 }),
     RangeError
   )
   assert.throws(
     () =>
-      computeLabActionsLayout({
+      computeActionsLayout({
         actions,
         maxWidth: 100,
         overflowWidth: Infinity,
@@ -135,7 +135,15 @@ test('invalid geometry is rejected before it can silently hide controls', () => 
     RangeError
   )
   assert.throws(
-    () => computeLabActionsLayout({ actions, maxWidth: 100, measure: () => Number.NaN }),
+    () => computeActionsLayout({ actions, maxWidth: 100, measure: () => Number.NaN }),
     RangeError
   )
+})
+
+import { diffVisibleActions } from '../src/actions/overflow-motion.ts'
+
+test('overflow motion knows which actions enter, leave and stay in the row', () => {
+  assert.deepEqual(diffVisibleActions(['a', 'b', 'c'], ['a', 'c']), { entering: [], leaving: ['b'], staying: ['a', 'c'] })
+  assert.deepEqual(diffVisibleActions(['a'], ['a', 'b']), { entering: ['b'], leaving: [], staying: ['a'] })
+  assert.deepEqual(diffVisibleActions([], []), { entering: [], leaving: [], staying: [] })
 })

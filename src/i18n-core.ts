@@ -26,7 +26,7 @@ export function directionFor(locale: string): 'rtl' | 'ltr' {
 }
 
 /** Format one ICU message; falls back to the raw pattern on any error. */
-export function formatLabMessage(
+export function formatMessage(
   message: string,
   locale: string,
   params?: Record<string, string | number | Date>
@@ -51,11 +51,11 @@ export function translateLab(
 ): string {
   const message = translations[key]
   if (message === undefined) return key
-  return formatLabMessage(message, locale, params)
+  return formatMessage(message, locale, params)
 }
 
 /** Flatten nested lab JSON (`{voice:{title:"…"}}`) into `lab.voice.title` keys. */
-export function flattenLabTranslations(
+export function flattenTranslations(
   nested: Record<string, unknown>,
   prefix = 'lab'
 ): Record<string, string> {

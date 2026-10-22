@@ -15,7 +15,7 @@ export interface ActionsLayout<T> {
  * lists preserve source order. A host narrower than the overflow trigger still
  * receives that trigger, so every action remains reachable.
  */
-export declare function computeLabActionsLayout<T extends ActionLayoutItem>({ actions, maxWidth, measure, overflowWidth, gap, }: {
+export declare function computeActionsLayout<T extends ActionLayoutItem>({ actions, maxWidth, measure, overflowWidth, gap, }: {
     actions: readonly T[];
     maxWidth: number;
     measure: (action: T) => number;

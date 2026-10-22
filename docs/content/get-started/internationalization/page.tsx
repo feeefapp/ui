@@ -108,9 +108,9 @@ function OrdersTitle({ count }: { count: number }) {
 }`}
         />
         <p>
-          If your translations are nested JSON, flatten them with <C>flattenLabTranslations</C> from{' '}
+          If your translations are nested JSON, flatten them with <C>flattenTranslations</C> from{' '}
           <C>@feeef.dev/ui/i18n-core</C> (<C>{'{voice:{title}}'}</C> → <C>lab.voice.title</C>). The same
-          module has <C>translateLab</C> and <C>formatLabMessage</C>, pure functions for tests and server
+          module has <C>translateLab</C> and <C>formatMessage</C>, pure functions for tests and server
           code.
         </p>
       </Section>

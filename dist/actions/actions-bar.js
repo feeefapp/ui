@@ -8,10 +8,11 @@ import { Check, ChevronDown, ChevronRight, MoreHorizontal, Square, SquareCheck }
 import { cn } from '../utils.js';
 import { Button } from '../ui.js';
 import { PixelLoader } from '../pixel-art.js';
-import { computeLabActionsLayout } from './layout.js';
+import { computeActionsLayout } from './layout.js';
 import { useMeasuredActions } from './use_measured_actions.js';
 import { useActionsWidth } from './width-context.js';
 import './actions.css';
+import { useOverflowMotion } from './overflow-motion.js';
 /**
  * Responsive, priority-based actions. Measures its real controls and moves the lowest-priority
  * ones into a "More actions" menu when they don't fit. Place inside a dock or any bounded slot.
@@ -23,6 +24,7 @@ export function ActionsBar({ actions, label, align = 'end', size = 'regular', ga
     const host = React.useRef(null);
     const measuringRow = React.useRef(null);
     const overflowTrigger = React.useRef(null);
+    const row = React.useRef(null);
     const [container, setContainer] = React.useState();
     const [pending, setPending] = React.useState(new Set());
     const pendingRef = React.useRef(new Set());
@@ -42,7 +44,7 @@ export function ActionsBar({ actions, label, align = 'end', size = 'regular', ga
         setContainer(portalContainer === undefined ? (host.current?.closest('dialog') ?? null) : portalContainer);
     }, [portalContainer]);
     const layout = React.useMemo(() => measurements
-        ? computeLabActionsLayout({
+        ? computeActionsLayout({
             actions,
             maxWidth: inheritedWidth ?? measurements.availableWidth,
             measure: (action) => measurements.widths.get(action.id) ?? measurements.overflowWidth,
@@ -50,6 +52,7 @@ export function ActionsBar({ actions, label, align = 'end', size = 'regular', ga
             gap,
         })
         : { visible: [...actions], overflow: [], requiredWidth: 0 }, [actions, gap, inheritedWidth, measurements]);
+    useOverflowMotion(row, overflowTrigger, layout.visible.map((action) => action.id));
     React.useLayoutEffect(() => {
         const actionId = focusAfterFit.current;
         focusAfterFit.current = null;
@@ -92,7 +95,7 @@ export function ActionsBar({ actions, label, align = 'end', size = 'regular', ga
             ...(inheritedWidth === undefined
                 ? {}
                 : { inlineSize: layout.requiredWidth, flex: 'none' }),
-        }, children: [_jsxs("div", { className: "lab-actions-bar__row", children: [layout.visible.map((action) => (_jsx("span", { className: "lab-actions-bar__entry", "data-lab-action-id": action.id, children: action.type === 'group' ? (_jsx(GroupControl, { action: action, size: size, menu: menu })) : (_jsx(ActionControl, { action: action, size: size, loading: pending.has(action.id), onClick: () => execute(action) })) }, action.id))), !!layout.overflow.length && (_jsxs(DropdownMenu.Root, { modal: false, open: overflowOpen, onOpenChange: setOverflowOpen, children: [_jsx(DropdownMenu.Trigger, { asChild: true, children: _jsx(Button, { ref: overflowTrigger, className: "lab-actions-bar__control", variant: "ghost", appearance: "toolbar", controlSize: "icon", "aria-label": resolvedOverflowLabel, title: resolvedOverflowLabel, children: _jsx(MoreHorizontal, { size: 20, "aria-hidden": "true" }) }) }), _jsx(MenuSurface, { menu: menu, label: resolvedOverflowLabel, children: layout.overflow.map((action) => (_jsx(MenuAction, { action: action, menu: menu }, action.id))) })] }))] }), _jsxs("div", { ref: measuringRow, className: "lab-actions-bar__measure", "aria-hidden": "true", inert: true, children: [actions.map((action) => (_jsx("span", { className: "lab-actions-bar__entry", "data-lab-action-id": action.id, children: _jsx(ActionControl, { action: action, size: size, loading: pending.has(action.id) }) }, action.id))), _jsx("span", { className: "lab-actions-bar__entry", "data-lab-overflow-measure": true, children: _jsx(Button, { className: "lab-actions-bar__control", variant: "ghost", appearance: "toolbar", controlSize: "icon", tabIndex: -1, children: _jsx(MoreHorizontal, { size: 20, "aria-hidden": "true" }) }) })] }), errorLabel && (_jsx("span", { className: "lab-actions-bar__error", role: "alert", children: errorLabel }))] }));
+        }, children: [_jsxs("div", { ref: row, className: "lab-actions-bar__row", children: [layout.visible.map((action) => (_jsx("span", { className: "lab-actions-bar__entry", "data-lab-action-id": action.id, children: action.type === 'group' ? (_jsx(GroupControl, { action: action, size: size, menu: menu })) : (_jsx(ActionControl, { action: action, size: size, loading: pending.has(action.id), onClick: () => execute(action) })) }, action.id))), !!layout.overflow.length && (_jsxs(DropdownMenu.Root, { modal: false, open: overflowOpen, onOpenChange: setOverflowOpen, children: [_jsx(DropdownMenu.Trigger, { asChild: true, children: _jsx(Button, { ref: overflowTrigger, className: "lab-actions-bar__control", variant: "ghost", appearance: "toolbar", controlSize: "icon", "aria-label": resolvedOverflowLabel, title: resolvedOverflowLabel, children: _jsx(MoreHorizontal, { size: 20, "aria-hidden": "true" }) }) }), _jsx(MenuSurface, { menu: menu, label: resolvedOverflowLabel, children: layout.overflow.map((action) => (_jsx(MenuAction, { action: action, menu: menu }, action.id))) })] }))] }), _jsxs("div", { ref: measuringRow, className: "lab-actions-bar__measure", "aria-hidden": "true", inert: true, children: [actions.map((action) => (_jsx("span", { className: "lab-actions-bar__entry", "data-lab-action-id": action.id, children: _jsx(ActionControl, { action: action, size: size, loading: pending.has(action.id) }) }, action.id))), _jsx("span", { className: "lab-actions-bar__entry", "data-lab-overflow-measure": true, children: _jsx(Button, { className: "lab-actions-bar__control", variant: "ghost", appearance: "toolbar", controlSize: "icon", tabIndex: -1, children: _jsx(MoreHorizontal, { size: 20, "aria-hidden": "true" }) }) })] }), errorLabel && (_jsx("span", { className: "lab-actions-bar__error", role: "alert", children: errorLabel }))] }));
 }
 const ActionControl = React.forwardRef(function ActionControl({ action, size, loading, ...buttonProps }, ref) {
     const iconOnly = action.display === 'icon' && (action.type === 'toggle' || !!action.icon);

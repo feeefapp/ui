@@ -8,11 +8,12 @@ import { Check, ChevronDown, ChevronRight, MoreHorizontal, Square, SquareCheck }
 import { cn } from '../utils'
 import { Button } from '../ui'
 import { PixelLoader } from '../pixel-art'
-import { computeLabActionsLayout } from './layout'
+import { computeActionsLayout } from './layout'
 import type { Action, GroupAction } from './types'
 import { useMeasuredActions } from './use_measured_actions'
 import { useActionsWidth } from './width-context'
 import './actions.css'
+import { useOverflowMotion } from './overflow-motion'
 
 export interface ActionsBarProps {
   /** The action tree, in display order. Top-level entries spill into the overflow menu by `priority`. */
@@ -64,6 +65,7 @@ export function ActionsBar({
   const host = React.useRef<HTMLDivElement>(null)
   const measuringRow = React.useRef<HTMLDivElement>(null)
   const overflowTrigger = React.useRef<HTMLButtonElement>(null)
+  const row = React.useRef<HTMLDivElement>(null)
   const [container, setContainer] = React.useState<HTMLElement | null>()
   const [pending, setPending] = React.useState<ReadonlySet<string>>(new Set())
   const pendingRef = React.useRef(new Set<string>())
@@ -89,7 +91,7 @@ export function ActionsBar({
   const layout = React.useMemo(
     () =>
       measurements
-        ? computeLabActionsLayout({
+        ? computeActionsLayout({
             actions,
             maxWidth: inheritedWidth ?? measurements.availableWidth,
             measure: (action) => measurements.widths.get(action.id) ?? measurements.overflowWidth,
@@ -99,6 +101,8 @@ export function ActionsBar({
         : { visible: [...actions], overflow: [], requiredWidth: 0 },
     [actions, gap, inheritedWidth, measurements]
   )
+
+  useOverflowMotion(row, overflowTrigger, layout.visible.map((action) => action.id))
 
   React.useLayoutEffect(() => {
     const actionId = focusAfterFit.current
@@ -153,7 +157,7 @@ export function ActionsBar({
         } as React.CSSProperties
       }
     >
-      <div className="lab-actions-bar__row">
+      <div ref={row} className="lab-actions-bar__row">
         {layout.visible.map((action) => (
           <span key={action.id} className="lab-actions-bar__entry" data-lab-action-id={action.id}>
             {action.type === 'group' ? (

@@ -36,5 +36,5 @@ export default function Priority() {
 export const meta = {
   title: 'Overflow by priority',
   description:
-    'Drag the slider. Lower priorities move into “More actions” first; both lists keep source order.',
+    'Drag the slider. Lower priorities shrink into “More actions” first and grow back out of it as space returns; both lists keep source order.',
 }

@@ -54,7 +54,7 @@ export { SegmentedControl } from './ui'
 export type { SegmentOption } from './ui'
 
 export { UI_MESSAGES } from './messages'
-export { flattenLabTranslations, translateLab } from './i18n-core'
+export { flattenTranslations, translateLab } from './i18n-core'
 export { localeUrl } from './i18n'
 export { cn } from './utils'
 

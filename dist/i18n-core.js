@@ -19,7 +19,7 @@ export function directionFor(locale) {
     return RTL_BASES.has(base) ? 'rtl' : 'ltr';
 }
 /** Format one ICU message; falls back to the raw pattern on any error. */
-export function formatLabMessage(message, locale, params) {
+export function formatMessage(message, locale, params) {
     if (!message.includes('{'))
         return message;
     try {
@@ -37,10 +37,10 @@ export function translateLab(translations, locale, key, params) {
     const message = translations[key];
     if (message === undefined)
         return key;
-    return formatLabMessage(message, locale, params);
+    return formatMessage(message, locale, params);
 }
 /** Flatten nested lab JSON (`{voice:{title:"…"}}`) into `lab.voice.title` keys. */
-export function flattenLabTranslations(nested, prefix = 'lab') {
+export function flattenTranslations(nested, prefix = 'lab') {
     const out = {};
     const walk = (value, path) => {
         if (typeof value === 'string')
