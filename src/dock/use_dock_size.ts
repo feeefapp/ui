@@ -39,12 +39,15 @@ export function useDockSize() {
       const tilePadding = tileStyle
         ? Number.parseFloat(tileStyle.paddingLeft) + Number.parseFloat(tileStyle.paddingRight)
         : 0
+      // scrollWidth rounds a fractional text width (56.6px → 56), which would ellipsize the tile;
+      // measure the text extent itself and round up.
+      const textWidth = (child: Element) => {
+        const range = document.createRange()
+        range.selectNodeContents(child)
+        return Math.max((child as HTMLElement).scrollWidth, Math.ceil(range.getBoundingClientRect().width))
+      }
       const intrinsic = tile
-        ? Math.max(
-            Math.max(0, ...[...tile.children].map((child) => (child as HTMLElement).scrollWidth)) +
-              tilePadding,
-            tile.scrollWidth
-          )
+        ? Math.max(Math.max(0, ...[...tile.children].map(textWidth)) + tilePadding, tile.scrollWidth)
         : 0
       const tileMax = tile
         ? Math.max(0, Math.min(available * 0.4, intrinsic, available - 44 - gap))

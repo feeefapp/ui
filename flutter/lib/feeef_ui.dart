@@ -26,5 +26,8 @@ export 'physics/spring.dart';
 export 'primitives/spring_core.dart';
 export 'primitives/text_field.dart';
 export 'scaffold.dart';
+export 'scroll/gradient_overlay.dart';
+export 'scroll/metrics.dart';
+export 'scroll/scroll_area.dart';
 export 'theme.dart';
 export 'toolbar.dart';

@@ -18,6 +18,7 @@ import { glassLightToward, rimGradient, DEFAULT_GLASS_LIGHT } from '../../src/gl
 import { SPRINGS, solveSpring, springCoefficients, rubberBand } from '../../src/physics/spring'
 import { glassStretch, pressedShape } from '../../src/glass/press'
 import { planGlassTransition } from '../../src/glass/transitions'
+import { scrollWashPaths, scrollEdgeOpacities, scrollContentReserve } from '../../src/scroll/metrics'
 
 const pill: GlassShape = { x: 10, y: 20, width: 120, height: 46, radius: 23 }
 const square: GlassShape = { x: 0, y: 0, width: 40, height: 40, radius: 12 }
@@ -80,3 +81,19 @@ const motion = {
 }
 writeFileSync(new URL('../test/fixtures/motion.json', import.meta.url), JSON.stringify(motion, null, 1) + '\n')
 console.log('wrote motion.json')
+
+// Scroll washes and edge opacities.
+const washLevels = (columns: number, rows: number) => {
+  const grid = Array.from({ length: columns * rows }, () => 0)
+  scrollWashPaths(columns, rows).forEach((d, level) => {
+    for (const [, x, y] of d.matchAll(/M(\d+) (\d+)/g)) grid[Number(y) * columns + Number(x)] = level
+  })
+  return grid
+}
+const scroll = {
+  wash: [[12, 5], [40, 13], [3, 1]].map(([c, r]) => ({ columns: c, rows: r, levels: washLevels(c, r) })),
+  edges: [[0, 0], [0, 500], [40, 500], [500, 500], [-20, 500], [700, 500], [10, 1]].map(([o, e]) => [o, e, scrollEdgeOpacities(o, e)]),
+  reserve: [[0, 12, 24], [52, 12, 24], [52, -3, 24]].map(([h, g, p]) => [h, g, p, scrollContentReserve(h, g, p)]),
+}
+writeFileSync(new URL('../test/fixtures/scroll.json', import.meta.url), JSON.stringify(scroll) + '\n')
+console.log('wrote scroll.json')

@@ -309,6 +309,90 @@ final Map<String, List<Widget> Function()> scenes = {
       },
     ),
   ],
+  'scroll': () => [
+    Builder(
+      builder: (context) {
+        final theme = ThemeProvider.of(context);
+        final c = theme.colors;
+        return Container(
+          height: 300,
+          decoration: ShapeDecoration(
+            color: c.surface,
+            shape: SuperellipseBorder(
+              radius: theme.sizes.radiusPanel,
+              side: BorderSide(color: c.line),
+            ),
+          ),
+          // The decoration's 1px border already insets the child.
+          child: ClipPath(
+            clipper: ShapeBorderClipper(
+              shape: SuperellipseBorder(radius: theme.sizes.radiusPanel - 1),
+            ),
+            child: ScrollArea(
+              label: 'Orders',
+              top: ToolbarGroup(
+                label: 'Filters',
+                children: [
+                  Button(
+                    variant: .ghost,
+                    appearance: .toolbar,
+                    controlSize: .compact,
+                    onClick: _noop,
+                    children: const [Text('All')],
+                  ),
+                  Button(
+                    variant: .ghost,
+                    appearance: .toolbar,
+                    controlSize: .compact,
+                    onClick: _noop,
+                    children: const [Text('Open')],
+                  ),
+                ],
+              ),
+              bottom: Dock(
+                label: 'Orders',
+                content: const Text('24 orders'),
+                children: [
+                  Button(
+                    variant: .filled,
+                    controlSize: .compact,
+                    onClick: _noop,
+                    children: const [Text('New order')],
+                  ),
+                ],
+              ),
+              child: DefaultTextStyle.merge(
+                style: const TextStyle(
+                  fontSize: 14,
+                  height: 20 / 14,
+                  leadingDistribution: TextLeadingDistribution.even,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var i = 0; i < 12; i++)
+                      // Container adds the border to the padding, like the CSS box.
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border(bottom: BorderSide(color: c.line)),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          child: CssBaseline(
+                            lineHeight: 20,
+                            child: Text('Order #${1040 + i}'),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    ),
+  ],
   'text': () => [
     Builder(
       builder: (context) => row([

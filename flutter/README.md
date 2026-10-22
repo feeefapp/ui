@@ -19,10 +19,11 @@ Labels and other visible content are widgets (`Text`, `LucideBold()`), on both s
 | `scaffold` (`GlassGroup`), `toolbar` | `GlassGroup`, `Toolbar`, `ToolbarGroup` | `glass` |
 | `physics/spring`, `motion-value` | `Spring`, `Springs`, `solveSpring`, `MotionValue`, `rubberBand` | vectors |
 | `primitives/popover-surface` | `PopoverSurface` (breathing pixel grain) | `popover` 0.33–0.43% |
+| `scroll` | `ScrollArea`, `ScrollGradientOverlay`, scroll metrics | `scroll` 0.47–0.63% |
 | `dock` | `Dock`, `DockContentSwap` | `dock` 0.52–1.05% |
 | `lucide-react` | `LucideIcon` + all 1,895 icons (generated) | `icons` 0.43–0.63% |
 
-Not yet: scroll area, modal, select, navigation containers, workspace scaffold.
+Not yet: modal, select, navigation containers, workspace scaffold.
 Glass on Flutter has no adaptive tint (it can't sample what is behind it) and no refraction yet;
 `GlassRenderer.canvas` blurs like `css` until the Impeller shader lands.
 
@@ -39,7 +40,8 @@ ui.ThemeProvider(
 
 Import paths mirror the web kit (`package:feeef_ui/primitives/button.dart` ↔
 `@feeef.dev/ui/primitives/button`). Names such as `Button` and `RadioGroup` are generic: prefix the
-import when an app also imports Material, or `hide RadioGroup` from `widgets.dart`.
+import when an app also imports Material, or `hide RadioGroup` from `widgets.dart`. Always pass
+a `variant` to `Button`: the web kit's variant-less button is a legacy unstyled mode with no twin.
 
 ## Parity
 

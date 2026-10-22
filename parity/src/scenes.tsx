@@ -13,6 +13,7 @@ import { Toolbar, ToolbarGroup } from '@feeef.dev/ui/toolbar'
 import { GlassContainer } from '@feeef.dev/ui/glass'
 import { Dock } from '@feeef.dev/ui/dock'
 import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
+import { ScrollArea } from '@feeef.dev/ui/scroll'
 import { LucidePrinter, LucideTruck, LucideX } from 'lucide-react'
 
 /**
@@ -168,6 +169,40 @@ export const SCENES: Record<string, () => ReactNode> = {
         <div style={{ padding: '10px 12px', color: 'var(--lab-danger)' }}>Delete order</div>
       </PopoverSurface>
       <PopoverSurface seed="lab-popover-2" style={{ width: 200, height: 120 }} />
+    </div>
+  ),
+  scroll: () => (
+    <div
+      style={{
+        alignSelf: 'stretch',
+        height: 300,
+        border: '1px solid var(--lab-line)',
+        borderRadius: 'var(--lab-radius-panel)',
+        cornerShape: 'superellipse(1.5)',
+        background: 'var(--lab-surface)',
+        overflow: 'hidden',
+      } as React.CSSProperties}
+    >
+      <ScrollArea
+        label="Orders"
+        top={
+          <ToolbarGroup label="Filters">
+            <Button variant="ghost" appearance="toolbar" controlSize="compact">All</Button>
+            <Button variant="ghost" appearance="toolbar" controlSize="compact">Open</Button>
+          </ToolbarGroup>
+        }
+        bottom={
+          <Dock label="Orders" content={<span>24 orders</span>}>
+            <Button variant="filled" controlSize="compact">New order</Button>
+          </Dock>
+        }
+      >
+        {Array.from({ length: 12 }, (_, i) => (
+          <div key={i} style={{ font: "14px/20px 'Parity Plex'", padding: '10px 0', borderBottom: '1px solid var(--lab-line)' }}>
+            Order #{1040 + i}
+          </div>
+        ))}
+      </ScrollArea>
     </div>
   ),
   text: () => (
