@@ -2,6 +2,8 @@ import 'package:feeef_ui/feeef_ui.dart';
 import 'package:feeef_ui/theme/css_text.dart';
 import 'package:flutter/widgets.dart' hide Action, RadioGroup;
 
+import 'brand_scenes.dart';
+
 // Tab is the kit's (a TabView destination).
 
 /// Scenes shared with parity/src/scenes.tsx: same ids, same content, same layout. Each is a column
@@ -1358,6 +1360,9 @@ final Map<String, List<Widget> Function()> scenes = {
         ),
     ]),
   ],
+  'header': headerScene,
+  'brand': brandScene,
+  'avatar': avatarScene,
 };
 
 void _noop() {}

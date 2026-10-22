@@ -40,7 +40,9 @@
   gap: 6px;
   white-space: nowrap;
 }
-.lab-workspace-brand > span {
+/* The suffix only: `> span` also matched the logo's own span (muting the wordmark, and hiding it
+entirely on small screens). */
+.lab-workspace-brand-suffix {
   font: 400 18px/24px var(--lab-font);
   color: var(--lab-muted);
 }
@@ -217,7 +219,7 @@
     --lab-navigation-logo-width: 88px;
     --lab-navigation-logo-height: 24px;
   }
-  .lab-workspace-brand > span {
+  .lab-workspace-brand-suffix {
     font-size: 16px;
   }
   .lab-workspace-header-leading {
@@ -266,7 +268,7 @@
     --lab-navigation-logo-width: 60px;
     --lab-navigation-logo-height: 18px;
   }
-  .lab-workspace-brand > span {
+  .lab-workspace-brand-suffix {
     display: none;
   }
 }

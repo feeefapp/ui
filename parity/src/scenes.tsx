@@ -28,6 +28,7 @@ import { ActionsBar } from '@feeef.dev/ui/actions'
 import { NumberField } from '@feeef.dev/ui/primitives/number-field'
 import type { Action } from '@feeef.dev/ui/actions'
 import { LucidePrinter, LucideTruck, LucideX } from 'lucide-react'
+import { AvatarScene, BrandScene, HeaderScene } from './brand-scenes'
 
 /**
  * Scenes shared with flutter/example/lib/scenes.dart: same ids, same content, same layout.
@@ -540,6 +541,9 @@ export const SCENES: Record<string, () => ReactNode> = {
       ))}
     </div>
   ),
+  header: () => <HeaderScene />,
+  brand: () => <BrandScene />,
+  avatar: () => <AvatarScene />,
 }
 
 function Segmented() {

@@ -63,7 +63,7 @@ export function WorkspaceHeader({
                   width="var(--lab-navigation-logo-width, 100px)"
                   height="var(--lab-navigation-logo-height, 27px)"
                 />
-                {brandSuffix && <span aria-hidden="true">/ {brandSuffix}</span>}
+                {brandSuffix && <span className="lab-workspace-brand-suffix" aria-hidden="true">/ {brandSuffix}</span>}
               </Link>
             </ToolbarGroup>
             <div className="lab-workspace-context">
