@@ -173,7 +173,14 @@ export function Carousel({
     event.preventDefault()
   }
 
-  const width = typeof slideWidth === 'number' ? `${slideWidth * 100}%` : slideWidth
+  // Fractions and percentages are of the frame (cqw), not of the padded track's content box, so a
+  // centred slide really is centred.
+  const width =
+    typeof slideWidth === 'number'
+      ? `${slideWidth * 100}cqw`
+      : slideWidth.trim().endsWith('%')
+        ? `${Number.parseFloat(slideWidth)}cqw`
+        : slideWidth
   return (
     <section
       className={cn('lab-carousel', className)}

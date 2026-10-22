@@ -7,6 +7,8 @@
 .lab-carousel-frame {
   position: relative;
   min-width: 0;
+  /* Slide widths are cqw of the frame. */
+  container-type: inline-size;
 }
 .lab-carousel-track {
   display: flex;
@@ -22,7 +24,7 @@
   display: none;
 }
 .lab-carousel-track[data-align='center'] {
-  padding-inline: calc((100% - var(--lab-carousel-slide)) / 2);
+  padding-inline: calc((100cqw - var(--lab-carousel-slide)) / 2);
 }
 .lab-carousel-track:focus-visible {
   outline: 2px solid var(--lab-focus);

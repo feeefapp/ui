@@ -15,6 +15,8 @@ import { Dock } from '@feeef.dev/ui/dock'
 import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
 import { ScrollArea } from '@feeef.dev/ui/scroll'
 import { Modal } from '@feeef.dev/ui/primitives/modal'
+import { Carousel, TabView } from '@feeef.dev/ui/containers'
+import { LucidePackage, LucideUsers, LucideSettings } from 'lucide-react'
 import { Select, Option } from '@feeef.dev/ui/primitives/select'
 import { ListSection, ListRow } from '@feeef.dev/ui/primitives/list'
 import { LucideStore, LucideArchive } from 'lucide-react'
@@ -294,6 +296,39 @@ export const SCENES: Record<string, () => ReactNode> = {
         </Select>
       </div>
     </>
+  ),
+  carousel: () => (
+    <div style={{ alignSelf: 'stretch' }}>
+      <Carousel label="Featured products">
+        {['Summer dress', 'Leather bag', 'Sneakers'].map((name) => (
+          <div
+            key={name}
+            style={{
+              height: 160,
+              display: 'grid',
+              placeItems: 'center',
+              background: 'var(--lab-surface-soft)',
+              font: "500 20px/28px 'Parity Plex'",
+            }}
+          >
+            {name}
+          </div>
+        ))}
+      </Carousel>
+    </div>
+  ),
+  tabs: () => (
+    <div style={{ alignSelf: 'stretch', height: 320, position: 'relative', background: 'var(--lab-surface-soft)' }}>
+      <TabView
+        value="orders"
+        onChange={() => {}}
+        tabs={[
+          { id: 'orders', label: 'Orders', icon: <LucidePackage />, content: <div style={{ padding: 24, font: "15px/22px 'Parity Plex'" }}>Today's orders</div> },
+          { id: 'customers', label: 'Customers', icon: <LucideUsers />, content: <div style={{ padding: 24 }}>Customers</div> },
+          { id: 'settings', label: 'Settings', icon: <LucideSettings />, content: <div style={{ padding: 24 }}>Settings</div> },
+        ]}
+      />
+    </div>
   ),
   modal: () => (
     <Modal label="Delete order" close={() => {}}>

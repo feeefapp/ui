@@ -2,6 +2,8 @@ import 'package:feeef_ui/feeef_ui.dart';
 import 'package:feeef_ui/theme/css_text.dart';
 import 'package:flutter/widgets.dart' hide Action, RadioGroup;
 
+// Tab is the kit's (a TabView destination).
+
 /// Scenes shared with parity/src/scenes.tsx: same ids, same content, same layout. Each is a column
 /// of rows (wrapping, 12px gap) in a 720px stage with 24px padding.
 final Map<String, List<Widget> Function()> scenes = {
@@ -597,6 +599,81 @@ final Map<String, List<Widget> Function()> scenes = {
         children: const [Option(value: '20', child: Text('20 per page'))],
       ),
     ]),
+  ],
+  'carousel': () => [
+    Builder(
+      builder: (context) => Carousel(
+        label: 'Featured products',
+        children: [
+          for (final name in const ['Summer dress', 'Leather bag', 'Sneakers'])
+            Container(
+              height: 160,
+              alignment: Alignment.center,
+              color: ThemeProvider.of(context).colors.surfaceSoft,
+              child: CssBaseline(
+                lineHeight: 28,
+                child: Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    height: 28 / 20,
+                    leadingDistribution: TextLeadingDistribution.even,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    ),
+  ],
+  'tabs': () => [
+    Builder(
+      builder: (context) => Container(
+        height: 320,
+        color: ThemeProvider.of(context).colors.surfaceSoft,
+        child: TabView(
+          value: 'orders',
+          onChange: (_) {},
+          tabs: [
+            Tab(
+              id: 'orders',
+              label: const Text('Orders'),
+              icon: const LucidePackage(),
+              content: const Padding(
+                padding: EdgeInsets.all(24),
+                child: Align(
+                  alignment: AlignmentDirectional.topStart,
+                  child: CssBaseline(
+                    lineHeight: 22,
+                    child: Text(
+                      "Today's orders",
+                      style: TextStyle(
+                        fontSize: 15,
+                        height: 22 / 15,
+                        leadingDistribution: TextLeadingDistribution.even,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const Tab(
+              id: 'customers',
+              label: Text('Customers'),
+              icon: LucideUsers(),
+              content: Text('Customers'),
+            ),
+            const Tab(
+              id: 'settings',
+              label: Text('Settings'),
+              icon: LucideSettings(),
+              content: Text('Settings'),
+            ),
+          ],
+        ),
+      ),
+    ),
   ],
   'modal': () => [
     Builder(
