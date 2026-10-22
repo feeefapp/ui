@@ -18,6 +18,7 @@ import { installFoContinuousCorners } from './brand/corners'
 import { useLabServices } from './services'
 import { useLabI18n } from './i18n'
 import { applyLabThemeConfig, type LabThemeConfig } from './theme-config'
+/** Color mode. `system` follows `prefers-color-scheme` and updates when it changes. */
 export type LabThemeMode = 'system' | 'light' | 'dark'
 type Mode = LabThemeMode
 const Context = createContext<{
@@ -26,6 +27,12 @@ const Context = createContext<{
   setMode: (mode: Mode) => void
 } | null>(null)
 const layoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect
+/**
+ * Owns the color mode and the app theme config. Sets `data-lab-theme="light|dark"` on `<html>`
+ * (every color token hangs off it), applies `config` with `applyLabThemeConfig`, and stores
+ * the chosen mode in the `preferences` service under `feeef-lab-theme`.
+ * `LabProvider` renders this for you.
+ */
 export function LabThemeProvider({
   children,
   initialMode = 'system',
@@ -33,7 +40,9 @@ export function LabThemeProvider({
   config,
 }: {
   children: ReactNode
+  /** Mode used when no preference is stored yet. Default: `system`. */
   initialMode?: Mode
+  /** Start the SVG superellipse fallback on browsers without `corner-shape` support. */
   enableCornerFallback?: boolean
   /** App-level palette, density and radius (theme-config.ts). */
   config?: LabThemeConfig
@@ -54,10 +63,10 @@ export function LabThemeProvider({
   useEffect(() => {
     if (enableCornerFallback) return installFoContinuousCorners()
   }, [enableCornerFallback])
-  const { palette, density, radius } = config ?? {}
+  const { palette, density, radius, primary } = config ?? {}
   layoutEffect(() => {
-    applyLabThemeConfig(document.documentElement, { palette, density, radius })
-  }, [palette, density, radius])
+    applyLabThemeConfig(document.documentElement, { palette, density, radius, primary })
+  }, [palette, density, radius, primary])
   layoutEffect(() => {
     const root = document.documentElement,
       previous = root.getAttribute('data-lab-theme'),
@@ -81,11 +90,16 @@ export function LabThemeProvider({
   const value = useMemo(() => ({ mode, resolvedMode, setMode }), [mode, resolvedMode])
   return <Context.Provider value={value}>{children}</Context.Provider>
 }
+/**
+ * Current mode (`system|light|dark`), the resolved `light|dark` and `setMode`.
+ * Throws outside `LabProvider` / `LabThemeProvider`.
+ */
 export function useLabTheme() {
   const context = useContext(Context)
   if (!context) throw new Error('useLabTheme requires LabProvider or LabThemeProvider')
   return context
 }
+/** Icon button that cycles system → light → dark → system. Its label comes from `lab.common.theme*`. */
 export function LabThemeSwitch() {
   const { t } = useLabI18n()
   const context = useLabTheme()

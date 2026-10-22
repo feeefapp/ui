@@ -80,16 +80,27 @@ export function FreeformBoard({
   onRemove,
   emptyContent,
 }: {
+  /** Fills its positioned parent instead of the whole window (`position: fixed`). */
   embedded?: boolean
+  /** Versions to show, newest first; they are laid out oldest to newest, left to right. */
   takes: ImageTake[]
+  /** The selected take; the board glides it into view. Defaults to the newest. */
   selectedId: string | undefined
+  /** Called with a take id when its card is clicked (not dragged). */
   onSelect(id: string): void
+  /** Room taken by floating chrome on each edge, in pixels; cards fit between them. */
   insets: Insets
+  /** Current time in ms, for the elapsed timer on pending cards. Tick it while work runs. */
   now: number
+  /** Picks the empty-board hint for signed-in or signed-out users. */
   signedIn: boolean
+  /** Starter prompts on the empty board. */
   starters: { label: string; prompt: string }[]
+  /** Called with the prompt of the starter the user clicked. */
   onStarter(prompt: string): void
+  /** Called from a failed card's "Try again". */
   onRetry(take: ImageTake): void
+  /** Called from a failed card's "Remove". */
   onRemove(take: ImageTake): void
   /** Replaces the default welcome on an empty board (e.g. the poster template gallery). */
   emptyContent?: ReactNode
@@ -323,7 +334,7 @@ export function FreeformBoard({
                   <span className="lab-ff-state-actions">
                     <LabButton
                       type="button"
-                      variant="secondary"
+                      variant="elevated"
                       onPointerDown={(e) => e.stopPropagation()}
                       onClick={() => onRetry(take)}
                     >
@@ -377,7 +388,7 @@ export function FreeformBoard({
                   <LabButton
                     key={starter.label}
                     type="button"
-                    variant="secondary"
+                    variant="elevated"
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={() => onStarter(starter.prompt)}
                   >

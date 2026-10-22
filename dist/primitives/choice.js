@@ -29,11 +29,16 @@ function Choice({ kind, forwardedRef, label, description, error, controlSize = '
                     onChange?.(event);
                 } }), _jsx("span", { className: "lab-choice-mark", "aria-hidden": "true", children: kind === 'checkbox' ? (_jsxs(_Fragment, { children: [_jsx(Check, { className: "lab-choice-check", size: 14, strokeWidth: 2.5 }), _jsx(Minus, { className: "lab-choice-mixed", size: 14, strokeWidth: 2.5 })] })) : (_jsx("span", { className: "lab-choice-dot" })) }), (label || description || error) && (_jsxs("span", { className: "lab-choice-copy", children: [label && (_jsxs("span", { id: `${id}-label`, children: [label, props.required && kind === 'checkbox' && _jsx("span", { "aria-hidden": "true", children: " *" })] })), description && _jsx("small", { id: `${id}-description`, children: description }), error && (_jsx("small", { id: `${id}-error`, className: "lab-choice-error", "aria-live": "polite", children: error }))] }))] }));
 }
+/** A native checkbox with a label, description, error and indeterminate state. */
 export const LabCheckbox = React.forwardRef((props, ref) => (_jsx(Choice, { ...props, kind: "checkbox", forwardedRef: ref })));
 LabCheckbox.displayName = 'LabCheckbox';
+/** A single native radio with a label and description. Prefer `LabRadioGroup`, which names and labels the set. */
 export const LabRadio = React.forwardRef((props, ref) => (_jsx(Choice, { ...props, kind: "radio", forwardedRef: ref })));
 LabRadio.displayName = 'LabRadio';
-/** Native radios own keyboard navigation, form submission and reset; fieldset owns the group label. */
+/**
+ * A labelled set of mutually exclusive choices. Native radios own keyboard navigation, form
+ * submission and reset; the `<fieldset>` and `<legend>` own the group label.
+ */
 export const LabRadioGroup = React.forwardRef(({ label, options, value, defaultValue, onValueChange, name, form, required, error, description, controlSize, className, 'aria-describedby': describedBy, ...props }, ref) => {
     const id = React.useId();
     const group = React.useRef(null);

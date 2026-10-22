@@ -1,0 +1,150 @@
+/* Sheet: a top-layer host covering the screen (or a container), a scrim, and one panel that moves
+   by transform. Heights at rest are exact, so the panel's scroll area and dock lay out normally. */
+.lab-sheet-host {
+  --lab-sheet-scrim: rgb(0 0 0 / 0.3);
+  --lab-sheet-radius: calc(28px * var(--lab-radius-scale, 1));
+  --lab-sheet-shadow: 0 -10px 40px -12px rgb(0 0 0 / 0.22);
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: var(--lab-ink);
+  outline: none;
+}
+html[data-lab-theme='dark'] .lab-sheet-host {
+  --lab-sheet-scrim: rgb(0 0 0 / 0.55);
+  --lab-sheet-shadow: 0 -10px 40px -12px rgb(0 0 0 / 0.6);
+}
+.lab-sheet-host::backdrop {
+  background: transparent;
+}
+.lab-sheet-host[data-inline] {
+  position: absolute;
+}
+/* A non-modal sheet leaves the page usable around it. */
+.lab-sheet-host:not([data-modal]) {
+  pointer-events: none;
+}
+.lab-sheet-host:not([data-modal]) > .lab-sheet {
+  pointer-events: auto;
+}
+html:has(.lab-sheet-host[data-modal][open]) {
+  overflow: hidden;
+}
+
+.lab-sheet-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--lab-sheet-scrim);
+  opacity: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.lab-sheet-safe-probe {
+  position: absolute;
+  top: 0;
+  width: 0;
+  height: env(safe-area-inset-top, 0px);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.lab-sheet {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--lab-sheet-radius) var(--lab-sheet-radius) 0 0;
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface);
+  box-shadow: var(--lab-sheet-shadow);
+  outline: none;
+  will-change: transform;
+}
+.lab-sheet:not([data-ready]) {
+  visibility: hidden;
+}
+/* Wide screens keep a bottom sheet a readable width. */
+@container (min-width: 720px) {
+  .lab-sheet[data-presentation='sheet'] {
+    inset-inline: max(0px, calc((100% - 680px) / 2));
+  }
+}
+.lab-sheet-host {
+  container-type: size;
+}
+.lab-sheet[data-presentation='dialog'] {
+  top: 50%;
+  bottom: auto;
+  inset-inline: auto;
+  left: 50%;
+  width: min(560px, calc(100% - 48px));
+  translate: -50% -50%;
+  border-radius: var(--lab-radius-panel);
+  box-shadow: 0 30px 80px -24px rgb(0 0 0 / 0.4);
+  will-change: transform, opacity;
+}
+.lab-sheet-scroll {
+  flex: 1 1 0%;
+  --lab-scroll-surface: var(--lab-surface);
+}
+.lab-sheet-scroll .lab-scroll-viewport {
+  overscroll-behavior: contain;
+}
+.lab-sheet-body {
+  display: flow-root;
+  min-width: 0;
+}
+
+/* Grabber: a short pill; the whole row is a drag handle, the pill is a button that cycles heights. */
+.lab-sheet-grabber-row {
+  display: grid;
+  flex: none;
+  place-items: center;
+  height: 20px;
+  touch-action: none;
+}
+.lab-sheet-grabber {
+  position: relative;
+  width: 64px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+}
+.lab-sheet-grabber::before {
+  content: '';
+  position: absolute;
+  inset-inline: 14px;
+  top: 7px;
+  height: 5px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--lab-ink) 22%, transparent);
+}
+.lab-sheet-grabber:focus-visible {
+  outline: 2px solid var(--lab-focus);
+  outline-offset: -2px;
+  border-radius: 10px;
+}
+/* The floating chrome is a drag handle too; a finger there never scrolls the content. */
+.lab-sheet-scroll > .lab-scroll-float {
+  touch-action: none;
+}
+
+@media (forced-colors: active) {
+  .lab-sheet {
+    border: 1px solid CanvasText;
+  }
+}

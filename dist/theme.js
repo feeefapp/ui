@@ -12,6 +12,12 @@ import { useLabI18n } from './i18n.js';
 import { applyLabThemeConfig } from './theme-config.js';
 const Context = createContext(null);
 const layoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
+/**
+ * Owns the color mode and the app theme config. Sets `data-lab-theme="light|dark"` on `<html>`
+ * (every color token hangs off it), applies `config` with `applyLabThemeConfig`, and stores
+ * the chosen mode in the `preferences` service under `feeef-lab-theme`.
+ * `LabProvider` renders this for you.
+ */
 export function LabThemeProvider({ children, initialMode = 'system', enableCornerFallback = false, config, }) {
     const { preferences } = useLabServices();
     const [mode, setMode] = useState(() => {
@@ -30,10 +36,10 @@ export function LabThemeProvider({ children, initialMode = 'system', enableCorne
         if (enableCornerFallback)
             return installFoContinuousCorners();
     }, [enableCornerFallback]);
-    const { palette, density, radius } = config ?? {};
+    const { palette, density, radius, primary } = config ?? {};
     layoutEffect(() => {
-        applyLabThemeConfig(document.documentElement, { palette, density, radius });
-    }, [palette, density, radius]);
+        applyLabThemeConfig(document.documentElement, { palette, density, radius, primary });
+    }, [palette, density, radius, primary]);
     layoutEffect(() => {
         const root = document.documentElement, previous = root.getAttribute('data-lab-theme'), preference = matchMedia('(prefers-color-scheme: dark)');
         const apply = () => {
@@ -58,12 +64,17 @@ export function LabThemeProvider({ children, initialMode = 'system', enableCorne
     const value = useMemo(() => ({ mode, resolvedMode, setMode }), [mode, resolvedMode]);
     return _jsx(Context.Provider, { value: value, children: children });
 }
+/**
+ * Current mode (`system|light|dark`), the resolved `light|dark` and `setMode`.
+ * Throws outside `LabProvider` / `LabThemeProvider`.
+ */
 export function useLabTheme() {
     const context = useContext(Context);
     if (!context)
         throw new Error('useLabTheme requires LabProvider or LabThemeProvider');
     return context;
 }
+/** Icon button that cycles system → light → dark → system. Its label comes from `lab.common.theme*`. */
 export function LabThemeSwitch() {
     const { t } = useLabI18n();
     const context = useLabTheme();

@@ -1,0 +1,277 @@
+/* Inset-grouped lists: rounded cards of rows with inset hairlines. Heights follow density. */
+.lab-list-section {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin-block: 0 24px;
+}
+.lab-list-section:last-child {
+  margin-block-end: 0;
+}
+.lab-list-section > .lab-list-header {
+  margin: 0;
+  padding-inline: 16px;
+  color: var(--lab-muted);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.lab-list-section > .lab-list-footer {
+  margin: 0;
+  padding-inline: 16px;
+  color: var(--lab-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.lab-list-card {
+  --lab-list-card-bg: color-mix(in srgb, var(--lab-ink) 4%, var(--lab-surface));
+  overflow: hidden;
+  border-radius: var(--lab-radius-group);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-list-card-bg);
+}
+.lab-list-item {
+  position: relative;
+  min-width: 0;
+}
+/* Hairline between rows, starting after the leading icon like iOS. */
+.lab-list-item + .lab-list-item::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  inset-block-start: 0;
+  inset-inline: 16px 0;
+  height: 1px;
+  background: var(--lab-line);
+  pointer-events: none;
+}
+.lab-list-item[data-leading] + .lab-list-item::before,
+.lab-list-item + .lab-list-item[data-leading]::before {
+  inset-inline-start: calc(16px + var(--lab-list-leading-size) + 14px);
+}
+.lab-list-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: calc(var(--lab-control-height) + 12px);
+  margin: 0;
+  padding-block: 8px;
+  padding-inline: 16px 14px;
+  border: 0;
+  background: transparent;
+  color: var(--lab-ink);
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--lab-duration-fast) var(--lab-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.lab-list-section,
+.lab-list-card {
+  --lab-list-leading-size: 32px;
+}
+.lab-list-row[data-static] {
+  cursor: default;
+}
+@media (hover: hover) {
+  .lab-list-row:not([data-static]):hover {
+    background: var(--lab-control-hover);
+  }
+}
+.lab-list-row:not([data-static]):active {
+  background: var(--lab-control-pressed);
+}
+.lab-list-row[data-selected] {
+  background: color-mix(in srgb, var(--lab-primary) 14%, var(--lab-surface));
+}
+.lab-list-row:focus-visible {
+  outline: 2px solid var(--lab-focus);
+  outline-offset: -2px;
+  border-radius: inherit;
+}
+.lab-list-row:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.lab-list-row-leading {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--lab-list-leading-size);
+  height: var(--lab-list-leading-size);
+  color: var(--lab-muted);
+}
+.lab-list-row-leading > svg {
+  width: 22px;
+  height: 22px;
+}
+.lab-list-row-text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+.lab-list-row-title {
+  overflow: hidden;
+  font-size: 15px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lab-list-row-subtitle {
+  overflow: hidden;
+  color: var(--lab-muted);
+  font-size: 13px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lab-list-row-trailing {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  max-width: 45%;
+  color: var(--lab-muted);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.lab-list-row-chevron {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-inline-start: -4px;
+  color: color-mix(in srgb, var(--lab-muted) 70%, transparent);
+}
+@media (forced-colors: active) {
+  .lab-list-card {
+    border: 1px solid CanvasText;
+  }
+  .lab-list-row[data-selected] {
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
+/* Swipe actions: revealed behind the row, as wide as the swipe. The first action sits at the
+   outer edge and takes the whole width on a long swipe. */
+.lab-list-item[data-swipe] {
+  overflow: hidden;
+  touch-action: pan-y;
+}
+.lab-list-item[data-swipe] > .lab-list-row {
+  position: relative;
+  z-index: 1;
+  background-color: var(--lab-list-card-bg);
+}
+@media (hover: hover) {
+  .lab-list-item[data-swipe] > .lab-list-row:not([data-static]):hover {
+    background-color: color-mix(in srgb, var(--lab-ink) 5%, var(--lab-list-card-bg));
+  }
+}
+.lab-list-actions {
+  position: absolute;
+  inset-block: 0;
+  display: flex;
+  width: var(--lab-row-swipe, 0px);
+  overflow: hidden;
+}
+.lab-list-actions[data-side='leading'] {
+  inset-inline-start: 0;
+}
+.lab-list-actions[data-side='trailing'] {
+  inset-inline-end: 0;
+  flex-direction: row-reverse;
+}
+.lab-list-item:not([data-swiping='leading']) > .lab-list-actions[data-side='leading'],
+.lab-list-item:not([data-swiping='trailing']) > .lab-list-actions[data-side='trailing'] {
+  visibility: hidden;
+}
+.lab-list-action {
+  display: flex;
+  flex: 1 1 0%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  padding: 0 6px;
+  overflow: hidden;
+  border: 0;
+  background: color-mix(in srgb, var(--lab-ink) 55%, var(--lab-surface));
+  color: var(--lab-surface);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: flex-grow 260ms cubic-bezier(0.2, 0.9, 0.25, 1.15);
+}
+.lab-list-action > svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+.lab-list-action[data-tone='primary'] {
+  background: var(--lab-primary);
+  color: var(--lab-on-primary);
+}
+.lab-list-action[data-tone='destructive'] {
+  background: var(--lab-danger);
+  color: var(--lab-surface);
+}
+.lab-list-action:focus-visible {
+  outline: 2px solid var(--lab-focus);
+  outline-offset: -4px;
+}
+.lab-list-actions[data-full] > .lab-list-action:first-child {
+  flex-grow: 60;
+}
+
+/* Reorder: a grip at the end of each row; the dragged row lifts above the others. */
+.lab-list-item[data-reorder] > .lab-list-row {
+  padding-inline-end: 52px;
+}
+.lab-list-grip {
+  position: absolute;
+  z-index: 2;
+  inset-block: 0;
+  inset-inline-end: 4px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--lab-muted);
+  cursor: grab;
+  touch-action: none;
+}
+.lab-list-grip > svg {
+  width: 20px;
+  height: 20px;
+}
+.lab-list-grip:focus-visible {
+  outline: 2px solid var(--lab-focus);
+  outline-offset: -6px;
+  border-radius: var(--lab-radius-control-compact);
+}
+.lab-list-card[data-reordering] {
+  overflow: visible;
+}
+.lab-list-card[data-reordering] .lab-list-item::before {
+  opacity: 0;
+}
+.lab-list-card[data-reordering] .lab-list-grip {
+  cursor: grabbing;
+}
+.lab-list-item[data-lifted] {
+  z-index: 3;
+  border-radius: var(--lab-radius-control);
+  background: var(--lab-surface);
+  box-shadow: 0 16px 32px -14px rgb(0 0 0 / 0.38);
+}

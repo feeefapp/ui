@@ -22,6 +22,7 @@ import { LabModal } from './primitives/modal'
 import { LabScrollArea } from './scroll'
 import { LabDock } from './dock'
 import { LabTemporalFilterEditor } from './filters/temporal-editor'
+import { LabTemporalDialog } from './filters/temporal-dialog'
 import {
   isTemporalType,
   isTemporalRange,
@@ -32,37 +33,67 @@ import {
 } from './filters/temporal'
 import './filter-bar.css'
 
+/** A filter's value: `true` for on/off filters, a string, a `{from, to}` range, or `null` (any). */
 export type LabFilterValue = string | boolean | { from: string; to: string } | null
+/**
+ * One filter in the catalog. `type` picks the editor: omitted/`boolean` (on/off), `enum` (choice
+ * list), a temporal type (`date`, `time`, `datetime`, `dateRange`, `timeRange`, `datetimeRange`)
+ * or `custom` (your own editor in a dialog).
+ */
 export type LabFilterOption = {
+  /** Stable id; the key in `value` / `values` / `pinned`. */
   id: string
+  /** Name shown in the catalog and on the pinned chip. */
   label: string
+  /** Second line in the catalog row. */
   description?: string
+  /** Catalog row icon. Defaults to one per type. */
   icon?: ReactNode
+  /** Extra words the catalog search matches. */
   keywords?: readonly string[]
+  /** Returns an error message to block Apply, or null. Runs after the built-in temporal checks. */
   validate?: (value: LabFilterValue) => string | null
 } & (
   | { type?: 'boolean' }
-  | { type: 'enum'; choices: readonly { value: string; label: string }[] }
+  | {
+      type: 'enum'
+      /** The choices; the stored value is the choice's `value`. */
+      choices: readonly { value: string; label: string }[]
+    }
   | LabTemporalConfig
   | {
       type: 'custom'
+      /** Renders the editor inside the filter dialog. Call `onChange` with the draft value. */
       renderEditor: (value: LabFilterValue, onChange: (value: LabFilterValue) => void) => ReactNode
+      /** Text for the chip and catalog row. Defaults to the raw value. */
       formatValue?: (value: LabFilterValue) => string
     }
 )
 export type LabFilterBarProps = {
+  /** Accessible name of the bar. */
   label: string
+  /** The filter catalog. */
   options: readonly LabFilterOption[]
   /** Enabled boolean filters. */
   value: readonly string[]
+  /** Called with the new list of enabled boolean filter ids. */
   onChange: (value: string[]) => void
   /** Non-boolean values can be controlled independently from pinned shortcuts. */
   values?: Readonly<Record<string, LabFilterValue>>
+  /** Called with every non-boolean value after an edit; cleared filters are `null`. */
   onValuesChange?: (values: Record<string, LabFilterValue>) => void
+  /** Ids shown as chips in the bar (controlled). Pinning never changes a value. */
   pinned?: readonly string[]
+  /** Called when filters are pinned or unpinned. Editing or toggling a filter also pins it. */
   onPinnedChange?: (ids: string[]) => void
+  /**
+   * Adds a "describe a filter" button. Return the boolean filter ids to enable (an empty list clears
+   * all) or throw an Error whose message is shown under the field. You supply the parser or model.
+   */
   onNaturalFilter?: (text: string) => Promise<readonly string[]> | readonly string[]
+  /** Shows a back button before the filter controls, e.g. to leave a filtered view. */
   onBack?: () => void
+  /** Content at the end of the bar, usually a LabToolbarGroup of view actions. */
   trailing?: ReactNode
 }
 function summary(option: LabFilterOption, value: LabFilterValue) {
@@ -74,7 +105,10 @@ function summary(option: LabFilterOption, value: LabFilterValue) {
   if (typeof value === 'boolean') return value ? 'On' : 'Off'
   return value
 }
-/** Searchable filter catalog; pinning controls shortcuts, clearing controls query values. */
+/**
+ * Filter toolbar: a searchable catalog button, an optional natural-language button, pinned filter
+ * chips and trailing actions. Pinning controls shortcuts, clearing controls query values.
+ */
 export function LabFilterBar({
   label,
   options,
@@ -92,6 +126,7 @@ export function LabFilterBar({
   const host = useRef<HTMLDivElement>(null),
     search = useRef<HTMLInputElement>(null)
   const enumSearch = useRef<HTMLInputElement>(null)
+  const naturalInput = useRef<HTMLInputElement>(null)
   const anchor = useRef<{ getBoundingClientRect: () => DOMRect }>({
     getBoundingClientRect: () => new DOMRect(),
   })
@@ -365,6 +400,11 @@ export function LabFilterBar({
                   sideOffset={8}
                   collisionPadding={12}
                   align="start"
+                  onOpenAutoFocus={(event) => {
+                    // Start in the description field, not on the scroll region.
+                    event.preventDefault()
+                    naturalInput.current?.focus()
+                  }}
                 >
                   <LabScrollArea
                     label="Natural filter description"
@@ -421,6 +461,7 @@ export function LabFilterBar({
                     >
                       <strong>Describe what you want</strong>
                       <LabTextField
+                        ref={naturalInput}
                         hint="Filter description"
                         leadingIcon={<Sparkles />}
                         value={text}
@@ -639,14 +680,52 @@ export function LabFilterBar({
           </LabPopoverSurface>
         </Popover.Portal>
       </Popover.Root>
+      {dialogSelected && selected && isTemporalType(selected.type) && (
+        <LabTemporalDialog
+          open
+          label={`Edit ${dialogSelected.label} filter`}
+          close={() => setEditing(null)}
+          returnFocusRef={returnFocus}
+          formId={`${formId}-editor`}
+          config={selected as LabFilterOption & LabTemporalConfig}
+          value={draft as LabTemporalValue}
+          onChange={(next) => {
+            setDraft(next)
+            setEditError('')
+          }}
+          intro={selected.description}
+          error={editError || undefined}
+          clearLabel="Clear value"
+          onClear={() => {
+            change(selected, null)
+            pin(selected.id)
+            setEditing(null)
+          }}
+          applyLabel="Apply filter"
+          onSubmit={(event) => {
+            event.preventDefault()
+            const config = selected as LabFilterOption & LabTemporalConfig
+            const next = readTemporalForm(config.type, new FormData(event.currentTarget))
+            const message = validateTemporal(config, next) || selected.validate?.(next)
+            if (message) {
+              setDraft(next)
+              setEditError(message)
+              return
+            }
+            change(selected, next)
+            pin(selected.id)
+            setEditing(null)
+          }}
+        />
+      )}
       <LabModal
         returnFocusRef={returnFocus}
-        open={!!dialogSelected}
+        open={!!dialogSelected && !(selected && isTemporalType(selected.type))}
         label={dialogSelected ? `Edit ${dialogSelected.label} filter` : 'Edit filter'}
         close={() => setEditing(null)}
         scrollable
         fitContent
-        className={`lab-filter-editor-dialog ${dialogSelected && isTemporalType(dialogSelected.type) && !dialogSelected.type.startsWith('time') ? 'lab-filter-calendar-dialog' : ''}`}
+        className="lab-filter-editor-dialog"
         bottom={
           <LabDock label="Filter editor actions">
             <LabButton
@@ -673,23 +752,12 @@ export function LabFilterBar({
             className="lab-filter-editor-form"
             onSubmit={(event) => {
               event.preventDefault()
-              const fields = new FormData(event.currentTarget)
-              const next = isTemporalType(selected.type)
-                ? readTemporalForm(selected.type, fields)
-                : draft
-              const message =
-                (isTemporalType(selected.type)
-                  ? validateTemporal(
-                      selected as LabFilterOption & LabTemporalConfig,
-                      next as LabTemporalValue
-                    )
-                  : null) || selected.validate?.(next)
+              const message = selected.validate?.(draft)
               if (message) {
-                setDraft(next)
                 setEditError(message)
                 return
               }
-              change(selected, next)
+              change(selected, draft)
               pin(selected.id)
               setEditing(null)
             }}
@@ -697,18 +765,7 @@ export function LabFilterBar({
             <p>
               {selected.description || 'Set a value, or clear it while keeping this filter pinned.'}
             </p>
-            {selected.type === 'custom' ? (
-              selected.renderEditor(draft, setDraft)
-            ) : isTemporalType(selected.type) ? (
-              <LabTemporalFilterEditor
-                config={selected as LabFilterOption & LabTemporalConfig}
-                value={draft as LabTemporalValue}
-                onChange={(next) => {
-                  setDraft(next)
-                  setEditError('')
-                }}
-              />
-            ) : null}
+            {selected.type === 'custom' ? selected.renderEditor(draft, setDraft) : null}
             {editError && <p role="alert">{editError}</p>}
           </form>
         )}

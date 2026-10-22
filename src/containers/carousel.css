@@ -1,0 +1,131 @@
+/* Carousel: a native scroll-snap track; slides transform their body, never their snap box. */
+.lab-carousel {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.lab-carousel-frame {
+  position: relative;
+  min-width: 0;
+}
+.lab-carousel-track {
+  display: flex;
+  gap: var(--lab-carousel-gap, 12px);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding-block: 4px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  outline: none;
+}
+.lab-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+.lab-carousel-track[data-align='center'] {
+  padding-inline: calc((100% - var(--lab-carousel-slide)) / 2);
+}
+.lab-carousel-track:focus-visible {
+  outline: 2px solid var(--lab-focus);
+  outline-offset: 2px;
+  border-radius: var(--lab-radius-group);
+}
+.lab-carousel-track[data-dragging] {
+  scroll-snap-type: none;
+  cursor: grabbing;
+  user-select: none;
+}
+.lab-carousel-slide {
+  flex: 0 0 var(--lab-carousel-slide);
+  min-width: 0;
+  scroll-snap-align: center;
+  scroll-snap-stop: normal;
+}
+.lab-carousel-track[data-align='start'] > .lab-carousel-slide {
+  scroll-snap-align: start;
+}
+.lab-carousel-slide-body {
+  height: 100%;
+  transform-origin: 50% 50%;
+}
+/* Parallax: mark media inside a slide with data-lab-parallax; it drifts against the scroll. */
+.lab-carousel[data-effect='parallax'] .lab-carousel-slide {
+  overflow: hidden;
+  border-radius: var(--lab-radius-group);
+}
+.lab-carousel[data-effect='parallax'] [data-lab-parallax] {
+  translate: calc(var(--lab-carousel-progress, 0) * -22%) 0;
+  scale: 1.25;
+}
+
+html[data-lab-theme] .lab-carousel-control.lab-toolbar-group {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  z-index: 2;
+  transition: opacity var(--lab-duration-normal) var(--lab-ease);
+}
+.lab-carousel-control[data-side='start'] {
+  inset-inline-start: 8px;
+}
+.lab-carousel-control[data-side='end'] {
+  inset-inline-end: 8px;
+}
+.lab-carousel-control:has(:disabled) {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+.lab-carousel[data-controls='auto'] .lab-carousel-control {
+  opacity: 0;
+}
+@media (hover: hover) and (pointer: fine) {
+  .lab-carousel[data-controls='auto'] .lab-carousel-frame:hover .lab-carousel-control,
+  .lab-carousel[data-controls='auto'] .lab-carousel-frame:focus-within .lab-carousel-control {
+    opacity: 1;
+  }
+}
+@media not ((hover: hover) and (pointer: fine)) {
+  .lab-carousel[data-controls='auto'] .lab-carousel-control {
+    display: none;
+  }
+}
+
+.lab-carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+}
+.lab-carousel-dot {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.lab-carousel-dot::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--lab-ink) 25%, transparent);
+  transition:
+    width 300ms cubic-bezier(0.2, 0.9, 0.25, 1.1),
+    background-color var(--lab-duration-fast) var(--lab-ease);
+}
+.lab-carousel-dot[aria-current]::before {
+  width: 18px;
+  background: var(--lab-primary);
+}
+.lab-carousel-dot:focus-visible {
+  outline: 2px solid var(--lab-focus);
+  outline-offset: -2px;
+  border-radius: 10px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab-carousel-track {
+    scroll-behavior: auto;
+  }
+}

@@ -1,0 +1,180 @@
+import { LAB_SPRINGS, solveSpring, springAtRest, type LabSpring, type LabSpringState } from './spring'
+import { LabVelocityTracker } from './velocity'
+
+type FrameCallback = (now: number) => void
+const callbacks = new Set<FrameCallback>()
+let frame = 0
+function loop(now: number) {
+  frame = callbacks.size ? requestAnimationFrame(loop) : 0
+  for (const callback of [...callbacks]) callback(now)
+}
+/** Runs `callback` on every animation frame until the returned function is called. One shared loop. */
+export function onAnimationFrame(callback: FrameCallback) {
+  callbacks.add(callback)
+  if (!frame && typeof requestAnimationFrame !== 'undefined') frame = requestAnimationFrame(loop)
+  return () => {
+    callbacks.delete(callback)
+  }
+}
+
+/** True when the reader asked for reduced motion. Safe to call on the server. */
+export function prefersReducedMotion() {
+  return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+}
+
+export type LabAnimateOptions = {
+  /** A spring, or the name of one of the kit's springs. Default `smooth`. */
+  spring?: LabSpring | keyof typeof LAB_SPRINGS
+  /** Starting velocity in units per second. Defaults to the value's current velocity. */
+  velocity?: number
+  /** Jump straight to the target (reduced motion, or no reason to animate). */
+  instant?: boolean
+}
+
+/**
+ * One animatable number with a velocity, driven by springs or by a pointer. Subscribers paint it
+ * (usually by writing a transform) without re-rendering React. Starting a new animation, tracking
+ * a pointer or setting the value interrupts the current animation exactly where it is, keeping
+ * its speed, so motion never jumps.
+ */
+export class LabMotionValue {
+  private value: number
+  private speed = 0
+  private solver: ((t: number) => LabSpringState) | null = null
+  private started = 0
+  private target = 0
+  private stopFrame: (() => void) | null = null
+  private settle: ((finished: boolean) => void) | null = null
+  private listeners = new Set<(value: number) => void>()
+  private tracker = new LabVelocityTracker()
+  private tracking = false
+
+  constructor(
+    initial: number,
+    /** Distance from the target that counts as arrived, in this value's units. */
+    private readonly restDelta = 0.001
+  ) {
+    this.value = initial
+  }
+
+  /** Current value. */
+  get() {
+    return this.value
+  }
+  /**
+   * Current speed in units per second: the spring's, or the pointer's while tracking. Pass the
+   * release event's `timeStamp` as `at` so a busy main thread cannot turn a flick into a stop.
+   */
+  getVelocity(at = performance.now()) {
+    if (this.tracking) return this.tracker.velocity(at)
+    return this.speed
+  }
+  /** True while a spring is running. */
+  isAnimating() {
+    return this.solver !== null
+  }
+  /** The target of the running animation, or the value at rest. */
+  getTarget() {
+    return this.solver ? this.target : this.value
+  }
+
+  /** Calls `listener` with every new value. Returns an unsubscribe function. */
+  subscribe(listener: (value: number) => void) {
+    this.listeners.add(listener)
+    return () => {
+      this.listeners.delete(listener)
+    }
+  }
+
+  /** Jumps to `value` and stops: no animation, no velocity. */
+  set(value: number) {
+    this.finish(false)
+    this.tracking = false
+    this.speed = 0
+    this.write(value)
+  }
+
+  /**
+   * Follows a pointer: sets `value` immediately and records it for velocity, so a following
+   * `animateTo` continues at the pointer's speed. `time` is the event's timestamp in ms.
+   */
+  track(value: number, time = performance.now()) {
+    this.finish(false)
+    if (!this.tracking) {
+      this.tracker.reset()
+      this.tracking = true
+    }
+    this.tracker.add(value, time)
+    this.write(value)
+  }
+
+  /** Stops a running animation where it is; keeps the current speed for a following animation. */
+  stop() {
+    if (this.solver) {
+      const state = this.solver((performance.now() - this.started) / 1000)
+      this.speed = state.velocity
+      this.finish(false)
+      this.write(state.position)
+      return
+    }
+    this.finish(false)
+  }
+
+  /**
+   * Springs to `target`. Resolves `true` when it comes to rest there, `false` when interrupted by
+   * another animation, `set`, `track` or `stop`.
+   */
+  animateTo(target: number, options: LabAnimateOptions = {}): Promise<boolean> {
+    const spring =
+      typeof options.spring === 'string' ? LAB_SPRINGS[options.spring] : options.spring ?? LAB_SPRINGS.smooth
+    const now = performance.now()
+    const velocity =
+      options.velocity ??
+      (this.tracking
+        ? this.tracker.velocity(now)
+        : this.solver
+          ? this.solver((now - this.started) / 1000).velocity
+          : this.speed)
+    if (this.solver) this.write(this.solver((now - this.started) / 1000).position)
+    this.finish(false)
+    this.tracking = false
+    if (options.instant || (Math.abs(this.value - target) <= this.restDelta && Math.abs(velocity) <= this.restDelta * 10)) {
+      this.speed = 0
+      this.write(target)
+      return Promise.resolve(true)
+    }
+    this.target = target
+    this.solver = solveSpring(spring, this.value, target, velocity)
+    this.started = now
+    return new Promise<boolean>((resolve) => {
+      this.settle = resolve
+      this.stopFrame = onAnimationFrame((time) => {
+        if (!this.solver) return
+        const state = this.solver(Math.max(0, (time - this.started) / 1000))
+        if (springAtRest(state, target, this.restDelta)) {
+          this.speed = 0
+          this.solver = null
+          this.write(target)
+          this.finish(true)
+          return
+        }
+        this.speed = state.velocity
+        this.write(state.position)
+      })
+    })
+  }
+
+  private write(value: number) {
+    this.value = value
+    for (const listener of [...this.listeners]) listener(value)
+  }
+
+  private finish(arrived: boolean) {
+    this.stopFrame?.()
+    this.stopFrame = null
+    this.solver = null
+    const settle = this.settle
+    this.settle = null
+    settle?.(arrived)
+  }
+}

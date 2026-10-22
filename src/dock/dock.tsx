@@ -9,9 +9,11 @@ import { useDockSize } from './use_dock_size'
 import { LabActionsWidthProvider } from '../actions/width-context'
 
 export type LabDockProps = Omit<HTMLAttributes<HTMLElement>, 'children' | 'content'> & {
+  /** Accessible name of the dock group. */
   label: string
   /** A compact title/status tile. It may shrink; actions remain accessible through overflow. */
   content?: ReactNode
+  /** The actions: buttons or one LabActionsBar, which then overflows into a menu when narrow. */
   children: ReactNode
   /** Bottom task actions stay centered by default. Override only for contextual chrome. */
   align?: 'start' | 'center' | 'end' | 'stretch'
@@ -19,7 +21,10 @@ export type LabDockProps = Omit<HTMLAttributes<HTMLElement>, 'children' | 'conte
   swapKey?: string
 }
 
-/** Floating glass container; positioning and scroll reservations belong to its host. */
+/**
+ * Floating glass container for a status tile and its actions. It hugs its content up to the host's
+ * width and animates size changes; positioning and scroll reservations belong to its host.
+ */
 export const LabDock = forwardRef<HTMLElement, LabDockProps>(function LabDock(
   { label, content, children, align = 'center', swapKey = 'default', className, ...props },
   ref

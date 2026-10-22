@@ -19,10 +19,15 @@ import { LAB_LANGUAGES, labDirectionFor } from './i18n-core'
 import { LAB_UI_MESSAGES } from './messages'
 import { useLabServices } from './services'
 
+/** What the host app passes to `LabProvider i18n={…}` (or `LabI18nProvider`). */
 export interface LabI18nSource {
+  /** Active locale code, e.g. `en`, `ar`, `fr`. Default: `ar`. */
   locale?: string
+  /** Text direction. Default: derived from `locale` (`rtl` for ar, fa, he, ur). */
   dir?: 'rtl' | 'ltr'
+  /** Locales the language switcher offers. Default: every built-in language (ar, fr, en). */
   availableLocales?: readonly string[]
+  /** Flat `{ "lab.…": "ICU message" }` map; merged over the kit's built-in strings for `locale`. */
   translations?: Record<string, string>
   /** Current path + query. Defaults to `window.location`. */
   url?: string
@@ -30,24 +35,33 @@ export interface LabI18nSource {
   navigate?: (url: string) => void
 }
 
+/** The value of `useLabI18n()`. */
 export interface LabI18n {
+  /** Active locale code. */
   locale: string
+  /** Active text direction. */
   dir: 'rtl' | 'ltr'
+  /** Locales the host serves. */
   availableLocales: readonly string[]
+  /** Translates `key` with ICU `params`; returns the key itself when no string exists. */
   t: (key: string, params?: Record<string, string | number | Date>) => string
+  /** Navigates to the current URL with `?hl=<locale>`. Ignores unknown or current locales. */
   setLocale: (locale: string) => void
 }
 
 const FALLBACK_LOCALE = 'ar'
+/** Stable default so the context value is not rebuilt on every render. */
+const DEFAULT_LOCALES: readonly string[] = LAB_LANGUAGES.map((l) => l.code)
 
 const LabI18nContext = createContext<LabI18n>({
   locale: FALLBACK_LOCALE,
   dir: 'rtl',
-  availableLocales: LAB_LANGUAGES.map((l) => l.code),
+  availableLocales: DEFAULT_LOCALES,
   t: (key) => key,
   setLocale: () => {},
 })
 
+/** Locale, direction and `t()` for the nearest `LabI18nProvider` (Arabic, RTL, keys as text without one). */
 export const useLabI18n = () => useContext(LabI18nContext)
 
 /** Append/replace `?hl=<code>` on a path+query URL (mirrors the global provider). */
@@ -63,15 +77,16 @@ export function labLocaleUrl(currentUrl: string, code: string): string {
 
 function makeFormatter(locale: string) {
   const cache = new Map<string, IntlMessageFormat | null>()
-  return (message: string, key: string, params?: Record<string, unknown>): string => {
-    let fmt = cache.get(key)
+  // Keyed by message, not key, so new translations for the same key are never served stale.
+  return (message: string, params?: Record<string, unknown>): string => {
+    let fmt = cache.get(message)
     if (fmt === undefined) {
       try {
         fmt = new IntlMessageFormat(message, locale)
       } catch {
         fmt = null
       }
-      cache.set(key, fmt)
+      cache.set(message, fmt)
     }
     if (!fmt) return message
     try {
@@ -104,7 +119,7 @@ export function LabI18nProvider({
     () => ({ ...(LAB_UI_MESSAGES[locale] ?? LAB_UI_MESSAGES.en), ...translationsProp }),
     [locale, translationsProp]
   )
-  const availableLocales = availableProp ?? LAB_LANGUAGES.map((l) => l.code)
+  const availableLocales = availableProp ?? DEFAULT_LOCALES
   const navigate = navigateProp ?? services.navigate
 
   const formatterRef = useRef(makeFormatter(locale))
@@ -130,7 +145,7 @@ export function LabI18nProvider({
         const message = translations[key]
         if (message === undefined) return key
         if (!message.includes('{')) return message
-        return format(message, key, (params ?? {}) as Record<string, unknown>)
+        return format(message, (params ?? {}) as Record<string, unknown>)
       },
       setLocale: (code) => {
         if (!availableLocales.includes(code) || code === locale) return
@@ -147,12 +162,16 @@ export function LabI18nProvider({
   return <LabI18nContext.Provider value={value}>{children}</LabI18nContext.Provider>
 }
 
-/** Language picker for Lab chrome; lists only server-available locales. */
+/**
+ * Language picker for Lab chrome; lists only server-available locales and renders nothing
+ * when fewer than two are available. Choosing one calls `setLocale`.
+ */
 export function LabLanguageSwitcher({
   className,
   iconOnly = false,
 }: {
   className?: string
+  /** Show a globe icon button with a menu instead of the labeled select. */
   iconOnly?: boolean
 }) {
   const { locale, setLocale, availableLocales, t, dir } = useLabI18n()

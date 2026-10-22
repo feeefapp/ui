@@ -2,7 +2,11 @@
 import { jsx as _jsx } from "react/jsx-runtime";
 import * as React from 'react';
 import './raw-input.css';
-/** Unpainted editing primitive. Native selection, IME, autofill and form semantics stay intact. */
+/**
+ * An unpainted native `<input>` or `<textarea>` with the kit's validation and auto-growing
+ * lines. Native selection, IME, autofill and form semantics stay intact. Use it inside bespoke
+ * editors that draw their own surface; use `LabTextField` everywhere else.
+ */
 export const LabRawInput = React.forwardRef(({ multiline = false, autoResize = true, minLines = 1, maxLines, validator, error, validationMode = 'blur', onValidationChange, onValueChange, onChange, onBlur, onInvalid, style, className, ...props }, forwardedRef) => {
     const node = React.useRef(null);
     const touched = React.useRef(false);

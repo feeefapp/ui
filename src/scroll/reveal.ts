@@ -2,7 +2,11 @@ import { scrollRevealDelta } from './metrics'
 
 type Alignment = 'nearest' | 'center' | false
 
-/** Reveal only inside the supplied viewport; native scrollIntoView also moves ancestors. */
+/**
+ * Scrolls `viewport` the minimum needed to show `child`, honoring the viewport's scroll padding
+ * (the floats' reservations). Unlike native scrollIntoView it never moves ancestors or the page.
+ * Reduced motion forces an instant scroll.
+ */
 export function revealScrollChild(
   viewport: HTMLElement | null | undefined,
   child: HTMLElement | null | undefined,

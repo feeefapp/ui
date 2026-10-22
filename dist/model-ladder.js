@@ -30,6 +30,10 @@ function useLabLadderCopy(copy) {
         typical: (price) => t('lab.ladder.typical', { price }),
     };
 }
+/**
+ * Quality picker: a trigger (chip or icon) that opens a popover with the ladder card. Moves
+ * between curated models with one slider, cheapest first; the title opens the full model list.
+ */
 export function ModelLadder({ stops, index, defaultIndex = 0, onChange, enabled = true, canvas, belowModel, catalog, onPickModel, onBrowseModels, onOpenChange, selectedModel, copy, variant = 'chip', align = 'start', side = 'top', className, }) {
     copy = useLabLadderCopy(copy);
     const [open, setOpen] = useState(false);
@@ -245,7 +249,7 @@ function ModelList({ items, tiers, selectedId, copy, onBack, onPick, }) {
             event.preventDefault();
             event.stopPropagation();
             onBack();
-        }, children: _jsx(LabScrollArea, { ref: viewport, className: "lab-ladder-list-scroll", label: copy.pickModel, edgeGap: 12, contentPadding: 12, viewportProps: { tabIndex: -1 }, top: _jsxs("div", { className: "lab-ladder-list-tools", children: [_jsxs("div", { className: "lab-ladder-list-head", children: [_jsx(LabButton, { type: "button", variant: "secondary", controlSize: "icon", "aria-label": copy.back, title: copy.back, onClick: onBack, children: _jsx(ArrowLeft, { size: 20, strokeWidth: 1.75, className: "lab-dir-flip" }) }), _jsx("b", { id: titleId, children: copy.pickModel })] }), count > 6 && (_jsx("div", { className: "lab-ladder-search", children: _jsx(LabToolbarSearch, { label: copy.searchModels, value: query, onValueChange: setQuery, inputRef: input, onInputKeyDown: (event) => {
+        }, children: _jsx(LabScrollArea, { ref: viewport, className: "lab-ladder-list-scroll", label: copy.pickModel, edgeGap: 12, contentPadding: 12, viewportProps: { tabIndex: -1 }, top: _jsxs("div", { className: "lab-ladder-list-tools", children: [_jsxs("div", { className: "lab-ladder-list-head", children: [_jsx(LabButton, { type: "button", variant: "elevated", controlSize: "icon", "aria-label": copy.back, title: copy.back, onClick: onBack, children: _jsx(ArrowLeft, { size: 20, strokeWidth: 1.75, className: "lab-dir-flip" }) }), _jsx("b", { id: titleId, children: copy.pickModel })] }), count > 6 && (_jsx("div", { className: "lab-ladder-search", children: _jsx(LabToolbarSearch, { label: copy.searchModels, value: query, onValueChange: setQuery, inputRef: input, onInputKeyDown: (event) => {
                                 if (!rows.length || !['ArrowDown', 'ArrowUp'].includes(event.key))
                                     return;
                                 event.preventDefault();

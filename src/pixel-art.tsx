@@ -84,10 +84,15 @@ function artworkPixels(variant: PixelVariant, seed: string) {
 }
 
 export type PixelArtworkProps = {
+  /** Motif: `voice` (multicolor fingerprint), `wave` (2:1 band), `orbit` (ring) or `spark` (star). */
   variant?: PixelVariant
+  /** Stable string that picks the arrangement; the same seed always draws the same art. */
   seed?: string
+  /** Width in pixels. Height follows the motif's aspect ratio. */
   size?: number
+  /** Ink for `wave`, `orbit` and `spark`. `voice` uses its own seeded palette. */
   tone?: PixelTone
+  /** Adds a slow breathing animation. Stays still under reduced motion. */
   animated?: boolean
   className?: string
   style?: CSSProperties
@@ -95,6 +100,7 @@ export type PixelArtworkProps = {
   title?: string
 }
 
+/** Seeded pixel artwork for identity: avatars, empty states, cards. Decorative unless `title` is set. */
 export function PixelArtwork({
   variant = 'voice',
   seed = 'feeef',
@@ -136,10 +142,15 @@ export function PixelArtwork({
 }
 
 export type PixelTextureProps = {
+  /** Where pixels gather: `corner` toward the top end, `grain` across the field, `wave` along a band. */
   variant?: 'corner' | 'grain' | 'wave'
+  /** Stable string that picks the arrangement, such as a record id. */
   seed?: string
+  /** How many squares are drawn. Opacity is set separately with `--pixel-texture-opacity`. */
   density?: 'sparse' | 'medium' | 'dense'
+  /** Ink color. Omit it to inherit the surface's `currentColor`. */
   tone?: PixelTone
+  /** Adds a slow opacity pulse. Stays still under reduced motion. */
   animated?: boolean
   className?: string
   style?: CSSProperties
@@ -170,7 +181,10 @@ function texturePixels(
   return pixels
 }
 
-/** Overlay inside a positioned, clipped surface. It inherits the surface's ink color. */
+/**
+ * Decorative pixel paint for a surface. Absolutely positioned to fill its nearest positioned
+ * ancestor, `aria-hidden` and pointer-transparent. It inherits the surface's ink color.
+ */
 export function PixelTexture({
   variant = 'corner',
   seed = 'feeef-surface',
@@ -207,8 +221,11 @@ export function PixelTexture({
 }
 
 export type PixelLoaderProps = {
+  /** Width and height in pixels. */
   size?: number
+  /** Accessible status text. Defaults to the localized "Loading…". */
   label?: string
+  /** Hides the loader from assistive technology when nearby text already announces the work. */
   decorative?: boolean
   className?: string
 }
@@ -246,13 +263,21 @@ export function PixelLoader({
 }
 
 export type PixelShaderProps = {
+  /** Sizes and places the canvas. Copied to the drawing canvas when it starts. */
   className?: string
+  /** Strength of the pixel band, about 0.5 to 1.35 (higher values are capped). */
   density?: number
+  /** Animation speed multiplier. */
   speed?: number
+  /** Inline size and position. Copied to the drawing canvas when it starts. */
   style?: CSSProperties
 }
 
-/** The CPU renderer keeps Feeef's transparent pixel field consistent across browser GPU drivers. */
+/**
+ * Animated, transparent pixel field on a canvas, painted with ordered dithering in the theme's
+ * `--lab-pixel-ink`. Runs at up to 18 fps, pauses off screen and in hidden tabs, and draws one still
+ * frame under reduced motion. The CPU renderer keeps it consistent across browser GPU drivers.
+ */
 export function PixelShader({
   className = '',
   density = 1.2,

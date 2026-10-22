@@ -5,7 +5,10 @@ import { cn } from '../utils.js';
 import { LabScrollGradientOverlay } from './gradient-overlay.js';
 import { scrollContentReserve } from './metrics.js';
 import './scroll.css';
-/** Full-bleed scroll viewport with local floating chrome, measured spacers and edge washes. */
+/**
+ * Full-bleed scroll viewport with local floating chrome, measured spacers and edge washes. Fills its
+ * parent, which must have a bounded height. The forwarded ref points at the scrolling element.
+ */
 export const LabScrollArea = forwardRef(function LabScrollArea({ children, top, bottom, label, edgeGap = 12, contentPadding = 24, gradient = true, topFadeHeight, bottomFadeHeight, viewportProps, className, style, ...props }, ref) {
     const viewport = useRef(null);
     const topRef = useRef(null), bottomRef = useRef(null);

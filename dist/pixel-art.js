@@ -70,6 +70,7 @@ function artworkPixels(variant, seed) {
     }
     return { pixels, width: columns * 4, height: rows * 4 };
 }
+/** Seeded pixel artwork for identity: avatars, empty states, cards. Decorative unless `title` is set. */
 export function PixelArtwork({ variant = 'voice', seed = 'feeef', size = 48, tone = 'ink', animated = false, className = '', style, title, }) {
     const art = useMemo(() => artworkPixels(variant, seed), [variant, seed]);
     return (_jsx("svg", { className: `lab-pixel-art lab-pixel-tone-${tone} ${animated ? 'lab-pixel-art-animated' : ''} ${className}`, width: size, height: (size * art.height) / art.width, viewBox: `0 0 ${art.width} ${art.height}`, fill: "currentColor", "aria-hidden": title ? undefined : true, "aria-label": title, role: title ? 'img' : undefined, focusable: "false", style: style, children: art.pixels.map((pixel) => (_jsx("rect", { x: pixel.x, y: pixel.y, width: "3", height: "3", opacity: pixel.opacity, fill: pixel.color }, `${pixel.x}-${pixel.y}`))) }));
@@ -94,7 +95,10 @@ function texturePixels(variant, seed, density) {
     }
     return pixels;
 }
-/** Overlay inside a positioned, clipped surface. It inherits the surface's ink color. */
+/**
+ * Decorative pixel paint for a surface. Absolutely positioned to fill its nearest positioned
+ * ancestor, `aria-hidden` and pointer-transparent. It inherits the surface's ink color.
+ */
 export function PixelTexture({ variant = 'corner', seed = 'feeef-surface', density = 'medium', tone, animated = false, className = '', style, }) {
     const pixels = useMemo(() => texturePixels(variant, seed, density), [variant, seed, density]);
     return (_jsx("svg", { className: `lab-pixel-texture ${tone ? `lab-pixel-tone-${tone}` : ''} ${animated ? 'lab-pixel-texture-animated' : ''} ${className}`, viewBox: "0 0 256 96", preserveAspectRatio: "xMidYMid slice", fill: "currentColor", "aria-hidden": "true", focusable: "false", style: style, children: pixels.map((pixel) => (_jsx("rect", { x: pixel.x, y: pixel.y, width: "2", height: "2", opacity: pixel.opacity }, `${pixel.x}-${pixel.y}`))) }));
@@ -107,7 +111,11 @@ export function PixelLoader({ size = 20, label, decorative = false, className = 
                 '--pixel-delay': `${(index % 3) * 110 + Math.floor(index / 3) * 80}ms`,
             } }, index))) }));
 }
-/** The CPU renderer keeps Feeef's transparent pixel field consistent across browser GPU drivers. */
+/**
+ * Animated, transparent pixel field on a canvas, painted with ordered dithering in the theme's
+ * `--lab-pixel-ink`. Runs at up to 18 fps, pauses off screen and in hidden tabs, and draws one still
+ * frame under reduced motion. The CPU renderer keeps it consistent across browser GPU drivers.
+ */
 export function PixelShader({ className = '', density = 1.2, speed = 0.35, style, }) {
     const canvas = useRef(null);
     useEffect(() => {

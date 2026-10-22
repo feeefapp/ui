@@ -63,6 +63,9 @@ export { LabFilterBar } from './filter-bar'
 export type { LabFilterBarProps, LabFilterOption, LabFilterValue } from './filter-bar'
 
 export { LabSlider, LabSlideSwitch, LabSlideSwitchIndicator } from './primitives/slider'
+export { LabNumberField } from './primitives/number-field'
+export type { LabNumberFieldProps } from './primitives/number-field'
+export { parseNumberExpression } from './primitives/number-field-core'
 export type {
   LabSliderProps,
   LabSliderState,
@@ -70,7 +73,16 @@ export type {
   LabSlideSwitchProps,
 } from './primitives/slider'
 
-export { LabTemporalFilterEditor } from './filters/temporal-editor'
+export {
+  LabTemporalFilterEditor,
+  LabTemporalBody,
+  LabTemporalEdges,
+  LabTemporalPresets,
+  useLabTemporalEditor,
+  type LabTemporalEditorOptions,
+  type LabTemporalEditorState,
+} from './filters/temporal-editor'
+export { LabTemporalDialog } from './filters/temporal-dialog'
 export { temporalPresets, validateTemporal } from './filters/temporal'
 export type {
   LabTemporalType,

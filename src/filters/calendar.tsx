@@ -3,8 +3,12 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { LabIconButton, LabButton } from '../primitives/button'
-import { LabSelect, LabOption } from '../primitives/select'
 import { calendarDate, monthDays, parseCalendarDate } from './calendar-model'
+
+/**
+ * One month grid. The heading is a plain row on the host surface: previous, a title that opens a
+ * month/year grid, next. Days support arrow, Home/End and Page Up/Down navigation; a range paints one continuous band.
+ */
 export function LabCalendarMonth({
   month,
   onMonthChange,
@@ -15,175 +19,211 @@ export function LabCalendarMonth({
   onSelect,
   locale = 'en',
   label = 'Calendar',
+  navigation = 'both',
 }: {
+  /** Visible month as `YYYY-MM`. */
   month: string
+  /** Called when the person pages or picks another month or year. */
   onMonthChange: (month: string) => void
+  /** Selected day, or range start, as `YYYY-MM-DD`. */
   from: string
+  /** Range end as `YYYY-MM-DD`; days between `from` and `to` are tinted. */
   to?: string
+  /** Earliest selectable day; earlier days are disabled. */
   min?: string
+  /** Latest selectable day; later days are disabled. */
   max?: string
+  /** Called with the chosen day as `YYYY-MM-DD`. */
   onSelect: (date: string) => void
+  /** Locale for month, weekday and day names. */
   locale?: string
+  /** Accessible name of the month region. */
   label?: string
+  /** Which paging arrows this month shows; two side-by-side months show one each. */
+  navigation?: 'both' | 'previous' | 'next'
 }) {
   const date = parseCalendarDate(`${month}-01`),
     year = date.getFullYear(),
     monthIndex = date.getMonth()
   const root = useRef<HTMLDivElement>(null)
   const [focusDate, setFocusDate] = useState('')
+  const [picking, setPicking] = useState(false)
+  const [pickYear, setPickYear] = useState(year)
   useLayoutEffect(() => {
     if (focusDate)
       root.current
         ?.querySelector<HTMLButtonElement>(`[data-date="${focusDate}"]`)
         ?.focus({ preventScroll: true })
   }, [month, focusDate])
-  const move = (amount: number) =>
-    onMonthChange(calendarDate(new Date(year, monthIndex + amount, 1, 12)).slice(0, 7))
+  const go = (y: number, m: number) => onMonthChange(calendarDate(new Date(y, m, 1, 12)).slice(0, 7))
+  const minMonth = min?.slice(0, 7),
+    maxMonth = max?.slice(0, 7)
+  const monthKey = (y: number, m: number) => `${y}-${String(m + 1).padStart(2, '0')}`
+  const outOfBounds = (y: number, m: number) =>
+    (!!minMonth && monthKey(y, m) < minMonth) || (!!maxMonth && monthKey(y, m) > maxMonth)
   const today = calendarDate(new Date()),
     days = monthDays(year, monthIndex)
-  const firstFocusable = days.find(
-    (day) => day && (!min || day >= min.slice(0, 10)) && (!max || day <= max.slice(0, 10))
-  )
+  const inBounds = (day: string) => (!min || day >= min.slice(0, 10)) && (!max || day <= max.slice(0, 10))
   const tabDate =
-    [focusDate, from, today].find(
-      (day) =>
-        days.includes(day) && (!min || day >= min.slice(0, 10)) && (!max || day <= max.slice(0, 10))
-    ) || firstFocusable
-  const years = Array.from(
-    { length: Math.max(101, year - (Number(min?.slice(0, 4)) || year - 50) + 1) },
-    (_, index) => (Number(min?.slice(0, 4)) || year - 50) + index
-  ).filter((y) => !max || y <= Number(max.slice(0, 4)))
+    [focusDate, from, today].find((day) => days.includes(day) && inBounds(day)) ||
+    days.find((day) => day && inBounds(day))
+  const title = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(date)
+  const lo = from && to ? (from < to ? from : to) : '',
+    hi = from && to ? (from < to ? to : from) : ''
+
   return (
-    <div ref={root} className="lab-calendar-month" aria-label={label}>
-      <div className="lab-calendar-heading">
-        <LabIconButton
-          variant="text"
-          controlSize="compact"
-          aria-label={`Previous month in ${label}`}
-          onClick={() => move(-1)}
-        >
-          <ChevronLeft />
-        </LabIconButton>
-        <LabSelect
-          hint="Month"
-          aria-label={`${label} month`}
-          controlSize="compact"
-          value={String(monthIndex)}
-          onValueChange={(next) =>
-            onMonthChange(`${year}-${String(Number(next) + 1).padStart(2, '0')}`)
-          }
-        >
-          {Array.from({ length: 12 }, (_, index) => (
-            <LabOption key={index} value={String(index)}>
-              {new Intl.DateTimeFormat(locale, { month: 'short' }).format(new Date(year, index, 1))}
-            </LabOption>
-          ))}
-        </LabSelect>
-        <LabSelect
-          hint="Year"
-          aria-label={`${label} year`}
-          controlSize="compact"
-          value={String(year)}
-          onValueChange={(next) =>
-            onMonthChange(`${next}-${String(monthIndex + 1).padStart(2, '0')}`)
-          }
-        >
-          {years.map((y) => (
-            <LabOption key={y} value={String(y)}>
-              {y}
-            </LabOption>
-          ))}
-        </LabSelect>
-        <LabIconButton
-          variant="text"
-          controlSize="compact"
-          aria-label={`Next month in ${label}`}
-          onClick={() => move(1)}
-        >
-          <ChevronRight />
-        </LabIconButton>
-      </div>
-      <table
-        className="lab-calendar-grid"
-        aria-label={new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(
-          date
+    <div ref={root} className="lab-calendar-month" role="group" aria-label={label}>
+      <div role="group" aria-label={`${label} navigation`} className="lab-calendar-heading">
+        {navigation !== 'next' && (
+          <LabIconButton
+            variant="text"
+            controlSize="compact"
+            data-nav="previous"
+            aria-label="Previous month"
+            disabled={
+              picking ? !!minMonth && `${pickYear - 1}-12` < minMonth : outOfBounds(year, monthIndex - 1)
+            }
+            onClick={() => (picking ? setPickYear(pickYear - 1) : go(year, monthIndex - 1))}
+          >
+            <ChevronLeft className="lab-dir-flip" />
+          </LabIconButton>
         )}
-      >
-        <thead>
-          <tr>
-            {Array.from({ length: 7 }, (_, index) => (
-              <th scope="col" key={index}>
-                {new Intl.DateTimeFormat(locale, { weekday: 'narrow' }).format(
-                  new Date(2026, 0, 5 + index)
-                )}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {Array.from({ length: 6 }, (_, week) => (
-            <tr key={week}>
-              {days.slice(week * 7, week * 7 + 7).map((day, index) => (
-                <td key={index} data-between={!!day && !!from && !!to && day > from && day < to}>
-                  {day && (
-                    <LabButton
-                      variant="text"
-                      controlSize="compact"
-                      className="lab-calendar-day"
-                      data-date={day}
-                      data-endpoint={day === from || day === to}
-                      disabled={
-                        !!((min && day < min.slice(0, 10)) || (max && day > max.slice(0, 10)))
-                      }
-                      tabIndex={day === tabDate ? 0 : -1}
-                      aria-label={new Intl.DateTimeFormat(locale, { dateStyle: 'full' }).format(
-                        parseCalendarDate(day)
-                      )}
-                      aria-pressed={day === from || day === to}
-                      aria-current={day === today ? 'date' : undefined}
-                      onClick={() => onSelect(day)}
-                      onKeyDown={(event) => {
-                        const offsets: Record<string, number> = {
-                          ArrowLeft: -1,
-                          ArrowRight: 1,
-                          ArrowUp: -7,
-                          ArrowDown: 7,
-                        }
-                        const target = parseCalendarDate(day)
-                        if (event.key in offsets)
-                          target.setDate(target.getDate() + offsets[event.key])
-                        else if (event.key === 'Home')
-                          target.setDate(target.getDate() - ((target.getDay() + 6) % 7))
-                        else if (event.key === 'End')
-                          target.setDate(target.getDate() + 6 - ((target.getDay() + 6) % 7))
-                        else if (event.key === 'PageUp' || event.key === 'PageDown') {
-                          const wanted = target.getDate()
-                          target.setDate(1)
-                          target.setMonth(target.getMonth() + (event.key === 'PageUp' ? -1 : 1))
-                          target.setDate(
-                            Math.min(
-                              wanted,
-                              new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate()
-                            )
-                          )
-                        } else return
-                        event.preventDefault()
-                        const next = calendarDate(target)
-                        if ((min && next < min.slice(0, 10)) || (max && next > max.slice(0, 10)))
-                          return
-                        onMonthChange(next.slice(0, 7))
-                        setFocusDate(next)
-                      }}
-                    >
-                      {Number(day.slice(-2))}
-                    </LabButton>
+        <LabButton
+          variant="text"
+          controlSize="compact"
+          className="lab-calendar-title"
+          aria-expanded={picking}
+          aria-label={picking ? `Choose a month in ${pickYear}` : `${title}, choose month and year`}
+          onClick={() => {
+            setPickYear(year)
+            setPicking(!picking)
+          }}
+        >
+          {picking ? pickYear : title}
+        </LabButton>
+        {navigation !== 'previous' && (
+          <LabIconButton
+            variant="text"
+            controlSize="compact"
+            data-nav="next"
+            aria-label="Next month"
+            disabled={
+              picking ? !!maxMonth && `${pickYear + 1}-01` > maxMonth : outOfBounds(year, monthIndex + 1)
+            }
+            onClick={() => (picking ? setPickYear(pickYear + 1) : go(year, monthIndex + 1))}
+          >
+            <ChevronRight className="lab-dir-flip" />
+          </LabIconButton>
+        )}
+      </div>
+
+      {picking ? (
+        <div className="lab-calendar-months" role="group" aria-label={`Months of ${pickYear}`}>
+          {Array.from({ length: 12 }, (_, m) => (
+            <LabButton
+              key={m}
+              variant={m === monthIndex && pickYear === year ? 'tonal' : 'text'}
+              controlSize="compact"
+              aria-pressed={m === monthIndex && pickYear === year}
+              disabled={outOfBounds(pickYear, m)}
+              onClick={() => {
+                go(pickYear, m)
+                setPicking(false)
+              }}
+            >
+              {new Intl.DateTimeFormat(locale, { month: 'short' }).format(new Date(pickYear, m, 1, 12))}
+            </LabButton>
+          ))}
+        </div>
+      ) : (
+        <table className="lab-calendar-grid" aria-label={title}>
+          <thead>
+            <tr>
+              {Array.from({ length: 7 }, (_, index) => (
+                <th
+                  scope="col"
+                  key={index}
+                  abbr={new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(
+                    new Date(2026, 0, 5 + index)
                   )}
-                </td>
+                >
+                  {new Intl.DateTimeFormat(locale, { weekday: 'narrow' }).format(
+                    new Date(2026, 0, 5 + index)
+                  )}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {Array.from({ length: 6 }, (_, week) => (
+              <tr key={week}>
+                {days.slice(week * 7, week * 7 + 7).map((day, index) => {
+                  const start = !!day && day === (lo || from)
+                  const end = !!day && !!hi && day === hi
+                  return (
+                    <td
+                      key={index}
+                      data-between={!!day && !!lo && day > lo && day < hi}
+                      data-range-start={(start && !!hi && lo !== hi) || undefined}
+                      data-range-end={(end && lo !== hi) || undefined}
+                    >
+                      {day && (
+                        <button
+                          type="button"
+                          className="lab-calendar-day"
+                          data-date={day}
+                          data-selected={day === from || day === to || undefined}
+                          disabled={!inBounds(day)}
+                          tabIndex={day === tabDate ? 0 : -1}
+                          aria-label={new Intl.DateTimeFormat(locale, { dateStyle: 'full' }).format(
+                            parseCalendarDate(day)
+                          )}
+                          aria-pressed={day === from || day === to}
+                          aria-current={day === today ? 'date' : undefined}
+                          onClick={() => onSelect(day)}
+                          onKeyDown={(event) => {
+                            const rtl = getComputedStyle(event.currentTarget).direction === 'rtl'
+                            const offsets: Record<string, number> = {
+                              ArrowLeft: rtl ? 1 : -1,
+                              ArrowRight: rtl ? -1 : 1,
+                              ArrowUp: -7,
+                              ArrowDown: 7,
+                            }
+                            const target = parseCalendarDate(day)
+                            if (event.key in offsets) target.setDate(target.getDate() + offsets[event.key])
+                            else if (event.key === 'Home')
+                              target.setDate(target.getDate() - ((target.getDay() + 6) % 7))
+                            else if (event.key === 'End')
+                              target.setDate(target.getDate() + 6 - ((target.getDay() + 6) % 7))
+                            else if (event.key === 'PageUp' || event.key === 'PageDown') {
+                              const wanted = target.getDate()
+                              target.setDate(1)
+                              target.setMonth(target.getMonth() + (event.key === 'PageUp' ? -1 : 1))
+                              target.setDate(
+                                Math.min(
+                                  wanted,
+                                  new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate()
+                                )
+                              )
+                            } else return
+                            event.preventDefault()
+                            const next = calendarDate(target)
+                            if (!inBounds(next)) return
+                            onMonthChange(next.slice(0, 7))
+                            setFocusDate(next)
+                          }}
+                        >
+                          {new Intl.NumberFormat(locale).format(Number(day.slice(-2)))}
+                        </button>
+                      )}
+                    </td>
+                  )
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   )
 }

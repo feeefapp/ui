@@ -1,0 +1,126 @@
+/* Decision flows: one question per row, the answer after it. */
+.docs-page .gl-flow {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: gl-flow;
+}
+.docs-page .gl-flow > li {
+  counter-increment: gl-flow;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 4px 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-small);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface);
+}
+.docs-page .gl-flow > li::before {
+  content: counter(gl-flow);
+  grid-row: span 2;
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--lab-control-selected);
+  color: var(--lab-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+.docs-page .gl-flow-q {
+  font-weight: 600;
+}
+.docs-page .gl-flow-a {
+  color: var(--lab-muted);
+}
+.docs-page .gl-flow-a strong,
+.docs-page .gl-flow-a code {
+  color: var(--lab-ink);
+}
+
+/* A notice that sits in the page, next to the task it blocks. */
+.docs-page .gl-notice {
+  display: grid;
+  gap: 12px;
+  width: min(100%, 360px);
+  padding: 16px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-panel);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface-soft);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.docs-page .gl-notice p {
+  margin: 0;
+}
+.docs-page .gl-notice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* What a toast looks like, for the wrong side of a comparison. */
+.docs-page .gl-toast {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--lab-radius-control);
+  background: var(--lab-ink);
+  color: var(--lab-surface);
+  font-size: 13px;
+}
+.docs-page .gl-faded {
+  opacity: 0.55;
+}
+.docs-page .gl-caption {
+  margin: 0;
+  color: var(--lab-muted);
+  font-size: 13px;
+}
+
+/* A simple card that holds inline details. */
+.docs-page .gl-card {
+  display: grid;
+  gap: 8px;
+  width: min(100%, 360px);
+  padding: 14px 16px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-panel);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface);
+  font-size: 14px;
+}
+.docs-page .gl-card-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.docs-page .gl-card-detail {
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--lab-line);
+  color: var(--lab-muted);
+}
+.docs-page .gl-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.docs-page .gl-modal-body {
+  margin: 0;
+  padding: 0 20px 20px;
+}
+.docs-page .gl-flow,
+.docs-page .gl-flow > li {
+  max-width: none;
+}

@@ -22,7 +22,8 @@
   width: 100%;
   height: 100%;
   z-index: -1;
-  opacity: 0.35;
+  /* Ambient texture, not content: kept quiet so it never competes with the page. */
+  opacity: var(--lab-ground-pixels-opacity);
 }
 .lab-workspace-top-side:empty {
   display: none;

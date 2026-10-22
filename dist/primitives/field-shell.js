@@ -5,7 +5,10 @@ import { cn } from '../utils.js';
 import '../system.css';
 import './control-variants.css';
 import './text-field.css';
-/** Decoration only: the child owns editing, selection and validation behavior. */
+/**
+ * The field frame on its own: surface, floating hint, icons, affixes, supporting text and
+ * counter. It paints and labels; the child control owns editing, selection and validation.
+ */
 export function LabFieldShell({ id: suppliedId, label, hint, dir, labelStyle = 'outlined', leadingIcon, leading, trailing, supportingText, error, containerClassName, variant = 'outlined', controlSize = 'regular', disabled, required, invalid = false, describedBy, populated, alwaysFloat, counter, children, }) {
     const floatingHint = hint ?? label;
     const shellRef = React.useRef(null);

@@ -10,9 +10,13 @@ export { useComposerLayout } from './use-composer-layout'
 
 /** Shared Chat/Image card. Domain-specific controls remain in named layout slots. */
 export const LabComposerCard = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement> & {
+  /** Two-row layout (field above, tools below) instead of one line. Sets `data-expanded`. */
   expanded?: boolean
+  /** Ref to the inner layout grid, for `useComposerLayout`. */
   layoutRef?: React.Ref<HTMLDivElement>
+  /** Class for the inner layout grid. */
   layoutClassName?: string
+  /** Content inside the card, above the layout grid. */
   above?: React.ReactNode
 }>(function LabComposerCard({ expanded, layoutRef, layoutClassName, above, children, className, ...props }, ref) {
   return <div {...props} ref={ref} className={cn('lab-pc-card lab-light-edge', className)} data-expanded={expanded}>
@@ -21,21 +25,34 @@ export const LabComposerCard = React.forwardRef<HTMLDivElement, React.HTMLAttrib
   </div>
 })
 
-export function LabComposerHint({ text }: { text: string }) {
+/** Placeholder that fades in word by word. Decorative (`aria-hidden`); label the field separately. */
+export function LabComposerHint({ text }: {
+  /** The hint text. Changing it replays the animation. */
+  text: string
+}) {
   return <span className="lab-pc-hint" aria-hidden="true" key={text}>{text.split(/(\s+)/).map((word, index) => /\s+/.test(word) ? word : <span key={index} style={{ animationDelay: `${Math.min(index, 40) * 28}ms` }}>{word}</span>)}</span>
 }
 
 export type LabPromptComposerProps = Omit<React.FormHTMLAttributes<HTMLFormElement>, 'onSubmit' | 'onChange' | 'children'> & {
+  /** The prompt text (controlled). */
   value: string
+  /** Called with the new text on every edit. */
   onValueChange: (value: string) => void
+  /** Called on Enter or form submit, only when the prompt is not blank and submitting is allowed. */
   onSubmit: () => void
+  /** Accessible name of the text field. */
   label: string
+  /** Animated hint shown while the field is empty. */
   placeholder?: string
+  /** Disables the field and blocks submitting. */
   disabled?: boolean
+  /** Request in flight: the field turns read-only, the form sets `aria-busy` and submitting is blocked. */
   busy?: boolean
   /** Highlight the card only while a compatible file is dragged over the drop target. */
   dropActive?: boolean
+  /** Blocks submitting without disabling the field. */
   submitDisabled?: boolean
+  /** Maximum prompt length in characters. */
   maxLength?: number
   /** Files, references, mask controls or a contextual note above the input card. */
   above?: React.ReactNode
@@ -43,7 +60,9 @@ export type LabPromptComposerProps = Omit<React.FormHTMLAttributes<HTMLFormEleme
   tools?: React.ReactNode
   /** Host-supplied shared submit/stop/compare controls, with their own permissions. */
   submit: React.ReactNode
+  /** Content below the card, such as a caption or allowance note. */
   footer?: React.ReactNode
+  /** Change it when slot content changes size, so the layout re-measures. */
   contentRevision?: unknown
 }
 

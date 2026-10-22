@@ -12,7 +12,10 @@ import { computeLabActionsLayout } from './layout.js';
 import { useMeasuredActions } from './use_measured_actions.js';
 import { useLabActionsWidth } from './width-context.js';
 import './actions.css';
-/** Responsive, priority-based actions. Place inside a dock or any bounded slot. */
+/**
+ * Responsive, priority-based actions. Measures its real controls and moves the lowest-priority
+ * ones into a "More actions" menu when they don't fit. Place inside a dock or any bounded slot.
+ */
 export function LabActionsBar({ actions, label, align = 'end', size = 'regular', gap = 4, overflowLabel, className, portalContainer, onActionError, }) {
     const { t } = useLabI18n();
     const resolvedOverflowLabel = overflowLabel ?? t('lab.common.moreActions');
@@ -91,17 +94,16 @@ export function LabActionsBar({ actions, label, align = 'end', size = 'regular',
                 : { inlineSize: layout.requiredWidth, flex: 'none' }),
         }, children: [_jsxs("div", { className: "lab-actions-bar__row", children: [layout.visible.map((action) => (_jsx("span", { className: "lab-actions-bar__entry", "data-lab-action-id": action.id, children: action.type === 'group' ? (_jsx(GroupControl, { action: action, size: size, menu: menu })) : (_jsx(ActionControl, { action: action, size: size, loading: pending.has(action.id), onClick: () => execute(action) })) }, action.id))), !!layout.overflow.length && (_jsxs(DropdownMenu.Root, { modal: false, open: overflowOpen, onOpenChange: setOverflowOpen, children: [_jsx(DropdownMenu.Trigger, { asChild: true, children: _jsx(LabButton, { ref: overflowTrigger, className: "lab-actions-bar__control", variant: "ghost", appearance: "toolbar", controlSize: "icon", "aria-label": resolvedOverflowLabel, title: resolvedOverflowLabel, children: _jsx(MoreHorizontal, { size: 20, "aria-hidden": "true" }) }) }), _jsx(MenuSurface, { menu: menu, label: resolvedOverflowLabel, children: layout.overflow.map((action) => (_jsx(MenuAction, { action: action, menu: menu }, action.id))) })] }))] }), _jsxs("div", { ref: measuringRow, className: "lab-actions-bar__measure", "aria-hidden": "true", inert: true, children: [actions.map((action) => (_jsx("span", { className: "lab-actions-bar__entry", "data-lab-action-id": action.id, children: _jsx(ActionControl, { action: action, size: size, loading: pending.has(action.id) }) }, action.id))), _jsx("span", { className: "lab-actions-bar__entry", "data-lab-overflow-measure": true, children: _jsx(LabButton, { className: "lab-actions-bar__control", variant: "ghost", appearance: "toolbar", controlSize: "icon", tabIndex: -1, children: _jsx(MoreHorizontal, { size: 20, "aria-hidden": "true" }) }) })] }), errorLabel && (_jsx("span", { className: "lab-actions-bar__error", role: "alert", children: errorLabel }))] }));
 }
-const ActionControl = React.forwardRef(({ action, size, loading, ...buttonProps }, ref) => {
+const ActionControl = React.forwardRef(function LabActionControl({ action, size, loading, ...buttonProps }, ref) {
     const iconOnly = action.display === 'icon' && (action.type === 'toggle' || !!action.icon);
     const blocked = action.disabled || (action.type === 'group' && !action.actions.length);
     return (_jsxs(LabButton, { ...buttonProps, ref: ref, className: "lab-actions-bar__control", variant: action.destructive
             ? 'destructive'
-            : (action.variant ?? (action.type === 'toggle' && action.checked ? 'secondary' : 'ghost')), controlSize: iconOnly ? 'icon' : size, appearance: action.appearance ??
+            : (action.variant ?? (action.type === 'toggle' && action.checked ? 'elevated' : 'ghost')), controlSize: iconOnly ? 'icon' : size, appearance: action.appearance ??
             (!action.destructive && (!action.variant || action.variant === 'ghost')
                 ? 'toolbar'
                 : 'default'), disabled: blocked, loading: loading || action.loading, "aria-label": action.label, "aria-pressed": action.type === 'toggle' ? action.checked : undefined, title: action.tooltip ?? (iconOnly ? action.label : undefined), children: [action.icon ? (_jsx("span", { className: "lab-actions-bar__icon", "aria-hidden": "true", children: action.icon })) : action.type === 'toggle' ? (action.checked ? (_jsx(SquareCheck, { size: 18, "aria-hidden": "true" })) : (_jsx(Square, { size: 18, "aria-hidden": "true" }))) : null, !iconOnly && _jsx("span", { children: action.label }), action.type === 'group' && !iconOnly && _jsx(ChevronDown, { size: 14, "aria-hidden": "true" })] }));
 });
-ActionControl.displayName = 'LabActionControl';
 function GroupControl({ action, size, menu, }) {
     const [open, setOpen] = React.useState(false);
     return (_jsxs(DropdownMenu.Root, { modal: false, open: open, onOpenChange: (next) => {

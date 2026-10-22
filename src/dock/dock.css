@@ -45,13 +45,15 @@
   color: var(--lab-muted);
   font-size: 11px;
 }
+/* Buttons passed straight to the dock sit in one row; a LabActionsBar child overflows into its menu. */
 .lab-dock-actions {
+  display: flex;
   flex: 0 1 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
   min-width: var(--lab-control-compact);
   max-width: 100%;
-}
-.lab-dock-actions > .lab-ui-row {
-  flex-wrap: nowrap;
 }
 .lab-dock-swap {
   min-width: 0;

@@ -1,0 +1,85 @@
+/* Pretend screens for container demos (navigation stack, split view, sheet). */
+.docs-device {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+.docs-device-screen {
+  position: absolute;
+  top: 0;
+  transform-origin: 0 0;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid var(--lab-border);
+  border-radius: calc(44px * var(--lab-radius-scale, 1));
+  background: var(--lab-ground);
+  box-shadow: 0 24px 60px -32px rgb(0 0 0 / 0.35);
+  /* Anything fixed inside (sheets) is laid out against the screen, not the docs window. */
+  contain: layout paint;
+}
+.docs-device[data-kind='tablet'] .docs-device-screen {
+  border-radius: calc(28px * var(--lab-radius-scale, 1));
+}
+.docs-device[data-kind='desktop'] .docs-device-screen {
+  border-radius: calc(18px * var(--lab-radius-scale, 1));
+}
+.docs-device-screen > .lab-nav-stack,
+.docs-device-screen > .demo-fill {
+  position: absolute;
+  inset: 0;
+}
+.docs-device-screen > .lab-nav-stack {
+  border-radius: inherit;
+}
+
+/* Sheet demos */
+.demo-sheet-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+.demo-sheet-title {
+  padding-inline: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.demo-sheet-page {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: var(--lab-surface);
+  text-align: center;
+}
+.demo-sheet-page > p {
+  margin: 0;
+}
+.demo-sheet-status {
+  color: var(--lab-muted);
+}
+
+/* Tab view demo: a call in progress as the bar's accessory. */
+.demo-call {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  padding-inline-start: 8px;
+  font-size: 14px;
+}
+.demo-call > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.demo-call > svg {
+  flex: none;
+  color: var(--lab-primary);
+}

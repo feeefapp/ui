@@ -7,6 +7,10 @@ import './scaffold.css'
 
 const useLabLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect
 
+/**
+ * Named floating regions. Each writes its reserved size to `--lab-<slot>-reserve`: `header` (top),
+ * `rail` (left, or top on narrow screens), `player` and `notice` (bottom; notices stack above docks).
+ */
 export type LabFloatingSlot = 'player' | 'header' | 'rail' | 'notice'
 type FloatingEdge = 'top' | 'bottom' | 'left' | 'right' | 'auto'
 type Reservation = {
@@ -35,12 +39,20 @@ const reserveProperties = [
   '--lab-viewport-height',
 ] as const
 
-/** The viewport host has no transform/filter, so every floating region stays viewport-fixed. */
+/**
+ * Page-level host for floating chrome. Mount it once near the root: it creates the viewport-fixed
+ * portal that LabFloatingLayer renders into and writes each region's measured size as CSS custom
+ * properties (`--lab-header-reserve`, `--lab-player-reserve`, `--lab-floating-bottom`, …) on
+ * `<html>`, its own root and the portal. The portal host has no transform/filter, so every floating
+ * region stays viewport-fixed.
+ */
 export function LabScaffoldProvider({
   children,
   className,
 }: {
+  /** The page. */
   children: React.ReactNode
+  /** Class for the root element (`.lab-scaffold`, at least the viewport's height). */
   className?: string
 }) {
   const root = React.useRef<HTMLDivElement>(null)
@@ -147,7 +159,11 @@ export function LabScaffoldProvider({
   )
 }
 
-/** Register an existing fixed surface without moving it or changing its semantic element. */
+/**
+ * Registers an existing fixed surface with the nearest LabScaffoldProvider so its size is reserved,
+ * without moving it or changing its semantic element. Remeasures on resize, animation and
+ * transition end. Does nothing outside a provider.
+ */
 export function useFloatingReserve(
   slot: LabFloatingSlot,
   ref: React.RefObject<HTMLElement | null>,
@@ -157,8 +173,11 @@ export function useFloatingReserve(
     gap = 12,
     measureChildren = false,
   }: {
+    /** Set false to stop reserving space. */
     active?: boolean
+    /** Edge it is measured from. `auto`: header → top, rail → left/top, others → bottom. */
     edge?: FloatingEdge
+    /** Extra px added to the reservation. */
     gap?: number
     /** FloatingLayer itself fills the viewport; its actual surface is its child. */
     measureChildren?: boolean
@@ -238,7 +257,11 @@ export function useFloatingReserve(
   }, [reserve, id, slot, ref, active, edge, gap, measureChildren, scaffold?.portal])
 }
 
-/** Persistent floating surfaces live outside the animated page, including its stacking contexts. */
+/**
+ * Portals persistent floating surfaces out of the animated page (and its stacking contexts) into
+ * the provider's viewport-fixed layer, and reserves their measured size under `slot`. The layer
+ * fills the viewport and ignores pointer input; position the child yourself.
+ */
 export function LabFloatingLayer({
   children,
   slot,
@@ -247,10 +270,15 @@ export function LabFloatingLayer({
   gap = 12,
   className,
 }: {
+  /** The floating surface. Its box (not the layer's) is measured. */
   children: React.ReactNode
+  /** Which reservation the surface counts toward. */
   slot: LabFloatingSlot
+  /** Set false to keep it mounted but stop reserving space. */
   active?: boolean
+  /** Edge it is measured from. `auto`: header → top, rail → left/top, others → bottom. */
   edge?: FloatingEdge
+  /** Extra px added to the reservation, between the surface and the content. */
   gap?: number
   className?: string
 }) {
@@ -275,10 +303,17 @@ export function LabFloatingLayer({
 }
 
 type SurfaceTag = 'div' | 'header' | 'aside' | 'nav' | 'section' | 'footer'
-/** Web glass material belongs to grouped navigation/actions, not to the editing content. */
+/**
+ * One translucent glass material (blur, light edge, neutral shadow) around a group of related
+ * controls. Glass belongs to grouped navigation/actions, not to the editing content. Falls back to
+ * an opaque surface without backdrop-filter or with reduced transparency.
+ */
 export const LabGlassGroup = React.forwardRef<
   HTMLElement,
-  React.HTMLAttributes<HTMLElement> & { as?: SurfaceTag }
+  React.HTMLAttributes<HTMLElement> & {
+    /** Element to render, so the group can be a landmark (`header`, `nav`, `aside`, …). */
+    as?: SurfaceTag
+  }
 >(({ as = 'div', className, children, ...props }, ref) =>
   React.createElement(
     as,
@@ -341,7 +376,9 @@ export function LabViewTransition({
   children,
   ...props
 }: React.HTMLAttributes<HTMLElement> & {
+  /** Element to render. */
   as?: 'div' | 'main' | 'section'
+  /** Changing it plays the enter animation and resets scroll; the subtree is not remounted. */
   viewKey: string
 }) {
   const ref = React.useRef<HTMLElement>(null)

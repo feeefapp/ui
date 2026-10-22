@@ -1,0 +1,51 @@
+'use client'
+
+import { useEffect, useLayoutEffect, useRef, useSyncExternalStore, type RefObject } from 'react'
+import { attachPan, type LabPanOptions } from './gesture'
+import { LabMotionValue, prefersReducedMotion } from './motion-value'
+
+const REDUCED = '(prefers-reduced-motion: reduce)'
+/** Live `prefers-reduced-motion`; false on the server. */
+export function useLabReducedMotion() {
+  return useSyncExternalStore(
+    (notify) => {
+      const media = window.matchMedia?.(REDUCED)
+      media?.addEventListener('change', notify)
+      return () => media?.removeEventListener('change', notify)
+    },
+    prefersReducedMotion,
+    () => false
+  )
+}
+
+/** A motion value that lives as long as the component. `restDelta` is in the value's units. */
+export function useLabMotionValue(initial: number, restDelta?: number) {
+  const ref = useRef<LabMotionValue | null>(null)
+  if (!ref.current) ref.current = new LabMotionValue(initial, restDelta)
+  return ref.current
+}
+
+/** Calls `paint` with every value (and once on mount), before the browser paints. */
+export function useLabMotionPaint(value: LabMotionValue, paint: (value: number) => void) {
+  const latest = useRef(paint)
+  latest.current = paint
+  useLayoutEffect(() => {
+    latest.current(value.get())
+    return value.subscribe((v) => latest.current(v))
+  }, [value])
+}
+
+/**
+ * Attaches a pan recognizer to `ref`. Options are read live, so callbacks may close over fresh
+ * state. Set `touch-action` on the element (`pan-y` for an x pan, `pan-x` for a y pan) unless
+ * the pan uses `touch: 'claim'`.
+ */
+export function useLabPan(ref: RefObject<HTMLElement | null>, options: LabPanOptions, enabled = true) {
+  const latest = useRef(options)
+  latest.current = options
+  useEffect(() => {
+    const element = ref.current
+    if (!element || !enabled) return
+    return attachPan(element, () => latest.current)
+  }, [ref, enabled])
+}

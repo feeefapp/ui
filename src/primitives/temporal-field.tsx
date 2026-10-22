@@ -7,11 +7,10 @@ import { CalendarDays, Clock, ChevronDown, X } from 'lucide-react'
 import { LabFieldShell, type LabFieldDecorationProps } from './field-shell'
 import { LabButton, LabIconButton } from './button'
 import { LabRawInput } from './raw-input'
-import { LabModal } from './modal'
 import { LabPopoverSurface } from './popover-surface'
-import { LabScrollArea } from '../scroll'
-import { LabDock } from '../dock'
 import { LabTemporalFilterEditor } from '../filters/temporal-editor'
+import { LabTemporalDialog } from '../filters/temporal-dialog'
+import { LabToolbarGroup } from '../toolbar'
 import {
   isTemporalRange,
   normalizeTemporal,
@@ -20,34 +19,73 @@ import {
   type LabTemporalValue,
 } from '../filters/temporal'
 import { formatTemporalValue } from '../filters/temporal-format'
+import { useLabI18n } from '../i18n'
 import { cn } from '../utils'
 import './temporal-field.css'
 
+/** Phones: every picker opens as a dialog (full width, 44px targets) instead of an anchored popover. */
+const COMPACT_QUERY = '(max-width: 599px)'
+function useCompactViewport() {
+  return React.useSyncExternalStore(
+    (notify) => {
+      const media = window.matchMedia(COMPACT_QUERY)
+      media.addEventListener('change', notify)
+      return () => media.removeEventListener('change', notify)
+    },
+    () => window.matchMedia(COMPACT_QUERY).matches,
+    () => false
+  )
+}
+
 export type LabTemporalFieldProps = LabFieldDecorationProps &
   LabTemporalConfig & {
-    'value': LabTemporalValue
-    'onValueChange': (value: LabTemporalValue) => void
-    'id'?: string
-    'name'?: string
+    /** Committed value: a local ISO string (`2026-10-21`, `09:30`, `2026-10-21T09:30`), a `{ from, to }` range, or `null`. */
+    value: LabTemporalValue
+    /** Called with the normalized value on Apply or when the clear button empties the field. */
+    onValueChange: (value: LabTemporalValue) => void
+    /** Id of the trigger button; generated when omitted. */
+    id?: string
+    /** Form field name. Single values submit as the ISO string, ranges as `{"from","to"}` JSON. */
+    name?: string
     /** Optional independent range form entries, in addition to name's JSON value. */
-    'rangeNames'?: { from: string; to: string }
-    'disabled'?: boolean
-    'readOnly'?: boolean
-    'required'?: boolean
-    'requiredMessage'?: string
-    'placeholder'?: string
-    'clearable'?: boolean
-    'validator'?: (value: LabTemporalValue) => string | null | undefined
-    'validationMode'?: 'blur' | 'change' | 'submit'
-    'onValidationChange'?: (error: string | null) => void
-    'onBlur'?: React.FocusEventHandler<HTMLButtonElement>
-    'locale'?: string
-    'formatValue'?: (value: LabTemporalValue) => string
-    'className'?: string
+    rangeNames?: { from: string; to: string }
+    /** Disables the trigger and leaves the value out of form submission. */
+    disabled?: boolean
+    /** Shows the value but never opens the picker; skips validation. */
+    readOnly?: boolean
+    /** Requires a value; checked on blur, on form submit and on Apply. */
+    required?: boolean
+    /** Error shown when a required field is empty. */
+    requiredMessage?: string
+    /** Text shown while empty. Hidden when a `hint` is set; add an `aria-label` when used alone. */
+    placeholder?: string
+    /** Shows a clear button inside the field while it has a value. */
+    clearable?: boolean
+    /** Extra synchronous rule after the built-in format, step and bounds checks. Return an error message or nothing. */
+    validator?: (value: LabTemporalValue) => string | null | undefined
+    /** When errors appear: after the field loses focus (default), on every change, or only on form submit. */
+    validationMode?: 'blur' | 'change' | 'submit'
+    /** Receives the current error message, or `null` once the value is valid. */
+    onValidationChange?: (error: string | null) => void
+    /** Blur handler for the trigger button. */
+    onBlur?: React.FocusEventHandler<HTMLButtonElement>
+    /** BCP 47 locale for the displayed value and the calendar. Defaults to the kit's i18n locale; the stored value stays ISO. */
+    locale?: string
+    /** Replaces the default display text for the value. Display only. */
+    formatValue?: (value: LabTemporalValue) => string
+    /** Class name for the trigger button. Use `containerClassName` for the field box. */
+    className?: string
+    /** Accessible name when there is no visible `hint`. */
     'aria-label'?: string
+    /** Extra ids describing the field, added to its supporting text and error. */
     'aria-describedby'?: string
   }
-/** Full-surface field trigger + shared selection-first editor. Drafts commit only on Apply. */
+/**
+ * A date or time field: a full-surface trigger that opens a selection-first picker with preset
+ * chips, calendars, number-field times and optional typed entry. Single values open in a popover
+ * (a dialog on phones), ranges in a dialog. A date commits on the day you pick; times, datetimes and
+ * ranges commit on Apply.
+ */
 export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalFieldProps>(
   function LabTemporalField(
     {
@@ -84,7 +122,7 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
       validationMode = 'blur',
       onValidationChange,
       onBlur,
-      locale,
+      locale: localeProp,
       formatValue,
       className,
       'aria-label': ariaLabel,
@@ -94,6 +132,8 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
   ) {
     const trigger = React.useRef<HTMLButtonElement>(null)
     React.useImperativeHandle(forwardedRef, () => trigger.current!, [])
+    const i18n = useLabI18n()
+    const locale = localeProp ?? i18n.locale
     const formId = React.useId(),
       range = isTemporalRange(type)
     const config: LabTemporalConfig = { type, min, max, step, allowOvernight, presets }
@@ -179,39 +219,65 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
       }
       commit(normalized)
     }
-    const formatted = (
-      formatValue || ((next: LabTemporalValue) => formatTemporalValue(type, next, locale))
-    )(value)
+    const formatted = (formatValue || ((next: LabTemporalValue) => formatTemporalValue(type, next, locale)))(
+      value
+    )
     const populated = normalizeTemporal(value) != null
     const floatingHint = hint ?? label
     const title = floatingHint || ariaLabel || 'Choose date and time'
-    const actions = (
-      <LabDock label={`${title} actions`}>
-        <LabButton
-          variant="text"
-          controlSize="compact"
-          onClick={() => {
-            setDraft(null)
-            setDraftError(null)
-          }}
-        >
-          Clear
-        </LabButton>
-        <LabButton variant="filled" controlSize="compact" type="submit" form={formId}>
-          Apply
-        </LabButton>
-      </LabDock>
-    )
-    const editor = (
+    // A date is complete with one tap: pick it and the field closes. Everything else has parts
+    // (time, two ends), so it keeps one Apply.
+    const instant = type === 'date'
+    const compact = useCompactViewport()
+    const asDialog = range || compact
+    const clear = () => {
+      if (instant) commit(null)
+      else {
+        setDraft(null)
+        setDraftError(null)
+      }
+    }
+    const changeDraft = (next: LabTemporalValue) => {
+      setDraft(next)
+      setDraftError(null)
+    }
+    const pick = (next: LabTemporalValue) => {
+      if (!instant) return
+      const failure = validate(normalizeTemporal(next))
+      if (failure) setDraftError(failure)
+      else commit(next)
+    }
+    // Popovers end their footer row with one glass group. A date with nothing to clear has no
+    // actions at all: the day itself is the action.
+    const actions =
+      instant && normalizeTemporal(draft) == null ? null : (
+        <LabToolbarGroup label={`${title} actions`} className="lab-temporal-actions">
+          <LabButton
+            variant="text"
+            appearance="toolbar"
+            controlSize="compact"
+            disabled={normalizeTemporal(draft) == null}
+            onClick={clear}
+          >
+            Clear
+          </LabButton>
+          {!instant && (
+            <LabButton variant="filled" appearance="toolbar" controlSize="compact" type="submit" form={formId}>
+              Apply
+            </LabButton>
+          )}
+        </LabToolbarGroup>
+      )
+    const popoverEditor = (
       <form id={formId} className="lab-temporal-field-editor" onSubmit={apply}>
         <LabTemporalFilterEditor
-          key={`${type}-${open}`}
           config={config}
+          locale={locale}
           value={draft}
-          onChange={(next) => {
-            setDraft(next)
-            setDraftError(null)
-          }}
+          resetKey={open}
+          onChange={changeDraft}
+          footer={actions}
+          onPick={pick}
         />
         {draftError && (
           <p role="alert" className="lab-filter-error">
@@ -221,22 +287,14 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
       </form>
     )
     return (
-      <Popover.Root open={open && !range} onOpenChange={(next) => (next ? begin() : close())}>
+      <Popover.Root open={open && !asDialog} onOpenChange={(next) => (next ? begin() : close())}>
         <LabFieldShell
           id={id}
           hint={hint}
           label={label}
           labelStyle={labelStyle}
           leadingIcon={
-            leadingIcon === undefined ? (
-              type.startsWith('time') ? (
-                <Clock />
-              ) : (
-                <CalendarDays />
-              )
-            ) : (
-              leadingIcon
-            )
+            leadingIcon === undefined ? type.startsWith('time') ? <Clock /> : <CalendarDays /> : leadingIcon
           }
           leading={leading}
           trailing={
@@ -282,17 +340,16 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
                 disabled={disabled}
                 aria-label={ariaLabel || floatingHint || placeholder || title}
                 aria-describedby={
-                  [describedBy, populated ? `${fieldId}-value` : null].filter(Boolean).join(' ') ||
-                  undefined
+                  [describedBy, populated ? `${fieldId}-value` : null].filter(Boolean).join(' ') || undefined
                 }
                 aria-invalid={invalid}
                 aria-required={required || undefined}
                 aria-readonly={readOnly || undefined}
                 aria-haspopup="dialog"
                 aria-expanded={open}
-                onClick={range ? begin : undefined}
+                onClick={asDialog ? begin : undefined}
                 onKeyDown={(event) => {
-                  if (!range && readOnly && ['Enter', ' ', 'ArrowDown'].includes(event.key))
+                  if (!asDialog && readOnly && ['Enter', ' ', 'ArrowDown'].includes(event.key))
                     event.preventDefault()
                   if (!readOnly && ['ArrowDown'].includes(event.key)) {
                     event.preventDefault()
@@ -312,7 +369,7 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
                 </span>
               </LabButton>
             )
-            return range || readOnly ? button : <Popover.Trigger asChild>{button}</Popover.Trigger>
+            return asDialog || readOnly ? button : <Popover.Trigger asChild>{button}</Popover.Trigger>
           }}
         </LabFieldShell>
         <LabRawInput
@@ -364,26 +421,32 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
                 trigger.current?.focus({ preventScroll: true })
               }}
             >
-              <LabScrollArea label={`${title} picker`} contentPadding={12} bottom={actions}>
-                {editor}
-              </LabScrollArea>
+              {/* Hugs its content; the actions sit at the end of the editor's footer row. */}
+              {!asDialog && popoverEditor}
             </Popover.Content>
           </LabPopoverSurface>
         </Popover.Portal>
         {typeof document !== 'undefined' &&
           createPortal(
-            <LabModal
-              open={open && range}
+            <LabTemporalDialog
+              open={open && asDialog}
               label={title}
               close={close}
               returnFocusRef={trigger}
-              scrollable
-              fitContent
-              className={`lab-temporal-field-dialog ${type.startsWith('time') ? '' : 'lab-filter-calendar-dialog'}`}
-              bottom={actions}
-            >
-              <div dir={direction}>{editor}</div>
-            </LabModal>,
+              dir={direction}
+              className="lab-temporal-field-dialog"
+              formId={formId}
+              onSubmit={apply}
+              config={config}
+              locale={locale}
+              value={draft}
+              onChange={changeDraft}
+              onPick={pick}
+              onClear={clear}
+              clearDisabled={normalizeTemporal(draft) == null}
+              showApply={!instant}
+              error={draftError}
+            />,
             container ?? document.body
           )}
       </Popover.Root>
@@ -391,18 +454,16 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
   }
 )
 
-export type LabTemporalSingleFieldProps = Omit<
-  LabTemporalFieldProps,
-  'type' | 'value' | 'onValueChange'
-> & {
+export type LabTemporalSingleFieldProps = Omit<LabTemporalFieldProps, 'type' | 'value' | 'onValueChange'> & {
+  /** Committed local ISO string, or `null` when empty. */
   value: string | null
+  /** Called with the applied string, or `null` when cleared. */
   onValueChange: (value: string | null) => void
 }
-export type LabTemporalRangeFieldProps = Omit<
-  LabTemporalFieldProps,
-  'type' | 'value' | 'onValueChange'
-> & {
+export type LabTemporalRangeFieldProps = Omit<LabTemporalFieldProps, 'type' | 'value' | 'onValueChange'> & {
+  /** Committed range of local ISO strings; either end may be `''` (open), or the whole value `null`. */
   value: { from: string; to: string } | null
+  /** Called with the applied range, or `null` when cleared. */
   onValueChange: (value: { from: string; to: string } | null) => void
 }
 function singleField(type: 'date' | 'time' | 'datetime') {
@@ -425,9 +486,15 @@ function rangeField(type: 'dateRange' | 'timeRange' | 'datetimeRange') {
     />
   ))
 }
+/** A calendar day, stored as `YYYY-MM-DD`. */
 export const LabDateField = singleField('date')
+/** A time of day, stored as `HH:mm` (or `HH:mm:ss` when `step` is under 60 seconds). */
 export const LabTimeField = singleField('time')
+/** A local date and time, stored as `YYYY-MM-DDTHH:mm`. */
 export const LabDateTimeField = singleField('datetime')
+/** A range of calendar days, stored as `{ from, to }` dates. */
 export const LabDateRangeField = rangeField('dateRange')
+/** A range of times of day; `allowOvernight` lets the end come before the start. */
 export const LabTimeRangeField = rangeField('timeRange')
+/** A range of local dates and times. */
 export const LabDateTimeRangeField = rangeField('datetimeRange')

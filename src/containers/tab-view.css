@@ -1,0 +1,198 @@
+/* Tab view: kept-alive panels under one floating glass bar. The bar's height is reserved in every
+   scroll area inside (via --lab-scroll-extra-bottom), so content and page docks clear it. */
+.lab-tab-view {
+  --lab-tab-chrome: 64px;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: inherit;
+  corner-shape: inherit;
+  container-type: inline-size;
+  container-name: lab-tab-view;
+  background: var(--lab-surface);
+}
+.lab-tab-panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  border-radius: inherit;
+  --lab-scroll-extra-bottom: calc(var(--lab-tab-chrome) + 12px);
+}
+.lab-tab-panel > * {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+.lab-tab-panel:not([data-active]) {
+  visibility: hidden;
+}
+
+.lab-tab-chrome {
+  position: absolute;
+  z-index: 20;
+  inset-inline: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.lab-tab-chrome > * {
+  pointer-events: auto;
+}
+.lab-tab-chrome[data-minimized] {
+  flex-direction: row;
+  align-items: stretch;
+}
+/* Minimized, the current tab leads and the accessory fills the rest of the row. */
+.lab-tab-chrome[data-minimized] > .lab-tab-bar {
+  order: -1;
+}
+html[data-lab-theme] .lab-tab-accessory.lab-glass-group {
+  display: flex;
+  align-items: center;
+  width: min(100%, 420px);
+  min-height: 52px;
+  padding: 4px 8px;
+  border-radius: calc(26px * var(--lab-radius-scale, 1));
+}
+.lab-tab-chrome[data-minimized] .lab-tab-accessory {
+  flex: 1 1 0%;
+  width: auto;
+  min-width: 0;
+}
+
+html[data-lab-theme] .lab-tab-bar.lab-glass-group {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  max-width: 100%;
+  padding: 4px;
+  border-radius: calc(30px * var(--lab-radius-scale, 1));
+}
+.lab-tab {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 68px;
+  max-width: 120px;
+  height: 52px;
+  margin: 0;
+  padding: 0 10px;
+  overflow: hidden;
+  border: 0;
+  border-radius: calc(26px * var(--lab-radius-scale, 1));
+  background: transparent;
+  color: var(--lab-muted);
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition-property: max-width, min-width, padding, opacity, background-color, color;
+  transition-duration: var(--lab-tab-duration), var(--lab-tab-duration), var(--lab-tab-duration), 160ms,
+    var(--lab-duration-fast), var(--lab-duration-fast);
+  transition-timing-function: var(--lab-tab-ease), var(--lab-tab-ease), var(--lab-tab-ease), ease,
+    var(--lab-ease), var(--lab-ease);
+}
+.lab-tab[data-selected] {
+  background: color-mix(in srgb, var(--lab-primary) 16%, transparent);
+  color: var(--lab-ink);
+}
+@media (hover: hover) {
+  .lab-tab:not([data-selected]):hover {
+    background: var(--lab-control-hover);
+  }
+}
+.lab-tab:active {
+  scale: 0.96;
+}
+.lab-tab:focus-visible {
+  outline: 2px solid var(--lab-focus);
+  outline-offset: -2px;
+}
+.lab-tab-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+}
+.lab-tab-icon > svg {
+  width: 22px;
+  height: 22px;
+}
+.lab-tab-badge {
+  position: absolute;
+  top: -5px;
+  inset-inline-start: 14px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--lab-danger);
+  color: var(--lab-surface);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+}
+.lab-tab-label {
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lab-tab[data-selected] .lab-tab-label {
+  font-weight: 600;
+}
+
+/* Wide: icon and label in one row. */
+@container lab-tab-view (min-width: 600px) {
+  .lab-tab {
+    flex-direction: row;
+    gap: 8px;
+    height: 44px;
+    max-width: 180px;
+    padding: 0 16px;
+  }
+  .lab-tab-label {
+    font-size: 14px;
+  }
+}
+
+/* Minimized: only the selected tab, as a round icon button. */
+.lab-tab-chrome[data-minimized] .lab-tab:not([data-selected]) {
+  min-width: 0;
+  max-width: 0;
+  padding: 0;
+  opacity: 0;
+}
+.lab-tab-chrome[data-minimized] .lab-tab[data-selected] {
+  min-width: 52px;
+  max-width: 52px;
+  padding: 0;
+}
+.lab-tab-chrome[data-minimized] .lab-tab-label {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-tab {
+    transition-duration: 0ms;
+  }
+}
+@media (forced-colors: active) {
+  .lab-tab[data-selected] {
+    outline: 2px solid Highlight;
+  }
+}

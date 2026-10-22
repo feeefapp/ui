@@ -28,8 +28,12 @@ export type { LabScaffoldProps, LabScaffoldState, LabScaffoldSideMode } from './
 export { LabFilterBar } from './filter-bar.js';
 export type { LabFilterBarProps, LabFilterOption, LabFilterValue } from './filter-bar.js';
 export { LabSlider, LabSlideSwitch, LabSlideSwitchIndicator } from './primitives/slider.js';
+export { LabNumberField } from './primitives/number-field.js';
+export type { LabNumberFieldProps } from './primitives/number-field.js';
+export { parseNumberExpression } from './primitives/number-field-core.js';
 export type { LabSliderProps, LabSliderState, LabSliderMark, LabSlideSwitchProps, } from './primitives/slider.js';
-export { LabTemporalFilterEditor } from './filters/temporal-editor.js';
+export { LabTemporalFilterEditor, LabTemporalBody, LabTemporalEdges, LabTemporalPresets, useLabTemporalEditor, type LabTemporalEditorOptions, type LabTemporalEditorState, } from './filters/temporal-editor.js';
+export { LabTemporalDialog } from './filters/temporal-dialog.js';
 export { temporalPresets, validateTemporal } from './filters/temporal.js';
 export type { LabTemporalType, LabTemporalValue, LabTemporalPreset, LabTemporalConfig, } from './filters/temporal.js';
 export { LabCheckbox, LabRadio, LabRadioGroup } from './primitives/choice.js';

@@ -11,13 +11,16 @@ import { LAB_LANGUAGES, labDirectionFor } from './i18n-core.js';
 import { LAB_UI_MESSAGES } from './messages.js';
 import { useLabServices } from './services.js';
 const FALLBACK_LOCALE = 'ar';
+/** Stable default so the context value is not rebuilt on every render. */
+const DEFAULT_LOCALES = LAB_LANGUAGES.map((l) => l.code);
 const LabI18nContext = createContext({
     locale: FALLBACK_LOCALE,
     dir: 'rtl',
-    availableLocales: LAB_LANGUAGES.map((l) => l.code),
+    availableLocales: DEFAULT_LOCALES,
     t: (key) => key,
     setLocale: () => { },
 });
+/** Locale, direction and `t()` for the nearest `LabI18nProvider` (Arabic, RTL, keys as text without one). */
 export const useLabI18n = () => useContext(LabI18nContext);
 /** Append/replace `?hl=<code>` on a path+query URL (mirrors the global provider). */
 export function labLocaleUrl(currentUrl, code) {
@@ -32,8 +35,9 @@ export function labLocaleUrl(currentUrl, code) {
 }
 function makeFormatter(locale) {
     const cache = new Map();
-    return (message, key, params) => {
-        let fmt = cache.get(key);
+    // Keyed by message, not key, so new translations for the same key are never served stale.
+    return (message, params) => {
+        let fmt = cache.get(message);
         if (fmt === undefined) {
             try {
                 fmt = new IntlMessageFormat(message, locale);
@@ -41,7 +45,7 @@ function makeFormatter(locale) {
             catch {
                 fmt = null;
             }
-            cache.set(key, fmt);
+            cache.set(message, fmt);
         }
         if (!fmt)
             return message;
@@ -64,7 +68,7 @@ export function LabI18nProvider({ children, locale: localeProp, dir: dirProp, av
     const locale = localeProp ?? FALLBACK_LOCALE;
     const dir = dirProp ?? labDirectionFor(locale);
     const translations = useMemo(() => ({ ...(LAB_UI_MESSAGES[locale] ?? LAB_UI_MESSAGES.en), ...translationsProp }), [locale, translationsProp]);
-    const availableLocales = availableProp ?? LAB_LANGUAGES.map((l) => l.code);
+    const availableLocales = availableProp ?? DEFAULT_LOCALES;
     const navigate = navigateProp ?? services.navigate;
     const formatterRef = useRef(makeFormatter(locale));
     const lastLocaleRef = useRef(locale);
@@ -90,7 +94,7 @@ export function LabI18nProvider({ children, locale: localeProp, dir: dirProp, av
                     return key;
                 if (!message.includes('{'))
                     return message;
-                return format(message, key, (params ?? {}));
+                return format(message, (params ?? {}));
             },
             setLocale: (code) => {
                 if (!availableLocales.includes(code) || code === locale)
@@ -105,7 +109,10 @@ export function LabI18nProvider({ children, locale: localeProp, dir: dirProp, av
     }, [locale, dir, availableLocales, translations, url, navigate]);
     return _jsx(LabI18nContext.Provider, { value: value, children: children });
 }
-/** Language picker for Lab chrome; lists only server-available locales. */
+/**
+ * Language picker for Lab chrome; lists only server-available locales and renders nothing
+ * when fewer than two are available. Choosing one calls `setLocale`.
+ */
 export function LabLanguageSwitcher({ className, iconOnly = false, }) {
     const { locale, setLocale, availableLocales, t, dir } = useLabI18n();
     const trigger = useRef(null);

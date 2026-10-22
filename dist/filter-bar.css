@@ -152,32 +152,9 @@ html[data-lab-theme] .lab-filter-editor-dialog {
 .lab-filter-demo-results[data-grid='true'] {
   grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
 }
-.lab-temporal-editor {
-  display: grid;
-  gap: 16px;
-}
-.lab-temporal-presets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.lab-temporal-fields {
-  display: grid;
-  gap: 16px;
-  min-width: 0;
-}
-.lab-temporal-editor small {
-  color: var(--lab-muted);
-  font-size: 11px;
-  line-height: 1.5;
-}
 .lab-filter-error {
   color: var(--lab-danger);
   font-size: 12px;
-}
-.lab-filter-value-menu:has(.lab-temporal-editor) {
-  width: min(360px, calc(100vw - 24px));
-  height: min(360px, var(--radix-popover-content-available-height, 360px));
 }
 @media (max-width: 599px) {
   html[data-lab-theme] .lab-dialog.lab-filter-editor-dialog {
@@ -187,15 +164,6 @@ html[data-lab-theme] .lab-filter-editor-dialog {
   }
   .lab-filter-editor-dialog .lab-dock {
     max-width: 100%;
-  }
-}
-
-.lab-temporal-editor {
-  container-type: inline-size;
-}
-@container (min-width:400px) {
-  .lab-temporal-fields[data-range='true'] {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 .lab-temporal-demo-title {

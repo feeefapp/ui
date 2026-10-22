@@ -4,10 +4,13 @@
  * Web port of marchant `tools/ai/widgets/model_ladder_selector.dart`.
  */
 export type LadderStop = {
+    /** Shows a Free or Pro tag. Display only; the owner enforces access. */
     access?: 'free' | 'pro';
+    /** Stable model id sent to the API. */
     modelId: string;
     /** Tier word shown large, e.g. "Fast", "Pro". Replaced by a positional tier when it copies the name or id. */
     label: string;
+    /** Human model name shown under the tier. */
     modelName: string;
     /** Optional one-liner shown in the model list. */
     description?: string | null;

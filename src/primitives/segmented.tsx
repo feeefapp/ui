@@ -4,12 +4,21 @@ import { cn } from '../utils'
 import { revealScrollChild } from '../scroll/reveal'
 import './segmented.css'
 
+/** One choice of a segmented control. */
 export type LabSegmentOption<T extends string> = {
+  /** Value reported to `onChange`. */
   value: T
+  /** Visible text and accessible name. */
   label: string
+  /** Decorative icon before the label. */
   icon?: ReactNode
+  /** Skipped by the keyboard and not clickable. */
   disabled?: boolean
 }
+/**
+ * A single choice among two to five short options, shown side by side. Radio semantics: one Tab
+ * stop, arrow keys move and select.
+ */
 export function LabSegmentedControl<const T extends string>({
   value,
   onChange,
@@ -19,12 +28,19 @@ export function LabSegmentedControl<const T extends string>({
   className,
   appearance = 'grouped',
 }: {
+  /** The selected option's value. */
   value: T
+  /** Called with the chosen value on click and on every arrow, Home or End key press. */
   onChange(value: NoInfer<T>): void
+  /** Choices, in display order. */
   options: readonly LabSegmentOption<T>[]
+  /** Accessible name of the radio group. */
   label: string
+  /** Disables every option. */
   disabled?: boolean
+  /** Class name for the group. */
   className?: string
+  /** `grouped` draws its own glass container; `plain` sits directly on an existing surface. */
   appearance?: 'grouped' | 'plain'
 }) {
   const group = useRef<HTMLDivElement>(null)
@@ -83,8 +99,12 @@ export function LabSegmentedControl<const T extends string>({
           data-state={option.value === value ? 'on' : 'off'}
           onClick={() => onChange(option.value)}
         >
-          {option.icon && <span aria-hidden="true">{option.icon}</span>}
-          {option.label}
+          {option.icon && (
+            <span className="lab-segmented-icon" aria-hidden="true">
+              {option.icon}
+            </span>
+          )}
+          <span className="lab-segmented-label">{option.label}</span>
         </LabButton>
       ))}
     </div>

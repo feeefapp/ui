@@ -5,9 +5,11 @@ from git; never copy kit files into an app or fork them there. App-specific chro
 live in the app and compose these pieces.
 
 Workflow: edit `src/`, add or update tests in `tests/` for pure logic, run `npm run check`,
-then `npm run release -- <patch|minor|major>` and bump consumers. The live examples at
-lab.feeef.org/ui (Lab repo, `inertia/pages/lab/ui.tsx` + `components/lab/docs/`) and the
-Lab README contract must be updated when a public primitive changes.
+then `npm run release -- <patch|minor|major>` and bump consumers. The docs live in this repo
+(`docs/`, `npm run docs`; authoring contract `docs/README.md`): update the component's docs page
+and its examples when a public primitive changes, and JSDoc every public prop (the API tables are
+generated from it). `DESIGN.md` ships with the package and is the short form of the docs'
+Guidelines; keep it in sync when a principle or decision rule changes.
 
 Theming is configuration, not code: apps pass `LabThemeConfig` (palette, density, radius;
 README "Theme config") and the kit CSS reads the resulting tokens. Never hard-code a color,
@@ -35,6 +37,13 @@ modules behind ui.tsx. Use typed props/callbacks for independent widgets, local
 state for local interactions, and context only for inherited/shared dependencies.
 Inject platform dependencies through LabServices; do not access browser storage
 or clipboard in leaf widgets. Keep feature orchestration in feature hooks.
+
+Containers and physics (`src/containers`, `src/physics`): navigation stack, sheet, split view and
+layout transitions share one physics core (analytic springs with velocity, pan recognizer, momentum
+projection, rubber band). Gestures write transform/opacity/clip-path only and track velocity with
+event timestamps; layout changes happen once at rest. Pure geometry lives in `*-model.ts` with tests
+in `tests/physics.test.ts` and `tests/containers.test.ts`. Never hand-roll a drag or a page
+transition in a feature: extend these.
 
 Merchant patterns are normative for new bounded scrolling surfaces: use
 LabScrollArea to fill the nearest closed/bordered container. Float controls in

@@ -5,7 +5,11 @@ import { LabScaffoldProvider } from './scaffold.js';
 import { LabI18nProvider } from './i18n.js';
 import { FO_FONTS_CSS } from './brand/fonts.js';
 import './workspace.css';
-/** Composition root: install context once and keep leaf widgets independent. */
+/**
+ * Composition root: install context once and keep leaf widgets independent.
+ * Renders services → i18n → theme → scaffold (floating layers) and loads the brand fonts.
+ * Mount it once around the whole app.
+ */
 export function LabProvider({ children, services, i18n, initialTheme = 'system', enableCornerFallback = false, theme, }) {
     return (_jsx(LabServicesProvider, { services: services, children: _jsx(LabI18nProvider, { ...i18n, children: _jsx(LabThemeProvider, { initialMode: initialTheme, enableCornerFallback: enableCornerFallback, config: theme, children: _jsxs(LabScaffoldProvider, { children: [_jsx("style", { children: FO_FONTS_CSS }), children] }) }) }) }));
 }

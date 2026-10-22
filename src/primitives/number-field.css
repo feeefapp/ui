@@ -1,0 +1,160 @@
+/* Blender-style number field: label and value inside one control, an optional range fill, steppers
+   that appear on hover/focus. Paint comes from the shared variant recipe (control-variants.css). */
+html[data-lab-theme] .lab-number-field {
+  --lab-number-pad: 14px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+  height: var(--lab-control-height);
+  min-height: var(--lab-control-height);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--lab-variant-edge);
+  border-radius: var(--lab-radius-control);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-variant-fill);
+  box-shadow: var(--lab-variant-shadow);
+  color: var(--lab-variant-ink);
+  font: 400 14px/20px var(--lab-font);
+  cursor: ew-resize;
+  user-select: none;
+  -webkit-user-select: none;
+  /* Vertical swipes still scroll the page; horizontal drags scrub. */
+  touch-action: pan-y;
+  transition:
+    background-color var(--lab-duration-fast) var(--lab-ease),
+    border-color var(--lab-duration-fast) var(--lab-ease);
+}
+html[data-lab-theme] .lab-number-field[data-control-size='compact'] {
+  --lab-number-pad: 12px;
+  height: var(--lab-control-compact);
+  min-height: var(--lab-control-compact);
+  border-radius: var(--lab-radius-control-compact);
+  font-size: 13px;
+}
+@media (hover: hover) {
+  html[data-lab-theme] .lab-number-field:not([data-disabled], [data-editing]):hover {
+    background: var(--lab-variant-hover);
+  }
+}
+html[data-lab-theme] .lab-number-field[data-dragging] {
+  background: var(--lab-variant-pressed);
+  cursor: ew-resize;
+}
+html[data-lab-theme] .lab-number-field:focus-visible,
+html[data-lab-theme] .lab-number-field[data-editing] {
+  border-color: var(--lab-focus);
+  outline: 2px solid var(--lab-focus);
+  outline-offset: 2px;
+}
+html[data-lab-theme] .lab-number-field[data-editing] {
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
+}
+html[data-lab-theme] .lab-number-field[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Range fill, like Blender's slider: a tinted band from the start edge to the value. */
+.lab-number-field-fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: calc(var(--lab-number-fill, 0) * 100%);
+  background: color-mix(in srgb, var(--lab-primary) 32%, transparent);
+  pointer-events: none;
+}
+.lab-number-field[data-editing] .lab-number-field-fill {
+  opacity: 0.35;
+}
+
+.lab-number-field-row {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding-inline: var(--lab-number-pad);
+}
+.lab-number-field-label {
+  overflow: hidden;
+  color: var(--lab-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lab-number-field-value {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.lab-number-field-unit {
+  margin-inline-start: 4px;
+  color: var(--lab-muted);
+  font-weight: 400;
+}
+
+/* Steppers live at the ends and show on hover or keyboard focus; touch keeps them visible. */
+html[data-lab-theme] .lab-number-field > .lab-number-field-stepper.lab-control {
+  position: relative;
+  width: 28px;
+  min-width: 28px;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  border-radius: 0;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity var(--lab-duration-fast) var(--lab-ease);
+}
+html[data-lab-theme] .lab-number-field:is(:hover, :focus-visible) > .lab-number-field-stepper {
+  opacity: 1;
+}
+@media (hover: none) {
+  html[data-lab-theme] .lab-number-field > .lab-number-field-stepper.lab-control {
+    opacity: 1;
+  }
+}
+html[data-lab-theme] .lab-number-field[data-dragging] > .lab-number-field-stepper {
+  opacity: 0;
+}
+/* Without steppers showing, the row keeps its own padding; with them, they provide it. */
+.lab-number-field:has(> .lab-number-field-stepper) .lab-number-field-row {
+  padding-inline: 2px;
+}
+
+.lab-number-field-input {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding-inline: var(--lab-number-pad);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+@media (pointer: coarse) {
+  html[data-lab-theme] .lab-number-field[data-control-size] {
+    height: var(--lab-control-touch-target);
+    min-height: var(--lab-control-touch-target);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-lab-theme] .lab-number-field,
+  html[data-lab-theme] .lab-number-field > .lab-number-field-stepper {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .lab-number-field-fill {
+    background: Highlight;
+    opacity: 0.4;
+  }
+}

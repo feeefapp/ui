@@ -25,7 +25,11 @@
   min-height: 100%;
   padding: calc(var(--lab-scroll-top-reserve) + env(safe-area-inset-top, 0px))
     var(--lab-scroll-padding)
-    calc(var(--lab-scroll-bottom-reserve) + env(safe-area-inset-bottom, 0px));
+    calc(var(--lab-scroll-bottom-reserve) + var(--lab-scroll-extra-bottom, 0px) + env(safe-area-inset-bottom, 0px));
+}
+/* Extra bottom space a host reserves for its own floating chrome (a tab bar); nested areas reset it. */
+.lab-scroll-content > * {
+  --lab-scroll-extra-bottom: 0px;
 }
 .lab-scroll-float {
   position: absolute;
@@ -44,7 +48,7 @@
   top: calc(var(--lab-scroll-gap) + env(safe-area-inset-top, 0px));
 }
 .lab-scroll-float--bottom {
-  bottom: calc(var(--lab-scroll-gap) + env(safe-area-inset-bottom, 0px));
+  bottom: calc(var(--lab-scroll-gap) + var(--lab-scroll-extra-bottom, 0px) + env(safe-area-inset-bottom, 0px));
 }
 .lab-scroll-gradient {
   position: absolute;

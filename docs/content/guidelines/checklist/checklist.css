@@ -1,0 +1,119 @@
+.docs-page .gc-summary {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 16px 20px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-panel);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface);
+}
+.docs-page .gc-summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.docs-page .gc-summary-count {
+  font-size: 17px;
+  font-weight: 600;
+}
+.docs-page .gc-summary-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.docs-page .gc-summary-groups a {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--lab-surface-soft);
+  color: var(--lab-ink);
+  font-size: 13px;
+  text-decoration: none;
+}
+.docs-page .gc-summary-groups a[data-done='true'] {
+  background: var(--lab-control-selected);
+}
+.docs-page .gc-summary-groups a:focus-visible {
+  outline: 2px solid var(--lab-focus);
+  outline-offset: 2px;
+}
+.docs-page .gc-summary-groups span {
+  color: var(--lab-muted);
+}
+
+.docs-page .gc-bar {
+  position: relative;
+  overflow: hidden;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--lab-surface-soft);
+}
+.docs-page .gc-bar > span {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  border-radius: inherit;
+  background: var(--lab-primary);
+  transition: width var(--lab-duration-normal, 200ms) var(--lab-ease, ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .docs-page .gc-bar > span {
+    transition: none;
+  }
+}
+
+.docs-page .gc-group-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 12px;
+  color: var(--lab-muted);
+  font-size: 14px;
+}
+.docs-page .gc-group-progress .gc-bar {
+  flex: 1;
+  max-width: 160px;
+}
+
+.docs-page .gc-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.docs-page .gc-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding: 10px 12px;
+  border-radius: var(--lab-radius-small);
+}
+.docs-page .gc-item:nth-child(odd of .gc-item) {
+  background: var(--lab-surface-soft);
+}
+.docs-page .gc-item > :first-child {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+.docs-page .gc-item-source {
+  flex-shrink: 0;
+  padding-top: 2px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+@media (max-width: 560px) {
+  .docs-page .gc-item-source {
+    padding-inline-start: 40px;
+  }
+}

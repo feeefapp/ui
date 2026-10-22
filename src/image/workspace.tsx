@@ -3,7 +3,14 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { Insets } from './freeform-board'
 import './workspace.css'
 /** Bounded Lab canvas with measured floating chrome and a 12px edge inset. */
-export function LabImageWorkspace({ top, bottom, board }: {top:ReactNode;bottom:ReactNode;board:(insets:Insets)=>ReactNode}) {
+export function LabImageWorkspace({ top, bottom, board }: {
+ /** Floating chrome along the top edge (title, project actions). Measured. */
+ top:ReactNode
+ /** Floating chrome along the bottom edge, usually the prompt composer (max 780px wide). Measured. */
+ bottom:ReactNode
+ /** Renders the canvas behind the chrome; receives the room the chrome takes on each edge. */
+ board:(insets:Insets)=>ReactNode
+}) {
  const header=useRef<HTMLDivElement>(null),composer=useRef<HTMLDivElement>(null)
  const [insets,setInsets]=useState<Insets>({top:80,bottom:120,left:12,right:12})
  useLayoutEffect(()=>{

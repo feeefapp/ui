@@ -7,7 +7,11 @@ import { LabI18nProvider, type LabI18nSource } from './i18n'
 import { FO_FONTS_CSS } from './brand/fonts'
 import './workspace.css'
 
-/** Composition root: install context once and keep leaf widgets independent. */
+/**
+ * Composition root: install context once and keep leaf widgets independent.
+ * Renders services → i18n → theme → scaffold (floating layers) and loads the brand fonts.
+ * Mount it once around the whole app.
+ */
 export function LabProvider({
   children,
   services,
@@ -17,9 +21,11 @@ export function LabProvider({
   theme,
 }: {
   children: ReactNode
+  /** Platform ports to override (navigate, preferences, clipboard, downloads). */
   services?: Partial<LabServices>
   /** Locale, direction, translations and URL from the host app. */
   i18n?: LabI18nSource
+  /** Color mode used until the reader picks one. Default: `system`. */
   initialTheme?: LabThemeMode
   /** Opt in to SVG corners only on browsers without native corner-shape support. */
   enableCornerFallback?: boolean

@@ -9,7 +9,10 @@ import { useLabI18n } from './i18n.js';
 import { cn } from './utils.js';
 import { stepSearchMorph, searchMorphVisibility } from './toolbar-search-motion.js';
 import './toolbar-search.css';
-/** Persistent material, stable control geometry and a velocity-preserving spring. */
+/**
+ * Search button that springs open into a field inside the same glass pill, taking the free width
+ * of its row. Persistent material, stable control geometry and a velocity-preserving spring.
+ */
 export function LabToolbarSearch({ label, value, onValueChange, placeholder, children, trailing, disabled, className, defaultExpanded = false, inputRef, renderInput, onInputKeyDown, onExpandedChange }) {
     const { t } = useLabI18n();
     const id = useId();

@@ -1,11 +1,14 @@
 'use client'
 
 import './calendar.css'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
+import { Keyboard } from 'lucide-react'
 import { LabButton } from '../primitives/button'
+import { useLabI18n } from '../i18n'
 import { LabRawInput } from '../primitives/raw-input'
 import { LabTextField } from '../primitives/text-field'
-import { LabSelect, LabOption } from '../primitives/select'
+import { LabNumberField } from '../primitives/number-field'
+import { LabSegmentedControl } from '../primitives/segmented'
 import { LabCalendarMonth } from './calendar'
 import { calendarDate, parseCalendarDate, chooseRangeDate } from './calendar-model'
 import {
@@ -16,7 +19,11 @@ import {
   type LabTemporalConfig,
   type LabTemporalValue,
 } from './temporal'
-function TimeChoices({
+
+const two = (n: number) => String(n).padStart(2, '0')
+
+/** Hour : minute (: second) as number fields: drag to scrub, type, or use the arrow keys. */
+function TimeInput({
   label,
   value,
   onChange,
@@ -25,133 +32,155 @@ function TimeChoices({
   label: string
   value: string
   onChange: (value: string) => void
+  /** Seconds between allowed values; minutes snap to it, seconds appear below one minute. */
   step?: number
 }) {
-  const [hour = '', minute = '', second = '00'] = value.split(':')
+  const [h = 9, m = 0, s = 0] = (value || '09:00').split(':').map(Number)
   const seconds = step < 60
-  const update = (h: string, m: string, s: string) =>
-    onChange(`${h || '00'}:${m || '00'}${seconds ? `:${s || '00'}` : ''}`)
+  const minuteStep = seconds ? 1 : Math.max(1, Math.min(30, Math.round(step / 60)))
+  const set = (hour: number, minute: number, second: number) =>
+    onChange(`${two(hour)}:${two(minute)}${seconds ? `:${two(second)}` : ''}`)
   return (
-    <div className="lab-time-choices" role="group" aria-label={label}>
-      <LabSelect
-        hint={`${label} hour`}
-        controlSize="compact"
-        value={hour || null}
-        onValueChange={(h) => update(h, minute, second)}
-      >
-        {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map((h) => (
-          <LabOption key={h} value={h}>
-            {h}
-          </LabOption>
-        ))}
-      </LabSelect>
-      <LabSelect
-        hint={`${label} minute`}
-        controlSize="compact"
-        value={minute || null}
-        onValueChange={(m) => update(hour, m, second)}
-      >
-        {Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0')).map((m) => (
-          <LabOption key={m} value={m}>
-            {m}
-          </LabOption>
-        ))}
-      </LabSelect>
-      {seconds && (
-        <LabSelect
-          hint={`${label} second`}
+    <div className="lab-time-input" role="group" aria-label={label}>
+      <span className="lab-time-input-label" aria-hidden="true">
+        {label}
+      </span>
+      <div className="lab-time-input-fields" dir="ltr">
+        <LabNumberField
+          label="Hour"
           controlSize="compact"
-          value={second}
-          onValueChange={(s) => update(hour, minute, s)}
-        >
-          {Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0')).map((s) => (
-            <LabOption key={s} value={s}>
-              {s}
-            </LabOption>
-          ))}
-        </LabSelect>
-      )}
+          min={0}
+          max={23}
+          value={h}
+          steppers={false}
+          format={two}
+          onValueChange={(hour) => set(hour, m, s)}
+        />
+        <span className="lab-time-input-colon" aria-hidden="true">
+          :
+        </span>
+        <LabNumberField
+          label="Minute"
+          controlSize="compact"
+          min={0}
+          max={60 - minuteStep}
+          step={minuteStep}
+          value={m}
+          steppers={false}
+          format={two}
+          onValueChange={(minute) => set(h, minute, s)}
+        />
+        {seconds && (
+          <>
+            <span className="lab-time-input-colon" aria-hidden="true">
+              :
+            </span>
+            <LabNumberField
+              label="Second"
+              controlSize="compact"
+              min={0}
+              max={59}
+              step={Math.max(1, step)}
+              value={s}
+              steppers={false}
+              format={two}
+              onValueChange={(second) => set(h, m, second)}
+            />
+          </>
+        )}
+      </div>
     </div>
   )
 }
-export function LabTemporalFilterEditor({
+
+
+export type LabTemporalEditorOptions = {
+  /** Type, bounds, step and presets. Presets that fail `validateTemporal` are hidden. */
+  config: LabTemporalConfig
+  /** Current draft value. */
+  value: LabTemporalValue
+  /** Called on every pick, preset or edit. Nothing is validated or committed for you. */
+  onChange: (value: LabTemporalValue) => void
+  /**
+   * Called when a choice is complete on its own: a day in a date picker, or a preset. Hosts can
+   * commit right away instead of waiting for Apply (LabDateField does).
+   */
+  onPick?: (value: LabTemporalValue) => void
+  /** BCP 47 locale for month, weekday and endpoint names. Defaults to the kit's i18n locale. */
+  locale?: string
+  /** Changing it resets the visible month, the active end and typed entry (e.g. on every open). */
+  resetKey?: unknown
+}
+export type LabTemporalEditorState = ReturnType<typeof useLabTemporalEditor>
+
+/**
+ * The picker's state, for hosts that place its parts apart: a dialog floats `LabTemporalPresets`
+ * and `LabTemporalEdges` in its top bar and scrolls `LabTemporalBody`.
+ */
+export function useLabTemporalEditor({
   config,
   value,
   onChange,
-}: {
-  config: LabTemporalConfig
-  value: LabTemporalValue
-  onChange: (value: LabTemporalValue) => void
-}) {
+  onPick,
+  locale: localeProp,
+  resetKey,
+}: LabTemporalEditorOptions) {
+  const i18n = useLabI18n()
+  const locale = localeProp ?? i18n.locale
   const type = temporalInputType(config.type),
     range = isTemporalRange(config.type),
     hasCalendar = type !== 'time',
     hasTime = type !== 'date'
   const from = typeof value === 'string' ? value : value?.from || '',
     to = value && typeof value === 'object' ? value.to : ''
-  const [edge, setEdge] = useState<'from' | 'to'>('from')
-  const [month, setMonth] = useState(() => {
-    let initial = (hasCalendar && from ? from : calendarDate(new Date())).slice(0, 7)
-    if (hasCalendar && config.min && initial < config.min.slice(0, 7))
-      initial = config.min.slice(0, 7)
-    if (hasCalendar && config.max && initial > config.max.slice(0, 7))
-      initial = config.max.slice(0, 7)
-    return initial
-  })
+  const initialEdge = (): 'from' | 'to' => (range && from && !to ? 'to' : 'from')
+  const initialMonth = () => {
+    let month = (hasCalendar && from ? from : calendarDate(new Date())).slice(0, 7)
+    if (hasCalendar && config.min && month < config.min.slice(0, 7)) month = config.min.slice(0, 7)
+    if (hasCalendar && config.max && month > config.max.slice(0, 7)) month = config.max.slice(0, 7)
+    return month
+  }
+  const [edge, setEdge] = useState(initialEdge)
+  const [month, setMonth] = useState(initialMonth)
   const [manual, setManual] = useState(false)
+  const [seenKey, setSeenKey] = useState(resetKey)
+  if (seenKey !== resetKey) {
+    setSeenKey(resetKey)
+    setEdge(initialEdge())
+    setMonth(initialMonth())
+    setManual(false)
+  }
   const presets = (config.presets ?? temporalPresets(config.type)).filter(
     (p) => !validateTemporal(config, p.value)
   )
-  const commit = (next: LabTemporalValue) => {
+  const dayOnly = (text: string) => text.slice(0, 10)
+
+  const choosePreset = (next: LabTemporalValue) => {
     onChange(next)
     setEdge('from')
     const start = typeof next === 'string' ? next : next?.from
     if (start && hasCalendar) setMonth(start.slice(0, 7))
+    onPick?.(next)
   }
   const setPart = (part: 'from' | 'to', next: string) =>
-    onChange(
-      range ? { from: part === 'from' ? next : from, to: part === 'to' ? next : to } : next || null
-    )
-  const dayOnly = (text: string) => text.slice(0, 10)
+    onChange(range ? { from: part === 'from' ? next : from, to: part === 'to' ? next : to } : next || null)
   const pickDay = (day: string) => {
     if (!range) {
-      onChange(type === 'datetime-local' ? `${day}T${from.split('T')[1] || '09:00'}` : day)
+      const next = type === 'datetime-local' ? `${day}T${from.split('T')[1] || '09:00'}` : day
+      onChange(next)
+      if (type === 'date') onPick?.(next)
       return
     }
     const next = chooseRangeDate({ from: dayOnly(from), to: dayOnly(to) }, day, edge)
-    onChange({
-      from: next.value.from
-        ? type === 'datetime-local'
-          ? `${next.value.from}T${from.split('T')[1] || '00:00'}`
-          : next.value.from
-        : '',
-      to: next.value.to
-        ? type === 'datetime-local'
-          ? `${next.value.to}T${to.split('T')[1] || '23:59'}`
-          : next.value.to
-        : '',
-    })
+    const withTime = (d: string, existing: string, fallback: string) =>
+      d && type === 'datetime-local' ? `${d}T${existing.split('T')[1] || fallback}` : d
+    onChange({ from: withTime(next.value.from, from, '00:00'), to: withTime(next.value.to, to, '23:59') })
     setEdge(next.edge)
   }
-  const nice = (text: string) => {
-    if (!text) return 'Choose'
-    if (!hasCalendar) return text
-    return new Intl.DateTimeFormat(undefined, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    }).format(parseCalendarDate(text))
-  }
-  const nextMonth = () => {
-    const d = parseCalendarDate(`${month}-01`)
-    d.setMonth(d.getMonth() + 1)
-    return calendarDate(d).slice(0, 7)
-  }
-  const shiftSecond = (next: string) => {
-    const d = parseCalendarDate(`${next}-01`)
-    d.setMonth(d.getMonth() - 1)
-    setMonth(calendarDate(d).slice(0, 7))
-  }
+  const endpointText = (text: string) =>
+    text && hasCalendar
+      ? new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(parseCalendarDate(text))
+      : text || 'Any'
   const setTime = (part: 'from' | 'to', time: string) => {
     const original = part === 'from' ? from : to
     setPart(
@@ -159,20 +188,106 @@ export function LabTemporalFilterEditor({
       type === 'datetime-local' ? `${dayOnly(original) || calendarDate(new Date())}T${time}` : time
     )
   }
-  const field = (part: 'from' | 'to' | 'date') => (
-    <LabTextField
-      key={part}
-      type={type}
-      hint={part === 'date' ? 'Exact value' : part === 'from' ? 'Exact start' : 'Exact end'}
-      value={part === 'to' ? to : from}
-      min={config.min}
-      max={config.max}
-      step={config.step}
-      onInput={(event) => setPart(part === 'to' ? 'to' : 'from', event.currentTarget.value)}
+  return {
+    config,
+    value,
+    locale,
+    type,
+    range,
+    hasCalendar,
+    hasTime,
+    from,
+    to,
+    edge,
+    setEdge,
+    month,
+    setMonth,
+    manual,
+    setManual,
+    presets,
+    dayOnly,
+    choosePreset,
+    setPart,
+    pickDay,
+    endpointText,
+    setTime,
+    presetActive: (p: { value: LabTemporalValue }) => JSON.stringify(value) === JSON.stringify(p.value),
+  }
+}
+
+/**
+ * Quick choices. `list` is a wrapping block of chips (popovers, menus); `bar` is one scrolling row
+ * of toolbar buttons, meant to sit inside a glass group (dialog top bars).
+ */
+export function LabTemporalPresets({
+  editor,
+  layout = 'list',
+}: {
+  editor: LabTemporalEditorState
+  layout?: 'list' | 'bar'
+}) {
+  if (!editor.presets.length) return null
+  return (
+    <div className="lab-temporal-presets" data-layout={layout} role="group" aria-label="Quick choices">
+      {editor.presets.map((p) => (
+        <LabButton
+          key={p.label}
+          variant={editor.presetActive(p) ? 'tonal' : 'text'}
+          appearance={layout === 'bar' ? 'toolbar' : 'default'}
+          controlSize="compact"
+          aria-pressed={editor.presetActive(p)}
+          onClick={() => editor.choosePreset(p.value)}
+        >
+          {p.label}
+        </LabButton>
+      ))}
+    </div>
+  )
+}
+
+/** The start/end switch of a date range; each side shows its chosen day. Nothing for other types. */
+export function LabTemporalEdges({
+  editor,
+  appearance,
+}: {
+  editor: LabTemporalEditorState
+  /** `plain` when it sits inside a glass group of its own. */
+  appearance?: 'plain'
+}) {
+  if (!editor.range || !editor.hasCalendar) return null
+  return (
+    <LabSegmentedControl<'from' | 'to'>
+      label="Which end you are choosing"
+      className="lab-temporal-edges"
+      appearance={appearance}
+      value={editor.edge}
+      onChange={editor.setEdge}
+      options={[
+        { value: 'from', label: `Start · ${editor.endpointText(editor.dayOnly(editor.from))}` },
+        { value: 'to', label: `End · ${editor.endpointText(editor.dayOnly(editor.to))}` },
+      ]}
     />
   )
+}
+
+/**
+ * Calendars, times and typed entry, plus the hidden `date` or `from`/`to` inputs that
+ * `readTemporalForm` reads back.
+ */
+export function LabTemporalBody({ editor, footer }: { editor: LabTemporalEditorState; footer?: ReactNode }) {
+  const { config, range, hasCalendar, hasTime, type, from, to, month, setMonth, locale, dayOnly } = editor
+  const nextMonth = () => {
+    const d = parseCalendarDate(`${month}-01`)
+    d.setMonth(d.getMonth() + 1)
+    return calendarDate(d).slice(0, 7)
+  }
+  const shiftFromSecond = (next: string) => {
+    const d = parseCalendarDate(`${next}-01`)
+    d.setMonth(d.getMonth() - 1)
+    setMonth(calendarDate(d).slice(0, 7))
+  }
   return (
-    <div className="lab-temporal-editor" data-calendar={hasCalendar}>
+    <div className="lab-temporal-main" data-range={range}>
       {range ? (
         <>
           <LabRawInput type="hidden" hidden name="from" value={from} />
@@ -181,144 +296,125 @@ export function LabTemporalFilterEditor({
       ) : (
         <LabRawInput type="hidden" hidden name="date" value={from} />
       )}
-      <div className="lab-temporal-selection-layout">
-        {!!presets.length && (
-          <div className="lab-temporal-presets-mobile">
-            <LabSelect
-              hint="Quick selection"
-              value={
-                presets.find((p) => JSON.stringify(p.value) === JSON.stringify(value))?.label ||
-                null
-              }
-              placeholder="Custom selection"
-              onValueChange={(label) => {
-                const preset = presets.find((p) => p.label === label)
-                if (preset) commit(preset.value)
-              }}
-            >
-              {presets.map((p) => (
-                <LabOption key={p.label} value={p.label}>
-                  {p.label}
-                </LabOption>
-              ))}
-            </LabSelect>
-          </div>
-        )}
-        {!!presets.length && (
-          <div className="lab-temporal-presets" role="group" aria-label="Quick presets">
-            {presets.map((p) => (
-              <LabButton
-                key={p.label}
-                variant="text"
-                controlSize="compact"
-                aria-pressed={JSON.stringify(value) === JSON.stringify(p.value)}
-                onClick={() => commit(p.value)}
-              >
-                {p.label}
-              </LabButton>
-            ))}
-          </div>
-        )}
-        <div className="lab-temporal-selection-main">
+
+      {hasCalendar && (
+        <div className="lab-calendar-pair" data-pair={range || undefined}>
+          <LabCalendarMonth
+            label={range ? 'First month' : 'Calendar'}
+            month={month}
+            onMonthChange={setMonth}
+            from={dayOnly(from)}
+            to={dayOnly(to)}
+            min={config.min}
+            max={config.max}
+            onSelect={editor.pickDay}
+            locale={locale}
+            navigation="both"
+          />
           {range && (
-            <div className="lab-temporal-range-summary" role="group" aria-label="Range endpoints">
-              <LabButton
-                variant={edge === 'from' ? 'tonal' : 'outlined'}
-                controlSize="compact"
-                aria-pressed={edge === 'from'}
-                onClick={() => setEdge('from')}
-              >
-                From · {nice(from)}
-              </LabButton>
-              <LabButton
-                variant={edge === 'to' ? 'tonal' : 'outlined'}
-                controlSize="compact"
-                aria-pressed={edge === 'to'}
-                onClick={() => setEdge('to')}
-              >
-                To · {nice(to)}
-              </LabButton>
-            </div>
-          )}
-          {hasCalendar && (
-            <div className="lab-calendar-pair">
+            <div className="lab-calendar-second">
               <LabCalendarMonth
-                label="Start calendar"
-                month={month}
-                onMonthChange={setMonth}
+                label="Second month"
+                month={nextMonth()}
+                onMonthChange={shiftFromSecond}
                 from={dayOnly(from)}
                 to={dayOnly(to)}
                 min={config.min}
                 max={config.max}
-                onSelect={pickDay}
+                onSelect={editor.pickDay}
+                locale={locale}
+                navigation="next"
               />
-              <div className="lab-calendar-second">
-                <LabCalendarMonth
-                  label="Next calendar"
-                  month={nextMonth()}
-                  onMonthChange={shiftSecond}
-                  from={dayOnly(from)}
-                  to={dayOnly(to)}
-                  min={config.min}
-                  max={config.max}
-                  onSelect={pickDay}
-                />
-              </div>
-            </div>
-          )}
-          {hasTime && (
-            <div className="lab-temporal-time-row">
-              <TimeChoices
-                label={range ? 'Start time' : 'Time'}
-                value={hasCalendar ? from.split('T')[1] || '' : from}
-                step={config.step}
-                onChange={(time) => setTime('from', time)}
-              />
-              {range && (
-                <TimeChoices
-                  label="End time"
-                  value={hasCalendar ? to.split('T')[1] || '' : to}
-                  step={config.step}
-                  onChange={(time) => setTime('to', time)}
-                />
-              )}
-            </div>
-          )}
-          {range && (
-            <p role="status" className="lab-temporal-hint">
-              {hasCalendar
-                ? from && to
-                  ? 'Range selected. Choose another start date to change it.'
-                  : edge === 'to'
-                    ? 'Choose an end date.'
-                    : 'Choose a start date.'
-                : 'Choose the start and end times.'}{' '}
-              {config.allowOvernight
-                ? 'Ranges may continue into the next day.'
-                : 'Either end can be left open.'}
-            </p>
-          )}
-          <LabButton
-            variant="text"
-            controlSize="compact"
-            aria-expanded={manual}
-            onClick={() => setManual(!manual)}
-          >
-            {manual ? 'Hide manual entry' : 'Enter exact values'}
-          </LabButton>
-          {manual && (
-            <div className="lab-temporal-fields" data-range={range}>
-              {range ? (
-                <>
-                  {field('from')}
-                  {field('to')}
-                </>
-              ) : (
-                field('date')
-              )}
             </div>
           )}
         </div>
+      )}
+
+      {hasTime && (
+        <div className="lab-temporal-times">
+          <TimeInput
+            label={range ? 'Start time' : 'Time'}
+            value={hasCalendar ? from.split('T')[1] || '' : from}
+            step={config.step}
+            onChange={(time) => editor.setTime('from', time)}
+          />
+          {range && (
+            <TimeInput
+              label="End time"
+              value={hasCalendar ? to.split('T')[1] || '' : to}
+              step={config.step}
+              onChange={(time) => editor.setTime('to', time)}
+            />
+          )}
+          {range && config.allowOvernight && (
+            <p className="lab-temporal-note">An end time before the start time continues into the next day.</p>
+          )}
+        </div>
+      )}
+
+      <div className="lab-temporal-footer">
+        <LabButton
+          variant="text"
+          controlSize="compact"
+          className="lab-temporal-manual-toggle"
+          aria-expanded={editor.manual}
+          onClick={() => editor.setManual(!editor.manual)}
+        >
+          <Keyboard size={16} />
+          {editor.manual
+            ? 'Hide typed entry'
+            : range
+              ? hasCalendar
+                ? 'Type the dates'
+                : 'Type the times'
+              : hasCalendar
+                ? 'Type a date'
+                : 'Type a time'}
+        </LabButton>
+        {footer}
+      </div>
+      {editor.manual && (
+        <div className="lab-temporal-fields" data-range={range}>
+          {(range ? (['from', 'to'] as const) : (['date'] as const)).map((part) => (
+            <LabTextField
+              key={part}
+              type={type}
+              controlSize="compact"
+              hint={part === 'date' ? (hasCalendar ? 'Date' : 'Time') : part === 'from' ? 'Start' : 'End'}
+              value={part === 'to' ? to : from}
+              min={config.min}
+              max={config.max}
+              step={config.step}
+              onInput={(event) => editor.setPart(part === 'to' ? 'to' : 'from', event.currentTarget.value)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * The picker body without a trigger, all parts in one column: presets as chips, a start/end switch
+ * for ranges, one or two calendars, number-field times and optional typed entry. Controlled; place
+ * it in your own form or popover. In a dialog, use `LabTemporalDialog`, which floats the presets
+ * and the switch in its top bar. It writes hidden `date` (single) or `from`/`to` (range) inputs
+ * that `readTemporalForm` reads back.
+ */
+export function LabTemporalFilterEditor({
+  footer,
+  ...options
+}: LabTemporalEditorOptions & {
+  /** Shown at the end of the typed-entry row, e.g. a popover's own actions. */
+  footer?: ReactNode
+}) {
+  const editor = useLabTemporalEditor(options)
+  return (
+    <div className="lab-temporal-editor" data-calendar={editor.hasCalendar} data-range={editor.range}>
+      <div className="lab-temporal-layout">
+        <LabTemporalPresets editor={editor} />
+        <LabTemporalEdges editor={editor} />
+        <LabTemporalBody editor={editor} footer={footer} />
       </div>
     </div>
   )

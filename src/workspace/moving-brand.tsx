@@ -7,7 +7,12 @@ import { useLabScaffold } from './scaffold'
 import './moving-brand.css'
 
 /** One persistent visual follows the real, accessible logo links as navigation changes. */
-export function LabMovingBrand({ host }: { host: RefObject<HTMLElement | null> }) {
+export function LabMovingBrand({
+  host,
+}: {
+  /** Element containing the `[data-tool-brand-anchor="side"|"header"]` logo anchors to follow. */
+  host: RefObject<HTMLElement | null>
+}) {
   const state = useLabScaffold()
   const visual = useRef<HTMLDivElement>(null)
   const [portal, setPortal] = useState<HTMLDialogElement | null>(null)

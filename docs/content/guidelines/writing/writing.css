@@ -1,0 +1,105 @@
+/* A dialog drawn in place, so a comparison can show its words without opening it. */
+.docs-page .gw-dialog {
+  display: grid;
+  gap: 8px;
+  width: min(100%, 340px);
+  padding: 18px 18px 12px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-panel);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface);
+  box-shadow: var(--lab-glass-shadow);
+}
+.docs-page .gw-dialog h4 {
+  margin: 0;
+  font-size: 16px;
+}
+.docs-page .gw-dialog p {
+  margin: 0;
+  color: var(--lab-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.docs-page .gw-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* An empty list state. */
+.docs-page .gw-empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: min(100%, 320px);
+  text-align: center;
+}
+.docs-page .gw-empty h4 {
+  margin: 0;
+  font-size: 16px;
+}
+.docs-page .gw-empty p {
+  margin: 0;
+  color: var(--lab-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.docs-page .gw-empty-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: var(--lab-control-selected);
+  color: var(--lab-ink);
+}
+
+/* Rendered strings: one per line, with the language marked. */
+.docs-page .gw-lines {
+  display: grid;
+  gap: 6px;
+  width: min(100%, 320px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 15px;
+}
+.docs-page .gw-lines li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 10px;
+  border-radius: var(--lab-radius-small);
+  background: var(--lab-surface-soft);
+}
+.docs-page .gw-lines small {
+  flex-shrink: 0;
+  color: var(--lab-muted);
+  font-size: 12px;
+}
+.docs-page .gw-rtl {
+  width: min(100%, 320px);
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--lab-radius-small);
+  background: var(--lab-surface-soft);
+  font-size: 17px;
+  line-height: 1.6;
+}
+.docs-page .gw-caption {
+  margin: 0;
+  color: var(--lab-muted);
+  font-size: 13px;
+}
+.docs-page .gw-stack {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.docs-page .gw-lines li {
+  max-width: none;
+}

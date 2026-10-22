@@ -13,7 +13,9 @@ export function LabActionsWidthProvider({
   value,
   children,
 }: {
+  /** Available width for the actions slot, in pixels. `undefined` lets each bar measure its own host. */
   value: number | undefined
+  /** Content containing one or more `LabActionsBar`s. */
   children: ReactNode
 }) {
   return <LabActionsWidthContext.Provider value={value}>{children}</LabActionsWidthContext.Provider>

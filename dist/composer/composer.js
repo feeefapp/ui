@@ -10,6 +10,7 @@ export { useComposerLayout } from './use-composer-layout.js';
 export const LabComposerCard = React.forwardRef(function LabComposerCard({ expanded, layoutRef, layoutClassName, above, children, className, ...props }, ref) {
     return _jsxs("div", { ...props, ref: ref, className: cn('lab-pc-card lab-light-edge', className), "data-expanded": expanded, children: [above, _jsx("div", { ref: layoutRef, className: cn('lab-pc-layout', layoutClassName), children: children })] });
 });
+/** Placeholder that fades in word by word. Decorative (`aria-hidden`); label the field separately. */
 export function LabComposerHint({ text }) {
     return _jsx("span", { className: "lab-pc-hint", "aria-hidden": "true", children: text.split(/(\s+)/).map((word, index) => /\s+/.test(word) ? word : _jsx("span", { style: { animationDelay: `${Math.min(index, 40) * 28}ms` }, children: word }, index)) }, text);
 }

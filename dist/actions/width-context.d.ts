@@ -5,7 +5,9 @@ import { type ReactNode } from 'react';
  * width of the currently visible actions. Undefined uses the bar's own host.
  */
 export declare function LabActionsWidthProvider({ value, children, }: {
+    /** Available width for the actions slot, in pixels. `undefined` lets each bar measure its own host. */
     value: number | undefined;
+    /** Content containing one or more `LabActionsBar`s. */
     children: ReactNode;
 }): import("react").JSX.Element;
 export declare function useLabActionsWidth(): number | undefined;

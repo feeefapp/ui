@@ -1,0 +1,276 @@
+/* Docs blocks on the kit's materials: content on opaque surfaces with the kit's panel radius and
+   superellipse corners; tools float together in the kit's glass groups; long content scrolls in
+   LabScrollArea with its washes. Tokens only, so Customize (palette, radius, mode) reshapes them. */
+
+.docs-surface,
+.docs-code,
+.docs-example-card,
+.docs-playground,
+.docs-table-wrap,
+.docs-card,
+.docs-callout,
+.docs-dodont > div,
+.docs-hero-demo,
+.docs-feature {
+  corner-shape: superellipse(1.5);
+}
+
+/* ---------- Code box ---------- */
+.docs-code {
+  --docs-code-line: 21.45px;
+  position: relative;
+  margin: 0;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-panel);
+  background: var(--lab-surface);
+  /* Washes under the floating tools fade into the same surface. */
+  --lab-scroll-surface: var(--lab-surface);
+}
+.docs-code[data-layout='box'] {
+  /* Bounded height for LabScrollArea: the rows shown plus the floating toolbar's reservation. */
+  height: calc(var(--docs-code-rows) * var(--docs-code-line) + 92px);
+  overflow: hidden;
+}
+.docs-code[data-layout='box'] .lab-scroll-area {
+  height: 100%;
+}
+.docs-code-label {
+  padding-inline: 10px;
+  color: var(--lab-muted);
+  font: 500 12px/1 var(--lab-font);
+  text-transform: lowercase;
+  white-space: nowrap;
+}
+.docs-code-body {
+  overflow-x: auto;
+  text-align: left;
+  scrollbar-width: thin;
+}
+.docs-code-body pre {
+  width: max-content;
+  min-width: 100%;
+  margin: 0;
+  padding: 2px 0 6px;
+  background: transparent !important;
+  font: 13px/var(--docs-code-line) var(--docs-mono);
+  tab-size: 2;
+}
+.docs-code .shiki span {
+  color: var(--shiki-light);
+}
+html[data-lab-theme='dark'] .docs-code .shiki span {
+  color: var(--shiki-dark);
+}
+/* One- and two-line snippets: one row, copy bubble at the end. */
+.docs-code[data-layout='inline'] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+  padding: 6px 6px 6px 16px;
+}
+.docs-code[data-layout='inline'] .docs-code-body {
+  flex: 1;
+  min-width: 0;
+}
+.docs-code[data-layout='inline'] .docs-code-body pre {
+  padding: 8px 0;
+}
+.docs-code-inline-tools {
+  flex-shrink: 0;
+}
+
+/* ---------- Example card ---------- */
+.docs-example-card {
+  overflow: hidden;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-glass);
+  background: var(--lab-surface);
+}
+.docs-example-card > .docs-stage {
+  border-radius: 0;
+}
+.docs-example-bar {
+  padding: 8px;
+  border-top: 1px solid var(--lab-line);
+}
+.docs-example-card > .docs-code {
+  border: 0;
+  border-top: 1px solid var(--lab-line);
+  border-radius: 0;
+}
+
+/* ---------- Playground ---------- */
+.docs-playground {
+  overflow: hidden;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-glass);
+  background: var(--lab-surface);
+}
+.docs-playground > .docs-code {
+  border: 0;
+  border-top: 1px solid var(--lab-line);
+  border-radius: 0;
+}
+.docs-playground-controls-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.docs-playground-controls-head strong {
+  padding-inline: 4px;
+  font-size: 13px;
+}
+
+/* ---------- Other surfaces take the kit radii ---------- */
+.docs-table-wrap {
+  border-radius: var(--lab-radius-panel);
+  background: var(--lab-surface);
+}
+.docs-card {
+  border-radius: var(--lab-radius-panel);
+  background: var(--lab-surface);
+}
+.docs-callout,
+.docs-dodont > div {
+  border-radius: var(--lab-radius-panel);
+}
+
+/* ---------- Search: back bubble + field bubble floating over a scrolling result list ---------- */
+html[data-lab-theme] .lab-dialog.docs-search {
+  width: 640px;
+  margin-block-start: min(12dvh, 96px);
+}
+html[data-lab-theme] .lab-dialog.docs-search.lab-dialog--fit-content {
+  height: min(var(--lab-modal-content-height, 240px), 70dvh);
+}
+.docs-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.docs-search-field {
+  flex: 1;
+  min-width: 0;
+}
+html[data-lab-theme] .docs-search-field.lab-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-inline-start: 14px;
+}
+.docs-search-glyph {
+  flex-shrink: 0;
+  color: var(--lab-muted);
+}
+.docs-search-field .lab-raw-editor {
+  flex: 1;
+  min-width: 0;
+  height: var(--lab-control-compact);
+  font-size: 15px;
+}
+.docs-search-field .lab-raw-editor:focus-visible {
+  outline: none;
+}
+.docs-search-field:has(.lab-raw-editor:focus-visible) {
+  outline: 2px solid var(--lab-focus);
+  outline-offset: 2px;
+}
+.docs-search-results {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.docs-search-results li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--lab-control-height);
+  padding: 8px 12px;
+  border-radius: var(--lab-radius-control);
+  corner-shape: superellipse(1.5);
+  cursor: pointer;
+}
+.docs-search-results li > svg:first-child {
+  flex-shrink: 0;
+  color: var(--lab-muted);
+}
+.docs-search-results li[aria-selected='true'] {
+  background: var(--lab-control-selected);
+}
+.docs-search-results li > span {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.docs-search-results strong {
+  font-weight: 500;
+}
+.docs-search-results small {
+  overflow: hidden;
+  color: var(--lab-muted);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.docs-search-empty {
+  color: var(--lab-muted);
+  cursor: default !important;
+}
+
+/* ---------- Customize panel ---------- */
+.docs-customize-row {
+  display: grid;
+  gap: 6px;
+}
+.docs-customize-row > span {
+  padding-inline: 4px;
+  color: var(--lab-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.docs-customize-row .lab-segmented {
+  width: 100%;
+}
+.docs-customize-row .lab-segmented > .lab-segmented-option {
+  flex: 1;
+}
+.docs-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+html[data-lab-theme] .docs-swatch.lab-control {
+  border-radius: 999px;
+}
+.docs-swatch-dot {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lab-ink) 18%, transparent);
+  color: #fff;
+}
+.docs-swatch-dot[data-default] {
+  background: linear-gradient(135deg, #72ce5d 50%, #0a0a0a 50%);
+}
+.docs-swatch-dot[data-custom]:not([style]) {
+  background: var(--lab-surface-soft);
+  color: var(--lab-ink);
+}
+.docs-swatch[aria-pressed='true'] .docs-swatch-dot {
+  outline: 2px solid var(--lab-ink);
+  outline-offset: 2px;
+}
+.docs-swatch-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}

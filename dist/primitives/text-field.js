@@ -4,6 +4,10 @@ import * as React from 'react';
 import { cn } from '../utils.js';
 import { LabRawInput } from './raw-input.js';
 import { LabFieldShell } from './field-shell.js';
+/**
+ * A labelled text input: native `<input>` or growing `<textarea>` inside the field frame, with a
+ * floating hint, icons, affixes, supporting text, validation and an optional counter.
+ */
 export const LabTextField = React.forwardRef(({ label, hint, controlSize = 'regular', variant = 'outlined', labelStyle = 'outlined', leadingIcon, leading, trailing, supportingText, error, showCounter = false, containerClassName, className, 'id': suppliedId, onValidationChange, onValueChange, 'aria-describedby': describedBy, ...props }, ref) => {
     const [validationError, setValidationError] = React.useState(null);
     const [length, setLength] = React.useState(String(props.value ?? props.defaultValue ?? '').length);

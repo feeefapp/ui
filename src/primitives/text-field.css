@@ -4,6 +4,8 @@
   --lab-text-field-padding-bottom: 5px;
   --lab-text-field-label-top: 12px;
   --lab-text-field-float-top: 4px;
+  --lab-text-field-font: 16px;
+  --lab-text-field-line: 20px;
   --lab-text-field-radius: var(--lab-radius-control);
   --lab-field-inset-start: 12px;
   --lab-field-inset-end: 12px;
@@ -43,7 +45,7 @@ html[data-lab-theme] .lab-text-field :is(.lab-raw-input, .lab-field-select-contr
   background: var(--lab-variant-fill, var(--lab-surface));
   color: var(--lab-variant-ink, var(--lab-ink));
   caret-color: var(--lab-focus);
-  font: 400 16px/20px var(--lab-font);
+  font: 400 var(--lab-text-field-font) / var(--lab-text-field-line) var(--lab-font);
   box-shadow: var(--lab-variant-shadow, none);
   transition:
     border-color 140ms,
@@ -182,15 +184,12 @@ html[data-lab-theme]
   --lab-text-field-float-top: 3px;
   --lab-text-field-radius: var(--lab-radius-control-compact);
 }
-.lab-text-field[data-label-style='outlined'],
-.lab-text-field:not([data-has-label='true']) {
-  --lab-text-field-padding-top: 11px;
-  --lab-text-field-padding-bottom: 11px;
-}
-.lab-text-field[data-label-style='outlined'][data-control-size='compact'],
-.lab-text-field:not([data-has-label='true'])[data-control-size='compact'] {
-  --lab-text-field-padding-top: 9px;
-  --lab-text-field-padding-bottom: 9px;
+/* Outlined (border) labels and label-less fields center the value: the padding follows the field
+height, so every size and density fits (44 → 11px, 40 → 9px, 28 → 4px). */
+.lab-text-field[data-label-style='outlined'][data-control-size],
+.lab-text-field:not([data-has-label='true'])[data-control-size] {
+  --lab-text-field-padding-top: max(0px, calc((var(--lab-text-field-height) - var(--lab-text-field-line) - 2px) / 2));
+  --lab-text-field-padding-bottom: var(--lab-text-field-padding-top);
 }
 .lab-text-field[data-label-style='outlined'] .lab-text-field-label {
   inset-inline-start: calc(var(--lab-field-inset-start) - 4px);
@@ -250,11 +249,6 @@ html[data-lab-theme] .lab-text-field .lab-field-select-control {
     --lab-text-field-padding-bottom: 5px;
     --lab-text-field-label-top: 12px;
   }
-  .lab-text-field[data-label-style='outlined'][data-control-size='compact'],
-  .lab-text-field:not([data-has-label='true'])[data-control-size='compact'] {
-    --lab-text-field-padding-top: 11px;
-    --lab-text-field-padding-bottom: 11px;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   .lab-text-field :is(.lab-raw-input, .lab-field-select-control),
@@ -280,4 +274,36 @@ html[data-lab-theme] .lab-text-field .lab-field-select-control {
     :is(.lab-raw-input, .lab-field-select-control) {
     border-style: dashed;
   }
+}
+/* Dense densities: smaller text, and inside labels float onto the border like outlined ones, since
+a 24–34px field has no room for two lines. */
+html[data-lab-density='compact'] .lab-text-field {
+  --lab-text-field-font: 14px;
+}
+html[data-lab-density='thin'] .lab-text-field {
+  --lab-text-field-font: 13px;
+  --lab-text-field-line: 18px;
+}
+html:is([data-lab-density='compact'], [data-lab-density='thin']) .lab-text-field[data-label-style='inside'][data-control-size] {
+  --lab-text-field-padding-top: max(0px, calc((var(--lab-text-field-height) - var(--lab-text-field-line) - 2px) / 2));
+  --lab-text-field-padding-bottom: var(--lab-text-field-padding-top);
+  --lab-text-field-label-top: var(--lab-text-field-padding-top);
+}
+html:is([data-lab-density='compact'], [data-lab-density='thin']) .lab-text-field[data-label-style='inside'] .lab-text-field-label {
+  inset-inline-start: calc(var(--lab-field-inset-start) - 4px);
+  inset-inline-end: auto;
+  padding-inline: 4px;
+}
+html:is([data-lab-density='compact'], [data-lab-density='thin'])
+  .lab-text-field[data-label-style='inside']
+  :is(
+    .lab-text-field-edit:focus-within,
+    .lab-text-field-edit:has(.lab-raw-input:not(:placeholder-shown)),
+    .lab-text-field-edit[data-always-float]
+  )
+  .lab-text-field-label {
+  top: -6px;
+  font-size: 11px;
+  line-height: 12px;
+  background: var(--lab-variant-label-surface, var(--lab-surface));
 }

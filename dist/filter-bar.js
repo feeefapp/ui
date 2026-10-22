@@ -12,6 +12,7 @@ import { LabModal } from './primitives/modal.js';
 import { LabScrollArea } from './scroll/index.js';
 import { LabDock } from './dock/index.js';
 import { LabTemporalFilterEditor } from './filters/temporal-editor.js';
+import { LabTemporalDialog } from './filters/temporal-dialog.js';
 import { isTemporalType, isTemporalRange, validateTemporal, readTemporalForm, } from './filters/temporal.js';
 import './filter-bar.css';
 function summary(option, value) {
@@ -27,11 +28,15 @@ function summary(option, value) {
         return value ? 'On' : 'Off';
     return value;
 }
-/** Searchable filter catalog; pinning controls shortcuts, clearing controls query values. */
+/**
+ * Filter toolbar: a searchable catalog button, an optional natural-language button, pinned filter
+ * chips and trailing actions. Pinning controls shortcuts, clearing controls query values.
+ */
 export function LabFilterBar({ label, options, value, onChange, values: controlledValues, onValuesChange, pinned: controlledPins, onPinnedChange, onNaturalFilter, onBack, trailing, }) {
     const formId = useId();
     const host = useRef(null), search = useRef(null);
     const enumSearch = useRef(null);
+    const naturalInput = useRef(null);
     const anchor = useRef({
         getBoundingClientRect: () => new DOMRect(),
     });
@@ -144,7 +149,11 @@ export function LabFilterBar({ label, options, value, onChange, values: controll
                             prepare(open);
                             setNatural(open);
                             setError('');
-                        }, children: [_jsx(Popover.Trigger, { asChild: true, children: _jsx(LabIconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": "Create filter from natural language", children: _jsx(Sparkles, {}) }) }), _jsx(Popover.Portal, { container: container, children: _jsx(LabPopoverSurface, { asChild: true, children: _jsx(Popover.Content, { dir: dir, className: "lab-filter-panel lab-filter-natural", "aria-label": "Describe a filter", sideOffset: 8, collisionPadding: 12, align: "start", children: _jsx(LabScrollArea, { label: "Natural filter description", edgeGap: 8, contentPadding: 12, bottom: _jsx(LabDock, { label: "Natural filter actions", children: _jsx(LabButton, { type: "submit", form: `${formId}-natural`, variant: "filled", controlSize: "compact", loading: busy, disabled: busy || !text.trim(), children: "Apply filters" }) }), children: _jsxs("form", { id: `${formId}-natural`, onSubmit: async (event) => {
+                        }, children: [_jsx(Popover.Trigger, { asChild: true, children: _jsx(LabIconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": "Create filter from natural language", children: _jsx(Sparkles, {}) }) }), _jsx(Popover.Portal, { container: container, children: _jsx(LabPopoverSurface, { asChild: true, children: _jsx(Popover.Content, { dir: dir, className: "lab-filter-panel lab-filter-natural", "aria-label": "Describe a filter", sideOffset: 8, collisionPadding: 12, align: "start", onOpenAutoFocus: (event) => {
+                                            // Start in the description field, not on the scroll region.
+                                            event.preventDefault();
+                                            naturalInput.current?.focus();
+                                        }, children: _jsx(LabScrollArea, { label: "Natural filter description", edgeGap: 8, contentPadding: 12, bottom: _jsx(LabDock, { label: "Natural filter actions", children: _jsx(LabButton, { type: "submit", form: `${formId}-natural`, variant: "filled", controlSize: "compact", loading: busy, disabled: busy || !text.trim(), children: "Apply filters" }) }), children: _jsxs("form", { id: `${formId}-natural`, onSubmit: async (event) => {
                                                     event.preventDefault();
                                                     if (busy || !text.trim())
                                                         return;
@@ -169,7 +178,7 @@ export function LabFilterBar({ label, options, value, onChange, values: controll
                                                     finally {
                                                         setBusy(false);
                                                     }
-                                                }, children: [_jsx("strong", { children: "Describe what you want" }), _jsx(LabTextField, { hint: "Filter description", leadingIcon: _jsx(Sparkles, {}), value: text, onChange: (event) => setText(event.target.value), error: error, supportingText: `Available: ${options
+                                                }, children: [_jsx("strong", { children: "Describe what you want" }), _jsx(LabTextField, { ref: naturalInput, hint: "Filter description", leadingIcon: _jsx(Sparkles, {}), value: text, onChange: (event) => setText(event.target.value), error: error, supportingText: `Available: ${options
                                                             .filter((option) => !option.type || option.type === 'boolean')
                                                             .map((option) => option.label)
                                                             .join(', ')}.` })] }) }) }) }) })] }))] }), !!pins.length && (_jsx("div", { className: "lab-filter-pins", role: "group", "aria-label": "Pinned filters", children: options
@@ -219,7 +228,27 @@ export function LabFilterBar({ label, options, value, onChange, values: controll
                                         }, children: [_jsx(LabTemporalFilterEditor, { config: smallSelected, value: draft, onChange: (next) => {
                                                     setDraft(next);
                                                     setEditError('');
-                                                } }), editError && (_jsx("p", { role: "alert", className: "lab-filter-error", children: editError }))] })) : null })) }) }) })] }), _jsx(LabModal, { returnFocusRef: returnFocus, open: !!dialogSelected, label: dialogSelected ? `Edit ${dialogSelected.label} filter` : 'Edit filter', close: () => setEditing(null), scrollable: true, fitContent: true, className: `lab-filter-editor-dialog ${dialogSelected && isTemporalType(dialogSelected.type) && !dialogSelected.type.startsWith('time') ? 'lab-filter-calendar-dialog' : ''}`, bottom: _jsxs(LabDock, { label: "Filter editor actions", children: [_jsx(LabButton, { variant: "text", onClick: () => {
+                                                } }), editError && (_jsx("p", { role: "alert", className: "lab-filter-error", children: editError }))] })) : null })) }) }) })] }), dialogSelected && selected && isTemporalType(selected.type) && (_jsx(LabTemporalDialog, { open: true, label: `Edit ${dialogSelected.label} filter`, close: () => setEditing(null), returnFocusRef: returnFocus, formId: `${formId}-editor`, config: selected, value: draft, onChange: (next) => {
+                    setDraft(next);
+                    setEditError('');
+                }, intro: selected.description, error: editError || undefined, clearLabel: "Clear value", onClear: () => {
+                    change(selected, null);
+                    pin(selected.id);
+                    setEditing(null);
+                }, applyLabel: "Apply filter", onSubmit: (event) => {
+                    event.preventDefault();
+                    const config = selected;
+                    const next = readTemporalForm(config.type, new FormData(event.currentTarget));
+                    const message = validateTemporal(config, next) || selected.validate?.(next);
+                    if (message) {
+                        setDraft(next);
+                        setEditError(message);
+                        return;
+                    }
+                    change(selected, next);
+                    pin(selected.id);
+                    setEditing(null);
+                } })), _jsx(LabModal, { returnFocusRef: returnFocus, open: !!dialogSelected && !(selected && isTemporalType(selected.type)), label: dialogSelected ? `Edit ${dialogSelected.label} filter` : 'Edit filter', close: () => setEditing(null), scrollable: true, fitContent: true, className: "lab-filter-editor-dialog", bottom: _jsxs(LabDock, { label: "Filter editor actions", children: [_jsx(LabButton, { variant: "text", onClick: () => {
                                 if (selected) {
                                     change(selected, null);
                                     pin(selected.id);
@@ -227,24 +256,14 @@ export function LabFilterBar({ label, options, value, onChange, values: controll
                                 setEditing(null);
                             }, children: "Clear value" }), _jsx(LabButton, { variant: "filled", type: "submit", form: `${formId}-editor`, children: "Apply filter" })] }), children: dialogSelected && selected && (_jsxs("form", { id: `${formId}-editor`, className: "lab-filter-editor-form", onSubmit: (event) => {
                         event.preventDefault();
-                        const fields = new FormData(event.currentTarget);
-                        const next = isTemporalType(selected.type)
-                            ? readTemporalForm(selected.type, fields)
-                            : draft;
-                        const message = (isTemporalType(selected.type)
-                            ? validateTemporal(selected, next)
-                            : null) || selected.validate?.(next);
+                        const message = selected.validate?.(draft);
                         if (message) {
-                            setDraft(next);
                             setEditError(message);
                             return;
                         }
-                        change(selected, next);
+                        change(selected, draft);
                         pin(selected.id);
                         setEditing(null);
-                    }, children: [_jsx("p", { children: selected.description || 'Set a value, or clear it while keeping this filter pinned.' }), selected.type === 'custom' ? (selected.renderEditor(draft, setDraft)) : isTemporalType(selected.type) ? (_jsx(LabTemporalFilterEditor, { config: selected, value: draft, onChange: (next) => {
-                                setDraft(next);
-                                setEditError('');
-                            } })) : null, editError && _jsx("p", { role: "alert", children: editError })] })) })] }));
+                    }, children: [_jsx("p", { children: selected.description || 'Set a value, or clear it while keeping this filter pinned.' }), selected.type === 'custom' ? selected.renderEditor(draft, setDraft) : null, editError && _jsx("p", { role: "alert", children: editError })] })) })] }));
 }
 //# sourceMappingURL=filter-bar.js.map

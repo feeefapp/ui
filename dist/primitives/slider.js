@@ -5,7 +5,10 @@ import { cn } from '../utils.js';
 import { sliderRange, sliderValue, sliderFraction, sliderPointer, sliderKey } from './slider-core.js';
 import './slider.css';
 import { useSliderMotion } from './slider-motion.js';
-/** Large single-value slider. Decoration slots share one interaction/geometry engine. */
+/**
+ * A single-value slider with a large touch-friendly track, springy thumb, optional stops and
+ * marks, and render slots for custom track, fill and thumb decoration.
+ */
 export const LabSlider = React.forwardRef((props, ref) => (_jsx(SliderControl, { ...props, forwardedRef: ref })));
 LabSlider.displayName = 'LabSlider';
 function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', value, defaultValue, min = 0, max = 100, step = 1, disabled = false, onValueChange, onValueCommit, getValueText, showStops = false, marks, renderTrack, renderFill, renderThumb, name, form, forwardedRef, switchMode = false, checkedText, className, style, onKeyDown, onClick, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, onLostPointerCapture, ...hostProps }) {
@@ -34,7 +37,7 @@ function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', v
     };
     const atPointer = (event) => {
         const rect = event.currentTarget.getBoundingClientRect();
-        const fraction = sliderPointer(event.clientX, rect.left, rect.width, getComputedStyle(event.currentTarget).direction === 'rtl', Number.parseFloat(getComputedStyle(event.currentTarget).getPropertyValue('--lab-slider-inset')) || 22);
+        const fraction = sliderPointer(event.clientX, rect.left, rect.width, getComputedStyle(event.currentTarget).direction === 'rtl', Number.parseFloat(getComputedStyle(event.currentTarget).getPropertyValue('--lab-slider-inset')) || rect.height / 2);
         return range.min + fraction * (range.max - range.min);
     };
     const move = (event) => {
@@ -191,12 +194,18 @@ function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', v
                         '--lab-slider-stop': sliderFraction(mark.value, range.min, range.max),
                     }, children: mark.label }, index))) })), _jsx("input", { ref: hidden, type: "hidden", name: name, form: form, value: current, disabled: disabled })] }));
 }
-/** Same track, thumb, pointer and animation engine; boolean state maps exactly to 0/1. */
+/**
+ * An on/off switch that can be tapped or dragged. It shares the slider's track, thumb and spring;
+ * the state maps to 0 and 1.
+ */
 export const LabSlideSwitch = React.forwardRef(({ checked, loading, defaultChecked = false, onCheckedChange, onCheckedCommit, onText, offText, ...props }, ref) => {
     return (_jsx(SliderControl, { ...props, forwardedRef: ref, switchMode: true, disabled: props.disabled || loading, "aria-busy": loading || undefined, min: 0, max: 1, step: 1, value: checked === undefined ? undefined : Number(checked), defaultValue: Number(defaultChecked), onValueChange: (next) => onCheckedChange?.(next === 1), onValueCommit: (next) => onCheckedCommit?.(next === 1), checkedText: (next) => (next === 1 ? onText : offText) }));
 });
 LabSlideSwitch.displayName = 'LabSlideSwitch';
-/** Noninteractive menu decoration with the same geometry and spring, never nested switch semantics. */
+/**
+ * A non-interactive switch picture for menu items and rows that already carry the checked
+ * semantics (for example `menuitemcheckbox`). Same geometry and spring, hidden from assistive technology.
+ */
 export function LabSlideSwitchIndicator({ checked, loading, controlSize = 'compact', }) {
     const host = React.useRef(null);
     useSliderMotion(host, Number(checked), false, false, false, Boolean(loading));

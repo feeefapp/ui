@@ -1,9 +1,15 @@
 export const isTemporalType = (type) => !!type && ['date', 'time', 'datetime', 'dateRange', 'timeRange', 'datetimeRange'].includes(type);
+/** True for the `…Range` types. */
 export const isTemporalRange = (type) => type.endsWith('Range');
 export const temporalInputType = (type) => type.startsWith('datetime') ? 'datetime-local' : type.startsWith('time') ? 'time' : 'date';
+/** Turns empty values (`''`, `{ from: '', to: '' }`) into `null`. */
 export function normalizeTemporal(value) {
     return value && typeof value === 'object' && !value.from && !value.to ? null : value || null;
 }
+/**
+ * Checks a value against a config: ISO format and real calendar dates, `step`, `min`/`max`, and
+ * range order. Returns an English error message, or `null` when the value (or `null`) is valid.
+ */
 export function validateTemporal(config, value) {
     if (value == null)
         return null;
@@ -59,7 +65,10 @@ export function validateTemporal(config, value) {
 const pad = (n) => String(n).padStart(2, '0');
 const dateText = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const datetimeText = (d) => `${dateText(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-/** Local wall-clock presets; feature owners choose timezone/query conversion. */
+/**
+ * Default presets for a type, computed from `now` in local wall-clock time (Today, Last 7 days,
+ * Morning…). Feature owners choose timezone and query conversion.
+ */
 export function temporalPresets(type, now = new Date()) {
     const today = dateText(now), yesterday = new Date(now);
     yesterday.setDate(now.getDate() - 1);
@@ -113,6 +122,7 @@ export function temporalPresets(type, now = new Date()) {
         { label: 'Last month', value: { from: dateText(lastMonthStart), to: dateText(lastMonthEnd) } },
     ];
 }
+/** Reads the value of a `LabTemporalFilterEditor` from its form's data (`date`, or `from`/`to`). */
 export function readTemporalForm(type, data) {
     return normalizeTemporal(isTemporalRange(type)
         ? { from: String(data.get('from') || ''), to: String(data.get('to') || '') }

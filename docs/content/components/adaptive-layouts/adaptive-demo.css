@@ -1,0 +1,53 @@
+.ad-demo {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+}
+.ad-frame {
+  max-width: 100%;
+  padding: 14px;
+  border: 1px dashed var(--lab-line);
+  border-radius: var(--lab-radius-group);
+}
+.ad-stat {
+  display: grid;
+  flex: 1 1 0%;
+  gap: 2px;
+  min-width: 120px;
+  padding: 12px 14px;
+  border-radius: var(--lab-radius-control);
+  background: color-mix(in srgb, var(--lab-ink) 4%, var(--lab-surface));
+}
+.ad-stat span {
+  color: var(--lab-muted);
+  font-size: 13px;
+}
+.ad-stat strong {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.ad-actions {
+  display: flex;
+  gap: 8px;
+}
+.ad-card {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+.ad-card[data-size='compact'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.ad-card-art {
+  aspect-ratio: 1;
+  border-radius: calc(16px * var(--lab-radius-scale, 1));
+  background: linear-gradient(135deg, hsl(28 70% 72%), hsl(68 55% 46%));
+}
+.ad-card[data-size='compact'] .ad-card-art {
+  aspect-ratio: 16 / 9;
+}
+.ad-card p {
+  margin: 4px 0 0;
+  color: var(--lab-muted);
+}

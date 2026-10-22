@@ -3,7 +3,11 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useLayoutEffect, useRef, useState, useMemo, } from 'react';
 import { scrollEdgeOpacities, scrollWashPaths } from './metrics.js';
 import './scroll.css';
-/** Read scroll metrics once per frame; update opacity without rerendering the scroll content. */
+/**
+ * Dithered top and bottom edge washes for a custom scroller. Place it as an absolutely positioned
+ * sibling of the viewport inside a `position: relative` box. Reads scroll metrics once per frame
+ * and updates opacity without rerendering the scroll content.
+ */
 export function LabScrollGradientOverlay({ viewport, topHeight = 100, bottomHeight = 160, density = 0.8, fadeZone = 80, color, }) {
     const root = useRef(null);
     const topPaint = useRef(null);

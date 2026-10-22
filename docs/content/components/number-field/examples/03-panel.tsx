@@ -1,0 +1,20 @@
+import { useState } from 'react'
+import { LabNumberField } from '@feeef.dev/ui/primitives/number-field'
+
+export default function ParcelPanel() {
+  const [size, setSize] = useState({ length: 30, width: 20, height: 15, weight: 1.2 })
+  const update = (key: keyof typeof size) => (value: number) => setSize((s) => ({ ...s, [key]: value }))
+  return (
+    <div className="demo-column" style={{ gap: 6 }}>
+      <LabNumberField label="Length" unit="cm" controlSize="compact" min={1} max={120} value={size.length} onValueChange={update('length')} />
+      <LabNumberField label="Width" unit="cm" controlSize="compact" min={1} max={120} value={size.width} onValueChange={update('width')} />
+      <LabNumberField label="Height" unit="cm" controlSize="compact" min={1} max={120} value={size.height} onValueChange={update('height')} />
+      <LabNumberField label="Weight" unit="kg" controlSize="compact" min={0} step={0.1} value={size.weight} onValueChange={update('weight')} />
+    </div>
+  )
+}
+
+export const meta = {
+  title: 'Properties panel',
+  description: 'Compact fields stacked tightly, the way Blender lays out properties. Each one scrubs on its own.',
+}

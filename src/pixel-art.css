@@ -14,7 +14,7 @@
 }
 
 .lab-pixel-tone-ink {
-  color: var(--text-main, #182b22);
+  color: var(--lab-ink, #182b22);
 }
 
 .lab-pixel-tone-sage {

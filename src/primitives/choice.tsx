@@ -6,10 +6,15 @@ import { cn } from '../utils'
 import './choice.css'
 
 type ChoiceDecoration = {
+  /** Visible label next to the mark. Clicking it toggles the control. */
   label?: React.ReactNode
+  /** Secondary text under the label, linked as the control's description. */
   description?: React.ReactNode
+  /** Error message under the label. Marks the control invalid and blocks form submission. */
   error?: string | null
+  /** Control density: `regular` or `compact`. */
   controlSize?: 'regular' | 'compact'
+  /** Class name for the outer `<label>`, for layout. */
   containerClassName?: string
 }
 export type LabCheckboxProps = Omit<
@@ -17,7 +22,9 @@ export type LabCheckboxProps = Omit<
   'type' | 'size' | 'children'
 > &
   ChoiceDecoration & {
+    /** Shows a dash for a partly selected group and reports `aria-checked="mixed"`. Derive it from your own state; it does not clear itself. */
     indeterminate?: boolean
+    /** Called with the new checked state. */
     onCheckedChange?: (checked: boolean) => void
   }
 export type LabRadioProps = Omit<LabCheckboxProps, 'indeterminate'>
@@ -114,38 +121,59 @@ function Choice({
     </label>
   )
 }
+/** A native checkbox with a label, description, error and indeterminate state. */
 export const LabCheckbox = React.forwardRef<HTMLInputElement, LabCheckboxProps>((props, ref) => (
   <Choice {...props} kind="checkbox" forwardedRef={ref} />
 ))
 LabCheckbox.displayName = 'LabCheckbox'
+/** A single native radio with a label and description. Prefer `LabRadioGroup`, which names and labels the set. */
 export const LabRadio = React.forwardRef<HTMLInputElement, LabRadioProps>((props, ref) => (
   <Choice {...props} kind="radio" forwardedRef={ref} />
 ))
 LabRadio.displayName = 'LabRadio'
 
+/** One entry in `LabRadioGroup`'s `options`. */
 export type LabRadioOption = {
+  /** The value submitted and passed to `onValueChange`. Must be unique in the group. */
   value: string
+  /** Visible label. */
   label: React.ReactNode
+  /** Secondary text under the label. */
   description?: React.ReactNode
+  /** Disables this option only. */
   disabled?: boolean
 }
 export type LabRadioGroupProps = Omit<
   React.FieldsetHTMLAttributes<HTMLFieldSetElement>,
   'onChange' | 'defaultValue'
 > & {
+  /** The group's question, rendered as the fieldset legend. */
   label: React.ReactNode
+  /** The choices, in order. */
   options: readonly LabRadioOption[]
+  /** The selected value, for a controlled group. */
   value?: string
+  /** The initially selected value, for an uncontrolled group. */
   defaultValue?: string
+  /** Called with the newly selected option's value. */
   onValueChange?: (value: string) => void
+  /** Form field name shared by the radios. Generated when omitted. */
   name?: string
+  /** Id of a form outside the group that the radios belong to. */
   form?: string
+  /** Requires a choice before the form submits; adds a marker to the legend. */
   required?: boolean
+  /** Error message under the options. Marks the group invalid and blocks form submission. */
   error?: string | null
+  /** Help text under the legend. */
   description?: React.ReactNode
+  /** Density of every radio: `regular` or `compact`. */
   controlSize?: 'regular' | 'compact'
 }
-/** Native radios own keyboard navigation, form submission and reset; fieldset owns the group label. */
+/**
+ * A labelled set of mutually exclusive choices. Native radios own keyboard navigation, form
+ * submission and reset; the `<fieldset>` and `<legend>` own the group label.
+ */
 export const LabRadioGroup = React.forwardRef<HTMLFieldSetElement, LabRadioGroupProps>(
   (
     {

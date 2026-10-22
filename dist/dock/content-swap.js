@@ -2,7 +2,11 @@
 import { jsx as _jsx } from "react/jsx-runtime";
 import { useLayoutEffect, useRef, useState } from 'react';
 import { cn } from '../utils.js';
-/** Coarse identity controls swaps; same-key changes keep focus and child state. */
+/**
+ * Cross-fades interactive dock content when `swapKey` changes: the old content fades out and turns
+ * inert (focus moves to the dock first), then the new content fades in. Same-key changes keep focus
+ * and child state.
+ */
 export function LabDockContentSwap({ swapKey, children, }) {
     const latest = useRef({ key: swapKey, node: children });
     latest.current = { key: swapKey, node: children };

@@ -1,0 +1,85 @@
+/* Temporal dialog: dialog → glass groups, never deeper. The top bar and the action bar span the
+   same width as the calendars between them, so every edge lines up. */
+html[data-lab-theme] .lab-dialog.lab-temporal-dialog {
+  width: min(400px, calc(100vw - 24px));
+}
+html[data-lab-theme] .lab-dialog.lab-temporal-dialog--pair {
+  width: min(680px, calc(100vw - 24px));
+}
+@media (max-width: 599px) {
+  html[data-lab-theme] .lab-dialog.lab-temporal-dialog {
+    width: calc(100vw - 16px);
+  }
+}
+
+.lab-temporal-dialog-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  pointer-events: none;
+}
+.lab-temporal-dialog-bar > * {
+  pointer-events: auto;
+}
+html[data-lab-theme] .lab-temporal-dialog-edges.lab-toolbar-group {
+  flex: 1 1 auto;
+  max-width: 100%;
+}
+html[data-lab-theme] .lab-temporal-dialog-edges .lab-temporal-edges {
+  width: 100%;
+}
+html[data-lab-theme] .lab-temporal-dialog-presets.lab-toolbar-group,
+html[data-lab-theme] .lab-temporal-dialog-actions.lab-toolbar-group,
+html[data-lab-theme] .lab-temporal-dialog-title.lab-toolbar-group {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: none;
+}
+html[data-lab-theme] .lab-temporal-dialog-presets.lab-toolbar-group {
+  flex-basis: 240px;
+  overflow: hidden;
+}
+/* Presets: one row that scrolls sideways and fades at the edges it can scroll toward. */
+.lab-temporal-presets[data-layout='bar'] {
+  display: flex;
+  flex: 1;
+  flex-wrap: nowrap;
+  gap: 0;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  mask-image: linear-gradient(to right, transparent, #000 12px, #000 calc(100% - 12px), transparent);
+}
+.lab-temporal-presets[data-layout='bar']::-webkit-scrollbar {
+  display: none;
+}
+.lab-temporal-presets[data-layout='bar'] > .lab-control {
+  flex: none;
+  scroll-snap-align: start;
+}
+.lab-temporal-dialog-title .lab-modal-title {
+  margin: 0;
+  padding-inline: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lab-temporal-dialog-spacer {
+  flex: 1;
+}
+
+.lab-temporal-dialog-form {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.lab-temporal-dialog-intro {
+  margin: 0;
+  color: var(--lab-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}

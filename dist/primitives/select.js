@@ -8,6 +8,10 @@ import { cn } from '../utils.js';
 import { LabFieldShell } from './field-shell.js';
 import { LabRawInput } from './raw-input.js';
 const EMPTY = '__lab_natural__';
+/**
+ * A single-choice dropdown in the same field frame as `LabTextField`: floating hint, icons,
+ * supporting text and validation. The menu opens in a popover; options are `LabOption`.
+ */
 export function LabSelect({ children, value: suppliedValue, onValueChange, className, variant = 'elevated', controlSize = 'regular', label, hint, dir, placeholder, labelStyle = 'outlined', leadingIcon, leading, trailing, supportingText, error, containerClassName, name, required, requiredMessage = 'Choose an option.', validator, validationMode = 'blur', onValidationChange, onBlur, ...props }) {
     const value = suppliedValue ?? '';
     const floatingHint = hint ?? label;
@@ -116,7 +120,8 @@ export function LabSelect({ children, value: suppliedValue, onValueChange, class
                     trigger.current?.focus();
                 } })), _jsx(Select.Portal, { container: container, children: _jsx(LabPopoverSurface, { asChild: true, children: _jsx(Select.Content, { className: "lab-select-menu", "data-lab-corners": true, "data-closing": closing || undefined, inert: closing || undefined, position: "popper", sideOffset: 6, collisionPadding: 12, collisionBoundary: container, children: _jsx(Select.Viewport, { children: children }) }) }) })] }));
 }
-export function LabOption({ value, children }) {
+/** One choice in a `LabSelect` menu. A check marks the selected option. */
+export function LabOption({ value, children, }) {
     return (_jsxs(Select.Item, { "data-lab-corners": true, className: "lab-select-option", value: (value ?? String(children)) || EMPTY, children: [_jsx(Select.ItemText, { children: children }), _jsx(Select.ItemIndicator, { children: _jsx(Check, { size: 18, "aria-hidden": "true" }) })] }));
 }
 //# sourceMappingURL=select.js.map

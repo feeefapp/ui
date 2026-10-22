@@ -1,0 +1,76 @@
+.ph-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.ph-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ph-fields > * {
+  width: 150px;
+}
+.ph-curve {
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  overflow: visible;
+}
+.ph-path {
+  fill: none;
+  stroke: var(--lab-primary);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.ph-target {
+  stroke: var(--lab-line);
+  stroke-dasharray: 4 4;
+  vector-effect: non-scaling-stroke;
+}
+.ph-axis {
+  stroke: var(--lab-line);
+  vector-effect: non-scaling-stroke;
+}
+.ph-flick {
+  position: relative;
+  width: 100%;
+  height: 56px;
+  border-radius: var(--lab-radius-control);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface-soft);
+  touch-action: pan-y;
+  cursor: grab;
+}
+.ph-snap {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--lab-ink) 25%, transparent);
+}
+.ph-puck,
+.ph-ghost {
+  position: absolute;
+  top: 8px;
+  inset-inline-start: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: calc(14px * var(--lab-radius-scale, 1));
+}
+.ph-puck {
+  background: var(--lab-primary);
+  box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--lab-primary) 70%, transparent);
+}
+.ph-ghost {
+  border: 2px dashed color-mix(in srgb, var(--lab-primary) 60%, transparent);
+  opacity: 0;
+  transition: opacity var(--lab-duration-fast) var(--lab-ease);
+}
+.ph-ghost[data-on] {
+  opacity: 1;
+}

@@ -1,0 +1,48 @@
+/* Bounded surfaces for the Filter bar page. */
+.filter-demo-frame {
+  width: 100%;
+  height: 380px;
+  overflow: hidden;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-panel);
+  background: var(--lab-surface);
+}
+.filter-demo-list {
+  display: grid;
+  gap: 8px;
+}
+.filter-demo-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-small);
+  font-size: 13px;
+}
+.filter-demo-row span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.filter-demo-row small,
+.filter-demo-empty {
+  color: var(--lab-muted);
+}
+.filter-demo-empty {
+  margin: 0;
+  font-size: 13px;
+}
+.filter-demo-preview {
+  display: flex;
+  gap: 8px;
+}
+.filter-demo-preview span {
+  padding: 8px 14px;
+  border: 1px solid var(--lab-line);
+  border-radius: 999px;
+  background: var(--lab-glass-fill);
+  font-size: 13px;
+  white-space: nowrap;
+}

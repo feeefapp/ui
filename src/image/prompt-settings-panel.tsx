@@ -15,7 +15,9 @@ const CONTENT_PADDING = 12
 export const PromptSettingsPanel = forwardRef<
   HTMLDivElement,
   {
+    /** The settings controls. */
     children: ReactNode
+    /** Called by the panel's close button. */
     onClose(): void
   }
 >(function PromptSettingsPanel({ children, onClose }, ref) {

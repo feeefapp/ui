@@ -2,6 +2,11 @@ import { jsx as _jsx, Fragment as _Fragment, jsxs as _jsxs } from "react/jsx-run
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { LabButton } from '../ui.js';
 import './navigation-item.css';
+/**
+ * One row of sidebar navigation: icon and label, a link with `href` or a button without. In
+ * `compact` (rail) mode only the icon shows and the label moves into a tooltip. Needs a Radix
+ * Tooltip.Provider above it.
+ */
 export function LabNavigationItem({ label, icon, href, onSelect, active, compact, }) {
     const content = (_jsxs(_Fragment, { children: [_jsx("span", { className: "lab-navigation-icon", "aria-hidden": "true", children: icon }), _jsx("span", { className: "lab-navigation-label", children: label })] }));
     return (_jsxs(Tooltip.Root, { children: [_jsx(Tooltip.Trigger, { asChild: true, children: href ? (_jsx(LabButton, { asChild: true, variant: "ghost", appearance: "toolbar", className: "lab-navigation-item", "data-compact": compact, children: _jsx("a", { href: href, "aria-current": active ? 'page' : undefined, onClick: onSelect, children: content }) })) : (_jsx(LabButton, { variant: "ghost", appearance: "toolbar", className: "lab-navigation-item", "data-compact": compact, "aria-current": active ? 'page' : undefined, onClick: onSelect, children: content })) }), compact && (_jsx(Tooltip.Portal, { children: _jsx(Tooltip.Content, { className: "lab-navigation-tooltip", side: "right", sideOffset: 8, collisionPadding: 12, children: label }) }))] }));

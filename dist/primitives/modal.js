@@ -8,6 +8,10 @@ import { usePresence, useLatched } from '../motion.js';
 import { LabButton, LabIconButton } from './button.js';
 import { LabToolbarGroup } from '../toolbar.js';
 import { LabScrollArea } from '../scroll/index.js';
+/**
+ * A modal dialog on the native `<dialog>`: focus is trapped, Escape and a backdrop click call
+ * `close`, and focus returns to the opener after the exit transition.
+ */
 export function LabModal({ open = true, children, close, label, wide = false, className, scrollable = false, top, bottom, initialFocusRef, returnFocusRef, scrollOptions, fitContent = false, headerless = false, showClose = true, }) {
     const { mounted, state } = usePresence(open, 200);
     const content = useLatched({
@@ -60,7 +64,8 @@ function LabDialog({ state, children, close, label, wide, className, scrollable,
         };
         const observer = new ResizeObserver(measure);
         observer.observe(body);
-        observer.observe(content);
+        // Border box: the floats' reserved padding can change without the body resizing.
+        observer.observe(content, { box: 'border-box' });
         dialog.querySelectorAll('.lab-scroll-float').forEach((element) => observer.observe(element));
         const frame = requestAnimationFrame(measure);
         measure();

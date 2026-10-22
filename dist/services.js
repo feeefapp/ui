@@ -1,6 +1,7 @@
 'use client';
 import { jsx as _jsx } from "react/jsx-runtime";
 import { createContext, useContext, useMemo } from 'react';
+/** Browser implementations used for any service the host does not supply. */
 const browserServices = {
     navigate(url) {
         window.location.assign(url);
@@ -51,9 +52,14 @@ const browserServices = {
     },
 };
 const LabServicesContext = createContext(browserServices);
+/**
+ * Installs services for its subtree. Pass only the ports you override; the rest keep their
+ * browser defaults. `LabProvider` renders this for you from its `services` prop.
+ */
 export function LabServicesProvider({ children, services, }) {
     const value = useMemo(() => ({ ...browserServices, ...services }), [services]);
     return _jsx(LabServicesContext.Provider, { value: value, children: children });
 }
+/** Returns the nearest services, or the browser defaults when no provider is mounted. */
 export const useLabServices = () => useContext(LabServicesContext);
 //# sourceMappingURL=services.js.map

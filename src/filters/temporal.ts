@@ -1,23 +1,44 @@
+/** What a temporal field or editor picks: a single value or a `from`/`to` range. */
 export type LabTemporalType =
   'date' | 'time' | 'datetime' | 'dateRange' | 'timeRange' | 'datetimeRange'
+/** Local ISO string, `{ from, to }` range (either end may be `''`), or `null` for no value. */
 export type LabTemporalValue = string | { from: string; to: string } | null
-export type LabTemporalPreset = { label: string; value: LabTemporalValue }
+/** A one-click choice shown beside the calendar. */
+export type LabTemporalPreset = {
+  /** Button text, also the preset's identity in the picker. */
+  label: string
+  /** Value applied when the preset is chosen; `null` means "no filter". */
+  value: LabTemporalValue
+}
+/** Shared rules for a temporal field or editor. */
 export type LabTemporalConfig = {
+  /** Value shape and picker: date, time, datetime, or one of their `Range` forms. */
   type: LabTemporalType
+  /** Earliest allowed value, in the same ISO format as the value. Earlier days are disabled. */
   min?: string
+  /** Latest allowed value, in the same ISO format as the value. Later days are disabled. */
   max?: string
+  /** Allowed increment: days for dates, seconds for times and datetimes, counted from `min`. */
   step?: number
+  /** Time ranges only: lets the end time be earlier than the start (crossing midnight). */
   allowOvernight?: boolean
+  /** Quick choices; defaults to `temporalPresets(type)`. Presets that break the rules are hidden. */
   presets?: readonly LabTemporalPreset[]
 }
 export const isTemporalType = (type: string | undefined): type is LabTemporalType =>
   !!type && ['date', 'time', 'datetime', 'dateRange', 'timeRange', 'datetimeRange'].includes(type)
+/** True for the `…Range` types. */
 export const isTemporalRange = (type: LabTemporalType) => type.endsWith('Range')
 export const temporalInputType = (type: LabTemporalType) =>
   type.startsWith('datetime') ? 'datetime-local' : type.startsWith('time') ? 'time' : 'date'
+/** Turns empty values (`''`, `{ from: '', to: '' }`) into `null`. */
 export function normalizeTemporal(value: LabTemporalValue): LabTemporalValue {
   return value && typeof value === 'object' && !value.from && !value.to ? null : value || null
 }
+/**
+ * Checks a value against a config: ISO format and real calendar dates, `step`, `min`/`max`, and
+ * range order. Returns an English error message, or `null` when the value (or `null`) is valid.
+ */
 export function validateTemporal(
   config: LabTemporalConfig,
   value: LabTemporalValue
@@ -80,7 +101,10 @@ export function validateTemporal(
 const pad = (n: number) => String(n).padStart(2, '0')
 const dateText = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 const datetimeText = (d: Date) => `${dateText(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-/** Local wall-clock presets; feature owners choose timezone/query conversion. */
+/**
+ * Default presets for a type, computed from `now` in local wall-clock time (Today, Last 7 days,
+ * Morning…). Feature owners choose timezone and query conversion.
+ */
 export function temporalPresets(type: LabTemporalType, now = new Date()): LabTemporalPreset[] {
   const today = dateText(now),
     yesterday = new Date(now)
@@ -135,6 +159,7 @@ export function temporalPresets(type: LabTemporalType, now = new Date()): LabTem
     { label: 'Last month', value: { from: dateText(lastMonthStart), to: dateText(lastMonthEnd) } },
   ]
 }
+/** Reads the value of a `LabTemporalFilterEditor` from its form's data (`date`, or `from`/`to`). */
 export function readTemporalForm(type: LabTemporalType, data: FormData): LabTemporalValue {
   return normalizeTemporal(
     isTemporalRange(type)

@@ -20,7 +20,13 @@ const reserveProperties = [
     '--lab-viewport-bottom',
     '--lab-viewport-height',
 ];
-/** The viewport host has no transform/filter, so every floating region stays viewport-fixed. */
+/**
+ * Page-level host for floating chrome. Mount it once near the root: it creates the viewport-fixed
+ * portal that LabFloatingLayer renders into and writes each region's measured size as CSS custom
+ * properties (`--lab-header-reserve`, `--lab-player-reserve`, `--lab-floating-bottom`, …) on
+ * `<html>`, its own root and the portal. The portal host has no transform/filter, so every floating
+ * region stays viewport-fixed.
+ */
 export function LabScaffoldProvider({ children, className, }) {
     const root = React.useRef(null);
     const regions = React.useRef(new Map());
@@ -108,7 +114,11 @@ export function LabScaffoldProvider({ children, className, }) {
     const context = React.useMemo(() => ({ portal, reserve }), [portal, reserve]);
     return (_jsx(ScaffoldContext.Provider, { value: context, children: _jsx("div", { ref: root, className: cn('lab-scaffold', className), "data-lab-scaffold": true, children: children }) }));
 }
-/** Register an existing fixed surface without moving it or changing its semantic element. */
+/**
+ * Registers an existing fixed surface with the nearest LabScaffoldProvider so its size is reserved,
+ * without moving it or changing its semantic element. Remeasures on resize, animation and
+ * transition end. Does nothing outside a provider.
+ */
 export function useFloatingReserve(slot, ref, { active = true, edge = 'auto', gap = 12, measureChildren = false, } = {}) {
     const scaffold = React.useContext(ScaffoldContext);
     const id = React.useId();
@@ -183,7 +193,11 @@ export function useFloatingReserve(slot, ref, { active = true, edge = 'auto', ga
         };
     }, [reserve, id, slot, ref, active, edge, gap, measureChildren, scaffold?.portal]);
 }
-/** Persistent floating surfaces live outside the animated page, including its stacking contexts. */
+/**
+ * Portals persistent floating surfaces out of the animated page (and its stacking contexts) into
+ * the provider's viewport-fixed layer, and reserves their measured size under `slot`. The layer
+ * fills the viewport and ignores pointer input; position the child yourself.
+ */
 export function LabFloatingLayer({ children, slot, active = true, edge = 'auto', gap = 12, className, }) {
     const scaffold = React.useContext(ScaffoldContext);
     const region = React.useRef(null);
@@ -196,7 +210,11 @@ export function LabFloatingLayer({ children, slot, active = true, edge = 'auto',
     const target = scaffold?.portal ?? document.body;
     return createPortal(_jsx("div", { ref: region, className: cn('lab-floating-layer', `lab-floating-layer--${slot}`, className), "data-lab-floating-slot": slot, children: children }), target);
 }
-/** Web glass material belongs to grouped navigation/actions, not to the editing content. */
+/**
+ * One translucent glass material (blur, light edge, neutral shadow) around a group of related
+ * controls. Glass belongs to grouped navigation/actions, not to the editing content. Falls back to
+ * an opaque surface without backdrop-filter or with reduced transparency.
+ */
 export const LabGlassGroup = React.forwardRef(({ as = 'div', className, children, ...props }, ref) => React.createElement(as, {
     ...props,
     ref,

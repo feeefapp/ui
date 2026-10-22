@@ -6,7 +6,7 @@ import { FoAnimatedLogo } from '../brand/logo.js';
 import { useLabScaffold } from './scaffold.js';
 import './moving-brand.css';
 /** One persistent visual follows the real, accessible logo links as navigation changes. */
-export function LabMovingBrand({ host }) {
+export function LabMovingBrand({ host, }) {
     const state = useLabScaffold();
     const visual = useRef(null);
     const [portal, setPortal] = useState(null);

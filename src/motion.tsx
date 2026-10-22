@@ -45,7 +45,9 @@ export function LabStableText({
   options,
   className,
 }: {
+  /** The label to show now. */
   value: string
+  /** Every label this slot can show; the widest one sets the width. */
   options: string[]
   className?: string
 }) {
@@ -70,7 +72,10 @@ export function LabAutoHeight({
   className,
   as: Component = 'div',
   ...props
-}: React.HTMLAttributes<HTMLElement> & { as?: 'div' | 'section' }) {
+}: React.HTMLAttributes<HTMLElement> & {
+  /** Element to render as the outer box. */
+  as?: 'div' | 'section'
+}) {
   const inner = React.useRef<HTMLDivElement>(null)
   const [height, setHeight] = React.useState<number | null>(null)
   React.useLayoutEffect(() => {
@@ -100,8 +105,11 @@ export function LabPresence({
   exitMs = 160,
   render,
 }: {
+  /** Whether the content should be shown. */
   open: boolean
+  /** How long the closing frame stays mounted, in milliseconds. 0 under reduced motion. */
   exitMs?: number
+  /** Draws the content. Put the state on `data-state` so CSS can animate open and closed. */
   render: (state: PresenceState) => React.ReactNode
 }) {
   const { mounted, state } = usePresence(open, exitMs)
@@ -123,7 +131,9 @@ export function LabSwap({
   children,
   className,
 }: {
+  /** Identity of the current child; changing it cross-fades the old child out and the new one in. */
   swapKey: string
+  /** The icon to show. Decorative: the cell is `aria-hidden`, so label the control around it. */
   children: React.ReactNode
   className?: string
 }) {

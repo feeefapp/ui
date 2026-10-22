@@ -7,7 +7,10 @@ import { LabDockContentSwap } from './content-swap.js';
 import './dock.css';
 import { useDockSize } from './use_dock_size.js';
 import { LabActionsWidthProvider } from '../actions/width-context.js';
-/** Floating glass container; positioning and scroll reservations belong to its host. */
+/**
+ * Floating glass container for a status tile and its actions. It hugs its content up to the host's
+ * width and animates size changes; positioning and scroll reservations belong to its host.
+ */
 export const LabDock = forwardRef(function LabDock({ label, content, children, align = 'center', swapKey = 'default', className, ...props }, ref) {
     const measured = useDockSize();
     useImperativeHandle(ref, () => measured.surface.current, []);
