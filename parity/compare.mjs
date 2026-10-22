@@ -35,7 +35,7 @@ function serve(root) {
   })
 }
 
-const SCENES = process.argv.slice(2).length ? process.argv.slice(2) : ['buttons', 'button-states', 'segmented']
+const SCENES = process.argv.slice(2).length ? process.argv.slice(2) : ['buttons', 'button-states', 'segmented', 'icons', 'corners']
 const VARIANTS = [
   { theme: 'light', palette: 'lab', density: 'comfortable' },
   { theme: 'dark', palette: 'lab', density: 'comfortable' },

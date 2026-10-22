@@ -29,6 +29,26 @@ final Map<String, List<Widget> Function()> scenes = {
         ]),
       ],
   'segmented': () => [const _Segmented()],
+  'icons': () => [
+        row([
+          Button(variant: .filled, onClick: _noop, children: const [LucidePlus(size: 18), Text('New order')]),
+          Button(variant: .elevated, onClick: _noop, children: const [LucideDownload(size: 18), Text('Export CSV')]),
+          Button(variant: .text, onClick: _noop, children: const [Text('Continue'), LucideArrowRight(size: 18)]),
+        ]),
+        row([
+          IconButton(variant: .text, ariaLabel: 'Search', onClick: _noop, icon: const LucideSearch()),
+          IconButton(variant: .filled, ariaLabel: 'Add', onClick: _noop, icon: const LucidePlus()),
+          IconButton(variant: .elevated, ariaLabel: 'Delete', onClick: _noop, icon: const LucideTrash2()),
+          IconButton(variant: .text, controlSize: .compact, ariaLabel: 'Search', onClick: _noop, icon: const LucideSearch()),
+          IconButton(variant: .elevated, controlSize: .compact, ariaLabel: 'Delete', onClick: _noop, icon: const LucideTrash2()),
+        ]),
+        Builder(
+          builder: (context) => IconTheme(
+            data: IconThemeData(color: ThemeProvider.of(context).colors.ink),
+            child: row(const [LucideSearch(), LucidePlus(), LucideTrash2(), LucideDownload()]),
+          ),
+        ),
+      ],
   'corners': () => [
         row([
           for (final radius in [12.0, 23.0, 40.0])

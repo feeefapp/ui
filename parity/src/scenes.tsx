@@ -1,6 +1,7 @@
 import type React from 'react'
 import { useState, type ReactNode } from 'react'
-import { Button } from '@feeef.dev/ui/primitives/button'
+import { LucideArrowRight, LucideDownload, LucidePlus, LucideSearch, LucideTrash2 } from 'lucide-react'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
 import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 
 /**
@@ -35,6 +36,37 @@ export const SCENES: Record<string, () => ReactNode> = {
     </>
   ),
   segmented: () => <Segmented />,
+  icons: () => (
+    <>
+      <div className="row">
+        <Button variant="filled">
+          <LucidePlus size={18} />
+          New order
+        </Button>
+        <Button variant="elevated">
+          <LucideDownload size={18} />
+          Export CSV
+        </Button>
+        <Button variant="text">
+          Continue
+          <LucideArrowRight size={18} />
+        </Button>
+      </div>
+      <div className="row">
+        <IconButton variant="text" aria-label="Search"><LucideSearch /></IconButton>
+        <IconButton variant="filled" aria-label="Add"><LucidePlus /></IconButton>
+        <IconButton variant="elevated" aria-label="Delete"><LucideTrash2 /></IconButton>
+        <IconButton variant="text" controlSize="compact" aria-label="Search"><LucideSearch /></IconButton>
+        <IconButton variant="elevated" controlSize="compact" aria-label="Delete"><LucideTrash2 /></IconButton>
+      </div>
+      <div className="row" style={{ color: 'var(--lab-ink)' }}>
+        <LucideSearch />
+        <LucidePlus />
+        <LucideTrash2 />
+        <LucideDownload />
+      </div>
+    </>
+  ),
   // Raw corner geometry: native corner-shape in Chrome vs the kit's superellipse maths.
   corners: () => (
     <div className="row">

@@ -3,6 +3,8 @@ import 'dart:ui' show lerpDouble;
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
+import '../brand/pixel_texture.dart';
+import '../icons/lucide.dart';
 import '../theme.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
@@ -197,6 +199,7 @@ class _ButtonState extends State<Button> {
       edge: paint.edge,
       radius: radius,
       raised: raised && !(interactive && _down),
+      texture: widget.variant == ButtonVariant.filled ? ink : null,
       pressedInset: interactive && _down,
       highlight: c.controlHighlight,
       depth: theme.brightness == Brightness.dark ? 0.18 : 0.08,
@@ -223,7 +226,11 @@ class _ButtonState extends State<Button> {
                 ),
                 maxLines: 1,
                 softWrap: false,
-                child: CssBaseline(lineHeight: 20, child: content),
+                // Icons in controls use a 1.75 stroke (`.lab-control[data-variant] svg.lucide`).
+                child: LucideStroke(
+                  width: 1.75,
+                  child: CssBaseline(lineHeight: 20, child: content),
+                ),
               ),
             ),
           ),
@@ -282,9 +289,11 @@ class _ButtonPaint extends StatelessWidget {
     required this.depth,
     required this.focus,
     required this.child,
+    this.texture,
   });
 
   final Color fill, edge, highlight;
+  final Color? texture;
   final double radius, depth;
   final bool raised, pressedInset;
   final Color? focus;
@@ -306,6 +315,7 @@ class _ButtonPaint extends StatelessWidget {
           highlight: highlight,
           depth: depth,
           focus: focus,
+          texture: texture,
         ),
         child: child,
       ),
@@ -324,12 +334,16 @@ class _SurfacePainter extends CustomPainter {
     required this.highlight,
     required this.depth,
     required this.focus,
+    this.texture,
   });
 
   final Color fill, edge, highlight;
   final double radius, depth;
   final bool raised, pressedInset;
   final Color? focus;
+
+  /// Filled buttons carry the kit's corner pixel texture in their ink colour.
+  final Color? texture;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -374,6 +388,21 @@ class _SurfacePainter extends CustomPainter {
       );
     }
     canvas.restore();
+    if (texture != null) {
+      // `.lab-app .lab-control > .lab-pixel-texture`: fills the padding box, clipped to it with
+      // the control radius, at 8% for filled buttons.
+      final box = rect.deflate(1);
+      canvas.save();
+      canvas.clipRRect(RRect.fromRectAndRadius(box, Radius.circular(radius)));
+      paintPixelTexture(
+        canvas,
+        box,
+        color: texture!,
+        opacity: 0.08,
+        seed: 'control',
+      );
+      canvas.restore();
+    }
     if (edge.a > 0) {
       canvas.drawPath(
         superellipsePath(rect, radii, inset: 0.5),
@@ -404,6 +433,7 @@ class _SurfacePainter extends CustomPainter {
       old.pressedInset != pressedInset ||
       old.focus != focus ||
       old.highlight != highlight ||
+      old.texture != texture ||
       old.depth != depth;
 }
 
@@ -456,5 +486,51 @@ class _LoaderState extends State<_Loader> with SingleTickerProviderStateMixin {
         ),
       ),
     ),
+  );
+}
+
+/// Icon-only actions reuse the button emphasis, loading and surface engines (the web kit's
+/// `IconButton`). [ariaLabel] is required: the icon is the only content.
+class IconButton extends StatelessWidget {
+  const IconButton({
+    super.key,
+    required this.ariaLabel,
+    required this.icon,
+    this.variant = ButtonVariant.text,
+    this.controlSize = ControlSize.regular,
+    this.appearance = ButtonAppearance.defaultAppearance,
+    this.loading = false,
+    this.disabled = false,
+    this.pressed,
+    this.onClick,
+    this.focusNode,
+  });
+
+  /// Accessible name: the icon is the button's only content.
+  final String ariaLabel;
+  final Widget icon;
+  final ButtonVariant variant;
+
+  /// Square size: `regular` 44px, `compact` 40px, `inline` for text runs.
+  final ControlSize controlSize;
+  final ButtonAppearance appearance;
+  final bool loading, disabled;
+  final bool? pressed;
+  final VoidCallback? onClick;
+  final FocusNode? focusNode;
+
+  @override
+  Widget build(BuildContext context) => Button(
+    variant: variant,
+    controlSize: ControlSize.icon,
+    iconSize: controlSize,
+    appearance: appearance,
+    loading: loading,
+    disabled: disabled,
+    pressed: pressed,
+    onClick: onClick,
+    ariaLabel: ariaLabel,
+    focusNode: focusNode,
+    children: [icon],
   );
 }

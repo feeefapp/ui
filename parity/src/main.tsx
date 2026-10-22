@@ -16,6 +16,9 @@ createRoot(document.getElementById('root')!).render(
     initialTheme={mode}
     theme={{ palette: (query.get('palette') ?? 'lab') as Palette, density: (query.get('density') ?? 'comfortable') as Density }}
   >
-    <div id="stage">{scene()}</div>
+    {/* Apps render under .lab-app (it scopes control details such as the texture clip). */}
+    <div className="lab-app">
+      <div id="stage">{scene()}</div>
+    </div>
   </Provider>
 )
