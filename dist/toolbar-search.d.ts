@@ -44,6 +44,8 @@ export type ToolbarSearchProps = {
 /**
  * Search button that springs open into a field inside the same glass pill, taking the free width
  * of its row. Persistent material, stable control geometry and a velocity-preserving spring.
+ * Neighbouring bubbles in `children` are absorbed into the search glass as it opens and grow back
+ * out of it when it closes.
  */
 export declare function ToolbarSearch({ label, value, onValueChange, placeholder, children, trailing, disabled, className, defaultExpanded, inputRef, renderInput, onInputKeyDown, onExpandedChange }: ToolbarSearchProps): import("react").JSX.Element;
 //# sourceMappingURL=toolbar-search.d.ts.map

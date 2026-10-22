@@ -1,8 +1,10 @@
 'use client'
 
-import { useId, useLayoutEffect, useRef, useState, type ReactNode, type Ref, type KeyboardEventHandler } from 'react'
+import { useContext, useId, useLayoutEffect, useRef, useState, type ReactNode, type Ref, type KeyboardEventHandler } from 'react'
 import { ArrowLeft, Search, X } from 'lucide-react'
 import { ToolbarGroup } from './toolbar'
+import { GlassContainer } from './glass/container'
+import { GlassContext } from './glass/context'
 import { IconButton } from './primitives/button'
 import { RawInput, type InputElement } from './primitives/raw-input'
 import { useI18n } from './i18n'
@@ -54,10 +56,15 @@ export type ToolbarSearchProps = {
 /**
  * Search button that springs open into a field inside the same glass pill, taking the free width
  * of its row. Persistent material, stable control geometry and a velocity-preserving spring.
+ * Neighbouring bubbles in `children` are absorbed into the search glass as it opens and grow back
+ * out of it when it closes.
  */
 export function ToolbarSearch({ label, value, onValueChange, placeholder, children, trailing, disabled, className, defaultExpanded = false, inputRef, renderInput, onInputKeyDown, onExpandedChange }: ToolbarSearchProps) {
   const { t } = useI18n()
   const id = useId()
+  // Standalone, the search is its own glass container so neighbouring bubbles can be absorbed
+  // into it; inside a container (an app bar) it joins that one.
+  const nested = useContext(GlassContext) !== null
   const [expanded, setExpanded] = useState(defaultExpanded || !!value)
   const [moving, setMoving] = useState(false)
   const [closingValue, setClosingValue] = useState('')
@@ -150,7 +157,8 @@ export function ToolbarSearch({ label, value, onValueChange, placeholder, childr
       else onInputKeyDown?.(event)
     },
   }
-  return <div className={cn('lab-toolbar-search', className)} role="group" aria-label={label} data-expanded={expanded} data-moving={moving}>
+  const Root = nested ? 'div' : GlassContainer
+  return <Root className={cn('lab-toolbar-search', className)} role="group" aria-label={label} data-expanded={expanded} data-moving={moving}>
     <div ref={main} className="lab-toolbar-search-main">
       <ToolbarGroup ref={surface} label={label} className="lab-toolbar-search-surface" glassMotion="follow">
         <IconButton ref={trigger} variant="text" appearance="toolbar" controlSize="compact" aria-label={expanded ? t('lab.search.collapse') : label} aria-expanded={expanded} aria-controls={id} disabled={disabled} onClick={() => change(!expanded)}>
@@ -164,5 +172,5 @@ export function ToolbarSearch({ label, value, onValueChange, placeholder, childr
       <div className="lab-toolbar-search-controls" inert={expanded || moving} aria-hidden={expanded || moving}>{children}</div>
     </div>
     {trailing && <div className="lab-toolbar-search-trailing">{trailing}</div>}
-  </div>
+  </Root>
 }

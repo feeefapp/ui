@@ -2,6 +2,7 @@ import { useRef, type ReactNode, type KeyboardEvent } from 'react'
 import { Button } from './button'
 import { cn } from '../utils'
 import { revealScrollChild } from '../scroll/reveal'
+import { useGlassMember } from '../glass/member'
 import './segmented.css'
 
 /** One choice of a segmented control. */
@@ -44,6 +45,7 @@ export function SegmentedControl<const T extends string>({
   appearance?: 'grouped' | 'plain'
 }) {
   const group = useRef<HTMLDivElement>(null)
+  const member = useGlassMember(group, undefined, { enabled: appearance === 'grouped' })
   const enabled = options.filter((option) => !disabled && !option.disabled)
   const tabValue = enabled.some((option) => option.value === value) ? value : enabled[0]?.value
   const navigate = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -79,6 +81,7 @@ export function SegmentedControl<const T extends string>({
       ref={group}
       className={cn('lab-segmented', appearance === 'grouped' && 'lab-light-edge', className)}
       data-appearance={appearance}
+      data-glass-member={member ? '' : undefined}
       role="radiogroup"
       aria-label={label}
       aria-disabled={disabled || undefined}

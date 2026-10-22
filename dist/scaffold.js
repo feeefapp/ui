@@ -3,7 +3,7 @@ import { jsx as _jsx } from "react/jsx-runtime";
 import * as React from 'react';
 import { createPortal, flushSync } from 'react-dom';
 import { cn } from './utils.js';
-import { GlassContext } from './glass/context.js';
+import { useGlassMember } from './glass/member.js';
 import './scaffold.css';
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
 const ScaffoldContext = React.createContext(null);
@@ -218,9 +218,6 @@ export function FloatingLayer({ children, slot, active = true, edge = 'auto', ga
  * the container paints it, so neighbouring bubbles can merge, split and share light.
  */
 export const GlassGroup = React.forwardRef(({ as = 'div', className, children, glassId, glassUnion, glassMotion, ...props }, ref) => {
-    const glass = React.useContext(GlassContext);
-    const autoId = React.useId();
-    const id = glassId ?? autoId;
     const element = React.useRef(null);
     const setRef = React.useCallback((node) => {
         element.current = node;
@@ -229,19 +226,13 @@ export const GlassGroup = React.forwardRef(({ as = 'div', className, children, g
         else if (ref)
             ref.current = node;
     }, [ref]);
-    useIsomorphicLayoutEffect(() => {
-        if (!glass || !element.current)
-            return;
-        return glass.register(id, element.current, { union: glassUnion, motion: glassMotion });
-    }, [glass, id, glassUnion, glassMotion]);
-    // Content changes can resize the bubble without a resize the container would notice in time.
-    useIsomorphicLayoutEffect(() => glass?.requestMeasure());
+    const member = useGlassMember(element, glassId, { union: glassUnion, motion: glassMotion });
     return React.createElement(as, {
         ...props,
         'ref': setRef,
         'className': cn('lab-glass-group lab-light-edge', className),
         'data-lab-corners': '',
-        'data-glass-member': glass ? '' : undefined,
+        'data-glass-member': member ? '' : undefined,
     }, children);
 });
 GlassGroup.displayName = 'GlassGroup';

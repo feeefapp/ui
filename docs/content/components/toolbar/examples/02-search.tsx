@@ -33,7 +33,7 @@ export default function Search() {
           </ToolbarGroup>
         }
       >
-        {/* Children sit beside the closed search button and hide while the field is open. */}
+        {/* Children sit beside the closed search button; their glass is absorbed while the field is open. */}
         <ToolbarGroup label="Filters">
           <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Filters">
             <SlidersHorizontal />
@@ -55,5 +55,5 @@ export default function Search() {
 export const meta = {
   title: 'Expanding search',
   description:
-    'ToolbarSearch is a search button that springs open into a field in the same pill, across the width of its row. Use it directly as a row rather than inside Toolbar’s leading slot. children sit beside the closed button; trailing is always visible. Escape closes and clears.',
+    'ToolbarSearch is a search button that springs open into a field in the same pill, across the width of its row. Use it directly as a row rather than inside Toolbar’s leading slot. children sit beside the closed button and flow into the search glass as it opens, then grow back out of it; trailing is always visible. Escape closes and clears.',
 }

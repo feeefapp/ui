@@ -27,6 +27,7 @@ function Overview() {
             ['Several bubbles are replaced by one nearby', 'They flow into it'],
             ['A bubble appears or leaves far from others', 'It materializes from a point, or shrinks away'],
             ['A bubble moves because the layout changed', 'Its glass and content spring to the new place'],
+            ['A bubble becomes inert (ToolbarSearch opening over its neighbours)', 'It is absorbed into the nearest bubble and grows back out when it returns'],
           ]}
         />
         <p>
@@ -38,7 +39,7 @@ function Overview() {
       <Section title="Using it">
         <p>
           Make the container the row itself (it keeps your <C>className</C> and layout) and put{' '}
-          <C>ToolbarGroup</C>, <C>GlassGroup</C> or <C>Dock</C> inside. Give a bubble a <C>glassId</C> when
+          <C>ToolbarGroup</C>, <C>GlassGroup</C>, <C>Dock</C> or a grouped <C>SegmentedControl</C> inside. A standalone <C>ToolbarSearch</C> is its own container. Give a bubble a <C>glassId</C> when
           the same bubble can be rendered from different places, so it moves instead of reappearing. Use{' '}
           <C>glassUnion</C> to draw separate groups as one shape.
         </p>

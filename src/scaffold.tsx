@@ -3,7 +3,8 @@
 import * as React from 'react'
 import { createPortal, flushSync } from 'react-dom'
 import { cn } from './utils'
-import { GlassContext, type GlassMotion } from './glass/context'
+import type { GlassMotion } from './glass/context'
+import { useGlassMember } from './glass/member'
 import './scaffold.css'
 
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect
@@ -326,9 +327,6 @@ export const GlassGroup = React.forwardRef<
     glassMotion?: GlassMotion
   }
 >(({ as = 'div', className, children, glassId, glassUnion, glassMotion, ...props }, ref) => {
-  const glass = React.useContext(GlassContext)
-  const autoId = React.useId()
-  const id = glassId ?? autoId
   const element = React.useRef<HTMLElement | null>(null)
   const setRef = React.useCallback(
     (node: HTMLElement | null) => {
@@ -338,12 +336,7 @@ export const GlassGroup = React.forwardRef<
     },
     [ref]
   )
-  useIsomorphicLayoutEffect(() => {
-    if (!glass || !element.current) return
-    return glass.register(id, element.current, { union: glassUnion, motion: glassMotion })
-  }, [glass, id, glassUnion, glassMotion])
-  // Content changes can resize the bubble without a resize the container would notice in time.
-  useIsomorphicLayoutEffect(() => glass?.requestMeasure())
+  const member = useGlassMember(element, glassId, { union: glassUnion, motion: glassMotion })
   return React.createElement(
     as,
     {
@@ -351,7 +344,7 @@ export const GlassGroup = React.forwardRef<
       'ref': setRef,
       'className': cn('lab-glass-group lab-light-edge', className),
       'data-lab-corners': '',
-      'data-glass-member': glass ? '' : undefined,
+      'data-glass-member': member ? '' : undefined,
     },
     children
   )

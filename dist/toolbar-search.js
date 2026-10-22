@@ -1,8 +1,10 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useId, useLayoutEffect, useRef, useState } from 'react';
+import { useContext, useId, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowLeft, Search, X } from 'lucide-react';
 import { ToolbarGroup } from './toolbar.js';
+import { GlassContainer } from './glass/container.js';
+import { GlassContext } from './glass/context.js';
 import { IconButton } from './primitives/button.js';
 import { RawInput } from './primitives/raw-input.js';
 import { useI18n } from './i18n.js';
@@ -12,10 +14,15 @@ import './toolbar-search.css';
 /**
  * Search button that springs open into a field inside the same glass pill, taking the free width
  * of its row. Persistent material, stable control geometry and a velocity-preserving spring.
+ * Neighbouring bubbles in `children` are absorbed into the search glass as it opens and grow back
+ * out of it when it closes.
  */
 export function ToolbarSearch({ label, value, onValueChange, placeholder, children, trailing, disabled, className, defaultExpanded = false, inputRef, renderInput, onInputKeyDown, onExpandedChange }) {
     const { t } = useI18n();
     const id = useId();
+    // Standalone, the search is its own glass container so neighbouring bubbles can be absorbed
+    // into it; inside a container (an app bar) it joins that one.
+    const nested = useContext(GlassContext) !== null;
     const [expanded, setExpanded] = useState(defaultExpanded || !!value);
     const [moving, setMoving] = useState(false);
     const [closingValue, setClosingValue] = useState('');
@@ -136,7 +143,8 @@ export function ToolbarSearch({ label, value, onValueChange, placeholder, childr
                 onInputKeyDown?.(event);
         },
     };
-    return _jsxs("div", { className: cn('lab-toolbar-search', className), role: "group", "aria-label": label, "data-expanded": expanded, "data-moving": moving, children: [_jsxs("div", { ref: main, className: "lab-toolbar-search-main", children: [_jsxs(ToolbarGroup, { ref: surface, label: label, className: "lab-toolbar-search-surface", glassMotion: "follow", children: [_jsx(IconButton, { ref: trigger, variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": expanded ? t('lab.search.collapse') : label, "aria-expanded": expanded, "aria-controls": id, disabled: disabled, onClick: () => change(!expanded), children: _jsxs("span", { className: "lab-toolbar-search-glyph", "data-expanded": expanded, children: [_jsx(Search, {}), _jsx(ArrowLeft, { className: "lab-dir-flip" })] }) }), _jsxs("div", { className: "lab-toolbar-search-editor", inert: !expanded, "aria-hidden": !expanded, children: [renderInput ? renderInput(input) : _jsx(RawInput, { ...input }), _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": t('lab.search.clear'), disabled: !value || disabled, onClick: () => { if (value)
+    const Root = nested ? 'div' : GlassContainer;
+    return _jsxs(Root, { className: cn('lab-toolbar-search', className), role: "group", "aria-label": label, "data-expanded": expanded, "data-moving": moving, children: [_jsxs("div", { ref: main, className: "lab-toolbar-search-main", children: [_jsxs(ToolbarGroup, { ref: surface, label: label, className: "lab-toolbar-search-surface", glassMotion: "follow", children: [_jsx(IconButton, { ref: trigger, variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": expanded ? t('lab.search.collapse') : label, "aria-expanded": expanded, "aria-controls": id, disabled: disabled, onClick: () => change(!expanded), children: _jsxs("span", { className: "lab-toolbar-search-glyph", "data-expanded": expanded, children: [_jsx(Search, {}), _jsx(ArrowLeft, { className: "lab-dir-flip" })] }) }), _jsxs("div", { className: "lab-toolbar-search-editor", inert: !expanded, "aria-hidden": !expanded, children: [renderInput ? renderInput(input) : _jsx(RawInput, { ...input }), _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": t('lab.search.clear'), disabled: !value || disabled, onClick: () => { if (value)
                                             onValueChange(''); field.current?.focus({ preventScroll: true }); }, children: _jsx(X, {}) })] })] }), _jsx("div", { className: "lab-toolbar-search-controls", inert: expanded || moving, "aria-hidden": expanded || moving, children: children })] }), trailing && _jsx("div", { className: "lab-toolbar-search-trailing", children: trailing })] });
 }
 //# sourceMappingURL=toolbar-search.js.map

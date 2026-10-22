@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { type GlassMotion } from './glass/context.js';
+import type { GlassMotion } from './glass/context.js';
 import './scaffold.css';
 /**
  * Named floating regions. Each writes its reserved size to `--lab-<slot>-reserve`: `header` (top),
