@@ -1,8 +1,7 @@
-import 'dart:ui' show lerpDouble;
-
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
+import '../brand/pixel_loader.dart';
 import '../brand/pixel_texture.dart';
 import '../icons/lucide.dart';
 import '../theme.dart';
@@ -239,7 +238,7 @@ class _ButtonState extends State<Button> {
       mainAxisSize: MainAxisSize.min,
       spacing: 6,
       children: [
-        if (widget.loading) _Loader(color: ink),
+        if (widget.loading) PixelLoader(size: 16, decorative: true, color: ink),
         if (!(widget.loading && icon)) ...widget.children,
       ],
     );
@@ -289,7 +288,12 @@ class _ButtonState extends State<Button> {
     );
 
     result = AnimatedOpacity(
-      opacity: widget.disabled ? 0.42 : 1,
+      // [data-loading] (0.78) is declared after :disabled (0.42) in system.css, so it wins.
+      opacity: widget.loading
+          ? 0.78
+          : widget.disabled
+          ? 0.42
+          : 1,
       duration: const Duration(milliseconds: 140),
       child: result,
     );
@@ -487,58 +491,6 @@ class _SurfacePainter extends CustomPainter {
       old.highlight != highlight ||
       old.texture != texture ||
       old.depth != depth;
-}
-
-/// A small three-dot loader standing in for the web kit's pixel loader (the pixel art port is a
-/// later step). Decorative: busy state is announced through the button's semantics.
-class _Loader extends StatefulWidget {
-  const _Loader({required this.color});
-  final Color color;
-  @override
-  State<_Loader> createState() => _LoaderState();
-}
-
-class _LoaderState extends State<_Loader> with SingleTickerProviderStateMixin {
-  late final AnimationController _clock = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 900),
-  )..repeat();
-
-  @override
-  void dispose() {
-    _clock.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => ExcludeSemantics(
-    child: SizedBox(
-      width: 16,
-      height: 16,
-      child: AnimatedBuilder(
-        animation: _clock,
-        builder: (context, _) => Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            for (var i = 0; i < 3; i++)
-              Opacity(
-                opacity: lerpDouble(
-                  0.3,
-                  1,
-                  (1 - ((_clock.value * 3 - i) % 3).abs().clamp(0, 1))
-                      .toDouble(),
-                )!,
-                child: SizedBox(
-                  width: 4,
-                  height: 4,
-                  child: ColoredBox(color: widget.color),
-                ),
-              ),
-          ],
-        ),
-      ),
-    ),
-  );
 }
 
 /// Icon-only actions reuse the button emphasis, loading and surface engines (the web kit's

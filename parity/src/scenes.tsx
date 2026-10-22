@@ -52,6 +52,11 @@ export const SCENES: Record<string, () => ReactNode> = {
         <Button variant="elevated" appearance="toolbar">Toolbar elevated</Button>
         <Button variant="outlined" appearance="toolbar">Toolbar outlined</Button>
       </div>
+      <div className="row">
+        <Button variant="filled" loading>Saving</Button>
+        <Button variant="elevated" loading>Syncing</Button>
+        <IconButton variant="elevated" loading aria-label="Refresh"><LucideSearch /></IconButton>
+      </div>
     </>
   ),
   segmented: () => <Segmented />,

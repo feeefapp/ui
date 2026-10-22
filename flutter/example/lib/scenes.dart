@@ -79,6 +79,27 @@ final Map<String, List<Widget> Function()> scenes = {
         children: const [Text('Toolbar outlined')],
       ),
     ]),
+    row([
+      Button(
+        variant: .filled,
+        loading: true,
+        onClick: _noop,
+        children: const [Text('Saving')],
+      ),
+      Button(
+        variant: .elevated,
+        loading: true,
+        onClick: _noop,
+        children: const [Text('Syncing')],
+      ),
+      IconButton(
+        variant: .elevated,
+        loading: true,
+        ariaLabel: 'Refresh',
+        onClick: _noop,
+        icon: const LucideSearch(),
+      ),
+    ]),
   ],
   'segmented': () => [const _Segmented()],
   'glass': () => [
