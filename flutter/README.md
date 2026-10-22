@@ -2,9 +2,27 @@
 
 The Flutter twin of `@feeef.dev/ui`: same component names and props, same tokens and geometry,
 built on `package:flutter/widgets.dart` only (it works inside a MaterialApp but doesn't need one).
+Labels and other visible content are widgets (`Text`, `LucideBold()`), on both sides.
 
-Status: parity spike. `ThemeProvider`, `Button` and `SegmentedControl`, with the kit's colour tokens
-and superellipse corners.
+## What is ported
+
+| Web kit | Flutter | Parity scene (React vs Flutter pixels) |
+|---|---|---|
+| `theme`, `theme-config`, tokens | `ThemeProvider`, `ThemeConfig` (palette, density, radius, glass, glassRenderer) | every scene |
+| `brand/geometry`, `pixel-art` noise | `superellipsePath`, `SuperellipseBorder`, `paintPixelTexture` | `corners` 0.02–0.04% |
+| `primitives/button` | `Button`, `IconButton`, `ControlOverrides` | `buttons`, `button-states` ≈1% |
+| `primitives/segmented` | `SegmentedControl` | `segmented` 0.21–0.50% |
+| `primitives/choice`, `primitives/badge` | `Checkbox`, `Radio`, `RadioGroup`, `ProBadge` | `choices` 0.60–0.80% |
+| `primitives/slider`, `switch` | `Slider`, `SlideSwitch`, `SlideSwitchIndicator` | `sliders` 0.03–0.07% |
+| `primitives/text-field`, `field-shell` | `TextField`, `FieldShell` | `fields` 0.59–0.78% |
+| `glass` | `GlassContainer`, `GlassScope`, glass geometry, light, press, transitions | `glass` 0.36–0.49% |
+| `scaffold` (`GlassGroup`), `toolbar` | `GlassGroup`, `Toolbar`, `ToolbarGroup` | `glass` |
+| `physics/spring`, `motion-value` | `Spring`, `Springs`, `solveSpring`, `MotionValue`, `rubberBand` | vectors |
+| `lucide-react` | `LucideIcon` + all 1,895 icons (generated) | `icons` 0.43–0.63% |
+
+Not yet: dock, scroll area, modal, popover, select, navigation containers, workspace scaffold.
+Glass on Flutter has no adaptive tint (it can't sample what is behind it) and no refraction yet;
+`GlassRenderer.canvas` blurs like `css` until the Impeller shader lands.
 
 ## Use
 
@@ -18,23 +36,34 @@ ui.ThemeProvider(
 ```
 
 Import paths mirror the web kit (`package:feeef_ui/primitives/button.dart` ↔
-`@feeef.dev/ui/primitives/button`). Names such as `Button` are generic; prefix the import when an app
-also imports Material.
+`@feeef.dev/ui/primitives/button`). Names such as `Button` and `RadioGroup` are generic: prefix the
+import when an app also imports Material, or `hide RadioGroup` from `widgets.dart`.
 
 ## Parity
 
-- `test/tokens_test.dart`: every colour token and emphasis recipe, in the lab and mono palettes,
-  light and dark, matches what the browser computes from the web kit's CSS (fixture
-  `test/fixtures/css_tokens.json`, resolved with `getComputedStyle`).
-- `test/geometry_test.dart`: superellipse corners match `brand/geometry.ts` point for point (fixture
-  generated from the TypeScript).
-- `test/widgets_test.dart`: sizes per density and pointer type, activation, disabled/loading,
-  semantics, and the segmented control's radio keyboard model (arrows, Home/End, RTL, one Tab stop).
-- `example/`: a Flutter web gallery rendering the same demos as the docs, for side-by-side checks
-  (`flutter build web` in `example/`, then the `ui-flutter-gallery` launch config).
+Numbers are tested against the web kit, not eyeballed:
 
-Known gap: the web kit uses the system font stack and Flutter web can't, so text widths differ until
-both sides bundle one font for comparisons.
+- `test/tokens_test.dart`: every colour token and emphasis recipe matches what the browser computes
+  from the web kit's CSS (`test/fixtures/css_tokens.json`).
+- `test/geometry_test.dart`, `glass_test.dart`, `motion_test.dart`, `pixel_noise_test.dart`:
+  superellipse corners, glass distances and outlines, light, springs, press response, transition
+  plans and pixel noise match vectors generated from the TypeScript
+  (`npx tsx flutter/tool/generate_glass_fixture.ts` from `ui/`).
+- Widget tests cover sizes per density and pointer type, keyboard models (radio groups, sliders),
+  validation, semantics and glass motion.
+- `../parity/`: the same scenes rendered by React (`parity/src`) and by Flutter web
+  (`example/`), captured in headless Chrome at 2x and diffed pixel by pixel:
+
+```bash
+npx vite build --config parity/vite.config.ts
+cd flutter/example && flutter build web --release && cd ../..
+node parity/compare.mjs
+```
+
+Text sits on Chrome's baseline: `CssBaseline` reproduces Blink's line layout (ascent and descent
+rounded at the device scale, half leading floored). What remains in the diffs is glyph
+rasterization (CoreText on macOS draws heavier, slightly differently hinted glyphs than Skia); the
+`text` scene measures it.
 
 ```bash
 flutter test
