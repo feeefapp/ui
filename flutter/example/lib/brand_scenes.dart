@@ -1,10 +1,4 @@
-import 'package:feeef_ui/brand/animated_logo.dart';
-import 'package:feeef_ui/brand/logo.dart';
 import 'package:feeef_ui/feeef_ui.dart';
-import 'package:feeef_ui/navigation/workspace_header.dart';
-import 'package:feeef_ui/pixel_art.dart';
-import 'package:feeef_ui/primitives/fields.dart';
-import 'package:feeef_ui/primitives/switch.dart';
 import 'package:flutter/widgets.dart';
 
 /// Scenes for the brand, header and avatar ports: the twins of parity/src/brand-scenes.tsx.

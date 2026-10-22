@@ -7,8 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
-import '../brand/pixel_loader.dart';
-import '../brand/pixel_art.dart';
+import '../pixel_art.dart';
 import '../glass/container.dart';
 import '../i18n/i18n.dart';
 import '../icons/lucide.dart';

@@ -562,6 +562,72 @@ class _ActionControl extends StatelessWidget {
   }
 }
 
+/// A trigger that opens a menu of [actions] on a [PopoverSurface] below it, aligned to its end:
+/// rows with icons, checkable toggles, nested submenus, destructive rows, arrow keys and Escape.
+/// The Flutter stand-in for a Radix `DropdownMenu` styled with the kit's `.lab-actions-menu`
+/// classes, and the same menu an [ActionsBar] opens for its groups and overflow. Commands run like
+/// in the bar: a returned future blocks repeats until it completes.
+class ActionsMenuAnchor extends StatefulWidget {
+  const ActionsMenuAnchor({
+    super.key,
+    required this.label,
+    required this.actions,
+    required this.builder,
+    this.enabled = true,
+    this.onActionError,
+  });
+
+  /// Accessible name of the menu.
+  final String label;
+  final List<Action> actions;
+
+  /// Builds the trigger; `open` toggles the menu (null when disabled).
+  final Widget Function(VoidCallback? open) builder;
+  final bool enabled;
+  final void Function(Object error, Action action)? onActionError;
+
+  @override
+  State<ActionsMenuAnchor> createState() => _ActionsMenuAnchorState();
+}
+
+class _ActionsMenuAnchorState extends State<ActionsMenuAnchor> {
+  final _pending = <String>{};
+
+  void _execute(Action action, [bool? checked]) {
+    if (action is GroupAction) return;
+    if (action.disabled || action.loading || _pending.contains(action.id)) {
+      return;
+    }
+    setState(() => _pending.add(action.id));
+    () async {
+      try {
+        switch (action) {
+          case ToggleAction():
+            await action.onCheckedChange(checked ?? !action.checked);
+          case CommandAction():
+            await action.onAction();
+          case GroupAction():
+            break;
+        }
+      } catch (error) {
+        widget.onActionError?.call(error, action);
+      } finally {
+        if (mounted) setState(() => _pending.remove(action.id));
+      }
+    }();
+  }
+
+  @override
+  Widget build(BuildContext context) => _MenuAnchor(
+    label: widget.label,
+    actions: widget.actions,
+    pending: _pending,
+    execute: _execute,
+    enabled: widget.enabled && widget.actions.isNotEmpty,
+    builder: widget.builder,
+  );
+}
+
 /// A trigger that opens a menu of actions below it, aligned to its end.
 class _MenuAnchor extends StatefulWidget {
   const _MenuAnchor({
@@ -572,8 +638,12 @@ class _MenuAnchor extends StatefulWidget {
     required this.enabled,
     required this.builder,
     this.onOpen,
+    this.submenu = false,
   });
   final String label;
+
+  /// Opens beside the row, toward the inline end (Radix `SubContent`, sideOffset 4).
+  final bool submenu;
   final List<Action> actions;
   final Set<String> pending;
   final void Function(Action action, [bool? checked]) execute;
@@ -623,13 +693,22 @@ class _MenuAnchorState extends State<_MenuAnchor> {
             ),
             CompositedTransformFollower(
               link: _link,
-              targetAnchor: AlignmentDirectional.bottomEnd.resolve(
-                Directionality.of(context),
-              ),
-              followerAnchor: AlignmentDirectional.topEnd.resolve(
-                Directionality.of(context),
-              ),
-              offset: const Offset(0, 8),
+              targetAnchor:
+                  (widget.submenu
+                          ? AlignmentDirectional.topEnd
+                          : AlignmentDirectional.bottomEnd)
+                      .resolve(Directionality.of(context)),
+              followerAnchor:
+                  (widget.submenu
+                          ? AlignmentDirectional.topStart
+                          : AlignmentDirectional.topEnd)
+                      .resolve(Directionality.of(context)),
+              offset: widget.submenu
+                  ? Offset(
+                      Directionality.of(context) == TextDirection.rtl ? -4 : 4,
+                      -4,
+                    )
+                  : const Offset(0, 8),
               child: _ActionsMenu(
                 label: widget.label,
                 actions: widget.actions,
@@ -838,8 +917,10 @@ class _MenuRow extends StatelessWidget {
         ),
       ),
     );
-    Widget item = Opacity(opacity: disabled ? 0.5 : 1, child: row);
+    final faded = Opacity(opacity: disabled ? 0.5 : 1, child: row);
+    Widget item = faded;
     if (a is GroupAction) {
+      // The builder must close over the row, not over `item` (which becomes this anchor).
       item = _MenuAnchor(
         label: a.label,
         actions: a.actions,
@@ -847,10 +928,11 @@ class _MenuRow extends StatelessWidget {
         execute: execute,
         enabled: !disabled,
         onOpen: a.onOpen,
+        submenu: true,
         builder: (open) => GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: open,
-          child: item,
+          child: faded,
         ),
       );
     } else {

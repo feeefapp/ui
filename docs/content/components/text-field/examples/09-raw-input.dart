@@ -1,4 +1,4 @@
-import 'package:feeef_ui/primitives/raw_input.dart';
+import 'package:feeef_ui/feeef_ui.dart';
 import 'package:flutter/widgets.dart';
 
 class RawInputExample extends StatefulWidget {

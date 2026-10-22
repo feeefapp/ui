@@ -15,7 +15,7 @@ enum DockAlign { start, center, end, stretch }
 /// Floating glass container for a status tile and its actions: the twin of `Dock` in
 /// `@feeef.dev/ui/dock`. It hugs its content up to the host's width and animates size changes;
 /// positioning and scroll reservations belong to its host.
-class Dock extends StatelessWidget {
+class Dock extends StatefulWidget {
   const Dock({
     super.key,
     required this.label,
@@ -41,7 +41,32 @@ class Dock extends StatelessWidget {
   final String swapKey;
 
   @override
+  State<Dock> createState() => _DockState();
+}
+
+class _DockState extends State<Dock> {
+  final _tileKey = GlobalKey();
+
+  /// The tile's natural width, padding included (`useDockSize`'s `intrinsic`).
+  double? _tileIntrinsic;
+
+  void _measureTile() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final box = _tileKey.currentContext?.findRenderObject() as RenderBox?;
+      if (box == null || !box.attached) return;
+      final width = box.getMaxIntrinsicWidth(double.infinity).ceilToDouble();
+      if (width != _tileIntrinsic) setState(() => _tileIntrinsic = width);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final content = widget.content;
+    final children = widget.children;
+    final align = widget.align;
+    final swapKey = widget.swapKey;
+    final label = widget.label;
     final theme = ThemeProvider.of(context);
     final narrow = (MediaQuery.maybeSizeOf(context)?.width ?? 1000) <= 420;
     final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
@@ -51,28 +76,40 @@ class Dock extends StatelessWidget {
         final available = math.max(0.0, constraints.maxWidth - 10);
         // The 4px inset (`--lab-dock-inset`): never a gap wider than the padding around it.
         const gap = 4.0;
-        // The tile takes at most 40% of the room and always leaves an action's width.
+        // The tile takes its natural width, at most 40% of the room, and always leaves an
+        // action's width; the actions get the rest.
+        if (content != null) _measureTile();
         final tileMax = math.max(
           0.0,
-          math.min(available * 0.4, available - 44 - gap),
+          math.min(
+            math.min(available * 0.4, _tileIntrinsic ?? double.infinity),
+            available - 44 - gap,
+          ),
         );
+        // `.lab-dock-content` min-width (48px on narrow screens), which wins over its max.
+        final tileMin = narrow ? 48.0 : 64.0;
         Widget row = Row(
           mainAxisSize: MainAxisSize.min,
           spacing: gap,
           children: [
+            // The tile is bounded by tileMax and the actions by what it leaves, so neither has to
+            // share a flex split (a Flexible tile would take half the row from the actions).
             if (content != null)
-              Flexible(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: tileMax),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: narrow ? 6 : 10),
-                    child: DefaultTextStyle.merge(
-                      style: const TextStyle(fontSize: 13),
-                      maxLines: 1,
-                      softWrap: false,
-                      overflow: TextOverflow.ellipsis,
-                      child: content!,
-                    ),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: tileMin,
+                  maxWidth: math.max(tileMin, tileMax),
+                ),
+                child: Padding(
+                  // Measured unclamped, so a tile that was squeezed can grow back.
+                  key: _tileKey,
+                  padding: EdgeInsets.symmetric(horizontal: narrow ? 6 : 10),
+                  child: DefaultTextStyle.merge(
+                    style: const TextStyle(fontSize: 13),
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                    child: content,
                   ),
                 ),
               ),

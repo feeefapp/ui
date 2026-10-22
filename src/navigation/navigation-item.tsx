@@ -15,7 +15,7 @@ export type WorkspaceAction = {
 /**
  * One row of sidebar navigation: icon and label, a link with `href` or a button without. In
  * `compact` (rail) mode only the icon shows and the label moves into a tooltip. Needs a Radix
- * Tooltip.Provider above it.
+ * Tooltip.Provider above it in compact mode.
  */
 export function NavigationItem({
   label,
@@ -46,46 +46,45 @@ export function NavigationItem({
       <span className="lab-navigation-label">{label}</span>
     </>
   )
+  const item = href ? (
+    <Button
+      asChild
+      variant="ghost"
+      appearance="toolbar"
+      className="lab-navigation-item"
+      data-compact={compact}
+    >
+      <a href={href} aria-current={active ? 'page' : undefined} onClick={onSelect}>
+        {content}
+      </a>
+    </Button>
+  ) : (
+    <Button
+      variant="ghost"
+      appearance="toolbar"
+      className="lab-navigation-item"
+      data-compact={compact}
+      aria-current={active ? 'page' : undefined}
+      onClick={onSelect}
+    >
+      {content}
+    </Button>
+  )
+  // Only the rail shows a tooltip, so a full-width item works without a Tooltip.Provider.
+  if (!compact) return item
   return (
     <Tooltip.Root>
-      <Tooltip.Trigger asChild>
-        {href ? (
-          <Button
-            asChild
-            variant="ghost"
-            appearance="toolbar"
-            className="lab-navigation-item"
-            data-compact={compact}
-          >
-            <a href={href} aria-current={active ? 'page' : undefined} onClick={onSelect}>
-              {content}
-            </a>
-          </Button>
-        ) : (
-          <Button
-            variant="ghost"
-            appearance="toolbar"
-            className="lab-navigation-item"
-            data-compact={compact}
-            aria-current={active ? 'page' : undefined}
-            onClick={onSelect}
-          >
-            {content}
-          </Button>
-        )}
-      </Tooltip.Trigger>
-      {compact && (
-        <Tooltip.Portal>
-          <Tooltip.Content
-            className="lab-navigation-tooltip"
-            side="right"
-            sideOffset={8}
-            collisionPadding={12}
-          >
-            {label}
-          </Tooltip.Content>
-        </Tooltip.Portal>
-      )}
+      <Tooltip.Trigger asChild>{item}</Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content
+          className="lab-navigation-tooltip"
+          side="right"
+          sideOffset={8}
+          collisionPadding={12}
+        >
+          {label}
+        </Tooltip.Content>
+      </Tooltip.Portal>
     </Tooltip.Root>
   )
 }

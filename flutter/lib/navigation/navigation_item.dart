@@ -13,6 +13,7 @@ class NavigationItem extends StatelessWidget {
     super.key,
     required this.label,
     required this.icon,
+    this.href,
     this.onSelect,
     this.active = false,
     required this.compact,
@@ -23,6 +24,10 @@ class NavigationItem extends StatelessWidget {
 
   /// 20px icon.
   final Widget icon;
+
+  /// The item's destination. With it the item is announced as a link to [href] (the web kit
+  /// renders an `<a href>`); route on [onSelect], since Flutter has no browser navigation.
+  final String? href;
 
   /// Called on activation (route, or close a drawer).
   final VoidCallback? onSelect;
@@ -49,6 +54,8 @@ class NavigationItem extends StatelessWidget {
         width: compact ? s.rowHeight : double.infinity,
         child: Semantics(
           selected: active,
+          link: href != null,
+          linkUrl: href == null ? null : Uri.tryParse(href!),
           child: Button(
             variant: ButtonVariant.ghost,
             appearance: ButtonAppearance.toolbar,

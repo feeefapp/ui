@@ -36,8 +36,13 @@ class GlassContainer extends StatefulWidget {
     this.spacing = 8,
     this.light = GlassLightMode.pointer,
     this.interactive = true,
+    this.adaptive = true,
     required this.child,
   });
+
+  /// Small glass (at most [glassAdaptMaxHeight] tall) over a [GlassBackdrop] of the opposite
+  /// tone switches to that tone's glass and ink, like the web kit's adaptive tint.
+  final bool adaptive;
 
   /// Distance in px at which bubbles start to bend toward each other; they join at half of it.
   final double spacing;
@@ -60,12 +65,14 @@ class GlassScope extends StatelessWidget {
     this.spacing = 8,
     this.light = GlassLightMode.pointer,
     this.interactive = true,
+    this.adaptive = true,
     required this.child,
   });
 
   final double spacing;
   final GlassLightMode light;
   final bool interactive;
+  final bool adaptive;
   final Widget child;
 
   @override
@@ -79,8 +86,30 @@ class GlassScope extends StatelessWidget {
           spacing: spacing,
           light: light,
           interactive: interactive,
+          adaptive: adaptive,
           child: child,
         );
+}
+
+/// The tone of what lies behind glass (the web kit's `GlassTone`).
+enum GlassTone { light, dark }
+
+/// Glass taller than this (px) never flips its tone (`GLASS_ADAPT_MAX_HEIGHT`).
+const double glassAdaptMaxHeight = 72;
+
+/// Marks a region (a photo, a video, a map) as dark or light, so small glass floating over it
+/// adapts: the twin of the web kit's `data-lab-backdrop="dark|light"`. Flutter can't read the
+/// pixels behind a widget, so a [GlassContainer] uses the nearest enclosing backdrop.
+class GlassBackdrop extends InheritedWidget {
+  const GlassBackdrop({super.key, required this.tone, required super.child});
+  final GlassTone tone;
+
+  /// The tone of the nearest enclosing backdrop, or null.
+  static GlassTone? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<GlassBackdrop>()?.tone;
+
+  @override
+  bool updateShouldNotify(GlassBackdrop old) => old.tone != tone;
 }
 
 /// What a bubble registers: how to find its box, and its options.
@@ -177,8 +206,42 @@ class _GlassContainerState extends State<GlassContainer> {
     }
   }
 
+  /// The container's height after the last layout, for the adaptive-tint size rule.
+  double? _height;
+
+  void _measureHeight() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final box = _scene.host();
+      if (box == null || !box.hasSize) return;
+      final small = box.size.height <= glassAdaptMaxHeight;
+      if (_height == null || (_height! <= glassAdaptMaxHeight) != small) {
+        setState(() => _height = box.size.height);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final backdrop = widget.adaptive ? GlassBackdrop.maybeOf(context) : null;
+    if (backdrop == null) return _build(context);
+    // Adaptive tint: small glass over the opposite tone takes that tone's glass and ink.
+    _measureHeight();
+    final theme = ThemeProvider.of(context);
+    final mode = theme.brightness == Brightness.dark
+        ? GlassTone.dark
+        : GlassTone.light;
+    final flip = backdrop != mode && (_height ?? 0) <= glassAdaptMaxHeight;
+    return ThemeProvider(
+      config: theme.config,
+      brightness: flip
+          ? (backdrop == GlassTone.dark ? Brightness.dark : Brightness.light)
+          : theme.brightness,
+      child: Builder(builder: _build),
+    );
+  }
+
+  Widget _build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final liquid = theme.config.glass == GlassStyle.liquid;
@@ -486,6 +549,9 @@ class _GlassScene extends ChangeNotifier {
   final _members = <String, _Member>{};
   final _shapes = <String, _Shape>{};
   final _contents = <String, ValueNotifier<(Offset, double)>>{};
+
+  /// Content offsets set while painting, applied after the frame unless a newer value lands first.
+  final _pendingContent = <String, (Offset, double)>{};
   final _unsubscribe = <String, List<void Function()>>{};
   List<GlassPath> paths = const [];
   String _key = '';
@@ -695,15 +761,19 @@ class _GlassScene extends ChangeNotifier {
       final offset = Offset(fx.abs() < 0.05 ? 0 : fx, fy.abs() < 0.05 ? 0 : fy);
       final press = shape.press.get();
       final next = (offset, (press - 1).abs() < 0.001 ? 1.0 : press);
-      if (content.value != next) {
-        if (_painting) {
-          // Applied after this frame: a listener rebuilding during paint is not allowed.
-          SchedulerBinding.instance.addPostFrameCallback(
-            (_) => content.value = next,
-          );
-        } else {
-          content.value = next;
+      if (_painting) {
+        // Applied after this frame: a listener rebuilding during paint is not allowed. A newer
+        // value set directly in the meantime wins (it clears the pending one).
+        if (content.value != next || _pendingContent.containsKey(id)) {
+          _pendingContent[id] = next;
+          SchedulerBinding.instance.addPostFrameCallback((_) {
+            final pending = _pendingContent.remove(id);
+            if (pending != null) content.value = pending;
+          });
         }
+      } else {
+        _pendingContent.remove(id);
+        content.value = next;
       }
     }
   }

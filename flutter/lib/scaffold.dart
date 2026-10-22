@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/widgets.dart';
@@ -23,8 +24,18 @@ class GlassGroup extends StatefulWidget {
     this.glassHidden = false,
     this.radius,
     this.padding = EdgeInsets.zero,
+    this.as = SurfaceTag.div,
+    this.label,
     required this.child,
   });
+
+  /// Element it stands for, so the group can be a landmark (`nav`, `aside`, …), like the web
+  /// kit's `as`. Maps to the nearest Flutter semantics role.
+  final SurfaceTag as;
+
+  /// Accessible name (`aria-label`). With a label or a landmark [as], the group is its own
+  /// semantics node.
+  final String? label;
 
   /// Identity of this bubble inside a GlassContainer. A bubble with the same id moves instead of
   /// reappearing; different ids morph into each other.
@@ -57,7 +68,14 @@ class _GlassGroupState extends State<GlassGroup> {
     final narrow = (MediaQuery.maybeSizeOf(context)?.width ?? 1000) <= 720;
     final radius =
         widget.radius ?? (narrow ? 27 * s.radiusScale : s.radiusGlass);
-    return GlassMemberBox(
+    final role = switch (widget.as) {
+      SurfaceTag.nav => ui.SemanticsRole.navigation,
+      SurfaceTag.aside => ui.SemanticsRole.complementary,
+      SurfaceTag.footer => ui.SemanticsRole.contentInfo,
+      SurfaceTag.section when widget.label != null => ui.SemanticsRole.region,
+      _ => null,
+    };
+    final group = GlassMemberBox(
       glassId: widget.glassId,
       union: widget.glassUnion,
       motion: widget.glassMotion,
@@ -70,8 +88,21 @@ class _GlassGroupState extends State<GlassGroup> {
         child: Padding(padding: widget.padding, child: widget.child),
       ),
     );
+    if (role == null && widget.label == null && widget.as == SurfaceTag.div) {
+      return group;
+    }
+    return Semantics(
+      container: true,
+      explicitChildNodes: true,
+      role: role,
+      label: widget.label,
+      child: group,
+    );
   }
 }
+
+/// The element a [GlassGroup] stands for (the web kit's `as`).
+enum SurfaceTag { div, header, aside, nav, section, footer }
 
 /// `.lab-glass-group.lab-light-edge` painted by one bubble on its own.
 class _StandaloneGlass extends StatelessWidget {
@@ -171,4 +202,218 @@ class _GlassGroupPainter extends CustomPainter {
       old.rim != rim ||
       old.edgeLight != edgeLight ||
       old.shadow != shadow;
+}
+
+/// Named floating regions (the web kit's `FloatingSlot`). `header` reserves from the top, `rail`
+/// from the start, `player` and `notice` from the bottom; notices stack above the other bottom
+/// chrome.
+enum FloatingSlot { player, header, rail, notice }
+
+/// Page-level host for floating chrome: the twin of `ScaffoldProvider` in
+/// `@feeef.dev/ui/scaffold`. Mount it once near the root. [FloatingLayer]s inside it float over
+/// the whole window and report their measured size, which [ScaffoldProvider.reserveOf] returns
+/// (the web kit's `--lab-<slot>-reserve`), so content can pad itself clear of them.
+class ScaffoldProvider extends StatefulWidget {
+  const ScaffoldProvider({super.key, required this.child});
+
+  /// The page.
+  final Widget child;
+
+  /// The space reserved for [slot] in the nearest provider, in px (0 without one).
+  static double reserveOf(BuildContext context, FloatingSlot slot) =>
+      context
+          .dependOnInheritedWidgetOfExactType<_ScaffoldScope>()
+          ?.reserves[slot] ??
+      0;
+
+  /// The bottom chrome other than notices (the web kit's `--lab-floating-bottom`).
+  static double floatingBottomOf(BuildContext context) =>
+      context
+          .dependOnInheritedWidgetOfExactType<_ScaffoldScope>()
+          ?.floatingBottom ??
+      0;
+
+  @override
+  State<ScaffoldProvider> createState() => _ScaffoldProviderState();
+}
+
+class _ScaffoldProviderState extends State<ScaffoldProvider> {
+  final _regions = <Object, ({FloatingSlot slot, double size})>{};
+
+  void _reserve(Object id, FloatingSlot slot, double? size) {
+    final current = _regions[id];
+    if (size == null) {
+      if (current == null) return;
+      setState(() => _regions.remove(id));
+      return;
+    }
+    if (current?.slot == slot && current?.size == size) return;
+    setState(() => _regions[id] = (slot: slot, size: size));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reserves = <FloatingSlot, double>{};
+    var bottom = 0.0;
+    for (final r in _regions.values) {
+      reserves[r.slot] = math.max(reserves[r.slot] ?? 0, r.size);
+      if (r.slot == FloatingSlot.player) bottom = math.max(bottom, r.size);
+    }
+    return _ScaffoldScope(
+      state: this,
+      reserves: reserves,
+      floatingBottom: bottom,
+      child: widget.child,
+    );
+  }
+}
+
+class _ScaffoldScope extends InheritedWidget {
+  const _ScaffoldScope({
+    required this.state,
+    required this.reserves,
+    required this.floatingBottom,
+    required super.child,
+  });
+  final _ScaffoldProviderState state;
+  final Map<FloatingSlot, double> reserves;
+  final double floatingBottom;
+
+  @override
+  bool updateShouldNotify(_ScaffoldScope old) =>
+      old.floatingBottom != floatingBottom ||
+      old.reserves.length != reserves.length ||
+      reserves.entries.any((e) => old.reserves[e.key] != e.value);
+}
+
+/// Floats [child] over the whole window, above the page (the web kit's viewport-fixed portal),
+/// and reserves its measured size under [slot] in the nearest [ScaffoldProvider]: the twin of
+/// `FloatingLayer` in `@feeef.dev/ui/scaffold`. The layer fills the window and only [child]
+/// takes input; position the child yourself (a `Positioned` or an `Align`). A `notice` is placed
+/// for you like the web kit's `.lab-floating-layer--notice > *`: centred, 12px above the other
+/// bottom chrome, at most the window width minus 24px.
+class FloatingLayer extends StatefulWidget {
+  const FloatingLayer({
+    super.key,
+    required this.slot,
+    this.active = true,
+    this.gap = 12,
+    required this.child,
+  });
+
+  /// Which reservation the surface counts toward.
+  final FloatingSlot slot;
+
+  /// Set false to keep it shown but stop reserving space.
+  final bool active;
+
+  /// Extra px added to the reservation, between the surface and the content.
+  final double gap;
+
+  /// The floating surface. Its box (not the layer's) is measured.
+  final Widget child;
+
+  @override
+  State<FloatingLayer> createState() => _FloatingLayerState();
+}
+
+class _FloatingLayerState extends State<FloatingLayer> {
+  final _portal = OverlayPortalController();
+  final _surface = GlobalKey();
+  _ScaffoldProviderState? _provider;
+
+  @override
+  void initState() {
+    super.initState();
+    _portal.show();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final next = context.getInheritedWidgetOfExactType<_ScaffoldScope>()?.state;
+    if (next != _provider) {
+      _provider?._reserve(this, widget.slot, null);
+      _provider = next;
+    }
+  }
+
+  @override
+  void dispose() {
+    final provider = _provider;
+    if (provider != null && provider.mounted) {
+      // Not during the provider's own build: report after this frame.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (provider.mounted) provider._reserve(this, widget.slot, null);
+      });
+    }
+    super.dispose();
+  }
+
+  void _measure(BuildContext overlay) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _provider == null) return;
+      final box = _surface.currentContext?.findRenderObject() as RenderBox?;
+      final host = overlay.findRenderObject() as RenderBox?;
+      if (!widget.active ||
+          box == null ||
+          host == null ||
+          !box.attached ||
+          !box.hasSize ||
+          box.size.isEmpty) {
+        _provider!._reserve(this, widget.slot, null);
+        return;
+      }
+      final rect = box.localToGlobal(Offset.zero, ancestor: host) & box.size;
+      final view = host.size;
+      final size = switch (widget.slot) {
+        FloatingSlot.header => rect.bottom,
+        FloatingSlot.rail =>
+          Directionality.of(context) == TextDirection.rtl
+              ? view.width - rect.left
+              : rect.right,
+        FloatingSlot.player || FloatingSlot.notice => view.height - rect.top,
+      };
+      _provider!._reserve(
+        this,
+        widget.slot,
+        math.max(0, (size + widget.gap).ceilToDouble()),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => OverlayPortal(
+    controller: _portal,
+    overlayChildBuilder: (overlay) {
+      _measure(overlay);
+      Widget surface = KeyedSubtree(key: _surface, child: widget.child);
+      if (widget.slot == FloatingSlot.notice) {
+        final width = MediaQuery.sizeOf(overlay).width;
+        surface = Positioned(
+          left: 0,
+          right: 0,
+          bottom: ScaffoldProvider.floatingBottomOf(context) + 12,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: math.max(0, width - 24)),
+              child: surface,
+            ),
+          ),
+        );
+      }
+      return GlassLayer(
+        child: DefaultTextStyle.merge(
+          // `.lab-floating-root`: 13px / 1.5 in the ink colour.
+          style: TextStyle(
+            fontSize: 13,
+            height: 1.5,
+            color: ThemeProvider.of(context).colors.ink,
+          ),
+          child: Stack(fit: StackFit.expand, children: [surface]),
+        ),
+      );
+    },
+    child: const SizedBox.shrink(),
+  );
 }

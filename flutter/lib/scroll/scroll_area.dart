@@ -4,6 +4,7 @@ import '../layout/size_reporter.dart';
 import '../theme.dart';
 import 'gradient_overlay.dart';
 import 'metrics.dart';
+import 'reveal.dart';
 
 /// Full-bleed scroll viewport with local floating chrome, measured spacers and edge washes: the
 /// twin of `ScrollArea` in `@feeef.dev/ui/scroll`. Fills its parent, which must have a bounded
@@ -123,7 +124,20 @@ class _ScrollAreaState extends State<ScrollArea> {
                     bottomReserve + extra + safe.bottom,
                   ),
                   // Nested areas start from zero (.lab-scroll-content > * resets it).
-                  child: ScrollExtraBottom(value: 0, child: widget.child),
+                  child: ScrollRevealPadding(
+                    // scroll-padding: what revealScrollChild keeps clear.
+                    padding: EdgeInsets.only(
+                      top: topReserve + safe.top,
+                      bottom: bottomReserve + extra + safe.bottom,
+                    ),
+                    child: ScrollExtraBottom(
+                      value: 0,
+                      child: ScrollTopReserve(
+                        value: topReserve + safe.top,
+                        child: widget.child,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -169,4 +183,26 @@ class ScrollExtraBottom extends InheritedWidget {
 
   @override
   bool updateShouldNotify(ScrollExtraBottom old) => old.value != value;
+}
+
+/// The space a [ScrollArea] reserves at its top for its top float (plus the safe area): the twin
+/// of the web kit's `--lab-scroll-top-reserve`, for content that positions sticky or floating
+/// parts below the area's top chrome.
+class ScrollTopReserve extends InheritedWidget {
+  const ScrollTopReserve({
+    super.key,
+    required this.value,
+    required super.child,
+  });
+
+  /// Reserved top space in px.
+  final double value;
+
+  /// The nearest reservation, or 0 when there is none.
+  static double of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<ScrollTopReserve>()?.value ??
+      0;
+
+  @override
+  bool updateShouldNotify(ScrollTopReserve old) => old.value != value;
 }
