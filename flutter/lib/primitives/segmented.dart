@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import '../brand/geometry.dart';
 import '../theme.dart';
 import '../theme/color_mix.dart';
+import '../theme/css_text.dart';
 
 /// One choice of a segmented control.
 class SegmentOption<T> {
@@ -146,6 +147,8 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
             height: optionHeight,
             padding: s.controlPadding,
             radius: s.radiusControlCompact,
+            // 15px, but the dense themes' control size wins in the CSS (higher specificity).
+            fontSize: s.density == Density.comfortable ? 15 : s.controlFont,
             onSelect: () => widget.onChange(widget.options[i].value),
           ),
       ],
@@ -168,8 +171,9 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
                   highlight: c.glassEdgeLow,
                   radius: s.radiusGroup,
                 ),
+                // 4px padding inside the group's 1px border.
                 child: Padding(
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(5),
                   child: options,
                 ),
               )
@@ -189,13 +193,14 @@ class _Segment<T> extends StatefulWidget {
     required this.height,
     required this.padding,
     required this.radius,
+    required this.fontSize,
     required this.onSelect,
   });
 
   final SegmentOption<T> option;
   final bool selected, disabled, tabbable;
   final FocusNode focusNode;
-  final double height, padding, radius;
+  final double height, padding, radius, fontSize;
   final VoidCallback onSelect;
 
   @override
@@ -281,28 +286,32 @@ class _SegmentState<T> extends State<_Segment<T>> {
                     height: widget.height,
                     child: Padding(
                       padding: EdgeInsetsDirectional.symmetric(
-                        horizontal: widget.padding,
+                        // Options are border-box buttons with a 1px border.
+                        horizontal: widget.padding + 1,
                       ),
                       child: IconTheme.merge(
                         data: IconThemeData(size: 18, color: ink),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          spacing: 6,
-                          children: [
-                            if (widget.option.icon != null) widget.option.icon!,
-                            Text(
-                              widget.option.label,
-                              maxLines: 1,
-                              softWrap: false,
-                              style: TextStyle(
-                                fontSize: 15,
-                                height: 20 / 15,
-                                leadingDistribution:
-                                    TextLeadingDistribution.even,
-                                color: ink,
-                              ),
+                        child: DefaultTextStyle.merge(
+                          style: TextStyle(
+                            fontSize: widget.fontSize,
+                            height: 20 / widget.fontSize,
+                            leadingDistribution: TextLeadingDistribution.even,
+                            color: ink,
+                          ),
+                          maxLines: 1,
+                          softWrap: false,
+                          child: CssBaseline(
+                            lineHeight: 20,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              spacing: 6,
+                              children: [
+                                if (widget.option.icon != null)
+                                  widget.option.icon!,
+                                Text(widget.option.label),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -334,21 +343,23 @@ class _GroupPainter extends CustomPainter {
     final radii = [radius, radius, radius, radius];
     final shape = superellipsePath(rect, radii);
     canvas.drawPath(shape, Paint()..color = fill);
+    // CSS inset shadows live inside the 1px border (the padding box).
+    final inner = superellipsePath(rect, radii, inset: 1);
     canvas.save();
-    canvas.clipPath(shape);
+    canvas.clipPath(inner);
     canvas.drawPath(
       Path.combine(
         PathOperation.difference,
-        shape,
-        shape.shift(const Offset(0, 1)),
+        inner,
+        inner.shift(const Offset(0, 1)),
       ),
       Paint()..color = highlight,
     );
     canvas.drawPath(
       Path.combine(
         PathOperation.difference,
-        shape,
-        shape.shift(const Offset(0, -1)),
+        inner,
+        inner.shift(const Offset(0, -1)),
       ),
       Paint()..color = const Color.from(alpha: 0.06, red: 0, green: 0, blue: 0),
     );

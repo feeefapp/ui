@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import '../brand/geometry.dart';
 import '../theme.dart';
 import '../theme/color_mix.dart';
+import '../theme/css_text.dart';
 
 /// Emphasis. Use filled for primary actions (the twin of `ButtonVariant` in the web kit).
 enum ButtonVariant {
@@ -205,7 +206,8 @@ class _ButtonState extends State<Button> {
         width: icon ? height : null,
         child: Padding(
           padding: EdgeInsetsDirectional.symmetric(
-            horizontal: icon ? 0 : (compact ? 14 : s.space4),
+            // CSS boxes are border-box with a 1px border: it adds to the padding.
+            horizontal: icon ? 0 : (compact ? 14 : s.space4) + 1,
           ),
           child: Center(
             widthFactor: 1,
@@ -221,7 +223,7 @@ class _ButtonState extends State<Button> {
                 ),
                 maxLines: 1,
                 softWrap: false,
-                child: content,
+                child: CssBaseline(lineHeight: 20, child: content),
               ),
             ),
           ),
@@ -343,15 +345,17 @@ class _SurfacePainter extends CustomPainter {
       );
     }
     canvas.drawPath(shape, Paint()..color = fill);
+    // CSS inset shadows live inside the 1px border (the padding box).
+    final inner = superellipsePath(rect, radii, inset: 1);
     canvas.save();
-    canvas.clipPath(shape);
+    canvas.clipPath(inner);
     if (raised) {
-      // inset 0 1px 0 highlight: the band between the shape and itself moved down 1px.
+      // inset 0 1px 0 highlight: the band between the padding box and itself moved down 1px.
       canvas.drawPath(
         Path.combine(
           PathOperation.difference,
-          shape,
-          shape.shift(const Offset(0, 1)),
+          inner,
+          inner.shift(const Offset(0, 1)),
         ),
         Paint()..color = highlight,
       );
@@ -362,7 +366,7 @@ class _SurfacePainter extends CustomPainter {
         Path.combine(
           PathOperation.difference,
           Path()..addRect(rect.inflate(8)),
-          shape.shift(const Offset(0, 1)),
+          inner.shift(const Offset(0, 1)),
         ),
         Paint()
           ..color = const Color.from(alpha: 0.10, red: 0, green: 0, blue: 0)

@@ -8,6 +8,11 @@ export 'theme/tokens.dart'
     show ColorTokens, ControlVariant, SizeTokens, VariantPaint;
 export 'theme_config.dart';
 
+/// The kit's text font as a package font (`--lab-font` ends in IBM Plex Sans Arabic; Outfit is the
+/// brand face). Platform system fonts come first, as in the CSS stack.
+const kitFontFamily = 'packages/feeef_ui/IBM Plex Sans Arabic';
+const brandFontFamily = 'packages/feeef_ui/Outfit';
+
 /// The resolved theme: config, colours for the current brightness and sizes for the density.
 @immutable
 class ThemeData {
@@ -82,7 +87,10 @@ class ThemeProvider extends StatelessWidget {
     return _ThemeScope(
       data: data,
       child: DefaultTextStyle.merge(
-        style: TextStyle(color: data.colors.ink),
+        style: TextStyle(
+          color: data.colors.ink,
+          fontFamilyFallback: const [kitFontFamily],
+        ),
         child: child,
       ),
     );

@@ -1,59 +1,46 @@
 import 'package:feeef_ui/feeef_ui.dart';
 import 'package:flutter/widgets.dart';
 
-/// Renders the same demos as the web docs, for side-by-side comparison.
+import 'scenes.dart';
+
+/// The Flutter side of the parity harness: `?scene=<id>&theme=light|dark&palette=lab|mono&density=…`
+/// renders the same stage as parity/src/main.tsx, at the same place, in the same font.
 void main() => runApp(const Gallery());
 
-class Gallery extends StatefulWidget {
+class Gallery extends StatelessWidget {
   const Gallery({super.key});
-  @override
-  State<Gallery> createState() => _GalleryState();
-}
-
-class _GalleryState extends State<Gallery> {
-  String delivery = 'home';
 
   @override
   Widget build(BuildContext context) {
-    final dark = Uri.base.queryParameters['theme'] == 'dark';
+    final query = Uri.base.queryParameters;
+    final scene = scenes[query['scene'] ?? 'buttons'] ?? () => [const Text('Unknown scene')];
     return WidgetsApp(
-      color: const Color(0xFF72CE5D),
+      color: const Color(0xFFFFFFFF),
       builder: (context, _) => ThemeProvider(
-        brightness: dark ? Brightness.dark : Brightness.light,
+        brightness: query['theme'] == 'dark' ? Brightness.dark : Brightness.light,
+        config: ThemeConfig(
+          palette: Palette.values.byName(query['palette'] ?? 'lab'),
+          density: Density.values.byName(query['density'] ?? 'comfortable'),
+        ),
         child: Builder(
           builder: (context) => ColoredBox(
-            color: ThemeProvider.of(context).colors.surface,
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 24,
-                children: [
-                  // Mirrors docs/content/components/button/examples/01-variants.tsx.
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      Button(variant: .filled, onClick: () {}, children: const [Text('Filled')]),
-                      Button(variant: .tonal, onClick: () {}, children: const [Text('Tonal')]),
-                      Button(variant: .elevated, onClick: () {}, children: const [Text('Elevated')]),
-                      Button(variant: .outlined, onClick: () {}, children: const [Text('Outlined')]),
-                      Button(variant: .text, onClick: () {}, children: const [Text('Text')]),
-                      Button(variant: .ghost, onClick: () {}, children: const [Text('Ghost')]),
-                      Button(variant: .destructive, onClick: () {}, children: const [Text('Delete')]),
-                    ],
+            color: const Color(0xFFFFFFFF),
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: DefaultTextStyle.merge(
+                style: const TextStyle(fontFamily: kitFontFamily),
+                child: Container(
+                  key: const ValueKey('stage'),
+                  width: 720,
+                  color: ThemeProvider.of(context).colors.surface,
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 24,
+                    children: scene(),
                   ),
-                  // Mirrors docs/content/components/segmented-control/examples/01-basic.tsx.
-                  SegmentedControl<String>(
-                    label: 'Delivery type',
-                    value: delivery,
-                    onChange: (value) => setState(() => delivery = value),
-                    options: const [
-                      SegmentOption(value: 'home', label: 'Home delivery'),
-                      SegmentOption(value: 'desk', label: 'Stop desk'),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
           ),

@@ -3,3 +3,5 @@ node_modules/
 *.log
 *.tgz
 docs/dist/
+parity/dist
+parity/out

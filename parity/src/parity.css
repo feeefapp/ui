@@ -1,0 +1,48 @@
+/* Local copies of the kit's fonts, so captures never depend on the network. */
+@font-face {
+  font-family: 'Parity Plex';
+  font-weight: 400;
+  src: url('../public/fonts/IBMPlexSansArabic-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Parity Plex';
+  font-weight: 500;
+  src: url('../public/fonts/IBMPlexSansArabic-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Parity Plex';
+  font-weight: 600;
+  src: url('../public/fonts/IBMPlexSansArabic-SemiBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Parity Plex';
+  font-weight: 700;
+  src: url('../public/fonts/IBMPlexSansArabic-Bold.ttf') format('truetype');
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+html[data-lab-theme] {
+  --lab-font: 'Parity Plex';
+}
+/* The stage both renderers draw at the same place: 720px wide, 24px padding, surface colour. */
+#stage {
+  box-sizing: border-box;
+  width: 720px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+  background: var(--lab-surface);
+  color: var(--lab-ink);
+  font-family: 'Parity Plex';
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
