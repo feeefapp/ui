@@ -39,6 +39,13 @@ Widget workspace({
   child: const Text('Page content'),
 );
 
+/// The scaffold's ground pixel field animates forever (like the web kit's), so pump fixed time.
+Future<void> settle(WidgetTester tester) async {
+  for (var i = 0; i < 20; i++) {
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+}
+
 void main() {
   testWidgets('the sidebar cycles expanded → rail → hidden → expanded', (
     tester,
@@ -48,22 +55,22 @@ void main() {
     final semantics = tester.ensureSemantics();
     final modes = <ScaffoldSideMode>[];
     await tester.pumpWidget(app(workspace(onSideModeChange: modes.add)));
-    await tester.pumpAndSettle();
+    await settle(tester);
     // 304px sidebar, 8px margin, 1px border, 24px content padding.
     expect(tester.getTopLeft(find.text('Page content')).dx, 304 + 8 + 1 + 24);
     expect(find.text('Nav item').hitTestable(), findsOneWidget);
 
     await tester.tap(find.bySemanticsLabel('Minimize workspace sidebar'));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(tester.getTopLeft(find.text('Page content')).dx, 64 + 8 + 1 + 24);
 
     await tester.tap(find.bySemanticsLabel('Hide workspace sidebar'));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(tester.getTopLeft(find.text('Page content')).dx, 8 + 1 + 24);
     expect(find.text('Nav item').hitTestable(), findsNothing, reason: 'inert');
 
     await tester.tap(find.bySemanticsLabel('Expand workspace sidebar'));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(modes, [
       ScaffoldSideMode.rail,
       ScaffoldSideMode.hidden,
@@ -89,7 +96,7 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(tester.getTopLeft(find.text('Page content')).dx, 248 + 8 + 1 + 24);
   });
 
@@ -100,24 +107,24 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
       final semantics = tester.ensureSemantics();
       await tester.pumpWidget(app(workspace()));
-      await tester.pumpAndSettle();
+      await settle(tester);
       expect(find.text('Nav item'), findsNothing);
       expect(tester.getTopLeft(find.text('Page content')).dx, 8 + 1 + 16);
 
       await tester.tap(find.bySemanticsLabel('Open workspace navigation'));
-      await tester.pumpAndSettle();
+      await settle(tester);
       expect(find.text('Nav item'), findsOneWidget);
       // Attached to the start edge, min(320, width - 56) wide.
       expect(tester.getTopLeft(find.text('Brand')).dx, lessThan(320));
 
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
+      await settle(tester);
       expect(find.text('Nav item'), findsNothing);
 
       await tester.tap(find.bySemanticsLabel('Open workspace navigation'));
-      await tester.pumpAndSettle();
+      await settle(tester);
       await tester.tapAt(const Offset(580, 400));
-      await tester.pumpAndSettle();
+      await settle(tester);
       expect(find.text('Nav item'), findsNothing, reason: 'backdrop closes');
       semantics.dispose();
     },
@@ -130,7 +137,7 @@ void main() {
       app(workspace(compact: true), direction: TextDirection.rtl),
     );
     Scaffold.of(tester.element(find.text('Page content'))).setDrawerOpen(true);
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(tester.getTopRight(find.text('Brand')).dx, greaterThan(600 - 320));
   });
 
