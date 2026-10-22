@@ -12,11 +12,13 @@
   justify-content: flex-end;
 }
 .lab-dock-host > .lab-dock {
+  /* Tile and actions sit as far apart as from the edge: a gap wider than the inset looks loose. */
+  --lab-dock-inset: 4px;
   pointer-events: auto;
   width: max-content;
   max-width: 100%;
   min-width: 0;
-  padding: 4px;
+  padding: var(--lab-dock-inset);
   --lab-glass-radius: var(--lab-radius-panel);
 }
 .lab-dock-host--stretch > .lab-dock {
@@ -26,7 +28,7 @@
   display: flex;
   align-items: center;
   min-width: 0;
-  gap: 8px;
+  gap: var(--lab-dock-inset, 4px);
 }
 .lab-dock-content {
   flex: 0 1 auto;
@@ -87,9 +89,6 @@
   }
 }
 @media (max-width: 420px) {
-  .lab-dock-row {
-    gap: 4px;
-  }
   .lab-dock-content {
     padding-inline: 6px;
     min-width: 48px;

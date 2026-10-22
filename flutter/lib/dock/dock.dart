@@ -49,7 +49,8 @@ class Dock extends StatelessWidget {
       builder: (context, constraints) {
         // 4px padding inside the 1px border on each side.
         final available = math.max(0.0, constraints.maxWidth - 10);
-        final gap = narrow ? 4.0 : 8.0;
+        // The 4px inset (`--lab-dock-inset`): never a gap wider than the padding around it.
+        const gap = 4.0;
         // The tile takes at most 40% of the room and always leaves an action's width.
         final tileMax = math.max(
           0.0,

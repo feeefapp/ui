@@ -47,6 +47,7 @@ class SegmentedControl<T> extends StatefulWidget {
     required this.label,
     this.disabled = false,
     this.appearance = SegmentedAppearance.grouped,
+    this.equalWidth = false,
   });
 
   /// The selected option's value.
@@ -65,6 +66,11 @@ class SegmentedControl<T> extends StatefulWidget {
   final bool disabled;
 
   final SegmentedAppearance appearance;
+
+  /// Fills the available width with one row of equal-width options (`flex: 1 1 0`) whose labels
+  /// end in an ellipsis when they don't fit. The web kit does this with a class (the temporal
+  /// editor's start/end switch, `.lab-temporal-edges`).
+  final bool equalWidth;
 
   @override
   State<SegmentedControl<T>> createState() => _SegmentedControlState<T>();
@@ -134,27 +140,37 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
         : (enabled.isEmpty ? -1 : enabled.first);
     final optionHeight = theme.coarsePointer(context) ? 44.0 : s.controlCompact;
 
-    final options = Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        for (var i = 0; i < widget.options.length; i++)
-          _Segment(
-            option: widget.options[i],
-            selected: widget.options[i].value == widget.value,
-            disabled: widget.disabled || widget.options[i].disabled,
-            focusNode: _node(i),
-            tabbable: i == tabIndex,
-            height: optionHeight,
-            padding: s.controlPadding,
-            radius: s.radiusControlCompact,
-            // 15px, but the dense themes' control size wins in the CSS (higher specificity).
-            fontSize: s.density == Density.comfortable ? 15 : s.controlFont,
-            onSelect: () => widget.onChange(widget.options[i].value),
-          ),
-      ],
+    Widget segment(int i) => _Segment(
+      option: widget.options[i],
+      selected: widget.options[i].value == widget.value,
+      disabled: widget.disabled || widget.options[i].disabled,
+      focusNode: _node(i),
+      tabbable: i == tabIndex,
+      height: optionHeight,
+      padding: s.controlPadding,
+      radius: s.radiusControlCompact,
+      // 15px, but the dense themes' control size wins in the CSS (higher specificity).
+      fontSize: s.density == Density.comfortable ? 15 : s.controlFont,
+      onSelect: () => widget.onChange(widget.options[i].value),
+      fill: widget.equalWidth,
     );
+    final Widget options = widget.equalWidth
+        ? Row(
+            // As far apart as the 4px inset (`--lab-segmented-inset`).
+            spacing: 4,
+            children: [
+              for (var i = 0; i < widget.options.length; i++)
+                Expanded(child: segment(i)),
+            ],
+          )
+        : Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              for (var i = 0; i < widget.options.length; i++) segment(i),
+            ],
+          );
 
     return Semantics(
       container: true,
@@ -202,10 +218,14 @@ class _Segment<T> extends StatefulWidget {
     required this.radius,
     required this.fontSize,
     required this.onSelect,
+    this.fill = false,
   });
 
   final SegmentOption<T> option;
   final bool selected, disabled, tabbable;
+
+  /// Takes the width it is given and centres (and ellipsizes) its content.
+  final bool fill;
   final FocusNode focusNode;
   final double height, padding, radius, fontSize;
   final VoidCallback onSelect;
@@ -310,12 +330,23 @@ class _SegmentState<T> extends State<_Segment<T>> {
                           child: CssBaseline(
                             lineHeight: 20,
                             child: Row(
-                              mainAxisSize: MainAxisSize.min,
+                              mainAxisSize: widget.fill
+                                  ? MainAxisSize.max
+                                  : MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               spacing: 6,
                               children: [
                                 if (widget.option.icon != null)
                                   widget.option.icon!,
-                                Text(widget.option.label),
+                                if (widget.fill)
+                                  Flexible(
+                                    child: Text(
+                                      widget.option.label,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  )
+                                else
+                                  Text(widget.option.label),
                               ],
                             ),
                           ),

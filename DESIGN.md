@@ -41,7 +41,9 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
    visible focus, focus that returns. Don't lighten text or borders below the tokens.
 10. **Configure, don't override.** Change the look only through `ThemeConfig` and tokens. Lay kit
     components out freely (position, gaps); never repaint them (color, radius, height, shadow). If the
-    kit can't do something, extend the kit instead of hand-rolling a one-off.
+    kit can't do something, extend the kit instead of hand-rolling a one-off. Inside an inset surface
+    (segmented control, dock, a glass group of buttons) controls sit no farther apart than the inset
+    around them: a 4px inset means a 4px gap.
 
 ## Choosing components (short)
 

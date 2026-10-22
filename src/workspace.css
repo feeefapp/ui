@@ -20,8 +20,9 @@ html[data-lab-theme] .lab-workspace-actions {
   display: flex;
   align-items: center;
   height: 52px;
+  /* Never a gap wider than the inset around the buttons. */
   padding: 4px;
-  gap: 8px;
+  gap: 4px;
   --lab-glass-radius: calc(26px * var(--lab-corner-scale, 1));
 }
 html[data-lab-theme] .lab-workspace-actions > :is(button, a),

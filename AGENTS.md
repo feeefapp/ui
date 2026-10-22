@@ -14,7 +14,7 @@ Guidelines; keep it in sync when a principle or decision rule changes.
 Theming is configuration, not code: apps pass `ThemeConfig` (palette, density, radius;
 README "Theme config") and the kit CSS reads the resulting tokens. Never hard-code a color,
 control height/padding or radius in kit CSS: use `--lab-*` color tokens, the density size
-tokens, and `var(--lab-radius-*)` or `calc(Npx * var(--lab-corner-scale, 1))` (never the raw `--lab-radius-scale`: `--lab-corner-scale` also carries the corner fit that keeps circle-only browsers looking like the superellipse).
+tokens, and `var(--lab-radius-*)` or `calc(Npx * var(--lab-corner-scale, 1))` (never the raw `--lab-radius-scale`: `--lab-corner-scale` also carries the corner fit that keeps circle-only browsers looking like the superellipse). Inside an inset surface the gap between its controls never exceeds the inset (tie both to one variable, like `--lab-segmented-inset`).
 
 Keep the kit framework-neutral: no Inertia, Next.js or router imports. Hosts pass locale,
 translations, URL and navigation through `Provider` / `Services`. Modules using hooks
