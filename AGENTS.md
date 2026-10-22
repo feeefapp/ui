@@ -179,3 +179,8 @@ are the contract the Flutter twin ports. Bubbles that animate their own size pas
 `glassMotion="follow"`. Hide bubbles with `inert`/removal, never with opacity, filter, mask or
 clip-path on a container or its ancestors (they cut the backdrop). One container per floating row;
 never nest containers or put one inside a bubble.
+Kit rows (ScaffoldAppBar, ScaffoldTopBar, Toolbar, Dock host, ToolbarSearch) are GlassScopes:
+a container unless one encloses them. Wrap any other standalone ToolbarGroup row in GlassScope.
+Bubbles leave the glass when they or an ancestor are `inert`, `hidden` or `aria-hidden="true"`.
+ThemeConfig `glass` (liquid/frosted/solid) and `glassRenderer` (css/canvas) are read live from
+`<html>`; canvas refraction (glass/refraction.ts, pure) only runs on settled glass in Chromium.

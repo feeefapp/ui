@@ -36,10 +36,10 @@ export function ThemeProvider({ children, initialMode = 'system', enableCornerFa
         if (enableCornerFallback)
             return installFoContinuousCorners();
     }, [enableCornerFallback]);
-    const { palette, density, radius, primary, glass } = config ?? {};
+    const { palette, density, radius, primary, glass, glassRenderer } = config ?? {};
     layoutEffect(() => {
-        applyThemeConfig(document.documentElement, { palette, density, radius, primary, glass });
-    }, [palette, density, radius, primary, glass]);
+        applyThemeConfig(document.documentElement, { palette, density, radius, primary, glass, glassRenderer });
+    }, [palette, density, radius, primary, glass, glassRenderer]);
     layoutEffect(() => {
         const root = document.documentElement, previous = root.getAttribute('data-lab-theme'), preference = matchMedia('(prefers-color-scheme: dark)');
         const apply = () => {

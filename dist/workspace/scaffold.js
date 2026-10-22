@@ -8,6 +8,7 @@ import { ScrollArea } from '../scroll/index.js';
 import { Modal } from '../primitives/modal.js';
 import { cn } from '../utils.js';
 import './scaffold.css';
+import { GlassScope } from '../glass/container.js';
 const WorkspaceScaffoldContext = React.createContext(null);
 /** Reads the nearest Scaffold's state. Throws outside a scaffold. */
 export function useScaffold() {
@@ -72,11 +73,11 @@ export function ScaffoldSide({ leading, children, trailing, className }) {
 }
 /** Transparent bar for the content panel's `appBar` slot; put controls in ToolbarGroups. */
 export function ScaffoldAppBar({ leading, children, trailing, className }) {
-    return (_jsxs("header", { className: cn('lab-workspace-app-bar', className), children: [_jsx("div", { className: "lab-workspace-app-leading", children: leading }), _jsx("div", { className: "lab-workspace-app-title", children: children }), _jsx("div", { className: "lab-workspace-app-trailing", children: trailing })] }));
+    return (_jsxs(GlassScope, { as: "header", className: cn('lab-workspace-app-bar', className), children: [_jsx("div", { className: "lab-workspace-app-leading", children: leading }), _jsx("div", { className: "lab-workspace-app-title", children: children }), _jsx("div", { className: "lab-workspace-app-trailing", children: trailing })] }));
 }
 /** Three-column bar for the `topSide` slot: start, centered brand, end. */
 export function ScaffoldTopBar({ leading, children, trailing, className }) {
-    return (_jsxs("header", { className: cn('lab-workspace-top-bar', className), children: [_jsx("div", { children: leading }), _jsx("div", { className: "lab-workspace-top-brand", children: children }), _jsx("div", { children: trailing })] }));
+    return (_jsxs(GlassScope, { as: "header", className: cn('lab-workspace-top-bar', className), children: [_jsx("div", { children: leading }), _jsx("div", { className: "lab-workspace-top-brand", children: children }), _jsx("div", { children: trailing })] }));
 }
 /** Icon button that drives the nearest Scaffold's sidebar; opens the drawer when compact. */
 export function ScaffoldToggleButton({ action = 'cycle', label, }) {

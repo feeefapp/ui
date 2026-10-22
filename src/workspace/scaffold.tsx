@@ -8,6 +8,7 @@ import { ScrollArea } from '../scroll'
 import { Modal } from '../primitives/modal'
 import { cn } from '../utils'
 import './scaffold.css'
+import { GlassScope } from '../glass/container'
 
 /** Sidebar width: `expanded` (304px), `rail` (64px icons) or `hidden` (0). */
 export type ScaffoldSideMode = 'expanded' | 'rail' | 'hidden'
@@ -241,21 +242,21 @@ export function ScaffoldSide({ leading, children, trailing, className }: ThreeSl
 /** Transparent bar for the content panel's `appBar` slot; put controls in ToolbarGroups. */
 export function ScaffoldAppBar({ leading, children, trailing, className }: ThreeSlots) {
   return (
-    <header className={cn('lab-workspace-app-bar', className)}>
+    <GlassScope as="header" className={cn('lab-workspace-app-bar', className)}>
       <div className="lab-workspace-app-leading">{leading}</div>
       <div className="lab-workspace-app-title">{children}</div>
       <div className="lab-workspace-app-trailing">{trailing}</div>
-    </header>
+    </GlassScope>
   )
 }
 /** Three-column bar for the `topSide` slot: start, centered brand, end. */
 export function ScaffoldTopBar({ leading, children, trailing, className }: ThreeSlots) {
   return (
-    <header className={cn('lab-workspace-top-bar', className)}>
+    <GlassScope as="header" className={cn('lab-workspace-top-bar', className)}>
       <div>{leading}</div>
       <div className="lab-workspace-top-brand">{children}</div>
       <div>{trailing}</div>
-    </header>
+    </GlassScope>
   )
 }
 /** Icon button that drives the nearest Scaffold's sidebar; opens the drawer when compact. */

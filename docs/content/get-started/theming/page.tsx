@@ -66,6 +66,11 @@ export function Root({ children }: { children: React.ReactNode }) {
               <><C>liquid</C> (default), <C>frosted</C> or <C>solid</C></>,
               <>Floating chrome. Liquid glass merges, lights up toward the pointer and responds to presses; frosted keeps the blur and the morphs with a still light; solid paints opaque surfaces, for dense tools. See <Link to="/components/glass-container">Glass container</Link>.</>,
             ],
+            [
+              <C>glassRenderer</C>,
+              <><C>css</C> (default) or <C>canvas</C></>,
+              <>How glass is drawn on the web. CSS is blur, light and shadow, cheap everywhere. Canvas also bends the content behind the glass at its edges, with displacement maps built whenever the glass settles: heavier, Chromium only (other browsers keep CSS), off with reduced transparency or increased contrast.</>,
+            ],
           ]}
         />
         <p>
@@ -120,7 +125,7 @@ function DarkModeToggle() {
         </p>
         <ul>
           <li>
-            <C>themeAttributes(theme)</C>: <C>data-lab-palette</C>, <C>data-lab-density</C>, <C>data-lab-glass</C> and the{' '}
+            <C>themeAttributes(theme)</C>: <C>data-lab-palette</C>, <C>data-lab-density</C>, <C>data-lab-glass</C>, <C>data-lab-glass-renderer</C> and the{' '}
             <C>--lab-radius-scale</C> style.
           </li>
           <li>

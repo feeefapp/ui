@@ -3,6 +3,7 @@
 import { forwardRef, useImperativeHandle, type HTMLAttributes, type ReactNode } from 'react'
 import { cn } from '../utils'
 import { GlassGroup } from '../scaffold'
+import { GlassScope } from '../glass/container'
 import { DockContentSwap } from './content-swap'
 import './dock.css'
 import { useDockSize } from './use_dock_size'
@@ -32,7 +33,7 @@ export const Dock = forwardRef<HTMLElement, DockProps>(function Dock(
   const measured = useDockSize()
   useImperativeHandle(ref, () => measured.surface.current!, [])
   return (
-    <div ref={measured.host} className={cn('lab-dock-host', `lab-dock-host--${align}`)}>
+    <GlassScope ref={measured.host} className={cn('lab-dock-host', `lab-dock-host--${align}`)}>
       <GlassGroup
         {...props}
         ref={measured.surface}
@@ -55,6 +56,6 @@ export const Dock = forwardRef<HTMLElement, DockProps>(function Dock(
           </ActionsWidthProvider>
         </div>
       </GlassGroup>
-    </div>
+    </GlassScope>
   )
 })

@@ -4,6 +4,7 @@ export const THEME_DEFAULTS = {
     density: 'comfortable',
     radius: 1,
     glass: 'liquid',
+    glassRenderer: 'css',
 };
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 /** `#abc` / `#aabbcc` → [r, g, b] in 0–255, or null for anything else. */
@@ -39,6 +40,7 @@ function resolve(config = {}) {
         palette: config.palette ?? THEME_DEFAULTS.palette,
         density: config.density ?? THEME_DEFAULTS.density,
         glass: config.glass ?? THEME_DEFAULTS.glass,
+        glassRenderer: config.glassRenderer ?? THEME_DEFAULTS.glassRenderer,
         radius,
         primary: config.primary && parseHexColor(config.primary) ? config.primary.toLowerCase() : null,
     };
@@ -56,7 +58,7 @@ function variables(theme) {
 }
 /**
  * Attributes for the root `<html>` element (React props), e.g. in a Next.js root layout:
- * `data-lab-palette`, `data-lab-density`, `data-lab-glass`, `data-lab-primary` (when set) and the style variables.
+ * `data-lab-palette`, `data-lab-density`, `data-lab-glass`, `data-lab-glass-renderer`, `data-lab-primary` (when set) and the style variables.
  * Unset options use `THEME_DEFAULTS`; `radius` is clamped to 0–1.5 and an invalid `primary`
  * is ignored. Color mode (`data-lab-theme`) is not included; `ThemeProvider` sets it.
  */
@@ -66,6 +68,7 @@ export function themeAttributes(config) {
         'data-lab-palette': theme.palette,
         'data-lab-density': theme.density,
         'data-lab-glass': theme.glass,
+        'data-lab-glass-renderer': theme.glassRenderer,
         ...(theme.primary ? { 'data-lab-primary': '' } : {}),
         style: variables(theme),
     };
@@ -80,6 +83,7 @@ export function applyThemeConfig(element, config) {
     element.setAttribute('data-lab-palette', theme.palette);
     element.setAttribute('data-lab-density', theme.density);
     element.setAttribute('data-lab-glass', theme.glass);
+    element.setAttribute('data-lab-glass-renderer', theme.glassRenderer);
     if (theme.primary)
         element.setAttribute('data-lab-primary', '');
     else

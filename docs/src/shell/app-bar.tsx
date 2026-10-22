@@ -150,7 +150,13 @@ export function DocsAppBar({
         <Presence
           open={titleAway}
           render={(state) => (
-            <ToolbarGroup label="Page title" className="docs-app-bar-title" data-state={state}>
+            <ToolbarGroup
+              label="Page title"
+              className="docs-app-bar-title"
+              data-state={state}
+              // Closing hides it from the glass too, so its bubble shrinks away with the text.
+              aria-hidden={state === 'closed' || undefined}
+            >
               <span>{title}</span>
             </ToolbarGroup>
           )}

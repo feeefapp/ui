@@ -6,7 +6,7 @@ import { NumberField } from '@feeef.dev/ui/primitives/number-field'
 import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
 import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 import { useTheme, type ThemeMode } from '@feeef.dev/ui/theme'
-import type { Density, GlassStyle, Palette } from '@feeef.dev/ui/theme-config'
+import type { Density, GlassRenderer, GlassStyle, Palette } from '@feeef.dev/ui/theme-config'
 import { useDocsSettings, type DocsSettings } from '../settings'
 
 /** Preset primaries; `null` is the palette's own color (Feeef green, or black in mono). */
@@ -160,6 +160,17 @@ export function Customize() {
                   { value: 'liquid', label: 'Liquid' },
                   { value: 'frosted', label: 'Frosted' },
                   { value: 'solid', label: 'Solid' },
+                ]}
+              />
+            </Row>
+            <Row label="Glass renderer">
+              <SegmentedControl<GlassRenderer>
+                label="Glass renderer"
+                value={settings.theme.glassRenderer}
+                onChange={(glassRenderer) => update({ theme: { glassRenderer } })}
+                options={[
+                  { value: 'css', label: 'CSS' },
+                  { value: 'canvas', label: 'Canvas refraction' },
                 ]}
               />
             </Row>

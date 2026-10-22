@@ -10,6 +10,7 @@ import type { CSSProperties } from 'react'
  * - `data-lab-density`  → control/row heights, padding and spacing (system.css)
  * - `--lab-radius-scale` → every corner radius (system.css and component CSS)
  * - `data-lab-glass`    → how floating glass behaves (glass/glass.css, GlassContainer)
+ * - `data-lab-glass-renderer` → CSS glass or canvas-built refraction (GlassContainer)
  *
  * Server-rendered hosts also spread `themeAttributes(config)` onto `<html>` so the first
  * paint is already themed; the provider keeps the attributes in sync on the client.
@@ -33,6 +34,13 @@ export interface ThemeConfig {
    * `solid` paints chrome on opaque surfaces (like reduced transparency) for dense tools.
    */
   glass?: GlassStyle
+  /**
+   * How glass is drawn on the web: `css` (default) is blur, light and shadow in CSS and SVG, cheap
+   * everywhere. `canvas` also bends the content behind the glass at its edges (refraction) with
+   * displacement maps built on a canvas whenever the glass settles: heavier, Chromium only, other
+   * browsers keep `css`.
+   */
+  glassRenderer?: GlassRenderer
 }
 
 /** Color palette: `lab` (Feeef green) or `mono` (black and white). */
@@ -41,6 +49,8 @@ export type Palette = 'lab' | 'mono'
 export type Density = 'comfortable' | 'compact' | 'thin'
 /** How floating glass behaves: moving liquid glass, still frosted glass, or opaque surfaces. */
 export type GlassStyle = 'liquid' | 'frosted' | 'solid'
+/** How glass is drawn on the web: CSS only, or CSS plus canvas-built refraction. */
+export type GlassRenderer = 'css' | 'canvas'
 
 /** The config every unset option falls back to. `primary` unset means the palette's own color. */
 export const THEME_DEFAULTS: Required<Omit<ThemeConfig, 'primary'>> = {
@@ -48,6 +58,7 @@ export const THEME_DEFAULTS: Required<Omit<ThemeConfig, 'primary'>> = {
   density: 'comfortable',
   radius: 1,
   glass: 'liquid',
+  glassRenderer: 'css',
 }
 
 type Resolved = Required<Omit<ThemeConfig, 'primary'>> & { primary: string | null }
@@ -91,6 +102,7 @@ function resolve(config: ThemeConfig = {}): Resolved {
     palette: config.palette ?? THEME_DEFAULTS.palette,
     density: config.density ?? THEME_DEFAULTS.density,
     glass: config.glass ?? THEME_DEFAULTS.glass,
+    glassRenderer: config.glassRenderer ?? THEME_DEFAULTS.glassRenderer,
     radius,
     primary: config.primary && parseHexColor(config.primary) ? config.primary.toLowerCase() : null,
   }
@@ -110,7 +122,7 @@ function variables(theme: Resolved): Record<string, string> {
 
 /**
  * Attributes for the root `<html>` element (React props), e.g. in a Next.js root layout:
- * `data-lab-palette`, `data-lab-density`, `data-lab-glass`, `data-lab-primary` (when set) and the style variables.
+ * `data-lab-palette`, `data-lab-density`, `data-lab-glass`, `data-lab-glass-renderer`, `data-lab-primary` (when set) and the style variables.
  * Unset options use `THEME_DEFAULTS`; `radius` is clamped to 0–1.5 and an invalid `primary`
  * is ignored. Color mode (`data-lab-theme`) is not included; `ThemeProvider` sets it.
  */
@@ -118,6 +130,7 @@ export function themeAttributes(config?: ThemeConfig): {
   'data-lab-palette': Palette
   'data-lab-density': Density
   'data-lab-glass': GlassStyle
+  'data-lab-glass-renderer': GlassRenderer
   'data-lab-primary'?: ''
   style: CSSProperties
 } {
@@ -126,6 +139,7 @@ export function themeAttributes(config?: ThemeConfig): {
     'data-lab-palette': theme.palette,
     'data-lab-density': theme.density,
     'data-lab-glass': theme.glass,
+    'data-lab-glass-renderer': theme.glassRenderer,
     ...(theme.primary ? { 'data-lab-primary': '' as const } : {}),
     style: variables(theme) as CSSProperties,
   }
@@ -142,6 +156,7 @@ export function applyThemeConfig(element: HTMLElement, config?: ThemeConfig): vo
   element.setAttribute('data-lab-palette', theme.palette)
   element.setAttribute('data-lab-density', theme.density)
   element.setAttribute('data-lab-glass', theme.glass)
+  element.setAttribute('data-lab-glass-renderer', theme.glassRenderer)
   if (theme.primary) element.setAttribute('data-lab-primary', '')
   else element.removeAttribute('data-lab-primary')
   for (const name of SEED_VARS) element.style.removeProperty(name)

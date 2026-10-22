@@ -11,6 +11,7 @@ import { Link } from '../router'
 import { Customize } from './customize'
 import { iconFor } from './icons'
 import pkg from '../../../package.json'
+import { GlassScope } from '@feeef.dev/ui/glass'
 
 /**
  * The docs sidebar, built like any Feeef workspace sidebar: brand and toggle on top, a page filter,
@@ -42,10 +43,12 @@ export function DocsSide({ path }: { path: string }) {
         </div>
       }
       trailing={
-        <ToolbarGroup label="Appearance" className="docs-side-trailing">
-          <Customize />
-          <ThemeSwitch />
-        </ToolbarGroup>
+        <GlassScope className="docs-glass-row">
+          <ToolbarGroup label="Appearance" className="docs-side-trailing">
+            <Customize />
+            <ThemeSwitch />
+          </ToolbarGroup>
+        </GlassScope>
       }
     >
       <nav aria-label="Documentation" className="docs-side-nav">

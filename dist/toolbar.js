@@ -3,6 +3,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { forwardRef } from 'react';
 import { cn } from './utils.js';
 import { GlassGroup } from './scaffold.js';
+import { GlassScope } from './glass/container.js';
 import './toolbar.css';
 /**
  * Unpainted toolbar row: `leading` at the start, `trailing` at the end, empty space between them
@@ -10,7 +11,7 @@ import './toolbar.css';
  * them in ToolbarGroups). Normal Tab order is preserved.
  */
 export function Toolbar({ label, leading, trailing, className, ...props }) {
-    return (_jsxs("div", { ...props, className: cn('lab-toolbar-layout', className), role: "group", "aria-label": label, children: [_jsx("div", { className: "lab-toolbar-leading", children: leading }), trailing && _jsx("div", { className: "lab-toolbar-trailing", children: trailing })] }));
+    return (_jsxs(GlassScope, { ...props, className: cn('lab-toolbar-layout', className), role: "group", "aria-label": label, children: [_jsx("div", { className: "lab-toolbar-leading", children: leading }), trailing && _jsx("div", { className: "lab-toolbar-trailing", children: trailing })] }));
 }
 /**
  * One glass pill for related toolbar controls (`role="group"`). Children should use

@@ -6,6 +6,7 @@ import { ScrollArea } from '@feeef.dev/ui/scroll'
 import { Toolbar, ToolbarGroup } from '@feeef.dev/ui/toolbar'
 import { useServices } from '@feeef.dev/ui/services'
 import { cn } from '@feeef.dev/ui/utils'
+import { GlassScope } from '@feeef.dev/ui/glass'
 
 export type CodeLang = 'tsx' | 'bash' | 'css' | 'json' | 'html'
 
@@ -116,9 +117,11 @@ export function Code({
       <figure className={cn('docs-code', className)} data-layout="inline" aria-label={label} data-lab-corners>
         <Source code={code} html={html} />
         {copy && (
-          <ToolbarGroup label="Code actions" className="docs-code-inline-tools">
-            <CopyButton text={code} />
-          </ToolbarGroup>
+          <GlassScope className="docs-code-inline-tools">
+            <ToolbarGroup label="Code actions">
+              <CopyButton text={code} />
+            </ToolbarGroup>
+          </GlassScope>
         )}
       </figure>
     )

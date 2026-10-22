@@ -8,6 +8,7 @@ import { API } from '../api'
 import { SECTIONS } from '../model'
 import { PAGES, pageHref } from '../registry'
 import { navigate } from '../router'
+import { GlassScope } from '@feeef.dev/ui/glass'
 
 type Hit = { id: string; title: string; detail: string; href: string; kind: 'page' | 'prop'; text: string }
 
@@ -91,7 +92,7 @@ export function Search({ onClose }: { onClose: () => void }) {
       fitContent
       scrollOptions={{ edgeGap: 10, contentPadding: 10 }}
       top={
-        <div className="docs-search-bar">
+        <GlassScope className="docs-search-bar">
           <ToolbarGroup label="Navigation">
             <IconButton variant="text" appearance="toolbar" aria-label="Close search" onClick={onClose}>
               <ArrowLeft size={20} />
@@ -132,7 +133,7 @@ export function Search({ onClose }: { onClose: () => void }) {
               </IconButton>
             )}
           </ToolbarGroup>
-        </div>
+        </GlassScope>
       }
     >
       <ul id="docs-search-results" role="listbox" aria-label="Results" className="docs-search-results">

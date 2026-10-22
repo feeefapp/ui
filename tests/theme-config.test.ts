@@ -13,15 +13,17 @@ test('defaults render the Lab look', () => {
     'data-lab-palette': THEME_DEFAULTS.palette,
     'data-lab-density': THEME_DEFAULTS.density,
     'data-lab-glass': THEME_DEFAULTS.glass,
+    'data-lab-glass-renderer': THEME_DEFAULTS.glassRenderer,
     style: { '--lab-radius-scale': '1' },
   })
 })
 
 test('config maps to root attributes and the radius variable', () => {
-  assert.deepEqual(themeAttributes({ palette: 'mono', density: 'compact', radius: 0.4, glass: 'solid' }), {
+  assert.deepEqual(themeAttributes({ palette: 'mono', density: 'compact', radius: 0.4, glass: 'solid', glassRenderer: 'canvas' }), {
     'data-lab-palette': 'mono',
     'data-lab-density': 'compact',
     'data-lab-glass': 'solid',
+    'data-lab-glass-renderer': 'canvas',
     style: { '--lab-radius-scale': '0.4' },
   })
 })
@@ -34,10 +36,11 @@ test('radius is clamped and non-numbers fall back to the default', () => {
 
 test('explicitly undefined options fall back to the defaults', () => {
   // Provider forwards unset options as `undefined`; they must not override the defaults.
-  assert.deepEqual(themeAttributes({ palette: undefined, density: undefined, radius: undefined, glass: undefined }), {
+  assert.deepEqual(themeAttributes({ palette: undefined, density: undefined, radius: undefined, glass: undefined, glassRenderer: undefined }), {
     'data-lab-palette': THEME_DEFAULTS.palette,
     'data-lab-density': THEME_DEFAULTS.density,
     'data-lab-glass': THEME_DEFAULTS.glass,
+    'data-lab-glass-renderer': THEME_DEFAULTS.glassRenderer,
     style: { '--lab-radius-scale': '1' },
   })
 })

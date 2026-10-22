@@ -79,6 +79,12 @@ html[data-lab-theme='dark'] .docs-code .shiki span {
 .docs-code-inline-tools {
   flex-shrink: 0;
 }
+/* A single row holding glass bubbles (a GlassScope around one ToolbarGroup). */
+.docs-glass-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
 /* ---------- Example card ---------- */
 .docs-example-card {

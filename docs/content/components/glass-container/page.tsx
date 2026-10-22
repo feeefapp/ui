@@ -82,6 +82,18 @@ function Overview() {
         </p>
       </Section>
 
+      <Section title="CSS or canvas">
+        <p>
+          On the web, <C>ThemeConfig</C> <C>glassRenderer</C> picks how much work the glass does.{' '}
+          <C>css</C> (default) is the blur, light and shadow above, cheap on any device. <C>canvas</C>{' '}
+          also bends what is behind the glass at its edges, like a lens: whenever the glass settles, the
+          kit builds a displacement map of its outline on a canvas and applies it as an SVG backdrop
+          filter. While bubbles move it falls back to CSS, so morphs stay smooth. Refraction works in
+          Chromium browsers; elsewhere, and with reduced transparency or increased contrast, the canvas
+          renderer quietly stays on CSS. Switch it in Customize to compare.
+        </p>
+      </Section>
+
       <Section title="Guidelines">
         <DoDont
           doItems={[

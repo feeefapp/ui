@@ -7,6 +7,7 @@ import { Slider, SlideSwitch } from '@feeef.dev/ui/primitives/slider'
 import { TextField } from '@feeef.dev/ui/primitives/text-field'
 import { Code } from './code'
 import { Stage } from './example'
+import { GlassScope } from '@feeef.dev/ui/glass'
 
 export type Control =
   | {
@@ -68,6 +69,7 @@ export function Playground<C extends Record<string, Control>>({
         >
           <div className="docs-playground-controls-head">
             <strong>Controls</strong>
+            <GlassScope className="docs-glass-row">
             <ToolbarGroup label="Controls actions">
               <IconButton
               variant="text"
@@ -80,6 +82,7 @@ export function Playground<C extends Record<string, Control>>({
               <RotateCcw size={16} />
             </IconButton>
             </ToolbarGroup>
+            </GlassScope>
           </div>
           {Object.entries(controls).map(([key, control]) => {
             const label = control.label ?? humanize(key)

@@ -222,3 +222,28 @@ test('only small glass flips, only on agreement, only against the color mode', (
   assert.equal(adaptiveGlassTone([null], 'light', 46), null)
   assert.equal(adaptiveGlassTone(['light'], 'dark', 46), 'light')
 })
+
+import { GLASS_BEZEL, displacementMap, refractionAt } from '../src/glass/refraction.ts'
+
+test('refraction bends only the bevel, strongest at the edge, toward the inside', () => {
+  assert.deepEqual(refractionAt(2, 1, 0), { x: 0, y: 0 }, 'outside')
+  assert.deepEqual(refractionAt(-GLASS_BEZEL, 1, 0), { x: 0, y: 0 }, 'flat middle')
+  const edge = refractionAt(-0.5, 1, 0)
+  const deeper = refractionAt(-GLASS_BEZEL / 2, 1, 0)
+  assert.ok(edge.x < 0 && deeper.x < 0, 'pulls inward against an outward normal')
+  assert.ok(Math.abs(edge.x) > Math.abs(deeper.x), 'fades across the bezel')
+  assert.ok(Math.abs(edge.x) <= 1)
+})
+
+test('the displacement map is neutral outside and in the middle, shifted on the rim', () => {
+  const pillShape = { x: 10, y: 10, width: 120, height: 46, radius: 23 }
+  const map = displacementMap(140, 66, [[pillShape]], 8)
+  const at = (x: number, y: number) => [map.data[(y * map.width + x) * 4], map.data[(y * map.width + x) * 4 + 1]]
+  assert.deepEqual(at(2, 2), [128, 128], 'outside')
+  assert.deepEqual(at(70, 33), [128, 128], 'flat middle')
+  const left = at(11, 33)
+  const right = at(128, 33)
+  assert.ok(left[0] > 128, 'left rim samples further right (inward)')
+  assert.ok(right[0] < 128, 'right rim samples further left (inward)')
+  assert.equal(map.data[3], 255)
+})

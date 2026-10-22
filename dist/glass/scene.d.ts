@@ -31,6 +31,11 @@ export declare class GlassScene {
     interactive: boolean;
     /** Small glass flips light/dark to stay legible over what is behind it. */
     adaptive: boolean;
+    /** `canvas` adds refraction (displacement maps) once the glass settles, where supported. */
+    renderer: 'css' | 'canvas';
+    private refractKey;
+    private refractTimer;
+    private filter;
     private sampleFrame;
     private themeObserver;
     private visibility;
@@ -55,6 +60,12 @@ export declare class GlassScene {
     private scheduleDraw;
     /** Paints the current frame: element offsets, backdrop clip, edge, light and shadow. */
     draw(): void;
+    /**
+     * Canvas renderer: CSS glass while anything moves; once the outline has been still for a moment,
+     * build a displacement map for it and bend the backdrop at the glass edges (Chromium).
+     */
+    private updateRefraction;
+    private applyRefraction;
     private lightFor;
 }
 //# sourceMappingURL=scene.d.ts.map

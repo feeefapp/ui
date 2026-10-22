@@ -7,18 +7,24 @@ import { GlassContext } from './context.js';
 import { GlassScene } from './scene.js';
 import './glass.css';
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
-const STYLES = ['liquid', 'frosted', 'solid'];
-const readGlassStyle = () => {
-    const value = document.documentElement.getAttribute('data-lab-glass');
-    return value && STYLES.includes(value) ? value : 'liquid';
-};
-/** The app's glass style (ThemeConfig `glass`, on `<html data-lab-glass>`), live. */
-export function useGlassStyle() {
+/** A theme attribute on `<html>`, live, limited to `allowed` values. */
+function useRootChoice(attribute, allowed, fallback) {
     return React.useSyncExternalStore((notify) => {
         const observer = new MutationObserver(notify);
-        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-lab-glass'] });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: [attribute] });
         return () => observer.disconnect();
-    }, readGlassStyle, () => 'liquid');
+    }, () => {
+        const value = document.documentElement.getAttribute(attribute);
+        return value && allowed.includes(value) ? value : fallback;
+    }, () => fallback);
+}
+/** The app's glass style (ThemeConfig `glass`, on `<html data-lab-glass>`), live. */
+export function useGlassStyle() {
+    return useRootChoice('data-lab-glass', ['liquid', 'frosted', 'solid'], 'liquid');
+}
+/** The app's glass renderer (ThemeConfig `glassRenderer`, on `<html data-lab-glass-renderer>`), live. */
+export function useGlassRenderer() {
+    return useRootChoice('data-lab-glass-renderer', ['css', 'canvas'], 'css');
 }
 /**
  * Draws ONE glass material for every bubble inside it (GlassGroup, ToolbarGroup, Dock, …), like
@@ -38,6 +44,7 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
     const uid = React.useId();
     const reduced = useReducedMotion();
     const style = useGlassStyle();
+    const renderer = useGlassRenderer();
     const liquid = style === 'liquid';
     const setHost = React.useCallback((element) => {
         host.current = element;
@@ -89,6 +96,7 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
         current.followPointer = light === 'pointer' && liquid;
         current.interactive = interactive && liquid;
         current.adaptive = adaptive;
+        current.renderer = renderer;
         current.requestMeasure();
     });
     React.useEffect(() => {
@@ -119,5 +127,15 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
         };
     }, [light, reduced, liquid]);
     return React.createElement(as, { ...props, 'ref': setHost, 'className': cn('lab-glass-container', className), 'data-glass-container': '' }, _jsxs("div", { className: "lab-glass-material", "aria-hidden": "true", children: [_jsx("svg", { ref: shadow, className: "lab-glass-shadow" }), _jsx("div", { ref: backdrop, className: "lab-glass-backdrop" }), _jsx("svg", { ref: paint, className: "lab-glass-paint" })] }), _jsx(GlassContext.Provider, { value: registry, children: children }));
+});
+/**
+ * A GlassContainer unless one already encloses it, then a plain element. Kit rows (app bar,
+ * toolbar, dock, search) use it so they share one material without ever nesting containers.
+ */
+export const GlassScope = React.forwardRef(function GlassScope({ as = 'div', spacing, light, interactive, adaptive, ...props }, ref) {
+    const outer = React.useContext(GlassContext);
+    if (outer)
+        return React.createElement(as, { ...props, ref });
+    return _jsx(GlassContainer, { ...props, as: as, spacing: spacing, light: light, interactive: interactive, adaptive: adaptive, ref: ref });
 });
 //# sourceMappingURL=container.js.map

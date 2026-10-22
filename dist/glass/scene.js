@@ -4,6 +4,7 @@ import { boundsOf, glassPaths } from './geometry.js';
 import { DEFAULT_GLASS_LIGHT, glassLightToward, rimGradient } from './light.js';
 import { planGlassTransition, sameRect } from './transitions.js';
 import { adaptiveGlassTone, backdropTone } from './adaptive.js';
+import { GLASS_REFRACTION, displacementMap, supportsRefraction } from './refraction.js';
 import { GLASS_CONTENT_FOLLOW, GLASS_PRESS_SCALE, glassStretch, pressedShape } from './press.js';
 /** How far (px) the material may reach past the container, for overshoot and growing bubbles. */
 export const GLASS_MARGIN = 32;
@@ -104,6 +105,11 @@ export class GlassScene {
     interactive = true;
     /** Small glass flips light/dark to stay legible over what is behind it. */
     adaptive = true;
+    /** `canvas` adds refraction (displacement maps) once the glass settles, where supported. */
+    renderer = 'css';
+    refractKey = '';
+    refractTimer = null;
+    filter = null;
     sampleFrame = 0;
     themeObserver = null;
     visibility = null;
@@ -119,9 +125,10 @@ export class GlassScene {
             this.resize.observe(host);
         }
         if (typeof MutationObserver !== 'undefined') {
-            // Bubbles hidden with `inert` (collapsed toolbars, search taking over) leave the glass.
+            // Bubbles hidden with `inert`, `hidden` or `aria-hidden` (collapsed toolbars, search taking
+            // over, a title scrolled away) leave the glass.
             this.mutations = new MutationObserver(() => this.requestMeasure());
-            this.mutations.observe(host, { subtree: true, attributes: true, attributeFilter: ['inert', 'hidden'] });
+            this.mutations.observe(host, { subtree: true, attributes: true, attributeFilter: ['inert', 'hidden', 'aria-hidden'] });
         }
         host.addEventListener('pointerdown', this.onPressStart, { passive: true });
         window.addEventListener('scroll', this.requestSample, { passive: true, capture: true });
@@ -273,6 +280,9 @@ export class GlassScene {
         window.removeEventListener('scroll', this.requestSample, { capture: true });
         this.themeObserver?.disconnect();
         this.visibility?.disconnect();
+        if (this.refractTimer)
+            clearTimeout(this.refractTimer);
+        this.filter?.ownerSVGElement?.remove();
         if (this.sampleTimer)
             clearInterval(this.sampleTimer);
         if (this.sampleFrame)
@@ -295,7 +305,7 @@ export class GlassScene {
         const unionRadius = new Map();
         for (const [id, member] of this.members) {
             const { element, options } = member;
-            if (!element.isConnected || element.closest('[inert],[hidden]'))
+            if (!element.isConnected || element.closest('[inert],[hidden],[aria-hidden="true"]'))
                 continue;
             const box = element.getBoundingClientRect();
             if (!box.width || !box.height)
@@ -437,6 +447,66 @@ export class GlassScene {
         renderPaint(this.paint, paths, lights, this.uid, glow ? { x: glow.x + m, y: glow.y + m, radius: glow.radius.get(), opacity: glow.opacity.get() } : null);
         renderShadow(this.shadow, d, this.uid);
         this.host.toggleAttribute('data-glass-ready', true);
+        this.updateRefraction(key);
+    }
+    /**
+     * Canvas renderer: CSS glass while anything moves; once the outline has been still for a moment,
+     * build a displacement map for it and bend the backdrop at the glass edges (Chromium).
+     */
+    updateRefraction(key) {
+        const wanted = this.renderer === 'canvas' &&
+            supportsRefraction() &&
+            document.documentElement.getAttribute('data-lab-glass') !== 'solid' &&
+            !window.matchMedia?.('(prefers-reduced-transparency: reduce), (prefers-contrast: more)').matches;
+        const moving = [...this.shapes.values()].some((shape) => shape.values().some((v) => v.isAnimating()));
+        if (!wanted || moving || key !== this.refractKey) {
+            if (this.backdrop.style.backdropFilter) {
+                this.backdrop.style.backdropFilter = '';
+                this.backdrop.style.removeProperty('-webkit-backdrop-filter');
+            }
+            if (this.refractKey !== key || !wanted)
+                this.refractKey = '';
+        }
+        if (!wanted || moving || this.refractKey === key)
+            return;
+        if (this.refractTimer)
+            clearTimeout(this.refractTimer);
+        this.refractTimer = setTimeout(() => {
+            this.refractTimer = null;
+            if (this.cache.key === key)
+                this.applyRefraction(key);
+        }, 120);
+    }
+    applyRefraction(key) {
+        const box = this.backdrop.getBoundingClientRect();
+        if (!box.width || !box.height)
+            return;
+        const map = displacementMap(box.width, box.height, this.cache.paths.map((path) => path.shapes), this.spacing);
+        const canvas = document.createElement('canvas');
+        canvas.width = map.width;
+        canvas.height = map.height;
+        const context = canvas.getContext('2d');
+        if (!context)
+            return;
+        context.putImageData(new ImageData(map.data, map.width, map.height), 0, 0);
+        const url = canvas.toDataURL();
+        if (!this.filter) {
+            this.filter = node('filter', { 'id': `${this.uid}-r`, 'color-interpolation-filters': 'sRGB', 'filterUnits': 'userSpaceOnUse' });
+            this.filter.append(node('feImage', { result: 'map', preserveAspectRatio: 'none' }), node('feDisplacementMap', { in: 'SourceGraphic', in2: 'map', xChannelSelector: 'R', yChannelSelector: 'G', scale: GLASS_REFRACTION * 2 }));
+            // Its own hidden SVG: the paint and shadow layers are rebuilt every frame.
+            const holder = node('svg', { 'width': 0, 'height': 0, 'aria-hidden': 'true', 'class': 'lab-glass-filters' });
+            holder.append(this.filter);
+            this.backdrop.parentElement?.append(holder);
+        }
+        for (const [name, value] of [['x', 0], ['y', 0], ['width', map.width], ['height', map.height]]) {
+            this.filter.setAttribute(name, String(value));
+            this.filter.firstElementChild.setAttribute(name, String(value));
+        }
+        this.filter.firstElementChild.setAttribute('href', url);
+        const value = `url(#${this.uid}-r) blur(12px) saturate(1.15)`;
+        this.backdrop.style.backdropFilter = value;
+        this.backdrop.style.setProperty('-webkit-backdrop-filter', value);
+        this.refractKey = key;
     }
     lightFor(bounds, origin) {
         if (!this.followPointer || this.reduceMotion || !this.pointer)

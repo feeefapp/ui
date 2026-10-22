@@ -5,28 +5,35 @@ import { cn } from '../utils'
 import { useReducedMotion } from '../physics/react'
 import { GlassContext, type GlassRegistry } from './context'
 import { GlassScene } from './scene'
-import type { GlassStyle } from '../theme-config'
+import type { GlassRenderer, GlassStyle } from '../theme-config'
 import './glass.css'
 
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect
 
-const STYLES: readonly GlassStyle[] = ['liquid', 'frosted', 'solid']
-const readGlassStyle = (): GlassStyle => {
-  const value = document.documentElement.getAttribute('data-lab-glass') as GlassStyle | null
-  return value && STYLES.includes(value) ? value : 'liquid'
+/** A theme attribute on `<html>`, live, limited to `allowed` values. */
+function useRootChoice<T extends string>(attribute: string, allowed: readonly T[], fallback: T): T {
+  return React.useSyncExternalStore(
+    (notify) => {
+      const observer = new MutationObserver(notify)
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: [attribute] })
+      return () => observer.disconnect()
+    },
+    () => {
+      const value = document.documentElement.getAttribute(attribute) as T | null
+      return value && allowed.includes(value) ? value : fallback
+    },
+    () => fallback
+  )
 }
 
 /** The app's glass style (ThemeConfig `glass`, on `<html data-lab-glass>`), live. */
 export function useGlassStyle(): GlassStyle {
-  return React.useSyncExternalStore(
-    (notify) => {
-      const observer = new MutationObserver(notify)
-      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-lab-glass'] })
-      return () => observer.disconnect()
-    },
-    readGlassStyle,
-    () => 'liquid'
-  )
+  return useRootChoice<GlassStyle>('data-lab-glass', ['liquid', 'frosted', 'solid'], 'liquid')
+}
+
+/** The app's glass renderer (ThemeConfig `glassRenderer`, on `<html data-lab-glass-renderer>`), live. */
+export function useGlassRenderer(): GlassRenderer {
+  return useRootChoice<GlassRenderer>('data-lab-glass-renderer', ['css', 'canvas'], 'css')
 }
 
 type ContainerTag = 'div' | 'header' | 'footer' | 'nav' | 'section' | 'aside'
@@ -76,6 +83,7 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
   const uid = React.useId()
   const reduced = useReducedMotion()
   const style = useGlassStyle()
+  const renderer = useGlassRenderer()
   const liquid = style === 'liquid'
 
   const setHost = React.useCallback(
@@ -130,6 +138,7 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
     current.followPointer = light === 'pointer' && liquid
     current.interactive = interactive && liquid
     current.adaptive = adaptive
+    current.renderer = renderer
     current.requestMeasure()
   })
 
@@ -168,4 +177,17 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
     </div>,
     <GlassContext.Provider value={registry}>{children}</GlassContext.Provider>
   )
+})
+
+/**
+ * A GlassContainer unless one already encloses it, then a plain element. Kit rows (app bar,
+ * toolbar, dock, search) use it so they share one material without ever nesting containers.
+ */
+export const GlassScope = React.forwardRef<HTMLElement, GlassContainerProps>(function GlassScope(
+  { as = 'div', spacing, light, interactive, adaptive, ...props },
+  ref
+) {
+  const outer = React.useContext(GlassContext)
+  if (outer) return React.createElement(as, { ...props, ref })
+  return <GlassContainer {...props} as={as} spacing={spacing} light={light} interactive={interactive} adaptive={adaptive} ref={ref} />
 })
