@@ -62,8 +62,9 @@ function Overview() {
         <p>
           The theme config’s <C>radius</C> option sets <C>--lab-radius-scale</C> on <C>{'<html>'}</C>.{' '}
           <C>1</C> is the default rounding, <C>0.5</C> half, <C>0</C> square; values are clamped to 0–1.5.
-          Every radius token, and every radius inside component CSS, is written as a multiple of it, so
-          circles such as radio marks stay round while everything else follows.
+          Every radius token, and every radius inside component CSS, is written as a multiple of{' '}
+          <C>--lab-corner-scale</C> (the radius scale times the corner fit below), so circles such as
+          radio marks stay round while everything else follows.
         </p>
         <Code code={`<Provider theme={{ palette: 'mono', density: 'compact', radius: 0.35 }}>`} />
         <p>Write your own radii the same way:</p>
@@ -75,7 +76,7 @@ function Overview() {
 }
 .order-card .thumbnail {
   /* A one-off size: still multiply by the scale. */
-  border-radius: calc(10px * var(--lab-radius-scale, 1));
+  border-radius: calc(10px * var(--lab-corner-scale, 1));
 }`}
         />
       </Section>
@@ -84,7 +85,10 @@ function Overview() {
         <p>
           Kit surfaces use <C>corner-shape: superellipse(1.5)</C>, a continuous curve rather than a
           quarter circle joined to a straight edge. Its exponent is 2<sup>1.5</sup> ≈ 2.83. Browsers
-          without <C>corner-shape</C> show ordinary rounded corners, which is the intended fallback.
+          without <C>corner-shape</C> (Firefox, Safari, most mobile browsers today) draw quarter circles,
+          which look rounder at the same radius. There the kit sets <C>--lab-corner-fit: 0.76</C>: every
+          radius shrinks to the circle that matches the superellipse most closely (measured against
+          Chrome’s <C>corner-shape</C> from 12 to 44px), so corners look the same everywhere.
         </p>
         <div className="fd-stage" style={{ justifyContent: 'center' }}>
           <div className="fd-corner-compare">
@@ -104,14 +108,14 @@ function Overview() {
         <p className="docs-muted">
           {nativeCorners()
             ? 'Your browser supports corner-shape, so the two shapes differ.'
-            : 'Your browser does not support corner-shape yet, so both shapes are ordinary rounded corners.'}
+            : 'Your browser does not support corner-shape yet, so both shapes are fitted rounded corners.'}
         </p>
       </Section>
 
       <Section title="SVG fallback">
         <p>
-          For browsers without native support you can opt in to an SVG engine that repaints kit surfaces
-          with a true superellipse. It starts only when <C>corner-shape</C> is unsupported and restores
+          The fitted circle is close but not exact. For a true superellipse on browsers without native
+          support you can opt in to an SVG engine that repaints kit surfaces with the real curve. It starts only when <C>corner-shape</C> is unsupported and restores
           the original paint when it stops.
         </p>
         <Code
@@ -132,7 +136,7 @@ function Overview() {
       <Section title="Guidelines">
         <DoDont
           doItems={[
-            <>Use a radius token, or <C>calc(Npx * var(--lab-radius-scale, 1))</C> for a one-off.</>,
+            <>Use a radius token, or <C>calc(Npx * var(--lab-corner-scale, 1))</C> for a one-off.</>,
             <>Add <C>corner-shape: superellipse(1.5)</C> next to the radius on surfaces.</>,
             'Decrease radii as surfaces nest.',
           ]}

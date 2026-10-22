@@ -60,7 +60,7 @@
   inset-inline-start: 0;
   width: 40px;
   height: 40px;
-  border-radius: calc(14px * var(--lab-radius-scale, 1));
+  border-radius: calc(14px * var(--lab-corner-scale, 1));
 }
 .ph-puck {
   background: var(--lab-primary);

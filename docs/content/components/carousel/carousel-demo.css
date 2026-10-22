@@ -8,7 +8,7 @@
 }
 .cd-art {
   aspect-ratio: 4 / 3;
-  border-radius: calc(14px * var(--lab-radius-scale, 1));
+  border-radius: calc(14px * var(--lab-corner-scale, 1));
 }
 .cd-card strong {
   font-size: 15px;

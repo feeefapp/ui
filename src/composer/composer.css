@@ -6,7 +6,7 @@
   --pc-surface: var(--lab-surface);
   --pc-primary: var(--lab-primary);
   --pc-on-primary: var(--lab-on-primary);
-  --pc-shell-radius: calc(26px * var(--lab-radius-scale, 1));
+  --pc-shell-radius: calc(26px * var(--lab-corner-scale, 1));
   --pc-shell-inset: calc(var(--lab-space-3) / 2);
   --pc-control-height: var(--lab-control-compact);
   --pc-ease: var(--lab-ease);
@@ -36,7 +36,7 @@
   min-width: 40px;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: 14px;
+  border-radius: calc(14px * var(--lab-corner-scale, 1));
   background: transparent;
   color: var(--pc-ink);
   font: inherit;
@@ -142,7 +142,7 @@
   padding-inline-start: 3px;
   padding-inline-end: 4px;
   border: 1px solid var(--pc-line);
-  border-radius: 18px;
+  border-radius: calc(18px * var(--lab-corner-scale, 1));
   background: color-mix(in srgb, var(--pc-surface) 86%, transparent);
   font-size: 12px;
   animation: lab-pc-in 220ms var(--pc-ease);
@@ -153,7 +153,7 @@
 .lab-pc-ref img {
   width: 28px;
   height: 28px;
-  border-radius: 10px;
+  border-radius: calc(10px * var(--lab-corner-scale, 1));
   object-fit: cover;
 }
 .lab-pc-ref-name {
@@ -171,7 +171,7 @@ html[data-lab-theme] .lab-pc-template-chip .lab-control[data-variant] {
   height: 40px;
   min-height: 40px;
   border: 0;
-  border-radius: 14px;
+  border-radius: calc(14px * var(--lab-corner-scale, 1));
   background: transparent;
   color: var(--pc-muted);
   cursor: pointer;

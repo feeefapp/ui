@@ -8,7 +8,7 @@ import type { CSSProperties } from 'react'
  * - `data-lab-palette`  → color tokens (theme-tokens.css)
  * - `data-lab-primary` + `--lab-seed*` → a custom primary color the tokens derive from
  * - `data-lab-density`  → control/row heights, padding and spacing (system.css)
- * - `--lab-radius-scale` → every corner radius (system.css and component CSS)
+ * - `--lab-radius-scale` → every corner radius, through `--lab-corner-scale` (system.css and component CSS)
  * - `data-lab-glass`    → how floating glass behaves (glass/glass.css, GlassContainer)
  * - `data-lab-glass-renderer` → filled glass, blurred CSS glass or canvas refraction (glass/glass.css)
  *

@@ -1,3 +1,4 @@
+import { cornerFit } from './corner-fit'
 import { FO_CORNER_EXPONENT, foSuperellipsePath, type FoCornerRadii } from './geometry'
 
 const selector =
@@ -45,10 +46,10 @@ const restore = (host: HTMLElement, property: string, value: InlineValue) => {
   if (value.value) host.style.setProperty(property, value.value, value.priority)
   else host.style.removeProperty(property)
 }
-const radius = (value: string, width: number, height: number) => {
+const radius = (value: string, width: number, height: number, fit: number) => {
   const [horizontal, vertical = horizontal] = value.split(' ')
   const length = (part: string, size: number) =>
-    part.endsWith('%') ? (Number.parseFloat(part) * size) / 100 : Number.parseFloat(part) || 0
+    part.endsWith('%') ? (Number.parseFloat(part) * size) / 100 : (Number.parseFloat(part) || 0) / fit
   return { x: length(horizontal, width), y: length(vertical, height) }
 }
 
@@ -104,6 +105,7 @@ export function installFoContinuousCorners(root?: Document | HTMLElement) {
       restore(host, property, entry.original.get(property)!)
     })
     const style = getComputedStyle(host)
+    const fit = cornerFit()
     const width = host.offsetWidth
     const height = host.offsetHeight
     const radii = [
@@ -111,7 +113,9 @@ export function installFoContinuousCorners(root?: Document | HTMLElement) {
       style.borderTopRightRadius,
       style.borderBottomRightRadius,
       style.borderBottomLeftRadius,
-    ].map((value) => radius(value, width, height)) as FoCornerRadii
+    ]
+      // CSS radii are shrunk to look right as circles (--lab-corner-fit); the SVG draws the real curve.
+      .map((value) => radius(value, width, height, fit)) as FoCornerRadii
     const image = style.backgroundImage
     if (
       !width ||

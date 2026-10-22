@@ -60,7 +60,7 @@ html[data-lab-theme] .lab-tab-accessory.lab-glass-group {
   width: min(100%, 420px);
   min-height: 52px;
   padding: 4px 8px;
-  border-radius: calc(26px * var(--lab-radius-scale, 1));
+  border-radius: calc(26px * var(--lab-corner-scale, 1));
 }
 .lab-tab-chrome[data-minimized] .lab-tab-accessory {
   flex: 1 1 0%;
@@ -74,7 +74,7 @@ html[data-lab-theme] .lab-tab-bar.lab-glass-group {
   gap: 2px;
   max-width: 100%;
   padding: 4px;
-  border-radius: calc(30px * var(--lab-radius-scale, 1));
+  border-radius: calc(30px * var(--lab-corner-scale, 1));
 }
 .lab-tab {
   position: relative;
@@ -90,7 +90,7 @@ html[data-lab-theme] .lab-tab-bar.lab-glass-group {
   padding: 0 10px;
   overflow: hidden;
   border: 0;
-  border-radius: calc(26px * var(--lab-radius-scale, 1));
+  border-radius: calc(26px * var(--lab-corner-scale, 1));
   background: transparent;
   color: var(--lab-muted);
   font: inherit;
@@ -136,7 +136,7 @@ html[data-lab-theme] .lab-tab-bar.lab-glass-group {
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  border-radius: 9px;
+  border-radius: calc(9px * var(--lab-corner-scale, 1));
   background: var(--lab-danger);
   color: var(--lab-surface);
   font-size: 11px;

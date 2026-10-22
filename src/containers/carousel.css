@@ -134,7 +134,7 @@ html[data-lab-theme] .lab-carousel-control.lab-toolbar-group {
 .lab-carousel-dot:focus-visible {
   outline: 2px solid var(--lab-focus);
   outline-offset: -2px;
-  border-radius: 10px;
+  border-radius: calc(10px * var(--lab-corner-scale, 1));
 }
 @media (prefers-reduced-motion: reduce) {
   .lab-carousel-track {

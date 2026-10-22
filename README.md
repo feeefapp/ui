@@ -85,7 +85,7 @@ How it works: `themeAttributes()` / `applyThemeConfig()` set `data-lab-palette`,
 palette or density, add its token block next to the existing ones (`theme-tokens.css`,
 `system.css`) and extend the union in `theme-config.ts`. Kit CSS must use these tokens, never
 literal colors, control sizes or radii, so every theme reaches it. App CSS should do the same
-(derive from `--lab-*` tokens and `--lab-radius-scale`).
+(derive from `--lab-*` tokens and `--lab-corner-scale`, the radius scale times the corner fit that browsers without `corner-shape` need).
 
 ## Develop
 

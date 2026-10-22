@@ -50,7 +50,7 @@
   height: 16px;
   flex: none;
   border: 1px solid color-mix(in srgb, var(--lab-ink) 20%, transparent);
-  border-radius: calc(4px * var(--lab-radius-scale, 1));
+  border-radius: calc(4px * var(--lab-corner-scale, 1));
 }
 .fd-stage {
   display: flex;
@@ -87,7 +87,7 @@
 }
 .fd-space-bar {
   height: 16px;
-  border-radius: calc(3px * var(--lab-radius-scale, 1));
+  border-radius: calc(3px * var(--lab-corner-scale, 1));
   background: var(--lab-primary);
 }
 .fd-measure {
@@ -149,7 +149,7 @@
   inset-inline-start: 6px;
   width: 32px;
   height: 32px;
-  border-radius: calc(12px * var(--lab-radius-scale, 1));
+  border-radius: calc(12px * var(--lab-corner-scale, 1));
   background: var(--lab-primary);
 }
 .fd-motion-dot[data-on] {

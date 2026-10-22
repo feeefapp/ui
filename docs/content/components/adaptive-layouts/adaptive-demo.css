@@ -41,7 +41,7 @@
 }
 .ad-card-art {
   aspect-ratio: 1;
-  border-radius: calc(16px * var(--lab-radius-scale, 1));
+  border-radius: calc(16px * var(--lab-corner-scale, 1));
   background: linear-gradient(135deg, hsl(28 70% 72%), hsl(68 55% 46%));
 }
 .ad-card[data-size='compact'] .ad-card-art {

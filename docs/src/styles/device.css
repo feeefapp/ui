@@ -11,17 +11,17 @@
   overflow: hidden;
   isolation: isolate;
   border: 1px solid var(--lab-border);
-  border-radius: calc(44px * var(--lab-radius-scale, 1));
+  border-radius: calc(44px * var(--lab-corner-scale, 1));
   background: var(--lab-ground);
   box-shadow: 0 24px 60px -32px rgb(0 0 0 / 0.35);
   /* Anything fixed inside (sheets) is laid out against the screen, not the docs window. */
   contain: layout paint;
 }
 .docs-device[data-kind='tablet'] .docs-device-screen {
-  border-radius: calc(28px * var(--lab-radius-scale, 1));
+  border-radius: calc(28px * var(--lab-corner-scale, 1));
 }
 .docs-device[data-kind='desktop'] .docs-device-screen {
-  border-radius: calc(18px * var(--lab-radius-scale, 1));
+  border-radius: calc(18px * var(--lab-corner-scale, 1));
 }
 .docs-device-screen > .lab-nav-stack,
 .docs-device-screen > .demo-fill {

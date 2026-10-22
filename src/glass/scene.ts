@@ -19,6 +19,7 @@ import { planGlassTransition, sameRect } from './transitions'
 import { adaptiveGlassTone, backdropTone, type BackdropSample, type GlassTone } from './adaptive'
 import { GLASS_REFRACTION, displacementMap, supportsRefraction } from './refraction'
 import { GLASS_CONTENT_FOLLOW, GLASS_PRESS_SCALE, glassStretch, pressedShape } from './press'
+import { cornerFit } from '../brand/corner-fit'
 
 /** How far (px) the material may reach past the container, for overshoot and growing bubbles. */
 export const GLASS_MARGIN = 32
@@ -123,6 +124,7 @@ const radiusOf = (element: HTMLElement) => {
  */
 export class GlassScene {
   private members = new Map<string, Member>()
+  private cornerFit = 1
   private shapes = new Map<string, Shape>()
   private measured = false
   private measureQueued = false
@@ -367,6 +369,8 @@ export class GlassScene {
     const targets = new Map<string, { rect: GlassRect; radius: number; member: Member | null; animated?: boolean }>()
     const unions = new Map<string, GlassRect[]>()
     const unionRadius = new Map<string, number>()
+    // Shapes keep the true superellipse radius; without corner-shape the CSS radius is shrunk.
+    this.cornerFit = cornerFit()
     for (const [id, member] of this.members) {
       const { element, options } = member
       if (!element.isConnected || element.closest('[inert],[hidden],[data-glass-hidden]')) continue
@@ -381,7 +385,7 @@ export class GlassScene {
       // In the container's own pixels (ancestors may scale it), minus our own content offset.
       const local = toLocalRect(frame, box)
       const rect = { x: local.x - offset.x, y: local.y - offset.y, width: local.width, height: local.height }
-      const radius = radiusOf(element)
+      const radius = radiusOf(element) / this.cornerFit
       if (options.union) {
         const key = `union:${options.union}`
         unions.set(key, [...(unions.get(key) ?? []), rect])
@@ -540,7 +544,8 @@ export class GlassScene {
       style.width = `${width}px`
       style.height = `${height}px`
       if (path.shapes.length === 1) {
-        style.borderRadius = `${clampRadius(path.shapes[0])}px`
+        // A lone shape clips with CSS: hand back the radius CSS would use (the circle fallback's).
+        style.borderRadius = `${clampRadius(path.shapes[0]) * this.cornerFit}px`
         style.clipPath = ''
       } else {
         style.borderRadius = ''

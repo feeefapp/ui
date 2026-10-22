@@ -67,11 +67,11 @@
 .lt-swatch {
   display: block;
   aspect-ratio: 4 / 3;
-  border-radius: calc(16px * var(--lab-radius-scale, 1));
+  border-radius: calc(16px * var(--lab-corner-scale, 1));
 }
 .lt-products[data-view='list'] .lt-swatch {
   aspect-ratio: 1;
-  border-radius: calc(12px * var(--lab-radius-scale, 1));
+  border-radius: calc(12px * var(--lab-corner-scale, 1));
 }
 .lt-product-name {
   justify-self: start;

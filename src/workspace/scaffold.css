@@ -167,7 +167,7 @@ html[data-lab-theme] .lab-dialog.lab-workspace-drawer {
   --lab-drawer-offset: -100%;
 }
 html[data-lab-theme] .lab-workspace-drawer:dir(rtl) {
-  border-radius: calc(20px * var(--lab-radius-scale, 1)) 0 0 calc(20px * var(--lab-radius-scale, 1));
+  border-radius: calc(20px * var(--lab-corner-scale, 1)) 0 0 calc(20px * var(--lab-corner-scale, 1));
   --lab-drawer-offset: 100%;
 }
 html[data-lab-theme] .lab-workspace-drawer[data-state='open'] {

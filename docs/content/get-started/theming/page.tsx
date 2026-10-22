@@ -223,7 +223,7 @@ applyThemeConfig(previewFrame.contentDocument!.documentElement, {
   color: var(--lab-muted);
 }
 .invoice-badge {
-  border-radius: calc(8px * var(--lab-radius-scale, 1));
+  border-radius: calc(8px * var(--lab-corner-scale, 1));
   background: color-mix(in srgb, var(--lab-primary) 18%, var(--lab-surface));
 }
 .invoice a:focus-visible {

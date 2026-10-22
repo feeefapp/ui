@@ -3,7 +3,7 @@
   --lab-workspace-space: 8px;
   --lab-workspace-gap: 16px;
   --lab-workspace-rail: 288px;
-  --lab-workspace-panel-radius: calc(28px * var(--lab-radius-scale, 1));
+  --lab-workspace-panel-radius: calc(28px * var(--lab-corner-scale, 1));
   --lab-workspace-composer: 780px;
 }
 .lab-workspace-canvas,
@@ -22,7 +22,7 @@ html[data-lab-theme] .lab-workspace-actions {
   height: 52px;
   padding: 4px;
   gap: 8px;
-  --lab-glass-radius: calc(26px * var(--lab-radius-scale, 1));
+  --lab-glass-radius: calc(26px * var(--lab-corner-scale, 1));
 }
 html[data-lab-theme] .lab-workspace-actions > :is(button, a),
 html[data-lab-theme] .lab-workspace-actions > .lab-control[data-variant] {
@@ -42,7 +42,7 @@ html[data-lab-theme] .lab-workspace-actions > .lab-control[data-control-size='ic
 }
 html[data-lab-theme] .lab-workspace-rail {
   border: 1px solid var(--lab-line);
-  border-radius: var(--lab-workspace-panel-radius, calc(28px * var(--lab-radius-scale, 1)));
+  border-radius: var(--lab-workspace-panel-radius, calc(28px * var(--lab-corner-scale, 1)));
   corner-shape: superellipse(1.5);
   background: color-mix(in srgb, var(--lab-surface) 80%, transparent);
   -webkit-backdrop-filter: blur(20px) saturate(1.2);
@@ -54,7 +54,7 @@ html[data-lab-theme] .lab-workspace-toolgroup {
   align-items: center;
   gap: 2px;
   padding: 4px;
-  --lab-glass-radius: calc(24px * var(--lab-radius-scale, 1));
+  --lab-glass-radius: calc(24px * var(--lab-corner-scale, 1));
 }
 html[data-lab-theme] .lab-workspace-toolgroup > :is(button, a)[data-variant],
 html[data-lab-theme] .lab-workspace-toolgroup > div > button[data-variant] {
