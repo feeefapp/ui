@@ -710,7 +710,6 @@ final Map<String, List<Widget> Function()> scenes = {
         final theme = ThemeProvider.of(context);
         return Container(
           height: 360,
-          clipBehavior: Clip.antiAlias,
           decoration: ShapeDecoration(
             color: theme.colors.surface,
             shape: SuperellipseBorder(
@@ -718,7 +717,13 @@ final Map<String, List<Widget> Function()> scenes = {
               side: BorderSide(color: theme.colors.line),
             ),
           ),
-          child: NavigationStack(onBack: _noop, children: pages),
+          // overflow: hidden clips to the padding box, inside the 1px border.
+          child: ClipPath(
+            clipper: ShapeBorderClipper(
+              shape: SuperellipseBorder(radius: theme.sizes.radiusPanel - 1),
+            ),
+            child: NavigationStack(onBack: _noop, children: pages),
+          ),
         );
       },
     );
@@ -749,6 +754,79 @@ final Map<String, List<Widget> Function()> scenes = {
       ]),
     ];
   },
+  'split': () => [
+    Builder(
+      builder: (context) {
+        final theme = ThemeProvider.of(context);
+        const text = TextStyle(
+          fontSize: 15,
+          height: 22 / 15,
+          leadingDistribution: TextLeadingDistribution.even,
+        );
+        return Container(
+          height: 360,
+          decoration: ShapeDecoration(
+            color: theme.colors.surface,
+            shape: SuperellipseBorder(
+              radius: theme.sizes.radiusPanel,
+              side: BorderSide(color: theme.colors.line),
+            ),
+          ),
+          // overflow: hidden clips to the padding box, inside the 1px border.
+          child: ClipPath(
+            clipper: ShapeBorderClipper(
+              shape: SuperellipseBorder(radius: theme.sizes.radiusPanel - 1),
+            ),
+            child: SplitView(
+              onBack: _noop,
+              compactBreakpoint: 400,
+              defaultListWidth: 300,
+              list: NavigationPage(
+                title: 'Orders',
+                titleDisplay: TitleDisplay.inline,
+                child: DefaultTextStyle.merge(
+                  style: text,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final r in const [
+                        'Order #1040',
+                        'Order #1041',
+                        'Order #1042',
+                      ])
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(color: theme.colors.line),
+                            ),
+                          ),
+                          child: CssBaseline(lineHeight: 22, child: Text(r)),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              detail: [
+                NavigationPage(
+                  key: const ValueKey('o1042'),
+                  title: 'Order #1042',
+                  titleDisplay: TitleDisplay.inline,
+                  child: CssBaseline(
+                    lineHeight: 22,
+                    child: Text(
+                      '3 items · 4,500 DZD',
+                      style: text.copyWith(color: theme.colors.muted),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  ],
   'sheet': () => [
     Builder(
       builder: (context) => Sheet(
