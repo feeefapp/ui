@@ -5,6 +5,7 @@ import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
 import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 import { Checkbox, RadioGroup } from '@feeef.dev/ui/primitives/choice'
 import { ProBadge } from '@feeef.dev/ui/primitives/badge'
+import { Slider, SlideSwitch } from '@feeef.dev/ui/primitives/slider'
 
 /**
  * Scenes shared with flutter/example/lib/scenes.dart: same ids, same content, same layout.
@@ -69,6 +70,31 @@ export const SCENES: Record<string, () => ReactNode> = {
       <div className="row">
         <span>Voice cloning</span>
         <ProBadge />
+      </div>
+    </>
+  ),
+  sliders: () => (
+    <>
+      <Slider label="Volume" defaultValue={40} />
+      <Slider label="Discount" controlSize="compact" defaultValue={50} step={25} showStops />
+      <div style={{ alignSelf: 'stretch' }}>
+        <Slider
+          label="Rating"
+          trackStyle="thin"
+          min={1}
+          max={5}
+          defaultValue={4}
+          marks={[1, 2, 3, 4, 5].map((value) => ({ value, label: String(value) }))}
+        />
+      </div>
+      <div className="row">
+        <SlideSwitch label="Notifications" defaultChecked />
+        <SlideSwitch label="SMS" />
+        <SlideSwitch label="Auto confirm" defaultChecked onText="On" offText="Off" />
+        <SlideSwitch label="Auto ship" onText="On" offText="Off" />
+        <SlideSwitch label="Compact" controlSize="compact" defaultChecked />
+        <SlideSwitch label="Disabled" disabled defaultChecked />
+        <SlideSwitch label="Thin" trackStyle="thin" defaultChecked />
       </div>
     </>
   ),

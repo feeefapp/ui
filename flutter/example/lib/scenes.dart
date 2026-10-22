@@ -80,6 +80,45 @@ final Map<String, List<Widget> Function()> scenes = {
     ]),
   ],
   'segmented': () => [const _Segmented()],
+  'sliders': () => [
+    const Slider(label: 'Volume', defaultValue: 40),
+    const Slider(
+      label: 'Discount',
+      controlSize: .compact,
+      defaultValue: 50,
+      step: 25,
+      showStops: true,
+    ),
+    Slider(
+      label: 'Rating',
+      trackStyle: .thin,
+      min: 1,
+      max: 5,
+      defaultValue: 4,
+      marks: [
+        for (var value = 1; value <= 5; value++)
+          SliderMark(value: value.toDouble(), label: Text('$value')),
+      ],
+    ),
+    row(const [
+      SlideSwitch(label: 'Notifications', defaultChecked: true),
+      SlideSwitch(label: 'SMS'),
+      SlideSwitch(
+        label: 'Auto confirm',
+        defaultChecked: true,
+        onText: 'On',
+        offText: 'Off',
+      ),
+      SlideSwitch(label: 'Auto ship', onText: 'On', offText: 'Off'),
+      SlideSwitch(
+        label: 'Compact',
+        controlSize: .compact,
+        defaultChecked: true,
+      ),
+      SlideSwitch(label: 'Disabled', disabled: true, defaultChecked: true),
+      SlideSwitch(label: 'Thin', trackStyle: .thin, defaultChecked: true),
+    ]),
+  ],
   'choices': () => [
     row([
       Checkbox(

@@ -13,4 +13,7 @@ export 'primitives/badge.dart';
 export 'primitives/button.dart';
 export 'primitives/choice.dart';
 export 'primitives/segmented.dart';
+export 'primitives/slider.dart';
+export 'primitives/slider_core.dart';
+export 'primitives/spring_core.dart';
 export 'theme.dart';
