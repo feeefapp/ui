@@ -1,5 +1,5 @@
 /** Built-in strings for the kit widgets. Host translations override them. */
-export const LAB_UI_MESSAGES: Record<string, Record<string, string>> = {
+export const UI_MESSAGES: Record<string, Record<string, string>> = {
   "en": {
     "lab.common.close": "Close",
     "lab.search.collapse": "Close search",

@@ -4,22 +4,22 @@ import * as React from 'react'
 import { createPortal } from 'react-dom'
 import * as Popover from '@radix-ui/react-popover'
 import { CalendarDays, Clock, ChevronDown, X } from 'lucide-react'
-import { LabFieldShell, type LabFieldDecorationProps } from './field-shell'
-import { LabButton, LabIconButton } from './button'
-import { LabRawInput } from './raw-input'
-import { LabPopoverSurface } from './popover-surface'
-import { LabTemporalFilterEditor } from '../filters/temporal-editor'
-import { LabTemporalDialog } from '../filters/temporal-dialog'
-import { LabToolbarGroup } from '../toolbar'
+import { FieldShell, type FieldDecorationProps } from './field-shell'
+import { Button, IconButton } from './button'
+import { RawInput } from './raw-input'
+import { PopoverSurface } from './popover-surface'
+import { TemporalFilterEditor } from '../filters/temporal-editor'
+import { TemporalDialog } from '../filters/temporal-dialog'
+import { ToolbarGroup } from '../toolbar'
 import {
   isTemporalRange,
   normalizeTemporal,
   validateTemporal,
-  type LabTemporalConfig,
-  type LabTemporalValue,
+  type TemporalConfig,
+  type TemporalValue,
 } from '../filters/temporal'
 import { formatTemporalValue } from '../filters/temporal-format'
-import { useLabI18n } from '../i18n'
+import { useI18n } from '../i18n'
 import { cn } from '../utils'
 import './temporal-field.css'
 
@@ -37,12 +37,12 @@ function useCompactViewport() {
   )
 }
 
-export type LabTemporalFieldProps = LabFieldDecorationProps &
-  LabTemporalConfig & {
+export type TemporalFieldProps = FieldDecorationProps &
+  TemporalConfig & {
     /** Committed value: a local ISO string (`2026-10-21`, `09:30`, `2026-10-21T09:30`), a `{ from, to }` range, or `null`. */
-    value: LabTemporalValue
+    value: TemporalValue
     /** Called with the normalized value on Apply or when the clear button empties the field. */
-    onValueChange: (value: LabTemporalValue) => void
+    onValueChange: (value: TemporalValue) => void
     /** Id of the trigger button; generated when omitted. */
     id?: string
     /** Form field name. Single values submit as the ISO string, ranges as `{"from","to"}` JSON. */
@@ -62,7 +62,7 @@ export type LabTemporalFieldProps = LabFieldDecorationProps &
     /** Shows a clear button inside the field while it has a value. */
     clearable?: boolean
     /** Extra synchronous rule after the built-in format, step and bounds checks. Return an error message or nothing. */
-    validator?: (value: LabTemporalValue) => string | null | undefined
+    validator?: (value: TemporalValue) => string | null | undefined
     /** When errors appear: after the field loses focus (default), on every change, or only on form submit. */
     validationMode?: 'blur' | 'change' | 'submit'
     /** Receives the current error message, or `null` once the value is valid. */
@@ -72,7 +72,7 @@ export type LabTemporalFieldProps = LabFieldDecorationProps &
     /** BCP 47 locale for the displayed value and the calendar. Defaults to the kit's i18n locale; the stored value stays ISO. */
     locale?: string
     /** Replaces the default display text for the value. Display only. */
-    formatValue?: (value: LabTemporalValue) => string
+    formatValue?: (value: TemporalValue) => string
     /** Class name for the trigger button. Use `containerClassName` for the field box. */
     className?: string
     /** Accessible name when there is no visible `hint`. */
@@ -86,8 +86,8 @@ export type LabTemporalFieldProps = LabFieldDecorationProps &
  * (a dialog on phones), ranges in a dialog. A date commits on the day you pick; times, datetimes and
  * ranges commit on Apply.
  */
-export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalFieldProps>(
-  function LabTemporalField(
+export const TemporalField = React.forwardRef<HTMLButtonElement, TemporalFieldProps>(
+  function TemporalField(
     {
       type,
       value,
@@ -132,13 +132,13 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
   ) {
     const trigger = React.useRef<HTMLButtonElement>(null)
     React.useImperativeHandle(forwardedRef, () => trigger.current!, [])
-    const i18n = useLabI18n()
+    const i18n = useI18n()
     const locale = localeProp ?? i18n.locale
     const formId = React.useId(),
       range = isTemporalRange(type)
-    const config: LabTemporalConfig = { type, min, max, step, allowOvernight, presets }
+    const config: TemporalConfig = { type, min, max, step, allowOvernight, presets }
     const [open, setOpen] = React.useState(false),
-      [draft, setDraft] = React.useState<LabTemporalValue>(value),
+      [draft, setDraft] = React.useState<TemporalValue>(value),
       [draftError, setDraftError] = React.useState<string | null>(null)
     const [message, setMessage] = React.useState<string | null>(null)
     const touched = React.useRef(false),
@@ -147,7 +147,7 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
     const [direction, setDirection] = React.useState<'rtl' | 'ltr'>(dir === 'rtl' ? 'rtl' : 'ltr')
     const valueKey = JSON.stringify(value)
     const validate = React.useCallback(
-      (next: LabTemporalValue) => {
+      (next: TemporalValue) => {
         if (readOnly) return null
         const normalized = normalizeTemporal(next)
         return (
@@ -201,7 +201,7 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
         setOpen(false)
       }
     }, [disabled, readOnly])
-    const commit = (next: LabTemporalValue) => {
+    const commit = (next: TemporalValue) => {
       const normalized = normalizeTemporal(next)
       onValueChange(normalized)
       touched.current = true
@@ -219,7 +219,7 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
       }
       commit(normalized)
     }
-    const formatted = (formatValue || ((next: LabTemporalValue) => formatTemporalValue(type, next, locale)))(
+    const formatted = (formatValue || ((next: TemporalValue) => formatTemporalValue(type, next, locale)))(
       value
     )
     const populated = normalizeTemporal(value) != null
@@ -237,11 +237,11 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
         setDraftError(null)
       }
     }
-    const changeDraft = (next: LabTemporalValue) => {
+    const changeDraft = (next: TemporalValue) => {
       setDraft(next)
       setDraftError(null)
     }
-    const pick = (next: LabTemporalValue) => {
+    const pick = (next: TemporalValue) => {
       if (!instant) return
       const failure = validate(normalizeTemporal(next))
       if (failure) setDraftError(failure)
@@ -251,8 +251,8 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
     // actions at all: the day itself is the action.
     const actions =
       instant && normalizeTemporal(draft) == null ? null : (
-        <LabToolbarGroup label={`${title} actions`} className="lab-temporal-actions">
-          <LabButton
+        <ToolbarGroup label={`${title} actions`} className="lab-temporal-actions">
+          <Button
             variant="text"
             appearance="toolbar"
             controlSize="compact"
@@ -260,17 +260,17 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
             onClick={clear}
           >
             Clear
-          </LabButton>
+          </Button>
           {!instant && (
-            <LabButton variant="filled" appearance="toolbar" controlSize="compact" type="submit" form={formId}>
+            <Button variant="filled" appearance="toolbar" controlSize="compact" type="submit" form={formId}>
               Apply
-            </LabButton>
+            </Button>
           )}
-        </LabToolbarGroup>
+        </ToolbarGroup>
       )
     const popoverEditor = (
       <form id={formId} className="lab-temporal-field-editor" onSubmit={apply}>
-        <LabTemporalFilterEditor
+        <TemporalFilterEditor
           config={config}
           locale={locale}
           value={draft}
@@ -288,7 +288,7 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
     )
     return (
       <Popover.Root open={open && !asDialog} onOpenChange={(next) => (next ? begin() : close())}>
-        <LabFieldShell
+        <FieldShell
           id={id}
           hint={hint}
           label={label}
@@ -301,7 +301,7 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
             <>
               {trailing}
               {clearable && populated && !disabled && !readOnly && (
-                <LabIconButton
+                <IconButton
                   variant="text"
                   controlSize="compact"
                   className="lab-temporal-field-clear"
@@ -312,7 +312,7 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
                   }}
                 >
                   <X size={16} />
-                </LabIconButton>
+                </IconButton>
               )}
               <ChevronDown size={18} aria-hidden="true" />
             </>
@@ -331,7 +331,7 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
         >
           {({ id: fieldId, describedBy, invalid }) => {
             const button = (
-              <LabButton
+              <Button
                 ref={trigger}
                 id={fieldId}
                 variant={variant}
@@ -367,12 +367,12 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
                 <span id={`${fieldId}-value`} className="lab-temporal-field-value">
                   {formatted || (!floatingHint ? placeholder : '') || '\u00a0'}
                 </span>
-              </LabButton>
+              </Button>
             )
             return asDialog || readOnly ? button : <Popover.Trigger asChild>{button}</Popover.Trigger>
           }}
-        </LabFieldShell>
-        <LabRawInput
+        </FieldShell>
+        <RawInput
           className="lab-sr-only"
           tabIndex={-1}
           aria-hidden="true"
@@ -393,13 +393,13 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
         />
         {range && rangeNames && (
           <>
-            <LabRawInput
+            <RawInput
               type="hidden"
               name={rangeNames.from}
               disabled={disabled}
               value={value && typeof value === 'object' ? value.from : ''}
             />
-            <LabRawInput
+            <RawInput
               type="hidden"
               name={rangeNames.to}
               disabled={disabled}
@@ -408,7 +408,7 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
           </>
         )}
         <Popover.Portal container={container}>
-          <LabPopoverSurface asChild>
+          <PopoverSurface asChild>
             <Popover.Content
               className="lab-temporal-field-popover"
               aria-label={title}
@@ -424,11 +424,11 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
               {/* Hugs its content; the actions sit at the end of the editor's footer row. */}
               {!asDialog && popoverEditor}
             </Popover.Content>
-          </LabPopoverSurface>
+          </PopoverSurface>
         </Popover.Portal>
         {typeof document !== 'undefined' &&
           createPortal(
-            <LabTemporalDialog
+            <TemporalDialog
               open={open && asDialog}
               label={title}
               close={close}
@@ -454,21 +454,21 @@ export const LabTemporalField = React.forwardRef<HTMLButtonElement, LabTemporalF
   }
 )
 
-export type LabTemporalSingleFieldProps = Omit<LabTemporalFieldProps, 'type' | 'value' | 'onValueChange'> & {
+export type TemporalSingleFieldProps = Omit<TemporalFieldProps, 'type' | 'value' | 'onValueChange'> & {
   /** Committed local ISO string, or `null` when empty. */
   value: string | null
   /** Called with the applied string, or `null` when cleared. */
   onValueChange: (value: string | null) => void
 }
-export type LabTemporalRangeFieldProps = Omit<LabTemporalFieldProps, 'type' | 'value' | 'onValueChange'> & {
+export type TemporalRangeFieldProps = Omit<TemporalFieldProps, 'type' | 'value' | 'onValueChange'> & {
   /** Committed range of local ISO strings; either end may be `''` (open), or the whole value `null`. */
   value: { from: string; to: string } | null
   /** Called with the applied range, or `null` when cleared. */
   onValueChange: (value: { from: string; to: string } | null) => void
 }
 function singleField(type: 'date' | 'time' | 'datetime') {
-  return React.forwardRef<HTMLButtonElement, LabTemporalSingleFieldProps>((props, ref) => (
-    <LabTemporalField
+  return React.forwardRef<HTMLButtonElement, TemporalSingleFieldProps>((props, ref) => (
+    <TemporalField
       {...props}
       ref={ref}
       type={type}
@@ -477,8 +477,8 @@ function singleField(type: 'date' | 'time' | 'datetime') {
   ))
 }
 function rangeField(type: 'dateRange' | 'timeRange' | 'datetimeRange') {
-  return React.forwardRef<HTMLButtonElement, LabTemporalRangeFieldProps>((props, ref) => (
-    <LabTemporalField
+  return React.forwardRef<HTMLButtonElement, TemporalRangeFieldProps>((props, ref) => (
+    <TemporalField
       {...props}
       ref={ref}
       type={type}
@@ -487,14 +487,14 @@ function rangeField(type: 'dateRange' | 'timeRange' | 'datetimeRange') {
   ))
 }
 /** A calendar day, stored as `YYYY-MM-DD`. */
-export const LabDateField = singleField('date')
+export const DateField = singleField('date')
 /** A time of day, stored as `HH:mm` (or `HH:mm:ss` when `step` is under 60 seconds). */
-export const LabTimeField = singleField('time')
+export const TimeField = singleField('time')
 /** A local date and time, stored as `YYYY-MM-DDTHH:mm`. */
-export const LabDateTimeField = singleField('datetime')
+export const DateTimeField = singleField('datetime')
 /** A range of calendar days, stored as `{ from, to }` dates. */
-export const LabDateRangeField = rangeField('dateRange')
+export const DateRangeField = rangeField('dateRange')
 /** A range of times of day; `allowOvernight` lets the end come before the start. */
-export const LabTimeRangeField = rangeField('timeRange')
+export const TimeRangeField = rangeField('timeRange')
 /** A range of local dates and times. */
-export const LabDateTimeRangeField = rangeField('datetimeRange')
+export const DateTimeRangeField = rangeField('datetimeRange')

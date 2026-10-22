@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, type CSSProperties } from 'react'
-import { useLabI18n } from './i18n'
+import { useI18n } from './i18n'
 import { installFoPixelFallback } from './brand/pixel-fallback'
 import './pixel-art.css'
 import { voiceFingerprint } from './avatar-fingerprint'
@@ -237,7 +237,7 @@ export function PixelLoader({
   decorative = false,
   className = '',
 }: PixelLoaderProps) {
-  const { t } = useLabI18n()
+  const { t } = useI18n()
   const resolvedLabel = label ?? t('lab.common.loading')
   return (
     <span

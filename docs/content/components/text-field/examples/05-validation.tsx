@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
 
 const phoneError = (value: string) =>
   /^0[567]\d{8}$/.test(value.replace(/\s/g, '')) ? null : 'Use 10 digits starting with 05, 06 or 07.'
@@ -16,8 +16,8 @@ export default function Validation() {
       }}
       onReset={() => setStatus('')}
     >
-      <LabTextField hint="Customer name" name="name" required minLength={3} />
-      <LabTextField
+      <TextField hint="Customer name" name="name" required minLength={3} />
+      <TextField
         hint="Phone number"
         name="phone"
         type="tel"
@@ -26,7 +26,7 @@ export default function Validation() {
         validator={phoneError}
         supportingText="Checked when you leave the field."
       />
-      <LabTextField
+      <TextField
         hint="Email (optional)"
         name="email"
         type="email"
@@ -34,12 +34,12 @@ export default function Validation() {
         supportingText="Checked as you type."
       />
       <div className="demo-row">
-        <LabButton variant="text" type="reset">
+        <Button variant="text" type="reset">
           Reset
-        </LabButton>
-        <LabButton variant="filled" type="submit">
+        </Button>
+        <Button variant="filled" type="submit">
           Save order
-        </LabButton>
+        </Button>
       </div>
       <p role="status">{status}</p>
     </form>

@@ -17,7 +17,7 @@ function Overview() {
           head={['Area', 'Commitment']}
           rows={[
             ['Native elements', <>Buttons are <C>{'<button>'}</C>, checkboxes and radios are native inputs, dialogs are the native <C>{'<dialog>'}</C>. Browser keyboard behavior, form submission and validity come for free.</>],
-            ['Names', <>Fields take a <C>hint</C>, their visible floating label. <C>LabIconButton</C> requires an <C>aria-label</C>. <C>LabModal</C> requires a <C>label</C>. Kit-generated labels (close, search, theme, language) are translated.</>],
+            ['Names', <>Fields take a <C>hint</C>, their visible floating label. <C>IconButton</C> requires an <C>aria-label</C>. <C>Modal</C> requires a <C>label</C>. Kit-generated labels (close, search, theme, language) are translated.</>],
             ['Focus', <>Every focusable control shows a 2px <C>--lab-focus</C> outline on <C>:focus-visible</C>, drawn outside the painted corner and never clipped.</>],
             ['Dialogs', <>Focus is trapped while open, Escape closes, and focus returns to the opener (or to <C>returnFocusRef</C> if the opener is gone). <C>initialFocusRef</C> picks the first focused element.</>],
             ['State', <>Loading buttons set <C>aria-busy</C> and block activation; pressed toggle buttons are styled from <C>aria-pressed</C>; segmented controls use radio semantics.</>],
@@ -51,15 +51,15 @@ function Overview() {
         <Heading level={3} id="labels">Labels</Heading>
         <Code
           code={`// A field's hint is its label: always set it.
-<LabTextField hint="Customer phone" type="tel" />
+<TextField hint="Customer phone" type="tel" />
 
 // Icon-only actions need a name that says what happens.
-<LabIconButton variant="text" aria-label="Delete order">
+<IconButton variant="text" aria-label="Delete order">
   <Trash2 />
-</LabIconButton>
+</IconButton>
 
 // Toolbars and groups get a name too.
-<LabGlassGroup role="toolbar" aria-label="Order actions">…</LabGlassGroup>`}
+<GlassGroup role="toolbar" aria-label="Order actions">…</GlassGroup>`}
         />
         <Heading level={3} id="focus-return">Focus after changes</Heading>
         <p>
@@ -70,9 +70,9 @@ function Overview() {
         <Code
           code={`const listHeading = useRef<HTMLHeadingElement>(null)
 
-<LabModal label="Delete order" close={close} returnFocusRef={listHeading}>
+<Modal label="Delete order" close={close} returnFocusRef={listHeading}>
   …
-</LabModal>`}
+</Modal>`}
         />
         <Heading level={3} id="your-css">Your CSS</Heading>
         <Code

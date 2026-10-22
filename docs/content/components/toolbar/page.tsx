@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { ArrowLeft, Download, Plus, SlidersHorizontal } from 'lucide-react'
-import { LabToolbar, LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabToolbarSearch } from '@feeef.dev/ui/toolbar-search'
-import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'
+import { Toolbar, ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { ToolbarSearch } from '@feeef.dev/ui/toolbar-search'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground } from '../../../src/blocks/playground'
 import { DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
@@ -19,46 +19,46 @@ const controls = {
 function PlaygroundToolbar(v: { search: boolean; back: boolean; trailing: boolean; title: string }) {
   const [query, setQuery] = useState('')
   const actions = v.trailing ? (
-    <LabToolbarGroup label="Actions">
-      <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Export CSV">
+    <ToolbarGroup label="Actions">
+      <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Export CSV">
         <Download />
-      </LabIconButton>
-      <LabButton variant="filled" appearance="toolbar" controlSize="compact">
+      </IconButton>
+      <Button variant="filled" appearance="toolbar" controlSize="compact">
         <Plus />
         Add
-      </LabButton>
-    </LabToolbarGroup>
+      </Button>
+    </ToolbarGroup>
   ) : undefined
   if (v.search)
     return (
       <div className="toolbar-demo-surface">
-        <LabToolbarSearch
+        <ToolbarSearch
           label={`Search ${v.title.toLowerCase()}`}
           value={query}
           onValueChange={setQuery}
           trailing={actions}
         >
-          <LabToolbarGroup label="Filters">
-            <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Filters">
+          <ToolbarGroup label="Filters">
+            <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Filters">
               <SlidersHorizontal />
-            </LabIconButton>
-          </LabToolbarGroup>
-        </LabToolbarSearch>
+            </IconButton>
+          </ToolbarGroup>
+        </ToolbarSearch>
       </div>
     )
   return (
     <div className="toolbar-demo-surface">
-      <LabToolbar
+      <Toolbar
         label={v.title}
         leading={
-          <LabToolbarGroup label="Navigation">
+          <ToolbarGroup label="Navigation">
             {v.back && (
-              <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back">
+              <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back">
                 <ArrowLeft className="lab-dir-flip" />
-              </LabIconButton>
+              </IconButton>
             )}
             <span className="toolbar-demo-title">{v.title}</span>
-          </LabToolbarGroup>
+          </ToolbarGroup>
         }
         trailing={actions}
       />
@@ -68,12 +68,12 @@ function PlaygroundToolbar(v: { search: boolean; back: boolean; trailing: boolea
 
 function playgroundCode(v: { search: boolean; back: boolean; trailing: boolean; title: string }) {
   if (v.search)
-    return `<LabToolbarSearch\n  label="Search ${v.title.toLowerCase()}"\n  value={query}\n  onValueChange={setQuery}${v.trailing ? '\n  trailing={<LabToolbarGroup label="Actions">…</LabToolbarGroup>}' : ''}\n>\n  <LabToolbarGroup label="Filters">…</LabToolbarGroup>\n</LabToolbarSearch>`
-  const leading = `  leading={\n    <LabToolbarGroup label="Navigation">\n${v.back ? '      <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back">…</LabIconButton>\n' : ''}      <span>${v.title}</span>\n    </LabToolbarGroup>\n  }`
+    return `<ToolbarSearch\n  label="Search ${v.title.toLowerCase()}"\n  value={query}\n  onValueChange={setQuery}${v.trailing ? '\n  trailing={<ToolbarGroup label="Actions">…</ToolbarGroup>}' : ''}\n>\n  <ToolbarGroup label="Filters">…</ToolbarGroup>\n</ToolbarSearch>`
+  const leading = `  leading={\n    <ToolbarGroup label="Navigation">\n${v.back ? '      <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back">…</IconButton>\n' : ''}      <span>${v.title}</span>\n    </ToolbarGroup>\n  }`
   const trailing = v.trailing
-    ? `\n  trailing={\n    <LabToolbarGroup label="Actions">\n      <LabButton variant="filled" appearance="toolbar" controlSize="compact">Add</LabButton>\n    </LabToolbarGroup>\n  }`
+    ? `\n  trailing={\n    <ToolbarGroup label="Actions">\n      <Button variant="filled" appearance="toolbar" controlSize="compact">Add</Button>\n    </ToolbarGroup>\n  }`
     : ''
-  return `<LabToolbar\n  label="${v.title}"\n${leading}${trailing}\n/>`
+  return `<Toolbar\n  label="${v.title}"\n${leading}${trailing}\n/>`
 }
 
 function Overview() {
@@ -85,45 +85,45 @@ function Overview() {
         <Table
           head={['Component', 'Role']}
           rows={[
-            [<C>LabToolbar</C>, 'Unpainted row. leading at the start, trailing at the end; the space between passes clicks through to the content underneath.'],
-            [<C>LabToolbarGroup</C>, 'One glass pill around related controls. It sizes children to 40px (44px on touch and narrow screens) and fits their corners to the pill.'],
-            [<C>LabToolbarSearch</C>, 'A search button that opens into a field inside the same pill, taking the free width of its row.'],
+            [<C>Toolbar</C>, 'Unpainted row. leading at the start, trailing at the end; the space between passes clicks through to the content underneath.'],
+            [<C>ToolbarGroup</C>, 'One glass pill around related controls. It sizes children to 40px (44px on touch and narrow screens) and fits their corners to the pill.'],
+            [<C>ToolbarSearch</C>, 'A search button that opens into a field inside the same pill, taking the free width of its row.'],
           ]}
         />
         <p>
-          A toolbar is chrome that floats over content: the <C>top</C> slot of a <C>LabScrollArea</C>, a
+          A toolbar is chrome that floats over content: the <C>top</C> slot of a <C>ScrollArea</C>, a
           scaffold's app bar, the head of a panel. Only groups are painted, so related controls read as one
           object and unrelated ones stay apart. Controls inside a group use{' '}
           <C>appearance="toolbar"</C> and <C>controlSize="compact"</C>, which drop their own surface and
           share the group's glass. A filled button keeps its fill.
         </p>
         <Code
-          code={`<LabToolbar
+          code={`<Toolbar
   label="Products"
   leading={
-    <LabToolbarGroup label="Navigation">
-      <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back">
+    <ToolbarGroup label="Navigation">
+      <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back">
         <ArrowLeft className="lab-dir-flip" />
-      </LabIconButton>
+      </IconButton>
       <span>Products</span>
-    </LabToolbarGroup>
+    </ToolbarGroup>
   }
   trailing={
-    <LabToolbarGroup label="Product actions">
-      <LabButton variant="filled" appearance="toolbar" controlSize="compact">Add product</LabButton>
-    </LabToolbarGroup>
+    <ToolbarGroup label="Product actions">
+      <Button variant="filled" appearance="toolbar" controlSize="compact">Add product</Button>
+    </ToolbarGroup>
   }
 />`}
         />
         <p>
           When space runs out, <C>leading</C> shrinks and <C>trailing</C> keeps its size. For actions that
-          should collapse into a More menu, put a <C>LabActionsBar</C> in a group.
+          should collapse into a More menu, put a <C>ActionsBar</C> in a group.
         </p>
       </Section>
 
       <Section title="Search">
         <p>
-          <C>LabToolbarSearch</C> starts as a 40px search button. Opening it moves focus into the field and
+          <C>ToolbarSearch</C> starts as a 40px search button. Opening it moves focus into the field and
           springs the pill to the full width of its row (so use it as the row itself, or give it a
           full-width parent, rather than placing it in a content-sized slot); the controls passed as <C>children</C> (filters,
           sort) hide while it is open and come back when it closes. <C>trailing</C> stays visible
@@ -143,7 +143,7 @@ function Overview() {
           ]}
           dontItems={[
             'Wrap the whole toolbar in one glass group.',
-            'Nest a LabToolbarGroup in another glass surface.',
+            'Nest a ToolbarGroup in another glass surface.',
             'Use toolbar controls without appearance="toolbar"; they would paint a second surface.',
             'Put the toolbar inside the scrolling content when it should float.',
           ]}
@@ -152,7 +152,7 @@ function Overview() {
 
       <Section title="Accessibility">
         <p>
-          <C>LabToolbar</C> and every <C>LabToolbarGroup</C> are <C>role="group"</C> with an{' '}
+          <C>Toolbar</C> and every <C>ToolbarGroup</C> are <C>role="group"</C> with an{' '}
           <C>aria-label</C>. Tab order is the normal source order; the toolbar does not add roving focus.
           The search trigger has <C>aria-expanded</C> and <C>aria-controls</C>; while closed, the field is
           inert and out of the Tab order, and while open, the hidden <C>children</C> are inert.
@@ -178,9 +178,9 @@ export default definePage({
   summary:
     'Floating rows of grouped controls: glass groups for related commands and a search button that expands into a field.',
   importLine:
-    "import { LabToolbar, LabToolbarGroup } from '@feeef.dev/ui/toolbar'\nimport { LabToolbarSearch } from '@feeef.dev/ui/toolbar-search'",
+    "import { Toolbar, ToolbarGroup } from '@feeef.dev/ui/toolbar'\nimport { ToolbarSearch } from '@feeef.dev/ui/toolbar-search'",
   source: 'src/toolbar.tsx',
-  api: ['LabToolbar', 'LabToolbarGroup', 'LabToolbarSearch'],
+  api: ['Toolbar', 'ToolbarGroup', 'ToolbarSearch'],
   keywords: ['app bar', 'header', 'search', 'button group', 'action bar'],
   Overview,
   examples: examplesFrom(
@@ -188,14 +188,14 @@ export default definePage({
     import.meta.glob('./examples/*.tsx', { eager: true, query: '?raw', import: 'default' })
   ),
   Preview: () => (
-    <LabToolbarGroup label="Preview">
-      <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back">
+    <ToolbarGroup label="Preview">
+      <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back">
         <ArrowLeft />
-      </LabIconButton>
+      </IconButton>
       <span className="toolbar-demo-title">Products</span>
-      <LabButton variant="filled" appearance="toolbar" controlSize="compact">
+      <Button variant="filled" appearance="toolbar" controlSize="compact">
         Add
-      </LabButton>
-    </LabToolbarGroup>
+      </Button>
+    </ToolbarGroup>
   ),
 })

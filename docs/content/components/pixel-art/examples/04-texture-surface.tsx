@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { PixelArtwork, PixelTexture } from '@feeef.dev/ui/pixel-art'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { Button } from '@feeef.dev/ui/primitives/button'
 
 type Density = 'sparse' | 'medium' | 'dense'
 
@@ -9,7 +9,7 @@ export default function TextureSurface() {
   const [density, setDensity] = useState<Density>('sparse')
   return (
     <div className="demo-column">
-      <LabSegmentedControl
+      <SegmentedControl
         label="Texture density"
         value={density}
         onChange={setDensity}
@@ -41,9 +41,9 @@ export default function TextureSurface() {
         <strong>Aurora landing page</strong>
         <span style={{ color: 'var(--lab-muted)' }}>Edited 2 hours ago</span>
         <div>
-          <LabButton variant="tonal" controlSize="compact">
+          <Button variant="tonal" controlSize="compact">
             Open project
-          </LabButton>
+          </Button>
         </div>
       </article>
     </div>

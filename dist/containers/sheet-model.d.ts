@@ -2,8 +2,8 @@
  * A height a sheet can rest at: `medium` (half the screen), `large` (almost full), `fit` (its
  * content, up to large), a pixel height, or a percentage of the screen like `'35%'`.
  */
-export type LabSheetDetent = 'medium' | 'large' | 'fit' | number | `${number}%`;
-export type LabSheetMetrics = {
+export type SheetDetent = 'medium' | 'large' | 'fit' | number | `${number}%`;
+export type SheetMetrics = {
     /** Height of the area the sheet covers (the viewport, or the container). */
     hostHeight: number;
     /** Gap kept above a large sheet (safe area + breathing room). */
@@ -12,9 +12,9 @@ export type LabSheetMetrics = {
     natural: number;
 };
 /** Pixel height of one detent, clamped to [0, large]. */
-export declare function detentHeight(detent: LabSheetDetent, m: LabSheetMetrics): number;
+export declare function detentHeight(detent: SheetDetent, m: SheetMetrics): number;
 /** Every detent's height, in the order given. */
-export declare function detentHeights(detents: readonly LabSheetDetent[], m: LabSheetMetrics): number[];
+export declare function detentHeights(detents: readonly SheetDetent[], m: SheetMetrics): number[];
 /**
  * The visible height while a finger drags the sheet: 1:1 between its lowest and highest rest
  * heights, rubber-banded above the highest, and below the lowest either free (dismissible, down

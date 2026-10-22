@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
-  LAB_SPRINGS,
+  SPRINGS,
   nearestTarget,
   projectMomentum,
   rubberBand,
@@ -10,7 +10,7 @@ import {
   springAtRest,
   springCoefficients,
 } from '../src/physics/spring.ts'
-import { LabVelocityTracker } from '../src/physics/velocity.ts'
+import { VelocityTracker } from '../src/physics/velocity.ts'
 
 const near = (a: number, b: number, epsilon = 1e-6) => Math.abs(a - b) <= epsilon
 
@@ -21,16 +21,16 @@ test('spring coefficients follow SwiftUI duration/bounce mapping', () => {
 })
 
 test('a smooth spring never overshoots and settles near its duration', () => {
-  const at = solveSpring(LAB_SPRINGS.smooth, 0, 100)
+  const at = solveSpring(SPRINGS.smooth, 0, 100)
   let max = -Infinity
   for (let t = 0; t <= 2; t += 1 / 120) max = Math.max(max, at(t).position)
   assert.ok(max <= 100 + 1e-9)
-  assert.ok(Math.abs(at(LAB_SPRINGS.smooth.duration * 1.5).position - 100) < 1)
+  assert.ok(Math.abs(at(SPRINGS.smooth.duration * 1.5).position - 100) < 1)
   assert.ok(springAtRest(at(2), 100, 0.01))
 })
 
 test('a bouncy spring overshoots, then settles', () => {
-  const at = solveSpring(LAB_SPRINGS.bouncy, 0, 1)
+  const at = solveSpring(SPRINGS.bouncy, 0, 1)
   let overshoot = 0
   for (let t = 0; t <= 2; t += 1 / 240) overshoot = Math.max(overshoot, at(t).position - 1)
   assert.ok(overshoot > 0.03 && overshoot < 0.1, `overshoot ${overshoot}`) // bounce 0.3 = damping ratio 0.7 ≈ 4.6%
@@ -38,7 +38,7 @@ test('a bouncy spring overshoots, then settles', () => {
 })
 
 test('initial velocity is honored exactly at t=0 (no speed change when interrupting)', () => {
-  for (const spring of [LAB_SPRINGS.smooth, LAB_SPRINGS.bouncy, { duration: 0.5, bounce: -0.5 }]) {
+  for (const spring of [SPRINGS.smooth, SPRINGS.bouncy, { duration: 0.5, bounce: -0.5 }]) {
     const at = solveSpring(spring, 20, 80, 640)
     assert.ok(near(at(0).position, 20))
     assert.ok(near(at(0).velocity, 640, 1e-6))
@@ -46,7 +46,7 @@ test('initial velocity is honored exactly at t=0 (no speed change when interrupt
 })
 
 test('velocity is the derivative of position for all damping regimes', () => {
-  for (const spring of [LAB_SPRINGS.bouncy, LAB_SPRINGS.smooth, { duration: 0.4, bounce: -0.6 }]) {
+  for (const spring of [SPRINGS.bouncy, SPRINGS.smooth, { duration: 0.4, bounce: -0.6 }]) {
     const at = solveSpring(spring, 0, 1, -3)
     for (const t of [0.05, 0.2, 0.6]) {
       const h = 1e-5
@@ -57,9 +57,9 @@ test('velocity is the derivative of position for all damping regimes', () => {
 })
 
 test('retargeting mid-flight continues from the same position and speed', () => {
-  const first = solveSpring(LAB_SPRINGS.smooth, 0, 300)
+  const first = solveSpring(SPRINGS.smooth, 0, 300)
   const mid = first(0.12)
-  const second = solveSpring(LAB_SPRINGS.smooth, mid.position, -50, mid.velocity)
+  const second = solveSpring(SPRINGS.smooth, mid.position, -50, mid.velocity)
   assert.ok(near(second(0).position, mid.position))
   assert.ok(near(second(0).velocity, mid.velocity, 1e-6))
   assert.ok(second(0.016).position > mid.position, 'momentum carries it forward before turning')
@@ -91,7 +91,7 @@ test('nearest target picks the closest snap point', () => {
 })
 
 test('velocity tracker measures steady motion and ignores a pause before release', () => {
-  const tracker = new LabVelocityTracker()
+  const tracker = new VelocityTracker()
   for (let i = 0; i <= 10; i++) tracker.add(i * 8, 1000 + i * 8) // 8px every 8ms = 1000 px/s
   assert.ok(near(tracker.velocity(1080), 1000, 1))
   assert.equal(tracker.velocity(1080 + 200), 0, 'a held pointer does not fling')

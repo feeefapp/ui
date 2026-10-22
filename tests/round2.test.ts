@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { reorderLanding, reorderShifts, reorderTarget, swipeIsFull, swipeRelease } from '../src/primitives/list-model.ts'
 import { centeredIndex, flickTarget, slideEffect, slideProgress } from '../src/containers/carousel-model.ts'
 import { pickFitting } from '../src/containers/adaptive-model.ts'
-import { LAB_SPRINGS, springTiming } from '../src/physics/spring.ts'
+import { SPRINGS, springTiming } from '../src/physics/spring.ts'
 
 const sides = { leading: 76, trailing: 152, row: 360, fullLeading: true, fullTrailing: true }
 
@@ -53,9 +53,9 @@ test('view that fits picks the first option with room, else the last', () => {
 })
 
 test('spring timing traces the spring as a CSS linear() easing ending at 1', () => {
-  const smooth = springTiming(LAB_SPRINGS.smooth)
+  const smooth = springTiming(SPRINGS.smooth)
   assert.ok(smooth.duration > 400 && smooth.duration < 1500, String(smooth.duration))
   assert.match(smooth.easing, /^linear\(0, .*, 1\)$/)
-  const bouncy = springTiming(LAB_SPRINGS.bouncy)
+  const bouncy = springTiming(SPRINGS.bouncy)
   assert.ok(bouncy.easing.split(', ').some((v) => parseFloat(v) > 1), 'overshoot survives')
 })

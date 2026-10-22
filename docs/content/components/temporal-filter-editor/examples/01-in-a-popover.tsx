@@ -1,24 +1,24 @@
 import { useState } from 'react'
 import * as Popover from '@radix-ui/react-popover'
 import { CalendarDays } from 'lucide-react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabPopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
-import { LabScrollArea } from '@feeef.dev/ui/scroll'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabTemporalFilterEditor } from '@feeef.dev/ui/filters/temporal-editor'
-import { validateTemporal, type LabTemporalValue } from '@feeef.dev/ui/filters/temporal'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
+import { ScrollArea } from '@feeef.dev/ui/scroll'
+import { Dock } from '@feeef.dev/ui/dock'
+import { TemporalFilterEditor } from '@feeef.dev/ui/filters/temporal-editor'
+import { validateTemporal, type TemporalValue } from '@feeef.dev/ui/filters/temporal'
 
 const config = { type: 'dateRange' } as const
 
-function describe(value: LabTemporalValue) {
+function describe(value: TemporalValue) {
   if (!value || typeof value === 'string') return 'All time'
   return `${value.from || '…'} → ${value.to || '…'}`
 }
 
 export default function InAPopover() {
   const [open, setOpen] = useState(false)
-  const [applied, setApplied] = useState<LabTemporalValue>(null)
-  const [draft, setDraft] = useState<LabTemporalValue>(null)
+  const [applied, setApplied] = useState<TemporalValue>(null)
+  const [draft, setDraft] = useState<TemporalValue>(null)
   const [error, setError] = useState<string | null>(null)
   const apply = () => {
     const failure = validateTemporal(config, draft)
@@ -38,38 +38,38 @@ export default function InAPopover() {
       }}
     >
       <Popover.Trigger asChild>
-        <LabButton variant="outlined">
+        <Button variant="outlined">
           <CalendarDays size={18} />
           Placed: {describe(applied)}
-        </LabButton>
+        </Button>
       </Popover.Trigger>
       <Popover.Portal>
-        <LabPopoverSurface asChild>
+        <PopoverSurface asChild>
           <Popover.Content
             aria-label="Filter orders by date"
             sideOffset={8}
             collisionPadding={12}
             style={{ width: 'min(640px, calc(100vw - 24px))', height: 'min(520px, 70vh)' }}
           >
-            <LabScrollArea
+            <ScrollArea
               label="Date filter"
               contentPadding={12}
               bottom={
-                <LabDock label="Date filter actions">
-                  <LabButton variant="text" controlSize="compact" onClick={() => setDraft(null)}>
+                <Dock label="Date filter actions">
+                  <Button variant="text" controlSize="compact" onClick={() => setDraft(null)}>
                     Clear
-                  </LabButton>
-                  <LabButton variant="filled" controlSize="compact" onClick={apply}>
+                  </Button>
+                  <Button variant="filled" controlSize="compact" onClick={apply}>
                     Apply
-                  </LabButton>
-                </LabDock>
+                  </Button>
+                </Dock>
               }
             >
-              <LabTemporalFilterEditor config={config} value={draft} onChange={setDraft} />
+              <TemporalFilterEditor config={config} value={draft} onChange={setDraft} />
               {error && <p role="alert">{error}</p>}
-            </LabScrollArea>
+            </ScrollArea>
           </Popover.Content>
-        </LabPopoverSurface>
+        </PopoverSurface>
       </Popover.Portal>
     </Popover.Root>
   )

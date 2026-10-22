@@ -24,26 +24,26 @@ function Overview() {
 
       <Section title="Add the provider">
         <p>
-          Wrap your app once in <C>LabProvider</C>. It installs services, translations, the theme and
+          Wrap your app once in <C>Provider</C>. It installs services, translations, the theme and
           the floating-layer system that docks, dialogs and menus use.
         </p>
         <Code
-          code={`import { LabProvider } from '@feeef.dev/ui/provider'
+          code={`import { Provider } from '@feeef.dev/ui/provider'
 
 export function Root({ children }: { children: React.ReactNode }) {
   return (
-    <LabProvider
+    <Provider
       theme={{ palette: 'lab', density: 'comfortable', radius: 1 }}
       i18n={{ locale: 'en' }}
     >
       {children}
-    </LabProvider>
+    </Provider>
   )
 }`}
         />
         <Callout title="Server rendering">
           <p>
-            In Next.js or any SSR host, spread <C>labThemeAttributes(theme)</C> onto <C>{'<html>'}</C> so
+            In Next.js or any SSR host, spread <C>themeAttributes(theme)</C> onto <C>{'<html>'}</C> so
             the first paint is already themed. See <Link to="/get-started/theming">Theming</Link>.
           </p>
         </Callout>
@@ -55,14 +55,14 @@ export function Root({ children }: { children: React.ReactNode }) {
           never add stylesheets by hand.
         </p>
         <Code
-          code={`import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
+          code={`import { Button } from '@feeef.dev/ui/primitives/button'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
 
 export function Signup() {
   return (
     <form>
-      <LabTextField hint="Email" type="email" required />
-      <LabButton variant="filled" type="submit">Create account</LabButton>
+      <TextField hint="Email" type="email" required />
+      <Button variant="filled" type="submit">Create account</Button>
     </form>
   )
 }`}

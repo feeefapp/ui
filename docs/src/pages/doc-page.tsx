@@ -1,5 +1,5 @@
 import { ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { Button } from '@feeef.dev/ui/primitives/button'
 import { SECTIONS, type DocPage } from '../model'
 import { Link } from '../router'
 import { pageHref, PAGES, type Route } from '../registry'
@@ -37,11 +37,11 @@ export function DocPageView({ route }: { route: Extract<Route, { kind: 'page' }>
             <div className="docs-page-meta">
               {page.importLine && <Code code={page.importLine} title="Import" />}
               {page.source && (
-                <LabButton variant="text" controlSize="compact" asChild>
+                <Button variant="text" controlSize="compact" asChild>
                   <a href={REPO + page.source} target="_blank" rel="noreferrer">
                     View source <ExternalLink size={16} />
                   </a>
-                </LabButton>
+                </Button>
               )}
             </div>
           )}
@@ -68,7 +68,7 @@ function PageFooter({ page }: { page: DocPage }) {
   return (
     <nav className="docs-pager" aria-label="More pages">
       {prev ? (
-        <LabButton variant="outlined" asChild>
+        <Button variant="outlined" asChild>
           <Link to={pageHref(prev)} data-dir="prev">
             <ArrowLeft size={18} />
             <span>
@@ -76,12 +76,12 @@ function PageFooter({ page }: { page: DocPage }) {
               {prev.title}
             </span>
           </Link>
-        </LabButton>
+        </Button>
       ) : (
         <span />
       )}
       {next && (
-        <LabButton variant="outlined" asChild>
+        <Button variant="outlined" asChild>
           <Link to={pageHref(next)} data-dir="next">
             <span>
               <small>Next</small>
@@ -89,7 +89,7 @@ function PageFooter({ page }: { page: DocPage }) {
             </span>
             <ArrowRight size={18} />
           </Link>
-        </LabButton>
+        </Button>
       )}
     </nav>
   )

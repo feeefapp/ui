@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react'
 import { Phone } from 'lucide-react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabModal } from '@feeef.dev/ui/primitives/modal'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { Modal } from '@feeef.dev/ui/primitives/modal'
+import { Dock } from '@feeef.dev/ui/dock'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
 
 export default function Focus() {
   const [open, setOpen] = useState(false)
@@ -13,11 +13,11 @@ export default function Focus() {
   const close = () => setOpen(false)
   return (
     <>
-      <LabButton ref={row} variant="elevated" onClick={() => setOpen(true)}>
+      <Button ref={row} variant="elevated" onClick={() => setOpen(true)}>
         <Phone size={18} />
         {phone}
-      </LabButton>
-      <LabModal
+      </Button>
+      <Modal
         open={open}
         close={close}
         label="Correct the phone number"
@@ -26,16 +26,16 @@ export default function Focus() {
         initialFocusRef={phoneField}
         returnFocusRef={row}
         bottom={
-          <LabDock label="Phone actions">
-            <LabButton variant="filled" onClick={close}>
+          <Dock label="Phone actions">
+            <Button variant="filled" onClick={close}>
               Save
-            </LabButton>
-          </LabDock>
+            </Button>
+          </Dock>
         }
       >
         <div style={{ display: 'grid', gap: 16 }}>
-          <LabTextField hint="Customer name" defaultValue="Yacine Benali" readOnly />
-          <LabTextField
+          <TextField hint="Customer name" defaultValue="Yacine Benali" readOnly />
+          <TextField
             ref={phoneField}
             hint="Phone"
             type="tel"
@@ -43,7 +43,7 @@ export default function Focus() {
             onValueChange={setPhone}
           />
         </div>
-      </LabModal>
+      </Modal>
     </>
   )
 }

@@ -1,9 +1,9 @@
-import { LabRadioGroup } from '@feeef.dev/ui/primitives/choice'
+import { RadioGroup } from '@feeef.dev/ui/primitives/choice'
 
 export default function Compact() {
   return (
     <div className="demo-column">
-      <LabRadioGroup
+      <RadioGroup
         label="Show orders from"
         controlSize="compact"
         defaultValue="7d"

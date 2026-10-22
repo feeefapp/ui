@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabNumberField } from '@feeef.dev/ui/primitives/number-field'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { NumberField } from '@feeef.dev/ui/primitives/number-field'
 
 export default function InAForm() {
   const [sent, setSent] = useState<string | null>(null)
@@ -12,11 +12,11 @@ export default function InAForm() {
         setSent(JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))))
       }}
     >
-      <LabNumberField label="Quantity" name="quantity" min={1} max={20} defaultValue={1} />
-      <LabNumberField label="Delivery fee" name="fee" unit="DA" step={50} min={0} defaultValue={400} />
-      <LabButton variant="filled" type="submit">
+      <NumberField label="Quantity" name="quantity" min={1} max={20} defaultValue={1} />
+      <NumberField label="Delivery fee" name="fee" unit="DA" step={50} min={0} defaultValue={400} />
+      <Button variant="filled" type="submit">
         Add to order
-      </LabButton>
+      </Button>
       {sent && <code>{sent}</code>}
     </form>
   )

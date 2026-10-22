@@ -1,4 +1,4 @@
-/* Shell glue for the kit's LabScaffold. Layout, sidebar, drawer, app bar and scrolling are the kit's;
+/* Shell glue for the kit's Scaffold. Layout, sidebar, drawer, app bar and scrolling are the kit's;
    this file only sizes the scaffold to the window and styles the docs' own content inside its slots. */
 
 html,

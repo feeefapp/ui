@@ -1,6 +1,6 @@
 import * as React from 'react';
 import './carousel.css';
-export type LabCarouselProps = {
+export type CarouselProps = {
     /** The slides. Each child becomes one slide. */
     children: React.ReactNode;
     /** Accessible name, e.g. “Featured products”. */
@@ -32,5 +32,5 @@ export type LabCarouselProps = {
  * `--lab-carousel-progress` property for custom effects). A mouse can drag and flick it; the
  * flick lands on the slide its momentum projects to.
  */
-export declare function LabCarousel({ children, label, slideWidth, gap, align, effect, index: controlled, onIndexChange, dots, controls, className, }: LabCarouselProps): React.JSX.Element;
+export declare function Carousel({ children, label, slideWidth, gap, align, effect, index: controlled, onIndexChange, dots, controls, className, }: CarouselProps): React.JSX.Element;
 //# sourceMappingURL=carousel.d.ts.map

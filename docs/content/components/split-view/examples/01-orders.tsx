@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Inbox, MapPin, Package, Phone, User } from 'lucide-react'
-import { LabNavigationPage, LabSplitPlaceholder, LabSplitView } from '@feeef.dev/ui/containers'
-import { LabListRow, LabListSection } from '@feeef.dev/ui/primitives/list'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
-import { LabDock } from '@feeef.dev/ui/dock'
+import { NavigationPage, SplitPlaceholder, SplitView } from '@feeef.dev/ui/containers'
+import { ListRow, ListSection } from '@feeef.dev/ui/primitives/list'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { Dock } from '@feeef.dev/ui/dock'
 import { Device } from '../../../../src/blocks/device'
 
 const ORDERS = [
@@ -25,7 +25,7 @@ export default function OrdersSplit() {
   const back = () => (showCustomer ? setShowCustomer(false) : setSelected(null))
   return (
     <div style={{ display: 'grid', gap: 16, width: '100%', justifyItems: 'center' }}>
-      <LabSegmentedControl
+      <SegmentedControl
         label="Screen"
         value={screen}
         onChange={setScreen}
@@ -36,15 +36,15 @@ export default function OrdersSplit() {
       />
       <Device kind={screen} label={`Orders split view on a ${screen}`}>
         <div className="demo-fill">
-          <LabSplitView
+          <SplitView
             label="Orders"
             onBack={back}
-            placeholder={<LabSplitPlaceholder icon={<Inbox />} title="Select an order" />}
+            placeholder={<SplitPlaceholder icon={<Inbox />} title="Select an order" />}
             list={
-              <LabNavigationPage key="orders" title="Orders" subtitle="6 to confirm">
-                <LabListSection label="Orders">
+              <NavigationPage key="orders" title="Orders" subtitle="6 to confirm">
+                <ListSection label="Orders">
                   {ORDERS.map((o) => (
-                    <LabListRow
+                    <ListRow
                       key={o.id}
                       leading={<Package />}
                       title={`#${o.id} · ${o.customer}`}
@@ -58,47 +58,47 @@ export default function OrdersSplit() {
                       }}
                     />
                   ))}
-                </LabListSection>
-              </LabNavigationPage>
+                </ListSection>
+              </NavigationPage>
             }
             detail={
               order && (
                 <>
-                  <LabNavigationPage
+                  <NavigationPage
                     key={`order-${order.id}`}
                     title={`Order #${order.id}`}
                     titleDisplay="inline"
                     bottom={
-                      <LabDock label="Order actions">
-                        <LabButton variant="tonal">
+                      <Dock label="Order actions">
+                        <Button variant="tonal">
                           <Phone size={18} /> Call
-                        </LabButton>
-                        <LabButton variant="filled">Confirm order</LabButton>
-                      </LabDock>
+                        </Button>
+                        <Button variant="filled">Confirm order</Button>
+                      </Dock>
                     }
                   >
-                    <LabListSection header="Customer">
-                      <LabListRow
+                    <ListSection header="Customer">
+                      <ListRow
                         chevron
                         leading={<User />}
                         title={order.customer}
                         subtitle="0555 12 34 56"
                         onClick={() => setShowCustomer(true)}
                       />
-                      <LabListRow static leading={<MapPin />} title={order.city} subtitle="Home delivery" />
-                    </LabListSection>
-                    <LabListSection header="Order">
-                      <LabListRow static title="Total" trailing={order.total} />
-                      <LabListRow static title="Courier" trailing="Yalidine" />
-                    </LabListSection>
-                  </LabNavigationPage>
+                      <ListRow static leading={<MapPin />} title={order.city} subtitle="Home delivery" />
+                    </ListSection>
+                    <ListSection header="Order">
+                      <ListRow static title="Total" trailing={order.total} />
+                      <ListRow static title="Courier" trailing="Yalidine" />
+                    </ListSection>
+                  </NavigationPage>
                   {showCustomer && (
-                    <LabNavigationPage key={`customer-${order.id}`} title={order.customer}>
-                      <LabListSection header="Contact">
-                        <LabListRow static leading={<Phone />} title="0555 12 34 56" />
-                        <LabListRow static leading={<MapPin />} title={order.city} />
-                      </LabListSection>
-                    </LabNavigationPage>
+                    <NavigationPage key={`customer-${order.id}`} title={order.customer}>
+                      <ListSection header="Contact">
+                        <ListRow static leading={<Phone />} title="0555 12 34 56" />
+                        <ListRow static leading={<MapPin />} title={order.city} />
+                      </ListSection>
+                    </NavigationPage>
                   )}
                 </>
               )

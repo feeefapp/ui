@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { LayoutGrid, List, Columns3 } from 'lucide-react'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
@@ -23,7 +23,7 @@ function PlaygroundControl(props: {
 }) {
   const [view, setView] = useState<View>('list')
   return (
-    <LabSegmentedControl
+    <SegmentedControl
       label="Orders view"
       value={view}
       onChange={setView}
@@ -60,7 +60,7 @@ function Overview() {
             v.appearance === 'plain' ? 'appearance="plain"' : '',
             v.disabled ? 'disabled' : '',
           ].filter(Boolean)
-          return `<LabSegmentedControl\n  ${attrs.join('\n  ')}\n  options={[\n    { value: 'list', label: 'List'${icon('List')} },\n    { value: 'board', label: 'Board'${icon('Columns3')}${v.disableBoard ? ', disabled: true' : ''} },\n    { value: 'grid', label: 'Grid'${icon('LayoutGrid')} },\n  ]}\n/>`
+          return `<SegmentedControl\n  ${attrs.join('\n  ')}\n  options={[\n    { value: 'list', label: 'List'${icon('List')} },\n    { value: 'board', label: 'Board'${icon('Columns3')}${v.disableBoard ? ', disabled: true' : ''} },\n    { value: 'grid', label: 'Grid'${icon('LayoutGrid')} },\n  ]}\n/>`
         }}
       />
 
@@ -73,9 +73,9 @@ function Overview() {
         <Table
           head={['Need', 'Use']}
           rows={[
-            ['One of 2–5 short options, applied right away', <C>LabSegmentedControl</C>],
-            ['One of many options, or long labels', <C>LabSelect</C>],
-            ['A choice inside a form, submitted with it', <C>LabRadioGroup</C>],
+            ['One of 2–5 short options, applied right away', <C>SegmentedControl</C>],
+            ['One of many options, or long labels', <C>Select</C>],
+            ['A choice inside a form, submitted with it', <C>RadioGroup</C>],
             ['Switching between whole pages or panels with their own content', 'Tabs'],
             ['Turning one thing on or off', 'A switch or a toggle button'],
           ]}
@@ -151,9 +151,9 @@ export default definePage({
   group: 'Actions',
   order: 2,
   summary: 'A single choice among two to five short options, shown side by side, with radio semantics.',
-  importLine: "import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'",
+  importLine: "import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'",
   source: 'src/primitives/segmented.tsx',
-  api: ['LabSegmentedControl'],
+  api: ['SegmentedControl'],
   keywords: ['toggle group', 'button group', 'tabs', 'radio', 'switcher', 'mode'],
   Overview,
   examples: examplesFrom(
@@ -161,7 +161,7 @@ export default definePage({
     import.meta.glob('./examples/*.tsx', { eager: true, query: '?raw', import: 'default' })
   ),
   Preview: () => (
-    <LabSegmentedControl
+    <SegmentedControl
       label="Orders view"
       value="list"
       onChange={() => {}}

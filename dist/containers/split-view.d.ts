@@ -1,7 +1,7 @@
 import * as React from 'react';
 import './split-view.css';
-export type LabSplitViewProps = {
-    /** The list column: usually a LabNavigationPage with selectable rows. */
+export type SplitViewProps = {
+    /** The list column: usually a NavigationPage with selectable rows. */
     list: React.ReactElement;
     /**
      * The open item's pages, first page first, each keyed. Empty or null when nothing is selected.
@@ -35,9 +35,9 @@ export type LabSplitViewProps = {
  * screens, collapsing into one navigation stack (list → detail, swipe back) on narrow ones. The
  * same pages render in both, so a phone and a desktop share one implementation.
  */
-export declare function LabSplitView({ list, detail, placeholder, onBack, listWidth: controlledWidth, defaultListWidth, onListWidthChange, minListWidth, maxListWidth, resizable, compactBreakpoint, label, className, }: LabSplitViewProps): React.JSX.Element;
+export declare function SplitView({ list, detail, placeholder, onBack, listWidth: controlledWidth, defaultListWidth, onListWidthChange, minListWidth, maxListWidth, resizable, compactBreakpoint, label, className, }: SplitViewProps): React.JSX.Element;
 /** Quiet centered message for an empty detail column. */
-export declare function LabSplitPlaceholder({ icon, title, children, }: {
+export declare function SplitPlaceholder({ icon, title, children, }: {
     /** A large, muted icon. */
     icon?: React.ReactNode;
     /** One line: what to do (“Select an order”). */

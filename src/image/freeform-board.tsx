@@ -1,8 +1,8 @@
 'use client'
 
-import { LabButton } from '../ui'
-import { useLabI18n } from '../i18n'
-import { LabGlassGroup } from '../scaffold'
+import { Button } from '../ui'
+import { useI18n } from '../i18n'
+import { GlassGroup } from '../scaffold'
 import {
   useCallback,
   useEffect,
@@ -105,7 +105,7 @@ export function FreeformBoard({
   /** Replaces the default welcome on an empty board (e.g. the poster template gallery). */
   emptyContent?: ReactNode
 }) {
-  const { t } = useLabI18n()
+  const { t } = useI18n()
   const root = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ w: 1280, h: 800 })
   const [view, setView] = useState<View>({ x: 0, y: 0, scale: 1 })
@@ -332,22 +332,22 @@ export function FreeformBoard({
                   <b>{t('lab.board.didntWork')}</b>
                   <small>{takeErrorText(take, t, t('lab.board.tryAnother'))}</small>
                   <span className="lab-ff-state-actions">
-                    <LabButton
+                    <Button
                       type="button"
                       variant="elevated"
                       onPointerDown={(e) => e.stopPropagation()}
                       onClick={() => onRetry(take)}
                     >
                       <RefreshCw size={18} /> {t('lab.canvas.tryAgain')}
-                    </LabButton>
-                    <LabButton
+                    </Button>
+                    <Button
                       type="button"
                       variant="destructive"
                       onPointerDown={(e) => e.stopPropagation()}
                       onClick={() => onRemove(take)}
                     >
                       <Trash2 size={18} /> {t('lab.canvas.remove')}
-                    </LabButton>
+                    </Button>
                   </span>
                 </div>
               )}
@@ -385,7 +385,7 @@ export function FreeformBoard({
               </small>
               <span className="lab-ff-starters">
                 {starters.map((starter) => (
-                  <LabButton
+                  <Button
                     key={starter.label}
                     type="button"
                     variant="elevated"
@@ -393,7 +393,7 @@ export function FreeformBoard({
                     onClick={() => onStarter(starter.prompt)}
                   >
                     {starter.label}
-                  </LabButton>
+                  </Button>
                 ))}
               </span>
             </div>
@@ -401,14 +401,14 @@ export function FreeformBoard({
         </div>
       )}
       {cards.length > 0 && (
-        <LabGlassGroup
+        <GlassGroup
           className="lab-ff-zoom"
           style={{ right: insets.right + 14 }}
           onPointerDown={(e) => e.stopPropagation()}
           role="toolbar"
           aria-label={t('lab.board.zoom')}
         >
-          <LabButton
+          <Button
             type="button"
             variant="ghost"
             appearance="toolbar"
@@ -417,8 +417,8 @@ export function FreeformBoard({
             onClick={() => zoomCentre(1 / 1.25)}
           >
             <Minus size={20} />
-          </LabButton>
-          <LabButton
+          </Button>
+          <Button
             type="button"
             variant="ghost"
             appearance="toolbar"
@@ -429,8 +429,8 @@ export function FreeformBoard({
             onClick={() => fitCard(selected)}
           >
             {percent}%
-          </LabButton>
-          <LabButton
+          </Button>
+          <Button
             type="button"
             variant="ghost"
             appearance="toolbar"
@@ -439,8 +439,8 @@ export function FreeformBoard({
             onClick={() => zoomCentre(1.25)}
           >
             <Plus size={20} />
-          </LabButton>
-          <LabButton
+          </Button>
+          <Button
             type="button"
             variant="ghost"
             appearance="toolbar"
@@ -451,8 +451,8 @@ export function FreeformBoard({
             disabled={cards.length < 2}
           >
             <Maximize size={20} />
-          </LabButton>
-        </LabGlassGroup>
+          </Button>
+        </GlassGroup>
       )}
     </div>
   )

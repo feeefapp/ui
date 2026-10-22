@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Download } from 'lucide-react'
-import { LabFilterBar, type LabFilterOption, type LabFilterValue } from '@feeef.dev/ui/filter-bar'
-import { LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabScrollArea } from '@feeef.dev/ui/scroll'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
-import { LabIconButton } from '@feeef.dev/ui/primitives/button'
+import { FilterBar, type FilterOption, type FilterValue } from '@feeef.dev/ui/filter-bar'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { ScrollArea } from '@feeef.dev/ui/scroll'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
+import { IconButton } from '@feeef.dev/ui/primitives/button'
 import '../filter-demo.css'
 
-const OPTIONS: LabFilterOption[] = [
+const OPTIONS: FilterOption[] = [
   {
     id: 'minTotal',
     label: 'Minimum total',
@@ -17,7 +17,7 @@ const OPTIONS: LabFilterOption[] = [
     validate: (value) =>
       value != null && !(Number(value) >= 0) ? 'Enter an amount of 0 DA or more.' : null,
     renderEditor: (value, onChange) => (
-      <LabTextField
+      <TextField
         hint="Amount in DA"
         inputMode="numeric"
         value={typeof value === 'string' ? value : ''}
@@ -35,16 +35,16 @@ const ORDERS = [
 ]
 
 export default function CustomEditor() {
-  const [values, setValues] = useState<Record<string, LabFilterValue>>({})
+  const [values, setValues] = useState<Record<string, FilterValue>>({})
   const [pinned, setPinned] = useState<string[]>(['minTotal'])
   const min = typeof values.minTotal === 'string' ? Number(values.minTotal) : 0
   const filtered = values.minTotal != null
   return (
     <div className="filter-demo-frame">
-      <LabScrollArea
+      <ScrollArea
         label="Orders"
         top={
-          <LabFilterBar
+          <FilterBar
             label="Order filters"
             options={OPTIONS}
             value={[]}
@@ -56,11 +56,11 @@ export default function CustomEditor() {
             // A back button while a value is set, and view actions at the end.
             onBack={filtered ? () => setValues({}) : undefined}
             trailing={
-              <LabToolbarGroup label="Order list actions">
-                <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Export CSV">
+              <ToolbarGroup label="Order list actions">
+                <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Export CSV">
                   <Download />
-                </LabIconButton>
-              </LabToolbarGroup>
+                </IconButton>
+              </ToolbarGroup>
             }
           />
         }
@@ -73,7 +73,7 @@ export default function CustomEditor() {
             </div>
           ))}
         </div>
-      </LabScrollArea>
+      </ScrollArea>
     </div>
   )
 }

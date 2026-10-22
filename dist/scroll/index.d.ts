@@ -1,6 +1,6 @@
-export { LabScrollArea } from './scroll-area.js';
-export type { LabScrollAreaProps } from './scroll-area.js';
-export { LabScrollGradientOverlay } from './gradient-overlay.js';
-export type { LabScrollGradientOverlayProps } from './gradient-overlay.js';
+export { ScrollArea } from './scroll-area.js';
+export type { ScrollAreaProps } from './scroll-area.js';
+export { ScrollGradientOverlay } from './gradient-overlay.js';
+export type { ScrollGradientOverlayProps } from './gradient-overlay.js';
 export { revealScrollChild } from './reveal.js';
 //# sourceMappingURL=index.d.ts.map

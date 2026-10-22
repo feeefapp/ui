@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabDateField, LabDateRangeField } from '@feeef.dev/ui/primitives/temporal-field'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { DateField, DateRangeField } from '@feeef.dev/ui/primitives/temporal-field'
 
 export default function FormValues() {
   const [shipped, setShipped] = useState<string | null>('2026-10-19')
@@ -18,17 +18,17 @@ export default function FormValues() {
         setSubmitted([...data].map(([key, value]) => `${key}=${value}`).join('\n'))
       }}
     >
-      <LabDateField hint="Shipped on" name="shipped" value={shipped} onValueChange={setShipped} />
-      <LabDateRangeField
+      <DateField hint="Shipped on" name="shipped" value={shipped} onValueChange={setShipped} />
+      <DateRangeField
         hint="Orders placed"
         name="period"
         rangeNames={{ from: 'placed_from', to: 'placed_to' }}
         value={period}
         onValueChange={setPeriod}
       />
-      <LabButton variant="tonal" type="submit">
+      <Button variant="tonal" type="submit">
         Export orders
-      </LabButton>
+      </Button>
       {submitted && <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{submitted}</pre>}
     </form>
   )

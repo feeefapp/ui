@@ -1,5 +1,5 @@
-export { LabActionsBar, type LabActionsBarProps } from './actions-bar.js';
-export { LabActionsWidthProvider } from './width-context.js';
-export { computeLabActionsLayout, type LabActionsLayout, type LabActionLayoutItem } from './layout.js';
-export type { LabAction, LabCommandAction, LabToggleAction, LabGroupAction } from './types.js';
+export { ActionsBar, type ActionsBarProps } from './actions-bar.js';
+export { ActionsWidthProvider } from './width-context.js';
+export { computeLabActionsLayout, type ActionsLayout, type ActionLayoutItem } from './layout.js';
+export type { Action, CommandAction, ToggleAction, GroupAction } from './types.js';
 //# sourceMappingURL=index.d.ts.map

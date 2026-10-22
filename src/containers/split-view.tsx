@@ -2,14 +2,14 @@
 
 import * as React from 'react'
 import { attachPan } from '../physics/gesture'
-import { LabMotionValue } from '../physics/motion-value'
-import { LAB_SPRINGS, rubberBandClamp } from '../physics/spring'
-import { LabNavigationStack } from './navigation-stack'
+import { MotionValue } from '../physics/motion-value'
+import { SPRINGS, rubberBandClamp } from '../physics/spring'
+import { NavigationStack } from './navigation-stack'
 import { cn } from '../utils'
 import './split-view.css'
 
-export type LabSplitViewProps = {
-  /** The list column: usually a LabNavigationPage with selectable rows. */
+export type SplitViewProps = {
+  /** The list column: usually a NavigationPage with selectable rows. */
   list: React.ReactElement
   /**
    * The open item's pages, first page first, each keyed. Empty or null when nothing is selected.
@@ -57,7 +57,7 @@ function detailPages(detail: React.ReactNode): React.ReactElement[] {
  * screens, collapsing into one navigation stack (list → detail, swipe back) on narrow ones. The
  * same pages render in both, so a phone and a desktop share one implementation.
  */
-export function LabSplitView({
+export function SplitView({
   list,
   detail,
   placeholder,
@@ -71,7 +71,7 @@ export function LabSplitView({
   compactBreakpoint = 720,
   label = 'List and detail',
   className,
-}: LabSplitViewProps) {
+}: SplitViewProps) {
   const root = React.useRef<HTMLDivElement>(null)
   const divider = React.useRef<HTMLDivElement>(null)
   const [hostWidth, setHostWidth] = React.useState<number | null>(null)
@@ -91,8 +91,8 @@ export function LabSplitView({
   }, [])
 
   // The column width is a motion value: dragging tracks it, release springs it into bounds.
-  const motion = React.useRef<LabMotionValue | null>(null)
-  if (!motion.current) motion.current = new LabMotionValue(width, 0.5)
+  const motion = React.useRef<MotionValue | null>(null)
+  if (!motion.current) motion.current = new MotionValue(width, 0.5)
   const live = React.useRef({ width, minListWidth, maxListWidth, onListWidthChange, controlledWidth })
   live.current = { width, minListWidth, maxListWidth, onListWidthChange, controlledWidth }
   const paint = React.useCallback((value: number) => {
@@ -136,22 +136,22 @@ export function LabSplitView({
         root.current?.removeAttribute('data-resizing')
         const velocity = motion.current!.getVelocity(time)
         const target = commit(motion.current!.get())
-        void motion.current!.animateTo(target, { spring: LAB_SPRINGS.release, velocity })
+        void motion.current!.animateTo(target, { spring: SPRINGS.release, velocity })
       },
     }))
   }, [resizable, compact, commit])
 
   const step = (delta: number) => {
     const target = commit(width + delta)
-    void motion.current!.animateTo(target, { spring: LAB_SPRINGS.snappy })
+    void motion.current!.animateTo(target, { spring: SPRINGS.snappy })
   }
 
   if (compact)
     return (
       <div ref={root} className={cn('lab-split', className)} data-compact="" role="region" aria-label={label}>
-        <LabNavigationStack label={label} onBack={onBack}>
+        <NavigationStack label={label} onBack={onBack}>
           {[list, ...pages]}
-        </LabNavigationStack>
+        </NavigationStack>
       </div>
     )
   return (
@@ -188,9 +188,9 @@ export function LabSplitView({
       />
       <div className="lab-split-detail">
         {pages.length ? (
-          <LabNavigationStack label={`${label}: detail`} onBack={onBack}>
+          <NavigationStack label={`${label}: detail`} onBack={onBack}>
             {pages}
-          </LabNavigationStack>
+          </NavigationStack>
         ) : (
           placeholder
         )}
@@ -200,7 +200,7 @@ export function LabSplitView({
 }
 
 /** Quiet centered message for an empty detail column. */
-export function LabSplitPlaceholder({
+export function SplitPlaceholder({
   icon,
   title,
   children,

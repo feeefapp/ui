@@ -1,22 +1,22 @@
 'use client'
 
-import { LabPopoverSurface } from '../ui'
+import { PopoverSurface } from '../ui'
 import * as React from 'react'
-import { useLabI18n } from '../i18n'
+import { useI18n } from '../i18n'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { Check, ChevronDown, ChevronRight, MoreHorizontal, Square, SquareCheck } from 'lucide-react'
 import { cn } from '../utils'
-import { LabButton } from '../ui'
+import { Button } from '../ui'
 import { PixelLoader } from '../pixel-art'
 import { computeLabActionsLayout } from './layout'
-import type { LabAction, LabGroupAction } from './types'
+import type { Action, GroupAction } from './types'
 import { useMeasuredActions } from './use_measured_actions'
-import { useLabActionsWidth } from './width-context'
+import { useActionsWidth } from './width-context'
 import './actions.css'
 
-export interface LabActionsBarProps {
+export interface ActionsBarProps {
   /** The action tree, in display order. Top-level entries spill into the overflow menu by `priority`. */
-  actions: readonly LabAction[]
+  actions: readonly Action[]
   /** Accessible name of the toolbar group. */
   label: string
   /** Which side the row hugs inside a wider host. */
@@ -32,10 +32,10 @@ export interface LabActionsBarProps {
   /** Defaults to the nearest dialog, otherwise document.body. */
   portalContainer?: HTMLElement | null
   /** Application effects are injected; this primitive never calls business APIs. */
-  onActionError?: (error: unknown, action: LabAction) => void
+  onActionError?: (error: unknown, action: Action) => void
 }
 
-type ExecuteAction = (action: Exclude<LabAction, LabGroupAction>, checked?: boolean) => void
+type ExecuteAction = (action: Exclude<Action, GroupAction>, checked?: boolean) => void
 interface MenuContext {
   ownerId: string
   container: HTMLElement | null | undefined
@@ -47,7 +47,7 @@ interface MenuContext {
  * Responsive, priority-based actions. Measures its real controls and moves the lowest-priority
  * ones into a "More actions" menu when they don't fit. Place inside a dock or any bounded slot.
  */
-export function LabActionsBar({
+export function ActionsBar({
   actions,
   label,
   align = 'end',
@@ -57,8 +57,8 @@ export function LabActionsBar({
   className,
   portalContainer,
   onActionError,
-}: LabActionsBarProps) {
-  const { t } = useLabI18n()
+}: ActionsBarProps) {
+  const { t } = useI18n()
   const resolvedOverflowLabel = overflowLabel ?? t('lab.common.moreActions')
   const ownerId = React.useId()
   const host = React.useRef<HTMLDivElement>(null)
@@ -70,7 +70,7 @@ export function LabActionsBar({
   const alive = React.useRef(true)
   const [errorLabel, setErrorLabel] = React.useState('')
   const [overflowOpen, setOverflowOpen] = React.useState(false)
-  const inheritedWidth = useLabActionsWidth()
+  const inheritedWidth = useActionsWidth()
   const revision = React.useMemo(() => ({ actions, size, pending }), [actions, size, pending])
   const { measurements, focusAfterFit } = useMeasuredActions(host, measuringRow, revision)
 
@@ -171,7 +171,7 @@ export function LabActionsBar({
         {!!layout.overflow.length && (
           <DropdownMenu.Root modal={false} open={overflowOpen} onOpenChange={setOverflowOpen}>
             <DropdownMenu.Trigger asChild>
-              <LabButton
+              <Button
                 ref={overflowTrigger}
                 className="lab-actions-bar__control"
                 variant="ghost"
@@ -181,7 +181,7 @@ export function LabActionsBar({
                 title={resolvedOverflowLabel}
               >
                 <MoreHorizontal size={20} aria-hidden="true" />
-              </LabButton>
+              </Button>
             </DropdownMenu.Trigger>
             <MenuSurface menu={menu} label={resolvedOverflowLabel}>
               {layout.overflow.map((action) => (
@@ -199,7 +199,7 @@ export function LabActionsBar({
           </span>
         ))}
         <span className="lab-actions-bar__entry" data-lab-overflow-measure>
-          <LabButton
+          <Button
             className="lab-actions-bar__control"
             variant="ghost"
             appearance="toolbar"
@@ -207,7 +207,7 @@ export function LabActionsBar({
             tabIndex={-1}
           >
             <MoreHorizontal size={20} aria-hidden="true" />
-          </LabButton>
+          </Button>
         </span>
       </div>
       {errorLabel && (
@@ -220,7 +220,7 @@ export function LabActionsBar({
 }
 
 interface ActionControlProps {
-  action: LabAction
+  action: Action
   size: 'regular' | 'compact'
   loading?: boolean
 }
@@ -228,11 +228,11 @@ interface ActionControlProps {
 const ActionControl = React.forwardRef<
   HTMLButtonElement,
   ActionControlProps & React.ButtonHTMLAttributes<HTMLButtonElement>
->(function LabActionControl({ action, size, loading, ...buttonProps }, ref) {
+>(function ActionControl({ action, size, loading, ...buttonProps }, ref) {
   const iconOnly = action.display === 'icon' && (action.type === 'toggle' || !!action.icon)
   const blocked = action.disabled || (action.type === 'group' && !action.actions.length)
   return (
-    <LabButton
+    <Button
       {...buttonProps}
       ref={ref}
       className="lab-actions-bar__control"
@@ -267,7 +267,7 @@ const ActionControl = React.forwardRef<
       ) : null}
       {!iconOnly && <span>{action.label}</span>}
       {action.type === 'group' && !iconOnly && <ChevronDown size={14} aria-hidden="true" />}
-    </LabButton>
+    </Button>
   )
 })
 
@@ -276,7 +276,7 @@ function GroupControl({
   size,
   menu,
 }: {
-  action: LabGroupAction
+  action: GroupAction
   size: 'regular' | 'compact'
   menu: MenuContext
 }) {
@@ -313,7 +313,7 @@ function MenuSurface({
 }) {
   return (
     <DropdownMenu.Portal container={menu.container}>
-      <LabPopoverSurface asChild>
+      <PopoverSurface asChild>
         <DropdownMenu.Content
           className="lab-actions-menu"
           data-lab-actions-owner={menu.ownerId}
@@ -326,12 +326,12 @@ function MenuSurface({
         >
           {children}
         </DropdownMenu.Content>
-      </LabPopoverSurface>
+      </PopoverSurface>
     </DropdownMenu.Portal>
   )
 }
 
-function MenuAction({ action, menu }: { action: LabAction; menu: MenuContext }) {
+function MenuAction({ action, menu }: { action: Action; menu: MenuContext }) {
   const loading = action.loading || menu.pending.has(action.id)
   const disabled = action.disabled || loading
   const content = (
@@ -381,7 +381,7 @@ function MenuAction({ action, menu }: { action: LabAction; menu: MenuContext }) 
   )
 }
 
-function SubmenuAction({ action, menu }: { action: LabGroupAction; menu: MenuContext }) {
+function SubmenuAction({ action, menu }: { action: GroupAction; menu: MenuContext }) {
   const [open, setOpen] = React.useState(false)
   return (
     <DropdownMenu.Sub
@@ -410,7 +410,7 @@ function SubmenuAction({ action, menu }: { action: LabGroupAction; menu: MenuCon
         />
       </DropdownMenu.SubTrigger>
       <DropdownMenu.Portal container={menu.container}>
-        <LabPopoverSurface asChild>
+        <PopoverSurface asChild>
           <DropdownMenu.SubContent
             className="lab-actions-menu"
             data-lab-actions-owner={menu.ownerId}
@@ -424,7 +424,7 @@ function SubmenuAction({ action, menu }: { action: LabGroupAction; menu: MenuCon
               <MenuAction key={child.id} action={child} menu={menu} />
             ))}
           </DropdownMenu.SubContent>
-        </LabPopoverSurface>
+        </PopoverSurface>
       </DropdownMenu.Portal>
     </DropdownMenu.Sub>
   )

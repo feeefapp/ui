@@ -3,10 +3,10 @@
 import * as React from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '../utils'
-import { useLabI18n } from '../i18n'
-import { LabIconButton } from './button'
-import { LabRawInput, type LabInputElement } from './raw-input'
-import type { LabControlVariant } from './control-variants'
+import { useI18n } from '../i18n'
+import { IconButton } from './button'
+import { RawInput, type InputElement } from './raw-input'
+import type { ControlVariant } from './control-variants'
 import {
   clampNumber,
   dragValue,
@@ -20,7 +20,7 @@ import {
 import './control-variants.css'
 import './number-field.css'
 
-export type LabNumberFieldProps = {
+export type NumberFieldProps = {
   /** Shown inside the field at the start; also the accessible name. */
   label: string
   /** Current value (controlled). */
@@ -46,7 +46,7 @@ export type LabNumberFieldProps = {
   /** Shows ‹ › steppers at the ends (on hover and focus). */
   steppers?: boolean
   /** Field paint recipe, shared with text fields and selects. */
-  variant?: LabControlVariant
+  variant?: ControlVariant
   /** `regular` 44px or `compact` 40px. */
   controlSize?: 'regular' | 'compact'
   disabled?: boolean
@@ -65,7 +65,7 @@ const DRAG_THRESHOLD = { mouse: 3, pen: 3, touch: 6 }
  * for precision dragging), click without dragging to type, and use arrows, Page Up/Down, Home/End or
  * Backspace (reset) from the keyboard. Typed values accept `+ - * /`, parentheses and `%`.
  */
-export const LabNumberField = React.forwardRef<HTMLDivElement, LabNumberFieldProps>(function LabNumberField(
+export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(function NumberField(
   {
     label,
     value: controlled,
@@ -90,7 +90,7 @@ export const LabNumberField = React.forwardRef<HTMLDivElement, LabNumberFieldPro
   },
   ref
 ) {
-  const { locale, dir } = useLabI18n()
+  const { locale, dir } = useI18n()
   const step = Number.isFinite(stepProp) && stepProp > 0 ? stepProp : 1
   const bounds: NumberFieldBounds = { min, max, step }
   const bounded = isBounded(bounds)
@@ -99,7 +99,7 @@ export const LabNumberField = React.forwardRef<HTMLDivElement, LabNumberFieldPro
   const [editing, setEditing] = React.useState<string | null>(null)
   const [dragging, setDragging] = React.useState(false)
   const host = React.useRef<HTMLDivElement>(null)
-  const input = React.useRef<LabInputElement>(null)
+  const input = React.useRef<InputElement>(null)
   const drag = React.useRef<{ x: number; value: number; width: number; moved: boolean; pointer: string } | null>(
     null
   )
@@ -233,7 +233,7 @@ export const LabNumberField = React.forwardRef<HTMLDivElement, LabNumberFieldPro
     >
       {fraction != null && <span className="lab-number-field-fill" aria-hidden="true" />}
       {steppers && editing === null && (
-        <LabIconButton
+        <IconButton
           data-number-stepper
           className="lab-number-field-stepper"
           variant="text"
@@ -245,7 +245,7 @@ export const LabNumberField = React.forwardRef<HTMLDivElement, LabNumberFieldPro
           onClick={() => stepBy(-1)}
         >
           <ChevronLeft size={16} className="lab-dir-flip" />
-        </LabIconButton>
+        </IconButton>
       )}
       {editing === null ? (
         <span className="lab-number-field-row" aria-hidden="true">
@@ -256,7 +256,7 @@ export const LabNumberField = React.forwardRef<HTMLDivElement, LabNumberFieldPro
           </span>
         </span>
       ) : (
-        <LabRawInput
+        <RawInput
           ref={input}
           className="lab-number-field-input"
           aria-label={label}
@@ -278,7 +278,7 @@ export const LabNumberField = React.forwardRef<HTMLDivElement, LabNumberFieldPro
         />
       )}
       {steppers && editing === null && (
-        <LabIconButton
+        <IconButton
           data-number-stepper
           className="lab-number-field-stepper"
           variant="text"
@@ -290,7 +290,7 @@ export const LabNumberField = React.forwardRef<HTMLDivElement, LabNumberFieldPro
           onClick={() => stepBy(1)}
         >
           <ChevronRight size={16} className="lab-dir-flip" />
-        </LabIconButton>
+        </IconButton>
       )}
       {name && <input type="hidden" name={name} form={form} value={value} />}
     </div>

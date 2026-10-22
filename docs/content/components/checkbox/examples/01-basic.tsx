@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { LabCheckbox } from '@feeef.dev/ui/primitives/choice'
+import { Checkbox } from '@feeef.dev/ui/primitives/choice'
 
 export default function Basic() {
   const [notify, setNotify] = useState(true)
   return (
     <div className="demo-column">
-      <LabCheckbox label="Send an SMS when the order ships" checked={notify} onCheckedChange={setNotify} />
-      <LabCheckbox label="Allow customers to open the parcel before paying" />
+      <Checkbox label="Send an SMS when the order ships" checked={notify} onCheckedChange={setNotify} />
+      <Checkbox label="Allow customers to open the parcel before paying" />
     </div>
   )
 }

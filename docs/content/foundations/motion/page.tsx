@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabSlider } from '@feeef.dev/ui/primitives/slider'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { Slider } from '@feeef.dev/ui/primitives/slider'
 import { stepSpring } from '@feeef.dev/ui/primitives/spring-core'
 import { definePage } from '../../../src/model'
 import { C, Code } from '../../../src/blocks/code'
@@ -51,9 +51,9 @@ function EasingDemo() {
         </div>
       ))}
       <div>
-        <LabButton variant="tonal" controlSize="compact" onClick={() => setOn((v) => !v)}>
+        <Button variant="tonal" controlSize="compact" onClick={() => setOn((v) => !v)}>
           Play
-        </LabButton>
+        </Button>
       </div>
     </div>
   )
@@ -94,7 +94,7 @@ function SpringDemo() {
         <div ref={dot} className="fd-motion-dot" />
       </div>
       <div className="demo-row" style={{ justifyContent: 'flex-start' }}>
-        <LabButton
+        <Button
           variant="tonal"
           controlSize="compact"
           onClick={() => {
@@ -104,7 +104,7 @@ function SpringDemo() {
           }}
         >
           Move
-        </LabButton>
+        </Button>
         <span className="docs-muted">Click again before it settles: it turns around without a jump.</span>
       </div>
     </div>
@@ -116,7 +116,7 @@ function SliderDemo() {
   return (
     <div className="fd-stage">
       <div style={{ width: 'min(100%, 360px)' }}>
-        <LabSlider label="Volume" min={0} max={100} value={value} onValueChange={setValue} />
+        <Slider label="Volume" min={0} max={100} value={value} onValueChange={setValue} />
       </div>
     </div>
   )
@@ -149,8 +149,8 @@ function Overview() {
           rows={[
             ['Dialog', '300ms, ease-out: fade, rise 14px, scale from 0.965', '180ms, ease-in'],
             ['Dialog as a sheet (720px and below)', '360ms: fade, rise 32px', '220ms'],
-            ['Icon and label swap (LabSwap)', '220ms, ease-out', '160ms, ease-in'],
-            ['Stable text (LabStableText)', '180ms fade, 220ms rise, ease-out', 'same'],
+            ['Icon and label swap (Swap)', '220ms, ease-out', '160ms, ease-in'],
+            ['Stable text (StableText)', '180ms fade, 220ms rise, ease-out', 'same'],
             ['Auto height', '320ms, ease-out', 'same'],
           ]}
         />
@@ -169,7 +169,7 @@ function Overview() {
         </Callout>
         <p>
           Direct manipulation uses a spring instead of a fixed curve, so an interrupted movement keeps
-          its velocity. <C>LabSlider</C> drives its fill, thumb travel and shape from one damped spring
+          its velocity. <C>Slider</C> drives its fill, thumb travel and shape from one damped spring
           clock; the toolbar search morph uses the same integrator.
         </p>
         <SliderDemo />

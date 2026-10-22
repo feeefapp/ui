@@ -1,4 +1,4 @@
-import { LabNumberField } from '@feeef.dev/ui/primitives/number-field'
+import { NumberField } from '@feeef.dev/ui/primitives/number-field'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground, jsx } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
@@ -23,7 +23,7 @@ function Overview() {
         controls={controls}
         render={(v) => (
           <div className="demo-column">
-            <LabNumberField
+            <NumberField
               key={`${v.bounded}-${v.max}-${v.step}`}
               label={v.label}
               unit={v.unit || undefined}
@@ -40,7 +40,7 @@ function Overview() {
         )}
         code={(v) =>
           jsx(
-            'LabNumberField',
+            'NumberField',
             {
               label: v.label,
               unit: v.unit || undefined,
@@ -102,7 +102,7 @@ function Overview() {
         <Code
           code={`const [fee, setFee] = useState(400)
 
-<LabNumberField
+<NumberField
   label="Delivery fee"
   unit="DA"
   min={0}
@@ -166,9 +166,9 @@ export default definePage({
   group: 'Inputs',
   order: 3.5,
   summary: 'A Blender-style numeric control: drag to scrub, click to type (with arithmetic), with an optional range fill.',
-  importLine: "import { LabNumberField } from '@feeef.dev/ui/primitives/number-field'",
+  importLine: "import { NumberField } from '@feeef.dev/ui/primitives/number-field'",
   source: 'src/primitives/number-field.tsx',
-  api: ['LabNumberField'],
+  api: ['NumberField'],
   keywords: ['number', 'scrub', 'drag', 'spin button', 'blender', 'quantity', 'price', 'expression'],
   Overview,
   examples: examplesFrom(
@@ -177,7 +177,7 @@ export default definePage({
   ),
   Preview: () => (
     <div style={{ width: 200 }}>
-      <LabNumberField label="Discount" unit="%" min={0} max={100} defaultValue={35} steppers={false} />
+      <NumberField label="Discount" unit="%" min={0} max={100} defaultValue={35} steppers={false} />
     </div>
   ),
 })

@@ -29,11 +29,11 @@ Pages are discovered automatically. Navigation order comes from `section`, `grou
 ## The site is built with the kit
 
 The docs shell is a normal Feeef workspace, so it doubles as the kit's largest integration test:
-`LabScaffold` (sidebar modes, compact drawer, content `LabScrollArea`), `LabScaffoldSide` with
-`LabNavigationItem`s and a `LabToolbarSearch` filter, a floating `LabScaffoldAppBar` with
-`LabToolbarGroup`s and a `LabSegmentedControl` for Overview / Examples / API, `LabModal` search,
-`LabPopoverSurface` customize panel, `LabThemeSwitch`. The small blocks follow the same rules: code
-boxes are opaque surfaces whose tools float in `LabToolbarGroup` glass bubbles over a `LabScrollArea`
+`Scaffold` (sidebar modes, compact drawer, content `ScrollArea`), `ScaffoldSide` with
+`NavigationItem`s and a `ToolbarSearch` filter, a floating `ScaffoldAppBar` with
+`ToolbarGroup`s and a `SegmentedControl` for Overview / Examples / API, `Modal` search,
+`PopoverSurface` customize panel, `ThemeSwitch`. The small blocks follow the same rules: code
+boxes are opaque surfaces whose tools float in `ToolbarGroup` glass bubbles over a `ScrollArea`
 (washes, in-box scrolling); example and playground actions sit in glass groups; every surface uses
 the kit's `--lab-radius-*` tokens and superellipse corners (`src/styles/materials.css`). Docs CSS
 only adds prose, tables and example stages. If the shell needs something the kit can't do, fix or extend the kit

@@ -122,7 +122,7 @@ export function temporalPresets(type, now = new Date()) {
         { label: 'Last month', value: { from: dateText(lastMonthStart), to: dateText(lastMonthEnd) } },
     ];
 }
-/** Reads the value of a `LabTemporalFilterEditor` from its form's data (`date`, or `from`/`to`). */
+/** Reads the value of a `TemporalFilterEditor` from its form's data (`date`, or `from`/`to`). */
 export function readTemporalForm(type, data) {
     return normalizeTemporal(isTemporalRange(type)
         ? { from: String(data.get('from') || ''), to: String(data.get('to') || '') }

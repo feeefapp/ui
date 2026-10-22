@@ -8,7 +8,7 @@ import './scroll.css';
  * sibling of the viewport inside a `position: relative` box. Reads scroll metrics once per frame
  * and updates opacity without rerendering the scroll content.
  */
-export function LabScrollGradientOverlay({ viewport, topHeight = 100, bottomHeight = 160, density = 0.8, fadeZone = 80, color, }) {
+export function ScrollGradientOverlay({ viewport, topHeight = 100, bottomHeight = 160, density = 0.8, fadeZone = 80, color, }) {
     const root = useRef(null);
     const topPaint = useRef(null);
     const bottomPaint = useRef(null);

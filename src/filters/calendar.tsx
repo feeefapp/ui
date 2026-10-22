@@ -2,14 +2,14 @@
 
 import { useLayoutEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { LabIconButton, LabButton } from '../primitives/button'
+import { IconButton, Button } from '../primitives/button'
 import { calendarDate, monthDays, parseCalendarDate } from './calendar-model'
 
 /**
  * One month grid. The heading is a plain row on the host surface: previous, a title that opens a
  * month/year grid, next. Days support arrow, Home/End and Page Up/Down navigation; a range paints one continuous band.
  */
-export function LabCalendarMonth({
+export function CalendarMonth({
   month,
   onMonthChange,
   from,
@@ -75,7 +75,7 @@ export function LabCalendarMonth({
     <div ref={root} className="lab-calendar-month" role="group" aria-label={label}>
       <div role="group" aria-label={`${label} navigation`} className="lab-calendar-heading">
         {navigation !== 'next' && (
-          <LabIconButton
+          <IconButton
             variant="text"
             controlSize="compact"
             data-nav="previous"
@@ -86,9 +86,9 @@ export function LabCalendarMonth({
             onClick={() => (picking ? setPickYear(pickYear - 1) : go(year, monthIndex - 1))}
           >
             <ChevronLeft className="lab-dir-flip" />
-          </LabIconButton>
+          </IconButton>
         )}
-        <LabButton
+        <Button
           variant="text"
           controlSize="compact"
           className="lab-calendar-title"
@@ -100,9 +100,9 @@ export function LabCalendarMonth({
           }}
         >
           {picking ? pickYear : title}
-        </LabButton>
+        </Button>
         {navigation !== 'previous' && (
-          <LabIconButton
+          <IconButton
             variant="text"
             controlSize="compact"
             data-nav="next"
@@ -113,14 +113,14 @@ export function LabCalendarMonth({
             onClick={() => (picking ? setPickYear(pickYear + 1) : go(year, monthIndex + 1))}
           >
             <ChevronRight className="lab-dir-flip" />
-          </LabIconButton>
+          </IconButton>
         )}
       </div>
 
       {picking ? (
         <div className="lab-calendar-months" role="group" aria-label={`Months of ${pickYear}`}>
           {Array.from({ length: 12 }, (_, m) => (
-            <LabButton
+            <Button
               key={m}
               variant={m === monthIndex && pickYear === year ? 'tonal' : 'text'}
               controlSize="compact"
@@ -132,7 +132,7 @@ export function LabCalendarMonth({
               }}
             >
               {new Intl.DateTimeFormat(locale, { month: 'short' }).format(new Date(pickYear, m, 1, 12))}
-            </LabButton>
+            </Button>
           ))}
         </div>
       ) : (

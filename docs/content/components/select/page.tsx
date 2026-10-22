@@ -1,6 +1,6 @@
 import { useState, type ComponentProps } from 'react'
 import { MapPin } from 'lucide-react'
-import { LabOption, LabSelect } from '@feeef.dev/ui/primitives/select'
+import { Option, Select } from '@feeef.dev/ui/primitives/select'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground, jsx } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
@@ -20,9 +20,9 @@ const controls = {
   disabled: { type: 'boolean', default: false },
 } as const
 
-function PlaygroundSelect(props: Omit<ComponentProps<typeof LabSelect>, 'value' | 'onValueChange'>) {
+function PlaygroundSelect(props: Omit<ComponentProps<typeof Select>, 'value' | 'onValueChange'>) {
   const [value, setValue] = useState<string | null>(null)
-  return <LabSelect {...props} value={value} onValueChange={setValue} />
+  return <Select {...props} value={value} onValueChange={setValue} />
 }
 
 function Overview() {
@@ -45,14 +45,14 @@ function Overview() {
               disabled={v.disabled}
             >
               {WILAYAS.map((w) => (
-                <LabOption key={w}>{w}</LabOption>
+                <Option key={w}>{w}</Option>
               ))}
             </PlaygroundSelect>
           </div>
         )}
         code={(v) =>
           jsx(
-            'LabSelect',
+            'Select',
             {
               hint: v.hint || undefined,
               labelStyle: v.labelStyle,
@@ -66,7 +66,7 @@ function Overview() {
               onValueChange: '__SET__',
             },
             WILAYAS.slice(0, 3)
-              .map((w) => `<LabOption>${w}</LabOption>`)
+              .map((w) => `<Option>${w}</Option>`)
               .join('\n'),
             { labelStyle: 'outlined', variant: 'elevated', controlSize: 'regular' }
           )
@@ -84,8 +84,8 @@ function Overview() {
           control. For on/off use a switch.
         </p>
         <p>
-          <C>LabSelect</C> is controlled: pass <C>value</C> (a string, or <C>null</C> for no
-          selection) and <C>onValueChange</C>. Each <C>LabOption</C> uses its text as its value
+          <C>Select</C> is controlled: pass <C>value</C> (a string, or <C>null</C> for no
+          selection) and <C>onValueChange</C>. Each <C>Option</C> uses its text as its value
           unless you give it a <C>value</C>.
         </p>
       </Section>
@@ -103,7 +103,7 @@ function Overview() {
           rows={[
             [<C>hint</C>, 'Names the select and floats once a value is chosen.'],
             [<C>placeholder</C>, 'Shown in the empty trigger only when there is no hint. Use with aria-label.'],
-            [<C>{"<LabOption value=\"\">"}</C>, 'A “no selection” choice, such as “Any courier” in a filter.'],
+            [<C>{"<Option value=\"\">"}</C>, 'A “no selection” choice, such as “Any courier” in a filter.'],
           ]}
         />
         <p>
@@ -178,9 +178,9 @@ export default definePage({
   group: 'Inputs',
   order: 2,
   summary: 'Selects let people choose one value from a list, in the same field frame as text fields.',
-  importLine: "import { LabOption, LabSelect } from '@feeef.dev/ui/primitives/select'",
+  importLine: "import { Option, Select } from '@feeef.dev/ui/primitives/select'",
   source: 'src/primitives/select.tsx',
-  api: ['LabSelect', 'LabOption'],
+  api: ['Select', 'Option'],
   keywords: ['dropdown', 'picker', 'menu', 'listbox', 'combobox', 'option'],
   Overview,
   examples: examplesFrom(
@@ -189,9 +189,9 @@ export default definePage({
   ),
   Preview: () => (
     <div style={{ width: 220 }}>
-      <LabSelect hint="Wilaya" value="Oran" onValueChange={() => {}}>
-        <LabOption>Oran</LabOption>
-      </LabSelect>
+      <Select hint="Wilaya" value="Oran" onValueChange={() => {}}>
+        <Option>Oran</Option>
+      </Select>
     </div>
   ),
 })

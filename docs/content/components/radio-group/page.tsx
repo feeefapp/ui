@@ -1,4 +1,4 @@
-import { LabRadioGroup } from '@feeef.dev/ui/primitives/choice'
+import { RadioGroup } from '@feeef.dev/ui/primitives/choice'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground, jsx } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
@@ -27,7 +27,7 @@ function Overview() {
         controls={controls}
         render={(v) => (
           <div className="demo-column">
-            <LabRadioGroup
+            <RadioGroup
               label={v.label || 'Delivery type'}
               description={v.description || undefined}
               options={v.descriptions ? OPTIONS : OPTIONS.map(({ description: _, ...option }) => option)}
@@ -41,7 +41,7 @@ function Overview() {
         )}
         code={(v) =>
           jsx(
-            'LabRadioGroup',
+            'RadioGroup',
             {
               label: v.label || 'Delivery type',
               description: v.description || undefined,
@@ -87,7 +87,7 @@ function Overview() {
           ]}
         />
         <p>
-          The <C>LabRadioOption</C> type describes one entry. <C>description</C> on the group itself
+          The <C>RadioOption</C> type describes one entry. <C>description</C> on the group itself
           adds help text under the legend.
         </p>
       </Section>
@@ -111,8 +111,8 @@ function Overview() {
 
       <Section title="A single radio">
         <p>
-          <C>LabRadio</C> is one radio with the same label, description and error props as{' '}
-          <C>LabCheckbox</C>, for layouts the group cannot draw, such as radios inside table rows or
+          <C>Radio</C> is one radio with the same label, description and error props as{' '}
+          <C>Checkbox</C>, for layouts the group cannot draw, such as radios inside table rows or
           cards. You then provide the shared <C>name</C>, the checked state and a{' '}
           <C>{'<fieldset>'}</C> with a <C>{'<legend>'}</C> yourself.
         </p>
@@ -171,17 +171,17 @@ export default definePage({
   group: 'Selection',
   order: 2,
   summary: 'Radio groups let people pick exactly one option from a short list, each with an optional description.',
-  importLine: "import { LabRadio, LabRadioGroup } from '@feeef.dev/ui/primitives/choice'",
+  importLine: "import { Radio, RadioGroup } from '@feeef.dev/ui/primitives/choice'",
   source: 'src/primitives/choice.tsx',
-  api: ['LabRadioGroup', 'LabRadio'],
-  keywords: ['radio', 'option', 'single choice', 'fieldset', 'legend', 'LabRadioOption'],
+  api: ['RadioGroup', 'Radio'],
+  keywords: ['radio', 'option', 'single choice', 'fieldset', 'legend', 'RadioOption'],
   Overview,
   examples: examplesFrom(
     import.meta.glob('./examples/*.tsx', { eager: true }),
     import.meta.glob('./examples/*.tsx', { eager: true, query: '?raw', import: 'default' })
   ),
   Preview: () => (
-    <LabRadioGroup
+    <RadioGroup
       label="Delivery"
       controlSize="compact"
       defaultValue="home"

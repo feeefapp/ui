@@ -1,12 +1,12 @@
 import { useRef, type ReactNode } from 'react'
 import * as Popover from '@radix-ui/react-popover'
-import { Check, Palette, Pipette } from 'lucide-react'
-import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabNumberField } from '@feeef.dev/ui/primitives/number-field'
-import { LabPopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
-import { useLabTheme, type LabThemeMode } from '@feeef.dev/ui/theme'
-import type { LabDensity, LabPalette } from '@feeef.dev/ui/theme-config'
+import { Check, Palette as PaletteIcon, Pipette } from 'lucide-react'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
+import { NumberField } from '@feeef.dev/ui/primitives/number-field'
+import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { useTheme, type ThemeMode } from '@feeef.dev/ui/theme'
+import type { Density, Palette } from '@feeef.dev/ui/theme-config'
 import { useDocsSettings, type DocsSettings } from '../settings'
 
 /** Preset primaries; `null` is the palette's own color (Feeef green, or black in mono). */
@@ -37,7 +37,7 @@ function ColorPicker() {
   return (
     <div className="docs-swatches" role="group" aria-label="Primary color">
       {COLORS.map((color) => (
-        <LabIconButton
+        <IconButton
           key={color.name}
           variant="text"
           controlSize="compact"
@@ -50,9 +50,9 @@ function ColorPicker() {
           <span className="docs-swatch-dot" data-default={color.value === null || undefined} style={{ background: color.value ?? undefined }}>
             {current === color.value && <Check size={14} />}
           </span>
-        </LabIconButton>
+        </IconButton>
       ))}
-      <LabIconButton
+      <IconButton
         variant="text"
         controlSize="compact"
         className="docs-swatch"
@@ -64,7 +64,7 @@ function ColorPicker() {
         <span className="docs-swatch-dot" data-custom style={custom ? { background: current! } : undefined}>
           {custom ? <Check size={14} /> : <Pipette size={14} />}
         </span>
-      </LabIconButton>
+      </IconButton>
       <input
         ref={picker}
         type="color"
@@ -79,27 +79,27 @@ function ColorPicker() {
 }
 
 /**
- * Live theme controls: everything here is the kit's own `LabThemeConfig` and locale, so every
+ * Live theme controls: everything here is the kit's own `ThemeConfig` and locale, so every
  * demo on the page shows exactly what an app would get with those settings.
  */
 export function Customize() {
   const { settings, update, reset } = useDocsSettings()
-  const { mode, setMode } = useLabTheme()
+  const { mode, setMode } = useTheme()
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <LabIconButton
+        <IconButton
           className="docs-customize-trigger"
           variant="text"
           appearance="toolbar"
           aria-label="Customize theme"
           title="Customize theme"
         >
-          <Palette size={20} />
-        </LabIconButton>
+          <PaletteIcon size={20} />
+        </IconButton>
       </Popover.Trigger>
       <Popover.Portal>
-        <LabPopoverSurface asChild>
+        <PopoverSurface asChild>
           <Popover.Content
             className="docs-customize"
             align="end"
@@ -110,11 +110,11 @@ export function Customize() {
           >
             <h2>Customize</h2>
             <p>
-              Applies to every demo: these are <code>LabProvider</code>’s <code>theme</code> and{' '}
+              Applies to every demo: these are <code>Provider</code>’s <code>theme</code> and{' '}
               <code>i18n</code> props. The demo language also sets the demos’ direction.
             </p>
             <Row label="Mode">
-              <LabSegmentedControl<LabThemeMode>
+              <SegmentedControl<ThemeMode>
                 label="Mode"
                 value={mode}
                 onChange={setMode}
@@ -129,7 +129,7 @@ export function Customize() {
               <ColorPicker />
             </Row>
             <Row label="Palette">
-              <LabSegmentedControl<LabPalette>
+              <SegmentedControl<Palette>
                 label="Palette"
                 value={settings.theme.palette}
                 onChange={(palette) => update({ theme: { palette } })}
@@ -140,7 +140,7 @@ export function Customize() {
               />
             </Row>
             <Row label="Density">
-              <LabSegmentedControl<LabDensity>
+              <SegmentedControl<Density>
                 label="Density"
                 value={settings.theme.density}
                 onChange={(density) => update({ theme: { density } })}
@@ -151,7 +151,7 @@ export function Customize() {
                 ]}
               />
             </Row>
-            <LabNumberField
+            <NumberField
               label="Corner radius"
               controlSize="compact"
               min={0}
@@ -163,7 +163,7 @@ export function Customize() {
               onValueChange={(radius) => update({ theme: { radius } })}
             />
             <Row label="Demo language">
-              <LabSegmentedControl<DocsSettings['locale']>
+              <SegmentedControl<DocsSettings['locale']>
                 label="Demo language"
                 value={settings.locale}
                 onChange={(locale) => update({ locale })}
@@ -174,11 +174,11 @@ export function Customize() {
                 ]}
               />
             </Row>
-            <LabButton variant="text" controlSize="compact" onClick={reset}>
+            <Button variant="text" controlSize="compact" onClick={reset}>
               Reset to defaults
-            </LabButton>
+            </Button>
           </Popover.Content>
-        </LabPopoverSurface>
+        </PopoverSurface>
       </Popover.Portal>
     </Popover.Root>
   )

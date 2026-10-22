@@ -1,12 +1,12 @@
 import { useState, type ReactNode } from 'react'
 import { Download, ListFilter, Phone, Plus, Search, X } from 'lucide-react'
-import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabCheckbox } from '@feeef.dev/ui/primitives/choice'
-import { LabSlider } from '@feeef.dev/ui/primitives/slider'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
-import { LabToolbar, LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabScrollArea } from '@feeef.dev/ui/scroll'
-import { LabDock } from '@feeef.dev/ui/dock'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
+import { Checkbox } from '@feeef.dev/ui/primitives/choice'
+import { Slider } from '@feeef.dev/ui/primitives/slider'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
+import { Toolbar, ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { ScrollArea } from '@feeef.dev/ui/scroll'
+import { Dock } from '@feeef.dev/ui/dock'
 import { definePage } from '../../../src/model'
 import { Link } from '../../../src/router'
 import { C, Code } from '../../../src/blocks/code'
@@ -38,7 +38,7 @@ function Rows({ check }: { check?: string[] }) {
               {order.city} · {order.total}
             </small>
           </span>
-          {check && <LabCheckbox controlSize="compact" aria-label={`Select order ${order.id}`} defaultChecked={check.includes(order.id)} />}
+          {check && <Checkbox controlSize="compact" aria-label={`Select order ${order.id}`} defaultChecked={check.includes(order.id)} />}
         </div>
       ))}
     </div>
@@ -46,9 +46,9 @@ function Rows({ check }: { check?: string[] }) {
 }
 
 const toolIcon = (label: string, icon: ReactNode) => (
-  <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label={label}>
+  <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label={label}>
     {icon}
-  </LabIconButton>
+  </IconButton>
 )
 
 /* ---------- Anatomy ---------- */
@@ -94,30 +94,30 @@ function Anatomy() {
 function GoodBubbles() {
   return (
     <div className="gl-mini">
-      <LabScrollArea
+      <ScrollArea
         label="Orders"
         edgeGap={8}
         contentPadding={8}
         top={
-          <LabToolbar
+          <Toolbar
             label="Orders toolbar"
             leading={
-              <LabToolbarGroup label="Page title">
+              <ToolbarGroup label="Page title">
                 <span className="gl-mini-title">Orders</span>
-              </LabToolbarGroup>
+              </ToolbarGroup>
             }
             trailing={
-              <LabToolbarGroup label="Order tools">
+              <ToolbarGroup label="Order tools">
                 {toolIcon('Search orders', <Search />)}
                 {toolIcon('Filter orders', <ListFilter />)}
                 {toolIcon('Export orders', <Download />)}
-              </LabToolbarGroup>
+              </ToolbarGroup>
             }
           />
         }
       >
         <Rows />
-      </LabScrollArea>
+      </ScrollArea>
     </div>
   )
 }
@@ -128,15 +128,15 @@ function BadPainted() {
       <div className="gl-painted-bar">
         <strong>Orders</strong>
         <div>
-          <LabIconButton variant="outlined" controlSize="compact" aria-label="Search orders">
+          <IconButton variant="outlined" controlSize="compact" aria-label="Search orders">
             <Search />
-          </LabIconButton>
-          <LabIconButton variant="outlined" controlSize="compact" aria-label="Filter orders">
+          </IconButton>
+          <IconButton variant="outlined" controlSize="compact" aria-label="Filter orders">
             <ListFilter />
-          </LabIconButton>
-          <LabIconButton variant="outlined" controlSize="compact" aria-label="Export orders">
+          </IconButton>
+          <IconButton variant="outlined" controlSize="compact" aria-label="Export orders">
             <Download />
-          </LabIconButton>
+          </IconButton>
         </div>
       </div>
       <div className="gl-mini-scroll">
@@ -153,20 +153,20 @@ function BadStacked() {
     <div className="gl-mini" data-stack>
       <div className="gl-painted-bar">
         <strong>Orders</strong>
-        <LabButton variant="filled" controlSize="compact">
+        <Button variant="filled" controlSize="compact">
           <Plus />
           New order
-        </LabButton>
+        </Button>
       </div>
       <div className="gl-painted-bar">
-        <LabTextField hint="Search orders" controlSize="compact" containerClassName="gl-grow" />
+        <TextField hint="Search orders" controlSize="compact" containerClassName="gl-grow" />
         <div>
-          <LabButton variant="outlined" controlSize="compact">
+          <Button variant="outlined" controlSize="compact">
             Wilaya
-          </LabButton>
-          <LabButton variant="outlined" controlSize="compact">
+          </Button>
+          <Button variant="outlined" controlSize="compact">
             Courier
-          </LabButton>
+          </Button>
         </div>
       </div>
       <div className="gl-mini-scroll">
@@ -179,37 +179,37 @@ function BadStacked() {
 function GoodFloating() {
   return (
     <div className="gl-mini">
-      <LabScrollArea
+      <ScrollArea
         label="Orders"
         edgeGap={8}
         contentPadding={8}
         top={
-          <LabToolbar
+          <Toolbar
             label="Orders toolbar"
             leading={
-              <LabToolbarGroup label="Page title">
+              <ToolbarGroup label="Page title">
                 <span className="gl-mini-title">Orders</span>
-              </LabToolbarGroup>
+              </ToolbarGroup>
             }
             trailing={
-              <LabToolbarGroup label="Order tools">
+              <ToolbarGroup label="Order tools">
                 {toolIcon('Search orders', <Search />)}
                 {toolIcon('Filter orders', <ListFilter />)}
-              </LabToolbarGroup>
+              </ToolbarGroup>
             }
           />
         }
         bottom={
-          <LabDock label="Order actions">
-            <LabButton variant="filled" controlSize="compact">
+          <Dock label="Order actions">
+            <Button variant="filled" controlSize="compact">
               <Plus />
               New order
-            </LabButton>
-          </LabDock>
+            </Button>
+          </Dock>
         }
       >
         <Rows />
-      </LabScrollArea>
+      </ScrollArea>
     </div>
   )
 }
@@ -219,25 +219,25 @@ function GoodFloating() {
 function GoodDock() {
   return (
     <div className="gl-mini">
-      <LabScrollArea
+      <ScrollArea
         label="Orders to confirm"
         edgeGap={8}
         contentPadding={8}
         bottom={
-          <LabDock label="Selected orders" content={<span className="gl-dock-status">2 selected</span>}>
+          <Dock label="Selected orders" content={<span className="gl-dock-status">2 selected</span>}>
             <div className="gl-dock-row">
-              <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Clear selection">
+              <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Clear selection">
                 <X />
-              </LabIconButton>
-              <LabButton variant="filled" controlSize="compact">
+              </IconButton>
+              <Button variant="filled" controlSize="compact">
                 Confirm 2 orders
-              </LabButton>
+              </Button>
             </div>
-          </LabDock>
+          </Dock>
         }
       >
         <Rows check={['#1048', '#1046']} />
-      </LabScrollArea>
+      </ScrollArea>
     </div>
   )
 }
@@ -255,15 +255,15 @@ function BadScattered() {
               <small>{order.total}</small>
             </span>
             <span style={{ display: 'flex', gap: 4 }}>
-              <LabIconButton variant="outlined" controlSize="compact" aria-label={`Call ${order.name}`}>
+              <IconButton variant="outlined" controlSize="compact" aria-label={`Call ${order.name}`}>
                 <Phone />
-              </LabIconButton>
-              <LabButton variant="filled" controlSize="compact">
+              </IconButton>
+              <Button variant="filled" controlSize="compact">
                 Confirm
-              </LabButton>
-              <LabButton variant="destructive" controlSize="compact">
+              </Button>
+              <Button variant="destructive" controlSize="compact">
                 Cancel
-              </LabButton>
+              </Button>
             </span>
           </div>
         ))}
@@ -290,7 +290,7 @@ function ResponsiveDemo() {
         <span aria-hidden="true">Screen width</span>
         <output aria-hidden="true">{width} px</output>
       </div>
-      <LabSlider
+      <Slider
         label="Screen width"
         min={360}
         max={1440}
@@ -326,7 +326,7 @@ function Overview() {
 
       <Section title="Anatomy">
         <p>
-          A screen is a <Link to="/components/scaffold">LabScaffold</Link>: a sidebar and one content panel on
+          A screen is a <Link to="/components/scaffold">Scaffold</Link>: a sidebar and one content panel on
           a tinted ground. The app bar and the dock float over the content panel; they are not rows that
           push it down. This is the real order screen of a merchant app, scaled down. Click around: the
           sidebar toggle, the views and the dock all work.
@@ -337,7 +337,7 @@ function Overview() {
       <Section title="Bubbles">
         <p>
           The app bar is not a bar. It is an unpainted row of glass bubbles (
-          <Link to="/components/toolbar">LabToolbarGroup</Link>), one per purpose, with the content showing
+          <Link to="/components/toolbar">ToolbarGroup</Link>), one per purpose, with the content showing
           between them. A bubble groups the controls people look for together (
           <Link to="/guidelines/principles#tools-travel-together">related tools travel together</Link>), and
           the empty space between bubbles lets the content breathe (
@@ -348,7 +348,7 @@ function Overview() {
           rows={[
             ['Start', 'Navigation and identity', 'Sidebar toggle, logo or store name, back button', 'Only when the sidebar can’t show them (rail, hidden, drawer) or on a sub-page'],
             ['Start, after it', 'Title', 'The page or record name, short', 'When the large title in the content has scrolled away, or there is none'],
-            ['End', 'Page views', <>One <C>LabSegmentedControl appearance="plain"</C></>, 'Two to five views of the same thing; drops to the dock on phones'],
+            ['End', 'Page views', <>One <C>SegmentedControl appearance="plain"</C></>, 'Two to five views of the same thing; drops to the dock on phones'],
             ['End, last', 'Tools', 'Icon buttons that act on the whole page: search, print, details, more', 'Always; overflow into a menu when full'],
           ]}
         />
@@ -358,30 +358,30 @@ function Overview() {
           <a href="#actions-go-in-a-dock">below</a>).
         </p>
         <Code
-          code={`<LabScaffoldAppBar
+          code={`<ScaffoldAppBar
   leading={
-    <LabToolbarGroup label="Navigation">
-      <LabScaffoldToggleButton action="drawer" />
+    <ToolbarGroup label="Navigation">
+      <ScaffoldToggleButton action="drawer" />
       <StoreBrand />
-    </LabToolbarGroup>
+    </ToolbarGroup>
   }
   trailing={
     <>
-      <LabToolbarGroup label="Page views">
-        <LabSegmentedControl label="Order views" appearance="plain" value={view} onChange={setView} options={VIEWS} />
-      </LabToolbarGroup>
-      <LabToolbarGroup label="Order tools">
-        <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Print label">
+      <ToolbarGroup label="Page views">
+        <SegmentedControl label="Order views" appearance="plain" value={view} onChange={setView} options={VIEWS} />
+      </ToolbarGroup>
+      <ToolbarGroup label="Order tools">
+        <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Print label">
           <Printer />
-        </LabIconButton>
-      </LabToolbarGroup>
+        </IconButton>
+      </ToolbarGroup>
     </>
   }
 >
-  <LabToolbarGroup label="Page title">
+  <ToolbarGroup label="Page title">
     <span>Order #1048</span>
-  </LabToolbarGroup>
-</LabScaffoldAppBar>`}
+  </ToolbarGroup>
+</ScaffoldAppBar>`}
         />
         <Compare
           good={<GoodBubbles />}
@@ -394,7 +394,7 @@ function Overview() {
       <Section title="Floating chrome and reservations">
         <p>
           Content scrolls under the floats, and a soft wash fades it where it meets them. At rest, nothing
-          is covered: <Link to="/components/scroll-area">LabScrollArea</Link> measures every float and
+          is covered: <Link to="/components/scroll-area">ScrollArea</Link> measures every float and
           reserves exactly that much room at the top and bottom, plus the gaps. When a dock grows (a
           selection appears, a button label changes), the reservation follows.
         </p>
@@ -411,9 +411,9 @@ function Overview() {
         </ul>
         <Code
           code={`// Do: the scroll area measures the floats and reserves their room.
-<LabScrollArea label="Orders" top={<OrdersToolbar />} bottom={<LabDock label="Order actions">…</LabDock>}>
+<ScrollArea label="Orders" top={<OrdersToolbar />} bottom={<Dock label="Order actions">…</Dock>}>
   <OrdersList />
-</LabScrollArea>
+</ScrollArea>
 
 // Don't: a fixed header and a magic spacer that is wrong on the next device.
 <header style={{ position: 'sticky', top: 0 }}>…</header>
@@ -431,11 +431,11 @@ function Overview() {
       <Section title="Actions go in a dock">
         <p>
           The actions of the task in front of people (confirm, ship, save) float in a{' '}
-          <Link to="/components/dock">LabDock</Link> at the bottom of the content, where a thumb reaches them
+          <Link to="/components/dock">Dock</Link> at the bottom of the content, where a thumb reaches them
           and where they are in the same place on every screen. The dock holds the{' '}
           <Link to="/guidelines/principles#one-primary-action">one primary action</Link>. When a selection
           starts, the dock changes to act on the selection; it does not add buttons to each row. When
-          actions don’t fit, use <Link to="/components/actions-bar">LabActionsBar</Link> inside the dock so
+          actions don’t fit, use <Link to="/components/actions-bar">ActionsBar</Link> inside the dock so
           the low-priority ones move into a menu.
         </p>
         <Compare
@@ -491,7 +491,7 @@ function Overview() {
           rows={[
             ['Ground', 'The page behind the scaffold; the sidebar sits on it', 'Text people read or edit'],
             ['Surface (opaque)', 'The content panel, cards, rows, forms, dialogs, menus, the inspector', 'Floating tools'],
-            ['Glass (LabToolbarGroup, LabDock, LabGlassGroup)', 'Chrome that floats over content: app bar bubbles, docks', 'Content, long text, forms, whole panels'],
+            ['Glass (ToolbarGroup, Dock, GlassGroup)', 'Chrome that floats over content: app bar bubbles, docks', 'Content, long text, forms, whole panels'],
           ]}
         />
       </Section>
@@ -502,7 +502,7 @@ function Overview() {
             'One scaffold per page; every page’s content scrolls in its content panel.',
             'One bubble per purpose, in reading order: navigation, title … views, tools.',
             'Task actions and the one primary action in the bottom dock.',
-            'Let LabScrollArea reserve room for every float.',
+            'Let ScrollArea reserve room for every float.',
             'Move things to their smaller home as the screen narrows; check every screen at 390px and in Arabic.',
           ]}
           dontItems={[

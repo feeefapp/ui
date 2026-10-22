@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { LabFilterBar, type LabFilterOption, type LabFilterValue } from '@feeef.dev/ui/filter-bar'
+import { FilterBar, type FilterOption, type FilterValue } from '@feeef.dev/ui/filter-bar'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
 import { C, Code } from '../../../src/blocks/code'
 import './filter-demo.css'
 
-const OPTIONS: LabFilterOption[] = [
+const OPTIONS: FilterOption[] = [
   { id: 'unpaid', label: 'Unpaid' },
   { id: 'returned', label: 'Returned' },
   {
@@ -32,13 +32,13 @@ const controls = {
 
 function PlaygroundBar(v: { pinUnpaid: boolean; pinWilaya: boolean; natural: boolean; back: boolean }) {
   const [enabled, setEnabled] = useState<string[]>([])
-  const [values, setValues] = useState<Record<string, LabFilterValue>>({})
+  const [values, setValues] = useState<Record<string, FilterValue>>({})
   const [pinned, setPinned] = useState(
     () => [v.pinUnpaid && 'unpaid', v.pinWilaya && 'wilaya'].filter(Boolean) as string[]
   )
   return (
     <div className="demo-column" style={{ width: '100%' }}>
-      <LabFilterBar
+      <FilterBar
         label="Order filters"
         options={OPTIONS}
         value={enabled}
@@ -65,14 +65,14 @@ function Overview() {
         controls={controls}
         render={(v) => <PlaygroundBar key={`${v.pinUnpaid}-${v.pinWilaya}`} {...v} />}
         code={(v) =>
-          `<LabFilterBar\n  label="Order filters"\n  options={options}\n  value={enabled}\n  onChange={setEnabled}\n  values={values}\n  onValuesChange={setValues}\n  pinned={[${[v.pinUnpaid && "'unpaid'", v.pinWilaya && "'wilaya'"].filter(Boolean).join(', ')}]}\n  onPinnedChange={setPinned}${v.natural ? '\n  onNaturalFilter={parseFilter}' : ''}${v.back ? '\n  onBack={leaveFilteredView}' : ''}\n/>`
+          `<FilterBar\n  label="Order filters"\n  options={options}\n  value={enabled}\n  onChange={setEnabled}\n  values={values}\n  onValuesChange={setValues}\n  pinned={[${[v.pinUnpaid && "'unpaid'", v.pinWilaya && "'wilaya'"].filter(Boolean).join(', ')}]}\n  onPinnedChange={setPinned}${v.natural ? '\n  onNaturalFilter={parseFilter}' : ''}${v.back ? '\n  onBack={leaveFilteredView}' : ''}\n/>`
         }
       />
 
       <Section title="Anatomy">
         <p>
           A filter bar is a row of separate glass groups, meant for the <C>top</C> slot of a{' '}
-          <C>LabScrollArea</C> above a list. From the start:
+          <C>ScrollArea</C> above a list. From the start:
         </p>
         <ol>
           <li>
@@ -109,7 +109,7 @@ function Overview() {
           head={['State', 'Props', 'Shape']}
           rows={[
             ['On/off filters that are on', <><C>value</C> / <C>onChange</C> (required)</>, <C>string[]</C>],
-            ['Every other value', <><C>values</C> / <C>onValuesChange</C></>, <C>{'Record<id, LabFilterValue>'}</C>],
+            ['Every other value', <><C>values</C> / <C>onValuesChange</C></>, <C>{'Record<id, FilterValue>'}</C>],
             ['Pinned chips', <><C>pinned</C> / <C>onPinnedChange</C></>, <C>string[]</C>],
           ]}
         />
@@ -154,7 +154,7 @@ function Overview() {
   return ids
 }
 
-<LabFilterBar … onNaturalFilter={parseFilter} />`}
+<FilterBar … onNaturalFilter={parseFilter} />`}
         />
       </Section>
 
@@ -209,9 +209,9 @@ export default definePage({
   order: 5,
   summary:
     'A filter toolbar with a searchable catalog, pinned chips, typed value editors and optional natural-language input.',
-  importLine: "import { LabFilterBar, type LabFilterOption, type LabFilterValue } from '@feeef.dev/ui/filter-bar'",
+  importLine: "import { FilterBar, type FilterOption, type FilterValue } from '@feeef.dev/ui/filter-bar'",
   source: 'src/filter-bar.tsx',
-  api: ['LabFilterBar'],
+  api: ['FilterBar'],
   keywords: ['filters', 'chips', 'query', 'facets', 'date range', 'pins', 'natural language'],
   Overview,
   examples: examplesFrom(

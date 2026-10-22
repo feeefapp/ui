@@ -2,10 +2,10 @@
 
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { GripVertical } from 'lucide-react'
-import { LabButton } from '../primitives/button'
+import { Button } from '../primitives/button'
 import { PixelTexture } from '../pixel-art'
 import { revealScrollChild } from '../scroll'
-import { useLabI18n } from '../i18n'
+import { useI18n } from '../i18n'
 import './speech.css'
 import { useSpeechReorder } from './reorder'
 
@@ -13,7 +13,7 @@ import { useSpeechReorder } from './reorder'
  * One card in a speech script: a drag handle, a toolbar and the block's editor. Only the handle
  * drags; text editing, selection and viewport scrolling stay native. Blocks must be siblings.
  */
-export function LabSpeechBlock({
+export function SpeechBlock({
   children,
   toolbar,
   index,
@@ -37,7 +37,7 @@ export function LabSpeechBlock({
   /** Called once on drop (or arrow key) with the old and new index. */
   onMove: (from: number, to: number) => void
 }) {
-  const { t } = useLabI18n()
+  const { t } = useI18n()
   const root = useRef<HTMLElement>(null)
   const [announcement, announce] = useState('')
   const hint = useId()
@@ -74,7 +74,7 @@ export function LabSpeechBlock({
         <PixelTexture variant="corner" density="sparse" seed={seed} />
       </div>
       <div className="lab-speech-block-toolbar">
-        <LabButton
+        <Button
           variant="ghost"
           appearance="toolbar"
           controlSize="icon"
@@ -85,7 +85,7 @@ export function LabSpeechBlock({
           {...reorder}
         >
           <GripVertical size={20} />
-        </LabButton>
+        </Button>
         {toolbar ?? <span className="lab-speech-block-caption">{t('lab.speech.block', { index: index + 1 })}</span>}
       </div>
       <span id={hint} className="lab-sr-only">

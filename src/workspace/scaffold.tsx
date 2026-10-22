@@ -3,22 +3,22 @@
 import * as React from 'react'
 import { PanelLeftClose, PanelLeftOpen, Menu } from 'lucide-react'
 import { PixelShader, PixelTexture } from '../pixel-art'
-import { LabIconButton } from '../primitives/button'
-import { LabScrollArea } from '../scroll'
-import { LabModal } from '../primitives/modal'
+import { IconButton } from '../primitives/button'
+import { ScrollArea } from '../scroll'
+import { Modal } from '../primitives/modal'
 import { cn } from '../utils'
 import './scaffold.css'
 
 /** Sidebar width: `expanded` (304px), `rail` (64px icons) or `hidden` (0). */
-export type LabScaffoldSideMode = 'expanded' | 'rail' | 'hidden'
-/** What `useLabScaffold()` and function slots receive. */
-export type LabScaffoldState = {
+export type ScaffoldSideMode = 'expanded' | 'rail' | 'hidden'
+/** What `useScaffold()` and function slots receive. */
+export type ScaffoldState = {
   /** True below the compact breakpoint: the sidebar is replaced by a modal drawer. */
   compact: boolean
   /** Current sidebar mode (ignored while compact). */
-  sideMode: LabScaffoldSideMode
+  sideMode: ScaffoldSideMode
   /** Sets the sidebar mode and calls `onSideModeChange`. */
-  setSideMode: (mode: LabScaffoldSideMode) => void
+  setSideMode: (mode: ScaffoldSideMode) => void
   /** Steps expanded → rail → hidden → expanded. */
   cycleSide: () => void
   /** Whether the compact drawer is open. */
@@ -28,40 +28,40 @@ export type LabScaffoldState = {
   /** Id of the sidebar region, for `aria-controls`. */
   sideId: string
 }
-const WorkspaceScaffoldContext = React.createContext<LabScaffoldState | null>(null)
-/** Reads the nearest LabScaffold's state. Throws outside a scaffold. */
-export function useLabScaffold() {
+const WorkspaceScaffoldContext = React.createContext<ScaffoldState | null>(null)
+/** Reads the nearest Scaffold's state. Throws outside a scaffold. */
+export function useScaffold() {
   const context = React.useContext(WorkspaceScaffoldContext)
-  if (!context) throw new Error('useLabScaffold requires LabScaffold')
+  if (!context) throw new Error('useScaffold requires Scaffold')
   return context
 }
-type ScaffoldSlot = React.ReactNode | ((state: LabScaffoldState) => React.ReactNode)
-export type LabScaffoldProps = {
+type ScaffoldSlot = React.ReactNode | ((state: ScaffoldState) => React.ReactNode)
+export type ScaffoldProps = {
   /**
    * Replaces the default content scroll area. Receives the rendered `appBar` and `bottom` so an
-   * editor with its own LabScrollArea can float them itself; `children` is then not rendered.
+   * editor with its own ScrollArea can float them itself; `children` is then not rendered.
    */
   renderViewport?: (slots: { appBar: React.ReactNode; bottom: React.ReactNode }) => React.ReactNode
   /** Page content, rendered inside the content panel's scroll area. Can be a function of the state. */
   children: ScaffoldSlot
-  /** Sidebar content, usually a LabScaffoldSide. Rendered in the drawer when compact. */
+  /** Sidebar content, usually a ScaffoldSide. Rendered in the drawer when compact. */
   side?: ScaffoldSlot
-  /** Full-width row above the sidebar and content, usually a LabScaffoldTopBar. */
+  /** Full-width row above the sidebar and content, usually a ScaffoldTopBar. */
   topSide?: ScaffoldSlot
-  /** Floats over the top of the content panel, usually a LabScaffoldAppBar. */
+  /** Floats over the top of the content panel, usually a ScaffoldAppBar. */
   appBar?: ScaffoldSlot
-  /** Floats over the bottom of the content panel, usually a LabDock. */
+  /** Floats over the bottom of the content panel, usually a Dock. */
   bottom?: ScaffoldSlot
   /** Ref to the content scroll viewport (the element that scrolls). */
   contentViewportRef?: React.Ref<HTMLDivElement>
   /** Accessible name of the content scroll region. */
   contentLabel?: string
   /** Controlled sidebar mode. Pair with `onSideModeChange`. */
-  sideMode?: LabScaffoldSideMode
+  sideMode?: ScaffoldSideMode
   /** Initial sidebar mode when uncontrolled. */
-  defaultSideMode?: LabScaffoldSideMode
+  defaultSideMode?: ScaffoldSideMode
   /** Called whenever the sidebar mode changes (toggle button, `setSideMode`, `cycleSide`). */
-  onSideModeChange?: (mode: LabScaffoldSideMode) => void
+  onSideModeChange?: (mode: ScaffoldSideMode) => void
   /** Override for embedded previews; otherwise the host's width selects compact mode. */
   compact?: boolean
   /** Host width in px below which the scaffold becomes compact. */
@@ -79,9 +79,9 @@ export type LabScaffoldProps = {
 /**
  * Workspace layout: optional top row, a sidebar (expanded, rail or hidden) and one rounded content
  * panel with floating app bar and bottom slots. Fills its parent's height. Below the compact
- * breakpoint the sidebar moves into a modal drawer. LabProvider owns theme, services and portals.
+ * breakpoint the sidebar moves into a modal drawer. Provider owns theme, services and portals.
  */
-export function LabScaffold({
+export function Scaffold({
   children,
   renderViewport,
   side,
@@ -100,7 +100,7 @@ export function LabScaffold({
   className,
   style,
   dir,
-}: LabScaffoldProps) {
+}: ScaffoldProps) {
   const host = React.useRef<HTMLDivElement>(null)
   const main = React.useRef<HTMLDivElement>(null)
   const [localMode, setLocalMode] = React.useState(defaultSideMode)
@@ -110,7 +110,7 @@ export function LabScaffold({
   const compact = compactOverride ?? measuredCompact
   const sideMode = controlledMode ?? localMode
   const setSideMode = React.useCallback(
-    (mode: LabScaffoldSideMode) => {
+    (mode: ScaffoldSideMode) => {
       if (typeof document !== 'undefined') {
         const sidebar = host.current?.querySelector('.lab-workspace-side-boundary')
         const top = host.current?.querySelector('.lab-workspace-top-side')
@@ -142,7 +142,7 @@ export function LabScaffold({
     if (sideMode === 'rail') main.current?.focus({ preventScroll: true })
     setSideMode(sideMode === 'expanded' ? 'rail' : sideMode === 'rail' ? 'hidden' : 'expanded')
   }, [sideMode, setSideMode])
-  const state = React.useMemo<LabScaffoldState>(
+  const state = React.useMemo<ScaffoldState>(
     () => ({ compact, sideMode, setSideMode, cycleSide, drawerOpen, setDrawerOpen, sideId }),
     [compact, sideMode, setSideMode, cycleSide, drawerOpen, sideId]
   )
@@ -157,7 +157,7 @@ export function LabScaffold({
         dir={dir}
         data-side-mode={visibleSide ? sideMode : 'hidden'}
         data-compact={compact}
-        // A full-height LabSheet makes the workspace recede behind it.
+        // A full-height Sheet makes the workspace recede behind it.
         data-lab-sheet-backdrop=""
       >
         <PixelShader className="lab-workspace-scaffold-pixels" density={0.8} speed={0.18} />
@@ -176,7 +176,7 @@ export function LabScaffold({
             {renderViewport ? (
               renderViewport({ appBar: render(appBar), bottom: render(bottom) })
             ) : (
-              <LabScrollArea
+              <ScrollArea
                 ref={contentViewportRef}
                 className="lab-workspace-route"
                 label={contentLabel}
@@ -185,12 +185,12 @@ export function LabScaffold({
                 bottom={bottom ? render(bottom) : undefined}
               >
                 {render(children)}
-              </LabScrollArea>
+              </ScrollArea>
             )}
           </div>
         </div>
         {compact && (
-          <LabModal
+          <Modal
             open={drawerOpen}
             label={drawerLabel}
             returnFocusRef={drawerReturnFocusRef}
@@ -203,7 +203,7 @@ export function LabScaffold({
             <div dir={dir} className="lab-workspace-drawer-side">
               {render(side)}
             </div>
-          </LabModal>
+          </Modal>
         )}
       </div>
     </WorkspaceScaffoldContext.Provider>
@@ -220,10 +220,10 @@ type ThreeSlots = {
   className?: string
 }
 /** Sidebar body: a scroll area with `leading` floating at the top and `trailing` at the bottom. */
-export function LabScaffoldSide({ leading, children, trailing, className }: ThreeSlots) {
+export function ScaffoldSide({ leading, children, trailing, className }: ThreeSlots) {
   return (
     <aside className={cn('lab-workspace-side', className)} aria-label="Workspace sidebar">
-      <LabScrollArea
+      <ScrollArea
         className="lab-workspace-side-main"
         label="Sidebar navigation content"
         contentPadding={10}
@@ -234,12 +234,12 @@ export function LabScaffoldSide({ leading, children, trailing, className }: Thre
         }
       >
         {children}
-      </LabScrollArea>
+      </ScrollArea>
     </aside>
   )
 }
-/** Transparent bar for the content panel's `appBar` slot; put controls in LabToolbarGroups. */
-export function LabScaffoldAppBar({ leading, children, trailing, className }: ThreeSlots) {
+/** Transparent bar for the content panel's `appBar` slot; put controls in ToolbarGroups. */
+export function ScaffoldAppBar({ leading, children, trailing, className }: ThreeSlots) {
   return (
     <header className={cn('lab-workspace-app-bar', className)}>
       <div className="lab-workspace-app-leading">{leading}</div>
@@ -249,7 +249,7 @@ export function LabScaffoldAppBar({ leading, children, trailing, className }: Th
   )
 }
 /** Three-column bar for the `topSide` slot: start, centered brand, end. */
-export function LabScaffoldTopBar({ leading, children, trailing, className }: ThreeSlots) {
+export function ScaffoldTopBar({ leading, children, trailing, className }: ThreeSlots) {
   return (
     <header className={cn('lab-workspace-top-bar', className)}>
       <div>{leading}</div>
@@ -258,8 +258,8 @@ export function LabScaffoldTopBar({ leading, children, trailing, className }: Th
     </header>
   )
 }
-/** Icon button that drives the nearest LabScaffold's sidebar; opens the drawer when compact. */
-export function LabScaffoldToggleButton({
+/** Icon button that drives the nearest Scaffold's sidebar; opens the drawer when compact. */
+export function ScaffoldToggleButton({
   action = 'cycle',
   label,
 }: {
@@ -268,7 +268,7 @@ export function LabScaffoldToggleButton({
   /** Accessible name. Defaults to a description of what the click does. */
   label?: string
 }) {
-  const state = useLabScaffold()
+  const state = useScaffold()
   const drawer = action === 'drawer' || state.compact
   const accessibleLabel =
     label ||
@@ -280,7 +280,7 @@ export function LabScaffoldToggleButton({
           ? 'Minimize workspace sidebar'
           : 'Hide workspace sidebar')
   return (
-    <LabIconButton
+    <IconButton
       variant="text"
       aria-label={accessibleLabel}
       aria-haspopup={drawer ? 'dialog' : undefined}
@@ -301,6 +301,6 @@ export function LabScaffoldToggleButton({
       ) : (
         <PanelLeftOpen className="lab-dir-flip" />
       )}
-    </LabIconButton>
+    </IconButton>
   )
 }

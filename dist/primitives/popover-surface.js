@@ -8,7 +8,7 @@ import './popover-surface.css';
  * The shared opaque material for menus and popovers: surface, border, group corners and a faint
  * animated pixel grain. Paint only; the owner (usually Radix) keeps positioning and interaction.
  */
-export const LabPopoverSurface = React.forwardRef(({ asChild = false, seed = 'lab-popover', className, children, ...props }, ref) => {
+export const PopoverSurface = React.forwardRef(({ asChild = false, seed = 'lab-popover', className, children, ...props }, ref) => {
     const decoration = (_jsx("div", { className: "lab-popover-decoration", "aria-hidden": "true", children: _jsx(PixelTexture, { variant: "grain", density: "sparse", seed: seed, animated: true }) }));
     const shared = {
         ...props,
@@ -22,5 +22,5 @@ export const LabPopoverSurface = React.forwardRef(({ asChild = false, seed = 'la
     }
     return (_jsxs("div", { ...shared, children: [decoration, children] }));
 });
-LabPopoverSurface.displayName = 'LabPopoverSurface';
+PopoverSurface.displayName = 'PopoverSurface';
 //# sourceMappingURL=popover-surface.js.map

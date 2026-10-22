@@ -4,7 +4,7 @@
  * Being closed-form, a spring knows its exact position and velocity at any time, so an animation
  * can be interrupted or retargeted mid-flight without a jump or a change of speed.
  */
-export type LabSpring = {
+export type Spring = {
   /** Perceptual duration in seconds: roughly how long the motion takes to look finished. */
   duration: number
   /** Overshoot from -1 to 1. 0 settles without overshoot; 0.15 is a snappy hint; 0.3 bounces. */
@@ -12,7 +12,7 @@ export type LabSpring = {
 }
 
 /** The kit's named springs. Pick by role, not by look. */
-export const LAB_SPRINGS = {
+export const SPRINGS = {
   /** Default for layout and presentation: pages, sheets, panels. No overshoot. */
   smooth: { duration: 0.5, bounce: 0 },
   /** Small controls and state changes that should feel quick: toggles, chips, indicators. */
@@ -23,12 +23,12 @@ export const LAB_SPRINGS = {
   release: { duration: 0.42, bounce: 0.08 },
   /** Following a pointer with a touch of lag, for values that must not jump. */
   interactive: { duration: 0.2, bounce: 0 },
-} as const satisfies Record<string, LabSpring>
+} as const satisfies Record<string, Spring>
 
-export type LabSpringName = keyof typeof LAB_SPRINGS
+export type SpringName = keyof typeof SPRINGS
 
 /** Physical coefficients (mass 1) for a duration/bounce spring, using SwiftUI's mapping. */
-export function springCoefficients({ duration, bounce }: LabSpring) {
+export function springCoefficients({ duration, bounce }: Spring) {
   const d = Math.max(0.01, duration)
   const b = Math.max(-0.99, Math.min(0.99, bounce))
   const stiffness = ((2 * Math.PI) / d) ** 2
@@ -36,18 +36,18 @@ export function springCoefficients({ duration, bounce }: LabSpring) {
   return { stiffness, damping }
 }
 
-export type LabSpringState = { position: number; velocity: number }
+export type SpringState = { position: number; velocity: number }
 
 /**
  * Solves a spring from `from` (moving at `velocity` units per second) toward `to`. The returned
  * function gives the exact state `t` seconds later.
  */
 export function solveSpring(
-  spring: LabSpring,
+  spring: Spring,
   from: number,
   to: number,
   velocity = 0
-): (t: number) => LabSpringState {
+): (t: number) => SpringState {
   const { stiffness, damping } = springCoefficients(spring)
   const omega = Math.sqrt(stiffness)
   const zeta = damping / (2 * omega)
@@ -86,7 +86,7 @@ export function solveSpring(
 }
 
 /** True once a spring is close enough to `to` and slow enough to snap and stop. */
-export function springAtRest(state: LabSpringState, to: number, restDelta: number, restSpeed = restDelta * 10) {
+export function springAtRest(state: SpringState, to: number, restDelta: number, restSpeed = restDelta * 10) {
   return Math.abs(state.position - to) <= restDelta && Math.abs(state.velocity) <= restSpeed
 }
 
@@ -138,7 +138,7 @@ export function progressBetween(value: number, inMin: number, inMax: number) {
  * A spring as a CSS transition: `duration` in ms until it settles and a `linear()` easing that
  * traces it (overshoot included). For state changes that CSS animates, like a tab bar collapsing.
  */
-export function springTiming(spring: LabSpring, samples = 40) {
+export function springTiming(spring: Spring, samples = 40) {
   const at = solveSpring(spring, 0, 1)
   let end = 0.1
   while (end < 2 && !springAtRest(at(end), 1, 0.001)) end += 0.02

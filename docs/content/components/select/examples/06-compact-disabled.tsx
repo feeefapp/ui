@@ -1,25 +1,25 @@
 import { useState } from 'react'
-import { LabOption, LabSelect } from '@feeef.dev/ui/primitives/select'
+import { Option, Select } from '@feeef.dev/ui/primitives/select'
 
 export default function CompactAndDisabled() {
   const [size, setSize] = useState('M')
   return (
     <div className="demo-column">
-      <LabSelect controlSize="compact" labelStyle="inside" hint="Size" value={size} onValueChange={setSize}>
-        <LabOption>S</LabOption>
-        <LabOption>M</LabOption>
-        <LabOption>L</LabOption>
-        <LabOption>XL</LabOption>
-      </LabSelect>
-      <LabSelect
+      <Select controlSize="compact" labelStyle="inside" hint="Size" value={size} onValueChange={setSize}>
+        <Option>S</Option>
+        <Option>M</Option>
+        <Option>L</Option>
+        <Option>XL</Option>
+      </Select>
+      <Select
         hint="Store currency"
         value="DZD"
         onValueChange={() => {}}
         disabled
         supportingText="Set when the store was created."
       >
-        <LabOption value="DZD">Algerian dinar (DZD)</LabOption>
-      </LabSelect>
+        <Option value="DZD">Algerian dinar (DZD)</Option>
+      </Select>
     </div>
   )
 }

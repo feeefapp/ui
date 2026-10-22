@@ -1,14 +1,14 @@
 'use client'
 
 import * as React from 'react'
-import { LabGlassGroup } from '../scaffold'
+import { GlassGroup } from '../scaffold'
 import { animateLayoutFrom, snapshotLayout } from '../physics/layout-group'
-import { LabMotionValue, prefersReducedMotion } from '../physics/motion-value'
-import { LAB_SPRINGS, springTiming } from '../physics/spring'
+import { MotionValue, prefersReducedMotion } from '../physics/motion-value'
+import { SPRINGS, springTiming } from '../physics/spring'
 import { cn } from '../utils'
 import './tab-view.css'
 
-export type LabTab = {
+export type Tab = {
   /** Stable id; also the value of `value`. */
   id: string
   /** Short label in sentence case (one word is best). */
@@ -17,13 +17,13 @@ export type LabTab = {
   icon: React.ReactNode
   /** A count or dot on the icon, e.g. unconfirmed orders. */
   badge?: React.ReactNode
-  /** The tab's content, usually a LabNavigationStack. It stays mounted while other tabs show. */
+  /** The tab's content, usually a NavigationStack. It stays mounted while other tabs show. */
   content: React.ReactNode
 }
 
-export type LabTabViewProps = {
+export type TabViewProps = {
   /** 2–5 top-level destinations. */
-  tabs: readonly LabTab[]
+  tabs: readonly Tab[]
   /** Selected tab id (controlled). */
   value: string
   /** Called when the person picks another tab. */
@@ -45,14 +45,14 @@ export type LabTabViewProps = {
   className?: string
 }
 
-const SNAPPY = springTiming(LAB_SPRINGS.snappy)
+const SNAPPY = springTiming(SPRINGS.snappy)
 
 /**
  * App-level tabs, like iOS: each tab keeps its own content (and stack) alive, a floating glass
  * tab bar switches between them, and while the person scrolls down it shrinks to the selected
  * tab so content gets the screen. Picking the current tab again returns it to the top.
  */
-export function LabTabView({
+export function TabView({
   tabs,
   value,
   onChange,
@@ -61,7 +61,7 @@ export function LabTabView({
   accessory,
   label = 'Tabs',
   className,
-}: LabTabViewProps) {
+}: TabViewProps) {
   const id = React.useId()
   const root = React.useRef<HTMLDivElement>(null)
   const bar = React.useRef<HTMLDivElement>(null)
@@ -96,7 +96,7 @@ export function LabTabView({
     setMinimized(next)
   }
   React.useLayoutEffect(() => {
-    if (pending.current) animateLayoutFrom(pending.current, { spring: LAB_SPRINGS.snappy })
+    if (pending.current) animateLayoutFrom(pending.current, { spring: SPRINGS.snappy })
     pending.current = null
   }, [minimized])
 
@@ -126,7 +126,7 @@ export function LabTabView({
   setMinimizedMorphRef.current = setMinimizedMorph
 
   // A switched-to panel fades in quickly; it never slides (tabs are siblings, not depth).
-  const fade = React.useRef(new LabMotionValue(1, 0.004)).current
+  const fade = React.useRef(new MotionValue(1, 0.004)).current
   const previous = React.useRef(value)
   React.useLayoutEffect(() => {
     if (previous.current === value) return
@@ -142,7 +142,7 @@ export function LabTabView({
     return unsubscribe
   }, [value])
 
-  const pick = (tab: LabTab) => {
+  const pick = (tab: Tab) => {
     if (tab.id === value) {
       setMinimizedMorph(false)
       if (onReselect) onReselect(tab.id)
@@ -197,11 +197,11 @@ export function LabTabView({
       )}
       <div ref={chrome} className="lab-tab-chrome" data-minimized={minimized || undefined}>
         {accessory && (
-          <LabGlassGroup className="lab-tab-accessory" data-lab-tab-piece="">
+          <GlassGroup className="lab-tab-accessory" data-lab-tab-piece="">
             {accessory}
-          </LabGlassGroup>
+          </GlassGroup>
         )}
-        <LabGlassGroup
+        <GlassGroup
           ref={bar as React.Ref<HTMLElement>}
           className="lab-tab-bar"
           role="tablist"
@@ -245,7 +245,7 @@ export function LabTabView({
               </button>
             )
           })}
-        </LabGlassGroup>
+        </GlassGroup>
       </div>
     </div>
   )

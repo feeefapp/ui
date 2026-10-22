@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import * as Tooltip from '@radix-ui/react-tooltip'
-import { LabProvider } from '@feeef.dev/ui/provider'
-import { LabScaffold } from '@feeef.dev/ui/workspace/scaffold'
+import { Provider } from '@feeef.dev/ui/provider'
+import { Scaffold } from '@feeef.dev/ui/workspace/scaffold'
 import { DocsSettingsProvider, useDocsSettings } from './settings'
 import { navigate, usePath } from './router'
 import { resolveRoute, type Route } from './registry'
@@ -25,11 +25,11 @@ export function App() {
 function Themed() {
   const { settings, dir } = useDocsSettings()
   return (
-    <LabProvider theme={settings.theme} i18n={{ locale: settings.locale, dir }}>
+    <Provider theme={settings.theme} i18n={{ locale: settings.locale, dir }}>
       <Tooltip.Provider delayDuration={300}>
         <Shell />
       </Tooltip.Provider>
-    </LabProvider>
+    </Provider>
   )
 }
 
@@ -84,7 +84,7 @@ function Shell() {
     // The kit puts the demo language's direction on <html>; the docs text itself stays English LTR.
     <div className="docs-app" dir="ltr" lang="en" onClickCapture={routeLinks}>
       <ViewportContext.Provider value={viewport}>
-        <LabScaffold
+        <Scaffold
           className="docs-scaffold"
           dir="ltr"
           contentLabel={title}
@@ -100,7 +100,7 @@ function Shell() {
             {route.kind === 'page' && <DocPageView route={route} />}
             {route.kind === 'missing' && <NotFound />}
           </div>
-        </LabScaffold>
+        </Scaffold>
       </ViewportContext.Provider>
       {searchOpen && <Search onClose={() => setSearchOpen(false)} />}
     </div>

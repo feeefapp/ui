@@ -89,7 +89,7 @@ function Overview() {
         </p>
         <Callout title="Filled buttons already have texture">
           <p>
-            <C>LabButton variant="filled"</C> paints its own corner texture. Don't add a second one.
+            <C>Button variant="filled"</C> paints its own corner texture. Don't add a second one.
           </p>
         </Callout>
       </Section>

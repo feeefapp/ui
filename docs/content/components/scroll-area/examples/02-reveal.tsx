@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react'
 import { ArrowDown, ArrowUp } from 'lucide-react'
-import { LabScrollArea, revealScrollChild } from '@feeef.dev/ui/scroll'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { ScrollArea, revealScrollChild } from '@feeef.dev/ui/scroll'
+import { Dock } from '@feeef.dev/ui/dock'
+import { Button } from '@feeef.dev/ui/primitives/button'
 import '../scroll-demo.css'
 
 const ORDERS = Array.from({ length: 16 }, (_, i) => ({
@@ -24,24 +24,24 @@ export default function Reveal() {
 
   return (
     <div className="scroll-demo-frame">
-      <LabScrollArea
+      <ScrollArea
         ref={viewport}
         label="Orders to confirm"
         bottom={
-          <LabDock label="Order navigation" content={<strong>Order {ORDERS[selected].id}</strong>}>
-            <LabButton variant="tonal" disabled={selected === 0} onClick={() => select(selected - 1)}>
+          <Dock label="Order navigation" content={<strong>Order {ORDERS[selected].id}</strong>}>
+            <Button variant="tonal" disabled={selected === 0} onClick={() => select(selected - 1)}>
               <ArrowUp />
               Previous
-            </LabButton>
-            <LabButton
+            </Button>
+            <Button
               variant="filled"
               disabled={selected === ORDERS.length - 1}
               onClick={() => select(selected + 1)}
             >
               <ArrowDown />
               Next
-            </LabButton>
-          </LabDock>
+            </Button>
+          </Dock>
         }
       >
         <div className="scroll-demo-list" role="listbox" aria-label="Orders">
@@ -63,7 +63,7 @@ export default function Reveal() {
             </div>
           ))}
         </div>
-      </LabScrollArea>
+      </ScrollArea>
     </div>
   )
 }

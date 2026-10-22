@@ -112,7 +112,7 @@ function Overview() {
 
       <Section title="How color works">
         <p>
-          Color tokens are defined on <C>{'html[data-lab-theme]'}</C>. <C>LabThemeProvider</C> sets that
+          Color tokens are defined on <C>{'html[data-lab-theme]'}</C>. <C>ThemeProvider</C> sets that
           attribute to <C>light</C> or <C>dark</C>, and <C>data-lab-palette</C> picks the palette. Nothing
           is themed until <C>data-lab-theme</C> exists, which is why SSR hosts set it before first paint
           (see <Link to="/get-started/theming">Theming</Link>).

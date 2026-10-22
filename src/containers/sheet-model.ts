@@ -1,13 +1,13 @@
-/** Pure geometry for LabSheet: detent heights, where a release lands, and the dimming. */
+/** Pure geometry for Sheet: detent heights, where a release lands, and the dimming. */
 import { nearestTarget, projectMomentum, rubberBand } from '../physics/spring'
 
 /**
  * A height a sheet can rest at: `medium` (half the screen), `large` (almost full), `fit` (its
  * content, up to large), a pixel height, or a percentage of the screen like `'35%'`.
  */
-export type LabSheetDetent = 'medium' | 'large' | 'fit' | number | `${number}%`
+export type SheetDetent = 'medium' | 'large' | 'fit' | number | `${number}%`
 
-export type LabSheetMetrics = {
+export type SheetMetrics = {
   /** Height of the area the sheet covers (the viewport, or the container). */
   hostHeight: number
   /** Gap kept above a large sheet (safe area + breathing room). */
@@ -17,7 +17,7 @@ export type LabSheetMetrics = {
 }
 
 /** Pixel height of one detent, clamped to [0, large]. */
-export function detentHeight(detent: LabSheetDetent, m: LabSheetMetrics) {
+export function detentHeight(detent: SheetDetent, m: SheetMetrics) {
   const large = Math.max(0, m.hostHeight - m.topInset)
   const value =
     detent === 'large'
@@ -33,7 +33,7 @@ export function detentHeight(detent: LabSheetDetent, m: LabSheetMetrics) {
 }
 
 /** Every detent's height, in the order given. */
-export function detentHeights(detents: readonly LabSheetDetent[], m: LabSheetMetrics) {
+export function detentHeights(detents: readonly SheetDetent[], m: SheetMetrics) {
   return detents.map((d) => detentHeight(d, m))
 }
 

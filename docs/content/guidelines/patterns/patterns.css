@@ -290,7 +290,7 @@
   margin-top: 16px;
 }
 
-/* LabDock lays out one child; several actions sit in a row of their own. */
+/* Dock lays out one child; several actions sit in a row of their own. */
 .pt-dock-row {
   display: flex;
   flex-wrap: nowrap;

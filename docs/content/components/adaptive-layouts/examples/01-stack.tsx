@@ -1,15 +1,15 @@
 import { useState } from 'react'
-import { LabAdaptiveStack } from '@feeef.dev/ui/containers'
-import { LabSlider } from '@feeef.dev/ui/primitives/slider'
+import { AdaptiveStack } from '@feeef.dev/ui/containers'
+import { Slider } from '@feeef.dev/ui/primitives/slider'
 import '../adaptive-demo.css'
 
 export default function StatsStack() {
   const [width, setWidth] = useState(640)
   return (
     <div className="ad-demo">
-      <LabSlider label="Width" min={260} max={720} value={width} onValueChange={setWidth} />
+      <Slider label="Width" min={260} max={720} value={width} onValueChange={setWidth} />
       <div className="ad-frame" style={{ width }}>
-        <LabAdaptiveStack align="stretch">
+        <AdaptiveStack align="stretch">
           <div className="ad-stat">
             <span>To confirm</span>
             <strong>24</strong>
@@ -22,7 +22,7 @@ export default function StatsStack() {
             <span>Cash to collect</span>
             <strong>184 500 DA</strong>
           </div>
-        </LabAdaptiveStack>
+        </AdaptiveStack>
       </div>
     </div>
   )

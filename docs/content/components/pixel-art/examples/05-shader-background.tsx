@@ -1,5 +1,5 @@
 import { PixelShader } from '@feeef.dev/ui/pixel-art'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { Button } from '@feeef.dev/ui/primitives/button'
 
 export default function ShaderBackground() {
   return (
@@ -26,7 +26,7 @@ export default function ShaderBackground() {
       />
       <h3 style={{ margin: 0 }}>Turn a script into a voiceover</h3>
       <p style={{ margin: 0, maxWidth: 360 }}>Write it once, pick a voice, and download the audio.</p>
-      <LabButton variant="filled">Start a project</LabButton>
+      <Button variant="filled">Start a project</Button>
     </section>
   )
 }

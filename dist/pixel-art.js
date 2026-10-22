@@ -1,7 +1,7 @@
 'use client';
 import { jsx as _jsx } from "react/jsx-runtime";
 import { useEffect, useMemo, useRef } from 'react';
-import { useLabI18n } from './i18n.js';
+import { useI18n } from './i18n.js';
 import { installFoPixelFallback } from './brand/pixel-fallback.js';
 import './pixel-art.css';
 import { voiceFingerprint } from './avatar-fingerprint.js';
@@ -105,7 +105,7 @@ export function PixelTexture({ variant = 'corner', seed = 'feeef-surface', densi
 }
 /** A nine-pixel loading wave; use decorative when adjacent text already announces status. */
 export function PixelLoader({ size = 20, label, decorative = false, className = '', }) {
-    const { t } = useLabI18n();
+    const { t } = useI18n();
     const resolvedLabel = label ?? t('lab.common.loading');
     return (_jsx("span", { className: `lab-pixel-loader ${className}`, role: decorative ? undefined : 'status', "aria-label": decorative ? undefined : resolvedLabel, "aria-hidden": decorative || undefined, style: { '--pixel-loader-size': `${size}px` }, children: Array.from({ length: 9 }, (_, index) => (_jsx("span", { className: "lab-pixel-loader-cell", style: {
                 '--pixel-delay': `${(index % 3) * 110 + Math.floor(index / 3) * 80}ms`,

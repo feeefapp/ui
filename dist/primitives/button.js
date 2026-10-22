@@ -7,7 +7,7 @@ import { legacyButtonHasTexture } from './button-compat.js';
 import '../system.css';
 import './control-variants.css';
 /** A native `<button>` (or, with `asChild`, your link) painted by one of the emphasis variants. */
-export const LabButton = React.forwardRef(({ className, children, loading, variant, controlSize = 'regular', iconSize = 'regular', appearance = 'default', type = 'button', size, asChild = false, ...props }, ref) => {
+export const Button = React.forwardRef(({ className, children, loading, variant, controlSize = 'regular', iconSize = 'regular', appearance = 'default', type = 'button', size, asChild = false, ...props }, ref) => {
     const resolvedVariant = variant === 'primary' ? 'filled' : variant;
     const filled = variant === 'primary' ||
         variant === 'filled' ||
@@ -47,8 +47,8 @@ export const LabButton = React.forwardRef(({ className, children, loading, varia
             ? resolvedVariant
             : undefined, "data-control-size": variant ? controlSize : undefined, "data-icon-size": controlSize === 'icon' ? iconSize : undefined, "data-control-appearance": variant ? appearance : undefined, "data-loading": loading || undefined, disabled: nativeButton ? disabled : undefined, onClickCapture: disabled ? stopActivation : props.onClickCapture, onAuxClickCapture: disabled ? stopActivation : props.onAuxClickCapture, onKeyDownCapture: disabled ? stopActivationKey : props.onKeyDownCapture, "aria-disabled": disabled || props['aria-disabled'], "data-disabled": disabled || undefined, "aria-busy": loading || undefined, "data-lab-corners": true, children: asChild ? (content) : (_jsxs(_Fragment, { children: [filled && _jsx(PixelTexture, { variant: "corner", seed: className || 'control' }), loading && _jsx(PixelLoader, { size: 16, decorative: true }), loading && controlSize === 'icon' ? null : children] })) }));
 });
-LabButton.displayName = 'LabButton';
+Button.displayName = 'Button';
 /** Icon-only actions reuse the button emphasis, loading and surface engines. */
-export const LabIconButton = React.forwardRef(({ controlSize = 'regular', variant = 'text', ...props }, ref) => (_jsx(LabButton, { ...props, ref: ref, variant: variant, controlSize: "icon", iconSize: controlSize })));
-LabIconButton.displayName = 'LabIconButton';
+export const IconButton = React.forwardRef(({ controlSize = 'regular', variant = 'text', ...props }, ref) => (_jsx(Button, { ...props, ref: ref, variant: variant, controlSize: "icon", iconSize: controlSize })));
+IconButton.displayName = 'IconButton';
 //# sourceMappingURL=button.js.map

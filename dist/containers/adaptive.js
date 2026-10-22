@@ -2,12 +2,12 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
 import { animateLayoutFrom, snapshotLayout } from '../physics/layout-group.js';
-import { LabMotionValue, prefersReducedMotion } from '../physics/motion-value.js';
+import { MotionValue, prefersReducedMotion } from '../physics/motion-value.js';
 import { cn } from '../utils.js';
 import { pickFitting } from './adaptive-model.js';
 import './adaptive.css';
 /** Width of `ref`'s element, kept current with a ResizeObserver; null before the first layout. */
-export function useLabElementWidth(ref) {
+export function useElementWidth(ref) {
     const [width, setWidth] = React.useState(null);
     React.useLayoutEffect(() => {
         const el = ref.current;
@@ -25,8 +25,8 @@ export function useLabElementWidth(ref) {
  * The size class of an element, like SwiftUI's horizontal size class but measured on the element,
  * so a component in a narrow pane is compact even on a wide screen.
  */
-export function useLabSizeClass(ref, breakpoint = 600) {
-    const width = useLabElementWidth(ref);
+export function useSizeClass(ref, breakpoint = 600) {
+    const width = useElementWidth(ref);
     return width !== null && width < breakpoint ? 'compact' : 'regular';
 }
 /**
@@ -34,7 +34,7 @@ export function useLabSizeClass(ref, breakpoint = 600) {
  * for a VStack: the same children, re-laid out, each flying to its new place on a spring. Use it
  * for a summary card's stats, a form's actions, or a toolbar's groups.
  */
-export function LabAdaptiveStack({ children, breakpoint = 'fit', gap = 12, align = 'center', justify = 'start', onAxisChange, className, style, }) {
+export function AdaptiveStack({ children, breakpoint = 'fit', gap = 12, align = 'center', justify = 'start', onAxisChange, className, style, }) {
     const root = React.useRef(null);
     const [vertical, setVertical] = React.useState(false);
     const pending = React.useRef(null);
@@ -85,7 +85,7 @@ export function LabAdaptiveStack({ children, breakpoint = 'fit', gap = 12, align
  * customer · Send SMS · Copy number”, else icons only, else one menu button. Every option is
  * measured off-screen at its natural width; the shown one swaps with a short fade.
  */
-export function LabViewThatFits({ children, className }) {
+export function ViewThatFits({ children, className }) {
     const options = React.Children.toArray(children).filter(React.isValidElement);
     const root = React.useRef(null);
     const measure = React.useRef(null);
@@ -105,7 +105,7 @@ export function LabViewThatFits({ children, className }) {
         observer.observe(probe);
         return () => observer.disconnect();
     }, [options.length]);
-    const fade = React.useRef(new LabMotionValue(1, 0.01)).current;
+    const fade = React.useRef(new MotionValue(1, 0.01)).current;
     const first = React.useRef(true);
     React.useLayoutEffect(() => {
         if (first.current) {

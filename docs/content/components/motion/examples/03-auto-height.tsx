@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { LabAutoHeight } from '@feeef.dev/ui/motion'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { AutoHeight } from '@feeef.dev/ui/motion'
+import { Button } from '@feeef.dev/ui/primitives/button'
 
 const LINES = [
   ['Subtotal', '4,800 DZD'],
@@ -8,11 +8,11 @@ const LINES = [
   ['Discount', '−300 DZD'],
 ]
 
-export default function AutoHeight() {
+export default function AutoHeightExample() {
   const [open, setOpen] = useState(false)
   return (
     <div className="demo-column">
-      <LabAutoHeight
+      <AutoHeight
         style={{ border: '1px solid var(--lab-line)', borderRadius: 'var(--lab-radius-panel)' }}
       >
         <div style={{ display: 'grid', gap: 8, padding: 16 }}>
@@ -28,10 +28,10 @@ export default function AutoHeight() {
               </div>
             ))}
         </div>
-      </LabAutoHeight>
-      <LabButton variant="text" aria-expanded={open} onClick={() => setOpen(!open)}>
+      </AutoHeight>
+      <Button variant="text" aria-expanded={open} onClick={() => setOpen(!open)}>
         {open ? 'Hide breakdown' : 'Show breakdown'}
-      </LabButton>
+      </Button>
     </div>
   )
 }
@@ -39,5 +39,5 @@ export default function AutoHeight() {
 export const meta = {
   title: 'Height that follows content',
   description:
-    'LabAutoHeight eases its height when the content inside grows or shrinks, so the button below glides instead of jumping.',
+    'AutoHeight eases its height when the content inside grows or shrinks, so the button below glides instead of jumping.',
 }

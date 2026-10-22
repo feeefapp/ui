@@ -1,5 +1,5 @@
 import { Package, ShoppingBag, Truck } from 'lucide-react'
-import { LabNavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
+import { NavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground, jsx } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
@@ -25,20 +25,20 @@ function Overview() {
             data-compact={v.compact}
             onClick={(event) => event.preventDefault()}
           >
-            <LabNavigationItem compact={v.compact} label="Orders" icon={<ShoppingBag />} />
-            <LabNavigationItem
+            <NavigationItem compact={v.compact} label="Orders" icon={<ShoppingBag />} />
+            <NavigationItem
               compact={v.compact}
               label={v.label}
               icon={<Truck />}
               active={v.active}
               href={v.link ? '/deliveries' : undefined}
             />
-            <LabNavigationItem compact={v.compact} label="Products" icon={<Package />} />
+            <NavigationItem compact={v.compact} label="Products" icon={<Package />} />
           </nav>
         )}
         code={(v) =>
           jsx(
-            'LabNavigationItem',
+            'NavigationItem',
             {
               label: v.label,
               icon: '__ICON__',
@@ -56,8 +56,8 @@ function Overview() {
 
       <Section title="When to use it">
         <p>
-          Use <C>LabNavigationItem</C> for the rows of a sidebar or drawer: top-level destinations in a
-          workspace, usually inside <C>LabScaffoldSide</C>. Each item is a quiet ghost button with a 20px
+          Use <C>NavigationItem</C> for the rows of a sidebar or drawer: top-level destinations in a
+          workspace, usually inside <C>ScaffoldSide</C>. Each item is a quiet ghost button with a 20px
           icon and a label, one row tall (44px, 32px in compact density), filling the sidebar's width. The
           current destination gets the selected fill.
         </p>
@@ -78,14 +78,14 @@ function Overview() {
           rail, full when it is expanded or shown in the compact drawer.
         </p>
         <Code
-          code={`<LabScaffold
+          code={`<Scaffold
   side={(state) => {
     const rail = state.sideMode === 'rail' && !state.drawerOpen
     return (
-      <LabScaffoldSide>
+      <ScaffoldSide>
         <nav aria-label="Store">
           {pages.map((page) => (
-            <LabNavigationItem
+            <NavigationItem
               key={page.href}
               compact={rail}
               label={page.label}
@@ -96,12 +96,12 @@ function Overview() {
             />
           ))}
         </nav>
-      </LabScaffoldSide>
+      </ScaffoldSide>
     )
   }}
 >
   …
-</LabScaffold>`}
+</Scaffold>`}
         />
         <Callout title="Tooltip provider">
           <p>
@@ -153,9 +153,9 @@ export default definePage({
   group: 'Navigation and layout',
   order: 6,
   summary: 'A sidebar destination with an icon and a label that collapses to an icon with a tooltip in a rail.',
-  importLine: "import { LabNavigationItem } from '@feeef.dev/ui/navigation/navigation-item'",
+  importLine: "import { NavigationItem } from '@feeef.dev/ui/navigation/navigation-item'",
   source: 'src/navigation/navigation-item.tsx',
-  api: ['LabNavigationItem'],
+  api: ['NavigationItem'],
   keywords: ['sidebar', 'nav', 'menu item', 'rail', 'link', 'aria-current'],
   Overview,
   examples: examplesFrom(
@@ -164,8 +164,8 @@ export default definePage({
   ),
   Preview: () => (
     <span className="nav-demo-side" style={{ width: 180 }}>
-      <LabNavigationItem compact={false} label="Orders" icon={<ShoppingBag />} active />
-      <LabNavigationItem compact={false} label="Products" icon={<Package />} />
+      <NavigationItem compact={false} label="Orders" icon={<ShoppingBag />} active />
+      <NavigationItem compact={false} label="Products" icon={<Package />} />
     </span>
   ),
 })

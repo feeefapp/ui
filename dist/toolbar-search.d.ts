@@ -1,8 +1,8 @@
 import { type ReactNode, type Ref, type KeyboardEventHandler } from 'react';
-import { type LabInputElement } from './primitives/raw-input.js';
+import { type InputElement } from './primitives/raw-input.js';
 import './toolbar-search.css';
-export type LabToolbarSearchInputProps = {
-    ref: Ref<LabInputElement>;
+export type ToolbarSearchInputProps = {
+    ref: Ref<InputElement>;
     id: string;
     type: 'search';
     'aria-label': string;
@@ -12,10 +12,10 @@ export type LabToolbarSearchInputProps = {
     tabIndex: number;
     className: string;
     onValueChange: (value: string) => void;
-    onKeyDown: KeyboardEventHandler<LabInputElement>;
+    onKeyDown: KeyboardEventHandler<InputElement>;
 };
-/** Props for LabToolbarSearch. */
-export type LabToolbarSearchProps = {
+/** Props for ToolbarSearch. */
+export type ToolbarSearchProps = {
     /** Accessible name of the search field and its trigger. Also the default placeholder. */
     label: string;
     /** The query (controlled). */
@@ -33,11 +33,11 @@ export type LabToolbarSearchProps = {
     /** Starts open. A non-empty `value` also starts it open. */
     defaultExpanded?: boolean;
     /** Ref to the input element. */
-    inputRef?: Ref<LabInputElement>;
+    inputRef?: Ref<InputElement>;
     /** Replaces the default input, e.g. with a combobox; spread the given props onto it. */
-    renderInput?: (props: LabToolbarSearchInputProps) => ReactNode;
+    renderInput?: (props: ToolbarSearchInputProps) => ReactNode;
     /** Key handler for the input. Escape is handled first: it collapses and clears. */
-    onInputKeyDown?: KeyboardEventHandler<LabInputElement>;
+    onInputKeyDown?: KeyboardEventHandler<InputElement>;
     /** Called when the field opens or collapses. */
     onExpandedChange?: (expanded: boolean) => void;
 };
@@ -45,5 +45,5 @@ export type LabToolbarSearchProps = {
  * Search button that springs open into a field inside the same glass pill, taking the free width
  * of its row. Persistent material, stable control geometry and a velocity-preserving spring.
  */
-export declare function LabToolbarSearch({ label, value, onValueChange, placeholder, children, trailing, disabled, className, defaultExpanded, inputRef, renderInput, onInputKeyDown, onExpandedChange }: LabToolbarSearchProps): import("react").JSX.Element;
+export declare function ToolbarSearch({ label, value, onValueChange, placeholder, children, trailing, disabled, className, defaultExpanded, inputRef, renderInput, onInputKeyDown, onExpandedChange }: ToolbarSearchProps): import("react").JSX.Element;
 //# sourceMappingURL=toolbar-search.d.ts.map

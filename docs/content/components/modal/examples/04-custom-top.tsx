@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabModal } from '@feeef.dev/ui/primitives/modal'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
-import { LabToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { Modal } from '@feeef.dev/ui/primitives/modal'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
 
 const COURIERS = {
   home: ['Yalidine · 600 DZD · 2 days', 'ZR Express · 650 DZD · 1 day', 'Maystro · 550 DZD · 3 days'],
@@ -14,18 +14,18 @@ export default function CustomTop() {
   const [mode, setMode] = useState<'home' | 'desk'>('home')
   return (
     <>
-      <LabButton variant="outlined" onClick={() => setOpen(true)}>
+      <Button variant="outlined" onClick={() => setOpen(true)}>
         Choose courier
-      </LabButton>
-      <LabModal
+      </Button>
+      <Modal
         open={open}
         close={() => setOpen(false)}
         label="Choose a courier"
         scrollable
         fitContent
         top={
-          <LabToolbarGroup label="Delivery type">
-            <LabSegmentedControl
+          <ToolbarGroup label="Delivery type">
+            <SegmentedControl
               label="Delivery type"
               appearance="plain"
               value={mode}
@@ -35,17 +35,17 @@ export default function CustomTop() {
                 { value: 'desk', label: 'Stop desk' },
               ]}
             />
-          </LabToolbarGroup>
+          </ToolbarGroup>
         }
       >
         <div style={{ display: 'grid', gap: 8 }}>
           {COURIERS[mode].map((courier) => (
-            <LabButton key={courier} variant="elevated" onClick={() => setOpen(false)}>
+            <Button key={courier} variant="elevated" onClick={() => setOpen(false)}>
               {courier}
-            </LabButton>
+            </Button>
           ))}
         </div>
-      </LabModal>
+      </Modal>
     </>
   )
 }

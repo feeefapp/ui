@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import {
-  LabDateField,
-  LabDateTimeField,
-  LabTimeField,
+  DateField,
+  DateTimeField,
+  TimeField,
 } from '@feeef.dev/ui/primitives/temporal-field'
 
 export default function SingleValues() {
@@ -11,14 +11,14 @@ export default function SingleValues() {
   const [callback, setCallback] = useState<string | null>(null)
   return (
     <div className="demo-column">
-      <LabDateField
+      <DateField
         hint="Delivery date"
         value={delivery}
         onValueChange={setDelivery}
         clearable
       />
-      <LabTimeField hint="Courier pickup" value={pickup} onValueChange={setPickup} />
-      <LabDateTimeField
+      <TimeField hint="Courier pickup" value={pickup} onValueChange={setPickup} />
+      <DateTimeField
         hint="Call the customer back"
         value={callback}
         onValueChange={setCallback}

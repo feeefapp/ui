@@ -1,22 +1,22 @@
 import { Minus, Plus, RotateCcw } from 'lucide-react'
-import { LabGlassGroup } from '@feeef.dev/ui/scaffold'
-import { LabIconButton } from '@feeef.dev/ui/primitives/button'
+import { GlassGroup } from '@feeef.dev/ui/scaffold'
+import { IconButton } from '@feeef.dev/ui/primitives/button'
 import '../glass-demo.css'
 
 export default function Basic() {
   return (
     <div className="glass-demo-backdrop">
-      <LabGlassGroup role="group" aria-label="Zoom" className="glass-demo-group-content">
-        <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Zoom out">
+      <GlassGroup role="group" aria-label="Zoom" className="glass-demo-group-content">
+        <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Zoom out">
           <Minus />
-        </LabIconButton>
-        <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Reset zoom">
+        </IconButton>
+        <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Reset zoom">
           <RotateCcw />
-        </LabIconButton>
-        <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Zoom in">
+        </IconButton>
+        <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Zoom in">
           <Plus />
-        </LabIconButton>
-      </LabGlassGroup>
+        </IconButton>
+      </GlassGroup>
     </div>
   )
 }

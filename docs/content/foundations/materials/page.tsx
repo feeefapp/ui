@@ -1,6 +1,6 @@
 import { Bold, Italic, Underline } from 'lucide-react'
-import { LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabGlassGroup } from '@feeef.dev/ui/scaffold'
+import { IconButton } from '@feeef.dev/ui/primitives/button'
+import { GlassGroup } from '@feeef.dev/ui/scaffold'
 import { PixelTexture } from '@feeef.dev/ui/pixel-art'
 import { definePage } from '../../../src/model'
 import { C, Code } from '../../../src/blocks/code'
@@ -61,30 +61,30 @@ function Overview() {
 
       <Section title="Glass groups">
         <p>
-          <Link to="/components/glass-group">LabGlassGroup</Link> paints the glass material once around a
+          <Link to="/components/glass-group">GlassGroup</Link> paints the glass material once around a
           related group of controls: a translucent fill, an 18px backdrop blur, a static diagonal rim
           highlight and a soft shadow. Controls inside it stay borderless and share the material.
         </p>
         <div className="fd-glass-stage">
-          <LabGlassGroup role="toolbar" aria-label="Text style">
-            <LabIconButton variant="ghost" aria-label="Bold">
+          <GlassGroup role="toolbar" aria-label="Text style">
+            <IconButton variant="ghost" aria-label="Bold">
               <Bold />
-            </LabIconButton>
-            <LabIconButton variant="ghost" aria-label="Italic">
+            </IconButton>
+            <IconButton variant="ghost" aria-label="Italic">
               <Italic />
-            </LabIconButton>
-            <LabIconButton variant="ghost" aria-label="Underline">
+            </IconButton>
+            <IconButton variant="ghost" aria-label="Underline">
               <Underline />
-            </LabIconButton>
-          </LabGlassGroup>
+            </IconButton>
+          </GlassGroup>
         </div>
         <Code
-          code={`import { LabGlassGroup } from '@feeef.dev/ui/scaffold'
+          code={`import { GlassGroup } from '@feeef.dev/ui/scaffold'
 
-<LabGlassGroup role="toolbar" aria-label="Text style">
-  <LabIconButton variant="ghost" aria-label="Bold"><Bold /></LabIconButton>
-  <LabIconButton variant="ghost" aria-label="Italic"><Italic /></LabIconButton>
-</LabGlassGroup>`}
+<GlassGroup role="toolbar" aria-label="Text style">
+  <IconButton variant="ghost" aria-label="Bold"><Bold /></IconButton>
+  <IconButton variant="ghost" aria-label="Italic"><Italic /></IconButton>
+</GlassGroup>`}
         />
         <Table
           head={['Token', 'Light', 'Dark', 'Role']}
@@ -109,7 +109,7 @@ function Overview() {
         />
         <Callout title="Never hand-build glass">
           <p>
-            Use <C>LabGlassGroup</C> instead of writing your own <C>backdrop-filter</C>, rim or
+            Use <C>GlassGroup</C> instead of writing your own <C>backdrop-filter</C>, rim or
             transparent panel; you would lose these fallbacks and the shared rim paint.
           </p>
         </Callout>

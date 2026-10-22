@@ -1,15 +1,15 @@
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { Button } from '@feeef.dev/ui/primitives/button'
 
 export default function Sizes() {
   return (
     <div className="demo-row">
-      <LabButton variant="filled">Regular</LabButton>
-      <LabButton variant="filled" controlSize="compact">
+      <Button variant="filled">Regular</Button>
+      <Button variant="filled" controlSize="compact">
         Compact
-      </LabButton>
-      <LabButton variant="text" controlSize="inline">
+      </Button>
+      <Button variant="text" controlSize="inline">
         Inline
-      </LabButton>
+      </Button>
     </div>
   )
 }

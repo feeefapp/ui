@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabCheckbox } from '@feeef.dev/ui/primitives/choice'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { Checkbox } from '@feeef.dev/ui/primitives/choice'
 
 export default function Required() {
   const [accepted, setAccepted] = useState(false)
@@ -16,7 +16,7 @@ export default function Required() {
         setStatus(accepted ? 'Store published.' : '')
       }}
     >
-      <LabCheckbox
+      <Checkbox
         name="terms"
         required
         label="I accept the seller terms"
@@ -25,9 +25,9 @@ export default function Required() {
         onCheckedChange={setAccepted}
         error={submitted && !accepted ? 'Accept the seller terms to publish your store.' : null}
       />
-      <LabButton variant="filled" type="submit">
+      <Button variant="filled" type="submit">
         Publish store
-      </LabButton>
+      </Button>
       <p role="status">{status}</p>
     </form>
   )

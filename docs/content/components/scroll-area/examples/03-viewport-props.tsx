@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { LabScrollArea } from '@feeef.dev/ui/scroll'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { ScrollArea } from '@feeef.dev/ui/scroll'
+import { Dock } from '@feeef.dev/ui/dock'
+import { Button } from '@feeef.dev/ui/primitives/button'
 import '../scroll-demo.css'
 
 const TERMS = Array.from(
@@ -14,7 +14,7 @@ export default function ViewportProps() {
   const [progress, setProgress] = useState(0)
   return (
     <div className="scroll-demo-frame">
-      <LabScrollArea
+      <ScrollArea
         label="Seller terms"
         contentPadding={20}
         viewportProps={{
@@ -25,17 +25,17 @@ export default function ViewportProps() {
           },
         }}
         bottom={
-          <LabDock label="Terms actions" content={<span>{progress}% read</span>}>
-            <LabButton variant="filled" disabled={progress < 100}>
+          <Dock label="Terms actions" content={<span>{progress}% read</span>}>
+            <Button variant="filled" disabled={progress < 100}>
               Accept terms
-            </LabButton>
-          </LabDock>
+            </Button>
+          </Dock>
         }
       >
         {TERMS.map((term) => (
           <p key={term}>{term}</p>
         ))}
-      </LabScrollArea>
+      </ScrollArea>
     </div>
   )
 }

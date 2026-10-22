@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Phone, Search, X } from 'lucide-react'
-import { LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
+import { IconButton } from '@feeef.dev/ui/primitives/button'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
 
 export default function IconsAndAffixes() {
   const [query, setQuery] = useState('Sneakers')
   return (
     <div className="demo-column">
-      <LabTextField
+      <TextField
         aria-label="Search products"
         placeholder="Search products"
         type="search"
@@ -16,20 +16,20 @@ export default function IconsAndAffixes() {
         onValueChange={setQuery}
         trailing={
           query && (
-            <LabIconButton variant="text" controlSize="compact" aria-label="Clear search" onClick={() => setQuery('')}>
+            <IconButton variant="text" controlSize="compact" aria-label="Clear search" onClick={() => setQuery('')}>
               <X size={16} />
-            </LabIconButton>
+            </IconButton>
           )
         }
       />
-      <LabTextField
+      <TextField
         hint="Phone number"
         type="tel"
         inputMode="tel"
         leadingIcon={<Phone size={18} />}
         leading="+213"
       />
-      <LabTextField hint="Delivery price" inputMode="numeric" defaultValue="600" trailing="DZD" />
+      <TextField hint="Delivery price" inputMode="numeric" defaultValue="600" trailing="DZD" />
     </div>
   )
 }

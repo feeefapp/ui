@@ -1,13 +1,13 @@
 import { MapPin, MoreHorizontal, Package, Phone, Truck, User } from 'lucide-react'
 import {
-  LabNavigationPage,
-  LabNavigationStack,
-  useLabNavigationPath,
+  NavigationPage,
+  NavigationStack,
+  useNavigationPath,
 } from '@feeef.dev/ui/containers'
-import { LabListRow, LabListSection } from '@feeef.dev/ui/primitives/list'
-import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabDock } from '@feeef.dev/ui/dock'
+import { ListRow, ListSection } from '@feeef.dev/ui/primitives/list'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { Dock } from '@feeef.dev/ui/dock'
 import { Device } from '../../../../src/blocks/device'
 
 const ORDERS = [
@@ -23,14 +23,14 @@ const ORDERS = [
 type Route = { page: 'order'; id: number } | { page: 'customer'; id: number }
 
 export default function OrdersStack() {
-  const nav = useLabNavigationPath<Route>()
+  const nav = useNavigationPath<Route>()
   return (
     <Device label="A phone showing the orders stack">
-      <LabNavigationStack label="Orders" onBack={() => nav.pop()}>
-        <LabNavigationPage key="orders" title="Orders" subtitle="8 waiting for confirmation">
-          <LabListSection header="Today">
+      <NavigationStack label="Orders" onBack={() => nav.pop()}>
+        <NavigationPage key="orders" title="Orders" subtitle="8 waiting for confirmation">
+          <ListSection header="Today">
             {ORDERS.map((order) => (
-              <LabListRow
+              <ListRow
                 key={order.id}
                 chevron
                 leading={<Package />}
@@ -40,62 +40,62 @@ export default function OrdersStack() {
                 onClick={() => nav.push({ page: 'order', id: order.id })}
               />
             ))}
-          </LabListSection>
-        </LabNavigationPage>
+          </ListSection>
+        </NavigationPage>
 
         {nav.path.map((route) => {
           const order = ORDERS.find((o) => o.id === route.id)!
           return route.page === 'order' ? (
-            <LabNavigationPage
+            <NavigationPage
               key={`order-${order.id}`}
               title={`Order #${order.id}`}
               trailing={
-                <LabToolbarGroup label="Order actions">
-                  <LabIconButton variant="text" appearance="toolbar" aria-label="More order actions">
+                <ToolbarGroup label="Order actions">
+                  <IconButton variant="text" appearance="toolbar" aria-label="More order actions">
                     <MoreHorizontal />
-                  </LabIconButton>
-                </LabToolbarGroup>
+                  </IconButton>
+                </ToolbarGroup>
               }
               bottom={
-                <LabDock label="Order actions">
-                  <LabButton variant="tonal">
+                <Dock label="Order actions">
+                  <Button variant="tonal">
                     <Phone size={18} /> Call
-                  </LabButton>
-                  <LabButton variant="filled">Confirm order</LabButton>
-                </LabDock>
+                  </Button>
+                  <Button variant="filled">Confirm order</Button>
+                </Dock>
               }
             >
-              <LabListSection header="Customer">
-                <LabListRow
+              <ListSection header="Customer">
+                <ListRow
                   chevron
                   leading={<User />}
                   title={order.customer}
                   subtitle="0555 12 34 56"
                   onClick={() => nav.push({ page: 'customer', id: order.id })}
                 />
-                <LabListRow static leading={<MapPin />} title={order.city} subtitle="Home delivery" />
-              </LabListSection>
-              <LabListSection header="Order" footer="Swipe right anywhere on this page to go back.">
-                <LabListRow static title="Items" trailing={order.items} />
-                <LabListRow static leading={<Truck />} title="Courier" trailing="Yalidine" />
-                <LabListRow static title="Total" trailing={order.total} />
-              </LabListSection>
-            </LabNavigationPage>
+                <ListRow static leading={<MapPin />} title={order.city} subtitle="Home delivery" />
+              </ListSection>
+              <ListSection header="Order" footer="Swipe right anywhere on this page to go back.">
+                <ListRow static title="Items" trailing={order.items} />
+                <ListRow static leading={<Truck />} title="Courier" trailing="Yalidine" />
+                <ListRow static title="Total" trailing={order.total} />
+              </ListSection>
+            </NavigationPage>
           ) : (
-            <LabNavigationPage key={`customer-${order.id}`} title={order.customer}>
-              <LabListSection header="Contact">
-                <LabListRow static leading={<Phone />} title="0555 12 34 56" subtitle="Mobile" />
-                <LabListRow static leading={<MapPin />} title={order.city} subtitle="Delivery address" />
-              </LabListSection>
-              <LabListSection header="History">
-                <LabListRow static title="Orders" trailing="6" />
-                <LabListRow static title="Delivered" trailing="5" />
-                <LabListRow static title="Returned" trailing="1" />
-              </LabListSection>
-            </LabNavigationPage>
+            <NavigationPage key={`customer-${order.id}`} title={order.customer}>
+              <ListSection header="Contact">
+                <ListRow static leading={<Phone />} title="0555 12 34 56" subtitle="Mobile" />
+                <ListRow static leading={<MapPin />} title={order.city} subtitle="Delivery address" />
+              </ListSection>
+              <ListSection header="History">
+                <ListRow static title="Orders" trailing="6" />
+                <ListRow static title="Delivered" trailing="5" />
+                <ListRow static title="Returned" trailing="1" />
+              </ListSection>
+            </NavigationPage>
           )
         })}
-      </LabNavigationStack>
+      </NavigationStack>
     </Device>
   )
 }

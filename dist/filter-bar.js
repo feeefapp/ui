@@ -3,16 +3,16 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useRef, useState, useId } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { ArrowLeft, ListFilter, Sparkles, Pin, PinOff, SlidersHorizontal, CalendarDays, ToggleLeft, X, } from 'lucide-react';
-import { LabToolbarSearch } from './toolbar-search.js';
-import { LabToolbarGroup } from './toolbar.js';
-import { LabIconButton, LabButton } from './primitives/button.js';
-import { LabTextField } from './primitives/text-field.js';
-import { LabPopoverSurface } from './primitives/popover-surface.js';
-import { LabModal } from './primitives/modal.js';
-import { LabScrollArea } from './scroll/index.js';
-import { LabDock } from './dock/index.js';
-import { LabTemporalFilterEditor } from './filters/temporal-editor.js';
-import { LabTemporalDialog } from './filters/temporal-dialog.js';
+import { ToolbarSearch } from './toolbar-search.js';
+import { ToolbarGroup } from './toolbar.js';
+import { IconButton, Button } from './primitives/button.js';
+import { TextField } from './primitives/text-field.js';
+import { PopoverSurface } from './primitives/popover-surface.js';
+import { Modal } from './primitives/modal.js';
+import { ScrollArea } from './scroll/index.js';
+import { Dock } from './dock/index.js';
+import { TemporalFilterEditor } from './filters/temporal-editor.js';
+import { TemporalDialog } from './filters/temporal-dialog.js';
 import { isTemporalType, isTemporalRange, validateTemporal, readTemporalForm, } from './filters/temporal.js';
 import './filter-bar.css';
 function summary(option, value) {
@@ -32,7 +32,7 @@ function summary(option, value) {
  * Filter toolbar: a searchable catalog button, an optional natural-language button, pinned filter
  * chips and trailing actions. Pinning controls shortcuts, clearing controls query values.
  */
-export function LabFilterBar({ label, options, value, onChange, values: controlledValues, onValuesChange, pinned: controlledPins, onPinnedChange, onNaturalFilter, onBack, trailing, }) {
+export function FilterBar({ label, options, value, onChange, values: controlledValues, onValuesChange, pinned: controlledPins, onPinnedChange, onNaturalFilter, onBack, trailing, }) {
     const formId = useId();
     const host = useRef(null), search = useRef(null);
     const enumSearch = useRef(null);
@@ -113,22 +113,22 @@ export function LabFilterBar({ label, options, value, onChange, values: controll
         setLocalValues(cleared);
         onValuesChange?.(cleared);
     };
-    return (_jsxs("div", { ref: host, className: "lab-filter-bar", role: "group", "aria-label": label, children: [onBack && (_jsx(LabToolbarGroup, { label: "Filter navigation", children: _jsx(LabIconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": "Back from filtered view", onClick: onBack, children: _jsx(ArrowLeft, { className: "lab-dir-flip" }) }) })), _jsxs(LabToolbarGroup, { label: "Filter controls", children: [_jsxs(Popover.Root, { open: catalog, onOpenChange: (open) => {
+    return (_jsxs("div", { ref: host, className: "lab-filter-bar", role: "group", "aria-label": label, children: [onBack && (_jsx(ToolbarGroup, { label: "Filter navigation", children: _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": "Back from filtered view", onClick: onBack, children: _jsx(ArrowLeft, { className: "lab-dir-flip" }) }) })), _jsxs(ToolbarGroup, { label: "Filter controls", children: [_jsxs(Popover.Root, { open: catalog, onOpenChange: (open) => {
                             prepare(open);
                             setCatalog(open);
                             if (open)
                                 setQuery('');
-                        }, children: [_jsx(Popover.Trigger, { asChild: true, children: _jsx(LabIconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": `Choose filters${active ? ` (${active} active)` : ''}`, children: _jsx(ListFilter, {}) }) }), _jsx(Popover.Portal, { container: container, children: _jsx(LabPopoverSurface, { asChild: true, children: _jsx(Popover.Content, { dir: dir, className: "lab-filter-panel lab-filter-catalog", "aria-label": "Available filters", sideOffset: 8, collisionPadding: 12, align: "start", onOpenAutoFocus: (event) => {
+                        }, children: [_jsx(Popover.Trigger, { asChild: true, children: _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": `Choose filters${active ? ` (${active} active)` : ''}`, children: _jsx(ListFilter, {}) }) }), _jsx(Popover.Portal, { container: container, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(Popover.Content, { dir: dir, className: "lab-filter-panel lab-filter-catalog", "aria-label": "Available filters", sideOffset: 8, collisionPadding: 12, align: "start", onOpenAutoFocus: (event) => {
                                             event.preventDefault();
                                             search.current?.focus();
                                         }, onCloseAutoFocus: (event) => {
                                             if (editing)
                                                 event.preventDefault();
-                                        }, children: _jsx(LabScrollArea, { label: "Filter catalog rows", contentPadding: 8, edgeGap: 8, top: _jsx(LabToolbarSearch, { label: "Find a filter", value: query, onValueChange: setQuery, inputRef: search, defaultExpanded: true }), bottom: _jsx(LabDock, { label: "Filter catalog actions", content: _jsxs("span", { children: [active, " active \u00B7 ", pins.length, " pinned"] }), children: _jsx(LabButton, { variant: "text", controlSize: "compact", disabled: !active, onClick: clearAll, children: "Clear values" }) }), children: _jsxs("div", { className: "lab-filter-catalog-list", children: [options
+                                        }, children: _jsx(ScrollArea, { label: "Filter catalog rows", contentPadding: 8, edgeGap: 8, top: _jsx(ToolbarSearch, { label: "Find a filter", value: query, onValueChange: setQuery, inputRef: search, defaultExpanded: true }), bottom: _jsx(Dock, { label: "Filter catalog actions", content: _jsxs("span", { children: [active, " active \u00B7 ", pins.length, " pinned"] }), children: _jsx(Button, { variant: "text", controlSize: "compact", disabled: !active, onClick: clearAll, children: "Clear values" }) }), children: _jsxs("div", { className: "lab-filter-catalog-list", children: [options
                                                         .filter((option) => `${option.label} ${option.description || ''} ${option.keywords?.join(' ') || ''}`
                                                         .toLowerCase()
                                                         .includes(query.toLowerCase()))
-                                                        .map((option) => (_jsxs("div", { className: "lab-filter-row", "data-active": read(option) != null, children: [_jsxs(LabButton, { variant: "text", className: "lab-filter-row-main", onClick: () => {
+                                                        .map((option) => (_jsxs("div", { className: "lab-filter-row", "data-active": read(option) != null, children: [_jsxs(Button, { variant: "text", className: "lab-filter-row-main", onClick: () => {
                                                                     if (!option.type || option.type === 'boolean') {
                                                                         change(option, read(option) == null ? true : null);
                                                                         pin(option.id);
@@ -141,7 +141,7 @@ export function LabFilterBar({ label, options, value, onChange, values: controll
                                                                                         ? 'On / off'
                                                                                         : option.type === 'enum'
                                                                                             ? 'Choose a value'
-                                                                                            : 'Open editor') })] }), _jsx("span", { className: "lab-filter-row-value", children: summary(option, read(option)) })] }), _jsx(LabIconButton, { variant: "text", controlSize: "compact", "aria-label": `${pins.includes(option.id) ? 'Unpin' : 'Pin'} ${option.label}`, "aria-pressed": pins.includes(option.id), onClick: () => pins.includes(option.id)
+                                                                                            : 'Open editor') })] }), _jsx("span", { className: "lab-filter-row-value", children: summary(option, read(option)) })] }), _jsx(IconButton, { variant: "text", controlSize: "compact", "aria-label": `${pins.includes(option.id) ? 'Unpin' : 'Pin'} ${option.label}`, "aria-pressed": pins.includes(option.id), onClick: () => pins.includes(option.id)
                                                                     ? setPins(pins.filter((id) => id !== option.id))
                                                                     : pin(option.id), children: pins.includes(option.id) ? _jsx(PinOff, {}) : _jsx(Pin, {}) })] }, option.id))), !options.some((option) => `${option.label} ${option.description || ''} ${option.keywords?.join(' ') || ''}`
                                                         .toLowerCase()
@@ -149,11 +149,11 @@ export function LabFilterBar({ label, options, value, onChange, values: controll
                             prepare(open);
                             setNatural(open);
                             setError('');
-                        }, children: [_jsx(Popover.Trigger, { asChild: true, children: _jsx(LabIconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": "Create filter from natural language", children: _jsx(Sparkles, {}) }) }), _jsx(Popover.Portal, { container: container, children: _jsx(LabPopoverSurface, { asChild: true, children: _jsx(Popover.Content, { dir: dir, className: "lab-filter-panel lab-filter-natural", "aria-label": "Describe a filter", sideOffset: 8, collisionPadding: 12, align: "start", onOpenAutoFocus: (event) => {
+                        }, children: [_jsx(Popover.Trigger, { asChild: true, children: _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": "Create filter from natural language", children: _jsx(Sparkles, {}) }) }), _jsx(Popover.Portal, { container: container, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(Popover.Content, { dir: dir, className: "lab-filter-panel lab-filter-natural", "aria-label": "Describe a filter", sideOffset: 8, collisionPadding: 12, align: "start", onOpenAutoFocus: (event) => {
                                             // Start in the description field, not on the scroll region.
                                             event.preventDefault();
                                             naturalInput.current?.focus();
-                                        }, children: _jsx(LabScrollArea, { label: "Natural filter description", edgeGap: 8, contentPadding: 12, bottom: _jsx(LabDock, { label: "Natural filter actions", children: _jsx(LabButton, { type: "submit", form: `${formId}-natural`, variant: "filled", controlSize: "compact", loading: busy, disabled: busy || !text.trim(), children: "Apply filters" }) }), children: _jsxs("form", { id: `${formId}-natural`, onSubmit: async (event) => {
+                                        }, children: _jsx(ScrollArea, { label: "Natural filter description", edgeGap: 8, contentPadding: 12, bottom: _jsx(Dock, { label: "Natural filter actions", children: _jsx(Button, { type: "submit", form: `${formId}-natural`, variant: "filled", controlSize: "compact", loading: busy, disabled: busy || !text.trim(), children: "Apply filters" }) }), children: _jsxs("form", { id: `${formId}-natural`, onSubmit: async (event) => {
                                                     event.preventDefault();
                                                     if (busy || !text.trim())
                                                         return;
@@ -178,20 +178,20 @@ export function LabFilterBar({ label, options, value, onChange, values: controll
                                                     finally {
                                                         setBusy(false);
                                                     }
-                                                }, children: [_jsx("strong", { children: "Describe what you want" }), _jsx(LabTextField, { ref: naturalInput, hint: "Filter description", leadingIcon: _jsx(Sparkles, {}), value: text, onChange: (event) => setText(event.target.value), error: error, supportingText: `Available: ${options
+                                                }, children: [_jsx("strong", { children: "Describe what you want" }), _jsx(TextField, { ref: naturalInput, hint: "Filter description", leadingIcon: _jsx(Sparkles, {}), value: text, onChange: (event) => setText(event.target.value), error: error, supportingText: `Available: ${options
                                                             .filter((option) => !option.type || option.type === 'boolean')
                                                             .map((option) => option.label)
                                                             .join(', ')}.` })] }) }) }) }) })] }))] }), !!pins.length && (_jsx("div", { className: "lab-filter-pins", role: "group", "aria-label": "Pinned filters", children: options
                     .filter((option) => pins.includes(option.id))
-                    .map((option) => (_jsxs(LabToolbarGroup, { label: `${option.label} filter`, children: [_jsxs(LabButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": `Edit ${option.label} filter`, onClick: (event) => edit(option, event.currentTarget), children: [option.label, _jsx("span", { className: "lab-filter-chip-value", children: summary(option, read(option)) })] }), _jsx(LabIconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": `Clear ${option.label} value`, disabled: read(option) == null, onClick: (event) => {
+                    .map((option) => (_jsxs(ToolbarGroup, { label: `${option.label} filter`, children: [_jsxs(Button, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": `Edit ${option.label} filter`, onClick: (event) => edit(option, event.currentTarget), children: [option.label, _jsx("span", { className: "lab-filter-chip-value", children: summary(option, read(option)) })] }), _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": `Clear ${option.label} value`, disabled: read(option) == null, onClick: (event) => {
                                 event.currentTarget.parentElement
                                     ?.querySelector('button')
                                     ?.focus({ preventScroll: true });
                                 change(option, null);
-                            }, children: _jsx(X, { size: 16 }) }), _jsx(LabIconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": `Unpin ${option.label}`, onClick: () => setPins(pins.filter((id) => id !== option.id)), children: _jsx(PinOff, { size: 16 }) })] }, option.id))) })), trailing && _jsx("div", { className: "lab-filter-trailing", children: trailing }), _jsxs(Popover.Root, { open: !!smallSelected, onOpenChange: (open) => {
+                            }, children: _jsx(X, { size: 16 }) }), _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": `Unpin ${option.label}`, onClick: () => setPins(pins.filter((id) => id !== option.id)), children: _jsx(PinOff, { size: 16 }) })] }, option.id))) })), trailing && _jsx("div", { className: "lab-filter-trailing", children: trailing }), _jsxs(Popover.Root, { open: !!smallSelected, onOpenChange: (open) => {
                     if (!open)
                         setEditing(null);
-                }, children: [_jsx(Popover.Anchor, { virtualRef: anchor }), _jsx(Popover.Portal, { container: container, children: _jsx(LabPopoverSurface, { asChild: true, children: _jsx(Popover.Content, { dir: dir, className: "lab-filter-panel lab-filter-value-menu", "aria-label": smallSelected ? `Edit ${smallSelected.label} filter` : 'Edit filter', align: "start", sideOffset: 8, collisionPadding: 12, onOpenAutoFocus: (event) => {
+                }, children: [_jsx(Popover.Anchor, { virtualRef: anchor }), _jsx(Popover.Portal, { container: container, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(Popover.Content, { dir: dir, className: "lab-filter-panel lab-filter-value-menu", "aria-label": smallSelected ? `Edit ${smallSelected.label} filter` : 'Edit filter', align: "start", sideOffset: 8, collisionPadding: 12, onOpenAutoFocus: (event) => {
                                     if (smallSelected?.type === 'enum') {
                                         event.preventDefault();
                                         enumSearch.current?.focus();
@@ -199,17 +199,17 @@ export function LabFilterBar({ label, options, value, onChange, values: controll
                                 }, onCloseAutoFocus: (event) => {
                                     event.preventDefault();
                                     returnFocus.current?.focus({ preventScroll: true });
-                                }, children: smallSelected && (_jsx(LabScrollArea, { label: `${smallSelected.label} options`, edgeGap: 8, contentPadding: 8, top: smallSelected.type === 'enum' ? (_jsx(LabToolbarSearch, { label: `Search ${smallSelected.label.toLowerCase()}`, value: choiceQuery, onValueChange: setChoiceQuery, inputRef: enumSearch, defaultExpanded: true })) : undefined, bottom: _jsxs(LabDock, { label: "Filter value actions", children: [_jsx(LabButton, { variant: "text", controlSize: "compact", onClick: () => {
+                                }, children: smallSelected && (_jsx(ScrollArea, { label: `${smallSelected.label} options`, edgeGap: 8, contentPadding: 8, top: smallSelected.type === 'enum' ? (_jsx(ToolbarSearch, { label: `Search ${smallSelected.label.toLowerCase()}`, value: choiceQuery, onValueChange: setChoiceQuery, inputRef: enumSearch, defaultExpanded: true })) : undefined, bottom: _jsxs(Dock, { label: "Filter value actions", children: [_jsx(Button, { variant: "text", controlSize: "compact", onClick: () => {
                                                     change(smallSelected, null);
                                                     pin(smallSelected.id);
                                                     setEditing(null);
-                                                }, children: "Clear value" }), isTemporalType(smallSelected.type) && (_jsx(LabButton, { variant: "filled", type: "submit", form: `${formId}-date`, controlSize: "compact", children: "Apply" }))] }), children: smallSelected.type === 'enum' ? (_jsxs("div", { className: "lab-filter-options", role: "group", "aria-label": `${smallSelected.label} choices`, children: [smallSelected.choices
+                                                }, children: "Clear value" }), isTemporalType(smallSelected.type) && (_jsx(Button, { variant: "filled", type: "submit", form: `${formId}-date`, controlSize: "compact", children: "Apply" }))] }), children: smallSelected.type === 'enum' ? (_jsxs("div", { className: "lab-filter-options", role: "group", "aria-label": `${smallSelected.label} choices`, children: [smallSelected.choices
                                                 .filter((choice) => choice.label.toLowerCase().includes(choiceQuery.toLowerCase()))
-                                                .map((choice) => (_jsxs(LabButton, { variant: "text", className: "lab-filter-choice", "aria-pressed": read(smallSelected) === choice.value, onClick: () => {
+                                                .map((choice) => (_jsxs(Button, { variant: "text", className: "lab-filter-choice", "aria-pressed": read(smallSelected) === choice.value, onClick: () => {
                                                     change(smallSelected, choice.value);
                                                     pin(smallSelected.id);
                                                     setEditing(null);
-                                                }, children: [choice.label, read(smallSelected) === choice.value && (_jsx("span", { "aria-hidden": "true", children: "\u2713" }))] }, choice.value))), !smallSelected.choices.some((choice) => choice.label.toLowerCase().includes(choiceQuery.toLowerCase())) && _jsx("p", { role: "status", children: "No matching options." })] })) : !smallSelected.type || smallSelected.type === 'boolean' ? (_jsx("div", { className: "lab-filter-options", children: [true, null].map((next, index) => (_jsx(LabButton, { variant: "text", "aria-pressed": read(smallSelected) === next, onClick: () => {
+                                                }, children: [choice.label, read(smallSelected) === choice.value && (_jsx("span", { "aria-hidden": "true", children: "\u2713" }))] }, choice.value))), !smallSelected.choices.some((choice) => choice.label.toLowerCase().includes(choiceQuery.toLowerCase())) && _jsx("p", { role: "status", children: "No matching options." })] })) : !smallSelected.type || smallSelected.type === 'boolean' ? (_jsx("div", { className: "lab-filter-options", children: [true, null].map((next, index) => (_jsx(Button, { variant: "text", "aria-pressed": read(smallSelected) === next, onClick: () => {
                                                 change(smallSelected, next);
                                                 pin(smallSelected.id);
                                                 setEditing(null);
@@ -225,10 +225,10 @@ export function LabFilterBar({ label, options, value, onChange, values: controll
                                             change(smallSelected, next);
                                             pin(smallSelected.id);
                                             setEditing(null);
-                                        }, children: [_jsx(LabTemporalFilterEditor, { config: smallSelected, value: draft, onChange: (next) => {
+                                        }, children: [_jsx(TemporalFilterEditor, { config: smallSelected, value: draft, onChange: (next) => {
                                                     setDraft(next);
                                                     setEditError('');
-                                                } }), editError && (_jsx("p", { role: "alert", className: "lab-filter-error", children: editError }))] })) : null })) }) }) })] }), dialogSelected && selected && isTemporalType(selected.type) && (_jsx(LabTemporalDialog, { open: true, label: `Edit ${dialogSelected.label} filter`, close: () => setEditing(null), returnFocusRef: returnFocus, formId: `${formId}-editor`, config: selected, value: draft, onChange: (next) => {
+                                                } }), editError && (_jsx("p", { role: "alert", className: "lab-filter-error", children: editError }))] })) : null })) }) }) })] }), dialogSelected && selected && isTemporalType(selected.type) && (_jsx(TemporalDialog, { open: true, label: `Edit ${dialogSelected.label} filter`, close: () => setEditing(null), returnFocusRef: returnFocus, formId: `${formId}-editor`, config: selected, value: draft, onChange: (next) => {
                     setDraft(next);
                     setEditError('');
                 }, intro: selected.description, error: editError || undefined, clearLabel: "Clear value", onClear: () => {
@@ -248,13 +248,13 @@ export function LabFilterBar({ label, options, value, onChange, values: controll
                     change(selected, next);
                     pin(selected.id);
                     setEditing(null);
-                } })), _jsx(LabModal, { returnFocusRef: returnFocus, open: !!dialogSelected && !(selected && isTemporalType(selected.type)), label: dialogSelected ? `Edit ${dialogSelected.label} filter` : 'Edit filter', close: () => setEditing(null), scrollable: true, fitContent: true, className: "lab-filter-editor-dialog", bottom: _jsxs(LabDock, { label: "Filter editor actions", children: [_jsx(LabButton, { variant: "text", onClick: () => {
+                } })), _jsx(Modal, { returnFocusRef: returnFocus, open: !!dialogSelected && !(selected && isTemporalType(selected.type)), label: dialogSelected ? `Edit ${dialogSelected.label} filter` : 'Edit filter', close: () => setEditing(null), scrollable: true, fitContent: true, className: "lab-filter-editor-dialog", bottom: _jsxs(Dock, { label: "Filter editor actions", children: [_jsx(Button, { variant: "text", onClick: () => {
                                 if (selected) {
                                     change(selected, null);
                                     pin(selected.id);
                                 }
                                 setEditing(null);
-                            }, children: "Clear value" }), _jsx(LabButton, { variant: "filled", type: "submit", form: `${formId}-editor`, children: "Apply filter" })] }), children: dialogSelected && selected && (_jsxs("form", { id: `${formId}-editor`, className: "lab-filter-editor-form", onSubmit: (event) => {
+                            }, children: "Clear value" }), _jsx(Button, { variant: "filled", type: "submit", form: `${formId}-editor`, children: "Apply filter" })] }), children: dialogSelected && selected && (_jsxs("form", { id: `${formId}-editor`, className: "lab-filter-editor-form", onSubmit: (event) => {
                         event.preventDefault();
                         const message = selected.validate?.(draft);
                         if (message) {

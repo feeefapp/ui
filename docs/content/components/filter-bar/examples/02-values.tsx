@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { LabFilterBar, type LabFilterOption, type LabFilterValue } from '@feeef.dev/ui/filter-bar'
-import { LabScrollArea } from '@feeef.dev/ui/scroll'
+import { FilterBar, type FilterOption, type FilterValue } from '@feeef.dev/ui/filter-bar'
+import { ScrollArea } from '@feeef.dev/ui/scroll'
 import '../filter-demo.css'
 
-const OPTIONS: LabFilterOption[] = [
+const OPTIONS: FilterOption[] = [
   {
     id: 'wilaya',
     label: 'Wilaya',
@@ -46,7 +46,7 @@ const ORDERS = [
 ]
 
 export default function Values() {
-  const [values, setValues] = useState<Record<string, LabFilterValue>>({ wilaya: 'alger' })
+  const [values, setValues] = useState<Record<string, FilterValue>>({ wilaya: 'alger' })
   const [pinned, setPinned] = useState<string[]>(['wilaya', 'created'])
   const created = values.created && typeof values.created === 'object' ? values.created : null
   const rows = ORDERS.filter(
@@ -58,10 +58,10 @@ export default function Values() {
   )
   return (
     <div className="filter-demo-frame">
-      <LabScrollArea
+      <ScrollArea
         label="Orders"
         top={
-          <LabFilterBar
+          <FilterBar
             label="Order filters"
             options={OPTIONS}
             value={[]}
@@ -86,7 +86,7 @@ export default function Values() {
           ))}
           {!rows.length && <p className="filter-demo-empty">No orders match these filters.</p>}
         </div>
-      </LabScrollArea>
+      </ScrollArea>
     </div>
   )
 }

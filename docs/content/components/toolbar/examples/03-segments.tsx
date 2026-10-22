@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Bold, Italic, Link2, Redo2, Undo2 } from 'lucide-react'
-import { LabToolbar, LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'
+import { Toolbar, ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
 import '../toolbar-demo.css'
 
 export default function Segments() {
@@ -9,20 +9,20 @@ export default function Segments() {
   const [italic, setItalic] = useState(false)
   return (
     <div className="toolbar-demo-surface">
-      <LabToolbar
+      <Toolbar
         label="Product description editor"
         leading={
           <>
-            <LabToolbarGroup label="History">
-              <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Undo">
+            <ToolbarGroup label="History">
+              <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Undo">
                 <Undo2 />
-              </LabIconButton>
-              <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Redo" disabled>
+              </IconButton>
+              <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Redo" disabled>
                 <Redo2 />
-              </LabIconButton>
-            </LabToolbarGroup>
-            <LabToolbarGroup label="Text style" style={{ marginInlineStart: 8 }}>
-              <LabIconButton
+              </IconButton>
+            </ToolbarGroup>
+            <ToolbarGroup label="Text style" style={{ marginInlineStart: 8 }}>
+              <IconButton
                 variant="text"
                 appearance="toolbar"
                 controlSize="compact"
@@ -31,8 +31,8 @@ export default function Segments() {
                 onClick={() => setBold(!bold)}
               >
                 <Bold />
-              </LabIconButton>
-              <LabIconButton
+              </IconButton>
+              <IconButton
                 variant="text"
                 appearance="toolbar"
                 controlSize="compact"
@@ -41,19 +41,19 @@ export default function Segments() {
                 onClick={() => setItalic(!italic)}
               >
                 <Italic />
-              </LabIconButton>
-              <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Insert link">
+              </IconButton>
+              <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Insert link">
                 <Link2 />
-              </LabIconButton>
-            </LabToolbarGroup>
+              </IconButton>
+            </ToolbarGroup>
           </>
         }
         trailing={
-          <LabToolbarGroup label="Document">
-            <LabButton variant="filled" appearance="toolbar" controlSize="compact">
+          <ToolbarGroup label="Document">
+            <Button variant="filled" appearance="toolbar" controlSize="compact">
               Save
-            </LabButton>
-          </LabToolbarGroup>
+            </Button>
+          </ToolbarGroup>
         }
       />
     </div>

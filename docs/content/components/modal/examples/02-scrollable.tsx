@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabModal } from '@feeef.dev/ui/primitives/modal'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
-import { LabOption, LabSelect } from '@feeef.dev/ui/primitives/select'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { Modal } from '@feeef.dev/ui/primitives/modal'
+import { Dock } from '@feeef.dev/ui/dock'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
+import { Option, Select } from '@feeef.dev/ui/primitives/select'
 
 export default function Scrollable() {
   const [open, setOpen] = useState(false)
@@ -12,44 +12,44 @@ export default function Scrollable() {
   const close = () => setOpen(false)
   return (
     <>
-      <LabButton variant="filled" onClick={() => setOpen(true)}>
+      <Button variant="filled" onClick={() => setOpen(true)}>
         Edit order
-      </LabButton>
-      <LabModal
+      </Button>
+      <Modal
         open={open}
         close={close}
         label="Edit order #10482"
         scrollable
         bottom={
-          <LabDock label="Order actions">
-            <LabButton variant="text" onClick={close}>
+          <Dock label="Order actions">
+            <Button variant="text" onClick={close}>
               Discard
-            </LabButton>
-            <LabButton variant="filled" onClick={close}>
+            </Button>
+            <Button variant="filled" onClick={close}>
               Save order
-            </LabButton>
-          </LabDock>
+            </Button>
+          </Dock>
         }
       >
         <div style={{ display: 'grid', gap: 16 }}>
-          <LabTextField hint="Customer name" defaultValue="Yacine Benali" />
-          <LabTextField hint="Phone" type="tel" defaultValue="0555 12 34 56" />
-          <LabSelect hint="Wilaya" value={wilaya} onValueChange={setWilaya}>
-            <LabOption value="16">16 · Alger</LabOption>
-            <LabOption value="31">31 · Oran</LabOption>
-            <LabOption value="25">25 · Constantine</LabOption>
-          </LabSelect>
-          <LabTextField hint="Commune" defaultValue="Bab Ezzouar" />
-          <LabTextField hint="Address" defaultValue="Cité 2068 Logements, Bt 12" />
-          <LabSelect hint="Delivery" value={delivery} onValueChange={setDelivery}>
-            <LabOption value="home">Home delivery · 600 DZD</LabOption>
-            <LabOption value="desk">Stop desk · 400 DZD</LabOption>
-          </LabSelect>
-          <LabTextField hint="Quantity" type="number" defaultValue="2" />
-          <LabTextField hint="Unit price (DZD)" type="number" defaultValue="3900" />
-          <LabTextField hint="Note for the courier" multiline minLines={3} />
+          <TextField hint="Customer name" defaultValue="Yacine Benali" />
+          <TextField hint="Phone" type="tel" defaultValue="0555 12 34 56" />
+          <Select hint="Wilaya" value={wilaya} onValueChange={setWilaya}>
+            <Option value="16">16 · Alger</Option>
+            <Option value="31">31 · Oran</Option>
+            <Option value="25">25 · Constantine</Option>
+          </Select>
+          <TextField hint="Commune" defaultValue="Bab Ezzouar" />
+          <TextField hint="Address" defaultValue="Cité 2068 Logements, Bt 12" />
+          <Select hint="Delivery" value={delivery} onValueChange={setDelivery}>
+            <Option value="home">Home delivery · 600 DZD</Option>
+            <Option value="desk">Stop desk · 400 DZD</Option>
+          </Select>
+          <TextField hint="Quantity" type="number" defaultValue="2" />
+          <TextField hint="Unit price (DZD)" type="number" defaultValue="3900" />
+          <TextField hint="Note for the courier" multiline minLines={3} />
         </div>
-      </LabModal>
+      </Modal>
     </>
   )
 }

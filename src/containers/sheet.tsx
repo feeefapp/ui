@@ -2,25 +2,25 @@
 
 import * as React from 'react'
 import { createPortal } from 'react-dom'
-import { LabScrollArea } from '../scroll'
-import { useLabI18n } from '../i18n'
+import { ScrollArea } from '../scroll'
+import { useI18n } from '../i18n'
 import { attachPan, canChildPan } from '../physics/gesture'
-import { LabMotionValue, prefersReducedMotion } from '../physics/motion-value'
-import { LAB_SPRINGS, projectMomentum, rubberBand, type LabSpring } from '../physics/spring'
+import { MotionValue, prefersReducedMotion } from '../physics/motion-value'
+import { SPRINGS, projectMomentum, rubberBand, type Spring } from '../physics/spring'
 import {
   detentHeights,
   dragHeight,
   releaseTarget,
   sheetDim,
   sheetRecede,
-  type LabSheetDetent,
+  type SheetDetent,
 } from './sheet-model'
 import { cn } from '../utils'
 import './sheet.css'
 
-export type { LabSheetDetent } from './sheet-model'
+export type { SheetDetent } from './sheet-model'
 
-export type LabSheetProps = {
+export type SheetProps = {
   /** Shows the sheet. It animates in and out; keep it mounted and toggle this. */
   open: boolean
   /** Called with `false` when the person dismisses it (drag down, scrim, Escape), and never with `true`. */
@@ -30,20 +30,20 @@ export type LabSheetProps = {
   /** Sheet content; it scrolls inside the sheet. */
   children: React.ReactNode
   /** Heights the sheet rests at, lowest first is not required. Default `['large']`. */
-  detents?: readonly LabSheetDetent[]
+  detents?: readonly SheetDetent[]
   /** Controlled detent. Pair with `onDetentChange`. */
-  detent?: LabSheetDetent
+  detent?: SheetDetent
   /** Detent to open at when uncontrolled. Default: the first in `detents`. */
-  defaultDetent?: LabSheetDetent
+  defaultDetent?: SheetDetent
   /** Called when the person drags or taps the grabber to another detent. */
-  onDetentChange?: (detent: LabSheetDetent) => void
+  onDetentChange?: (detent: SheetDetent) => void
   /** Whether dragging down, the scrim and Escape close it. Default true. */
   dismissible?: boolean
   /** Shows the grabber. Default: when there is more than one detent. */
   grabber?: boolean
   /** Floating chrome over the top of the content: a title and a Done button in glass groups. */
   top?: React.ReactNode
-  /** Floating chrome over the bottom: usually a LabDock with the sheet's main action. */
+  /** Floating chrome over the bottom: usually a Dock with the sheet's main action. */
   bottom?: React.ReactNode
   /**
    * `true` (default) dims and blocks the page. `false` leaves the page usable behind the sheet,
@@ -63,7 +63,7 @@ export type LabSheetProps = {
   className?: string
 }
 
-const DEFAULT_DETENTS: readonly LabSheetDetent[] = ['large']
+const DEFAULT_DETENTS: readonly SheetDetent[] = ['large']
 
 /**
  * A sheet that rises from the bottom, like iOS: it rests at detents (half, full, fit or custom
@@ -71,7 +71,7 @@ const DEFAULT_DETENTS: readonly LabSheetDetent[] = ['large']
  * when flicked down. Scrolling inside hands off to dragging the sheet at the top. On wide screens
  * it becomes a centered dialog. The page behind dims and, under a full-height sheet, recedes.
  */
-export function LabSheet(props: LabSheetProps) {
+export function Sheet(props: SheetProps) {
   const [mounted, setMounted] = React.useState(props.open)
   if (props.open && !mounted) setMounted(true)
   if (!mounted) return null
@@ -101,8 +101,8 @@ function SheetPresentation({
   contentPadding,
   className,
   onExited,
-}: LabSheetProps & { onExited: () => void }) {
-  const { t } = useLabI18n()
+}: SheetProps & { onExited: () => void }) {
+  const { t } = useI18n()
   const host = React.useRef<HTMLElement | null>(null)
   const panel = React.useRef<HTMLDivElement>(null)
   const scrim = React.useRef<HTMLDivElement>(null)
@@ -125,9 +125,9 @@ function SheetPresentation({
     controlledDetent !== undefined ? Math.max(0, detents.indexOf(controlledDetent)) : Math.min(localIndex, detents.length - 1)
 
   // Motion: `visible` is the sheet's visible height (sheet); `shown` 0–1 and `lift` px (dialog).
-  const visible = React.useRef(new LabMotionValue(0, 0.5)).current
-  const shown = React.useRef(new LabMotionValue(0, 0.004)).current
-  const lift = React.useRef(new LabMotionValue(0, 0.5)).current
+  const visible = React.useRef(new MotionValue(0, 0.5)).current
+  const shown = React.useRef(new MotionValue(0, 0.004)).current
+  const lift = React.useRef(new MotionValue(0, 0.5)).current
   const motionHeight = React.useRef(0)
   const presented = React.useRef(false)
   const dragging = React.useRef(false)
@@ -191,7 +191,7 @@ function SheetPresentation({
     for (const node of pinned()) node.style.translate = ''
     paintSheet(height)
   }
-  const moveTo = (height: number, spring: LabSpring = LAB_SPRINGS.smooth, velocity?: number) => {
+  const moveTo = (height: number, spring: Spring = SPRINGS.smooth, velocity?: number) => {
     beginMotion()
     return visible.animateTo(height, { spring, velocity }).then((arrived) => {
       if (arrived) rest(height)
@@ -280,7 +280,7 @@ function SheetPresentation({
         onExited()
       }
       if (presentation === 'dialog') {
-        void shown.animateTo(0, { spring: reduced ? { duration: 0.18, bounce: 0 } : LAB_SPRINGS.smooth }).then((a) => a && done())
+        void shown.animateTo(0, { spring: reduced ? { duration: 0.18, bounce: 0 } : SPRINGS.smooth }).then((a) => a && done())
       } else if (reduced) {
         const el = panel.current
         if (el) el.style.transition = 'opacity 160ms'
@@ -289,7 +289,7 @@ function SheetPresentation({
         window.setTimeout(done, 170)
       } else {
         beginMotion()
-        void visible.animateTo(0, { spring: LAB_SPRINGS.smooth }).then((a) => a && done())
+        void visible.animateTo(0, { spring: SPRINGS.smooth }).then((a) => a && done())
       }
       return
     }
@@ -304,7 +304,7 @@ function SheetPresentation({
       if (!presented.current) {
         presented.current = true
         if (!shown.isAnimating()) shown.set(0)
-        void shown.animateTo(1, { spring: reduced ? { duration: 0.2, bounce: 0 } : LAB_SPRINGS.smooth })
+        void shown.animateTo(1, { spring: reduced ? { duration: 0.2, bounce: 0 } : SPRINGS.smooth })
       } else paintDialog()
       return
     }
@@ -386,15 +386,15 @@ function SheetPresentation({
           const away = !cancelled && L.dismissible && projectMomentum(lift.get(), vy / scale, 0.99) > 160
           if (away) {
             L.onOpenChange(false)
-            void lift.animateTo(0, { spring: LAB_SPRINGS.smooth })
-          } else void lift.animateTo(0, { spring: LAB_SPRINGS.release, velocity: lift.getVelocity(time) })
+            void lift.animateTo(0, { spring: SPRINGS.smooth })
+          } else void lift.animateTo(0, { spring: SPRINGS.release, velocity: lift.getVelocity(time) })
           return
         }
         const velocity = visible.getVelocity(time)
         const landing = releaseTarget(visible.get(), velocity, L.heights, L.dismissible)
         if (landing.dismiss && !cancelled) {
           // Leave at the finger's speed; the close that follows continues this same motion.
-          void visible.animateTo(0, { spring: LAB_SPRINGS.smooth, velocity })
+          void visible.animateTo(0, { spring: SPRINGS.smooth, velocity })
           L.onOpenChange(false)
           // A host that keeps the sheet open gets it back at its detent.
           window.setTimeout(() => {
@@ -404,7 +404,7 @@ function SheetPresentation({
         }
         const next = landing.dismiss ? L.index : landing.index
         setDetentIndex(next)
-        void moveTo(L.heights[next] ?? landing.height, LAB_SPRINGS.release, velocity)
+        void moveTo(L.heights[next] ?? landing.height, SPRINGS.release, velocity)
       },
     }))
   }, [])
@@ -449,7 +449,7 @@ function SheetPresentation({
             />
           </div>
         )}
-        <LabScrollArea
+        <ScrollArea
           ref={viewport}
           className="lab-sheet-scroll"
           label={label}
@@ -460,7 +460,7 @@ function SheetPresentation({
           <div ref={body} className="lab-sheet-body">
             {children}
           </div>
-        </LabScrollArea>
+        </ScrollArea>
       </div>
     </>
   )

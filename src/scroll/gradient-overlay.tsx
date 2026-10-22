@@ -11,7 +11,7 @@ import {
 import { scrollEdgeOpacities, scrollWashPaths } from './metrics'
 import './scroll.css'
 
-export type LabScrollGradientOverlayProps = {
+export type ScrollGradientOverlayProps = {
   /** The scrolling element whose offset drives the washes. */
   viewport: RefObject<HTMLElement | null>
   /** Top wash height in px, capped at 40% of the viewport. */
@@ -31,14 +31,14 @@ export type LabScrollGradientOverlayProps = {
  * sibling of the viewport inside a `position: relative` box. Reads scroll metrics once per frame
  * and updates opacity without rerendering the scroll content.
  */
-export function LabScrollGradientOverlay({
+export function ScrollGradientOverlay({
   viewport,
   topHeight = 100,
   bottomHeight = 160,
   density = 0.8,
   fadeZone = 80,
   color,
-}: LabScrollGradientOverlayProps) {
+}: ScrollGradientOverlayProps) {
   const root = useRef<HTMLDivElement>(null)
   const topPaint = useRef<SVGSVGElement>(null)
   const bottomPaint = useRef<SVGSVGElement>(null)

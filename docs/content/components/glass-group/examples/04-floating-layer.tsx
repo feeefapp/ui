@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { LabFloatingLayer, LabGlassGroup, LabScaffoldProvider } from '@feeef.dev/ui/scaffold'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { FloatingLayer, GlassGroup, ScaffoldProvider } from '@feeef.dev/ui/scaffold'
+import { Button } from '@feeef.dev/ui/primitives/button'
 import '../glass-demo.css'
 
 /** Reads the reservation the provider writes on <html>. */
@@ -22,37 +22,37 @@ function SyncNotice() {
   const reserve = useReserve('--lab-notice-reserve')
   return (
     <div className="demo-column">
-      <LabButton variant="tonal" onClick={() => setOpen(!open)}>
+      <Button variant="tonal" onClick={() => setOpen(!open)}>
         {open ? 'Hide notice' : 'Show sync notice'}
-      </LabButton>
+      </Button>
       <p className="glass-demo-status" role="status">
         Reserved at the bottom of the window: {reserve}
       </p>
       {open && (
-        <LabFloatingLayer slot="notice">
-          <LabGlassGroup role="status" className="glass-demo-notice">
+        <FloatingLayer slot="notice">
+          <GlassGroup role="status" className="glass-demo-notice">
             12 orders synced from Yalidine
-            <LabButton variant="text" controlSize="compact" onClick={() => setOpen(false)}>
+            <Button variant="text" controlSize="compact" onClick={() => setOpen(false)}>
               Dismiss
-            </LabButton>
-          </LabGlassGroup>
-        </LabFloatingLayer>
+            </Button>
+          </GlassGroup>
+        </FloatingLayer>
       )}
     </div>
   )
 }
 
-export default function FloatingLayer() {
+export default function FloatingLayerExample() {
   // Mount the provider once at the root of your page; it is local here only for the demo.
   return (
-    <LabScaffoldProvider className="glass-demo-provider">
+    <ScaffoldProvider className="glass-demo-provider">
       <SyncNotice />
-    </LabScaffoldProvider>
+    </ScaffoldProvider>
   )
 }
 
 export const meta = {
   title: 'Floating layer',
   description:
-    'LabFloatingLayer portals a surface into a viewport-fixed layer and reserves its measured height. Show the notice: it floats at the bottom of the window and the reservation updates.',
+    'FloatingLayer portals a surface into a viewport-fixed layer and reserves its measured height. Show the notice: it floats at the bottom of the window and the reservation updates.',
 }

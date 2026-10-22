@@ -12,24 +12,24 @@ type ChoiceDecoration = {
     /** Class name for the outer `<label>`, for layout. */
     containerClassName?: string;
 };
-export type LabCheckboxProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'size' | 'children'> & ChoiceDecoration & {
+export type CheckboxProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'size' | 'children'> & ChoiceDecoration & {
     /** Shows a dash for a partly selected group and reports `aria-checked="mixed"`. Derive it from your own state; it does not clear itself. */
     indeterminate?: boolean;
     /** Called with the new checked state. */
     onCheckedChange?: (checked: boolean) => void;
 };
-export type LabRadioProps = Omit<LabCheckboxProps, 'indeterminate'>;
+export type RadioProps = Omit<CheckboxProps, 'indeterminate'>;
 /** A native checkbox with a label, description, error and indeterminate state. */
-export declare const LabCheckbox: React.ForwardRefExoticComponent<Omit<React.InputHTMLAttributes<HTMLInputElement>, "children" | "type" | "size"> & ChoiceDecoration & {
+export declare const Checkbox: React.ForwardRefExoticComponent<Omit<React.InputHTMLAttributes<HTMLInputElement>, "children" | "type" | "size"> & ChoiceDecoration & {
     /** Shows a dash for a partly selected group and reports `aria-checked="mixed"`. Derive it from your own state; it does not clear itself. */
     indeterminate?: boolean;
     /** Called with the new checked state. */
     onCheckedChange?: (checked: boolean) => void;
 } & React.RefAttributes<HTMLInputElement>>;
-/** A single native radio with a label and description. Prefer `LabRadioGroup`, which names and labels the set. */
-export declare const LabRadio: React.ForwardRefExoticComponent<LabRadioProps & React.RefAttributes<HTMLInputElement>>;
-/** One entry in `LabRadioGroup`'s `options`. */
-export type LabRadioOption = {
+/** A single native radio with a label and description. Prefer `RadioGroup`, which names and labels the set. */
+export declare const Radio: React.ForwardRefExoticComponent<RadioProps & React.RefAttributes<HTMLInputElement>>;
+/** One entry in `RadioGroup`'s `options`. */
+export type RadioOption = {
     /** The value submitted and passed to `onValueChange`. Must be unique in the group. */
     value: string;
     /** Visible label. */
@@ -39,11 +39,11 @@ export type LabRadioOption = {
     /** Disables this option only. */
     disabled?: boolean;
 };
-export type LabRadioGroupProps = Omit<React.FieldsetHTMLAttributes<HTMLFieldSetElement>, 'onChange' | 'defaultValue'> & {
+export type RadioGroupProps = Omit<React.FieldsetHTMLAttributes<HTMLFieldSetElement>, 'onChange' | 'defaultValue'> & {
     /** The group's question, rendered as the fieldset legend. */
     label: React.ReactNode;
     /** The choices, in order. */
-    options: readonly LabRadioOption[];
+    options: readonly RadioOption[];
     /** The selected value, for a controlled group. */
     value?: string;
     /** The initially selected value, for an uncontrolled group. */
@@ -67,11 +67,11 @@ export type LabRadioGroupProps = Omit<React.FieldsetHTMLAttributes<HTMLFieldSetE
  * A labelled set of mutually exclusive choices. Native radios own keyboard navigation, form
  * submission and reset; the `<fieldset>` and `<legend>` own the group label.
  */
-export declare const LabRadioGroup: React.ForwardRefExoticComponent<Omit<React.FieldsetHTMLAttributes<HTMLFieldSetElement>, "defaultValue" | "onChange"> & {
+export declare const RadioGroup: React.ForwardRefExoticComponent<Omit<React.FieldsetHTMLAttributes<HTMLFieldSetElement>, "defaultValue" | "onChange"> & {
     /** The group's question, rendered as the fieldset legend. */
     label: React.ReactNode;
     /** The choices, in order. */
-    options: readonly LabRadioOption[];
+    options: readonly RadioOption[];
     /** The selected value, for a controlled group. */
     value?: string;
     /** The initially selected value, for an uncontrolled group. */

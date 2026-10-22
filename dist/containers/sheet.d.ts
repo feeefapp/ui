@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { type LabSheetDetent } from './sheet-model.js';
+import { type SheetDetent } from './sheet-model.js';
 import './sheet.css';
-export type { LabSheetDetent } from './sheet-model.js';
-export type LabSheetProps = {
+export type { SheetDetent } from './sheet-model.js';
+export type SheetProps = {
     /** Shows the sheet. It animates in and out; keep it mounted and toggle this. */
     open: boolean;
     /** Called with `false` when the person dismisses it (drag down, scrim, Escape), and never with `true`. */
@@ -12,20 +12,20 @@ export type LabSheetProps = {
     /** Sheet content; it scrolls inside the sheet. */
     children: React.ReactNode;
     /** Heights the sheet rests at, lowest first is not required. Default `['large']`. */
-    detents?: readonly LabSheetDetent[];
+    detents?: readonly SheetDetent[];
     /** Controlled detent. Pair with `onDetentChange`. */
-    detent?: LabSheetDetent;
+    detent?: SheetDetent;
     /** Detent to open at when uncontrolled. Default: the first in `detents`. */
-    defaultDetent?: LabSheetDetent;
+    defaultDetent?: SheetDetent;
     /** Called when the person drags or taps the grabber to another detent. */
-    onDetentChange?: (detent: LabSheetDetent) => void;
+    onDetentChange?: (detent: SheetDetent) => void;
     /** Whether dragging down, the scrim and Escape close it. Default true. */
     dismissible?: boolean;
     /** Shows the grabber. Default: when there is more than one detent. */
     grabber?: boolean;
     /** Floating chrome over the top of the content: a title and a Done button in glass groups. */
     top?: React.ReactNode;
-    /** Floating chrome over the bottom: usually a LabDock with the sheet's main action. */
+    /** Floating chrome over the bottom: usually a Dock with the sheet's main action. */
     bottom?: React.ReactNode;
     /**
      * `true` (default) dims and blocks the page. `false` leaves the page usable behind the sheet,
@@ -50,5 +50,5 @@ export type LabSheetProps = {
  * when flicked down. Scrolling inside hands off to dragging the sheet at the top. On wide screens
  * it becomes a centered dialog. The page behind dims and, under a full-height sheet, recedes.
  */
-export declare function LabSheet(props: LabSheetProps): React.JSX.Element | null;
+export declare function Sheet(props: SheetProps): React.JSX.Element | null;
 //# sourceMappingURL=sheet.d.ts.map

@@ -1,17 +1,17 @@
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
 
 export default function Basic() {
   return (
     <div className="demo-column">
-      <LabTextField hint="Customer name" autoComplete="name" />
-      <LabTextField
+      <TextField hint="Customer name" autoComplete="name" />
+      <TextField
         hint="Phone number"
         type="tel"
         inputMode="tel"
         autoComplete="tel"
         supportingText="10 digits, starting with 05, 06 or 07."
       />
-      <LabTextField hint="Address" defaultValue="12 rue Didouche Mourad, Alger" />
+      <TextField hint="Address" defaultValue="12 rue Didouche Mourad, Alger" />
     </div>
   )
 }

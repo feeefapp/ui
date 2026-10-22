@@ -1,34 +1,34 @@
 import { ArrowLeft, Download, MoreHorizontal, Plus } from 'lucide-react'
-import { LabToolbar, LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'
+import { Toolbar, ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
 import '../toolbar-demo.css'
 
 export default function Basic() {
   return (
     <div className="toolbar-demo-surface">
-      <LabToolbar
+      <Toolbar
         label="Products"
         leading={
-          <LabToolbarGroup label="Navigation">
-            <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back to store">
+          <ToolbarGroup label="Navigation">
+            <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back to store">
               <ArrowLeft className="lab-dir-flip" />
-            </LabIconButton>
+            </IconButton>
             <span className="toolbar-demo-title">Products</span>
-          </LabToolbarGroup>
+          </ToolbarGroup>
         }
         trailing={
-          <LabToolbarGroup label="Product actions">
-            <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Export CSV">
+          <ToolbarGroup label="Product actions">
+            <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Export CSV">
               <Download />
-            </LabIconButton>
-            <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="More actions">
+            </IconButton>
+            <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="More actions">
               <MoreHorizontal />
-            </LabIconButton>
-            <LabButton variant="filled" appearance="toolbar" controlSize="compact">
+            </IconButton>
+            <Button variant="filled" appearance="toolbar" controlSize="compact">
               <Plus />
               Add product
-            </LabButton>
-          </LabToolbarGroup>
+            </Button>
+          </ToolbarGroup>
         }
       />
     </div>
@@ -38,5 +38,5 @@ export default function Basic() {
 export const meta = {
   title: 'Leading and trailing groups',
   description:
-    'LabToolbar only lays out its two sides. Each LabToolbarGroup is one glass pill for related controls; the gap between them stays click-through.',
+    'Toolbar only lays out its two sides. Each ToolbarGroup is one glass pill for related controls; the gap between them stays click-through.',
 }

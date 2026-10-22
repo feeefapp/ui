@@ -65,7 +65,7 @@ function Overview() {
           Every radius token, and every radius inside component CSS, is written as a multiple of it, so
           circles such as radio marks stay round while everything else follows.
         </p>
-        <Code code={`<LabProvider theme={{ palette: 'mono', density: 'compact', radius: 0.35 }}>`} />
+        <Code code={`<Provider theme={{ palette: 'mono', density: 'compact', radius: 0.35 }}>`} />
         <p>Write your own radii the same way:</p>
         <Code
           lang="css"
@@ -116,10 +116,10 @@ function Overview() {
         </p>
         <Code
           code={`// Default: native CSS corners, ordinary rounding elsewhere.
-<LabProvider>{children}</LabProvider>
+<Provider>{children}</Provider>
 
 // Opt in to the SVG fallback on unsupported browsers.
-<LabProvider enableCornerFallback>{children}</LabProvider>`}
+<Provider enableCornerFallback>{children}</Provider>`}
         />
         <Callout tone="warning" title="Mark reusable surfaces">
           <p>

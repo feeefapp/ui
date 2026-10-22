@@ -2,15 +2,15 @@
 
 import type { ReactNode, RefObject } from 'react'
 import { FoAnimatedLogo } from '../brand/logo'
-import { LabLink, LabToolbar, LabToolbarGroup } from '../ui'
-import { useLabI18n } from '../i18n'
+import { Link, Toolbar, ToolbarGroup } from '../ui'
+import { useI18n } from '../i18n'
 
 /**
  * Floating workspace header: a glass group with the sidebar toggle and logo, the page title and
  * detail, then optional `tools` and `actions` groups at the end. Pages supply context and
  * commands, never a second navbar skin.
  */
-export function LabWorkspaceHeader({
+export function WorkspaceHeader({
   toggle,
   title,
   detail,
@@ -23,7 +23,7 @@ export function LabWorkspaceHeader({
   brandLabel = 'Feeef',
   brandSuffix,
 }: {
-  /** The sidebar toggle, shown before the logo (e.g. LabScaffoldToggleButton). */
+  /** The sidebar toggle, shown before the logo (e.g. ScaffoldToggleButton). */
   toggle: ReactNode
   /** Current page title. */
   title: string
@@ -46,26 +46,26 @@ export function LabWorkspaceHeader({
   /** Short product name after the logo, e.g. `lab`. */
   brandSuffix?: string
 }) {
-  const { t } = useLabI18n()
+  const { t } = useI18n()
   return (
     <header ref={headerRef} className="lab-workspace-header" data-embedded={embedded}>
-      <LabToolbar
+      <Toolbar
         label={t('lab.nav.labWorkspace')}
         leading={
           <>
-            <LabToolbarGroup
+            <ToolbarGroup
               label={t('lab.nav.workspaceNavigation')}
               className="lab-workspace-header-leading"
             >
               {toggle}
-              <LabLink href={brandHref} className="lab-workspace-brand" aria-label={brandLabel}>
+              <Link href={brandHref} className="lab-workspace-brand" aria-label={brandLabel}>
                 <FoAnimatedLogo
                   width="var(--lab-navigation-logo-width, 100px)"
                   height="var(--lab-navigation-logo-height, 27px)"
                 />
                 {brandSuffix && <span aria-hidden="true">/ {brandSuffix}</span>}
-              </LabLink>
-            </LabToolbarGroup>
+              </Link>
+            </ToolbarGroup>
             <div className="lab-workspace-context">
               <strong>{title}</strong>
               {detail && <span>{detail}</span>}
@@ -75,20 +75,20 @@ export function LabWorkspaceHeader({
         trailing={
           <>
             {tools && (
-              <LabToolbarGroup
+              <ToolbarGroup
                 label={toolsLabel ?? t('lab.nav.viewControls')}
                 className="lab-workspace-header-tools"
               >
                 {tools}
-              </LabToolbarGroup>
+              </ToolbarGroup>
             )}
             {actions && (
-              <LabToolbarGroup
+              <ToolbarGroup
                 label={t('lab.nav.workspaceActions')}
                 className="lab-workspace-header-actions"
               >
                 {actions}
-              </LabToolbarGroup>
+              </ToolbarGroup>
             )}
           </>
         }

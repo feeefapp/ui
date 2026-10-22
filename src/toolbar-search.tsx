@@ -2,16 +2,16 @@
 
 import { useId, useLayoutEffect, useRef, useState, type ReactNode, type Ref, type KeyboardEventHandler } from 'react'
 import { ArrowLeft, Search, X } from 'lucide-react'
-import { LabToolbarGroup } from './toolbar'
-import { LabIconButton } from './primitives/button'
-import { LabRawInput, type LabInputElement } from './primitives/raw-input'
-import { useLabI18n } from './i18n'
+import { ToolbarGroup } from './toolbar'
+import { IconButton } from './primitives/button'
+import { RawInput, type InputElement } from './primitives/raw-input'
+import { useI18n } from './i18n'
 import { cn } from './utils'
 import { stepSearchMorph, searchMorphVisibility } from './toolbar-search-motion'
 import './toolbar-search.css'
 
-export type LabToolbarSearchInputProps = {
-  ref: Ref<LabInputElement>
+export type ToolbarSearchInputProps = {
+  ref: Ref<InputElement>
   id: string
   type: 'search'
   'aria-label': string
@@ -21,10 +21,10 @@ export type LabToolbarSearchInputProps = {
   tabIndex: number
   className: string
   onValueChange: (value: string) => void
-  onKeyDown: KeyboardEventHandler<LabInputElement>
+  onKeyDown: KeyboardEventHandler<InputElement>
 }
-/** Props for LabToolbarSearch. */
-export type LabToolbarSearchProps = {
+/** Props for ToolbarSearch. */
+export type ToolbarSearchProps = {
   /** Accessible name of the search field and its trigger. Also the default placeholder. */
   label: string
   /** The query (controlled). */
@@ -42,11 +42,11 @@ export type LabToolbarSearchProps = {
   /** Starts open. A non-empty `value` also starts it open. */
   defaultExpanded?: boolean
   /** Ref to the input element. */
-  inputRef?: Ref<LabInputElement>
+  inputRef?: Ref<InputElement>
   /** Replaces the default input, e.g. with a combobox; spread the given props onto it. */
-  renderInput?: (props: LabToolbarSearchInputProps) => ReactNode
+  renderInput?: (props: ToolbarSearchInputProps) => ReactNode
   /** Key handler for the input. Escape is handled first: it collapses and clears. */
-  onInputKeyDown?: KeyboardEventHandler<LabInputElement>
+  onInputKeyDown?: KeyboardEventHandler<InputElement>
   /** Called when the field opens or collapses. */
   onExpandedChange?: (expanded: boolean) => void
 }
@@ -55,8 +55,8 @@ export type LabToolbarSearchProps = {
  * Search button that springs open into a field inside the same glass pill, taking the free width
  * of its row. Persistent material, stable control geometry and a velocity-preserving spring.
  */
-export function LabToolbarSearch({ label, value, onValueChange, placeholder, children, trailing, disabled, className, defaultExpanded = false, inputRef, renderInput, onInputKeyDown, onExpandedChange }: LabToolbarSearchProps) {
-  const { t } = useLabI18n()
+export function ToolbarSearch({ label, value, onValueChange, placeholder, children, trailing, disabled, className, defaultExpanded = false, inputRef, renderInput, onInputKeyDown, onExpandedChange }: ToolbarSearchProps) {
+  const { t } = useI18n()
   const id = useId()
   const [expanded, setExpanded] = useState(defaultExpanded || !!value)
   const [moving, setMoving] = useState(false)
@@ -64,7 +64,7 @@ export function LabToolbarSearch({ label, value, onValueChange, placeholder, chi
   const main = useRef<HTMLDivElement>(null)
   const surface = useRef<HTMLElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
-  const field = useRef<LabInputElement>(null)
+  const field = useRef<InputElement>(null)
   const spring = useRef({ position: 0, velocity: 0 })
   const target = useRef(0)
   const frame = useRef(0)
@@ -140,7 +140,7 @@ export function LabToolbarSearch({ label, value, onValueChange, placeholder, chi
     }
     setMoving(true); setExpanded(next); onExpandedChange?.(next)
   }
-  const input: LabToolbarSearchInputProps = {
+  const input: ToolbarSearchInputProps = {
     ref: node => { field.current = node; if (typeof inputRef === 'function') inputRef(node); else if (inputRef) inputRef.current = node },
     id, type: 'search', 'aria-label': label, placeholder: placeholder ?? label,
     value: expanded ? value : moving ? closingValue : value, disabled, tabIndex: expanded ? 0 : -1,
@@ -152,15 +152,15 @@ export function LabToolbarSearch({ label, value, onValueChange, placeholder, chi
   }
   return <div className={cn('lab-toolbar-search', className)} role="group" aria-label={label} data-expanded={expanded} data-moving={moving}>
     <div ref={main} className="lab-toolbar-search-main">
-      <LabToolbarGroup ref={surface} label={label} className="lab-toolbar-search-surface">
-        <LabIconButton ref={trigger} variant="text" appearance="toolbar" controlSize="compact" aria-label={expanded ? t('lab.search.collapse') : label} aria-expanded={expanded} aria-controls={id} disabled={disabled} onClick={() => change(!expanded)}>
+      <ToolbarGroup ref={surface} label={label} className="lab-toolbar-search-surface" glassMotion="follow">
+        <IconButton ref={trigger} variant="text" appearance="toolbar" controlSize="compact" aria-label={expanded ? t('lab.search.collapse') : label} aria-expanded={expanded} aria-controls={id} disabled={disabled} onClick={() => change(!expanded)}>
           <span className="lab-toolbar-search-glyph" data-expanded={expanded}><Search/><ArrowLeft className="lab-dir-flip"/></span>
-        </LabIconButton>
+        </IconButton>
         <div className="lab-toolbar-search-editor" inert={!expanded} aria-hidden={!expanded}>
-          {renderInput ? renderInput(input) : <LabRawInput {...input}/>}
-          <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label={t('lab.search.clear')} disabled={!value || disabled} onClick={() => { if (value) onValueChange(''); field.current?.focus({preventScroll:true}) }}><X/></LabIconButton>
+          {renderInput ? renderInput(input) : <RawInput {...input}/>}
+          <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label={t('lab.search.clear')} disabled={!value || disabled} onClick={() => { if (value) onValueChange(''); field.current?.focus({preventScroll:true}) }}><X/></IconButton>
         </div>
-      </LabToolbarGroup>
+      </ToolbarGroup>
       <div className="lab-toolbar-search-controls" inert={expanded || moving} aria-hidden={expanded || moving}>{children}</div>
     </div>
     {trailing && <div className="lab-toolbar-search-trailing">{trailing}</div>}

@@ -5,8 +5,8 @@ import { Slot } from '@radix-ui/react-slot';
 import { ChevronRight, GripVertical } from 'lucide-react';
 import { attachPan } from '../physics/gesture.js';
 import { animateLayoutFrom, snapshotLayout } from '../physics/layout-group.js';
-import { LabMotionValue } from '../physics/motion-value.js';
-import { LAB_SPRINGS, rubberBand, rubberBandClamp } from '../physics/spring.js';
+import { MotionValue } from '../physics/motion-value.js';
+import { SPRINGS, rubberBand, rubberBandClamp } from '../physics/spring.js';
 import { reorderLanding, reorderShifts, reorderTarget, swipeIsFull, swipeRelease, } from './list-model.js';
 import { cn } from '../utils.js';
 import './list.css';
@@ -17,7 +17,7 @@ const Reorder = React.createContext({ enabled: false });
  * their leading icon. With `onReorder`, every row gets a grip: drag it (any pointer) or focus it
  * and press the arrow keys.
  */
-export function LabListSection({ header, footer, children, className, label, onReorder, }) {
+export function ListSection({ header, footer, children, className, label, onReorder, }) {
     const id = React.useId();
     const card = React.useRef(null);
     const pending = React.useRef(null);
@@ -30,7 +30,7 @@ export function LabListSection({ header, footer, children, className, label, onR
             return;
         const snapshot = pending.current;
         pending.current = null;
-        animateLayoutFrom(snapshot, { spring: LAB_SPRINGS.snappy });
+        animateLayoutFrom(snapshot, { spring: SPRINGS.snappy });
     });
     const items = () => (card.current ? Array.from(card.current.children) : []);
     const commit = (from, to) => {
@@ -60,7 +60,7 @@ export function LabListSection({ header, footer, children, className, label, onR
                 d.to = to;
                 reorderShifts(d.heights, d.from, to).forEach((shift, j) => {
                     if (j !== d.from)
-                        void d.offsets[j].animateTo(shift, { spring: LAB_SPRINGS.snappy });
+                        void d.offsets[j].animateTo(shift, { spring: SPRINGS.snappy });
                 });
             }
         };
@@ -108,7 +108,7 @@ export function LabListSection({ header, footer, children, className, label, onR
                     heights,
                     nodes,
                     offsets: nodes.map((node, j) => {
-                        const value = new LabMotionValue(0, 0.25);
+                        const value = new MotionValue(0, 0.25);
                         value.subscribe((v) => paint(node, v, j === from));
                         return value;
                     }),
@@ -149,7 +149,7 @@ export function LabListSection({ header, footer, children, className, label, onR
                     });
                 };
                 const landing = reorderLanding(d.heights, d.from, d.to);
-                void d.offsets[d.from].animateTo(landing, { spring: LAB_SPRINGS.release }).then((arrived) => arrived && finish());
+                void d.offsets[d.from].animateTo(landing, { spring: SPRINGS.release }).then((arrived) => arrived && finish());
             },
         }));
     }, [Boolean(onReorder)]);
@@ -173,9 +173,9 @@ let closeOpenRow = null;
 /**
  * One row of a list: a full-width button (or your link with `asChild`) with leading media, title,
  * subtitle, trailing value and an optional chevron. Swipe actions reveal behind it, and inside a
- * reorderable LabListSection it gets a grip.
+ * reorderable ListSection it gets a grip.
  */
-export const LabListRow = React.forwardRef(function LabListRow({ title, subtitle, leading, trailing, chevron, selected, asChild, static: isStatic, leadingActions, trailingActions, fullSwipe = true, reorderLabel, className, children, ...props }, ref) {
+export const ListRow = React.forwardRef(function ListRow({ title, subtitle, leading, trailing, chevron, selected, asChild, static: isStatic, leadingActions, trailingActions, fullSwipe = true, reorderLabel, className, children, ...props }, ref) {
     const reorder = React.useContext(Reorder);
     const item = React.useRef(null);
     const swipeable = !!(leadingActions?.length || trailingActions?.length);
@@ -183,7 +183,7 @@ export const LabListRow = React.forwardRef(function LabListRow({ title, subtitle
     const [full, setFull] = React.useState(null);
     const offset = React.useRef(null);
     if (!offset.current)
-        offset.current = new LabMotionValue(0, 0.25);
+        offset.current = new MotionValue(0, 0.25);
     const live = React.useRef({ leadingActions, trailingActions, fullSwipe });
     live.current = { leadingActions, trailingActions, fullSwipe };
     const rtl = () => !!item.current && getComputedStyle(item.current).direction === 'rtl';
@@ -211,7 +211,7 @@ export const LabListRow = React.forwardRef(function LabListRow({ title, subtitle
             setFull(isFull ? (v > 0 ? 'leading' : 'trailing') : null);
         });
     }, [swipeable]);
-    const settle = (target, velocity) => offset.current.animateTo(target, { spring: LAB_SPRINGS.release, velocity });
+    const settle = (target, velocity) => offset.current.animateTo(target, { spring: SPRINGS.release, velocity });
     const close = React.useCallback(() => {
         setOpen(null);
         void settle(0);

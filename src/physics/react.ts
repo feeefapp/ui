@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useRef, useSyncExternalStore, type RefObject } from 'react'
-import { attachPan, type LabPanOptions } from './gesture'
-import { LabMotionValue, prefersReducedMotion } from './motion-value'
+import { attachPan, type PanOptions } from './gesture'
+import { MotionValue, prefersReducedMotion } from './motion-value'
 
 const REDUCED = '(prefers-reduced-motion: reduce)'
 /** Live `prefers-reduced-motion`; false on the server. */
-export function useLabReducedMotion() {
+export function useReducedMotion() {
   return useSyncExternalStore(
     (notify) => {
       const media = window.matchMedia?.(REDUCED)
@@ -19,14 +19,14 @@ export function useLabReducedMotion() {
 }
 
 /** A motion value that lives as long as the component. `restDelta` is in the value's units. */
-export function useLabMotionValue(initial: number, restDelta?: number) {
-  const ref = useRef<LabMotionValue | null>(null)
-  if (!ref.current) ref.current = new LabMotionValue(initial, restDelta)
+export function useMotionValue(initial: number, restDelta?: number) {
+  const ref = useRef<MotionValue | null>(null)
+  if (!ref.current) ref.current = new MotionValue(initial, restDelta)
   return ref.current
 }
 
 /** Calls `paint` with every value (and once on mount), before the browser paints. */
-export function useLabMotionPaint(value: LabMotionValue, paint: (value: number) => void) {
+export function useMotionPaint(value: MotionValue, paint: (value: number) => void) {
   const latest = useRef(paint)
   latest.current = paint
   useLayoutEffect(() => {
@@ -40,7 +40,7 @@ export function useLabMotionPaint(value: LabMotionValue, paint: (value: number) 
  * state. Set `touch-action` on the element (`pan-y` for an x pan, `pan-x` for a y pan) unless
  * the pan uses `touch: 'claim'`.
  */
-export function useLabPan(ref: RefObject<HTMLElement | null>, options: LabPanOptions, enabled = true) {
+export function usePan(ref: RefObject<HTMLElement | null>, options: PanOptions, enabled = true) {
   const latest = useRef(options)
   latest.current = options
   useEffect(() => {

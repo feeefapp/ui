@@ -326,7 +326,7 @@ html[data-lab-theme] .lab-pc .lab-pc-card[data-expanded='false'] .lab-pc-field t
   background: color-mix(in srgb, var(--pc-ink) 8%, transparent);
 }
 
-/* What to make: the Lab tab group (LabGlassGroup + .lab-tab) sits above the card. */
+/* What to make: the Lab tab group (GlassGroup + .lab-tab) sits above the card. */
 .lab-pc-modes {
   justify-self: center;
 }

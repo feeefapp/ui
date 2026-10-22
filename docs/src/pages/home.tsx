@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { ArrowRight, Languages, Paintbrush, Accessibility, Boxes, Search } from 'lucide-react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
-import { LabSlideSwitch, LabSlider } from '@feeef.dev/ui/primitives/slider'
-import { LabCheckbox } from '@feeef.dev/ui/primitives/choice'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { SlideSwitch, Slider } from '@feeef.dev/ui/primitives/slider'
+import { Checkbox } from '@feeef.dev/ui/primitives/choice'
 import { Code } from '../blocks/code'
 import { navigate } from '../router'
 import pkg from '../../../package.json'
@@ -15,7 +15,7 @@ const FEATURES = [
   {
     icon: Paintbrush,
     title: 'Themed by configuration',
-    text: 'Palette, density and corner radius are one LabThemeConfig. Components read tokens, never literals.',
+    text: 'Palette, density and corner radius are one ThemeConfig. Components read tokens, never literals.',
   },
   {
     icon: Languages,
@@ -46,12 +46,12 @@ export function HomePage() {
             design language for every Feeef web app.
           </p>
           <div className="docs-hero-actions">
-            <LabButton variant="filled" onClick={() => navigate('/get-started/introduction')}>
+            <Button variant="filled" onClick={() => navigate('/get-started/introduction')}>
               Get started <ArrowRight size={18} className="docs-dir-flip" />
-            </LabButton>
-            <LabButton variant="elevated" onClick={() => navigate('/components')}>
+            </Button>
+            <Button variant="elevated" onClick={() => navigate('/components')}>
               Browse components
-            </LabButton>
+            </Button>
           </div>
           <Code code={INSTALL} lang="bash" title="Install" />
         </div>
@@ -77,8 +77,8 @@ function HeroDemo() {
   const [notify, setNotify] = useState(true)
   return (
     <div className="docs-hero-demo" aria-label="Live components">
-      <LabTextField hint="Search orders" leadingIcon={<Search size={18} />} />
-      <LabSegmentedControl
+      <TextField hint="Search orders" leadingIcon={<Search size={18} />} />
+      <SegmentedControl
         label="Billing"
         value={plan}
         onChange={setPlan}
@@ -91,16 +91,16 @@ function HeroDemo() {
         <span aria-hidden="true">
           Seats <output>{seats}</output>
         </span>
-        <LabSlider label="Seats" min={1} max={20} value={seats} onValueChange={setSeats} />
+        <Slider label="Seats" min={1} max={20} value={seats} onValueChange={setSeats} />
       </div>
       <div className="docs-playground-row">
         <span aria-hidden="true">Email me about new orders</span>
-        <LabSlideSwitch label="Email me about new orders" checked={notify} onCheckedChange={setNotify} />
+        <SlideSwitch label="Email me about new orders" checked={notify} onCheckedChange={setNotify} />
       </div>
-      <LabCheckbox label="Remember this device" defaultChecked />
+      <Checkbox label="Remember this device" defaultChecked />
       <div className="docs-hero-demo-actions">
-        <LabButton variant="text">Cancel</LabButton>
-        <LabButton variant="filled">Save changes</LabButton>
+        <Button variant="text">Cancel</Button>
+        <Button variant="filled">Save changes</Button>
       </div>
     </div>
   )

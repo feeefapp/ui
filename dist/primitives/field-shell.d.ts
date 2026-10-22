@@ -1,9 +1,9 @@
 import * as React from 'react';
-import type { LabControlVariant } from './control-variants.js';
+import type { ControlVariant } from './control-variants.js';
 import '../system.css';
 import './control-variants.css';
 import './text-field.css';
-export type LabFieldDecorationProps = {
+export type FieldDecorationProps = {
     /** The field's name. It sits inside the empty field and floats up on focus or when a value is present. */
     hint?: string;
     label?: string;
@@ -24,12 +24,12 @@ export type LabFieldDecorationProps = {
     /** Class name for the outer wrapper (field plus supporting text), for layout. */
     containerClassName?: string;
     /** Surface emphasis, shared with buttons. */
-    variant?: LabControlVariant;
+    variant?: ControlVariant;
     /** Field height: `regular` (44px) or `compact` (40px). */
     controlSize?: 'regular' | 'compact';
 };
-/** What `LabFieldShell` hands its child control so the label and messages stay connected. */
-export type LabFieldControlState = {
+/** What `FieldShell` hands its child control so the label and messages stay connected. */
+export type FieldControlState = {
     /** Put on the control; the floating label points at it. */
     id: string;
     /** Put on the control as `aria-describedby`: supporting text, error and counter ids. */
@@ -37,7 +37,7 @@ export type LabFieldControlState = {
     /** Put on the control as `aria-invalid`. */
     invalid: boolean;
 };
-export type LabFieldShellProps = LabFieldDecorationProps & {
+export type FieldShellProps = FieldDecorationProps & {
     /** Id for the control. Generated when omitted. */
     id?: string;
     /** Dims the field. The child control must also be disabled. */
@@ -55,11 +55,11 @@ export type LabFieldShellProps = LabFieldDecorationProps & {
     /** Content at the end of the supporting line, such as a character count. */
     counter?: React.ReactNode;
     /** Renders the control, given the id, description ids and invalid state to apply to it. */
-    children: (state: LabFieldControlState) => React.ReactNode;
+    children: (state: FieldControlState) => React.ReactNode;
 };
 /**
  * The field frame on its own: surface, floating hint, icons, affixes, supporting text and
  * counter. It paints and labels; the child control owns editing, selection and validation.
  */
-export declare function LabFieldShell({ id: suppliedId, label, hint, dir, labelStyle, leadingIcon, leading, trailing, supportingText, error, containerClassName, variant, controlSize, disabled, required, invalid, describedBy, populated, alwaysFloat, counter, children, }: LabFieldShellProps): React.JSX.Element;
+export declare function FieldShell({ id: suppliedId, label, hint, dir, labelStyle, leadingIcon, leading, trailing, supportingText, error, containerClassName, variant, controlSize, disabled, required, invalid, describedBy, populated, alwaysFloat, counter, children, }: FieldShellProps): React.JSX.Element;
 //# sourceMappingURL=field-shell.d.ts.map

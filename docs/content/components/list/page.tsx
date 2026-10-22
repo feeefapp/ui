@@ -37,7 +37,7 @@ function Overview() {
           prevent that). Opening one row closes the other, and tapping an open row closes it.
         </p>
         <Code
-          code={`<LabListRow
+          code={`<ListRow
   title="#1048 · Amina Benali"
   leadingActions={[{ label: 'Confirm', tone: 'primary', icon: <Check />, onAction: confirm }]}
   trailingActions={[
@@ -82,9 +82,9 @@ export default definePage({
   group: 'Containment',
   order: 3,
   summary: 'Inset-grouped rows with chevrons, values, swipe actions and drag-to-reorder.',
-  importLine: "import { LabListSection, LabListRow } from '@feeef.dev/ui/primitives/list'",
+  importLine: "import { ListSection, ListRow } from '@feeef.dev/ui/primitives/list'",
   source: 'src/primitives/list.tsx',
-  api: ['LabListSection', 'LabListRow'],
+  api: ['ListSection', 'ListRow'],
   keywords: ['list', 'row', 'table view', 'swipe', 'actions', 'reorder', 'drag', 'sortable', 'settings'],
   Overview,
   examples: examplesFrom(

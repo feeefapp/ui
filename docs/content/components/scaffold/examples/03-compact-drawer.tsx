@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Package, ShoppingBag, Truck, Users } from 'lucide-react'
 import {
-  LabScaffold,
-  LabScaffoldAppBar,
-  LabScaffoldSide,
-  LabScaffoldToggleButton,
+  Scaffold,
+  ScaffoldAppBar,
+  ScaffoldSide,
+  ScaffoldToggleButton,
 } from '@feeef.dev/ui/workspace/scaffold'
-import { LabNavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
-import { LabToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { NavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
 import '../scaffold-demo.css'
 
 const PAGES = [
@@ -21,14 +21,14 @@ export default function CompactDrawer() {
   const [page, setPage] = useState('Deliveries')
   return (
     <div className="scaffold-demo-frame" data-size="phone">
-      <LabScaffold
+      <Scaffold
         compact
         drawerLabel="Store navigation"
         side={(state) => (
-          <LabScaffoldSide leading={<strong className="scaffold-demo-brand">Atlas Store</strong>}>
+          <ScaffoldSide leading={<strong className="scaffold-demo-brand">Atlas Store</strong>}>
             <nav aria-label="Store pages" className="scaffold-demo-nav">
               {PAGES.map((item) => (
-                <LabNavigationItem
+                <NavigationItem
                   key={item.label}
                   compact={false}
                   label={item.label}
@@ -41,20 +41,20 @@ export default function CompactDrawer() {
                 />
               ))}
             </nav>
-          </LabScaffoldSide>
+          </ScaffoldSide>
         )}
         appBar={
-          <LabScaffoldAppBar
+          <ScaffoldAppBar
             leading={
-              <LabToolbarGroup label="Navigation">
-                <LabScaffoldToggleButton />
-              </LabToolbarGroup>
+              <ToolbarGroup label="Navigation">
+                <ScaffoldToggleButton />
+              </ToolbarGroup>
             }
           >
-            <LabToolbarGroup label="Current page">
+            <ToolbarGroup label="Current page">
               <span className="scaffold-demo-title">{page}</span>
-            </LabToolbarGroup>
-          </LabScaffoldAppBar>
+            </ToolbarGroup>
+          </ScaffoldAppBar>
         }
       >
         <div className="scaffold-demo-list">
@@ -67,7 +67,7 @@ export default function CompactDrawer() {
             </div>
           ))}
         </div>
-      </LabScaffold>
+      </Scaffold>
     </div>
   )
 }

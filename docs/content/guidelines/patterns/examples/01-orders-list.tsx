@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Plus, Truck, X } from 'lucide-react'
-import { LabFilterBar, type LabFilterOption, type LabFilterValue } from '@feeef.dev/ui/filter-bar'
-import { LabToolbarSearch } from '@feeef.dev/ui/toolbar-search'
-import { LabScrollArea } from '@feeef.dev/ui/scroll'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabCheckbox } from '@feeef.dev/ui/primitives/choice'
+import { FilterBar, type FilterOption, type FilterValue } from '@feeef.dev/ui/filter-bar'
+import { ToolbarSearch } from '@feeef.dev/ui/toolbar-search'
+import { ScrollArea } from '@feeef.dev/ui/scroll'
+import { Dock } from '@feeef.dev/ui/dock'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
+import { Checkbox } from '@feeef.dev/ui/primitives/choice'
 import '../patterns.css'
 
 type Order = { id: string; customer: string; wilaya: string; courier: string; total: string; confirmed: boolean; called: boolean }
@@ -20,7 +20,7 @@ const ORDERS: Order[] = [
   { id: '1042', customer: 'Nour Hamidi', wilaya: 'Alger', courier: 'Maystro', total: '4 300 DA', confirmed: true, called: true },
 ]
 
-const FILTERS: LabFilterOption[] = [
+const FILTERS: FilterOption[] = [
   { id: 'notCalled', label: 'Not called yet', description: 'No confirmation call so far' },
   {
     id: 'wilaya',
@@ -40,7 +40,7 @@ export default function OrdersList() {
   const [orders, setOrders] = useState(ORDERS)
   const [query, setQuery] = useState('')
   const [toggles, setToggles] = useState<string[]>([])
-  const [values, setValues] = useState<Record<string, LabFilterValue>>({})
+  const [values, setValues] = useState<Record<string, FilterValue>>({})
   const [pinned, setPinned] = useState<string[]>(['notCalled'])
   const [selected, setSelected] = useState<string[]>([])
 
@@ -68,12 +68,12 @@ export default function OrdersList() {
 
   return (
     <div className="pt-frame">
-      <LabScrollArea
+      <ScrollArea
         label="Orders"
         top={
           // The search springs open over the row; the filter bar sits beside it while it is closed.
-          <LabToolbarSearch label="Search orders" placeholder="Order number or name" value={query} onValueChange={setQuery}>
-            <LabFilterBar
+          <ToolbarSearch label="Search orders" placeholder="Order number or name" value={query} onValueChange={setQuery}>
+            <FilterBar
               label="Order filters"
               options={FILTERS}
               value={toggles}
@@ -83,42 +83,42 @@ export default function OrdersList() {
               pinned={pinned}
               onPinnedChange={setPinned}
             />
-          </LabToolbarSearch>
+          </ToolbarSearch>
         }
         bottom={
           visibleSelected.length ? (
-            <LabDock
+            <Dock
               label="Selected orders"
               swapKey="selected"
               content={<span className="pt-status">{visibleSelected.length} selected</span>}
             >
               <div className="pt-dock-row">
-                <LabIconButton variant="text" appearance="toolbar" aria-label="Clear selection" onClick={() => setSelected([])}>
+                <IconButton variant="text" appearance="toolbar" aria-label="Clear selection" onClick={() => setSelected([])}>
                   <X />
-                </LabIconButton>
-                <LabButton variant="tonal">
+                </IconButton>
+                <Button variant="tonal">
                   <Truck />
                   Assign courier
-                </LabButton>
-                <LabButton variant="filled" onClick={confirmSelected}>
+                </Button>
+                <Button variant="filled" onClick={confirmSelected}>
                   Confirm {visibleSelected.length}
-                </LabButton>
+                </Button>
               </div>
-            </LabDock>
+            </Dock>
           ) : (
-            <LabDock label="Order actions" swapKey="idle">
-              <LabButton variant="filled">
+            <Dock label="Order actions" swapKey="idle">
+              <Button variant="filled">
                 <Plus />
                 New order
-              </LabButton>
-            </LabDock>
+              </Button>
+            </Dock>
           )
         }
       >
         {rows.length ? (
           <div className="pt-list">
             <div className="pt-list-head">
-              <LabCheckbox
+              <Checkbox
                 controlSize="compact"
                 label={`${rows.length} orders`}
                 checked={allSelected}
@@ -128,7 +128,7 @@ export default function OrdersList() {
             </div>
             {rows.map((order) => (
               <div key={order.id} className="pt-row" data-selected={selected.includes(order.id) || undefined}>
-                <LabCheckbox
+                <Checkbox
                   label={`#${order.id} · ${order.customer}`}
                   description={`${order.wilaya} · ${order.courier}`}
                   checked={selected.includes(order.id)}
@@ -147,12 +147,12 @@ export default function OrdersList() {
           <div className="pt-state" role="status">
             <h4>No orders match</h4>
             <p>Nothing matches {q ? `“${query.trim()}” with ` : ''}these filters. Clear them to see every order again.</p>
-            <LabButton variant="tonal" onClick={clearFilters}>
+            <Button variant="tonal" onClick={clearFilters}>
               Clear search and filters
-            </LabButton>
+            </Button>
           </div>
         )}
-      </LabScrollArea>
+      </ScrollArea>
     </div>
   )
 }

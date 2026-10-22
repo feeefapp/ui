@@ -2,16 +2,16 @@
 
 import * as React from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { LabIconButton } from '../primitives/button'
-import { LabToolbarGroup } from '../toolbar'
+import { IconButton } from '../primitives/button'
+import { ToolbarGroup } from '../toolbar'
 import { attachPan } from '../physics/gesture'
-import { LabMotionValue, prefersReducedMotion } from '../physics/motion-value'
-import { LAB_SPRINGS } from '../physics/spring'
+import { MotionValue, prefersReducedMotion } from '../physics/motion-value'
+import { SPRINGS } from '../physics/spring'
 import { centeredIndex, flickTarget, slideEffect, slideProgress } from './carousel-model'
 import { cn } from '../utils'
 import './carousel.css'
 
-export type LabCarouselProps = {
+export type CarouselProps = {
   /** The slides. Each child becomes one slide. */
   children: React.ReactNode
   /** Accessible name, e.g. “Featured products”. */
@@ -44,7 +44,7 @@ export type LabCarouselProps = {
  * `--lab-carousel-progress` property for custom effects). A mouse can drag and flick it; the
  * flick lands on the slide its momentum projects to.
  */
-export function LabCarousel({
+export function Carousel({
   children,
   label,
   slideWidth = 0.82,
@@ -56,7 +56,7 @@ export function LabCarousel({
   dots = true,
   controls = 'auto',
   className,
-}: LabCarouselProps) {
+}: CarouselProps) {
   const slides = React.Children.toArray(children).filter(React.isValidElement)
   const track = React.useRef<HTMLDivElement>(null)
   const [current, setCurrent] = React.useState(controlled ?? 0)
@@ -136,7 +136,7 @@ export function LabCarousel({
   React.useEffect(() => {
     const el = track.current
     if (!el) return
-    const scroll = new LabMotionValue(0, 0.5)
+    const scroll = new MotionValue(0, 0.5)
     scroll.subscribe((v) => (el.scrollLeft = v))
     let start = 0
     return attachPan(el, () => ({
@@ -155,7 +155,7 @@ export function LabCarousel({
         const now = el.scrollLeft
         const offsets = slideEls().map((_, i) => now + deltaTo(i))
         const target = flickTarget(now, velocity, offsets, live.current.current)
-        void scroll.animateTo(offsets[target], { spring: LAB_SPRINGS.release, velocity }).then(() => {
+        void scroll.animateTo(offsets[target], { spring: SPRINGS.release, velocity }).then(() => {
           delete el.dataset.dragging
         })
       },
@@ -205,13 +205,13 @@ export function LabCarousel({
         </div>
         {controls !== 'never' && slides.length > 1 && (
           <>
-            <LabToolbarGroup label="Previous slide" className="lab-carousel-control" data-side="start">
-              <LabIconButton variant="text" appearance="toolbar" aria-label="Previous slide" disabled={current === 0} onClick={() => go(current - 1)}>
+            <ToolbarGroup label="Previous slide" className="lab-carousel-control" data-side="start">
+              <IconButton variant="text" appearance="toolbar" aria-label="Previous slide" disabled={current === 0} onClick={() => go(current - 1)}>
                 <ChevronLeft className="lab-dir-flip" />
-              </LabIconButton>
-            </LabToolbarGroup>
-            <LabToolbarGroup label="Next slide" className="lab-carousel-control" data-side="end">
-              <LabIconButton
+              </IconButton>
+            </ToolbarGroup>
+            <ToolbarGroup label="Next slide" className="lab-carousel-control" data-side="end">
+              <IconButton
                 variant="text"
                 appearance="toolbar"
                 aria-label="Next slide"
@@ -219,8 +219,8 @@ export function LabCarousel({
                 onClick={() => go(current + 1)}
               >
                 <ChevronRight className="lab-dir-flip" />
-              </LabIconButton>
-            </LabToolbarGroup>
+              </IconButton>
+            </ToolbarGroup>
           </>
         )}
       </div>

@@ -1,6 +1,6 @@
 import { useState, type MouseEvent } from 'react'
 import { Package, ShoppingBag, Truck } from 'lucide-react'
-import { LabNavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
+import { NavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
 import '../nav-demo.css'
 
 const PAGES = [
@@ -22,7 +22,7 @@ export default function Links() {
     <div className="nav-demo-layout">
       <nav aria-label="Store" className="nav-demo-side" onClick={route}>
         {PAGES.map((item) => (
-          <LabNavigationItem
+          <NavigationItem
             key={item.href}
             compact={false}
             label={item.label}

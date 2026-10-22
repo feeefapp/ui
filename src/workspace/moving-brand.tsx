@@ -3,17 +3,17 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { FoAnimatedLogo } from '../brand/logo'
-import { useLabScaffold } from './scaffold'
+import { useScaffold } from './scaffold'
 import './moving-brand.css'
 
 /** One persistent visual follows the real, accessible logo links as navigation changes. */
-export function LabMovingBrand({
+export function MovingBrand({
   host,
 }: {
   /** Element containing the `[data-tool-brand-anchor="side"|"header"]` logo anchors to follow. */
   host: RefObject<HTMLElement | null>
 }) {
-  const state = useLabScaffold()
+  const state = useScaffold()
   const visual = useRef<HTMLDivElement>(null)
   const [portal, setPortal] = useState<HTMLDialogElement | null>(null)
   const position = useRef<{ x: number; y: number } | null>(null)

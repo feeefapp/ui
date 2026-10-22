@@ -1,9 +1,9 @@
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
 
 export default function Multiline() {
   return (
     <div className="demo-column">
-      <LabTextField
+      <TextField
         hint="Delivery note"
         multiline
         minLines={3}

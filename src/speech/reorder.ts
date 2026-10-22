@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, type KeyboardEvent, type PointerEvent, type RefObject } from 'react'
-import { useLabI18n } from '../i18n'
+import { useI18n } from '../i18n'
 import { flushSync } from 'react-dom'
 import { speechDragIndex, speechPreviewOffsets } from './block-order'
 
@@ -36,7 +36,7 @@ export function useSpeechReorder({
   onMove: (from: number, to: number) => void
   announce: (message: string) => void
 }) {
-  const { t } = useLabI18n()
+  const { t } = useI18n()
   const drag = useRef<Drag | null>(null)
   const animations = useRef(new Map<HTMLElement, Animation>())
   const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches

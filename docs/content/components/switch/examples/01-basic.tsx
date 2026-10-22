@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LabSlideSwitch } from '@feeef.dev/ui/primitives/slider'
+import { SlideSwitch } from '@feeef.dev/ui/primitives/slider'
 
 const SETTINGS = [
   { id: 'cod', label: 'Cash on delivery', description: 'Customers pay the courier when the parcel arrives.' },
@@ -17,7 +17,7 @@ export default function Basic() {
             <strong style={{ display: 'block' }}>{setting.label}</strong>
             <small>{setting.description}</small>
           </div>
-          <LabSlideSwitch
+          <SlideSwitch
             label={setting.label}
             checked={enabled[setting.id]}
             onCheckedChange={(checked) => setEnabled((state) => ({ ...state, [setting.id]: checked }))}

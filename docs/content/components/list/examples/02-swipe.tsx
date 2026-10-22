@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Archive, Check, Package, Trash2 } from 'lucide-react'
-import { LabListRow, LabListSection } from '@feeef.dev/ui/primitives/list'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { ListRow, ListSection } from '@feeef.dev/ui/primitives/list'
+import { Button } from '@feeef.dev/ui/primitives/button'
 
 const START = [
   { id: 1048, customer: 'Amina Benali', city: 'Alger' },
@@ -20,9 +20,9 @@ export default function SwipeInbox() {
   }
   return (
     <div className="demo-wide" style={{ display: 'grid', gap: 12 }}>
-      <LabListSection header="To confirm" footer="Swipe right to confirm, left to archive or delete. A long swipe runs the first action.">
+      <ListSection header="To confirm" footer="Swipe right to confirm, left to archive or delete. A long swipe runs the first action.">
         {orders.map((o) => (
-          <LabListRow
+          <ListRow
             key={o.id}
             leading={<Package />}
             title={`#${o.id} · ${o.customer}`}
@@ -46,12 +46,12 @@ export default function SwipeInbox() {
             ]}
           />
         ))}
-      </LabListSection>
+      </ListSection>
       <div className="demo-row" style={{ justifyContent: 'space-between' }}>
         <span className="docs-muted" role="status">
           {log}
         </span>
-        <LabButton
+        <Button
           variant="text"
           controlSize="compact"
           onClick={() => {
@@ -60,7 +60,7 @@ export default function SwipeInbox() {
           }}
         >
           Reset
-        </LabButton>
+        </Button>
       </div>
     </div>
   )

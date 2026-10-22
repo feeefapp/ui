@@ -29,7 +29,7 @@ function Overview() {
         <Code
           code={`const [tab, setTab] = useState('orders')
 
-<LabTabView
+<TabView
   label="Store"
   value={tab}
   onChange={setTab}
@@ -80,9 +80,9 @@ export default definePage({
   group: 'Navigation and layout',
   order: 2,
   summary: 'Top-level tabs that keep their state, with a floating tab bar that shrinks while content scrolls.',
-  importLine: "import { LabTabView } from '@feeef.dev/ui/containers'",
+  importLine: "import { TabView } from '@feeef.dev/ui/containers'",
   source: 'src/containers/tab-view.tsx',
-  api: ['LabTabView'],
+  api: ['TabView'],
   keywords: ['tabs', 'tab bar', 'bottom navigation', 'ios', 'minimize', 'accessory'],
   Overview,
   examples: examplesFrom(

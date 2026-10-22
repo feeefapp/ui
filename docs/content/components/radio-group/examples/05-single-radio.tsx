@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LabRadio } from '@feeef.dev/ui/primitives/choice'
+import { Radio } from '@feeef.dev/ui/primitives/choice'
 
 const COURIERS = [
   { id: 'yalidine', name: 'Yalidine', price: '600 DZD', days: '2–3 days' },
@@ -26,7 +26,7 @@ export default function SingleRadio() {
               borderRadius: 14,
             }}
           >
-            <LabRadio
+            <Radio
               name="courier"
               value={option.id}
               label={option.name}
@@ -44,5 +44,5 @@ export default function SingleRadio() {
 
 export const meta = {
   title: 'Single radios in a custom layout',
-  description: 'LabRadio for rows the group cannot draw. You provide the shared name, checked state and fieldset.',
+  description: 'Radio for rows the group cannot draw. You provide the shared name, checked state and fieldset.',
 }

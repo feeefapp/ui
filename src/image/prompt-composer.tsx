@@ -1,10 +1,10 @@
 'use client'
 
-import { LabComposerCard, LabComposerHint as AnimatedHint } from '../composer/composer'
-import { LabPopoverSurface } from '../ui'
-import { LabButton, LabRawInput } from '../ui'
-import { useLabI18n } from '../i18n'
-import { useLabServices } from '../services'
+import { ComposerCard, ComposerHint as AnimatedHint } from '../composer/composer'
+import { PopoverSurface } from '../ui'
+import { Button, RawInput } from '../ui'
+import { useI18n } from '../i18n'
+import { useServices } from '../services'
 import {
   useEffect,
   useRef,
@@ -42,7 +42,7 @@ export type RecentImage = { id: string; thumbUrl: string; prompt: string }
  * row above a glass card that is one compact line until you type, then grows upward with its
  * controls on a second row. Model ladder, AI enhance, output settings and send are icon controls.
  */
-export function PromptComposer({
+export function ImagePromptComposer({
   prompt,
   onPrompt,
   placeholder,
@@ -149,10 +149,10 @@ export function PromptComposer({
   /** Runs before the built-in Enter handling; call `preventDefault()` to skip it. */
   onKeyDown?(event: KeyboardEvent): void
 }) {
-  const { t } = useLabI18n()
+  const { t } = useI18n()
   const resolvedTemplatesLabel = templatesLabel ?? t('lab.imgcomposer.startFromIdea')
   const resolvedReferenceNoun = referenceNoun ?? t('lab.imgcomposer.references')
-  const { readClipboard } = useLabServices()
+  const { readClipboard } = useServices()
   const upload = useRef<HTMLInputElement>(null)
   const photo = useRef<HTMLInputElement>(null)
   const root = useRef<HTMLElement>(null)
@@ -203,7 +203,7 @@ export function PromptComposer({
   const wandMode = prompt.trim() ? 'enhance' : 'ideas'
 
   const wand = onEnhance ? (
-    <LabButton
+    <Button
       type="button"
       variant="ghost"
       appearance="toolbar"
@@ -231,11 +231,11 @@ export function PromptComposer({
         ) : (
           <Lightbulb size={18} strokeWidth={1.6} />
         ))}
-    </LabButton>
+    </Button>
   ) : null
   const settingsControl = (chip: boolean) =>
     onSettings ? (
-      <LabButton
+      <Button
         type="button"
         variant={chip ? 'elevated' : 'ghost'}
         appearance={chip ? 'default' : 'toolbar'}
@@ -249,7 +249,7 @@ export function PromptComposer({
       >
         <SlidersHorizontal size={chip ? 15 : 18} strokeWidth={1.6} />
         {chip && <span>{settingsLabel}</span>}
-      </LabButton>
+      </Button>
     ) : (
       <Popover.Root
         open={settingsOpen}
@@ -259,7 +259,7 @@ export function PromptComposer({
         }}
       >
         <Popover.Trigger asChild disabled={settingsDisabled}>
-          <LabButton
+          <Button
             type="button"
             variant={chip ? 'elevated' : 'ghost'}
             appearance={chip ? 'default' : 'toolbar'}
@@ -270,10 +270,10 @@ export function PromptComposer({
           >
             <SlidersHorizontal size={chip ? 15 : 18} strokeWidth={1.6} />
             {chip && <span>{settingsLabel}</span>}
-          </LabButton>
+          </Button>
         </Popover.Trigger>
         <Popover.Portal container={portalContainer}>
-          <LabPopoverSurface asChild>
+          <PopoverSurface asChild>
             <Popover.Content
               className="lab-pc-popover"
               side="top"
@@ -297,12 +297,12 @@ export function PromptComposer({
                 {settings}
               </PromptSettingsPanel>
             </Popover.Content>
-          </LabPopoverSurface>
+          </PopoverSurface>
         </Popover.Portal>
       </Popover.Root>
     )
   const send = (
-    <LabButton
+    <Button
       type="button"
       variant="filled"
       controlSize="icon"
@@ -314,12 +314,12 @@ export function PromptComposer({
       onClick={onSubmit}
     >
       {!submitting && <ArrowUp size={20} strokeWidth={2} aria-hidden="true" />}
-    </LabButton>
+    </Button>
   )
   const input = (
     <div className="lab-pc-field">
       {!prompt && <AnimatedHint text={placeholder} />}
-      <LabRawInput
+      <RawInput
         className="lab-textarea"
         multiline
         autoResize={false}
@@ -391,7 +391,7 @@ export function PromptComposer({
           <span className="lab-pc-template-chip">
             <Sparkle size={13} /> {templateName}
             {onClearTemplate && (
-              <LabButton
+              <Button
                 type="button"
                 variant="ghost"
                 appearance="toolbar"
@@ -400,7 +400,7 @@ export function PromptComposer({
                 onClick={onClearTemplate}
               >
                 <X size={20} />
-              </LabButton>
+              </Button>
             )}
           </span>
         )}
@@ -411,7 +411,7 @@ export function PromptComposer({
               <span className="lab-pc-ref-name">
                 {index === 0 ? t('lab.imgcomposer.mainImage') : ref.name}
               </span>
-              <LabButton
+              <Button
                 type="button"
                 variant="ghost"
                 appearance="toolbar"
@@ -420,7 +420,7 @@ export function PromptComposer({
                 onClick={() => onRemoveReference(ref.id)}
               >
                 <X size={20} />
-              </LabButton>
+              </Button>
             </span>
           ))}
         </div>
@@ -429,7 +429,7 @@ export function PromptComposer({
       {above}
 
       {/* One grid in both states, so the field never remounts and keeps focus and caret. */}
-      <LabComposerCard ref={card}
+      <ComposerCard ref={card}
 className="lab-pc-card lab-light-edge"
 data-focused={focused}
 onMouseDown={(e) => {
@@ -438,7 +438,7 @@ onMouseDown={(e) => {
           <span className="lab-pc-slot lab-pc-slot--add">
             <Menu.Root modal={false} onOpenChange={(next) => next && updatePortal()}>
               <Menu.Trigger asChild>
-                <LabButton
+                <Button
                   type="button"
                   variant="ghost"
                   appearance="toolbar"
@@ -448,10 +448,10 @@ onMouseDown={(e) => {
                   title={t('lab.imgcomposer.addImages')}
                 >
                   <Plus size={18} strokeWidth={1.7} />
-                </LabButton>
+                </Button>
               </Menu.Trigger>
               <Menu.Portal container={portalContainer}>
-                <LabPopoverSurface asChild>
+                <PopoverSurface asChild>
                   <Menu.Content
                     className="lab-pc-menu"
                     side="top"
@@ -489,7 +489,7 @@ onMouseDown={(e) => {
                           <History size={15} /> From your images
                         </Menu.SubTrigger>
                         <Menu.Portal container={portalContainer}>
-                          <LabPopoverSurface asChild>
+                          <PopoverSurface asChild>
                             <Menu.SubContent
                               className="lab-pc-menu lab-pc-recent"
                               sideOffset={6}
@@ -507,7 +507,7 @@ onMouseDown={(e) => {
                                 </Menu.Item>
                               ))}
                             </Menu.SubContent>
-                          </LabPopoverSurface>
+                          </PopoverSurface>
                         </Menu.Portal>
                       </Menu.Sub>
                     )}
@@ -522,7 +522,7 @@ onMouseDown={(e) => {
                             <Sparkle size={15} /> {resolvedTemplatesLabel}
                           </Menu.SubTrigger>
                           <Menu.Portal container={portalContainer}>
-                            <LabPopoverSurface asChild>
+                            <PopoverSurface asChild>
                               <Menu.SubContent
                                 className="lab-pc-menu lab-pc-idea-menu"
                                 sideOffset={6}
@@ -540,7 +540,7 @@ onMouseDown={(e) => {
                                   </Menu.Item>
                                 ))}
                               </Menu.SubContent>
-                            </LabPopoverSurface>
+                            </PopoverSurface>
                           </Menu.Portal>
                         </Menu.Sub>
                       )
@@ -550,7 +550,7 @@ onMouseDown={(e) => {
                       <Brush size={15} /> Edit a photo…
                     </Menu.Item>
                   </Menu.Content>
-                </LabPopoverSurface>
+                </PopoverSurface>
               </Menu.Portal>
             </Menu.Root>
           </span>
@@ -559,7 +559,7 @@ onMouseDown={(e) => {
           <span className="lab-pc-slot lab-pc-slot--settings">{settingsControl(false)}</span>
           <span className="lab-pc-slot lab-pc-slot--wand">{wand}</span>
           <span className="lab-pc-slot lab-pc-slot--send">{send}</span>
-        </LabComposerCard>
+        </ComposerCard>
       <p className="lab-pc-caption">{caption}</p>
     </section>
   )

@@ -1,9 +1,9 @@
-import { LabRadioGroup } from '@feeef.dev/ui/primitives/choice'
+import { RadioGroup } from '@feeef.dev/ui/primitives/choice'
 
 export default function Descriptions() {
   return (
     <div className="demo-column">
-      <LabRadioGroup
+      <RadioGroup
         label="Delivery type"
         description="Prices are shown at checkout for the customer’s wilaya."
         name="delivery"

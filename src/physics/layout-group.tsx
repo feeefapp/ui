@@ -1,11 +1,11 @@
 'use client'
 
 import * as React from 'react'
-import { LabMotionValue, prefersReducedMotion } from './motion-value'
-import { LAB_SPRINGS, type LabSpring } from './spring'
+import { MotionValue, prefersReducedMotion } from './motion-value'
+import { SPRINGS, type Spring } from './spring'
 
 type Box = { x: number; y: number; width: number; height: number }
-type Track = { x: LabMotionValue; y: LabMotionValue; sx: LabMotionValue; sy: LabMotionValue; stop: () => void }
+type Track = { x: MotionValue; y: MotionValue; sx: MotionValue; sy: MotionValue; stop: () => void }
 
 /** Running layout animations, per element, so a new layout change can take over their speed. */
 const tracks = new WeakMap<HTMLElement, Track>()
@@ -29,10 +29,10 @@ export function snapshotLayout(elements: Iterable<HTMLElement>) {
  */
 export function animateLayoutFrom(
   before: Map<HTMLElement, Box>,
-  options: { spring?: LabSpring; size?: (el: HTMLElement) => boolean } = {}
+  options: { spring?: Spring; size?: (el: HTMLElement) => boolean } = {}
 ) {
   if (prefersReducedMotion()) return
-  const spring = options.spring ?? LAB_SPRINGS.snappy
+  const spring = options.spring ?? SPRINGS.snappy
   for (const [el, first] of before) {
     if (!el.isConnected) continue
     const track = tracks.get(el)
@@ -61,12 +61,12 @@ function move(
   el: HTMLElement,
   from: { dx: number; dy: number; sx: number; sy: number },
   speed: { x: number; y: number; sx: number; sy: number } | null,
-  spring: LabSpring
+  spring: Spring
 ) {
-  const x = new LabMotionValue(from.dx, 0.25)
-  const y = new LabMotionValue(from.dy, 0.25)
-  const sx = new LabMotionValue(from.sx, 0.001)
-  const sy = new LabMotionValue(from.sy, 0.001)
+  const x = new MotionValue(from.dx, 0.25)
+  const y = new MotionValue(from.dy, 0.25)
+  const sx = new MotionValue(from.sx, 0.001)
+  const sy = new MotionValue(from.sy, 0.001)
   const paint = () => {
     el.style.transformOrigin = '0 0'
     el.style.transform = `translate3d(${x.get()}px, ${y.get()}px, 0) scale(${sx.get()}, ${sy.get()})`
@@ -97,8 +97,8 @@ function move(
   void sy.animateTo(1, { spring, velocity: speed?.sy ?? 0 }).then(done)
 }
 
-function enter(el: HTMLElement, spring: LabSpring) {
-  const p = new LabMotionValue(0, 0.002)
+function enter(el: HTMLElement, spring: Spring) {
+  const p = new MotionValue(0, 0.002)
   const paint = (v: number) => {
     el.style.opacity = String(Math.min(1, Math.max(0, v)))
     el.style.transform = `scale(${0.94 + 0.06 * v})`
@@ -112,13 +112,13 @@ function enter(el: HTMLElement, spring: LabSpring) {
   })
 }
 
-export type LabLayoutGroupProps = {
+export type LayoutGroupProps = {
   /** The subtree to watch. Elements with `data-lab-layout-id` move; ids must be unique in the group. */
   children: React.ReactNode
   /** Animate only when this value changes (cheaper on busy screens). Default: after every render. */
   layoutKey?: unknown
   /** Spring for movement. Default `snappy`. */
-  spring?: LabSpring
+  spring?: Spring
   /** Elements that are new in a render fade and scale in. Default true. */
   animateEnter?: boolean
 }
@@ -130,7 +130,7 @@ export type LabLayoutGroupProps = {
  * size too (it scales, so prefer it for media and plain shapes). An interrupted move continues
  * from where it is on screen at the speed it had, so rapid changes never jump.
  */
-export class LabLayoutGroup extends React.Component<LabLayoutGroupProps> {
+export class LayoutGroup extends React.Component<LayoutGroupProps> {
   private root = React.createRef<HTMLDivElement>()
 
   private elements() {
@@ -138,16 +138,16 @@ export class LabLayoutGroup extends React.Component<LabLayoutGroupProps> {
     return root ? Array.from(root.querySelectorAll<HTMLElement>('[data-lab-layout-id]')) : []
   }
 
-  getSnapshotBeforeUpdate(previous: LabLayoutGroupProps) {
+  getSnapshotBeforeUpdate(previous: LayoutGroupProps) {
     if ('layoutKey' in this.props && Object.is(previous.layoutKey, this.props.layoutKey)) return null
     const boxes = new Map<string, Box>()
     for (const el of this.elements()) boxes.set(el.dataset.labLayoutId!, boxOf(el))
     return boxes
   }
 
-  componentDidUpdate(_: LabLayoutGroupProps, __: unknown, before: Map<string, Box> | null) {
+  componentDidUpdate(_: LayoutGroupProps, __: unknown, before: Map<string, Box> | null) {
     if (!before || prefersReducedMotion()) return
-    const spring = this.props.spring ?? LAB_SPRINGS.snappy
+    const spring = this.props.spring ?? SPRINGS.snappy
     const moved = new Map<HTMLElement, Box>()
     for (const el of this.elements()) {
       const first = before.get(el.dataset.labLayoutId!)

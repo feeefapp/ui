@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { LayoutGrid, List } from 'lucide-react'
-import { LabLayoutGroup } from '@feeef.dev/ui/physics'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { LayoutGroup } from '@feeef.dev/ui/physics'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 import '../layout-demo.css'
 
 const PRODUCTS = [
@@ -17,7 +17,7 @@ export default function GridOrList() {
   const [view, setView] = useState<'grid' | 'list'>('grid')
   return (
     <div className="lt-demo">
-      <LabSegmentedControl
+      <SegmentedControl
         label="View"
         value={view}
         onChange={setView}
@@ -26,7 +26,7 @@ export default function GridOrList() {
           { value: 'list', label: 'List', icon: <List size={16} /> },
         ]}
       />
-      <LabLayoutGroup layoutKey={view}>
+      <LayoutGroup layoutKey={view}>
         <ul className="lt-products" data-view={view}>
           {PRODUCTS.map((p) => (
             <li key={p.id} className="lt-product">
@@ -43,7 +43,7 @@ export default function GridOrList() {
             </li>
           ))}
         </ul>
-      </LabLayoutGroup>
+      </LayoutGroup>
     </div>
   )
 }

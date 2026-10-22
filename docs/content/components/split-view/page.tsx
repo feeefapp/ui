@@ -28,18 +28,18 @@ function Overview() {
         <Code
           code={`const [selected, setSelected] = useState<number | null>(null)
 
-<LabSplitView
+<SplitView
   label="Orders"
   onBack={() => setSelected(null)}
-  placeholder={<LabSplitPlaceholder icon={<Inbox />} title="Select an order" />}
+  placeholder={<SplitPlaceholder icon={<Inbox />} title="Select an order" />}
   list={
-    <LabNavigationPage key="orders" title="Orders">
+    <NavigationPage key="orders" title="Orders">
       {orders.map((o) => (
-        <LabListRow key={o.id} title={o.name} selected={o.id === selected} onClick={() => setSelected(o.id)} />
+        <ListRow key={o.id} title={o.name} selected={o.id === selected} onClick={() => setSelected(o.id)} />
       ))}
-    </LabNavigationPage>
+    </NavigationPage>
   }
-  detail={selected && <LabNavigationPage key={selected} title={\`Order #\${selected}\`}>…</LabNavigationPage>}
+  detail={selected && <NavigationPage key={selected} title={\`Order #\${selected}\`}>…</NavigationPage>}
 />`}
         />
       </Section>
@@ -68,7 +68,7 @@ function Overview() {
           <C>onListWidthChange</C> if people expect it to stay.
         </p>
         <DoDont
-          doItems={['Show the open row as selected in the list (LabListRow selected) on wide screens.']}
+          doItems={['Show the open row as selected in the list (ListRow selected) on wide screens.']}
           dontItems={['Show chevrons on wide screens: the item opens beside the list, not on top of it.']}
         />
       </Section>
@@ -83,9 +83,9 @@ export default definePage({
   group: 'Navigation and layout',
   order: 1,
   summary: 'A list beside its detail on wide screens that becomes a navigation stack on phones.',
-  importLine: "import { LabSplitView, LabSplitPlaceholder } from '@feeef.dev/ui/containers'",
+  importLine: "import { SplitView, SplitPlaceholder } from '@feeef.dev/ui/containers'",
   source: 'src/containers/split-view.tsx',
-  api: ['LabSplitView', 'LabSplitPlaceholder'],
+  api: ['SplitView', 'SplitPlaceholder'],
   keywords: ['master detail', 'list detail', 'two pane', 'columns', 'inbox', 'ipad', 'resizable'],
   Overview,
   examples: examplesFrom(

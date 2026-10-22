@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Copy, MessageSquare, Phone, PhoneOff } from 'lucide-react'
-import { LabSheet } from '@feeef.dev/ui/containers'
-import { LabListRow, LabListSection } from '@feeef.dev/ui/primitives/list'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { Sheet } from '@feeef.dev/ui/containers'
+import { ListRow, ListSection } from '@feeef.dev/ui/primitives/list'
+import { Button } from '@feeef.dev/ui/primitives/button'
 import { Device } from '../../../../src/blocks/device'
 
 export default function ContactSheet() {
@@ -18,21 +18,21 @@ export default function ContactSheet() {
         <>
           <div className="demo-fill demo-sheet-page">
             <p>Amina Benali · 0555 12 34 56</p>
-            <LabButton variant="filled" onClick={() => setOpen(true)}>
+            <Button variant="filled" onClick={() => setOpen(true)}>
               <Phone size={18} /> Contact customer
-            </LabButton>
+            </Button>
             <p className="demo-sheet-status" role="status">
               {last}
             </p>
           </div>
-          <LabSheet open={open} onOpenChange={setOpen} label="Contact Amina Benali" container={screen} detents={['fit']}>
-            <LabListSection header="Amina Benali">
-              <LabListRow leading={<Phone />} title="Call" subtitle="0555 12 34 56" onClick={() => act('Calling…')} />
-              <LabListRow leading={<MessageSquare />} title="Send SMS" onClick={() => act('SMS sent.')} />
-              <LabListRow leading={<Copy />} title="Copy number" onClick={() => act('Number copied.')} />
-              <LabListRow leading={<PhoneOff />} title="Mark as unreachable" onClick={() => act('Marked unreachable.')} />
-            </LabListSection>
-          </LabSheet>
+          <Sheet open={open} onOpenChange={setOpen} label="Contact Amina Benali" container={screen} detents={['fit']}>
+            <ListSection header="Amina Benali">
+              <ListRow leading={<Phone />} title="Call" subtitle="0555 12 34 56" onClick={() => act('Calling…')} />
+              <ListRow leading={<MessageSquare />} title="Send SMS" onClick={() => act('SMS sent.')} />
+              <ListRow leading={<Copy />} title="Copy number" onClick={() => act('Number copied.')} />
+              <ListRow leading={<PhoneOff />} title="Mark as unreachable" onClick={() => act('Marked unreachable.')} />
+            </ListSection>
+          </Sheet>
         </>
       )}
     </Device>

@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 
 export default function Basic() {
   const [delivery, setDelivery] = useState<'home' | 'desk'>('home')
   return (
     <div className="demo-column" style={{ justifyItems: 'center' }}>
-      <LabSegmentedControl
+      <SegmentedControl
         label="Delivery type"
         value={delivery}
         onChange={setDelivery}

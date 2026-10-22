@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { LabFilterBar, type LabFilterOption } from '@feeef.dev/ui/filter-bar'
-import { LabScrollArea } from '@feeef.dev/ui/scroll'
+import { FilterBar, type FilterOption } from '@feeef.dev/ui/filter-bar'
+import { ScrollArea } from '@feeef.dev/ui/scroll'
 import '../filter-demo.css'
 
-const OPTIONS: LabFilterOption[] = [
+const OPTIONS: FilterOption[] = [
   { id: 'unpaid', label: 'Unpaid', description: 'Cash not collected yet' },
   { id: 'returned', label: 'Returned', keywords: ['refused', 'retour'] },
   { id: 'express', label: 'Express delivery' },
@@ -23,10 +23,10 @@ export default function OnOff() {
   const rows = ORDERS.filter((order) => enabled.every((id) => order[id as 'unpaid' | 'returned' | 'express']))
   return (
     <div className="filter-demo-frame">
-      <LabScrollArea
+      <ScrollArea
         label="Orders"
         top={
-          <LabFilterBar
+          <FilterBar
             label="Order filters"
             options={OPTIONS}
             value={enabled}
@@ -53,7 +53,7 @@ export default function OnOff() {
           ))}
           {!rows.length && <p className="filter-demo-empty">No orders match these filters.</p>}
         </div>
-      </LabScrollArea>
+      </ScrollArea>
     </div>
   )
 }

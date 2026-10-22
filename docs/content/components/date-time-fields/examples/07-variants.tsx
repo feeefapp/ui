@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LabDateField } from '@feeef.dev/ui/primitives/temporal-field'
+import { DateField } from '@feeef.dev/ui/primitives/temporal-field'
 
 const VARIANTS = ['outlined', 'filled', 'tonal', 'elevated', 'text'] as const
 
@@ -8,7 +8,7 @@ export default function Variants() {
   return (
     <div className="demo-column">
       {VARIANTS.map((variant) => (
-        <LabDateField
+        <DateField
           key={variant}
           hint={`${variant[0].toUpperCase()}${variant.slice(1)}`}
           variant={variant}
@@ -17,7 +17,7 @@ export default function Variants() {
           onValueChange={(next) => setValues((old) => ({ ...old, [variant]: next }))}
         />
       ))}
-      <LabDateField
+      <DateField
         hint="Inside label"
         labelStyle="inside"
         value={values.inside ?? null}

@@ -2,9 +2,9 @@ import { definePage, examplesFrom } from '../../../src/model'
 import { Keys, Section, Table } from '../../../src/blocks/prose'
 import { C, Code } from '../../../src/blocks/code'
 
-const usage = `<LabImageWorkspace
+const usage = `<ImageWorkspace
   top={<ProjectHeader />}
-  bottom={<PromptComposer … />}
+  bottom={<ImagePromptComposer … />}
   board={(insets) => (
     <FreeformBoard
       embedded
@@ -29,7 +29,7 @@ function Overview() {
         <Table
           head={['Component', 'Use it for']}
           rows={[
-            [<C>LabImageWorkspace</C>, 'Measures the top and bottom chrome and hands the board the room they take.'],
+            [<C>ImageWorkspace</C>, 'Measures the top and bottom chrome and hands the board the room they take.'],
             [<C>FreeformBoard</C>, 'The pan-and-zoom board of image takes (versions).'],
           ]}
         />
@@ -38,7 +38,7 @@ function Overview() {
 
       <Section title="Layout">
         <p>
-          <C>LabImageWorkspace</C> fills a flex parent (give it a height) and places <C>top</C> and{' '}
+          <C>ImageWorkspace</C> fills a flex parent (give it a height) and places <C>top</C> and{' '}
           <C>bottom</C> 12 px from the edges; the bottom slot is at most 780 px wide. It observes both and
           calls <C>board(insets)</C> with their heights plus a gap, so the board can center cards in the
           free area. <C>FreeformBoard</C> covers the whole window unless you pass <C>embedded</C>, which
@@ -86,9 +86,9 @@ export default definePage({
   order: 4,
   summary: 'The image studio canvas: a pan-and-zoom board of versions under measured floating chrome.',
   importLine:
-    "import { LabImageWorkspace } from '@feeef.dev/ui/image/workspace'\nimport { FreeformBoard } from '@feeef.dev/ui/image/freeform-board'",
+    "import { ImageWorkspace } from '@feeef.dev/ui/image/workspace'\nimport { FreeformBoard } from '@feeef.dev/ui/image/freeform-board'",
   source: 'src/image/workspace.tsx',
-  api: ['LabImageWorkspace', 'FreeformBoard'],
+  api: ['ImageWorkspace', 'FreeformBoard'],
   keywords: ['canvas', 'board', 'zoom', 'pan', 'image studio', 'versions', 'takes'],
   Overview,
   examples: examplesFrom(

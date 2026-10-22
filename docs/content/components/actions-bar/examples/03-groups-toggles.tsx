@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { Download, Eye, FileSpreadsheet, FileText, Flag, Tag } from 'lucide-react'
-import { LabActionsBar, type LabAction } from '@feeef.dev/ui/actions'
+import { ActionsBar, type Action } from '@feeef.dev/ui/actions'
 
 export default function GroupsAndToggles() {
   const [urgent, setUrgent] = useState(false)
   const [hidePaid, setHidePaid] = useState(true)
   const [status, setStatus] = useState('')
-  const actions = useMemo<LabAction[]>(
+  const actions = useMemo<Action[]>(
     () => [
       { id: 'urgent', type: 'toggle', label: 'Urgent', icon: <Flag />, checked: urgent, onCheckedChange: setUrgent },
       { id: 'hide-paid', type: 'toggle', label: 'Hide paid', icon: <Eye />, display: 'icon', checked: hidePaid, onCheckedChange: setHidePaid },
@@ -44,7 +44,7 @@ export default function GroupsAndToggles() {
   )
   return (
     <div className="demo-wide" style={{ display: 'grid', gap: 12 }}>
-      <LabActionsBar label="Order list actions" actions={actions} align="start" />
+      <ActionsBar label="Order list actions" actions={actions} align="start" />
       <p role="status" style={{ margin: 0 }}>
         {status || `Urgent: ${urgent ? 'on' : 'off'} · Hide paid: ${hidePaid ? 'on' : 'off'}`}
       </p>

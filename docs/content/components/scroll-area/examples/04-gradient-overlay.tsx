@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { LabScrollGradientOverlay } from '@feeef.dev/ui/scroll'
+import { ScrollGradientOverlay } from '@feeef.dev/ui/scroll'
 import '../scroll-demo.css'
 
 const EVENTS = [
@@ -33,7 +33,7 @@ export default function GradientOverlay() {
           ))}
         </div>
       </div>
-      <LabScrollGradientOverlay viewport={viewport} topHeight={60} bottomHeight={80} />
+      <ScrollGradientOverlay viewport={viewport} topHeight={60} bottomHeight={80} />
     </div>
   )
 }
@@ -41,5 +41,5 @@ export default function GradientOverlay() {
 export const meta = {
   title: 'Edge washes on your own scroller',
   description:
-    'LabScrollGradientOverlay paints the dithered top and bottom washes for any scrolling element. Each wash fades in as content passes under its edge.',
+    'ScrollGradientOverlay paints the dithered top and bottom washes for any scrolling element. Each wash fades in as content passes under its edge.',
 }

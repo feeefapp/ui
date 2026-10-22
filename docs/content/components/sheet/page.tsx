@@ -39,16 +39,16 @@ function Overview() {
         <Code
           code={`const [open, setOpen] = useState(false)
 
-<LabSheet
+<Sheet
   open={open}
   onOpenChange={setOpen}
   label="Filters"
   detents={['medium', 'large']}
-  top={<LabToolbarGroup label="Sheet title"><strong>Filters</strong></LabToolbarGroup>}
-  bottom={<LabDock label="Apply filters"><LabButton variant="filled">Show 24 orders</LabButton></LabDock>}
+  top={<ToolbarGroup label="Sheet title"><strong>Filters</strong></ToolbarGroup>}
+  bottom={<Dock label="Apply filters"><Button variant="filled">Show 24 orders</Button></Dock>}
 >
-  <LabListSection header="Status">…</LabListSection>
-</LabSheet>`}
+  <ListSection header="Status">…</ListSection>
+</Sheet>`}
         />
       </Section>
 
@@ -72,7 +72,7 @@ function Overview() {
 
       <Section title="Closing">
         <p>
-          <C>LabSheet</C> is controlled and stays mounted; toggle <C>open</C>. A drag down, a tap on
+          <C>Sheet</C> is controlled and stays mounted; toggle <C>open</C>. A drag down, a tap on
           the scrim and <kbd>Escape</kbd> call <C>onOpenChange(false)</C>. Set{' '}
           <C>{'dismissible={false}'}</C> when closing would lose unsaved work: then only your own
           actions close it, and the sheet rubber-bands instead of leaving.
@@ -126,9 +126,9 @@ export default definePage({
   group: 'Containment',
   order: 2,
   summary: 'A bottom sheet with detents, momentum and scroll handoff that becomes a dialog on wide screens.',
-  importLine: "import { LabSheet } from '@feeef.dev/ui/containers'",
+  importLine: "import { Sheet } from '@feeef.dev/ui/containers'",
   source: 'src/containers/sheet.tsx',
-  api: ['LabSheet'],
+  api: ['Sheet'],
   keywords: ['bottom sheet', 'drawer', 'detent', 'action sheet', 'half sheet', 'panel', 'ios'],
   Overview,
   examples: examplesFrom(

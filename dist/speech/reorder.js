@@ -1,12 +1,12 @@
 'use client';
 import { useEffect, useRef } from 'react';
-import { useLabI18n } from '../i18n.js';
+import { useI18n } from '../i18n.js';
 import { flushSync } from 'react-dom';
 import { speechDragIndex, speechPreviewOffsets } from './block-order.js';
 const selector = '[data-speech-block]';
 /** Pointer movement stays off React's render path; the owner receives one history edit on drop. */
 export function useSpeechReorder({ root, index, count, onMove, announce, }) {
-    const { t } = useLabI18n();
+    const { t } = useI18n();
     const drag = useRef(null);
     const animations = useRef(new Map());
     const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;

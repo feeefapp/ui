@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Code as CodeIcon } from 'lucide-react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabToolbar, LabToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { Toolbar, ToolbarGroup } from '@feeef.dev/ui/toolbar'
 import type { DocExample } from '../model'
 import { Code, CopyButton } from './code'
 import { Heading } from './prose'
@@ -21,13 +21,13 @@ export function Example({ example, headingLevel = 2 }: { example: DocExample; he
         <Stage>
           <Demo />
         </Stage>
-        <LabToolbar
+        <Toolbar
           label={`${example.title} example`}
           className="docs-example-bar"
           leading={null}
           trailing={
-            <LabToolbarGroup label="Example actions">
-              <LabButton
+            <ToolbarGroup label="Example actions">
+              <Button
                 variant="text"
                 appearance="toolbar"
                 controlSize="compact"
@@ -36,9 +36,9 @@ export function Example({ example, headingLevel = 2 }: { example: DocExample; he
               >
                 <CodeIcon size={18} />
                 {open ? 'Hide code' : 'Show code'}
-              </LabButton>
+              </Button>
               <CopyButton text={example.source} label="Copy example code" />
-            </LabToolbarGroup>
+            </ToolbarGroup>
           }
         />
         {open && <Code code={example.source} copy={false} className="docs-example-code" />}

@@ -3,9 +3,9 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../utils.js';
-import { useLabI18n } from '../i18n.js';
-import { LabIconButton } from './button.js';
-import { LabRawInput } from './raw-input.js';
+import { useI18n } from '../i18n.js';
+import { IconButton } from './button.js';
+import { RawInput } from './raw-input.js';
 import { clampNumber, dragValue, fillFraction, isBounded, keyValue, parseNumberExpression, stepDecimals, } from './number-field-core.js';
 import './control-variants.css';
 import './number-field.css';
@@ -15,8 +15,8 @@ const DRAG_THRESHOLD = { mouse: 3, pen: 3, touch: 6 };
  * for precision dragging), click without dragging to type, and use arrows, Page Up/Down, Home/End or
  * Backspace (reset) from the keyboard. Typed values accept `+ - * /`, parentheses and `%`.
  */
-export const LabNumberField = React.forwardRef(function LabNumberField({ label, value: controlled, defaultValue, onValueChange, onValueCommit, min, max, step: stepProp = 1, unit, format, fill, steppers = true, variant = 'elevated', controlSize = 'regular', disabled = false, name, form, className, id, 'aria-describedby': describedBy, }, ref) {
-    const { locale, dir } = useLabI18n();
+export const NumberField = React.forwardRef(function NumberField({ label, value: controlled, defaultValue, onValueChange, onValueCommit, min, max, step: stepProp = 1, unit, format, fill, steppers = true, variant = 'elevated', controlSize = 'regular', disabled = false, name, form, className, id, 'aria-describedby': describedBy, }, ref) {
+    const { locale, dir } = useI18n();
     const step = Number.isFinite(stepProp) && stepProp > 0 ? stepProp : 1;
     const bounds = { min, max, step };
     const bounded = isBounded(bounds);
@@ -139,7 +139,7 @@ export const LabNumberField = React.forwardRef(function LabNumberField({ label, 
     };
     const stepBy = (direction) => set(value + direction * step, true);
     const fraction = (fill ?? bounded) ? fillFraction(value, bounds) : null;
-    return (_jsxs("div", { ref: host, id: id, className: cn('lab-number-field lab-control', className), "data-surface-variant": variant, "data-control-size": controlSize, "data-editing": editing !== null || undefined, "data-dragging": dragging || undefined, "data-disabled": disabled || undefined, "data-lab-corners": true, role: editing !== null ? 'group' : bounded ? 'slider' : 'spinbutton', tabIndex: disabled || editing !== null ? -1 : 0, "aria-label": label, "aria-valuenow": editing !== null ? undefined : value, "aria-valuemin": editing !== null ? undefined : min, "aria-valuemax": editing !== null ? undefined : max, "aria-valuetext": editing !== null ? undefined : valueText, "aria-disabled": disabled || undefined, "aria-describedby": describedBy, style: fraction != null ? { '--lab-number-fill': fraction } : undefined, onPointerDown: onPointerDown, onPointerMove: onPointerMove, onPointerUp: (event) => endPointer(event, false), onPointerCancel: (event) => endPointer(event, true), onKeyDown: onKeyDown, children: [fraction != null && _jsx("span", { className: "lab-number-field-fill", "aria-hidden": "true" }), steppers && editing === null && (_jsx(LabIconButton, { "data-number-stepper": true, className: "lab-number-field-stepper", variant: "text", appearance: "toolbar", controlSize: "compact", tabIndex: -1, "aria-label": `Decrease ${label}`, disabled: disabled || (min !== undefined && value <= min), onClick: () => stepBy(-1), children: _jsx(ChevronLeft, { size: 16, className: "lab-dir-flip" }) })), editing === null ? (_jsxs("span", { className: "lab-number-field-row", "aria-hidden": "true", children: [_jsx("span", { className: "lab-number-field-label", children: label }), _jsxs("span", { className: "lab-number-field-value", children: [display, unit && _jsx("span", { className: "lab-number-field-unit", children: unit })] })] })) : (_jsx(LabRawInput, { ref: input, className: "lab-number-field-input", "aria-label": label, inputMode: "decimal", autoComplete: "off", spellCheck: false, value: editing, onValueChange: setEditing, onBlur: () => finishEditing(true), onKeyDown: (event) => {
+    return (_jsxs("div", { ref: host, id: id, className: cn('lab-number-field lab-control', className), "data-surface-variant": variant, "data-control-size": controlSize, "data-editing": editing !== null || undefined, "data-dragging": dragging || undefined, "data-disabled": disabled || undefined, "data-lab-corners": true, role: editing !== null ? 'group' : bounded ? 'slider' : 'spinbutton', tabIndex: disabled || editing !== null ? -1 : 0, "aria-label": label, "aria-valuenow": editing !== null ? undefined : value, "aria-valuemin": editing !== null ? undefined : min, "aria-valuemax": editing !== null ? undefined : max, "aria-valuetext": editing !== null ? undefined : valueText, "aria-disabled": disabled || undefined, "aria-describedby": describedBy, style: fraction != null ? { '--lab-number-fill': fraction } : undefined, onPointerDown: onPointerDown, onPointerMove: onPointerMove, onPointerUp: (event) => endPointer(event, false), onPointerCancel: (event) => endPointer(event, true), onKeyDown: onKeyDown, children: [fraction != null && _jsx("span", { className: "lab-number-field-fill", "aria-hidden": "true" }), steppers && editing === null && (_jsx(IconButton, { "data-number-stepper": true, className: "lab-number-field-stepper", variant: "text", appearance: "toolbar", controlSize: "compact", tabIndex: -1, "aria-label": `Decrease ${label}`, disabled: disabled || (min !== undefined && value <= min), onClick: () => stepBy(-1), children: _jsx(ChevronLeft, { size: 16, className: "lab-dir-flip" }) })), editing === null ? (_jsxs("span", { className: "lab-number-field-row", "aria-hidden": "true", children: [_jsx("span", { className: "lab-number-field-label", children: label }), _jsxs("span", { className: "lab-number-field-value", children: [display, unit && _jsx("span", { className: "lab-number-field-unit", children: unit })] })] })) : (_jsx(RawInput, { ref: input, className: "lab-number-field-input", "aria-label": label, inputMode: "decimal", autoComplete: "off", spellCheck: false, value: editing, onValueChange: setEditing, onBlur: () => finishEditing(true), onKeyDown: (event) => {
                     if (event.key === 'Enter') {
                         event.preventDefault();
                         finishEditing(true);
@@ -148,6 +148,6 @@ export const LabNumberField = React.forwardRef(function LabNumberField({ label, 
                         event.preventDefault();
                         finishEditing(false);
                     }
-                } })), steppers && editing === null && (_jsx(LabIconButton, { "data-number-stepper": true, className: "lab-number-field-stepper", variant: "text", appearance: "toolbar", controlSize: "compact", tabIndex: -1, "aria-label": `Increase ${label}`, disabled: disabled || (max !== undefined && value >= max), onClick: () => stepBy(1), children: _jsx(ChevronRight, { size: 16, className: "lab-dir-flip" }) })), name && _jsx("input", { type: "hidden", name: name, form: form, value: value })] }));
+                } })), steppers && editing === null && (_jsx(IconButton, { "data-number-stepper": true, className: "lab-number-field-stepper", variant: "text", appearance: "toolbar", controlSize: "compact", tabIndex: -1, "aria-label": `Increase ${label}`, disabled: disabled || (max !== undefined && value >= max), onClick: () => stepBy(1), children: _jsx(ChevronRight, { size: 16, className: "lab-dir-flip" }) })), name && _jsx("input", { type: "hidden", name: name, form: form, value: value })] }));
 });
 //# sourceMappingURL=number-field.js.map

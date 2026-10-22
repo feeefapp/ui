@@ -4,7 +4,7 @@ import './speech.css';
  * One card in a speech script: a drag handle, a toolbar and the block's editor. Only the handle
  * drags; text editing, selection and viewport scrolling stay native. Blocks must be siblings.
  */
-export declare function LabSpeechBlock({ children, toolbar, index, count, onMove, seed, reorderDisabled, }: {
+export declare function SpeechBlock({ children, toolbar, index, count, onMove, seed, reorderDisabled, }: {
     /** The block's editor, usually a multiline text field. */
     children: ReactNode;
     /** Controls next to the drag handle (speaker, style, delete). Defaults to a "Speech block N" caption. */

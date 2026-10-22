@@ -1,18 +1,18 @@
 import { useState } from 'react'
 import { Download } from 'lucide-react'
-import { LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
-import { LabToolbar, LabToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { IconButton } from '@feeef.dev/ui/primitives/button'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { Toolbar, ToolbarGroup } from '@feeef.dev/ui/toolbar'
 
 export default function Plain() {
   const [period, setPeriod] = useState<'day' | 'week' | 'month'>('week')
   return (
-    <LabToolbar
+    <Toolbar
       label="Sales report"
       className="demo-wide"
       leading={
-        <LabToolbarGroup label="Period">
-          <LabSegmentedControl
+        <ToolbarGroup label="Period">
+          <SegmentedControl
             label="Report period"
             appearance="plain"
             value={period}
@@ -23,14 +23,14 @@ export default function Plain() {
               { value: 'month', label: 'Month' },
             ]}
           />
-        </LabToolbarGroup>
+        </ToolbarGroup>
       }
       trailing={
-        <LabToolbarGroup label="Export">
-          <LabIconButton variant="text" appearance="toolbar" aria-label="Export report">
+        <ToolbarGroup label="Export">
+          <IconButton variant="text" appearance="toolbar" aria-label="Export report">
             <Download size={20} />
-          </LabIconButton>
-        </LabToolbarGroup>
+          </IconButton>
+        </ToolbarGroup>
       }
     />
   )

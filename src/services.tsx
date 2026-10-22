@@ -6,7 +6,7 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react'
  * Key/value storage for small UI preferences (the kit stores the theme mode under
  * `feeef-lab-theme`). The browser default uses `localStorage` and never throws.
  */
-export interface LabPreferences {
+export interface Preferences {
   /** Returns the stored string, or `null` when the key is missing or storage is unavailable. */
   get(key: string): string | null
   /** Stores a string. Failures are swallowed; the current session keeps working. */
@@ -16,12 +16,12 @@ export interface LabPreferences {
 }
 /**
  * Platform ports: every browser or router dependency a kit widget needs. Widgets call these
- * through `useLabServices()` instead of touching `window`, `localStorage` or the clipboard, so
+ * through `useServices()` instead of touching `window`, `localStorage` or the clipboard, so
  * hosts can swap them for a client-side router, a native shell or test doubles.
  */
-export interface LabServices {
+export interface Services {
   /** Small persistent preferences, such as the theme mode. Default: `localStorage`. */
-  preferences: LabPreferences
+  preferences: Preferences
   /** Opens a URL, e.g. after a language change. Default: `window.location.assign`. */
   navigate(url: string): void
   /** Writes text to the clipboard. Default: `navigator.clipboard.writeText`; rejects when unavailable. */
@@ -32,7 +32,7 @@ export interface LabServices {
   downloadText(filename: string, content: string, mediaType: string): void
 }
 /** Browser implementations used for any service the host does not supply. */
-const browserServices: LabServices = {
+const browserServices: Services = {
   navigate(url) {
     window.location.assign(url)
   },
@@ -76,21 +76,21 @@ const browserServices: LabServices = {
     await navigator.clipboard.writeText(text)
   },
 }
-const LabServicesContext = createContext<LabServices>(browserServices)
+const ServicesContext = createContext<Services>(browserServices)
 /**
  * Installs services for its subtree. Pass only the ports you override; the rest keep their
- * browser defaults. `LabProvider` renders this for you from its `services` prop.
+ * browser defaults. `Provider` renders this for you from its `services` prop.
  */
-export function LabServicesProvider({
+export function ServicesProvider({
   children,
   services,
 }: {
   children: ReactNode
   /** Services to override. Keep the object stable (memoize it) to avoid re-rendering consumers. */
-  services?: Partial<LabServices>
+  services?: Partial<Services>
 }) {
   const value = useMemo(() => ({ ...browserServices, ...services }), [services])
-  return <LabServicesContext.Provider value={value}>{children}</LabServicesContext.Provider>
+  return <ServicesContext.Provider value={value}>{children}</ServicesContext.Provider>
 }
 /** Returns the nearest services, or the browser defaults when no provider is mounted. */
-export const useLabServices = () => useContext(LabServicesContext)
+export const useServices = () => useContext(ServicesContext)

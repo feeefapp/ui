@@ -2,17 +2,17 @@
 
 import * as React from 'react'
 import { animateLayoutFrom, snapshotLayout } from '../physics/layout-group'
-import { LabMotionValue, prefersReducedMotion } from '../physics/motion-value'
+import { MotionValue, prefersReducedMotion } from '../physics/motion-value'
 import { cn } from '../utils'
 import { pickFitting } from './adaptive-model'
 import './adaptive.css'
 
 /** `compact` below the breakpoint, `regular` from it: the element's own width, not the window's. */
-export type LabSizeClass = 'compact' | 'regular'
+export type SizeClass = 'compact' | 'regular'
 
 
 /** Width of `ref`'s element, kept current with a ResizeObserver; null before the first layout. */
-export function useLabElementWidth(ref: React.RefObject<HTMLElement | null>) {
+export function useElementWidth(ref: React.RefObject<HTMLElement | null>) {
   const [width, setWidth] = React.useState<number | null>(null)
   React.useLayoutEffect(() => {
     const el = ref.current
@@ -30,12 +30,12 @@ export function useLabElementWidth(ref: React.RefObject<HTMLElement | null>) {
  * The size class of an element, like SwiftUI's horizontal size class but measured on the element,
  * so a component in a narrow pane is compact even on a wide screen.
  */
-export function useLabSizeClass(ref: React.RefObject<HTMLElement | null>, breakpoint = 600): LabSizeClass {
-  const width = useLabElementWidth(ref)
+export function useSizeClass(ref: React.RefObject<HTMLElement | null>, breakpoint = 600): SizeClass {
+  const width = useElementWidth(ref)
   return width !== null && width < breakpoint ? 'compact' : 'regular'
 }
 
-export type LabAdaptiveStackProps = {
+export type AdaptiveStackProps = {
   /** The items. Each direct child moves as one piece when the stack changes axis. */
   children: React.ReactNode
   /**
@@ -60,7 +60,7 @@ export type LabAdaptiveStackProps = {
  * for a VStack: the same children, re-laid out, each flying to its new place on a spring. Use it
  * for a summary card's stats, a form's actions, or a toolbar's groups.
  */
-export function LabAdaptiveStack({
+export function AdaptiveStack({
   children,
   breakpoint = 'fit',
   gap = 12,
@@ -69,7 +69,7 @@ export function LabAdaptiveStack({
   onAxisChange,
   className,
   style,
-}: LabAdaptiveStackProps) {
+}: AdaptiveStackProps) {
   const root = React.useRef<HTMLDivElement>(null)
   const [vertical, setVertical] = React.useState(false)
   const pending = React.useRef<ReturnType<typeof snapshotLayout> | null>(null)
@@ -125,7 +125,7 @@ export function LabAdaptiveStack({
   )
 }
 
-export type LabViewThatFitsProps = {
+export type ViewThatFitsProps = {
   /** Options from most to least preferred, e.g. a full toolbar, then icons only, then a menu. */
   children: React.ReactNode
   /** Accessible names are each option's own; this labels nothing. */
@@ -137,7 +137,7 @@ export type LabViewThatFitsProps = {
  * customer · Send SMS · Copy number”, else icons only, else one menu button. Every option is
  * measured off-screen at its natural width; the shown one swaps with a short fade.
  */
-export function LabViewThatFits({ children, className }: LabViewThatFitsProps) {
+export function ViewThatFits({ children, className }: ViewThatFitsProps) {
   const options = React.Children.toArray(children).filter(React.isValidElement)
   const root = React.useRef<HTMLDivElement>(null)
   const measure = React.useRef<HTMLDivElement>(null)
@@ -159,7 +159,7 @@ export function LabViewThatFits({ children, className }: LabViewThatFitsProps) {
     return () => observer.disconnect()
   }, [options.length])
 
-  const fade = React.useRef(new LabMotionValue(1, 0.01)).current
+  const fade = React.useRef(new MotionValue(1, 0.01)).current
   const first = React.useRef(true)
   React.useLayoutEffect(() => {
     if (first.current) {

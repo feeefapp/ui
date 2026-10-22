@@ -51,15 +51,15 @@ const browserServices = {
         await navigator.clipboard.writeText(text);
     },
 };
-const LabServicesContext = createContext(browserServices);
+const ServicesContext = createContext(browserServices);
 /**
  * Installs services for its subtree. Pass only the ports you override; the rest keep their
- * browser defaults. `LabProvider` renders this for you from its `services` prop.
+ * browser defaults. `Provider` renders this for you from its `services` prop.
  */
-export function LabServicesProvider({ children, services, }) {
+export function ServicesProvider({ children, services, }) {
     const value = useMemo(() => ({ ...browserServices, ...services }), [services]);
-    return _jsx(LabServicesContext.Provider, { value: value, children: children });
+    return _jsx(ServicesContext.Provider, { value: value, children: children });
 }
 /** Returns the nearest services, or the browser defaults when no provider is mounted. */
-export const useLabServices = () => useContext(LabServicesContext);
+export const useServices = () => useContext(ServicesContext);
 //# sourceMappingURL=services.js.map

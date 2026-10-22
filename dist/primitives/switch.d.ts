@@ -1,7 +1,7 @@
-import { LabSlideSwitchIndicator } from './slider.js';
+import { SlideSwitchIndicator } from './slider.js';
 /** Compatibility aliases; new code uses the shared spring controls explicitly. */
-export declare const LabSwitchIndicator: typeof LabSlideSwitchIndicator;
-export declare function LabSwitch(props: {
+export declare const SwitchIndicator: typeof SlideSwitchIndicator;
+export declare function Switch(props: {
     checked: boolean;
     onCheckedChange(value: boolean): void;
     label: string;

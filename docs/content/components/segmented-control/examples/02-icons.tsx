@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Columns3, LayoutGrid, List } from 'lucide-react'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 
 export default function WithIcons() {
   const [view, setView] = useState<'list' | 'board' | 'grid'>('board')
   return (
-    <LabSegmentedControl
+    <SegmentedControl
       label="Orders view"
       value={view}
       onChange={setView}

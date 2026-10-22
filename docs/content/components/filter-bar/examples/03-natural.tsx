@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { LabFilterBar, type LabFilterOption } from '@feeef.dev/ui/filter-bar'
-import { LabScrollArea } from '@feeef.dev/ui/scroll'
+import { FilterBar, type FilterOption } from '@feeef.dev/ui/filter-bar'
+import { ScrollArea } from '@feeef.dev/ui/scroll'
 import '../filter-demo.css'
 
-const OPTIONS: LabFilterOption[] = [
+const OPTIONS: FilterOption[] = [
   { id: 'unpaid', label: 'Unpaid', keywords: ['cash', 'not paid'] },
   { id: 'returned', label: 'Returned', keywords: ['refused'] },
   { id: 'express', label: 'Express delivery', keywords: ['express', 'fast'] },
@@ -24,10 +24,10 @@ export default function Natural() {
   const [enabled, setEnabled] = useState<string[]>([])
   return (
     <div className="filter-demo-frame">
-      <LabScrollArea
+      <ScrollArea
         label="Orders"
         top={
-          <LabFilterBar
+          <FilterBar
             label="Order filters"
             options={OPTIONS}
             value={enabled}
@@ -40,7 +40,7 @@ export default function Natural() {
           Enabled filters: {enabled.length ? enabled.join(', ') : 'none'}. Use the sparkle button and type
           a sentence.
         </p>
-      </LabScrollArea>
+      </ScrollArea>
     </div>
   )
 }

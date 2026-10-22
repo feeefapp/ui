@@ -6,12 +6,12 @@ import './list.css';
  * their leading icon. With `onReorder`, every row gets a grip: drag it (any pointer) or focus it
  * and press the arrow keys.
  */
-export declare function LabListSection({ header, footer, children, className, label, onReorder, }: {
+export declare function ListSection({ header, footer, children, className, label, onReorder, }: {
     /** Short label above the card, in sentence case. */
     header?: React.ReactNode;
     /** Help text under the card. */
     footer?: React.ReactNode;
-    /** LabListRow elements. */
+    /** ListRow elements. */
     children: React.ReactNode;
     className?: string;
     /** Accessible name when there is no visible header. */
@@ -20,7 +20,7 @@ export declare function LabListSection({ header, footer, children, className, la
     onReorder?: (from: number, to: number) => void;
 }): React.JSX.Element;
 /** An action revealed by swiping a row. */
-export type LabRowAction = {
+export type RowAction = {
     /** Short verb: “Confirm”, “Archive”, “Delete”. */
     label: string;
     icon?: React.ReactNode;
@@ -28,7 +28,7 @@ export type LabRowAction = {
     tone?: 'neutral' | 'primary' | 'destructive';
     onAction: () => void;
 };
-export type LabListRowProps = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'title'> & {
+export type ListRowProps = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'title'> & {
     /** Main text. */
     title: React.ReactNode;
     /** Second line in muted text. */
@@ -46,9 +46,9 @@ export type LabListRowProps = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>
     /** Without `onClick`, `href` or `asChild`, the row is static text. */
     static?: boolean;
     /** Actions revealed by swiping toward the end (they sit at the start). The first runs on a long swipe. */
-    leadingActions?: readonly LabRowAction[];
+    leadingActions?: readonly RowAction[];
     /** Actions revealed by swiping toward the start (they sit at the end). The first runs on a long swipe. */
-    trailingActions?: readonly LabRowAction[];
+    trailingActions?: readonly RowAction[];
     /** Whether a long swipe runs the first action. Default true. */
     fullSwipe?: boolean;
     /** Accessible name of the reorder grip. Defaults to “Reorder” plus the title when it is text. */
@@ -57,9 +57,9 @@ export type LabListRowProps = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>
 /**
  * One row of a list: a full-width button (or your link with `asChild`) with leading media, title,
  * subtitle, trailing value and an optional chevron. Swipe actions reveal behind it, and inside a
- * reorderable LabListSection it gets a grip.
+ * reorderable ListSection it gets a grip.
  */
-export declare const LabListRow: React.ForwardRefExoticComponent<Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "title"> & {
+export declare const ListRow: React.ForwardRefExoticComponent<Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "title"> & {
     /** Main text. */
     title: React.ReactNode;
     /** Second line in muted text. */
@@ -77,9 +77,9 @@ export declare const LabListRow: React.ForwardRefExoticComponent<Omit<React.Butt
     /** Without `onClick`, `href` or `asChild`, the row is static text. */
     static?: boolean;
     /** Actions revealed by swiping toward the end (they sit at the start). The first runs on a long swipe. */
-    leadingActions?: readonly LabRowAction[];
+    leadingActions?: readonly RowAction[];
     /** Actions revealed by swiping toward the start (they sit at the end). The first runs on a long swipe. */
-    trailingActions?: readonly LabRowAction[];
+    trailingActions?: readonly RowAction[];
     /** Whether a long swipe runs the first action. Default true. */
     fullSwipe?: boolean;
     /** Accessible name of the reorder grip. Defaults to “Reorder” plus the title when it is text. */

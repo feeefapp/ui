@@ -1,7 +1,7 @@
 import * as React from 'react';
 import './navigation-stack.css';
-/** What a page inside a LabNavigationStack knows about its place in it. */
-export type LabNavigationStackPage = {
+/** What a page inside a NavigationStack knows about its place in it. */
+export type NavigationStackPage = {
     /** Distance from the root page; 0 for the root. */
     depth: number;
     /** True for the page on top, the one people see and use. */
@@ -14,12 +14,12 @@ export type LabNavigationStackPage = {
     previousTitle?: string;
 };
 /** The nearest stack page's position and `back()`. Outside a stack: a root page that cannot go back. */
-export declare function useLabNavigationStack(): LabNavigationStackPage;
+export declare function useNavigationStack(): NavigationStackPage;
 /**
  * Path state for a stack: an array of route values, root page not included. Map it to pages
- * (`path.map((route) => <LabNavigationPage key=… />)`) and pass `pop` as the stack's `onBack`.
+ * (`path.map((route) => <NavigationPage key=… />)`) and pass `pop` as the stack's `onBack`.
  */
-export declare function useLabNavigationPath<T>(initial?: T[]): {
+export declare function useNavigationPath<T>(initial?: T[]): {
     path: T[];
     setPath: React.Dispatch<React.SetStateAction<T[]>>;
     push: (route: T) => void;
@@ -27,9 +27,9 @@ export declare function useLabNavigationPath<T>(initial?: T[]): {
     popToRoot: () => void;
     replace: (route: T) => void;
 };
-export type LabNavigationStackProps = {
+export type NavigationStackProps = {
     /**
-     * The pages, root first, each a keyed element (usually a LabNavigationPage). Append a page to
+     * The pages, root first, each a keyed element (usually a NavigationPage). Append a page to
      * push it; remove the top one to pop. The stack animates whatever changed.
      */
     children: React.ReactNode;
@@ -52,8 +52,8 @@ export type LabNavigationStackProps = {
  * pushed with `zoomSource` grows out of that element instead and can be dragged down to shrink
  * back into it. Every page stays mounted, so scroll positions and drafts survive.
  */
-export declare function LabNavigationStack({ children, onBack, swipeBack, label, className, style, }: LabNavigationStackProps): React.JSX.Element;
-export type LabNavigationPageProps = {
+export declare function NavigationStack({ children, onBack, swipeBack, label, className, style, }: NavigationStackProps): React.JSX.Element;
+export type NavigationPageProps = {
     /** Page title: the large title, the bar title once it scrolls away, and the next page's back label. */
     title: string;
     /** `large` shows a big title in the content that collapses into the bar; `inline` shows it in the bar. Default: large on the root page, inline when pushed. */
@@ -62,9 +62,9 @@ export type LabNavigationPageProps = {
     subtitle?: React.ReactNode;
     /** Extra controls after the back button, in the same glass group. */
     leading?: React.ReactNode;
-    /** Controls at the end of the bar; wrap them in a LabToolbarGroup. */
+    /** Controls at the end of the bar; wrap them in a ToolbarGroup. */
     trailing?: React.ReactNode;
-    /** Floats over the bottom, usually a LabDock with the page's actions. */
+    /** Floats over the bottom, usually a Dock with the page's actions. */
     bottom?: React.ReactNode;
     /** What the back button of the next page says for this one. Defaults to `title`. */
     backTitle?: string;
@@ -80,9 +80,9 @@ export type LabNavigationPageProps = {
     className?: string;
 };
 /**
- * One page of a LabNavigationStack: its own scroll area with a floating glass bar (back button
+ * One page of a NavigationStack: its own scroll area with a floating glass bar (back button
  * with the previous title, the page title, trailing actions) and an optional bottom dock. A large
  * title scrolls under the bar and reappears in it, like iOS.
  */
-export declare function LabNavigationPage({ title, titleDisplay, subtitle, leading, trailing, bottom, hideBar, contentPadding, contentLabel, children, className, }: LabNavigationPageProps): React.JSX.Element;
+export declare function NavigationPage({ title, titleDisplay, subtitle, leading, trailing, bottom, hideBar, contentPadding, contentLabel, children, className, }: NavigationPageProps): React.JSX.Element;
 //# sourceMappingURL=navigation-stack.d.ts.map

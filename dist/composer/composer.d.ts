@@ -2,7 +2,7 @@ import * as React from 'react';
 import './composer.css';
 export { useComposerLayout } from './use-composer-layout.js';
 /** Shared Chat/Image card. Domain-specific controls remain in named layout slots. */
-export declare const LabComposerCard: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLDivElement> & {
+export declare const ComposerCard: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLDivElement> & {
     /** Two-row layout (field above, tools below) instead of one line. Sets `data-expanded`. */
     expanded?: boolean;
     /** Ref to the inner layout grid, for `useComposerLayout`. */
@@ -13,11 +13,11 @@ export declare const LabComposerCard: React.ForwardRefExoticComponent<React.HTML
     above?: React.ReactNode;
 } & React.RefAttributes<HTMLDivElement>>;
 /** Placeholder that fades in word by word. Decorative (`aria-hidden`); label the field separately. */
-export declare function LabComposerHint({ text }: {
+export declare function ComposerHint({ text }: {
     /** The hint text. Changing it replays the animation. */
     text: string;
 }): React.JSX.Element;
-export type LabPromptComposerProps = Omit<React.FormHTMLAttributes<HTMLFormElement>, 'onSubmit' | 'onChange' | 'children'> & {
+export type PromptComposerProps = Omit<React.FormHTMLAttributes<HTMLFormElement>, 'onSubmit' | 'onChange' | 'children'> & {
     /** The prompt text (controlled). */
     value: string;
     /** Called with the new text on every edit. */
@@ -50,5 +50,5 @@ export type LabPromptComposerProps = Omit<React.FormHTMLAttributes<HTMLFormEleme
     contentRevision?: unknown;
 };
 /** Canonical measured Lab composer with stable caret, growing input and responsive tool slots. */
-export declare function LabPromptComposer({ value, onValueChange, onSubmit, label, placeholder, disabled, busy, dropActive, submitDisabled, maxLength, above, tools, submit, footer, contentRevision, className, ...props }: LabPromptComposerProps): React.JSX.Element;
+export declare function PromptComposer({ value, onValueChange, onSubmit, label, placeholder, disabled, busy, dropActive, submitDisabled, maxLength, above, tools, submit, footer, contentRevision, className, ...props }: PromptComposerProps): React.JSX.Element;
 //# sourceMappingURL=composer.d.ts.map

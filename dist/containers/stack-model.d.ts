@@ -1,5 +1,5 @@
 /** Pure model of a navigation stack: what changed between two page lists, and frame geometry. */
-export type LabStackChange = {
+export type StackChange = {
     kind: 'none';
 }
 /** `enter` arrives on top of `exit` (the previous top, which stays below). */
@@ -23,9 +23,9 @@ export type LabStackChange = {
     removed: string[];
 };
 /** Classifies how a stack went from `previous` page keys to `next`, root first. */
-export declare function diffStack(previous: readonly string[], next: readonly string[]): LabStackChange;
+export declare function diffStack(previous: readonly string[], next: readonly string[]): StackChange;
 /** How far (fraction of the width) the page underneath slides while a page covers it, like iOS. */
-export declare const LAB_STACK_PARALLAX = 0.3;
+export declare const STACK_PARALLAX = 0.3;
 /**
  * Horizontal offsets in px for a slide transition. `shown` is how much the front page covers the
  * back one: 0 = front fully off its trailing edge, 1 = front in place. Mirrored for RTL.
@@ -35,20 +35,20 @@ export declare function slideFrame(shown: number, width: number, rtl: boolean): 
     back: number;
     dim: number;
 };
-export type LabRect = {
+export type Rect = {
     x: number;
     y: number;
     width: number;
     height: number;
 };
 /** Interpolates two rects; `progress` is not clamped, so springs can overshoot through it. */
-export declare function mixRect(from: LabRect, to: LabRect, progress: number): LabRect;
+export declare function mixRect(from: Rect, to: Rect, progress: number): Rect;
 /**
  * Paint for a page of `page` size shown inside `rect` (stack coordinates): a uniform scale that
  * matches the rect's width, a translation to its corner, and a clip that crops the page's bottom
  * to the rect's height with `radius` corners (in screen px). Content is never stretched.
  */
-export declare function zoomFrame(rect: LabRect, radius: number, page: {
+export declare function zoomFrame(rect: Rect, radius: number, page: {
     width: number;
     height: number;
 }): {
@@ -67,5 +67,5 @@ export declare function dragDismissRect(page: {
 }, anchor: {
     x: number;
     y: number;
-}, dx: number, dy: number, pull?: number): LabRect;
+}, dx: number, dy: number, pull?: number): Rect;
 //# sourceMappingURL=stack-model.d.ts.map

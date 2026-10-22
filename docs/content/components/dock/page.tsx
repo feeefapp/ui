@@ -1,6 +1,6 @@
 import { Printer, Truck } from 'lucide-react'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { Dock } from '@feeef.dev/ui/dock'
+import { Button } from '@feeef.dev/ui/primitives/button'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground, jsx } from '../../../src/blocks/playground'
 import { DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
@@ -23,7 +23,7 @@ function Overview() {
         controls={controls}
         render={(v) => (
           <div className="dock-demo-host">
-            <LabDock
+            <Dock
               label="Order actions"
               align={v.align as (typeof ALIGNS)[number]}
               content={
@@ -37,30 +37,30 @@ function Overview() {
             >
               <div className="demo-row">
                 {v.secondary && (
-                  <LabButton variant="text">
+                  <Button variant="text">
                     <Printer />
                     Print label
-                  </LabButton>
+                  </Button>
                 )}
-                <LabButton variant="filled">
+                <Button variant="filled">
                   <Truck />
                   Ship order
-                </LabButton>
+                </Button>
               </div>
-            </LabDock>
+            </Dock>
           </div>
         )}
         code={(v) =>
           jsx(
-            'LabDock',
+            'Dock',
             {
               label: 'Order actions',
               align: v.align,
               content: v.content ? '__CONTENT__' : undefined,
             },
             v.secondary
-              ? '<LabButton variant="text">Print label</LabButton>\n<LabButton variant="filled">Ship order</LabButton>'
-              : '<LabButton variant="filled">Ship order</LabButton>',
+              ? '<Button variant="text">Print label</Button>\n<Button variant="filled">Ship order</Button>'
+              : '<Button variant="filled">Ship order</Button>',
             { align: 'center' }
           ).replace('content="__CONTENT__"', `content={<strong>${v.title}</strong>}`)
         }
@@ -71,7 +71,7 @@ function Overview() {
           A dock is the floating glass container for a task's actions: the main action of a page, the
           commands for a selection, pagination, or the Save / Cancel pair of a dialog. It optionally leads
           with a small status tile (a title, a count, a total). Put it where actions float: the{' '}
-          <C>bottom</C> slot of a <C>LabScrollArea</C>, <C>LabScaffold</C> or scrollable <C>LabModal</C>.
+          <C>bottom</C> slot of a <C>ScrollArea</C>, <C>Scaffold</C> or scrollable <C>Modal</C>.
         </p>
         <p>
           The dock does not position itself. Its host decides where it floats and reserves its height, so
@@ -86,7 +86,7 @@ function Overview() {
             <strong>Host</strong>: a full-width, click-through row that aligns the dock (<C>align</C>).
           </li>
           <li>
-            <strong>Glass</strong>: one <C>LabGlassGroup</C> with a 4px inset, named by <C>label</C>.
+            <strong>Glass</strong>: one <C>GlassGroup</C> with a 4px inset, named by <C>label</C>.
           </li>
           <li>
             <strong>Status tile</strong> (<C>content</C>, optional): one or two short lines. It can shrink
@@ -94,7 +94,7 @@ function Overview() {
           </li>
           <li>
             <strong>Actions</strong> (<C>children</C>): buttons laid out in a row, or one{' '}
-            <C>LabActionsBar</C>. The dock passes the width left after the tile to the actions bar, which
+            <C>ActionsBar</C>. The dock passes the width left after the tile to the actions bar, which
             moves low-priority actions into a More menu instead of wrapping.
           </li>
         </ol>
@@ -119,13 +119,13 @@ function Overview() {
           change under the same key updates in place and keeps focus. Reduced motion swaps instantly.
         </p>
         <Code
-          code={`<LabDock
+          code={`<Dock
   label="Selection actions"
   swapKey={selected.length ? 'selected' : 'browsing'}
   content={<strong>{selected.length} selected</strong>}
 >
-  <LabActionsBar actions={actions} label="Selection actions" size="compact" />
-</LabDock>`}
+  <ActionsBar actions={actions} label="Selection actions" size="compact" />
+</Dock>`}
         />
       </Section>
 
@@ -134,7 +134,7 @@ function Overview() {
           doItems={[
             'Keep one filled button per dock, last in reading order.',
             'Give the dock a label that names the task (“Order actions”).',
-            'Use LabActionsBar when there are more than two or three actions or the width can get narrow.',
+            'Use ActionsBar when there are more than two or three actions or the width can get narrow.',
             'Put it in a host’s bottom slot so its height is reserved.',
           ]}
           dontItems={[
@@ -171,9 +171,9 @@ export default definePage({
   order: 3,
   summary:
     'A floating glass container for a task’s actions and a short status, sized to its content and placed by its host.',
-  importLine: "import { LabDock } from '@feeef.dev/ui/dock'",
+  importLine: "import { Dock } from '@feeef.dev/ui/dock'",
   source: 'src/dock/dock.tsx',
-  api: ['LabDock'],
+  api: ['Dock'],
   keywords: ['action bar', 'footer', 'bottom bar', 'floating actions', 'selection', 'swapKey'],
   Overview,
   examples: examplesFrom(
@@ -181,10 +181,10 @@ export default definePage({
     import.meta.glob('./examples/*.tsx', { eager: true, query: '?raw', import: 'default' })
   ),
   Preview: () => (
-    <LabDock label="Order actions" content={<strong>#1048</strong>}>
-      <LabButton variant="filled" controlSize="compact">
+    <Dock label="Order actions" content={<strong>#1048</strong>}>
+      <Button variant="filled" controlSize="compact">
         Ship
-      </LabButton>
-    </LabDock>
+      </Button>
+    </Dock>
   ),
 })

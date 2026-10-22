@@ -4,14 +4,14 @@
  * Being closed-form, a spring knows its exact position and velocity at any time, so an animation
  * can be interrupted or retargeted mid-flight without a jump or a change of speed.
  */
-export type LabSpring = {
+export type Spring = {
     /** Perceptual duration in seconds: roughly how long the motion takes to look finished. */
     duration: number;
     /** Overshoot from -1 to 1. 0 settles without overshoot; 0.15 is a snappy hint; 0.3 bounces. */
     bounce: number;
 };
 /** The kit's named springs. Pick by role, not by look. */
-export declare const LAB_SPRINGS: {
+export declare const SPRINGS: {
     /** Default for layout and presentation: pages, sheets, panels. No overshoot. */
     readonly smooth: {
         readonly duration: 0.5;
@@ -38,13 +38,13 @@ export declare const LAB_SPRINGS: {
         readonly bounce: 0;
     };
 };
-export type LabSpringName = keyof typeof LAB_SPRINGS;
+export type SpringName = keyof typeof SPRINGS;
 /** Physical coefficients (mass 1) for a duration/bounce spring, using SwiftUI's mapping. */
-export declare function springCoefficients({ duration, bounce }: LabSpring): {
+export declare function springCoefficients({ duration, bounce }: Spring): {
     stiffness: number;
     damping: number;
 };
-export type LabSpringState = {
+export type SpringState = {
     position: number;
     velocity: number;
 };
@@ -52,9 +52,9 @@ export type LabSpringState = {
  * Solves a spring from `from` (moving at `velocity` units per second) toward `to`. The returned
  * function gives the exact state `t` seconds later.
  */
-export declare function solveSpring(spring: LabSpring, from: number, to: number, velocity?: number): (t: number) => LabSpringState;
+export declare function solveSpring(spring: Spring, from: number, to: number, velocity?: number): (t: number) => SpringState;
 /** True once a spring is close enough to `to` and slow enough to snap and stop. */
-export declare function springAtRest(state: LabSpringState, to: number, restDelta: number, restSpeed?: number): boolean;
+export declare function springAtRest(state: SpringState, to: number, restDelta: number, restSpeed?: number): boolean;
 /**
  * Where a moving value would come to rest if it decelerated like an iOS scroll view
  * (`decelerationRate` 0.998 = normal, 0.99 = fast). Velocity is in units per second. Use it to
@@ -78,7 +78,7 @@ export declare function progressBetween(value: number, inMin: number, inMax: num
  * A spring as a CSS transition: `duration` in ms until it settles and a `linear()` easing that
  * traces it (overshoot included). For state changes that CSS animates, like a tab bar collapsing.
  */
-export declare function springTiming(spring: LabSpring, samples?: number): {
+export declare function springTiming(spring: Spring, samples?: number): {
     duration: number;
     easing: string;
 };

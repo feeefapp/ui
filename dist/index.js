@@ -1,19 +1,19 @@
 /** Public core API. Feature widgets may import dedicated modules directly. */
-export { LabProvider } from './provider.js';
-export { LabI18nProvider, LabLanguageSwitcher, useLabI18n } from './i18n.js';
-export { LAB_LANGUAGES, labDirectionFor } from './i18n-core.js';
-export { LabServicesProvider, useLabServices } from './services.js';
-export { LabThemeProvider, LabThemeSwitch, useLabTheme } from './theme.js';
-export { LAB_THEME_DEFAULTS, applyLabThemeConfig, labThemeAttributes } from './theme-config.js';
-export { LabButton, LabInput, LabTextarea, LabSelect, LabOption, LabLabel, LabModal, LabBox, LabText, LabLink, LabForm, LabList, LabListItem, LabDivider, } from './ui.js';
-export { LabScaffoldProvider, LabGlassGroup, LabFloatingLayer, LabViewTransition, useLabNavigation, useFloatingReserve, } from './scaffold.js';
-export { LabScrollArea, LabScrollGradientOverlay } from './scroll/index.js';
-export { LabDock } from './dock/index.js';
-export { LabActionsBar, LabActionsWidthProvider } from './actions/index.js';
-export { LabSegmentedControl } from './ui.js';
-export { LAB_UI_MESSAGES } from './messages.js';
+export { Provider } from './provider.js';
+export { I18nProvider, LanguageSwitcher, useI18n } from './i18n.js';
+export { LANGUAGES, directionFor } from './i18n-core.js';
+export { ServicesProvider, useServices } from './services.js';
+export { ThemeProvider, ThemeSwitch, useTheme } from './theme.js';
+export { THEME_DEFAULTS, applyThemeConfig, themeAttributes } from './theme-config.js';
+export { Button, Input, Textarea, Select, Option, Label, Modal, Box, Text, Link, Form, List, ListItem, Divider, } from './ui.js';
+export { ScaffoldProvider, GlassGroup, FloatingLayer, ViewTransition, useNavigation, useFloatingReserve, } from './scaffold.js';
+export { ScrollArea, ScrollGradientOverlay } from './scroll/index.js';
+export { Dock } from './dock/index.js';
+export { ActionsBar, ActionsWidthProvider } from './actions/index.js';
+export { SegmentedControl } from './ui.js';
+export { UI_MESSAGES } from './messages.js';
 export { flattenLabTranslations, translateLab } from './i18n-core.js';
-export { labLocaleUrl } from './i18n.js';
+export { localeUrl } from './i18n.js';
 export { cn } from './utils.js';
-export { LabToolbarSearch } from './toolbar-search.js';
+export { ToolbarSearch } from './toolbar-search.js';
 //# sourceMappingURL=index.js.map

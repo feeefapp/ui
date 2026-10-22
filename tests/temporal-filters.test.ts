@@ -4,7 +4,7 @@ import {
   temporalPresets,
   validateTemporal,
   readTemporalForm,
-  type LabTemporalType,
+  type TemporalType,
 } from '../src/filters/temporal.ts'
 
 test('temporal editors reject impossible dates and invalid clock times', () => {
@@ -42,7 +42,7 @@ test('bounds are inclusive and minute/second representations compare equally', (
 })
 test('all six temporal presets generate valid local wall-clock values across month boundaries', () => {
   const now = new Date(2026, 0, 1, 8, 30)
-  const types: LabTemporalType[] = [
+  const types: TemporalType[] = [
     'date',
     'time',
     'datetime',

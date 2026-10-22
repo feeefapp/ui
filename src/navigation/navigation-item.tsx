@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 import * as Tooltip from '@radix-ui/react-tooltip'
-import { LabButton } from '../ui'
+import { Button } from '../ui'
 import './navigation-item.css'
 
 /** A navigation entry described as data. */
-export type LabWorkspaceAction = {
+export type WorkspaceAction = {
   id: string
   label: string
   icon: ReactNode
@@ -17,7 +17,7 @@ export type LabWorkspaceAction = {
  * `compact` (rail) mode only the icon shows and the label moves into a tooltip. Needs a Radix
  * Tooltip.Provider above it.
  */
-export function LabNavigationItem({
+export function NavigationItem({
   label,
   icon,
   href,
@@ -50,7 +50,7 @@ export function LabNavigationItem({
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
         {href ? (
-          <LabButton
+          <Button
             asChild
             variant="ghost"
             appearance="toolbar"
@@ -60,9 +60,9 @@ export function LabNavigationItem({
             <a href={href} aria-current={active ? 'page' : undefined} onClick={onSelect}>
               {content}
             </a>
-          </LabButton>
+          </Button>
         ) : (
-          <LabButton
+          <Button
             variant="ghost"
             appearance="toolbar"
             className="lab-navigation-item"
@@ -71,7 +71,7 @@ export function LabNavigationItem({
             onClick={onSelect}
           >
             {content}
-          </LabButton>
+          </Button>
         )}
       </Tooltip.Trigger>
       {compact && (

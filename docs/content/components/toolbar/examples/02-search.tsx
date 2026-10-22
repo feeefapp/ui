@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { LayoutGrid, List, SlidersHorizontal } from 'lucide-react'
-import { LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabToolbarSearch } from '@feeef.dev/ui/toolbar-search'
-import { LabIconButton } from '@feeef.dev/ui/primitives/button'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { ToolbarSearch } from '@feeef.dev/ui/toolbar-search'
+import { IconButton } from '@feeef.dev/ui/primitives/button'
 import '../toolbar-demo.css'
 
 const PRODUCTS = ['Wireless earbuds', 'Phone case', 'Smart watch', 'Power bank', 'USB-C cable', 'Desk lamp']
@@ -13,15 +13,15 @@ export default function Search() {
   const rows = PRODUCTS.filter((name) => name.toLowerCase().includes(query.toLowerCase()))
   return (
     <div className="toolbar-demo-surface">
-      <LabToolbarSearch
+      <ToolbarSearch
         label="Search products"
         placeholder="Search by name or SKU"
         value={query}
         onValueChange={setQuery}
         // Always visible after the search.
         trailing={
-          <LabToolbarGroup label="View">
-            <LabIconButton
+          <ToolbarGroup label="View">
+            <IconButton
               variant="text"
               appearance="toolbar"
               controlSize="compact"
@@ -29,17 +29,17 @@ export default function Search() {
               onClick={() => setGrid(!grid)}
             >
               {grid ? <List /> : <LayoutGrid />}
-            </LabIconButton>
-          </LabToolbarGroup>
+            </IconButton>
+          </ToolbarGroup>
         }
       >
         {/* Children sit beside the closed search button and hide while the field is open. */}
-        <LabToolbarGroup label="Filters">
-          <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Filters">
+        <ToolbarGroup label="Filters">
+          <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Filters">
             <SlidersHorizontal />
-          </LabIconButton>
-        </LabToolbarGroup>
-      </LabToolbarSearch>
+          </IconButton>
+        </ToolbarGroup>
+      </ToolbarSearch>
       <div className="toolbar-demo-content" style={grid ? undefined : { gridTemplateColumns: '1fr' }}>
         {rows.map((name) => (
           <div key={name}>
@@ -55,5 +55,5 @@ export default function Search() {
 export const meta = {
   title: 'Expanding search',
   description:
-    'LabToolbarSearch is a search button that springs open into a field in the same pill, across the width of its row. Use it directly as a row rather than inside LabToolbar’s leading slot. children sit beside the closed button; trailing is always visible. Escape closes and clears.',
+    'ToolbarSearch is a search button that springs open into a field in the same pill, across the width of its row. Use it directly as a row rather than inside Toolbar’s leading slot. children sit beside the closed button; trailing is always visible. Escape closes and clears.',
 }

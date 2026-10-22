@@ -1,8 +1,8 @@
 import { jsx as _jsx } from "react/jsx-runtime";
-import { LabSlideSwitch, LabSlideSwitchIndicator } from './slider.js';
+import { SlideSwitch, SlideSwitchIndicator } from './slider.js';
 /** Compatibility aliases; new code uses the shared spring controls explicitly. */
-export const LabSwitchIndicator = LabSlideSwitchIndicator;
-export function LabSwitch(props) {
-    return _jsx(LabSlideSwitch, { ...props, controlSize: "compact" });
+export const SwitchIndicator = SlideSwitchIndicator;
+export function Switch(props) {
+    return _jsx(SlideSwitch, { ...props, controlSize: "compact" });
 }
 //# sourceMappingURL=switch.js.map

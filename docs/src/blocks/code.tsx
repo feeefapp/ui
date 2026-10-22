@@ -1,10 +1,10 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { Check, Copy } from 'lucide-react'
 import type { HighlighterCore } from 'shiki/core'
-import { LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabScrollArea } from '@feeef.dev/ui/scroll'
-import { LabToolbar, LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { useLabServices } from '@feeef.dev/ui/services'
+import { IconButton } from '@feeef.dev/ui/primitives/button'
+import { ScrollArea } from '@feeef.dev/ui/scroll'
+import { Toolbar, ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { useServices } from '@feeef.dev/ui/services'
 import { cn } from '@feeef.dev/ui/utils'
 
 export type CodeLang = 'tsx' | 'bash' | 'css' | 'json' | 'html'
@@ -54,7 +54,7 @@ function useHighlighted(code: string, lang: CodeLang) {
 }
 
 export function CopyButton({ text, label = 'Copy code' }: { text: string; label?: string }) {
-  const { copyText } = useLabServices()
+  const { copyText } = useServices()
   const [done, setDone] = useState(false)
   useEffect(() => {
     if (!done) return
@@ -62,7 +62,7 @@ export function CopyButton({ text, label = 'Copy code' }: { text: string; label?
     return () => clearTimeout(timer)
   }, [done])
   return (
-    <LabIconButton
+    <IconButton
       variant="text"
       appearance="toolbar"
       controlSize="compact"
@@ -71,7 +71,7 @@ export function CopyButton({ text, label = 'Copy code' }: { text: string; label?
       onClick={() => copyText(text).then(() => setDone(true), () => {})}
     >
       {done ? <Check size={18} /> : <Copy size={18} />}
-    </LabIconButton>
+    </IconButton>
   )
 }
 
@@ -92,7 +92,7 @@ const MAX_ROWS = 22
 
 /**
  * Highlighted, copyable code on an opaque surface. Its tools float together in glass bubbles over a
- * LabScrollArea, which fades the code under them and scrolls long sources; one- and two-line snippets
+ * ScrollArea, which fades the code under them and scrolls long sources; one- and two-line snippets
  * get a single row with the copy bubble at the end. Plain text renders first, so nothing waits on Shiki.
  */
 export function Code({
@@ -116,9 +116,9 @@ export function Code({
       <figure className={cn('docs-code', className)} data-layout="inline" aria-label={label} data-lab-corners>
         <Source code={code} html={html} />
         {copy && (
-          <LabToolbarGroup label="Code actions" className="docs-code-inline-tools">
+          <ToolbarGroup label="Code actions" className="docs-code-inline-tools">
             <CopyButton text={code} />
-          </LabToolbarGroup>
+          </ToolbarGroup>
         )}
       </figure>
     )
@@ -131,31 +131,31 @@ export function Code({
       data-lab-corners
       style={{ '--docs-code-rows': Math.min(rows, MAX_ROWS) } as CSSProperties}
     >
-      <LabScrollArea
+      <ScrollArea
         label={`${label} code`}
         edgeGap={8}
         contentPadding={16}
         topFadeHeight={64}
         top={
-          <LabToolbar
+          <Toolbar
             label={`${label} code tools`}
             leading={
-              <LabToolbarGroup label="Language">
+              <ToolbarGroup label="Language">
                 <span className="docs-code-label">{label}</span>
-              </LabToolbarGroup>
+              </ToolbarGroup>
             }
             trailing={
               copy ? (
-                <LabToolbarGroup label="Code actions">
+                <ToolbarGroup label="Code actions">
                   <CopyButton text={code} />
-                </LabToolbarGroup>
+                </ToolbarGroup>
               ) : undefined
             }
           />
         }
       >
         <Source code={code} html={html} />
-      </LabScrollArea>
+      </ScrollArea>
     </figure>
   )
 }

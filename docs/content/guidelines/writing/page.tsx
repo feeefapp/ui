@@ -1,6 +1,6 @@
 import { PackageOpen } from 'lucide-react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
 import { formatLabMessage } from '@feeef.dev/ui/i18n-core'
 import { definePage } from '../../../src/model'
 import { Link } from '../../../src/router'
@@ -27,12 +27,12 @@ function DialogMock({
       <h4>{title}</h4>
       <p>{body}</p>
       <div className="gw-dialog-actions">
-        <LabButton variant="text" controlSize="compact">
+        <Button variant="text" controlSize="compact">
           {cancel}
-        </LabButton>
-        <LabButton variant="destructive" controlSize="compact">
+        </Button>
+        <Button variant="destructive" controlSize="compact">
           {confirm}
-        </LabButton>
+        </Button>
       </div>
     </div>
   )
@@ -136,15 +136,15 @@ function Overview() {
         <Compare
           good={
             <div className="demo-row">
-              <LabButton variant="tonal">Export orders</LabButton>
-              <LabButton variant="filled">Add product</LabButton>
+              <Button variant="tonal">Export orders</Button>
+              <Button variant="filled">Add product</Button>
             </div>
           }
           goodNote="Sentence case reads as a calm instruction."
           bad={
             <div className="demo-row">
-              <LabButton variant="tonal">Export Orders</LabButton>
-              <LabButton variant="filled">ADD NEW PRODUCT</LabButton>
+              <Button variant="tonal">Export Orders</Button>
+              <Button variant="filled">ADD NEW PRODUCT</Button>
             </div>
           }
           badNote="Title case and capitals shout, and capitals don’t exist in Arabic anyway."
@@ -170,15 +170,15 @@ function Overview() {
         <Compare
           good={
             <div className="demo-row">
-              <LabButton variant="text">Call back later</LabButton>
-              <LabButton variant="filled">Confirm order</LabButton>
+              <Button variant="text">Call back later</Button>
+              <Button variant="filled">Confirm order</Button>
             </div>
           }
           goodNote="Both labels say what happens to the order."
           bad={
             <div className="demo-row">
-              <LabButton variant="text">Back</LabButton>
-              <LabButton variant="filled">Submit</LabButton>
+              <Button variant="text">Back</Button>
+              <Button variant="filled">Submit</Button>
             </div>
           }
           badNote="“Submit” what? The agent has to remember what this screen does."
@@ -199,7 +199,7 @@ function Overview() {
         <Compare
           good={
             <div className="demo-column">
-              <LabTextField
+              <TextField
                 hint="Delivery address"
                 supportingText="Street, building and commune. The courier reads this on the phone."
               />
@@ -208,7 +208,7 @@ function Overview() {
           goodNote="A short name, and help that stays visible while typing."
           bad={
             <div className="demo-column">
-              <LabTextField hint="Please enter the full delivery address of the customer" />
+              <TextField hint="Please enter the full delivery address of the customer" />
             </div>
           }
           badNote="An instruction as the name: it truncates, and the help is gone once it floats."
@@ -270,7 +270,7 @@ function Overview() {
               </span>
               <h4>No orders yet</h4>
               <p>Orders from your store appear here as soon as a customer checks out.</p>
-              <LabButton variant="tonal">Copy store link</LabButton>
+              <Button variant="tonal">Copy store link</Button>
             </div>
           }
           goodNote="What goes here, how it fills, and the action that starts it."
@@ -401,7 +401,7 @@ const time = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit
       <Section title="Write for translation" id="translation">
         <p>
           Every string will exist in Arabic and French. Write one complete message per sentence, with
-          parameters for the parts that change, and let <C>useLabI18n().t()</C> format it (see{' '}
+          parameters for the parts that change, and let <C>useI18n().t()</C> format it (see{' '}
           <Link to="/get-started/internationalization">Internationalization</Link>).
         </p>
         <Table

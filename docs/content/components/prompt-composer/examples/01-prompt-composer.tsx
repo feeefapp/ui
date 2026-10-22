@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { ArrowUp, Paperclip } from 'lucide-react'
-import { LabPromptComposer } from '@feeef.dev/ui/composer/composer'
+import { PromptComposer } from '@feeef.dev/ui/composer/composer'
 import { ModelLadder, type LadderStop } from '@feeef.dev/ui/model-ladder'
-import { LabIconButton } from '@feeef.dev/ui/primitives/button'
+import { IconButton } from '@feeef.dev/ui/primitives/button'
 
 const STOPS: LadderStop[] = [
   { modelId: 'gemini-flash-lite', modelName: 'Gemini Flash Lite', label: 'Fast', access: 'free' },
@@ -25,7 +25,7 @@ export default function PromptComposerDemo() {
   }
   return (
     <div className="demo-wide">
-      <LabPromptComposer
+      <PromptComposer
         label="Message"
         placeholder="Ask about your orders, products or customers"
         value={prompt}
@@ -35,14 +35,14 @@ export default function PromptComposerDemo() {
         maxLength={4000}
         tools={
           <>
-            <LabIconButton variant="ghost" appearance="toolbar" aria-label="Attach a file">
+            <IconButton variant="ghost" appearance="toolbar" aria-label="Attach a file">
               <Paperclip size={18} />
-            </LabIconButton>
+            </IconButton>
             <ModelLadder variant="icon" stops={STOPS} index={model} defaultIndex={1} onChange={setModel} />
           </>
         }
         submit={
-          <LabIconButton
+          <IconButton
             type="submit"
             variant="filled"
             aria-label="Send message"
@@ -50,7 +50,7 @@ export default function PromptComposerDemo() {
             loading={busy}
           >
             <ArrowUp size={20} />
-          </LabIconButton>
+          </IconButton>
         }
         footer={sent && <p style={{ margin: '8px 4px 0', color: 'var(--lab-muted)' }}>Sent: {sent}</p>}
       />

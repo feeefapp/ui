@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { LabDateRangeField } from '@feeef.dev/ui/primitives/temporal-field'
+import { DateRangeField } from '@feeef.dev/ui/primitives/temporal-field'
 
 export default function RightToLeft() {
   const [period, setPeriod] = useState<{ from: string; to: string } | null>(null)
   return (
     <div className="demo-column" dir="rtl">
-      <LabDateRangeField
+      <DateRangeField
         hint="فترة الطلبات"
         locale="ar-DZ"
         value={period}

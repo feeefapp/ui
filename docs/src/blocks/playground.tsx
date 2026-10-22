@@ -1,10 +1,10 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { RotateCcw } from 'lucide-react'
-import { LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabOption, LabSelect } from '@feeef.dev/ui/primitives/select'
-import { LabSlider, LabSlideSwitch } from '@feeef.dev/ui/primitives/slider'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
+import { IconButton } from '@feeef.dev/ui/primitives/button'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { Option, Select } from '@feeef.dev/ui/primitives/select'
+import { Slider, SlideSwitch } from '@feeef.dev/ui/primitives/slider'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
 import { Code } from './code'
 import { Stage } from './example'
 
@@ -68,8 +68,8 @@ export function Playground<C extends Record<string, Control>>({
         >
           <div className="docs-playground-controls-head">
             <strong>Controls</strong>
-            <LabToolbarGroup label="Controls actions">
-              <LabIconButton
+            <ToolbarGroup label="Controls actions">
+              <IconButton
               variant="text"
                 appearance="toolbar"
               controlSize="compact"
@@ -78,8 +78,8 @@ export function Playground<C extends Record<string, Control>>({
               onClick={() => setValues(initial)}
             >
               <RotateCcw size={16} />
-            </LabIconButton>
-            </LabToolbarGroup>
+            </IconButton>
+            </ToolbarGroup>
           </div>
           {Object.entries(controls).map(([key, control]) => {
             const label = control.label ?? humanize(key)
@@ -87,7 +87,7 @@ export function Playground<C extends Record<string, Control>>({
             switch (control.type) {
               case 'select':
                 return (
-                  <LabSelect
+                  <Select
                     key={key}
                     hint={label}
                     controlSize="compact"
@@ -95,17 +95,17 @@ export function Playground<C extends Record<string, Control>>({
                     onValueChange={(next) => set(key, next)}
                   >
                     {control.options.map((option) => (
-                      <LabOption key={option} value={option}>
+                      <Option key={option} value={option}>
                         {option}
-                      </LabOption>
+                      </Option>
                     ))}
-                  </LabSelect>
+                  </Select>
                 )
               case 'boolean':
                 return (
                   <div key={key} className="docs-playground-row">
                     <span aria-hidden="true">{label}</span>
-                    <LabSlideSwitch
+                    <SlideSwitch
                       label={label}
                       controlSize="compact"
                       checked={Boolean(value)}
@@ -115,7 +115,7 @@ export function Playground<C extends Record<string, Control>>({
                 )
               case 'text':
                 return (
-                  <LabTextField
+                  <TextField
                     key={key}
                     hint={label}
                     controlSize="compact"
@@ -129,7 +129,7 @@ export function Playground<C extends Record<string, Control>>({
                     <span aria-hidden="true">
                       {label} <output>{String(value)}</output>
                     </span>
-                    <LabSlider
+                    <Slider
                       label={label}
                       controlSize="compact"
                       min={control.min}

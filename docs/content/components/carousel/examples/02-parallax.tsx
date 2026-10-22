@@ -1,4 +1,4 @@
-import { LabCarousel } from '@feeef.dev/ui/containers'
+import { Carousel } from '@feeef.dev/ui/containers'
 import '../carousel-demo.css'
 
 const BANNERS = [
@@ -10,7 +10,7 @@ const BANNERS = [
 export default function Banners() {
   return (
     <div className="cd-wide">
-      <LabCarousel label="Promotions" slideWidth={0.9} effect="parallax" gap={10}>
+      <Carousel label="Promotions" slideWidth={0.9} effect="parallax" gap={10}>
         {BANNERS.map((b) => (
           <div key={b.title} className="cd-banner">
             {/* Marked media drifts against the scroll. */}
@@ -19,7 +19,7 @@ export default function Banners() {
             <p>{b.text}</p>
           </div>
         ))}
-      </LabCarousel>
+      </Carousel>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-export { LabActionsBar, type LabActionsBarProps } from './actions-bar'
-export { LabActionsWidthProvider } from './width-context'
-export { computeLabActionsLayout, type LabActionsLayout, type LabActionLayoutItem } from './layout'
-export type { LabAction, LabCommandAction, LabToggleAction, LabGroupAction } from './types'
+export { ActionsBar, type ActionsBarProps } from './actions-bar'
+export { ActionsWidthProvider } from './width-context'
+export { computeLabActionsLayout, type ActionsLayout, type ActionLayoutItem } from './layout'
+export type { Action, CommandAction, ToggleAction, GroupAction } from './types'

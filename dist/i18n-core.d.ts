@@ -6,7 +6,7 @@
  * active locale already merged over their default locale.
  */
 /** Built-in languages: code, native name and direction. The switcher shows them in this order. */
-export declare const LAB_LANGUAGES: readonly [{
+export declare const LANGUAGES: readonly [{
     readonly code: "ar";
     readonly name: "العربية";
     readonly dir: "rtl";
@@ -20,9 +20,9 @@ export declare const LAB_LANGUAGES: readonly [{
     readonly dir: "ltr";
 }];
 /** `ar`, `fr` or `en`. */
-export type LabLanguageCode = (typeof LAB_LANGUAGES)[number]['code'];
+export type LanguageCode = (typeof LANGUAGES)[number]['code'];
 /** `rtl` for Arabic, Persian, Hebrew and Urdu (any region subtag), otherwise `ltr`. */
-export declare function labDirectionFor(locale: string): 'rtl' | 'ltr';
+export declare function directionFor(locale: string): 'rtl' | 'ltr';
 /** Format one ICU message; falls back to the raw pattern on any error. */
 export declare function formatLabMessage(message: string, locale: string, params?: Record<string, string | number | Date>): string;
 /**

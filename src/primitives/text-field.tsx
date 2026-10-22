@@ -2,15 +2,15 @@
 
 import * as React from 'react'
 import { cn } from '../utils'
-import { LabRawInput, type LabRawInputProps, type LabInputElement } from './raw-input'
-import { LabFieldShell, type LabFieldDecorationProps } from './field-shell'
+import { RawInput, type RawInputProps, type InputElement } from './raw-input'
+import { FieldShell, type FieldDecorationProps } from './field-shell'
 
 type NullableFieldValue<T extends { value?: unknown }> = T extends unknown
   ? Omit<T, 'value'> & { value?: T['value'] | null }
   : never
 
-export type LabTextFieldProps = NullableFieldValue<LabRawInputProps> &
-  LabFieldDecorationProps & {
+export type TextFieldProps = NullableFieldValue<RawInputProps> &
+  FieldDecorationProps & {
     /** Shows the character count under the field, with `maxLength` when set. */
     showCounter?: boolean
   }
@@ -19,7 +19,7 @@ export type LabTextFieldProps = NullableFieldValue<LabRawInputProps> &
  * A labelled text input: native `<input>` or growing `<textarea>` inside the field frame, with a
  * floating hint, icons, affixes, supporting text, validation and an optional counter.
  */
-export const LabTextField = React.forwardRef<LabInputElement, LabTextFieldProps>(
+export const TextField = React.forwardRef<InputElement, TextFieldProps>(
   (
     {
       label,
@@ -57,7 +57,7 @@ export const LabTextField = React.forwardRef<LabInputElement, LabTextFieldProps>
       [onValidationChange]
     )
     return (
-      <LabFieldShell
+      <FieldShell
         id={suppliedId}
         label={label}
         hint={hint}
@@ -89,7 +89,7 @@ export const LabTextField = React.forwardRef<LabInputElement, LabTextFieldProps>
         }
       >
         {({ id, describedBy: description, invalid }) => (
-          <LabRawInput
+          <RawInput
             {...props}
             error={error}
             value={props.value === null ? '' : props.value}
@@ -107,8 +107,8 @@ export const LabTextField = React.forwardRef<LabInputElement, LabTextFieldProps>
             }}
           />
         )}
-      </LabFieldShell>
+      </FieldShell>
     )
   }
 )
-LabTextField.displayName = 'LabTextField'
+TextField.displayName = 'TextField'

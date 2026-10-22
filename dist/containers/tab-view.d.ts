@@ -1,6 +1,6 @@
 import * as React from 'react';
 import './tab-view.css';
-export type LabTab = {
+export type Tab = {
     /** Stable id; also the value of `value`. */
     id: string;
     /** Short label in sentence case (one word is best). */
@@ -9,12 +9,12 @@ export type LabTab = {
     icon: React.ReactNode;
     /** A count or dot on the icon, e.g. unconfirmed orders. */
     badge?: React.ReactNode;
-    /** The tab's content, usually a LabNavigationStack. It stays mounted while other tabs show. */
+    /** The tab's content, usually a NavigationStack. It stays mounted while other tabs show. */
     content: React.ReactNode;
 };
-export type LabTabViewProps = {
+export type TabViewProps = {
     /** 2–5 top-level destinations. */
-    tabs: readonly LabTab[];
+    tabs: readonly Tab[];
     /** Selected tab id (controlled). */
     value: string;
     /** Called when the person picks another tab. */
@@ -40,5 +40,5 @@ export type LabTabViewProps = {
  * tab bar switches between them, and while the person scrolls down it shrinks to the selected
  * tab so content gets the screen. Picking the current tab again returns it to the top.
  */
-export declare function LabTabView({ tabs, value, onChange, onReselect, minimize, accessory, label, className, }: LabTabViewProps): React.JSX.Element;
+export declare function TabView({ tabs, value, onChange, onReselect, minimize, accessory, label, className, }: TabViewProps): React.JSX.Element;
 //# sourceMappingURL=tab-view.d.ts.map

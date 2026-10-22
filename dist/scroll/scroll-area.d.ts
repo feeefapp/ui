@@ -1,11 +1,11 @@
 import { type ReactNode, type HTMLAttributes } from 'react';
 import './scroll.css';
-export type LabScrollAreaProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
+export type ScrollAreaProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
     /** The scrolling content. */
     children: ReactNode;
     /** Chrome floating over the top edge (toolbar, filter bar). Its height is reserved as top padding. */
     top?: ReactNode;
-    /** Chrome floating over the bottom edge (usually a LabDock). Its height is reserved as bottom padding. */
+    /** Chrome floating over the bottom edge (usually a Dock). Its height is reserved as bottom padding. */
     bottom?: ReactNode;
     /** Accessible name of the scroll region. */
     label: string;
@@ -26,12 +26,12 @@ export type LabScrollAreaProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'
  * Full-bleed scroll viewport with local floating chrome, measured spacers and edge washes. Fills its
  * parent, which must have a bounded height. The forwarded ref points at the scrolling element.
  */
-export declare const LabScrollArea: import("react").ForwardRefExoticComponent<Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
+export declare const ScrollArea: import("react").ForwardRefExoticComponent<Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
     /** The scrolling content. */
     children: ReactNode;
     /** Chrome floating over the top edge (toolbar, filter bar). Its height is reserved as top padding. */
     top?: ReactNode;
-    /** Chrome floating over the bottom edge (usually a LabDock). Its height is reserved as bottom padding. */
+    /** Chrome floating over the bottom edge (usually a Dock). Its height is reserved as bottom padding. */
     bottom?: ReactNode;
     /** Accessible name of the scroll region. */
     label: string;

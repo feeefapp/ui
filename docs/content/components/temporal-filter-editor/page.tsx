@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { LabTemporalFilterEditor } from '@feeef.dev/ui/filters/temporal-editor'
-import type { LabTemporalType, LabTemporalValue } from '@feeef.dev/ui/filters/temporal'
+import { TemporalFilterEditor } from '@feeef.dev/ui/filters/temporal-editor'
+import type { TemporalType, TemporalValue } from '@feeef.dev/ui/filters/temporal'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
@@ -20,16 +20,16 @@ function PlaygroundEditor({
   bounded,
   allowOvernight,
 }: {
-  type: LabTemporalType
+  type: TemporalType
   bounded: boolean
   allowOvernight: boolean
 }) {
-  const [value, setValue] = useState<LabTemporalValue>(null)
+  const [value, setValue] = useState<TemporalValue>(null)
   const year = new Date().getFullYear()
   const bounds = bounded && !type.startsWith('time')
   return (
     <div className="demo-wide">
-      <LabTemporalFilterEditor
+      <TemporalFilterEditor
         config={{
           type,
           allowOvernight,
@@ -56,7 +56,7 @@ function Overview() {
         render={(v) => (
           <PlaygroundEditor
             key={v.type}
-            type={v.type as LabTemporalType}
+            type={v.type as TemporalType}
             bounded={v.bounded}
             allowOvernight={v.allowOvernight}
           />
@@ -69,26 +69,26 @@ function Overview() {
           ]
             .filter(Boolean)
             .join(', ')
-          return `<LabTemporalFilterEditor\n  config={{ ${config} }}\n  value={value}\n  onChange={setValue}\n/>`
+          return `<TemporalFilterEditor\n  config={{ ${config} }}\n  value={value}\n  onChange={setValue}\n/>`
         }}
       />
 
       <Section title="When to use">
         <p>
-          <C>LabTemporalFilterEditor</C> is the picker body behind the{' '}
+          <C>TemporalFilterEditor</C> is the picker body behind the{' '}
           <Link to="/components/date-time-fields">date and time fields</Link>, without the field, the
           popover or the Apply button. Use it when you own the container: a filter panel, a
           “Filter orders by date” dialog, a sidebar, or a popover opened from a chip. For a form
-          field, use <C>LabDateField</C> and its siblings instead; they wrap this editor and add the
+          field, use <C>DateField</C> and its siblings instead; they wrap this editor and add the
           trigger, draft handling and validation.
         </p>
         <p>
-          In a dialog, use <C>LabTemporalDialog</C> instead of putting this editor in a{' '}
-          <C>LabModal</C>. It floats the start/end switch and the presets in one top bar, scrolls the
+          In a dialog, use <C>TemporalDialog</C> instead of putting this editor in a{' '}
+          <C>Modal</C>. It floats the start/end switch and the presets in one top bar, scrolls the
           calendars and times, and ends with one action bar (Cancel · Clear · Apply), with no title bar
           and no close button. That keeps the dialog two levels deep. Building your own layout? Take the
-          parts: <C>useLabTemporalEditor</C> with <C>LabTemporalEdges</C>, <C>LabTemporalPresets</C>{' '}
-          (<C>layout="bar"</C>) and <C>LabTemporalBody</C>.
+          parts: <C>useTemporalEditor</C> with <C>TemporalEdges</C>, <C>TemporalPresets</C>{' '}
+          (<C>layout="bar"</C>) and <C>TemporalBody</C>.
         </p>
       </Section>
 
@@ -109,7 +109,7 @@ function Overview() {
         />
         <p>
           The editor sizes to its container, so give it a bounded width. Inside a scrollable dialog or
-          popover, wrap it in a <C>LabScrollArea</C> and dock the Apply action at the bottom, as the
+          popover, wrap it in a <C>ScrollArea</C> and dock the Apply action at the bottom, as the
           examples do.
         </p>
       </Section>
@@ -146,7 +146,7 @@ const presets = [
   { label: 'Since launch', value: { from: '2026-03-01', to: '' } },
 ]
 
-<LabTemporalFilterEditor config={{ type: 'dateRange', presets }} value={value} onChange={setValue} />`}
+<TemporalFilterEditor config={{ type: 'dateRange', presets }} value={value} onChange={setValue} />`}
           />
         </Section>
 
@@ -192,7 +192,7 @@ validateTemporal({ type: 'timeRange', allowOvernight: true }, { from: '20:00', t
     if (!error) applyFilter(value)
   }}
 >
-  <LabTemporalFilterEditor config={{ type: 'dateRange' }} value={draft} onChange={setDraft} />
+  <TemporalFilterEditor config={{ type: 'dateRange' }} value={draft} onChange={setDraft} />
 </form>`}
           />
         </Section>
@@ -209,7 +209,7 @@ validateTemporal({ type: 'timeRange', allowOvernight: true }, { from: '20:00', t
           dontItems={[
             'Apply every click immediately to an expensive query; a range takes two clicks.',
             'Squeeze it into a fixed tiny box; it needs about 280px, and two months need more.',
-            'Use it as a form field. Use LabDateRangeField, which adds the trigger and validation.',
+            'Use it as a form field. Use DateRangeField, which adds the trigger and validation.',
           ]}
         />
       </Section>
@@ -255,9 +255,9 @@ export default definePage({
   order: 2,
   summary:
     'The date and time picker body on its own, for filter panels and custom containers, with helpers for presets and validation.',
-  importLine: "import { LabTemporalFilterEditor } from '@feeef.dev/ui/filters/temporal-editor'",
+  importLine: "import { TemporalFilterEditor } from '@feeef.dev/ui/filters/temporal-editor'",
   source: 'src/filters/temporal-editor.tsx',
-  api: ['LabTemporalFilterEditor'],
+  api: ['TemporalFilterEditor'],
   keywords: ['calendar', 'date filter', 'presets', 'temporalPresets', 'validateTemporal', 'readTemporalForm', 'range'],
   Overview,
   examples: examplesFrom(

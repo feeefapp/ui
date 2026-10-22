@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LabTimeRangeField } from '@feeef.dev/ui/primitives/temporal-field'
+import { TimeRangeField } from '@feeef.dev/ui/primitives/temporal-field'
 
 export default function Overnight() {
   const [shift, setShift] = useState<{ from: string; to: string } | null>({
@@ -8,7 +8,7 @@ export default function Overnight() {
   })
   return (
     <div className="demo-column">
-      <LabTimeRangeField
+      <TimeRangeField
         hint="Night confirmation shift"
         value={shift}
         onValueChange={setShift}

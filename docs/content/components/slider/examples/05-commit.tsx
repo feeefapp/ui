@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LabSlider } from '@feeef.dev/ui/primitives/slider'
+import { Slider } from '@feeef.dev/ui/primitives/slider'
 
 const dzd = (value: number) => `${value.toLocaleString('fr-DZ')} DZD`
 
@@ -13,7 +13,7 @@ export default function Commit() {
         <span>Maximum price</span>
         <output>{dzd(price)}</output>
       </div>
-      <LabSlider
+      <Slider
         label="Maximum price"
         min={500}
         max={20000}

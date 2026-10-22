@@ -1,16 +1,16 @@
 'use client'
 
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react'
+import { forwardRef, type ComponentPropsWithoutRef, type HTMLAttributes, type ReactNode } from 'react'
 import { cn } from './utils'
-import { LabGlassGroup } from './scaffold'
+import { GlassGroup } from './scaffold'
 import './toolbar.css'
 
 /**
  * Unpainted toolbar row: `leading` at the start, `trailing` at the end, empty space between them
  * passes pointer input through to the content below. Only related controls share a material (put
- * them in LabToolbarGroups). Normal Tab order is preserved.
+ * them in ToolbarGroups). Normal Tab order is preserved.
  */
-export function LabToolbar({
+export function Toolbar({
   label,
   leading,
   trailing,
@@ -19,7 +19,7 @@ export function LabToolbar({
 }: Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
   /** Accessible name of the toolbar group. */
   label: string
-  /** Start content, usually one or more LabToolbarGroups. It may shrink. */
+  /** Start content, usually one or more ToolbarGroups. It may shrink. */
   leading: ReactNode
   /** End content; keeps its size. */
   trailing?: ReactNode
@@ -36,9 +36,9 @@ export function LabToolbar({
  * One glass pill for related toolbar controls (`role="group"`). Children should use
  * `appearance="toolbar"` and `controlSize="compact"`; the group sizes them to 40px (44px on touch).
  */
-export const LabToolbarGroup = forwardRef<HTMLElement, HTMLAttributes<HTMLElement> & {
+export const ToolbarGroup = forwardRef<HTMLElement, Omit<ComponentPropsWithoutRef<typeof GlassGroup>, 'as'> & {
   /** Accessible name of the group. */
   label: string
-}>(function LabToolbarGroup({ label, className, ...props }, ref) {
-  return <LabGlassGroup {...props} ref={ref} className={cn('lab-toolbar-group', className)} role="group" aria-label={label}/>
+}>(function ToolbarGroup({ label, className, ...props }, ref) {
+  return <GlassGroup {...props} ref={ref} className={cn('lab-toolbar-group', className)} role="group" aria-label={label}/>
 })

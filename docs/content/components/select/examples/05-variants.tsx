@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LabOption, LabSelect } from '@feeef.dev/ui/primitives/select'
+import { Option, Select } from '@feeef.dev/ui/primitives/select'
 
 const VARIANTS = ['elevated', 'outlined', 'filled', 'tonal', 'text'] as const
 
@@ -8,7 +8,7 @@ export default function Variants() {
   return (
     <div className="demo-column">
       {VARIANTS.map((variant) => (
-        <LabSelect
+        <Select
           key={variant}
           variant={variant}
           labelStyle={variant === 'filled' || variant === 'tonal' ? 'inside' : 'outlined'}
@@ -16,10 +16,10 @@ export default function Variants() {
           value={currency}
           onValueChange={setCurrency}
         >
-          <LabOption value="DZD">Algerian dinar (DZD)</LabOption>
-          <LabOption value="EUR">Euro (EUR)</LabOption>
-          <LabOption value="USD">US dollar (USD)</LabOption>
-        </LabSelect>
+          <Option value="DZD">Algerian dinar (DZD)</Option>
+          <Option value="EUR">Euro (EUR)</Option>
+          <Option value="USD">US dollar (USD)</Option>
+        </Select>
       ))}
     </div>
   )

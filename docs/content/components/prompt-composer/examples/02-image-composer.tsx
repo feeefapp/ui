@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { PromptComposer, type ComposerReference } from '@feeef.dev/ui/image/prompt-composer'
+import { ImagePromptComposer, type ComposerReference } from '@feeef.dev/ui/image/prompt-composer'
 import { ModelLadder, type LadderStop } from '@feeef.dev/ui/model-ladder'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 
 const STOPS: LadderStop[] = [
   { modelId: 'flux-schnell', modelName: 'FLUX Schnell', label: 'Fast', access: 'free' },
@@ -32,7 +32,7 @@ export default function ImageComposer() {
     )
   return (
     <div className="demo-wide" style={{ paddingTop: 72 }}>
-      <PromptComposer
+      <ImagePromptComposer
         mode="image"
         prompt={prompt}
         onPrompt={setPrompt}
@@ -52,7 +52,7 @@ export default function ImageComposer() {
         )}
         settingsLabel={shape}
         settings={
-          <LabSegmentedControl
+          <SegmentedControl
             label="Shape"
             value={shape}
             onChange={setShape}

@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { LabNumberField } from '@feeef.dev/ui/primitives/number-field'
+import { NumberField } from '@feeef.dev/ui/primitives/number-field'
 
 export default function Price() {
   const [price, setPrice] = useState(2500)
   return (
     <div className="demo-column">
-      <LabNumberField label="Price" unit="DA" step={50} min={0} value={price} onValueChange={setPrice} />
+      <NumberField label="Price" unit="DA" step={50} min={0} value={price} onValueChange={setPrice} />
       <small>Drag sideways, or click and type 2500*0.9 to take 10% off.</small>
     </div>
   )

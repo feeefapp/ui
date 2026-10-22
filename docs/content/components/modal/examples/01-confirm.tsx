@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabModal } from '@feeef.dev/ui/primitives/modal'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { Modal } from '@feeef.dev/ui/primitives/modal'
 
 export default function Confirm() {
   const [open, setOpen] = useState(false)
@@ -8,21 +8,21 @@ export default function Confirm() {
   const close = () => setOpen(false)
   return (
     <div className="demo-column">
-      <LabButton variant="destructive" onClick={() => setOpen(true)}>
+      <Button variant="destructive" onClick={() => setOpen(true)}>
         Cancel order
-      </LabButton>
+      </Button>
       <p role="status">{status}</p>
-      <LabModal open={open} close={close} label="Cancel order #10482?" showClose={false}>
+      <Modal open={open} close={close} label="Cancel order #10482?" showClose={false}>
         <div style={{ display: 'grid', gap: 16, padding: 24 }}>
           <h2 style={{ margin: 0, fontSize: 18 }}>Cancel order #10482?</h2>
           <p style={{ margin: 0 }}>
             The customer won’t be called again and the reserved stock goes back to inventory.
           </p>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-            <LabButton variant="text" onClick={close}>
+            <Button variant="text" onClick={close}>
               Keep order
-            </LabButton>
-            <LabButton
+            </Button>
+            <Button
               variant="destructive"
               onClick={() => {
                 setStatus('Order #10482 was cancelled.')
@@ -30,10 +30,10 @@ export default function Confirm() {
               }}
             >
               Cancel order
-            </LabButton>
+            </Button>
           </div>
         </div>
-      </LabModal>
+      </Modal>
     </div>
   )
 }

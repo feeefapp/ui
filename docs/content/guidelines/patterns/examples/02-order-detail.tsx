@@ -1,10 +1,10 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { ArrowLeft, PanelRight, Phone, Printer } from 'lucide-react'
-import { LabScrollArea } from '@feeef.dev/ui/scroll'
-import { LabToolbar, LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabModal } from '@feeef.dev/ui/primitives/modal'
+import { ScrollArea } from '@feeef.dev/ui/scroll'
+import { Toolbar, ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { Dock } from '@feeef.dev/ui/dock'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
+import { Modal } from '@feeef.dev/ui/primitives/modal'
 import '../patterns.css'
 
 /** True while the element is narrower than `breakpoint`: the inspector then lives in a dialog. */
@@ -49,29 +49,29 @@ export default function OrderDetail() {
   const [confirmed, setConfirmed] = useState(false)
   return (
     <div ref={frame} className="pt-frame">
-      <LabScrollArea
+      <ScrollArea
         label="Order #1048"
         top={
-          <LabToolbar
+          <Toolbar
             label="Order toolbar"
             leading={
-              <LabToolbarGroup label="Navigation">
-                <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back to orders">
+              <ToolbarGroup label="Navigation">
+                <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back to orders">
                   <ArrowLeft className="lab-dir-flip" />
-                </LabIconButton>
+                </IconButton>
                 <span className="pt-title">Order #1048</span>
-              </LabToolbarGroup>
+              </ToolbarGroup>
             }
             trailing={
-              <LabToolbarGroup label="Order tools">
-                <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Call Amina Benali">
+              <ToolbarGroup label="Order tools">
+                <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Call Amina Benali">
                   <Phone />
-                </LabIconButton>
-                <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Print shipping label">
+                </IconButton>
+                <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Print shipping label">
                   <Printer />
-                </LabIconButton>
+                </IconButton>
                 {narrow && (
-                  <LabIconButton
+                  <IconButton
                     variant="text"
                     appearance="toolbar"
                     controlSize="compact"
@@ -80,25 +80,25 @@ export default function OrderDetail() {
                     onClick={() => setDetailsOpen(true)}
                   >
                     <PanelRight />
-                  </LabIconButton>
+                  </IconButton>
                 )}
-              </LabToolbarGroup>
+              </ToolbarGroup>
             }
           />
         }
         bottom={
-          <LabDock
+          <Dock
             label="Order actions"
             // On a phone the call count is already in the content; the dock keeps its width for the actions.
             content={narrow ? undefined : <span className="pt-status">{confirmed ? 'Confirmed' : 'Call 3 of 5'}</span>}
           >
             <div className="pt-dock-row">
-              <LabButton variant="tonal">Call back later</LabButton>
-              <LabButton variant="filled" onClick={() => setConfirmed(!confirmed)}>
+              <Button variant="tonal">Call back later</Button>
+              <Button variant="filled" onClick={() => setConfirmed(!confirmed)}>
                 {confirmed ? 'Undo confirm' : 'Confirm order'}
-              </LabButton>
+              </Button>
             </div>
-          </LabDock>
+          </Dock>
         }
       >
         <div className="pt-detail" data-inspector={!narrow || undefined}>
@@ -143,10 +143,10 @@ export default function OrderDetail() {
             </aside>
           )}
         </div>
-      </LabScrollArea>
-      <LabModal open={detailsOpen && narrow} close={() => setDetailsOpen(false)} label="Order details" scrollable>
+      </ScrollArea>
+      <Modal open={detailsOpen && narrow} close={() => setDetailsOpen(false)} label="Order details" scrollable>
         <OrderFacts />
-      </LabModal>
+      </Modal>
     </div>
   )
 }

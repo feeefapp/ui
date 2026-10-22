@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabModal } from '@feeef.dev/ui/primitives/modal'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { Modal } from '@feeef.dev/ui/primitives/modal'
+import { Dock } from '@feeef.dev/ui/dock'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
 
 export default function FitContent() {
   const [open, setOpen] = useState(false)
@@ -12,7 +12,7 @@ export default function FitContent() {
   return (
     <div className="demo-row">
       <span>{name}</span>
-      <LabButton
+      <Button
         variant="tonal"
         onClick={() => {
           setDraft(name)
@@ -20,16 +20,16 @@ export default function FitContent() {
         }}
       >
         Rename store
-      </LabButton>
-      <LabModal
+      </Button>
+      <Modal
         open={open}
         close={close}
         label="Rename store"
         scrollable
         fitContent
         bottom={
-          <LabDock label="Rename actions">
-            <LabButton
+          <Dock label="Rename actions">
+            <Button
               variant="filled"
               disabled={!draft.trim()}
               onClick={() => {
@@ -38,17 +38,17 @@ export default function FitContent() {
               }}
             >
               Save name
-            </LabButton>
-          </LabDock>
+            </Button>
+          </Dock>
         }
       >
-        <LabTextField
+        <TextField
           hint="Store name"
           value={draft}
           onValueChange={setDraft}
           supportingText="Shown on your storefront and order messages."
         />
-      </LabModal>
+      </Modal>
     </div>
   )
 }

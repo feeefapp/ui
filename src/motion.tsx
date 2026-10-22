@@ -40,7 +40,7 @@ export function useLatched<T>(value: T, hold: boolean) {
  * Label that swaps between known values without changing width: every option
  * is laid out in the same grid cell and only the active one is visible.
  */
-export function LabStableText({
+export function StableText({
   value,
   options,
   className,
@@ -67,7 +67,7 @@ export function LabStableText({
  * Animates its own height to follow its content, so content that appears,
  * disappears or grows (results, errors, previews) eases instead of jumping.
  */
-export function LabAutoHeight({
+export function AutoHeight({
   children,
   className,
   as: Component = 'div',
@@ -100,7 +100,7 @@ export function LabAutoHeight({
 }
 
 /** Mounts `render` while open and through its exit, with the last open output frozen. */
-export function LabPresence({
+export function Presence({
   open,
   exitMs = 160,
   render,
@@ -126,7 +126,7 @@ function withState(node: React.ReactElement<any>, state: PresenceState) {
  * Cross-fades between keyed icons in one fixed-size cell, so play/pause,
  * mic/stop and similar swaps animate without moving surrounding layout.
  */
-export function LabSwap({
+export function Swap({
   swapKey,
   children,
   className,

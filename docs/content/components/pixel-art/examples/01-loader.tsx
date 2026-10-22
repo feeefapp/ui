@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { PixelLoader } from '@feeef.dev/ui/pixel-art'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { Button } from '@feeef.dev/ui/primitives/button'
 
 export default function Loader() {
   const [exporting, setExporting] = useState(true)
@@ -20,9 +20,9 @@ export default function Loader() {
           <span>Export ready.</span>
         )}
       </div>
-      <LabButton variant="outlined" controlSize="compact" onClick={() => setExporting(!exporting)}>
+      <Button variant="outlined" controlSize="compact" onClick={() => setExporting(!exporting)}>
         {exporting ? 'Finish export' : 'Start again'}
-      </LabButton>
+      </Button>
     </div>
   )
 }

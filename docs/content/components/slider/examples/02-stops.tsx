@@ -1,9 +1,9 @@
-import { LabSlider } from '@feeef.dev/ui/primitives/slider'
+import { Slider } from '@feeef.dev/ui/primitives/slider'
 
 export default function Stops() {
   return (
     <div className="demo-wide">
-      <LabSlider
+      <Slider
         label="Minimum rating"
         min={1}
         max={5}

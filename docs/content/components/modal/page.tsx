@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabModal } from '@feeef.dev/ui/primitives/modal'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { Modal } from '@feeef.dev/ui/primitives/modal'
+import { Dock } from '@feeef.dev/ui/dock'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground, jsx } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
@@ -30,10 +30,10 @@ function PlaygroundModal(props: {
   const close = () => setOpen(false)
   return (
     <>
-      <LabButton variant="filled" onClick={() => setOpen(true)}>
+      <Button variant="filled" onClick={() => setOpen(true)}>
         Open dialog
-      </LabButton>
-      <LabModal
+      </Button>
+      <Modal
         open={open}
         close={close}
         label={props.label}
@@ -43,28 +43,28 @@ function PlaygroundModal(props: {
         wide={props.wide}
         bottom={
           props.dock ? (
-            <LabDock label="Address actions">
-              <LabButton variant="text" onClick={close}>
+            <Dock label="Address actions">
+              <Button variant="text" onClick={close}>
                 Cancel
-              </LabButton>
-              <LabButton variant="filled" onClick={close}>
+              </Button>
+              <Button variant="filled" onClick={close}>
                 Save address
-              </LabButton>
-            </LabDock>
+              </Button>
+            </Dock>
           ) : undefined
         }
       >
         <div style={{ display: 'grid', gap: 16, padding: props.scrollable ? 0 : 24 }}>
-          <LabTextField hint="Wilaya" defaultValue="Alger" />
-          <LabTextField hint="Commune" defaultValue="Bab Ezzouar" />
-          <LabTextField hint="Street and building" defaultValue="Cité 2068 Logements, Bt 12" />
+          <TextField hint="Wilaya" defaultValue="Alger" />
+          <TextField hint="Commune" defaultValue="Bab Ezzouar" />
+          <TextField hint="Street and building" defaultValue="Cité 2068 Logements, Bt 12" />
           {!props.scrollable && (
-            <LabButton variant="filled" onClick={close}>
+            <Button variant="filled" onClick={close}>
               Save address
-            </LabButton>
+            </Button>
           )}
         </div>
-      </LabModal>
+      </Modal>
     </>
   )
 }
@@ -77,7 +77,7 @@ function Overview() {
         render={(v) => <PlaygroundModal {...v} />}
         code={(v) =>
           jsx(
-            'LabModal',
+            'Modal',
             {
               open: '{open}',
               close: '{close}',
@@ -86,9 +86,9 @@ function Overview() {
               fitContent: v.scrollable && v.fitContent,
               showClose: v.showClose ? undefined : '{false}',
               wide: v.wide,
-              bottom: v.scrollable && v.dock ? '{<LabDock label="Address actions">…</LabDock>}' : undefined,
+              bottom: v.scrollable && v.dock ? '{<Dock label="Address actions">…</Dock>}' : undefined,
             },
-            '<LabTextField hint="Wilaya" />\n…'
+            '<TextField hint="Wilaya" />\n…'
           ).replace(/="\{(.+?)\}"(?=\s|\n|>|\/)/g, '={$1}')
         }
       />
@@ -108,7 +108,7 @@ function Overview() {
 
       <Section title="Opening and closing">
         <p>
-          <C>LabModal</C> is controlled. Keep it mounted, set <C>open</C>, and set it back to false in{' '}
+          <C>Modal</C> is controlled. Keep it mounted, set <C>open</C>, and set it back to false in{' '}
           <C>close</C>. The dialog plays an exit transition before it unmounts, so toggling{' '}
           <C>open</C> (rather than rendering the modal conditionally) keeps the animation and focus
           return intact. <C>close</C> is called by Escape, a click on the backdrop and the close
@@ -117,10 +117,10 @@ function Overview() {
         <Code
           code={`const [open, setOpen] = useState(false)
 
-<LabButton variant="destructive" onClick={() => setOpen(true)}>Cancel order</LabButton>
-<LabModal open={open} close={() => setOpen(false)} label="Cancel order #10482?">
+<Button variant="destructive" onClick={() => setOpen(true)}>Cancel order</Button>
+<Modal open={open} close={() => setOpen(false)} label="Cancel order #10482?">
   …
-</LabModal>`}
+</Modal>`}
         />
       </Section>
 
@@ -129,7 +129,7 @@ function Overview() {
           head={['Prop', 'Effect']}
           rows={[
             [<C>scrollable</C>, 'The recommended layout. Content fills the dialog and scrolls on its own; a floating header (the label as a quiet title and a close button) and the bottom slot stay put.'],
-            [<C>bottom</C>, 'Floating chrome at the bottom of a scrollable dialog. Put the actions here, in a LabDock, so they never scroll away.'],
+            [<C>bottom</C>, 'Floating chrome at the bottom of a scrollable dialog. Put the actions here, in a Dock, so they never scroll away.'],
             [<C>top</C>, 'Replaces the default title in the floating header, for a toolbar, tabs or a search field. The close button stays unless showClose is false.'],
             [<C>fitContent</C>, 'With scrollable: the dialog measures its content and floating chrome and grows to fit, up to the viewport. Use it for short forms; long content still scrolls.'],
             [<C>headerless</C>, 'Drops the default header entirely. The content supplies its own heading and a visible way to close.'],
@@ -159,12 +159,12 @@ function Overview() {
         <DoDont
           doItems={[
             'Write the label as the task: “Edit delivery address”, “Cancel order #10482?”.',
-            'Use scrollable with the actions in a bottom LabDock for anything longer than a sentence.',
+            'Use scrollable with the actions in a bottom Dock for anything longer than a sentence.',
             <>Use <C>fitContent</C> for short forms so the dialog isn’t taller than its content.</>,
             'Make the destructive choice explicit: “Cancel order”, not “OK”.',
           ]}
           dontItems={[
-            <>Render <C>{'{open && <LabModal …/>}'}</C>; toggle <C>open</C> instead.</>,
+            <>Render <C>{'{open && <Modal …/>}'}</C>; toggle <C>open</C> instead.</>,
             'Repeat the label as a heading inside a scrollable dialog; the header already shows it.',
             'Stack modals, or open one without a clear way out.',
             'Put a second scroll area inside a scrollable dialog.',
@@ -189,7 +189,7 @@ function Overview() {
         />
         <Callout title="Menus and pickers inside a dialog">
           <p>
-            Kit components that open menus or popovers, such as <C>LabActionsBar</C> and the date
+            Kit components that open menus or popovers, such as <C>ActionsBar</C> and the date
             fields, detect the enclosing dialog and portal into it, so they stay above it and remain
             reachable.
           </p>
@@ -206,9 +206,9 @@ export default definePage({
   group: 'Containment',
   order: 1,
   summary: 'A modal dialog for short, focused tasks, with floating header and actions, focus handling and an exit transition.',
-  importLine: "import { LabModal } from '@feeef.dev/ui/primitives/modal'",
+  importLine: "import { Modal } from '@feeef.dev/ui/primitives/modal'",
   source: 'src/primitives/modal.tsx',
-  api: ['LabModal'],
+  api: ['Modal'],
   keywords: ['dialog', 'popup', 'confirm', 'sheet', 'overlay', 'focus trap'],
   Overview,
   examples: examplesFrom(
@@ -232,12 +232,12 @@ export default definePage({
     >
       <strong>Cancel order #10482?</strong>
       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-        <LabButton variant="text" controlSize="compact" tabIndex={-1}>
+        <Button variant="text" controlSize="compact" tabIndex={-1}>
           Keep
-        </LabButton>
-        <LabButton variant="destructive" controlSize="compact" tabIndex={-1}>
+        </Button>
+        <Button variant="destructive" controlSize="compact" tabIndex={-1}>
           Cancel order
-        </LabButton>
+        </Button>
       </div>
     </div>
   ),

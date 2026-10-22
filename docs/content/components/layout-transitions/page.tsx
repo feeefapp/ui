@@ -17,13 +17,13 @@ function Overview() {
 
       <Section title="How it works">
         <p>
-          Wrap the area in <C>LabLayoutGroup</C> and give each moving element a stable{' '}
+          Wrap the area in <C>LayoutGroup</C> and give each moving element a stable{' '}
           <C>data-lab-layout-id</C>. After a render the group compares where each id was with where it
           is now and plays the difference back as a transform. Ids can move between containers inside
           the group (a card from one column to another). New ids fade and scale in.
         </p>
         <Code
-          code={`<LabLayoutGroup>
+          code={`<LayoutGroup>
   {columns.map((column) => (
     <section key={column}>
       {cards(column).map((card) => (
@@ -31,7 +31,7 @@ function Overview() {
       ))}
     </section>
   ))}
-</LabLayoutGroup>`}
+</LayoutGroup>`}
         />
         <Table
           head={['Option', 'Effect']}
@@ -39,7 +39,7 @@ function Overview() {
             [<C>data-lab-layout-id</C>, 'Required on each element that moves. Unique within the group.'],
             [<C>data-lab-layout="size"</C>, 'Also animate size (by scaling). Use on media and shapes; text would stretch.'],
             [<C>layoutKey</C>, 'Only animate when this value changes, instead of after every render.'],
-            [<C>spring</C>, 'Movement spring; default LAB_SPRINGS.snappy.'],
+            [<C>spring</C>, 'Movement spring; default SPRINGS.snappy.'],
             [<C>animateEnter</C>, 'false to make new elements appear without the fade.'],
           ]}
         />
@@ -74,9 +74,9 @@ export default definePage({
   group: 'Feedback and motion',
   order: 1,
   summary: 'Shared-element moves: marked elements fly from their old place to their new one on springs.',
-  importLine: "import { LabLayoutGroup } from '@feeef.dev/ui/physics'",
+  importLine: "import { LayoutGroup } from '@feeef.dev/ui/physics'",
   source: 'src/physics/layout-group.tsx',
-  api: ['LabLayoutGroup'],
+  api: ['LayoutGroup'],
   keywords: ['flip', 'matched geometry', 'shared element', 'reorder', 'animate layout', 'kanban', 'hero'],
   Overview,
   examples: examplesFrom(

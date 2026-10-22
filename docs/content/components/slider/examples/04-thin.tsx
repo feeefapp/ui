@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Volume1, Volume2 } from 'lucide-react'
-import { LabSlider } from '@feeef.dev/ui/primitives/slider'
+import { Slider } from '@feeef.dev/ui/primitives/slider'
 
 export default function Thin() {
   const [volume, setVolume] = useState(60)
@@ -8,7 +8,7 @@ export default function Thin() {
     <div className="demo-wide" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       <Volume1 size={18} aria-hidden="true" />
       <div style={{ flex: 1 }}>
-        <LabSlider
+        <Slider
           label="Notification volume"
           trackStyle="thin"
           value={volume}

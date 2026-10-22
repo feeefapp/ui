@@ -1,44 +1,44 @@
 import { useState } from 'react'
-import { LabSheet } from '@feeef.dev/ui/containers'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
-import { LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabDock } from '@feeef.dev/ui/dock'
+import { Sheet } from '@feeef.dev/ui/containers'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { Dock } from '@feeef.dev/ui/dock'
 
 export default function AdaptiveSheet() {
   const [open, setOpen] = useState(false)
   return (
     <div className="demo-column">
-      <LabButton variant="filled" onClick={() => setOpen(true)}>
+      <Button variant="filled" onClick={() => setOpen(true)}>
         Edit delivery address
-      </LabButton>
-      <LabSheet
+      </Button>
+      <Sheet
         open={open}
         onOpenChange={setOpen}
         label="Delivery address"
         detents={['fit']}
         top={
-          <LabToolbarGroup label="Sheet title">
+          <ToolbarGroup label="Sheet title">
             <strong className="demo-sheet-title">Delivery address</strong>
-          </LabToolbarGroup>
+          </ToolbarGroup>
         }
         bottom={
-          <LabDock label="Address actions">
-            <LabButton variant="text" onClick={() => setOpen(false)}>
+          <Dock label="Address actions">
+            <Button variant="text" onClick={() => setOpen(false)}>
               Cancel
-            </LabButton>
-            <LabButton variant="filled" onClick={() => setOpen(false)}>
+            </Button>
+            <Button variant="filled" onClick={() => setOpen(false)}>
               Save address
-            </LabButton>
-          </LabDock>
+            </Button>
+          </Dock>
         }
       >
         <div style={{ display: 'grid', gap: 16, paddingBlock: 4 }}>
-          <LabTextField hint="Wilaya" defaultValue="Alger" />
-          <LabTextField hint="Commune" defaultValue="Bab Ezzouar" />
-          <LabTextField hint="Street and building" defaultValue="Cité 2068 Logements, Bt 12" />
+          <TextField hint="Wilaya" defaultValue="Alger" />
+          <TextField hint="Commune" defaultValue="Bab Ezzouar" />
+          <TextField hint="Street and building" defaultValue="Cité 2068 Logements, Bt 12" />
         </div>
-      </LabSheet>
+      </Sheet>
     </div>
   )
 }

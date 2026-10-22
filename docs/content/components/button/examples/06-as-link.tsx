@@ -1,18 +1,18 @@
 import { ExternalLink } from 'lucide-react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { Button } from '@feeef.dev/ui/primitives/button'
 
 export default function AsLink() {
   return (
     <div className="demo-row">
-      <LabButton variant="filled" asChild>
+      <Button variant="filled" asChild>
         <a href="#as-link">Open dashboard</a>
-      </LabButton>
-      <LabButton variant="text" asChild>
+      </Button>
+      <Button variant="text" asChild>
         <a href="https://feeef.org" target="_blank" rel="noreferrer">
           feeef.org
           <ExternalLink size={16} />
         </a>
-      </LabButton>
+      </Button>
     </div>
   )
 }

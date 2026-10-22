@@ -1,16 +1,16 @@
 'use client'
 
 import type { FormEventHandler, ReactNode, RefObject } from 'react'
-import { LabButton } from '../primitives/button'
-import { LabModal } from '../primitives/modal'
-import { LabToolbarGroup } from '../toolbar'
+import { Button } from '../primitives/button'
+import { Modal } from '../primitives/modal'
+import { ToolbarGroup } from '../toolbar'
 import { cn } from '../utils'
 import {
-  LabTemporalBody,
-  LabTemporalEdges,
-  LabTemporalPresets,
-  useLabTemporalEditor,
-  type LabTemporalEditorOptions,
+  TemporalBody,
+  TemporalEdges,
+  TemporalPresets,
+  useTemporalEditor,
+  type TemporalEditorOptions,
 } from './temporal-editor'
 import './temporal-dialog.css'
 
@@ -21,7 +21,7 @@ import './temporal-dialog.css'
  * Escape and the backdrop close it. Wrap your own submit handling with `onSubmit`; the hidden
  * `date` or `from`/`to` inputs are inside its form for `readTemporalForm`.
  */
-export function LabTemporalDialog({
+export function TemporalDialog({
   open,
   label,
   close,
@@ -38,7 +38,7 @@ export function LabTemporalDialog({
   dir,
   className,
   ...options
-}: LabTemporalEditorOptions & {
+}: TemporalEditorOptions & {
   /** Shows the dialog. Changing it also resets the editor's month and active end. */
   open: boolean
   /** Accessible name of the dialog. */
@@ -65,10 +65,10 @@ export function LabTemporalDialog({
   dir?: 'ltr' | 'rtl'
   className?: string
 }) {
-  const editor = useLabTemporalEditor({ ...options, resetKey: open })
+  const editor = useTemporalEditor({ ...options, resetKey: open })
   const bar = !!editor.presets.length || (editor.range && editor.hasCalendar)
   return (
-    <LabModal
+    <Modal
       open={open}
       label={label}
       close={close}
@@ -88,33 +88,33 @@ export function LabTemporalDialog({
         bar ? (
           <div className="lab-temporal-dialog-bar" dir={dir}>
             {editor.range && editor.hasCalendar && (
-              <LabToolbarGroup label="Range ends" className="lab-temporal-dialog-edges">
-                <LabTemporalEdges editor={editor} appearance="plain" />
-              </LabToolbarGroup>
+              <ToolbarGroup label="Range ends" className="lab-temporal-dialog-edges">
+                <TemporalEdges editor={editor} appearance="plain" />
+              </ToolbarGroup>
             )}
             {!!editor.presets.length && (
-              <LabToolbarGroup label="Quick choices" className="lab-temporal-dialog-presets">
-                <LabTemporalPresets editor={editor} layout="bar" />
-              </LabToolbarGroup>
+              <ToolbarGroup label="Quick choices" className="lab-temporal-dialog-presets">
+                <TemporalPresets editor={editor} layout="bar" />
+              </ToolbarGroup>
             )}
           </div>
         ) : (
           <div className="lab-temporal-dialog-bar" dir={dir}>
-            <LabToolbarGroup label="Dialog title" className="lab-temporal-dialog-title">
+            <ToolbarGroup label="Dialog title" className="lab-temporal-dialog-title">
               <h2 className="lab-modal-title">{label}</h2>
-            </LabToolbarGroup>
+            </ToolbarGroup>
           </div>
         )
       }
       bottom={
         <div className="lab-temporal-dialog-bar" dir={dir}>
-          <LabToolbarGroup label={`${label} actions`} className="lab-temporal-dialog-actions">
-            <LabButton variant="text" appearance="toolbar" controlSize="compact" onClick={close}>
+          <ToolbarGroup label={`${label} actions`} className="lab-temporal-dialog-actions">
+            <Button variant="text" appearance="toolbar" controlSize="compact" onClick={close}>
               Cancel
-            </LabButton>
+            </Button>
             <span className="lab-temporal-dialog-spacer" />
             {onClear && (
-              <LabButton
+              <Button
                 variant="text"
                 appearance="toolbar"
                 controlSize="compact"
@@ -122,21 +122,21 @@ export function LabTemporalDialog({
                 onClick={onClear}
               >
                 {clearLabel}
-              </LabButton>
+              </Button>
             )}
             {showApply && (
-              <LabButton variant="filled" appearance="toolbar" controlSize="compact" type="submit" form={formId}>
+              <Button variant="filled" appearance="toolbar" controlSize="compact" type="submit" form={formId}>
                 {applyLabel}
-              </LabButton>
+              </Button>
             )}
-          </LabToolbarGroup>
+          </ToolbarGroup>
         </div>
       }
     >
       <form id={formId} className="lab-temporal-dialog-form" dir={dir} onSubmit={onSubmit}>
         {intro && <p className="lab-temporal-dialog-intro">{intro}</p>}
         <div className="lab-temporal-editor" data-calendar={editor.hasCalendar} data-range={editor.range}>
-          <LabTemporalBody editor={editor} />
+          <TemporalBody editor={editor} />
         </div>
         {error && (
           <p role="alert" className="lab-filter-error">
@@ -144,6 +144,6 @@ export function LabTemporalDialog({
           </p>
         )}
       </form>
-    </LabModal>
+    </Modal>
   )
 }

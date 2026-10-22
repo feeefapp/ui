@@ -2,11 +2,11 @@ import { definePage, examplesFrom } from '../../../src/model'
 import { Keys, Section } from '../../../src/blocks/prose'
 import { C, Code } from '../../../src/blocks/code'
 
-const usage = `import { LabSpeechBlock } from '@feeef.dev/ui/speech/block'
+const usage = `import { SpeechBlock } from '@feeef.dev/ui/speech/block'
 import { moveSpeechBlock } from '@feeef.dev/ui/speech/block-order'
 
 {blocks.map((block, index) => (
-  <LabSpeechBlock
+  <SpeechBlock
     key={block.id}
     seed={block.id}
     index={index}
@@ -15,7 +15,7 @@ import { moveSpeechBlock } from '@feeef.dev/ui/speech/block-order'
     toolbar={<SpeakerPicker block={block} />}
   >
     <SpeechEditor block={block} />
-  </LabSpeechBlock>
+  </SpeechBlock>
 ))}`
 
 function Overview() {
@@ -69,9 +69,9 @@ export default definePage({
   status: 'studio',
   order: 3,
   summary: 'A reorderable card for one block of a voice script, with a drag handle and a toolbar slot.',
-  importLine: "import { LabSpeechBlock } from '@feeef.dev/ui/speech/block'",
+  importLine: "import { SpeechBlock } from '@feeef.dev/ui/speech/block'",
   source: 'src/speech/block.tsx',
-  api: ['LabSpeechBlock'],
+  api: ['SpeechBlock'],
   keywords: ['voice', 'script', 'tts', 'reorder', 'drag', 'sortable'],
   Overview,
   examples: examplesFrom(

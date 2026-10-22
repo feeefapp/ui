@@ -19,7 +19,7 @@ export type LadderStop = {
 }
 
 /** A ladder as the Lab API serves it (Cloud collection, or a priced catalog fallback). */
-export type LabLadder = {
+export type Ladder = {
   id: string
   name: string
   source: 'cloud' | 'catalog'

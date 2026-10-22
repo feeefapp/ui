@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import './navigation-item.css';
 /** A navigation entry described as data. */
-export type LabWorkspaceAction = {
+export type WorkspaceAction = {
     id: string;
     label: string;
     icon: ReactNode;
@@ -13,7 +13,7 @@ export type LabWorkspaceAction = {
  * `compact` (rail) mode only the icon shows and the label moves into a tooltip. Needs a Radix
  * Tooltip.Provider above it.
  */
-export declare function LabNavigationItem({ label, icon, href, onSelect, active, compact, }: {
+export declare function NavigationItem({ label, icon, href, onSelect, active, compact, }: {
     /** Visible label; also the accessible name and the rail tooltip. */
     label: string;
     /** 20px icon. */

@@ -1,23 +1,23 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
-  LAB_THEME_DEFAULTS,
+  THEME_DEFAULTS,
   darkModePrimary,
-  labThemeAttributes,
+  themeAttributes,
   parseHexColor,
   readableTextOn,
 } from '../src/theme-config.ts'
 
 test('defaults render the Lab look', () => {
-  assert.deepEqual(labThemeAttributes(), {
-    'data-lab-palette': LAB_THEME_DEFAULTS.palette,
-    'data-lab-density': LAB_THEME_DEFAULTS.density,
+  assert.deepEqual(themeAttributes(), {
+    'data-lab-palette': THEME_DEFAULTS.palette,
+    'data-lab-density': THEME_DEFAULTS.density,
     style: { '--lab-radius-scale': '1' },
   })
 })
 
 test('config maps to root attributes and the radius variable', () => {
-  assert.deepEqual(labThemeAttributes({ palette: 'mono', density: 'compact', radius: 0.4 }), {
+  assert.deepEqual(themeAttributes({ palette: 'mono', density: 'compact', radius: 0.4 }), {
     'data-lab-palette': 'mono',
     'data-lab-density': 'compact',
     style: { '--lab-radius-scale': '0.4' },
@@ -25,31 +25,31 @@ test('config maps to root attributes and the radius variable', () => {
 })
 
 test('radius is clamped and non-numbers fall back to the default', () => {
-  assert.equal(labThemeAttributes({ radius: -1 }).style['--lab-radius-scale' as never], '0')
-  assert.equal(labThemeAttributes({ radius: 9 }).style['--lab-radius-scale' as never], '1.5')
-  assert.equal(labThemeAttributes({ radius: Number.NaN }).style['--lab-radius-scale' as never], '1')
+  assert.equal(themeAttributes({ radius: -1 }).style['--lab-radius-scale' as never], '0')
+  assert.equal(themeAttributes({ radius: 9 }).style['--lab-radius-scale' as never], '1.5')
+  assert.equal(themeAttributes({ radius: Number.NaN }).style['--lab-radius-scale' as never], '1')
 })
 
 test('explicitly undefined options fall back to the defaults', () => {
-  // LabProvider forwards unset options as `undefined`; they must not override the defaults.
-  assert.deepEqual(labThemeAttributes({ palette: undefined, density: undefined, radius: undefined }), {
-    'data-lab-palette': LAB_THEME_DEFAULTS.palette,
-    'data-lab-density': LAB_THEME_DEFAULTS.density,
+  // Provider forwards unset options as `undefined`; they must not override the defaults.
+  assert.deepEqual(themeAttributes({ palette: undefined, density: undefined, radius: undefined }), {
+    'data-lab-palette': THEME_DEFAULTS.palette,
+    'data-lab-density': THEME_DEFAULTS.density,
     style: { '--lab-radius-scale': '1' },
   })
 })
 
 test('thin density maps to the root attribute', () => {
-  assert.equal(labThemeAttributes({ density: 'thin' })['data-lab-density'], 'thin')
+  assert.equal(themeAttributes({ density: 'thin' })['data-lab-density'], 'thin')
 })
 
 test('a hex primary sets the seed variables and the attribute; anything else is ignored', () => {
-  const attrs = labThemeAttributes({ primary: '#2563EB' })
+  const attrs = themeAttributes({ primary: '#2563EB' })
   assert.equal(attrs['data-lab-primary'], '')
   assert.equal((attrs.style as Record<string, string>)['--lab-seed'], '#2563eb')
   assert.equal((attrs.style as Record<string, string>)['--lab-seed-on'], '#ffffff')
   for (const bad of ['blue', 'rgb(0,0,255)', '#12345', '#ggg', '']) {
-    const ignored = labThemeAttributes({ primary: bad })
+    const ignored = themeAttributes({ primary: bad })
     assert.equal(ignored['data-lab-primary'], undefined, bad)
     assert.equal((ignored.style as Record<string, string>)['--lab-seed'], undefined, bad)
   }

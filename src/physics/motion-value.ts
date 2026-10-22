@@ -1,5 +1,5 @@
-import { LAB_SPRINGS, solveSpring, springAtRest, type LabSpring, type LabSpringState } from './spring'
-import { LabVelocityTracker } from './velocity'
+import { SPRINGS, solveSpring, springAtRest, type Spring, type SpringState } from './spring'
+import { VelocityTracker } from './velocity'
 
 type FrameCallback = (now: number) => void
 const callbacks = new Set<FrameCallback>()
@@ -22,9 +22,9 @@ export function prefersReducedMotion() {
   return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 }
 
-export type LabAnimateOptions = {
+export type AnimateOptions = {
   /** A spring, or the name of one of the kit's springs. Default `smooth`. */
-  spring?: LabSpring | keyof typeof LAB_SPRINGS
+  spring?: Spring | keyof typeof SPRINGS
   /** Starting velocity in units per second. Defaults to the value's current velocity. */
   velocity?: number
   /** Jump straight to the target (reduced motion, or no reason to animate). */
@@ -37,16 +37,16 @@ export type LabAnimateOptions = {
  * a pointer or setting the value interrupts the current animation exactly where it is, keeping
  * its speed, so motion never jumps.
  */
-export class LabMotionValue {
+export class MotionValue {
   private value: number
   private speed = 0
-  private solver: ((t: number) => LabSpringState) | null = null
+  private solver: ((t: number) => SpringState) | null = null
   private started = 0
   private target = 0
   private stopFrame: (() => void) | null = null
   private settle: ((finished: boolean) => void) | null = null
   private listeners = new Set<(value: number) => void>()
-  private tracker = new LabVelocityTracker()
+  private tracker = new VelocityTracker()
   private tracking = false
 
   constructor(
@@ -124,9 +124,9 @@ export class LabMotionValue {
    * Springs to `target`. Resolves `true` when it comes to rest there, `false` when interrupted by
    * another animation, `set`, `track` or `stop`.
    */
-  animateTo(target: number, options: LabAnimateOptions = {}): Promise<boolean> {
+  animateTo(target: number, options: AnimateOptions = {}): Promise<boolean> {
     const spring =
-      typeof options.spring === 'string' ? LAB_SPRINGS[options.spring] : options.spring ?? LAB_SPRINGS.smooth
+      typeof options.spring === 'string' ? SPRINGS[options.spring] : options.spring ?? SPRINGS.smooth
     const now = performance.now()
     const velocity =
       options.velocity ??

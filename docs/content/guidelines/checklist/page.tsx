@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabCheckbox } from '@feeef.dev/ui/primitives/choice'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { Checkbox } from '@feeef.dev/ui/primitives/choice'
 import { definePage } from '../../../src/model'
 import { Link } from '../../../src/router'
 import { Lead, Section } from '../../../src/blocks/prose'
@@ -43,7 +43,7 @@ const GROUPS: Group[] = [
       { id: 'actions-links', label: 'Navigation is a link', description: 'Buttons that open another page use asChild with a router link.', source: CHOOSING('actions', 'Choosing') },
       { id: 'actions-icons', label: 'Icon-only buttons are rare and named', description: 'A well-known icon and an aria-label; anything people would guess gets text.', source: CHOOSING('actions', 'Choosing') },
       { id: 'actions-groups', label: 'Related tools share one toolbar group', description: 'One glass bubble per purpose, controls inside use appearance="toolbar".', source: P('tools-travel-together', 3) },
-      { id: 'actions-overflow', label: 'Rows that can run out of width overflow', description: 'LabActionsBar with the main action at the highest priority; nothing wraps or clips in French.', source: CHOOSING('actions', 'Choosing') },
+      { id: 'actions-overflow', label: 'Rows that can run out of width overflow', description: 'ActionsBar with the main action at the highest priority; nothing wraps or clips in French.', source: CHOOSING('actions', 'Choosing') },
     ],
   },
   {
@@ -92,7 +92,7 @@ const GROUPS: Group[] = [
       { id: 'color-not-alone', label: 'State never depends on color alone', description: 'A label or icon carries the same meaning.', source: P('color-means-something', 6) },
       { id: 'color-tokens', label: 'Only tokens, no literal colors, sizes or radii', description: 'var(--lab-*) everywhere, in light and dark.', source: { to: '/foundations/color', label: 'Color' } },
       { id: 'color-dark', label: 'Checked in light and dark', description: 'Every screen, including its empty and error states.', source: { to: '/foundations/color', label: 'Color' } },
-      { id: 'color-no-repaint', label: 'Kit components are not repainted', description: 'The look changes through LabThemeConfig, not CSS on kit classes.', source: P('configure-dont-override', 10) },
+      { id: 'color-no-repaint', label: 'Kit components are not repainted', description: 'The look changes through ThemeConfig, not CSS on kit classes.', source: P('configure-dont-override', 10) },
     ],
   },
   {
@@ -207,9 +207,9 @@ function Overview() {
           <span className="gc-summary-count" aria-live="polite">
             {done === TOTAL ? `All ${TOTAL} checks done` : `${done} of ${TOTAL} checked`}
           </span>
-          <LabButton variant="text" controlSize="compact" disabled={done === 0} onClick={() => update(new Set())}>
+          <Button variant="text" controlSize="compact" disabled={done === 0} onClick={() => update(new Set())}>
             Clear checks
-          </LabButton>
+          </Button>
         </div>
         <Bar value={done} max={TOTAL} label="Review progress" />
         <ul className="gc-summary-groups" aria-label="Groups">
@@ -242,7 +242,7 @@ function Overview() {
             <fieldset className="gc-list" aria-labelledby={group.id}>
               {group.items.map((item) => (
                 <div key={item.id} className="gc-item">
-                  <LabCheckbox
+                  <Checkbox
                     label={item.label}
                     description={item.description}
                     checked={checks.has(item.id)}

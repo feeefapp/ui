@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react'
-import { LabScrollArea } from '@feeef.dev/ui/scroll'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
-import { LabOption, LabSelect } from '@feeef.dev/ui/primitives/select'
-import { LabNumberField } from '@feeef.dev/ui/primitives/number-field'
-import { LabSlideSwitch } from '@feeef.dev/ui/primitives/slider'
-import { LabCheckbox } from '@feeef.dev/ui/primitives/choice'
+import { ScrollArea } from '@feeef.dev/ui/scroll'
+import { Dock } from '@feeef.dev/ui/dock'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
+import { Option, Select } from '@feeef.dev/ui/primitives/select'
+import { NumberField } from '@feeef.dev/ui/primitives/number-field'
+import { SlideSwitch } from '@feeef.dev/ui/primitives/slider'
+import { Checkbox } from '@feeef.dev/ui/primitives/choice'
 import '../patterns.css'
 
 type Settings = {
@@ -52,7 +52,7 @@ function FeatureSwitches() {
             <strong>{feature.label}</strong>
             <small>{feature.description}</small>
           </span>
-          <LabSlideSwitch
+          <SlideSwitch
             label={feature.label}
             checked={on[feature.id]}
             loading={busy === feature.id}
@@ -94,17 +94,17 @@ export default function StoreSettings() {
 
   return (
     <div className="pt-frame">
-      <LabScrollArea
+      <ScrollArea
         label="Store settings"
         bottom={
-          <LabDock
+          <Dock
             label="Settings actions"
             swapKey={dirty ? 'dirty' : 'clean'}
             content={<span className="pt-status">{dirty ? 'Unsaved' : 'Saved'}</span>}
           >
             <div className="pt-dock-row">
               {dirty && (
-                <LabButton
+                <Button
                   variant="text"
                   onClick={() => {
                     setDraft(saved)
@@ -112,13 +112,13 @@ export default function StoreSettings() {
                   }}
                 >
                   Discard
-                </LabButton>
+                </Button>
               )}
-              <LabButton variant="filled" disabled={!dirty || saving} onClick={save}>
+              <Button variant="filled" disabled={!dirty || saving} onClick={save}>
                 {saving ? 'Saving…' : 'Save changes'}
-              </LabButton>
+              </Button>
             </div>
-          </LabDock>
+          </Dock>
         }
       >
         <form
@@ -133,8 +133,8 @@ export default function StoreSettings() {
             <h4 id="settings-store">Store</h4>
             <p>Shown to customers on your store and on shipping labels.</p>
             <div className="pt-fields">
-              <LabTextField hint="Store name" value={draft.name} onValueChange={(value) => set('name', value)} required />
-              <LabTextField
+              <TextField hint="Store name" value={draft.name} onValueChange={(value) => set('name', value)} required />
+              <TextField
                 ref={phoneRef}
                 hint="Support phone"
                 type="tel"
@@ -147,12 +147,12 @@ export default function StoreSettings() {
                 }}
                 onBlur={() => setErrors({ phone: phoneError(draft.phone) })}
               />
-              <LabSelect hint="Ship from" value={draft.wilaya} onValueChange={(value) => set('wilaya', value ?? '16')}>
-                <LabOption value="16">16 · Alger</LabOption>
-                <LabOption value="31">31 · Oran</LabOption>
-                <LabOption value="25">25 · Constantine</LabOption>
-                <LabOption value="09">09 · Blida</LabOption>
-              </LabSelect>
+              <Select hint="Ship from" value={draft.wilaya} onValueChange={(value) => set('wilaya', value ?? '16')}>
+                <Option value="16">16 · Alger</Option>
+                <Option value="31">31 · Oran</Option>
+                <Option value="25">25 · Constantine</Option>
+                <Option value="09">09 · Blida</Option>
+              </Select>
             </div>
           </section>
 
@@ -160,10 +160,10 @@ export default function StoreSettings() {
             <h4 id="settings-delivery">Delivery</h4>
             <p>What customers pay at checkout. Couriers bill you separately.</p>
             <div className="pt-fields">
-              <LabNumberField label="Home delivery" unit="DA" step={50} min={0} max={2000} value={draft.homeFee} onValueChange={(value) => set('homeFee', value)} />
-              <LabNumberField label="Stop desk" unit="DA" step={50} min={0} max={2000} value={draft.deskFee} onValueChange={(value) => set('deskFee', value)} />
+              <NumberField label="Home delivery" unit="DA" step={50} min={0} max={2000} value={draft.homeFee} onValueChange={(value) => set('homeFee', value)} />
+              <NumberField label="Stop desk" unit="DA" step={50} min={0} max={2000} value={draft.deskFee} onValueChange={(value) => set('deskFee', value)} />
             </div>
-            <LabCheckbox
+            <Checkbox
               label="Free delivery over 10 000 DA"
               description="Orders above this total ship free to every wilaya."
               checked={draft.freeOver}
@@ -174,7 +174,7 @@ export default function StoreSettings() {
           <section className="pt-section" aria-labelledby="settings-calls">
             <h4 id="settings-calls">Confirmation calls</h4>
             <div className="pt-fields">
-              <LabNumberField
+              <NumberField
                 label="Call attempts before failing"
                 min={1}
                 max={6}
@@ -185,7 +185,7 @@ export default function StoreSettings() {
           </section>
         </form>
         <FeatureSwitches />
-      </LabScrollArea>
+      </ScrollArea>
     </div>
   )
 }

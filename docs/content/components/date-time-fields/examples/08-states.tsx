@@ -1,18 +1,18 @@
 import { CalendarX } from 'lucide-react'
-import { LabDateField, LabTimeField } from '@feeef.dev/ui/primitives/temporal-field'
+import { DateField, TimeField } from '@feeef.dev/ui/primitives/temporal-field'
 
 export default function States() {
   return (
     <div className="demo-column">
-      <LabDateField
+      <DateField
         hint="Order date"
         value="2026-10-14"
         onValueChange={() => {}}
         readOnly
         supportingText="Set when the customer placed the order."
       />
-      <LabTimeField hint="Pickup time" value="09:00" onValueChange={() => {}} disabled />
-      <LabDateField
+      <TimeField hint="Pickup time" value="09:00" onValueChange={() => {}} disabled />
+      <DateField
         hint="Delivery date"
         value="2026-10-23"
         onValueChange={() => {}}

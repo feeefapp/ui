@@ -1,6 +1,6 @@
 /** Physics for direct manipulation: springs, velocity, momentum, rubber-banding and pans. */
 export {
-  LAB_SPRINGS,
+  SPRINGS,
   mix,
   nearestTarget,
   progressBetween,
@@ -12,12 +12,12 @@ export {
   springCoefficients,
   springTiming,
 } from './spring'
-export type { LabSpring, LabSpringName, LabSpringState } from './spring'
-export { LabVelocityTracker } from './velocity'
-export { LabMotionValue, onAnimationFrame, prefersReducedMotion } from './motion-value'
-export type { LabAnimateOptions } from './motion-value'
+export type { Spring, SpringName, SpringState } from './spring'
+export { VelocityTracker } from './velocity'
+export { MotionValue, onAnimationFrame, prefersReducedMotion } from './motion-value'
+export type { AnimateOptions } from './motion-value'
 export { attachPan, canChildPan } from './gesture'
-export type { LabPanAxis, LabPanBegin, LabPanOptions, LabPanPoint, LabPointerKind } from './gesture'
-export { useLabMotionPaint, useLabMotionValue, useLabPan, useLabReducedMotion } from './react'
-export { LabLayoutGroup, animateLayoutFrom, snapshotLayout } from './layout-group'
-export type { LabLayoutGroupProps } from './layout-group'
+export type { PanAxis, PanBegin, PanOptions, PanPoint, PointerKind } from './gesture'
+export { useMotionPaint, useMotionValue, usePan, useReducedMotion } from './react'
+export { LayoutGroup, animateLayoutFrom, snapshotLayout } from './layout-group'
+export type { LayoutGroupProps } from './layout-group'

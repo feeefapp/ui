@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 
 export default function Disabled() {
   const [payment, setPayment] = useState<'cod' | 'card' | 'baridimob'>('cod')
   return (
     <div style={{ display: 'grid', gap: 16, justifyItems: 'center' }}>
-      <LabSegmentedControl
+      <SegmentedControl
         label="Payment method"
         value={payment}
         onChange={setPayment}
@@ -15,7 +15,7 @@ export default function Disabled() {
           { value: 'baridimob', label: 'BaridiMob' },
         ]}
       />
-      <LabSegmentedControl
+      <SegmentedControl
         label="Store status"
         value="open"
         onChange={() => {}}

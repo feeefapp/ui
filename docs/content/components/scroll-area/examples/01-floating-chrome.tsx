@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
-import { LabScrollArea } from '@feeef.dev/ui/scroll'
-import { LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabToolbarSearch } from '@feeef.dev/ui/toolbar-search'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { ScrollArea } from '@feeef.dev/ui/scroll'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { ToolbarSearch } from '@feeef.dev/ui/toolbar-search'
+import { Dock } from '@feeef.dev/ui/dock'
+import { Button } from '@feeef.dev/ui/primitives/button'
 import '../scroll-demo.css'
 
 const PRODUCTS = [
@@ -27,29 +27,29 @@ export default function FloatingChrome() {
   const rows = PRODUCTS.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()))
   return (
     <div className="scroll-demo-frame">
-      <LabScrollArea
+      <ScrollArea
         label="Products"
         top={
-          <LabToolbarSearch
+          <ToolbarSearch
             label="Search products"
             value={query}
             onValueChange={setQuery}
             trailing={
-              <LabToolbarGroup label="Product count">
+              <ToolbarGroup label="Product count">
                 <span style={{ paddingInline: 12, fontSize: 13, whiteSpace: 'nowrap' }}>
                   {rows.length} products
                 </span>
-              </LabToolbarGroup>
+              </ToolbarGroup>
             }
           />
         }
         bottom={
-          <LabDock label="Product actions">
-            <LabButton variant="filled">
+          <Dock label="Product actions">
+            <Button variant="filled">
               <Plus />
               Add product
-            </LabButton>
-          </LabDock>
+            </Button>
+          </Dock>
         }
       >
         <div className="scroll-demo-list">
@@ -63,7 +63,7 @@ export default function FloatingChrome() {
             </div>
           ))}
         </div>
-      </LabScrollArea>
+      </ScrollArea>
     </div>
   )
 }

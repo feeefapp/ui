@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LabSlider } from '@feeef.dev/ui/primitives/slider'
+import { Slider } from '@feeef.dev/ui/primitives/slider'
 
 export default function Basic() {
   const [discount, setDiscount] = useState(15)
@@ -9,7 +9,7 @@ export default function Basic() {
         <span>Discount</span>
         <output>{discount}%</output>
       </div>
-      <LabSlider
+      <Slider
         label="Discount"
         max={50}
         step={5}

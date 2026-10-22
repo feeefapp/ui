@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LabCheckbox } from '@feeef.dev/ui/primitives/choice'
+import { Checkbox } from '@feeef.dev/ui/primitives/choice'
 
 const ORDERS = [
   { id: '10231', customer: 'Yacine Haddad', total: '4 500 DZD' },
@@ -13,7 +13,7 @@ export default function SelectAll() {
   const some = selected.length > 0 && !all
   return (
     <div className="demo-column">
-      <LabCheckbox
+      <Checkbox
         label={`Select all (${selected.length} of ${ORDERS.length})`}
         checked={all}
         indeterminate={some}
@@ -21,7 +21,7 @@ export default function SelectAll() {
       />
       <div style={{ display: 'grid', gap: 8, paddingInlineStart: 28 }}>
         {ORDERS.map((order) => (
-          <LabCheckbox
+          <Checkbox
             key={order.id}
             label={`#${order.id} · ${order.customer}`}
             description={order.total}

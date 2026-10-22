@@ -1,8 +1,8 @@
 import * as React from 'react';
-import type { LabControlVariant } from './control-variants.js';
+import type { ControlVariant } from './control-variants.js';
 import './control-variants.css';
 import './number-field.css';
-export type LabNumberFieldProps = {
+export type NumberFieldProps = {
     /** Shown inside the field at the start; also the accessible name. */
     label: string;
     /** Current value (controlled). */
@@ -28,7 +28,7 @@ export type LabNumberFieldProps = {
     /** Shows ‹ › steppers at the ends (on hover and focus). */
     steppers?: boolean;
     /** Field paint recipe, shared with text fields and selects. */
-    variant?: LabControlVariant;
+    variant?: ControlVariant;
     /** `regular` 44px or `compact` 40px. */
     controlSize?: 'regular' | 'compact';
     disabled?: boolean;
@@ -44,5 +44,5 @@ export type LabNumberFieldProps = {
  * for precision dragging), click without dragging to type, and use arrows, Page Up/Down, Home/End or
  * Backspace (reset) from the keyboard. Typed values accept `+ - * /`, parentheses and `%`.
  */
-export declare const LabNumberField: React.ForwardRefExoticComponent<LabNumberFieldProps & React.RefAttributes<HTMLDivElement>>;
+export declare const NumberField: React.ForwardRefExoticComponent<NumberFieldProps & React.RefAttributes<HTMLDivElement>>;
 //# sourceMappingURL=number-field.d.ts.map

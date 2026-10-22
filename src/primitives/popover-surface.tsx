@@ -4,7 +4,7 @@ import { cn } from '../utils'
 import { PixelTexture } from '../pixel-art'
 import './popover-surface.css'
 
-export type LabPopoverSurfaceProps = React.HTMLAttributes<HTMLDivElement> & {
+export type PopoverSurfaceProps = React.HTMLAttributes<HTMLDivElement> & {
   /** Decorate the actual Radix/content host without adding a positioning wrapper. */
   asChild?: boolean
   /** Seed for the decorative pixel grain, so neighbouring surfaces don't look identical. */
@@ -15,7 +15,7 @@ export type LabPopoverSurfaceProps = React.HTMLAttributes<HTMLDivElement> & {
  * The shared opaque material for menus and popovers: surface, border, group corners and a faint
  * animated pixel grain. Paint only; the owner (usually Radix) keeps positioning and interaction.
  */
-export const LabPopoverSurface = React.forwardRef<HTMLDivElement, LabPopoverSurfaceProps>(
+export const PopoverSurface = React.forwardRef<HTMLDivElement, PopoverSurfaceProps>(
   ({ asChild = false, seed = 'lab-popover', className, children, ...props }, ref) => {
     const decoration = (
       <div className="lab-popover-decoration" aria-hidden="true">
@@ -53,4 +53,4 @@ export const LabPopoverSurface = React.forwardRef<HTMLDivElement, LabPopoverSurf
     )
   }
 )
-LabPopoverSurface.displayName = 'LabPopoverSurface'
+PopoverSurface.displayName = 'PopoverSurface'

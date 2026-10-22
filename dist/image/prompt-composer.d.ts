@@ -21,7 +21,7 @@ export type RecentImage = {
  * row above a glass card that is one compact line until you type, then grows upward with its
  * controls on a second row. Model ladder, AI enhance, output settings and send are icon controls.
  */
-export declare function PromptComposer({ prompt, onPrompt, placeholder, maxLength, references, referenceLimit, onAddFiles, onRemoveReference, recent, onUseRecent, onEditPhoto, templates, templatesLabel, onTemplate, mode, templateName, onClearTemplate, onBrowseTemplates, ladder, settings, settingsLabel, settingsDisabled, onSettings, settingsActive, referenceNoun, wandLabel, enhancing, onEnhance, onSubmit, submitDisabled, submitting, submitLabel, caption, above, onKeyDown, }: {
+export declare function ImagePromptComposer({ prompt, onPrompt, placeholder, maxLength, references, referenceLimit, onAddFiles, onRemoveReference, recent, onUseRecent, onEditPhoto, templates, templatesLabel, onTemplate, mode, templateName, onClearTemplate, onBrowseTemplates, ladder, settings, settingsLabel, settingsDisabled, onSettings, settingsActive, referenceNoun, wandLabel, enhancing, onEnhance, onSubmit, submitDisabled, submitting, submitLabel, caption, above, onKeyDown, }: {
     /** The prompt text (controlled). */
     prompt: string;
     /** Called with the new text on every edit. */

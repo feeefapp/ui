@@ -7,14 +7,14 @@ import { IntlMessageFormat } from 'intl-messageformat';
  * active locale already merged over their default locale.
  */
 /** Built-in languages: code, native name and direction. The switcher shows them in this order. */
-export const LAB_LANGUAGES = [
+export const LANGUAGES = [
     { code: 'ar', name: 'العربية', dir: 'rtl' },
     { code: 'fr', name: 'Français', dir: 'ltr' },
     { code: 'en', name: 'English', dir: 'ltr' },
 ];
 const RTL_BASES = new Set(['ar', 'fa', 'he', 'ur']);
 /** `rtl` for Arabic, Persian, Hebrew and Urdu (any region subtag), otherwise `ltr`. */
-export function labDirectionFor(locale) {
+export function directionFor(locale) {
     const base = String(locale || '').split(/[-_]/, 1)[0].toLowerCase();
     return RTL_BASES.has(base) ? 'rtl' : 'ltr';
 }

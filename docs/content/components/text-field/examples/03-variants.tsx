@@ -1,13 +1,13 @@
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
 
 export default function Variants() {
   return (
     <div className="demo-column">
-      <LabTextField variant="outlined" hint="Outlined" defaultValue="Oran" />
-      <LabTextField variant="filled" labelStyle="inside" hint="Filled" defaultValue="Oran" />
-      <LabTextField variant="tonal" labelStyle="inside" hint="Tonal" defaultValue="Oran" />
-      <LabTextField variant="elevated" hint="Elevated" defaultValue="Oran" />
-      <LabTextField variant="text" hint="Text" defaultValue="Oran" />
+      <TextField variant="outlined" hint="Outlined" defaultValue="Oran" />
+      <TextField variant="filled" labelStyle="inside" hint="Filled" defaultValue="Oran" />
+      <TextField variant="tonal" labelStyle="inside" hint="Tonal" defaultValue="Oran" />
+      <TextField variant="elevated" hint="Elevated" defaultValue="Oran" />
+      <TextField variant="text" hint="Text" defaultValue="Oran" />
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LabDateField, LabTimeField } from '@feeef.dev/ui/primitives/temporal-field'
+import { DateField, TimeField } from '@feeef.dev/ui/primitives/temporal-field'
 
 const iso = (date: Date) => date.toLocaleDateString('en-CA')
 
@@ -11,7 +11,7 @@ export default function Bounds() {
   const [slot, setSlot] = useState<string | null>('10:00')
   return (
     <div className="demo-column">
-      <LabDateField
+      <DateField
         hint="Delivery date"
         value={date}
         onValueChange={setDate}
@@ -19,7 +19,7 @@ export default function Bounds() {
         max={iso(lastDay)}
         supportingText="Within the next two weeks."
       />
-      <LabTimeField
+      <TimeField
         hint="Delivery slot"
         value={slot}
         onValueChange={setSlot}

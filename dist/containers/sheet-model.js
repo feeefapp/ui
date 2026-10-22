@@ -1,4 +1,4 @@
-/** Pure geometry for LabSheet: detent heights, where a release lands, and the dimming. */
+/** Pure geometry for Sheet: detent heights, where a release lands, and the dimming. */
 import { nearestTarget, projectMomentum, rubberBand } from '../physics/spring.js';
 /** Pixel height of one detent, clamped to [0, large]. */
 export function detentHeight(detent, m) {

@@ -2,28 +2,28 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
 import { ChevronLeft } from 'lucide-react';
-import { LabButton } from '../primitives/button.js';
-import { LabScrollArea } from '../scroll/index.js';
-import { LabToolbarGroup } from '../toolbar.js';
-import { LabScaffoldAppBar } from '../workspace/scaffold.js';
-import { useLabI18n } from '../i18n.js';
+import { Button } from '../primitives/button.js';
+import { ScrollArea } from '../scroll/index.js';
+import { ToolbarGroup } from '../toolbar.js';
+import { ScaffoldAppBar } from '../workspace/scaffold.js';
+import { useI18n } from '../i18n.js';
 import { attachPan, canChildPan } from '../physics/gesture.js';
-import { LabMotionValue, prefersReducedMotion } from '../physics/motion-value.js';
-import { LAB_SPRINGS, mix, progressBetween, projectMomentum } from '../physics/spring.js';
+import { MotionValue, prefersReducedMotion } from '../physics/motion-value.js';
+import { SPRINGS, mix, progressBetween, projectMomentum } from '../physics/spring.js';
 import { diffStack, dragDismissRect, mixRect, slideFrame, zoomFrame } from './stack-model.js';
 import { cn } from '../utils.js';
 import './navigation-stack.css';
 const ROOT_PAGE = { depth: 0, isTop: true, canGoBack: false, back: () => { } };
 const PageContext = React.createContext(null);
 /** The nearest stack page's position and `back()`. Outside a stack: a root page that cannot go back. */
-export function useLabNavigationStack() {
+export function useNavigationStack() {
     return React.useContext(PageContext) ?? ROOT_PAGE;
 }
 /**
  * Path state for a stack: an array of route values, root page not included. Map it to pages
- * (`path.map((route) => <LabNavigationPage key=… />)`) and pass `pop` as the stack's `onBack`.
+ * (`path.map((route) => <NavigationPage key=… />)`) and pass `pop` as the stack's `onBack`.
  */
-export function useLabNavigationPath(initial = []) {
+export function useNavigationPath(initial = []) {
     const [path, setPath] = React.useState(initial);
     const push = React.useCallback((route) => setPath((p) => [...p, route]), []);
     const pop = React.useCallback((count = 1) => setPath((p) => p.slice(0, Math.max(0, p.length - count))), []);
@@ -108,7 +108,7 @@ function focusPage(host) {
  * pushed with `zoomSource` grows out of that element instead and can be dragged down to shrink
  * back into it. Every page stays mounted, so scroll positions and drafts survive.
  */
-export function LabNavigationStack({ children, onBack, swipeBack = 'content', label = 'Pages', className, style, }) {
+export function NavigationStack({ children, onBack, swipeBack = 'content', label = 'Pages', className, style, }) {
     const pages = [];
     React.Children.forEach(children, (child) => {
         if (React.isValidElement(child))
@@ -133,7 +133,7 @@ export function LabNavigationStack({ children, onBack, swipeBack = 'content', la
     const hosts = React.useRef(new Map());
     const shown = React.useRef(null);
     if (!shown.current)
-        shown.current = new LabMotionValue(1, 0.0005);
+        shown.current = new MotionValue(1, 0.0005);
     const painter = React.useRef(null);
     const activeFront = React.useRef(null);
     const returnFocus = React.useRef(new Map());
@@ -290,7 +290,7 @@ export function LabNavigationStack({ children, onBack, swipeBack = 'content', la
         painter.current = paint;
         paint(value.get());
         void value
-            .animateTo(transition.to, { spring: reduced ? { duration: 0.2, bounce: 0 } : LAB_SPRINGS.smooth })
+            .animateTo(transition.to, { spring: reduced ? { duration: 0.2, bounce: 0 } : SPRINGS.smooth })
             .then((arrived) => {
             if (arrived)
                 finish();
@@ -322,7 +322,7 @@ export function LabNavigationStack({ children, onBack, swipeBack = 'content', la
                 sign: rtl() ? -1 : 1,
                 page: pageSize(),
                 anchor: { x: (point.originX - origin.left) / k, y: (point.originY - origin.top) / k },
-                motion: new LabMotionValue(0, 0.0005),
+                motion: new MotionValue(0, 0.0005),
                 rect: { x: 0, y: 0, ...pageSize() },
                 radius: 0,
                 k,
@@ -395,7 +395,7 @@ export function LabNavigationStack({ children, onBack, swipeBack = 'content', la
                 if (s.back)
                     s.back.dataset.moving = '';
                 painter.current = s.style === 'slide' ? slidePainter(s.front, s.back) : fadePainter(s.front);
-                void shown.current.animateTo(1, { spring: LAB_SPRINGS.release }).then((done) => done && settle(s));
+                void shown.current.animateTo(1, { spring: SPRINGS.release }).then((done) => done && settle(s));
             }, 500);
         };
         const end = (screen) => {
@@ -408,7 +408,7 @@ export function LabNavigationStack({ children, onBack, swipeBack = 'content', la
                 const travel = point.dx * s.sign, speed = point.vx * s.sign;
                 const complete = !point.cancelled && projectMomentum(travel, speed, 0.99) > s.page.width / 2 && speed > -250;
                 const velocity = shown.current.getVelocity(point.time);
-                void shown.current.animateTo(complete ? 0 : 1, { spring: LAB_SPRINGS.release, velocity }).then((done) => {
+                void shown.current.animateTo(complete ? 0 : 1, { spring: SPRINGS.release, velocity }).then((done) => {
                     if (!done)
                         return;
                     if (complete)
@@ -442,7 +442,7 @@ export function LabNavigationStack({ children, onBack, swipeBack = 'content', la
                 }
             });
             void motion
-                .animateTo(1, { spring: LAB_SPRINGS.release, velocity: Math.max(0, Math.min(8, toward)) })
+                .animateTo(1, { spring: SPRINGS.release, velocity: Math.max(0, Math.min(8, toward)) })
                 .then((done) => {
                 unsubscribe();
                 if (!done)
@@ -507,13 +507,13 @@ function StackPage({ depth, isTop, back, previousTitle, children, }) {
     return _jsx(PageContext.Provider, { value: value, children: children });
 }
 /**
- * One page of a LabNavigationStack: its own scroll area with a floating glass bar (back button
+ * One page of a NavigationStack: its own scroll area with a floating glass bar (back button
  * with the previous title, the page title, trailing actions) and an optional bottom dock. A large
  * title scrolls under the bar and reappears in it, like iOS.
  */
-export function LabNavigationPage({ title, titleDisplay, subtitle, leading, trailing, bottom, hideBar, contentPadding, contentLabel, children, className, }) {
-    const page = useLabNavigationStack();
-    const { t } = useLabI18n();
+export function NavigationPage({ title, titleDisplay, subtitle, leading, trailing, bottom, hideBar, contentPadding, contentLabel, children, className, }) {
+    const page = useNavigationStack();
+    const { t } = useI18n();
     const display = titleDisplay ?? (page.depth === 0 ? 'large' : 'inline');
     const viewport = React.useRef(null);
     const bar = React.useRef(null);
@@ -557,7 +557,7 @@ export function LabNavigationPage({ title, titleDisplay, subtitle, leading, trai
     }, [display]);
     const titleShown = display === 'inline' || collapsed;
     const backLabel = page.previousTitle ? t('lab.nav.backTo', { title: page.previousTitle }) : t('lab.nav.back');
-    const header = hideBar ? undefined : (_jsx(LabScaffoldAppBar, { className: "lab-nav-bar", leading: page.canGoBack || leading ? (_jsxs(LabToolbarGroup, { label: "Navigation", className: "lab-nav-bar-leading", children: [page.canGoBack && (_jsxs(LabButton, { variant: "text", appearance: "toolbar", className: "lab-nav-back", "aria-label": backLabel, onClick: page.back, children: [_jsx(ChevronLeft, { className: "lab-dir-flip", "aria-hidden": "true" }), _jsx("span", { className: "lab-nav-back-label", children: page.previousTitle ?? t('lab.nav.back') })] })), leading] })) : undefined, trailing: trailing, children: _jsx(LabToolbarGroup, { label: "Page title", className: "lab-nav-bar-title", "data-shown": titleShown, "aria-hidden": display === 'large' ? true : undefined, children: display === 'inline' ? (_jsx("h1", { className: "lab-nav-bar-heading", tabIndex: -1, "data-lab-page-title": true, children: title })) : (_jsx("span", { className: "lab-nav-bar-heading", children: title })) }) }));
-    return (_jsxs(LabScrollArea, { ref: viewport, className: cn('lab-nav-page', className), label: contentLabel ?? title, contentPadding: contentPadding, top: header ? _jsx("div", { ref: bar, className: "lab-nav-bar-host", children: header }) : undefined, bottom: bottom, children: [display === 'large' && (_jsxs("header", { className: "lab-nav-large-title", children: [_jsx("h1", { ref: heading, tabIndex: -1, "data-lab-page-title": true, children: title }), subtitle && _jsx("div", { className: "lab-nav-subtitle", children: subtitle })] })), children] }));
+    const header = hideBar ? undefined : (_jsx(ScaffoldAppBar, { className: "lab-nav-bar", leading: page.canGoBack || leading ? (_jsxs(ToolbarGroup, { label: "Navigation", className: "lab-nav-bar-leading", children: [page.canGoBack && (_jsxs(Button, { variant: "text", appearance: "toolbar", className: "lab-nav-back", "aria-label": backLabel, onClick: page.back, children: [_jsx(ChevronLeft, { className: "lab-dir-flip", "aria-hidden": "true" }), _jsx("span", { className: "lab-nav-back-label", children: page.previousTitle ?? t('lab.nav.back') })] })), leading] })) : undefined, trailing: trailing, children: _jsx(ToolbarGroup, { label: "Page title", className: "lab-nav-bar-title", "data-shown": titleShown, "aria-hidden": display === 'large' ? true : undefined, children: display === 'inline' ? (_jsx("h1", { className: "lab-nav-bar-heading", tabIndex: -1, "data-lab-page-title": true, children: title })) : (_jsx("span", { className: "lab-nav-bar-heading", children: title })) }) }));
+    return (_jsxs(ScrollArea, { ref: viewport, className: cn('lab-nav-page', className), label: contentLabel ?? title, contentPadding: contentPadding, top: header ? _jsx("div", { ref: bar, className: "lab-nav-bar-host", children: header }) : undefined, bottom: bottom, children: [display === 'large' && (_jsxs("header", { className: "lab-nav-large-title", children: [_jsx("h1", { ref: heading, tabIndex: -1, "data-lab-page-title": true, children: title }), subtitle && _jsx("div", { className: "lab-nav-subtitle", children: subtitle })] })), children] }));
 }
 //# sourceMappingURL=navigation-stack.js.map

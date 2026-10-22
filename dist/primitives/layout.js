@@ -1,26 +1,26 @@
 import { jsx as _jsx } from "react/jsx-runtime";
 import * as React from 'react';
-export const LabBox = React.forwardRef(({ as = 'div', ...props }, ref) => React.createElement(as, { ...props, ref }));
-LabBox.displayName = 'LabBox';
-export function LabText({ as: Component = 'span', ...props }) {
+export const Box = React.forwardRef(({ as = 'div', ...props }, ref) => React.createElement(as, { ...props, ref }));
+Box.displayName = 'Box';
+export function Text({ as: Component = 'span', ...props }) {
     return _jsx(Component, { ...props });
 }
-export function LabLink(props) {
+export function Link(props) {
     return _jsx("a", { ...props });
 }
-export function LabForm(props) {
+export function Form(props) {
     return _jsx("form", { ...props });
 }
-export function LabList(props) {
+export function List(props) {
     return _jsx("ul", { ...props });
 }
-export function LabListItem(props) {
+export function ListItem(props) {
     return _jsx("li", { ...props });
 }
-export function LabDivider() {
+export function Divider() {
     return _jsx("hr", {});
 }
-export function LabStyle({ children }) {
+export function Style({ children }) {
     return _jsx("style", { children: children });
 }
 //# sourceMappingURL=layout.js.map

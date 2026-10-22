@@ -1,22 +1,22 @@
 import { useState } from 'react'
 import { Pause, Play } from 'lucide-react'
-import { LabSwap } from '@feeef.dev/ui/motion'
-import { LabIconButton } from '@feeef.dev/ui/primitives/button'
+import { Swap } from '@feeef.dev/ui/motion'
+import { IconButton } from '@feeef.dev/ui/primitives/button'
 
-export default function Swap() {
+export default function SwapExample() {
   const [playing, setPlaying] = useState(false)
   return (
     <div className="demo-row">
-      <LabIconButton
+      <IconButton
         variant="filled"
         aria-label={playing ? 'Pause preview' : 'Play preview'}
         aria-pressed={playing}
         onClick={() => setPlaying(!playing)}
       >
-        <LabSwap swapKey={playing ? 'pause' : 'play'}>
+        <Swap swapKey={playing ? 'pause' : 'play'}>
           {playing ? <Pause size={20} /> : <Play size={20} />}
-        </LabSwap>
-      </LabIconButton>
+        </Swap>
+      </IconButton>
       <span>{playing ? 'Playing take 3' : 'Take 3 · 0:42'}</span>
     </div>
   )
@@ -25,5 +25,5 @@ export default function Swap() {
 export const meta = {
   title: 'Icon swap',
   description:
-    'LabSwap cross-fades icons in one fixed cell. It is hidden from assistive technology, so the button carries the label.',
+    'Swap cross-fades icons in one fixed cell. It is hidden from assistive technology, so the button carries the label.',
 }

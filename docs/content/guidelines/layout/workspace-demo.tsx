@@ -1,20 +1,20 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { PanelRight, Phone, PhoneCall, Package, Printer, ShoppingBag, Store, Truck, Users } from 'lucide-react'
 import {
-  LabScaffold,
-  LabScaffoldAppBar,
-  LabScaffoldSide,
-  LabScaffoldToggleButton,
-  type LabScaffoldSideMode,
-  type LabScaffoldState,
+  Scaffold,
+  ScaffoldAppBar,
+  ScaffoldSide,
+  ScaffoldToggleButton,
+  type ScaffoldSideMode,
+  type ScaffoldState,
 } from '@feeef.dev/ui/workspace/scaffold'
-import { LabNavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
-import { LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
-import { LabModal } from '@feeef.dev/ui/primitives/modal'
-import { LabPresence } from '@feeef.dev/ui/motion'
+import { NavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { Dock } from '@feeef.dev/ui/dock'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { Modal } from '@feeef.dev/ui/primitives/modal'
+import { Presence } from '@feeef.dev/ui/motion'
 import { Marker } from './frame'
 import './layout.css'
 
@@ -42,10 +42,10 @@ const CALLS = [
 
 /** Sidebar mode follows the screen width; a click on the toggle wins until the width changes. */
 function useSideMode(screenWidth: number) {
-  const auto: LabScaffoldSideMode = screenWidth >= 1200 ? 'expanded' : 'rail'
-  const [override, setOverride] = useState<{ mode: LabScaffoldSideMode; width: number } | null>(null)
+  const auto: ScaffoldSideMode = screenWidth >= 1200 ? 'expanded' : 'rail'
+  const [override, setOverride] = useState<{ mode: ScaffoldSideMode; width: number } | null>(null)
   const mode = override && override.width === screenWidth ? override.mode : auto
-  return [mode, (next: LabScaffoldSideMode) => setOverride({ mode: next, width: screenWidth })] as const
+  return [mode, (next: ScaffoldSideMode) => setOverride({ mode: next, width: screenWidth })] as const
 }
 
 /** True once the large page title has scrolled under the floating app bar. */
@@ -129,7 +129,7 @@ export function OrderWorkspace({
   const inspectorInline = inspector ?? screenWidth >= 1024
 
   const views = (
-    <LabSegmentedControl<View>
+    <SegmentedControl<View>
       label="Order views"
       appearance="plain"
       value={view}
@@ -141,21 +141,21 @@ export function OrderWorkspace({
     />
   )
 
-  const side = (state: LabScaffoldState) => {
+  const side = (state: ScaffoldState) => {
     const rail = state.sideMode === 'rail' && !state.drawerOpen
     return (
-      <LabScaffoldSide
+      <ScaffoldSide
         leading={
           <div className="gl-side-brand" data-rail={rail || undefined}>
             {!rail && <Brand />}
             {markers && <Marker n={2} />}
-            {!state.drawerOpen && <LabScaffoldToggleButton />}
+            {!state.drawerOpen && <ScaffoldToggleButton />}
           </div>
         }
       >
         <nav aria-label="Store pages" className="gl-side-nav">
           {NAV.map((item, i) => (
-            <LabNavigationItem
+            <NavigationItem
               key={item.label}
               compact={rail}
               label={item.label}
@@ -165,44 +165,44 @@ export function OrderWorkspace({
             />
           ))}
         </nav>
-      </LabScaffoldSide>
+      </ScaffoldSide>
     )
   }
 
-  const appBar = (state: LabScaffoldState) => {
+  const appBar = (state: ScaffoldState) => {
     const minimal = state.compact || state.sideMode !== 'expanded'
     // A rail keeps its own toggle; hidden and compact sidebars need one in the bar.
     const toggle = state.compact ? 'drawer' : state.sideMode === 'hidden' ? 'restore' : null
     return (
-      <LabScaffoldAppBar
+      <ScaffoldAppBar
         leading={
           minimal ? (
-            <LabToolbarGroup label="Navigation">
-              {toggle && <LabScaffoldToggleButton action={toggle} />}
+            <ToolbarGroup label="Navigation">
+              {toggle && <ScaffoldToggleButton action={toggle} />}
               <Brand short />
               {markers && <Marker n={3} />}
-            </LabToolbarGroup>
+            </ToolbarGroup>
           ) : undefined
         }
         trailing={
           <>
             {!state.compact && (
-              <LabToolbarGroup label="Page views">
+              <ToolbarGroup label="Page views">
                 {views}
                 {markers && <Marker n={5} />}
-              </LabToolbarGroup>
+              </ToolbarGroup>
             )}
-            <LabToolbarGroup label="Order tools">
+            <ToolbarGroup label="Order tools">
               {state.compact && (
-                <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Call customer">
+                <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Call customer">
                   <Phone />
-                </LabIconButton>
+                </IconButton>
               )}
-              <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Print label">
+              <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Print label">
                 <Printer />
-              </LabIconButton>
+              </IconButton>
               {!inspectorInline && (
-                <LabIconButton
+                <IconButton
                   variant="text"
                   appearance="toolbar"
                   controlSize="compact"
@@ -211,43 +211,43 @@ export function OrderWorkspace({
                   onClick={() => setDetailsOpen(true)}
                 >
                   <PanelRight />
-                </LabIconButton>
+                </IconButton>
               )}
               {markers && <Marker n={6} />}
-            </LabToolbarGroup>
+            </ToolbarGroup>
           </>
         }
       >
         {!state.compact && (
-          <LabPresence
+          <Presence
             open={alwaysTitle || titleAway}
             render={(presence) => (
-              <LabToolbarGroup label="Page title" className="gl-bar-title" data-state={presence}>
+              <ToolbarGroup label="Page title" className="gl-bar-title" data-state={presence}>
                 <span>Order #1048</span>
                 {markers && <Marker n={4} />}
-              </LabToolbarGroup>
+              </ToolbarGroup>
             )}
           />
         )}
-      </LabScaffoldAppBar>
+      </ScaffoldAppBar>
     )
   }
 
-  const bottom = (state: LabScaffoldState) => {
+  const bottom = (state: ScaffoldState) => {
     const confirm = (
-      <LabButton variant="filled" onClick={() => setConfirmed(!confirmed)}>
+      <Button variant="filled" onClick={() => setConfirmed(!confirmed)}>
         {confirmed ? 'Confirmed' : 'Confirm order'}
-      </LabButton>
+      </Button>
     )
     return state.compact ? (
-      <LabDock label="Order views and actions">
+      <Dock label="Order views and actions">
         <div className="gl-dock-row">
           {views}
           {confirm}
         </div>
-      </LabDock>
+      </Dock>
     ) : (
-      <LabDock
+      <Dock
         label="Order actions"
         content={
           <span className="gl-dock-status">
@@ -257,19 +257,19 @@ export function OrderWorkspace({
         }
       >
         <div className="gl-dock-row">
-          <LabButton variant="tonal">
+          <Button variant="tonal">
             <Phone />
             Call customer
-          </LabButton>
+          </Button>
           {confirm}
         </div>
-      </LabDock>
+      </Dock>
     )
   }
 
   return (
     <>
-      <LabScaffold
+      <Scaffold
         contentLabel="Order #1048"
         contentViewportRef={viewport}
         sideMode={sideMode}
@@ -334,10 +334,10 @@ export function OrderWorkspace({
             </aside>
           )}
         </div>
-      </LabScaffold>
-      <LabModal open={detailsOpen && !inspectorInline} close={() => setDetailsOpen(false)} label="Order details" scrollable>
+      </Scaffold>
+      <Modal open={detailsOpen && !inspectorInline} close={() => setDetailsOpen(false)} label="Order details" scrollable>
         <Inspector markers={false} />
-      </LabModal>
+      </Modal>
     </>
   )
 }

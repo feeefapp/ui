@@ -22,9 +22,9 @@ function Overview() {
           drives the built-in effects and any of your own.
         </p>
         <Code
-          code={`<LabCarousel label="Featured products" slideWidth={0.62} effect="scale">
+          code={`<Carousel label="Featured products" slideWidth={0.62} effect="scale">
   {products.map((p) => <ProductCard key={p.id} product={p} />)}
-</LabCarousel>`}
+</Carousel>`}
         />
         <Table
           head={['Option', 'Effect']}
@@ -62,9 +62,9 @@ export default definePage({
   group: 'Containment',
   order: 4,
   summary: 'Sideways browsing on native scroll snapping, with scale, fade and parallax scroll transitions.',
-  importLine: "import { LabCarousel } from '@feeef.dev/ui/containers'",
+  importLine: "import { Carousel } from '@feeef.dev/ui/containers'",
   source: 'src/containers/carousel.tsx',
-  api: ['LabCarousel'],
+  api: ['Carousel'],
   keywords: ['carousel', 'slider', 'gallery', 'paging', 'snap', 'parallax', 'shelf', 'swiper'],
   Overview,
   examples: examplesFrom(

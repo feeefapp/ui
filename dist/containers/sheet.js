@@ -2,11 +2,11 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { LabScrollArea } from '../scroll/index.js';
-import { useLabI18n } from '../i18n.js';
+import { ScrollArea } from '../scroll/index.js';
+import { useI18n } from '../i18n.js';
 import { attachPan, canChildPan } from '../physics/gesture.js';
-import { LabMotionValue, prefersReducedMotion } from '../physics/motion-value.js';
-import { LAB_SPRINGS, projectMomentum, rubberBand } from '../physics/spring.js';
+import { MotionValue, prefersReducedMotion } from '../physics/motion-value.js';
+import { SPRINGS, projectMomentum, rubberBand } from '../physics/spring.js';
 import { detentHeights, dragHeight, releaseTarget, sheetDim, sheetRecede, } from './sheet-model.js';
 import { cn } from '../utils.js';
 import './sheet.css';
@@ -17,7 +17,7 @@ const DEFAULT_DETENTS = ['large'];
  * when flicked down. Scrolling inside hands off to dragging the sheet at the top. On wide screens
  * it becomes a centered dialog. The page behind dims and, under a full-height sheet, recedes.
  */
-export function LabSheet(props) {
+export function Sheet(props) {
     const [mounted, setMounted] = React.useState(props.open);
     if (props.open && !mounted)
         setMounted(true);
@@ -26,7 +26,7 @@ export function LabSheet(props) {
     return _jsx(SheetPresentation, { ...props, onExited: () => setMounted(false) });
 }
 function SheetPresentation({ open, onOpenChange, label, children, detents = DEFAULT_DETENTS, detent: controlledDetent, defaultDetent, onDetentChange, dismissible = true, grabber, top, bottom, modal = true, regular = 'dialog', regularBreakpoint = 720, container, recede = true, contentPadding, className, onExited, }) {
-    const { t } = useLabI18n();
+    const { t } = useI18n();
     const host = React.useRef(null);
     const panel = React.useRef(null);
     const scrim = React.useRef(null);
@@ -43,9 +43,9 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
     const [localIndex, setLocalIndex] = React.useState(() => Math.max(0, detents.indexOf(defaultDetent ?? detents[0])));
     const index = controlledDetent !== undefined ? Math.max(0, detents.indexOf(controlledDetent)) : Math.min(localIndex, detents.length - 1);
     // Motion: `visible` is the sheet's visible height (sheet); `shown` 0–1 and `lift` px (dialog).
-    const visible = React.useRef(new LabMotionValue(0, 0.5)).current;
-    const shown = React.useRef(new LabMotionValue(0, 0.004)).current;
-    const lift = React.useRef(new LabMotionValue(0, 0.5)).current;
+    const visible = React.useRef(new MotionValue(0, 0.5)).current;
+    const shown = React.useRef(new MotionValue(0, 0.004)).current;
+    const lift = React.useRef(new MotionValue(0, 0.5)).current;
     const motionHeight = React.useRef(0);
     const presented = React.useRef(false);
     const dragging = React.useRef(false);
@@ -109,7 +109,7 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
             node.style.translate = '';
         paintSheet(height);
     };
-    const moveTo = (height, spring = LAB_SPRINGS.smooth, velocity) => {
+    const moveTo = (height, spring = SPRINGS.smooth, velocity) => {
         beginMotion();
         return visible.animateTo(height, { spring, velocity }).then((arrived) => {
             if (arrived)
@@ -204,7 +204,7 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
                 onExited();
             };
             if (presentation === 'dialog') {
-                void shown.animateTo(0, { spring: reduced ? { duration: 0.18, bounce: 0 } : LAB_SPRINGS.smooth }).then((a) => a && done());
+                void shown.animateTo(0, { spring: reduced ? { duration: 0.18, bounce: 0 } : SPRINGS.smooth }).then((a) => a && done());
             }
             else if (reduced) {
                 const el = panel.current;
@@ -218,7 +218,7 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
             }
             else {
                 beginMotion();
-                void visible.animateTo(0, { spring: LAB_SPRINGS.smooth }).then((a) => a && done());
+                void visible.animateTo(0, { spring: SPRINGS.smooth }).then((a) => a && done());
             }
             return;
         }
@@ -235,7 +235,7 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
                 presented.current = true;
                 if (!shown.isAnimating())
                     shown.set(0);
-                void shown.animateTo(1, { spring: reduced ? { duration: 0.2, bounce: 0 } : LAB_SPRINGS.smooth });
+                void shown.animateTo(1, { spring: reduced ? { duration: 0.2, bounce: 0 } : SPRINGS.smooth });
             }
             else
                 paintDialog();
@@ -324,17 +324,17 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
                     const away = !cancelled && L.dismissible && projectMomentum(lift.get(), vy / scale, 0.99) > 160;
                     if (away) {
                         L.onOpenChange(false);
-                        void lift.animateTo(0, { spring: LAB_SPRINGS.smooth });
+                        void lift.animateTo(0, { spring: SPRINGS.smooth });
                     }
                     else
-                        void lift.animateTo(0, { spring: LAB_SPRINGS.release, velocity: lift.getVelocity(time) });
+                        void lift.animateTo(0, { spring: SPRINGS.release, velocity: lift.getVelocity(time) });
                     return;
                 }
                 const velocity = visible.getVelocity(time);
                 const landing = releaseTarget(visible.get(), velocity, L.heights, L.dismissible);
                 if (landing.dismiss && !cancelled) {
                     // Leave at the finger's speed; the close that follows continues this same motion.
-                    void visible.animateTo(0, { spring: LAB_SPRINGS.smooth, velocity });
+                    void visible.animateTo(0, { spring: SPRINGS.smooth, velocity });
                     L.onOpenChange(false);
                     // A host that keeps the sheet open gets it back at its detent.
                     window.setTimeout(() => {
@@ -345,7 +345,7 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
                 }
                 const next = landing.dismiss ? L.index : landing.index;
                 setDetentIndex(next);
-                void moveTo(L.heights[next] ?? landing.height, LAB_SPRINGS.release, velocity);
+                void moveTo(L.heights[next] ?? landing.height, SPRINGS.release, velocity);
             },
         }));
     }, []);
@@ -364,7 +364,7 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
                                     event.preventDefault();
                                     cycle(event.key === 'ArrowUp' ? 1 : -1);
                                 }
-                            } }) })), _jsx(LabScrollArea, { ref: viewport, className: "lab-sheet-scroll", label: label, contentPadding: contentPadding, top: top, bottom: bottom, children: _jsx("div", { ref: body, className: "lab-sheet-body", children: children }) })] })] }));
+                            } }) })), _jsx(ScrollArea, { ref: viewport, className: "lab-sheet-scroll", label: label, contentPadding: contentPadding, top: top, bottom: bottom, children: _jsx("div", { ref: body, className: "lab-sheet-body", children: children }) })] })] }));
     if (inline)
         return createPortal(_jsx("div", { ref: host, className: "lab-sheet-host", "data-inline": "", "data-modal": modal || undefined, onKeyDown: (event) => {
                 if (event.key === 'Escape' && modal) {

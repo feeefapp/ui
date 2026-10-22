@@ -1,5 +1,5 @@
 /** Built-in strings for the kit widgets. Host translations override them. */
-export const LAB_UI_MESSAGES = {
+export const UI_MESSAGES = {
     "en": {
         "lab.common.close": "Close",
         "lab.search.collapse": "Close search",

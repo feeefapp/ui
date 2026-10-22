@@ -9,8 +9,8 @@ import { useSliderMotion } from './slider-motion.js';
  * A single-value slider with a large touch-friendly track, springy thumb, optional stops and
  * marks, and render slots for custom track, fill and thumb decoration.
  */
-export const LabSlider = React.forwardRef((props, ref) => (_jsx(SliderControl, { ...props, forwardedRef: ref })));
-LabSlider.displayName = 'LabSlider';
+export const Slider = React.forwardRef((props, ref) => (_jsx(SliderControl, { ...props, forwardedRef: ref })));
+Slider.displayName = 'Slider';
 function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', value, defaultValue, min = 0, max = 100, step = 1, disabled = false, onValueChange, onValueCommit, getValueText, showStops = false, marks, renderTrack, renderFill, renderThumb, name, form, forwardedRef, switchMode = false, checkedText, className, style, onKeyDown, onClick, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, onLostPointerCapture, ...hostProps }) {
     const range = sliderRange(min, max, step);
     const normalize = (next) => sliderValue(next, range.min, range.max, range.step);
@@ -198,15 +198,15 @@ function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', v
  * An on/off switch that can be tapped or dragged. It shares the slider's track, thumb and spring;
  * the state maps to 0 and 1.
  */
-export const LabSlideSwitch = React.forwardRef(({ checked, loading, defaultChecked = false, onCheckedChange, onCheckedCommit, onText, offText, ...props }, ref) => {
+export const SlideSwitch = React.forwardRef(({ checked, loading, defaultChecked = false, onCheckedChange, onCheckedCommit, onText, offText, ...props }, ref) => {
     return (_jsx(SliderControl, { ...props, forwardedRef: ref, switchMode: true, disabled: props.disabled || loading, "aria-busy": loading || undefined, min: 0, max: 1, step: 1, value: checked === undefined ? undefined : Number(checked), defaultValue: Number(defaultChecked), onValueChange: (next) => onCheckedChange?.(next === 1), onValueCommit: (next) => onCheckedCommit?.(next === 1), checkedText: (next) => (next === 1 ? onText : offText) }));
 });
-LabSlideSwitch.displayName = 'LabSlideSwitch';
+SlideSwitch.displayName = 'SlideSwitch';
 /**
  * A non-interactive switch picture for menu items and rows that already carry the checked
  * semantics (for example `menuitemcheckbox`). Same geometry and spring, hidden from assistive technology.
  */
-export function LabSlideSwitchIndicator({ checked, loading, controlSize = 'compact', }) {
+export function SlideSwitchIndicator({ checked, loading, controlSize = 'compact', }) {
     const host = React.useRef(null);
     useSliderMotion(host, Number(checked), false, false, false, Boolean(loading));
     return (_jsxs("div", { ref: host, className: "lab-slider lab-slide-switch-indicator", "data-checked": checked, "data-switch": true, "data-control-size": controlSize, "data-disabled": loading || undefined, "aria-hidden": "true", style: { '--lab-slider-fraction': Number(checked) }, children: [_jsx("span", { className: "lab-slider-rail" }), _jsx("span", { className: "lab-slider-fill" }), _jsx("span", { className: "lab-slider-thumb" })] }));

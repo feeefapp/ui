@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LabSlideSwitchIndicator } from '@feeef.dev/ui/primitives/slider'
+import { SlideSwitchIndicator } from '@feeef.dev/ui/primitives/slider'
 
 const COLUMNS = ['Customer', 'Phone', 'Wilaya', 'Courier', 'Total']
 
@@ -34,7 +34,7 @@ export default function MenuIndicator() {
           }}
         >
           {column}
-          <LabSlideSwitchIndicator checked={visible.includes(column)} />
+          <SlideSwitchIndicator checked={visible.includes(column)} />
         </button>
       ))}
     </div>
@@ -44,5 +44,5 @@ export default function MenuIndicator() {
 export const meta = {
   title: 'Indicator in a menu',
   description:
-    'The menu item owns the checked state and the click; LabSlideSwitchIndicator only draws it, so there is no nested control.',
+    'The menu item owns the checked state and the click; SlideSwitchIndicator only draws it, so there is no nested control.',
 }

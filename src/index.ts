@@ -1,62 +1,62 @@
 /** Public core API. Feature widgets may import dedicated modules directly. */
-export { LabProvider } from './provider'
-export { LabI18nProvider, LabLanguageSwitcher, useLabI18n } from './i18n'
-export type { LabI18n, LabI18nSource } from './i18n'
-export { LAB_LANGUAGES, labDirectionFor } from './i18n-core'
-export type { LabLanguageCode } from './i18n-core'
-export { LabServicesProvider, useLabServices } from './services'
-export type { LabPreferences, LabServices } from './services'
-export { LabThemeProvider, LabThemeSwitch, useLabTheme } from './theme'
-export type { LabThemeMode } from './theme'
-export { LAB_THEME_DEFAULTS, applyLabThemeConfig, labThemeAttributes } from './theme-config'
-export type { LabDensity, LabPalette, LabThemeConfig } from './theme-config'
+export { Provider } from './provider'
+export { I18nProvider, LanguageSwitcher, useI18n } from './i18n'
+export type { I18n, I18nSource } from './i18n'
+export { LANGUAGES, directionFor } from './i18n-core'
+export type { LanguageCode } from './i18n-core'
+export { ServicesProvider, useServices } from './services'
+export type { Preferences, Services } from './services'
+export { ThemeProvider, ThemeSwitch, useTheme } from './theme'
+export type { ThemeMode } from './theme'
+export { THEME_DEFAULTS, applyThemeConfig, themeAttributes } from './theme-config'
+export type { Density, Palette, ThemeConfig } from './theme-config'
 export {
-  LabButton,
-  LabInput,
-  LabTextarea,
-  LabSelect,
-  LabOption,
-  LabLabel,
-  LabModal,
-  LabBox,
-  LabText,
-  LabLink,
-  LabForm,
-  LabList,
-  LabListItem,
-  LabDivider,
+  Button,
+  Input,
+  Textarea,
+  Select,
+  Option,
+  Label,
+  Modal,
+  Box,
+  Text,
+  Link,
+  Form,
+  List,
+  ListItem,
+  Divider,
 } from './ui'
 export {
-  LabScaffoldProvider,
-  LabGlassGroup,
-  LabFloatingLayer,
-  LabViewTransition,
-  useLabNavigation,
+  ScaffoldProvider,
+  GlassGroup,
+  FloatingLayer,
+  ViewTransition,
+  useNavigation,
   useFloatingReserve,
 } from './scaffold'
 
-export { LabScrollArea, LabScrollGradientOverlay } from './scroll'
-export type { LabScrollAreaProps, LabScrollGradientOverlayProps } from './scroll'
-export { LabDock } from './dock'
-export type { LabDockProps } from './dock'
-export { LabActionsBar, LabActionsWidthProvider } from './actions'
+export { ScrollArea, ScrollGradientOverlay } from './scroll'
+export type { ScrollAreaProps, ScrollGradientOverlayProps } from './scroll'
+export { Dock } from './dock'
+export type { DockProps } from './dock'
+export { ActionsBar, ActionsWidthProvider } from './actions'
 export type {
-  LabAction,
-  LabCommandAction,
-  LabToggleAction,
-  LabGroupAction,
-  LabActionsBarProps,
+  Action,
+  CommandAction,
+  ToggleAction,
+  GroupAction,
+  ActionsBarProps,
 } from './actions'
 
-export type { LabButtonProps, LabButtonVariant, LabControlSize, LabButtonAppearance } from './ui'
+export type { ButtonProps, ButtonVariant, ControlSize, ButtonAppearance } from './ui'
 
-export { LabSegmentedControl } from './ui'
-export type { LabSegmentOption } from './ui'
+export { SegmentedControl } from './ui'
+export type { SegmentOption } from './ui'
 
-export { LAB_UI_MESSAGES } from './messages'
+export { UI_MESSAGES } from './messages'
 export { flattenLabTranslations, translateLab } from './i18n-core'
-export { labLocaleUrl } from './i18n'
+export { localeUrl } from './i18n'
 export { cn } from './utils'
 
-export { LabToolbarSearch } from './toolbar-search'
-export type { LabToolbarSearchProps } from './toolbar-search'
+export { ToolbarSearch } from './toolbar-search'
+export type { ToolbarSearchProps } from './toolbar-search'

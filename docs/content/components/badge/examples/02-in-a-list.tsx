@@ -1,4 +1,4 @@
-import { LabProBadge } from '@feeef.dev/ui/primitives/badge'
+import { ProBadge } from '@feeef.dev/ui/primitives/badge'
 
 const FEATURES = [
   { name: 'Text to speech', pro: false },
@@ -13,7 +13,7 @@ export default function InAList() {
       {FEATURES.map((feature) => (
         <li key={feature.name} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {feature.name}
-          {feature.pro && <LabProBadge />}
+          {feature.pro && <ProBadge />}
         </li>
       ))}
     </ul>

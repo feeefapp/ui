@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { ArrowLeft, Braces, CornerDownLeft, FileText, Search as SearchIcon, X } from 'lucide-react'
-import { LabModal } from '@feeef.dev/ui/primitives/modal'
-import { LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabRawInput } from '@feeef.dev/ui/primitives/raw-input'
-import { LabToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { Modal } from '@feeef.dev/ui/primitives/modal'
+import { IconButton } from '@feeef.dev/ui/primitives/button'
+import { RawInput } from '@feeef.dev/ui/primitives/raw-input'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
 import { API } from '../api'
 import { SECTIONS } from '../model'
 import { PAGES, pageHref } from '../registry'
@@ -80,7 +80,7 @@ export function Search({ onClose }: { onClose: () => void }) {
     document.getElementById(`hit-${hits[active]?.id}`)?.scrollIntoView({ block: 'nearest' })
   }, [active, hits])
   return (
-    <LabModal
+    <Modal
       label="Search the docs"
       close={onClose}
       className="docs-search"
@@ -92,14 +92,14 @@ export function Search({ onClose }: { onClose: () => void }) {
       scrollOptions={{ edgeGap: 10, contentPadding: 10 }}
       top={
         <div className="docs-search-bar">
-          <LabToolbarGroup label="Navigation">
-            <LabIconButton variant="text" appearance="toolbar" aria-label="Close search" onClick={onClose}>
+          <ToolbarGroup label="Navigation">
+            <IconButton variant="text" appearance="toolbar" aria-label="Close search" onClick={onClose}>
               <ArrowLeft size={20} />
-            </LabIconButton>
-          </LabToolbarGroup>
-          <LabToolbarGroup label="Search" className="docs-search-field">
+            </IconButton>
+          </ToolbarGroup>
+          <ToolbarGroup label="Search" className="docs-search-field">
             <SearchIcon size={18} aria-hidden="true" className="docs-search-glyph" />
-            <LabRawInput
+            <RawInput
               ref={input as never}
               type="search"
               aria-label="Search components, guides and props"
@@ -118,7 +118,7 @@ export function Search({ onClose }: { onClose: () => void }) {
               spellCheck={false}
             />
             {query && (
-              <LabIconButton
+              <IconButton
                 variant="text"
                 appearance="toolbar"
                 controlSize="compact"
@@ -129,9 +129,9 @@ export function Search({ onClose }: { onClose: () => void }) {
                 }}
               >
                 <X size={18} />
-              </LabIconButton>
+              </IconButton>
             )}
-          </LabToolbarGroup>
+          </ToolbarGroup>
         </div>
       }
     >
@@ -156,6 +156,6 @@ export function Search({ onClose }: { onClose: () => void }) {
         ))}
         {!hits.length && <li className="docs-search-empty">No results for “{query}”.</li>}
       </ul>
-    </LabModal>
+    </Modal>
   )
 }

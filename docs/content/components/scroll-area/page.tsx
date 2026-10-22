@@ -1,8 +1,8 @@
 import { Plus } from 'lucide-react'
-import { LabScrollArea } from '@feeef.dev/ui/scroll'
-import { LabToolbar, LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { ScrollArea } from '@feeef.dev/ui/scroll'
+import { Toolbar, ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { Dock } from '@feeef.dev/ui/dock'
+import { Button } from '@feeef.dev/ui/primitives/button'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground, jsx } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
@@ -45,31 +45,31 @@ function Overview() {
         controls={controls}
         render={(v) => (
           <div className="scroll-demo-frame" style={{ height: 320 }}>
-            <LabScrollArea
+            <ScrollArea
               label="Orders"
               edgeGap={v.edgeGap}
               contentPadding={v.contentPadding}
               gradient={v.gradient}
               top={
                 v.top ? (
-                  <LabToolbar
+                  <Toolbar
                     label="Order tools"
                     leading={
-                      <LabToolbarGroup label="Title">
+                      <ToolbarGroup label="Title">
                         <strong style={{ paddingInline: 12, fontSize: 14 }}>Orders</strong>
-                      </LabToolbarGroup>
+                      </ToolbarGroup>
                     }
                   />
                 ) : undefined
               }
               bottom={
                 v.bottom ? (
-                  <LabDock label="Order actions">
-                    <LabButton variant="filled">
+                  <Dock label="Order actions">
+                    <Button variant="filled">
                       <Plus />
                       New order
-                    </LabButton>
-                  </LabDock>
+                    </Button>
+                  </Dock>
                 ) : undefined
               }
             >
@@ -83,12 +83,12 @@ function Overview() {
                   </div>
                 ))}
               </div>
-            </LabScrollArea>
+            </ScrollArea>
           </div>
         )}
         code={(v) =>
           jsx(
-            'LabScrollArea',
+            'ScrollArea',
             {
               label: 'Orders',
               edgeGap: v.edgeGap,
@@ -100,14 +100,14 @@ function Overview() {
             '<OrderList />',
             { edgeGap: 12, contentPadding: 24, gradient: true }
           )
-            .replace('top="__TOP__"', 'top={<LabToolbar label="Order tools" leading={…} />}')
-            .replace('bottom="__BOTTOM__"', 'bottom={<LabDock label="Order actions">…</LabDock>}')
+            .replace('top="__TOP__"', 'top={<Toolbar label="Order tools" leading={…} />}')
+            .replace('bottom="__BOTTOM__"', 'bottom={<Dock label="Order actions">…</Dock>}')
         }
       />
 
       <Section title="How it works">
         <p>
-          <C>LabScrollArea</C> fills the nearest bounded box and turns it into one scroll viewport with
+          <C>ScrollArea</C> fills the nearest bounded box and turns it into one scroll viewport with
           floating chrome. The box you put it in owns the border, the corners and the opaque surface; the
           scroll area itself is transparent and inherits the radius, so content reaches the real edge and
           scrolls behind the toolbar and dock instead of stopping short of them.
@@ -125,7 +125,7 @@ function Overview() {
             padding, so focus and <C>revealScrollChild</C> also keep rows out from under the floats.
           </li>
           <li>
-            <strong>Bottom float</strong> (<C>bottom</C>): usually a <C>LabDock</C>.
+            <strong>Bottom float</strong> (<C>bottom</C>): usually a <C>Dock</C>.
           </li>
         </ol>
         <p>
@@ -143,7 +143,7 @@ function Overview() {
           floats (at least 100px top and 140px bottom); override them with <C>topFadeHeight</C> and{' '}
           <C>bottomFadeHeight</C>. The color comes from <C>--lab-scroll-surface</C>, falling back to{' '}
           <C>--lab-surface</C>; set that custom property when the box has a different paint. For a scroller
-          you build yourself, use <C>LabScrollGradientOverlay</C>.
+          you build yourself, use <C>ScrollGradientOverlay</C>.
         </p>
       </Section>
 
@@ -174,7 +174,7 @@ revealScrollChild(viewport.current, row, { block: 'nearest', behavior: 'smooth' 
           doItems={[
             'Give the parent a bounded height (a flex child with min-height: 0, a fixed-height panel, 100dvh).',
             'Put toolbars and docks in top and bottom, not as rows inside the content.',
-            'Use one scroll area per surface; a scrollable dialog uses LabModal scrollable.',
+            'Use one scroll area per surface; a scrollable dialog uses Modal scrollable.',
             'Let the measured reservations do the spacing.',
           ]}
           dontItems={[
@@ -219,9 +219,9 @@ export default definePage({
   order: 2,
   summary:
     'A full-bleed scroll viewport with floating top and bottom chrome whose measured heights are reserved, so content never hides under it.',
-  importLine: "import { LabScrollArea, LabScrollGradientOverlay, revealScrollChild } from '@feeef.dev/ui/scroll'",
+  importLine: "import { ScrollArea, ScrollGradientOverlay, revealScrollChild } from '@feeef.dev/ui/scroll'",
   source: 'src/scroll/scroll-area.tsx',
-  api: ['LabScrollArea', 'LabScrollGradientOverlay'],
+  api: ['ScrollArea', 'ScrollGradientOverlay'],
   keywords: ['scroll', 'overflow', 'viewport', 'sticky', 'fade', 'gradient', 'revealScrollChild', 'scrollIntoView'],
   Overview,
   examples: examplesFrom(

@@ -1,5 +1,5 @@
 import type { FormEventHandler, ReactNode, RefObject } from 'react';
-import { type LabTemporalEditorOptions } from './temporal-editor.js';
+import { type TemporalEditorOptions } from './temporal-editor.js';
 import './temporal-dialog.css';
 /**
  * A temporal picker as a dialog, two levels deep and nothing more: the dialog, then one row of
@@ -8,7 +8,7 @@ import './temporal-dialog.css';
  * Escape and the backdrop close it. Wrap your own submit handling with `onSubmit`; the hidden
  * `date` or `from`/`to` inputs are inside its form for `readTemporalForm`.
  */
-export declare function LabTemporalDialog({ open, label, close, returnFocusRef, formId, onSubmit, onClear, clearLabel, clearDisabled, applyLabel, showApply, error, intro, dir, className, ...options }: LabTemporalEditorOptions & {
+export declare function TemporalDialog({ open, label, close, returnFocusRef, formId, onSubmit, onClear, clearLabel, clearDisabled, applyLabel, showApply, error, intro, dir, className, ...options }: TemporalEditorOptions & {
     /** Shows the dialog. Changing it also resets the editor's month and active end. */
     open: boolean;
     /** Accessible name of the dialog. */

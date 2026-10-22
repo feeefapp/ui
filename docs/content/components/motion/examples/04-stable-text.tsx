@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { LabStableText } from '@feeef.dev/ui/motion'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { StableText } from '@feeef.dev/ui/motion'
+import { Button } from '@feeef.dev/ui/primitives/button'
 
 const LABELS = ['Publish', 'Publishing…', 'Published']
 
-export default function StableText() {
+export default function StableTextExample() {
   const [step, setStep] = useState(0)
   const publish = () => {
     setStep(1)
@@ -13,10 +13,10 @@ export default function StableText() {
   }
   return (
     <div className="demo-row">
-      <LabButton variant="filled" loading={step === 1} disabled={step === 2} onClick={publish}>
-        <LabStableText value={LABELS[step]} options={LABELS} />
-      </LabButton>
-      <LabButton variant="outlined">Preview</LabButton>
+      <Button variant="filled" loading={step === 1} disabled={step === 2} onClick={publish}>
+        <StableText value={LABELS[step]} options={LABELS} />
+      </Button>
+      <Button variant="outlined">Preview</Button>
     </div>
   )
 }
@@ -24,5 +24,5 @@ export default function StableText() {
 export const meta = {
   title: 'Width-stable label',
   description:
-    'LabStableText reserves the width of its longest option, so the button and its neighbor never shift while the label changes.',
+    'StableText reserves the width of its longest option, so the button and its neighbor never shift while the label changes.',
 }

@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { LabNumberField } from '@feeef.dev/ui/primitives/number-field'
+import { NumberField } from '@feeef.dev/ui/primitives/number-field'
 
 export default function Percent() {
   const [discount, setDiscount] = useState(15)
   return (
     <div className="demo-column">
-      <LabNumberField label="Discount" unit="%" min={0} max={100} value={discount} onValueChange={setDiscount} />
+      <NumberField label="Discount" unit="%" min={0} max={100} value={discount} onValueChange={setDiscount} />
     </div>
   )
 }

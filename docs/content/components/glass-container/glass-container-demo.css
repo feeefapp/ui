@@ -1,0 +1,40 @@
+/* Stages for the Glass container page: glass only reads as glass over content. */
+.glass-stage {
+  display: grid;
+  gap: 16px;
+  place-items: center;
+  width: 100%;
+  min-height: 200px;
+  padding: 24px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-panel);
+  background:
+    radial-gradient(circle at 18% 30%, color-mix(in srgb, var(--lab-primary) 50%, transparent) 0 16%, transparent 17%),
+    radial-gradient(circle at 80% 70%, color-mix(in srgb, var(--lab-accent) 55%, transparent) 0 20%, transparent 21%),
+    repeating-linear-gradient(45deg, var(--lab-surface) 0 14px, var(--lab-surface-soft) 14px 28px);
+}
+.glass-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.glass-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 420px);
+}
+.glass-controls > * {
+  flex: 1 1 200px;
+}
+.glass-title {
+  padding-inline: 14px;
+  font-weight: 600;
+  line-height: 40px;
+}

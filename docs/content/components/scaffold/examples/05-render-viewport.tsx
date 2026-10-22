@@ -1,10 +1,10 @@
 import { useRef } from 'react'
 import { ArrowDown } from 'lucide-react'
-import { LabScaffold, LabScaffoldAppBar } from '@feeef.dev/ui/workspace/scaffold'
-import { LabScrollArea, revealScrollChild } from '@feeef.dev/ui/scroll'
-import { LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { Scaffold, ScaffoldAppBar } from '@feeef.dev/ui/workspace/scaffold'
+import { ScrollArea, revealScrollChild } from '@feeef.dev/ui/scroll'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { Dock } from '@feeef.dev/ui/dock'
+import { Button } from '@feeef.dev/ui/primitives/button'
 import '../scaffold-demo.css'
 
 const LINES = Array.from({ length: 12 }, (_, i) => `Line ${i + 1} · Wireless earbuds × ${i + 1}`)
@@ -14,28 +14,28 @@ export default function RenderViewport() {
   const last = useRef<HTMLDivElement>(null)
   return (
     <div className="scaffold-demo-frame">
-      <LabScaffold
+      <Scaffold
         appBar={
-          <LabScaffoldAppBar>
-            <LabToolbarGroup label="Current page">
+          <ScaffoldAppBar>
+            <ToolbarGroup label="Current page">
               <span className="scaffold-demo-title">Invoice #2210</span>
-            </LabToolbarGroup>
-          </LabScaffoldAppBar>
+            </ToolbarGroup>
+          </ScaffoldAppBar>
         }
         bottom={
-          <LabDock label="Invoice actions">
-            <LabButton
+          <Dock label="Invoice actions">
+            <Button
               variant="tonal"
               onClick={() => revealScrollChild(viewport.current, last.current, { behavior: 'smooth' })}
             >
               <ArrowDown />
               Jump to total
-            </LabButton>
-          </LabDock>
+            </Button>
+          </Dock>
         }
         // The editor owns its scroll area (and its ref), and floats the scaffold's chrome itself.
         renderViewport={({ appBar, bottom }) => (
-          <LabScrollArea ref={viewport} label="Invoice lines" contentPadding={16} top={appBar} bottom={bottom}>
+          <ScrollArea ref={viewport} label="Invoice lines" contentPadding={16} top={appBar} bottom={bottom}>
             <div className="scaffold-demo-list">
               {LINES.map((line) => (
                 <div key={line} className="scaffold-demo-row">
@@ -47,11 +47,11 @@ export default function RenderViewport() {
                 <strong>38 400 DA</strong>
               </div>
             </div>
-          </LabScrollArea>
+          </ScrollArea>
         )}
       >
         {null}
-      </LabScaffold>
+      </Scaffold>
     </div>
   )
 }
@@ -59,5 +59,5 @@ export default function RenderViewport() {
 export const meta = {
   title: 'Your own viewport',
   description:
-    'renderViewport replaces the built-in content scroll area. It receives the rendered appBar and bottom so an editor can float them in its own LabScrollArea.',
+    'renderViewport replaces the built-in content scroll area. It receives the rendered appBar and bottom so an editor can float them in its own ScrollArea.',
 }

@@ -1,15 +1,15 @@
 'use client'
 
-import { LabPopoverSurface } from './popover-surface'
+import { PopoverSurface } from './popover-surface'
 import * as React from 'react'
-import * as Select from '@radix-ui/react-select'
+import * as SelectPrimitive from '@radix-ui/react-select'
 import { Check, ChevronDown } from 'lucide-react'
 import { cn } from '../utils'
-import { LabFieldShell, type LabFieldDecorationProps } from './field-shell'
-import { LabRawInput, type LabInputValidator } from './raw-input'
+import { FieldShell, type FieldDecorationProps } from './field-shell'
+import { RawInput, type InputValidator } from './raw-input'
 
-export type LabSelectProps = LabFieldDecorationProps & {
-  /** The `LabOption` items of the menu. */
+export type SelectProps = FieldDecorationProps & {
+  /** The `Option` items of the menu. */
   'children': React.ReactNode
   /** The selected option's value. `null` or `''` means nothing is selected. */
   'value': string | null
@@ -35,7 +35,7 @@ export type LabSelectProps = LabFieldDecorationProps & {
   /** Error shown when a required select is empty. */
   'requiredMessage'?: string
   /** Synchronous check run on the value; return an actionable error, or nothing when it is valid. */
-  'validator'?: LabInputValidator
+  'validator'?: InputValidator
   /** When errors appear: after the menu first closes or the trigger blurs (`blur`), on every change (`change`) or only on submit (`submit`). */
   'validationMode'?: 'blur' | 'change' | 'submit'
   /** Called with the visible error message, or `null` when it clears. */
@@ -46,10 +46,10 @@ export type LabSelectProps = LabFieldDecorationProps & {
 const EMPTY = '__lab_natural__'
 
 /**
- * A single-choice dropdown in the same field frame as `LabTextField`: floating hint, icons,
- * supporting text and validation. The menu opens in a popover; options are `LabOption`.
+ * A single-choice dropdown in the same field frame as `TextField`: floating hint, icons,
+ * supporting text and validation. The menu opens in a popover; options are `Option`.
  */
-export function LabSelect({
+export function Select({
   children,
   value: suppliedValue,
   onValueChange,
@@ -75,7 +75,7 @@ export function LabSelect({
   onValidationChange,
   onBlur,
   ...props
-}: LabSelectProps) {
+}: SelectProps) {
   const value = suppliedValue ?? ''
   const floatingHint = hint ?? label
   const touched = React.useRef(false)
@@ -155,7 +155,7 @@ export function LabSelect({
     setOpen(false)
   }, [props.disabled])
   return (
-    <Select.Root
+    <SelectPrimitive.Root
       dir={resolvedDirection}
       value={value || EMPTY}
       onValueChange={(next) => {
@@ -189,7 +189,7 @@ export function LabSelect({
       disabled={props.disabled}
     >
       {decorated ? (
-        <LabFieldShell
+        <FieldShell
           id={props.id}
           label={label}
           hint={hint}
@@ -210,7 +210,7 @@ export function LabSelect({
           populated={Boolean(value)}
         >
           {({ id, describedBy, invalid }) => (
-            <Select.Trigger
+            <SelectPrimitive.Trigger
               ref={trigger}
               id={id}
               className={cn('lab-field-select-control', className)}
@@ -228,18 +228,18 @@ export function LabSelect({
               }}
             >
               <span className="lab-field-select-value">
-                <Select.Value>
+                <SelectPrimitive.Value>
                   {!value && !floatingHint && placeholder ? placeholder : undefined}
-                </Select.Value>
+                </SelectPrimitive.Value>
               </span>
-              <Select.Icon>
+              <SelectPrimitive.Icon>
                 <ChevronDown size={18} aria-hidden="true" />
-              </Select.Icon>
-            </Select.Trigger>
+              </SelectPrimitive.Icon>
+            </SelectPrimitive.Trigger>
           )}
-        </LabFieldShell>
+        </FieldShell>
       ) : (
-        <Select.Trigger
+        <SelectPrimitive.Trigger
           ref={trigger}
           className={cn('lab-select lab-control', className)}
           aria-label={props['aria-label']}
@@ -259,16 +259,16 @@ export function LabSelect({
             onBlur?.(event)
           }}
         >
-          <Select.Value>
+          <SelectPrimitive.Value>
             {!value && !floatingHint && placeholder ? placeholder : undefined}
-          </Select.Value>
-          <Select.Icon>
+          </SelectPrimitive.Value>
+          <SelectPrimitive.Icon>
             <ChevronDown size={18} aria-hidden="true" />
-          </Select.Icon>
-        </Select.Trigger>
+          </SelectPrimitive.Icon>
+        </SelectPrimitive.Trigger>
       )}
       {(required || validator || name || error) && (
-        <LabRawInput
+        <RawInput
           className="lab-sr-only"
           tabIndex={-1}
           aria-hidden="true"
@@ -288,9 +288,9 @@ export function LabSelect({
           }}
         />
       )}
-      <Select.Portal container={container}>
-        <LabPopoverSurface asChild>
-          <Select.Content
+      <SelectPrimitive.Portal container={container}>
+        <PopoverSurface asChild>
+          <SelectPrimitive.Content
             className="lab-select-menu"
             data-lab-corners
             data-closing={closing || undefined}
@@ -300,16 +300,16 @@ export function LabSelect({
             collisionPadding={12}
             collisionBoundary={container}
           >
-            <Select.Viewport>{children}</Select.Viewport>
-          </Select.Content>
-        </LabPopoverSurface>
-      </Select.Portal>
-    </Select.Root>
+            <SelectPrimitive.Viewport>{children}</SelectPrimitive.Viewport>
+          </SelectPrimitive.Content>
+        </PopoverSurface>
+      </SelectPrimitive.Portal>
+    </SelectPrimitive.Root>
   )
 }
 
-/** One choice in a `LabSelect` menu. A check marks the selected option. */
-export function LabOption({
+/** One choice in a `Select` menu. A check marks the selected option. */
+export function Option({
   value,
   children,
 }: {
@@ -319,15 +319,15 @@ export function LabOption({
   children: React.ReactNode
 }) {
   return (
-    <Select.Item
+    <SelectPrimitive.Item
       data-lab-corners
       className="lab-select-option"
       value={(value ?? String(children)) || EMPTY}
     >
-      <Select.ItemText>{children}</Select.ItemText>
-      <Select.ItemIndicator>
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      <SelectPrimitive.ItemIndicator>
         <Check size={18} aria-hidden="true" />
-      </Select.ItemIndicator>
-    </Select.Item>
+      </SelectPrimitive.ItemIndicator>
+    </SelectPrimitive.Item>
   )
 }

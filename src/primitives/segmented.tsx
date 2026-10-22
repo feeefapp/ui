@@ -1,11 +1,11 @@
 import { useRef, type ReactNode, type KeyboardEvent } from 'react'
-import { LabButton } from './button'
+import { Button } from './button'
 import { cn } from '../utils'
 import { revealScrollChild } from '../scroll/reveal'
 import './segmented.css'
 
 /** One choice of a segmented control. */
-export type LabSegmentOption<T extends string> = {
+export type SegmentOption<T extends string> = {
   /** Value reported to `onChange`. */
   value: T
   /** Visible text and accessible name. */
@@ -19,7 +19,7 @@ export type LabSegmentOption<T extends string> = {
  * A single choice among two to five short options, shown side by side. Radio semantics: one Tab
  * stop, arrow keys move and select.
  */
-export function LabSegmentedControl<const T extends string>({
+export function SegmentedControl<const T extends string>({
   value,
   onChange,
   options,
@@ -33,7 +33,7 @@ export function LabSegmentedControl<const T extends string>({
   /** Called with the chosen value on click and on every arrow, Home or End key press. */
   onChange(value: NoInfer<T>): void
   /** Choices, in display order. */
-  options: readonly LabSegmentOption<T>[]
+  options: readonly SegmentOption<T>[]
   /** Accessible name of the radio group. */
   label: string
   /** Disables every option. */
@@ -86,7 +86,7 @@ export function LabSegmentedControl<const T extends string>({
       data-lab-corners
     >
       {options.map((option) => (
-        <LabButton
+        <Button
           key={option.value}
           variant="ghost"
           appearance="toolbar"
@@ -105,7 +105,7 @@ export function LabSegmentedControl<const T extends string>({
             </span>
           )}
           <span className="lab-segmented-label">{option.label}</span>
-        </LabButton>
+        </Button>
       ))}
     </div>
   )

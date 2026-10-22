@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import * as Tooltip from '@radix-ui/react-tooltip'
 import { Package, ShoppingBag, Truck, Users } from 'lucide-react'
-import { LabNavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
-import { LabSlideSwitch } from '@feeef.dev/ui/primitives/slider'
+import { NavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
+import { SlideSwitch } from '@feeef.dev/ui/primitives/slider'
 import '../nav-demo.css'
 
 const PAGES = [
@@ -21,7 +21,7 @@ export default function Rail() {
       <div className="nav-demo-layout">
         <nav aria-label="Store" className="nav-demo-side" data-compact={compact}>
           {PAGES.map((item) => (
-            <LabNavigationItem
+            <NavigationItem
               key={item.label}
               compact={compact}
               label={item.label}
@@ -33,7 +33,7 @@ export default function Rail() {
         </nav>
         <div className="demo-row">
           <span aria-hidden="true">Rail</span>
-          <LabSlideSwitch label="Rail" checked={compact} onCheckedChange={setCompact} />
+          <SlideSwitch label="Rail" checked={compact} onCheckedChange={setCompact} />
         </div>
       </div>
     </Tooltip.Provider>

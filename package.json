@@ -1,7 +1,7 @@
 {
   "name": "@feeef.dev/ui",
   "version": "0.9.0",
-  "description": "Feeef UI kit: tokens, workspace scaffold and controls shared by every Feeef web app (Lab, Cloud console, …).",
+  "description": "Feeef UI kit: tokens, workspace scaffold and controls shared by every Feeef web app (Lab, Cloud console, \u2026).",
   "private": true,
   "license": "UNLICENSED",
   "repository": {
@@ -29,6 +29,10 @@
     "./dock": {
       "types": "./dist/dock/index.d.ts",
       "default": "./dist/dock/index.js"
+    },
+    "./glass": {
+      "types": "./dist/glass/index.d.ts",
+      "default": "./dist/glass/index.js"
     },
     "./scroll": {
       "types": "./dist/scroll/index.d.ts",

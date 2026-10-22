@@ -1,15 +1,15 @@
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { Button } from '@feeef.dev/ui/primitives/button'
 
 export default function Variants() {
   return (
     <div className="demo-row">
-      <LabButton variant="filled">Filled</LabButton>
-      <LabButton variant="tonal">Tonal</LabButton>
-      <LabButton variant="elevated">Elevated</LabButton>
-      <LabButton variant="outlined">Outlined</LabButton>
-      <LabButton variant="text">Text</LabButton>
-      <LabButton variant="ghost">Ghost</LabButton>
-      <LabButton variant="destructive">Delete</LabButton>
+      <Button variant="filled">Filled</Button>
+      <Button variant="tonal">Tonal</Button>
+      <Button variant="elevated">Elevated</Button>
+      <Button variant="outlined">Outlined</Button>
+      <Button variant="text">Text</Button>
+      <Button variant="ghost">Ghost</Button>
+      <Button variant="destructive">Delete</Button>
     </div>
   )
 }

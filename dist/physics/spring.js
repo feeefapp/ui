@@ -1,5 +1,5 @@
 /** The kit's named springs. Pick by role, not by look. */
-export const LAB_SPRINGS = {
+export const SPRINGS = {
     /** Default for layout and presentation: pages, sheets, panels. No overshoot. */
     smooth: { duration: 0.5, bounce: 0 },
     /** Small controls and state changes that should feel quick: toggles, chips, indicators. */

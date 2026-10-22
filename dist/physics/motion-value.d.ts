@@ -1,12 +1,12 @@
-import { LAB_SPRINGS, type LabSpring } from './spring.js';
+import { SPRINGS, type Spring } from './spring.js';
 type FrameCallback = (now: number) => void;
 /** Runs `callback` on every animation frame until the returned function is called. One shared loop. */
 export declare function onAnimationFrame(callback: FrameCallback): () => void;
 /** True when the reader asked for reduced motion. Safe to call on the server. */
 export declare function prefersReducedMotion(): boolean;
-export type LabAnimateOptions = {
+export type AnimateOptions = {
     /** A spring, or the name of one of the kit's springs. Default `smooth`. */
-    spring?: LabSpring | keyof typeof LAB_SPRINGS;
+    spring?: Spring | keyof typeof SPRINGS;
     /** Starting velocity in units per second. Defaults to the value's current velocity. */
     velocity?: number;
     /** Jump straight to the target (reduced motion, or no reason to animate). */
@@ -18,7 +18,7 @@ export type LabAnimateOptions = {
  * a pointer or setting the value interrupts the current animation exactly where it is, keeping
  * its speed, so motion never jumps.
  */
-export declare class LabMotionValue {
+export declare class MotionValue {
     /** Distance from the target that counts as arrived, in this value's units. */
     private readonly restDelta;
     private value;
@@ -60,7 +60,7 @@ export declare class LabMotionValue {
      * Springs to `target`. Resolves `true` when it comes to rest there, `false` when interrupted by
      * another animation, `set`, `track` or `stop`.
      */
-    animateTo(target: number, options?: LabAnimateOptions): Promise<boolean>;
+    animateTo(target: number, options?: AnimateOptions): Promise<boolean>;
     private write;
     private finish;
 }

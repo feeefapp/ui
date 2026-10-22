@@ -1,5 +1,5 @@
-import { stepSpring, type SpringState } from './primitives/spring-core'
-export function stepSearchMorph(state: SpringState, target: number, elapsed: number) {
+import { stepSpring, type StepSpringState } from './primitives/spring-core'
+export function stepSearchMorph(state: StepSpringState, target: number, elapsed: number) {
   return stepSpring(state, target, elapsed, 360, 34)
 }
 const smooth = (value: number) => { const t = Math.min(1, Math.max(0, value)); return t * t * (3 - 2 * t) }

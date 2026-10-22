@@ -1,6 +1,6 @@
 import { type RefObject } from 'react';
 import './scroll.css';
-export type LabScrollGradientOverlayProps = {
+export type ScrollGradientOverlayProps = {
     /** The scrolling element whose offset drives the washes. */
     viewport: RefObject<HTMLElement | null>;
     /** Top wash height in px, capped at 40% of the viewport. */
@@ -19,5 +19,5 @@ export type LabScrollGradientOverlayProps = {
  * sibling of the viewport inside a `position: relative` box. Reads scroll metrics once per frame
  * and updates opacity without rerendering the scroll content.
  */
-export declare function LabScrollGradientOverlay({ viewport, topHeight, bottomHeight, density, fadeZone, color, }: LabScrollGradientOverlayProps): import("react").JSX.Element;
+export declare function ScrollGradientOverlay({ viewport, topHeight, bottomHeight, density, fadeZone, color, }: ScrollGradientOverlayProps): import("react").JSX.Element;
 //# sourceMappingURL=gradient-overlay.d.ts.map

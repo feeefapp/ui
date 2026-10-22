@@ -1,4 +1,4 @@
-import { LabVelocityTracker } from './velocity.js';
+import { VelocityTracker } from './velocity.js';
 let suppressUntil = 0;
 function suppressClick(event) {
     if (performance.now() > suppressUntil)
@@ -56,8 +56,8 @@ export function attachPan(element, options) {
             target: el,
             started: false,
             rejected: false,
-            x: new LabVelocityTracker(),
-            y: new LabVelocityTracker(),
+            x: new VelocityTracker(),
+            y: new VelocityTracker(),
             lastX: x,
             lastY: y,
         };

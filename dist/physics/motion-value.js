@@ -1,5 +1,5 @@
-import { LAB_SPRINGS, solveSpring, springAtRest } from './spring.js';
-import { LabVelocityTracker } from './velocity.js';
+import { SPRINGS, solveSpring, springAtRest } from './spring.js';
+import { VelocityTracker } from './velocity.js';
 const callbacks = new Set();
 let frame = 0;
 function loop(now) {
@@ -26,7 +26,7 @@ export function prefersReducedMotion() {
  * a pointer or setting the value interrupts the current animation exactly where it is, keeping
  * its speed, so motion never jumps.
  */
-export class LabMotionValue {
+export class MotionValue {
     restDelta;
     value;
     speed = 0;
@@ -36,7 +36,7 @@ export class LabMotionValue {
     stopFrame = null;
     settle = null;
     listeners = new Set();
-    tracker = new LabVelocityTracker();
+    tracker = new VelocityTracker();
     tracking = false;
     constructor(initial, 
     /** Distance from the target that counts as arrived, in this value's units. */
@@ -108,7 +108,7 @@ export class LabMotionValue {
      * another animation, `set`, `track` or `stop`.
      */
     animateTo(target, options = {}) {
-        const spring = typeof options.spring === 'string' ? LAB_SPRINGS[options.spring] : options.spring ?? LAB_SPRINGS.smooth;
+        const spring = typeof options.spring === 'string' ? SPRINGS[options.spring] : options.spring ?? SPRINGS.smooth;
         const now = performance.now();
         const velocity = options.velocity ??
             (this.tracking

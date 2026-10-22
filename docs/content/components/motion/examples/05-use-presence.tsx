@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { usePresence, useLatched } from '@feeef.dev/ui/motion'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { Button } from '@feeef.dev/ui/primitives/button'
 import './presence.css'
 
 const CUSTOMERS = ['Sara B.', 'Karim M.', 'Nour H.']
@@ -15,13 +15,13 @@ export default function UsePresenceHook() {
     <div className="demo-column">
       <div className="demo-row">
         {CUSTOMERS.map((name) => (
-          <LabButton key={name} variant="outlined" controlSize="compact" onClick={() => setSelected(name)}>
+          <Button key={name} variant="outlined" controlSize="compact" onClick={() => setSelected(name)}>
             {name}
-          </LabButton>
+          </Button>
         ))}
-        <LabButton variant="text" controlSize="compact" disabled={!open} onClick={() => setSelected(null)}>
+        <Button variant="text" controlSize="compact" disabled={!open} onClick={() => setSelected(null)}>
           Close
-        </LabButton>
+        </Button>
       </div>
       {mounted && (
         <div className="sync-notice" data-state={state}>
@@ -35,5 +35,5 @@ export default function UsePresenceHook() {
 export const meta = {
   title: 'Hooks',
   description:
-    'usePresence and useLatched are the pieces LabPresence is built from. Use them when the exiting element is yours to render.',
+    'usePresence and useLatched are the pieces Presence is built from. Use them when the exiting element is yours to render.',
 }

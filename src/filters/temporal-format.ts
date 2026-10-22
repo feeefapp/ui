@@ -3,20 +3,20 @@ import {
   normalizeTemporal,
   temporalInputType,
   validateTemporal,
-  type LabTemporalType,
-  type LabTemporalValue,
+  type TemporalType,
+  type TemporalValue,
 } from './temporal'
 /** Display only; canonical form values remain local ISO strings. */
 export function formatTemporalValue(
-  type: LabTemporalType,
-  value: LabTemporalValue,
+  type: TemporalType,
+  value: TemporalValue,
   locale?: string
 ): string {
   if (value == null || !normalizeTemporal(value)) return ''
   const input = temporalInputType(type)
   const part = (text: string) => {
     if (!text) return 'Any'
-    const singleType = type.replace('Range', '') as LabTemporalType
+    const singleType = type.replace('Range', '') as TemporalType
     if (validateTemporal({ type: singleType }, text)) return text
     if (input === 'time') return text
     const date = new Intl.DateTimeFormat(locale, {

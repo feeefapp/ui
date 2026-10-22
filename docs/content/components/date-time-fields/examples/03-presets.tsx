@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { LabDateRangeField } from '@feeef.dev/ui/primitives/temporal-field'
-import { temporalPresets, type LabTemporalPreset } from '@feeef.dev/ui/filters/temporal'
+import { DateRangeField } from '@feeef.dev/ui/primitives/temporal-field'
+import { temporalPresets, type TemporalPreset } from '@feeef.dev/ui/filters/temporal'
 
 const iso = (date: Date) => date.toLocaleDateString('en-CA')
 
-function salesPresets(now = new Date()): LabTemporalPreset[] {
+function salesPresets(now = new Date()): TemporalPreset[] {
   const weekStart = new Date(now)
   // The Algerian work week starts on Sunday.
   weekStart.setDate(now.getDate() - now.getDay())
@@ -22,7 +22,7 @@ export default function Presets() {
   const [period, setPeriod] = useState<{ from: string; to: string } | null>(null)
   return (
     <div className="demo-column">
-      <LabDateRangeField
+      <DateRangeField
         hint="Sales period"
         value={period}
         onValueChange={setPeriod}

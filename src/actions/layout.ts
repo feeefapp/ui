@@ -1,11 +1,11 @@
 /** Width-only contract, independent of React and browser measurement. */
-export interface LabActionLayoutItem {
+export interface ActionLayoutItem {
   id: string
   /** Lower priorities enter overflow first. Equal priorities spill from the end. */
   priority?: number
 }
 
-export interface LabActionsLayout<T> {
+export interface ActionsLayout<T> {
   visible: T[]
   overflow: T[]
   /** The space the result needs, including the menu trigger when present. */
@@ -17,7 +17,7 @@ export interface LabActionsLayout<T> {
  * lists preserve source order. A host narrower than the overflow trigger still
  * receives that trigger, so every action remains reachable.
  */
-export function computeLabActionsLayout<T extends LabActionLayoutItem>({
+export function computeLabActionsLayout<T extends ActionLayoutItem>({
   actions,
   maxWidth,
   measure,
@@ -29,9 +29,9 @@ export function computeLabActionsLayout<T extends LabActionLayoutItem>({
   measure: (action: T) => number
   overflowWidth?: number
   gap?: number
-}): LabActionsLayout<T> {
+}): ActionsLayout<T> {
   if (Number.isNaN(maxWidth) || maxWidth < 0) {
-    throw new RangeError('Lab actions maxWidth must be non-negative.')
+    throw new RangeError('Actions maxWidth must be non-negative.')
   }
   for (const [name, value] of [
     ['overflowWidth', overflowWidth],

@@ -35,7 +35,7 @@ export function useLatched(value, hold) {
  * Label that swaps between known values without changing width: every option
  * is laid out in the same grid cell and only the active one is visible.
  */
-export function LabStableText({ value, options, className, }) {
+export function StableText({ value, options, className, }) {
     const all = options.includes(value) ? options : [...options, value];
     return (_jsx("span", { className: `lab-stable-text ${className || ''}`, children: all.map((option) => (_jsx("span", { "data-active": option === value || undefined, "aria-hidden": option !== value, children: option }, option))) }));
 }
@@ -43,7 +43,7 @@ export function LabStableText({ value, options, className, }) {
  * Animates its own height to follow its content, so content that appears,
  * disappears or grows (results, errors, previews) eases instead of jumping.
  */
-export function LabAutoHeight({ children, className, as: Component = 'div', ...props }) {
+export function AutoHeight({ children, className, as: Component = 'div', ...props }) {
     const inner = React.useRef(null);
     const [height, setHeight] = React.useState(null);
     React.useLayoutEffect(() => {
@@ -58,7 +58,7 @@ export function LabAutoHeight({ children, className, as: Component = 'div', ...p
     return (_jsx(Component, { ...props, className: `lab-auto-height ${className || ''}`, style: { ...props.style, height: height === null ? undefined : height }, children: _jsx("div", { ref: inner, className: "lab-auto-height-inner", children: children }) }));
 }
 /** Mounts `render` while open and through its exit, with the last open output frozen. */
-export function LabPresence({ open, exitMs = 160, render, }) {
+export function Presence({ open, exitMs = 160, render, }) {
     const { mounted, state } = usePresence(open, exitMs);
     const live = open ? render('open') : null;
     const node = useLatched(live, open);
@@ -73,7 +73,7 @@ function withState(node, state) {
  * Cross-fades between keyed icons in one fixed-size cell, so play/pause,
  * mic/stop and similar swaps animate without moving surrounding layout.
  */
-export function LabSwap({ swapKey, children, className, }) {
+export function Swap({ swapKey, children, className, }) {
     const previous = React.useRef({ key: swapKey, node: children });
     const [leaving, setLeaving] = React.useState([]);
     const timers = React.useRef(new Set());

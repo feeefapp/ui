@@ -1,4 +1,4 @@
-import { LabSlider } from '@feeef.dev/ui/primitives/slider'
+import { Slider } from '@feeef.dev/ui/primitives/slider'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground, jsx } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
@@ -21,7 +21,7 @@ function Overview() {
         controls={controls}
         render={(v) => (
           <div className="demo-wide">
-            <LabSlider
+            <Slider
               label="Discount"
               min={v.min}
               max={v.max}
@@ -37,7 +37,7 @@ function Overview() {
         )}
         code={(v) =>
           jsx(
-            'LabSlider',
+            'Slider',
             {
               label: 'Discount',
               min: v.min,
@@ -167,9 +167,9 @@ export default definePage({
   group: 'Inputs',
   order: 3,
   summary: 'Sliders pick a value from a range by dragging or with the keyboard, with optional stops, marks and custom decoration.',
-  importLine: "import { LabSlider } from '@feeef.dev/ui/primitives/slider'",
+  importLine: "import { Slider } from '@feeef.dev/ui/primitives/slider'",
   source: 'src/primitives/slider.tsx',
-  api: ['LabSlider'],
+  api: ['Slider'],
   keywords: ['range', 'track', 'thumb', 'marks', 'stops', 'volume'],
   Overview,
   examples: examplesFrom(
@@ -178,7 +178,7 @@ export default definePage({
   ),
   Preview: () => (
     <div style={{ width: 220 }}>
-      <LabSlider label="Discount" defaultValue={40} />
+      <Slider label="Discount" defaultValue={40} />
     </div>
   ),
 })

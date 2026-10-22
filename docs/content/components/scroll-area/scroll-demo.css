@@ -1,4 +1,4 @@
-/* Bounded surfaces for the Scroll area page. LabScrollArea fills the nearest box, so the box owns
+/* Bounded surfaces for the Scroll area page. ScrollArea fills the nearest box, so the box owns
    the border, corners and opaque paint. */
 .scroll-demo-frame {
   position: relative;
@@ -36,7 +36,7 @@
 .scroll-demo-row small {
   color: var(--lab-muted);
 }
-/* A hand-built scroller for LabScrollGradientOverlay: the overlay is a sibling of the viewport. */
+/* A hand-built scroller for ScrollGradientOverlay: the overlay is a sibling of the viewport. */
 .scroll-demo-viewport {
   position: absolute;
   inset: 0;

@@ -1,23 +1,23 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
-import { LabPopoverSurface } from '../ui.js';
+import { PopoverSurface } from '../ui.js';
 import * as React from 'react';
-import { useLabI18n } from '../i18n.js';
+import { useI18n } from '../i18n.js';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Check, ChevronDown, ChevronRight, MoreHorizontal, Square, SquareCheck } from 'lucide-react';
 import { cn } from '../utils.js';
-import { LabButton } from '../ui.js';
+import { Button } from '../ui.js';
 import { PixelLoader } from '../pixel-art.js';
 import { computeLabActionsLayout } from './layout.js';
 import { useMeasuredActions } from './use_measured_actions.js';
-import { useLabActionsWidth } from './width-context.js';
+import { useActionsWidth } from './width-context.js';
 import './actions.css';
 /**
  * Responsive, priority-based actions. Measures its real controls and moves the lowest-priority
  * ones into a "More actions" menu when they don't fit. Place inside a dock or any bounded slot.
  */
-export function LabActionsBar({ actions, label, align = 'end', size = 'regular', gap = 4, overflowLabel, className, portalContainer, onActionError, }) {
-    const { t } = useLabI18n();
+export function ActionsBar({ actions, label, align = 'end', size = 'regular', gap = 4, overflowLabel, className, portalContainer, onActionError, }) {
+    const { t } = useI18n();
     const resolvedOverflowLabel = overflowLabel ?? t('lab.common.moreActions');
     const ownerId = React.useId();
     const host = React.useRef(null);
@@ -29,7 +29,7 @@ export function LabActionsBar({ actions, label, align = 'end', size = 'regular',
     const alive = React.useRef(true);
     const [errorLabel, setErrorLabel] = React.useState('');
     const [overflowOpen, setOverflowOpen] = React.useState(false);
-    const inheritedWidth = useLabActionsWidth();
+    const inheritedWidth = useActionsWidth();
     const revision = React.useMemo(() => ({ actions, size, pending }), [actions, size, pending]);
     const { measurements, focusAfterFit } = useMeasuredActions(host, measuringRow, revision);
     React.useEffect(() => {
@@ -92,12 +92,12 @@ export function LabActionsBar({ actions, label, align = 'end', size = 'regular',
             ...(inheritedWidth === undefined
                 ? {}
                 : { inlineSize: layout.requiredWidth, flex: 'none' }),
-        }, children: [_jsxs("div", { className: "lab-actions-bar__row", children: [layout.visible.map((action) => (_jsx("span", { className: "lab-actions-bar__entry", "data-lab-action-id": action.id, children: action.type === 'group' ? (_jsx(GroupControl, { action: action, size: size, menu: menu })) : (_jsx(ActionControl, { action: action, size: size, loading: pending.has(action.id), onClick: () => execute(action) })) }, action.id))), !!layout.overflow.length && (_jsxs(DropdownMenu.Root, { modal: false, open: overflowOpen, onOpenChange: setOverflowOpen, children: [_jsx(DropdownMenu.Trigger, { asChild: true, children: _jsx(LabButton, { ref: overflowTrigger, className: "lab-actions-bar__control", variant: "ghost", appearance: "toolbar", controlSize: "icon", "aria-label": resolvedOverflowLabel, title: resolvedOverflowLabel, children: _jsx(MoreHorizontal, { size: 20, "aria-hidden": "true" }) }) }), _jsx(MenuSurface, { menu: menu, label: resolvedOverflowLabel, children: layout.overflow.map((action) => (_jsx(MenuAction, { action: action, menu: menu }, action.id))) })] }))] }), _jsxs("div", { ref: measuringRow, className: "lab-actions-bar__measure", "aria-hidden": "true", inert: true, children: [actions.map((action) => (_jsx("span", { className: "lab-actions-bar__entry", "data-lab-action-id": action.id, children: _jsx(ActionControl, { action: action, size: size, loading: pending.has(action.id) }) }, action.id))), _jsx("span", { className: "lab-actions-bar__entry", "data-lab-overflow-measure": true, children: _jsx(LabButton, { className: "lab-actions-bar__control", variant: "ghost", appearance: "toolbar", controlSize: "icon", tabIndex: -1, children: _jsx(MoreHorizontal, { size: 20, "aria-hidden": "true" }) }) })] }), errorLabel && (_jsx("span", { className: "lab-actions-bar__error", role: "alert", children: errorLabel }))] }));
+        }, children: [_jsxs("div", { className: "lab-actions-bar__row", children: [layout.visible.map((action) => (_jsx("span", { className: "lab-actions-bar__entry", "data-lab-action-id": action.id, children: action.type === 'group' ? (_jsx(GroupControl, { action: action, size: size, menu: menu })) : (_jsx(ActionControl, { action: action, size: size, loading: pending.has(action.id), onClick: () => execute(action) })) }, action.id))), !!layout.overflow.length && (_jsxs(DropdownMenu.Root, { modal: false, open: overflowOpen, onOpenChange: setOverflowOpen, children: [_jsx(DropdownMenu.Trigger, { asChild: true, children: _jsx(Button, { ref: overflowTrigger, className: "lab-actions-bar__control", variant: "ghost", appearance: "toolbar", controlSize: "icon", "aria-label": resolvedOverflowLabel, title: resolvedOverflowLabel, children: _jsx(MoreHorizontal, { size: 20, "aria-hidden": "true" }) }) }), _jsx(MenuSurface, { menu: menu, label: resolvedOverflowLabel, children: layout.overflow.map((action) => (_jsx(MenuAction, { action: action, menu: menu }, action.id))) })] }))] }), _jsxs("div", { ref: measuringRow, className: "lab-actions-bar__measure", "aria-hidden": "true", inert: true, children: [actions.map((action) => (_jsx("span", { className: "lab-actions-bar__entry", "data-lab-action-id": action.id, children: _jsx(ActionControl, { action: action, size: size, loading: pending.has(action.id) }) }, action.id))), _jsx("span", { className: "lab-actions-bar__entry", "data-lab-overflow-measure": true, children: _jsx(Button, { className: "lab-actions-bar__control", variant: "ghost", appearance: "toolbar", controlSize: "icon", tabIndex: -1, children: _jsx(MoreHorizontal, { size: 20, "aria-hidden": "true" }) }) })] }), errorLabel && (_jsx("span", { className: "lab-actions-bar__error", role: "alert", children: errorLabel }))] }));
 }
-const ActionControl = React.forwardRef(function LabActionControl({ action, size, loading, ...buttonProps }, ref) {
+const ActionControl = React.forwardRef(function ActionControl({ action, size, loading, ...buttonProps }, ref) {
     const iconOnly = action.display === 'icon' && (action.type === 'toggle' || !!action.icon);
     const blocked = action.disabled || (action.type === 'group' && !action.actions.length);
-    return (_jsxs(LabButton, { ...buttonProps, ref: ref, className: "lab-actions-bar__control", variant: action.destructive
+    return (_jsxs(Button, { ...buttonProps, ref: ref, className: "lab-actions-bar__control", variant: action.destructive
             ? 'destructive'
             : (action.variant ?? (action.type === 'toggle' && action.checked ? 'elevated' : 'ghost')), controlSize: iconOnly ? 'icon' : size, appearance: action.appearance ??
             (!action.destructive && (!action.variant || action.variant === 'ghost')
@@ -113,7 +113,7 @@ function GroupControl({ action, size, menu, }) {
         }, children: [_jsx(DropdownMenu.Trigger, { asChild: true, children: _jsx(ActionControl, { action: action, size: size }) }), _jsx(MenuSurface, { menu: menu, label: action.label, children: action.actions.map((child) => (_jsx(MenuAction, { action: child, menu: menu }, child.id))) })] }));
 }
 function MenuSurface({ menu, label, children, }) {
-    return (_jsx(DropdownMenu.Portal, { container: menu.container, children: _jsx(LabPopoverSurface, { asChild: true, children: _jsx(DropdownMenu.Content, { className: "lab-actions-menu", "data-lab-actions-owner": menu.ownerId, "data-lab-corners": true, sideOffset: 8, collisionBoundary: menu.container ?? undefined, collisionPadding: 12, align: "end", "aria-label": label, children: children }) }) }));
+    return (_jsx(DropdownMenu.Portal, { container: menu.container, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(DropdownMenu.Content, { className: "lab-actions-menu", "data-lab-actions-owner": menu.ownerId, "data-lab-corners": true, sideOffset: 8, collisionBoundary: menu.container ?? undefined, collisionPadding: 12, align: "end", "aria-label": label, children: children }) }) }));
 }
 function MenuAction({ action, menu }) {
     const loading = action.loading || menu.pending.has(action.id);
@@ -131,6 +131,6 @@ function SubmenuAction({ action, menu }) {
             if (next && action.onOpen?.() === false)
                 return;
             setOpen(next);
-        }, children: [_jsxs(DropdownMenu.SubTrigger, { className: "lab-actions-menu__item", "data-lab-corners": true, disabled: action.disabled || action.loading || !action.actions.length, "aria-busy": action.loading || undefined, "data-destructive": action.destructive || action.variant === 'destructive' || undefined, textValue: action.label, children: [_jsx("span", { className: "lab-actions-menu__leading", "aria-hidden": "true", children: action.loading ? _jsx(PixelLoader, { size: 17, decorative: true }) : action.icon }), _jsx("span", { className: "lab-actions-menu__label", children: action.label }), _jsx(ChevronRight, { className: "lab-actions-menu__chevron lab-dir-flip", size: 16, "aria-hidden": "true" })] }), _jsx(DropdownMenu.Portal, { container: menu.container, children: _jsx(LabPopoverSurface, { asChild: true, children: _jsx(DropdownMenu.SubContent, { className: "lab-actions-menu", "data-lab-actions-owner": menu.ownerId, "data-lab-corners": true, sideOffset: 4, collisionBoundary: menu.container ?? undefined, collisionPadding: 12, "aria-label": action.label, children: action.actions.map((child) => (_jsx(MenuAction, { action: child, menu: menu }, child.id))) }) }) })] }));
+        }, children: [_jsxs(DropdownMenu.SubTrigger, { className: "lab-actions-menu__item", "data-lab-corners": true, disabled: action.disabled || action.loading || !action.actions.length, "aria-busy": action.loading || undefined, "data-destructive": action.destructive || action.variant === 'destructive' || undefined, textValue: action.label, children: [_jsx("span", { className: "lab-actions-menu__leading", "aria-hidden": "true", children: action.loading ? _jsx(PixelLoader, { size: 17, decorative: true }) : action.icon }), _jsx("span", { className: "lab-actions-menu__label", children: action.label }), _jsx(ChevronRight, { className: "lab-actions-menu__chevron lab-dir-flip", size: 16, "aria-hidden": "true" })] }), _jsx(DropdownMenu.Portal, { container: menu.container, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(DropdownMenu.SubContent, { className: "lab-actions-menu", "data-lab-actions-owner": menu.ownerId, "data-lab-corners": true, sideOffset: 4, collisionBoundary: menu.container ?? undefined, collisionPadding: 12, "aria-label": action.label, children: action.actions.map((child) => (_jsx(MenuAction, { action: child, menu: menu }, child.id))) }) }) })] }));
 }
 //# sourceMappingURL=actions-bar.js.map

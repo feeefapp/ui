@@ -1,19 +1,19 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
-import { LabGlassGroup } from '../scaffold.js';
+import { GlassGroup } from '../scaffold.js';
 import { animateLayoutFrom, snapshotLayout } from '../physics/layout-group.js';
-import { LabMotionValue, prefersReducedMotion } from '../physics/motion-value.js';
-import { LAB_SPRINGS, springTiming } from '../physics/spring.js';
+import { MotionValue, prefersReducedMotion } from '../physics/motion-value.js';
+import { SPRINGS, springTiming } from '../physics/spring.js';
 import { cn } from '../utils.js';
 import './tab-view.css';
-const SNAPPY = springTiming(LAB_SPRINGS.snappy);
+const SNAPPY = springTiming(SPRINGS.snappy);
 /**
  * App-level tabs, like iOS: each tab keeps its own content (and stack) alive, a floating glass
  * tab bar switches between them, and while the person scrolls down it shrinks to the selected
  * tab so content gets the screen. Picking the current tab again returns it to the top.
  */
-export function LabTabView({ tabs, value, onChange, onReselect, minimize = 'scroll', accessory, label = 'Tabs', className, }) {
+export function TabView({ tabs, value, onChange, onReselect, minimize = 'scroll', accessory, label = 'Tabs', className, }) {
     const id = React.useId();
     const root = React.useRef(null);
     const bar = React.useRef(null);
@@ -50,7 +50,7 @@ export function LabTabView({ tabs, value, onChange, onReselect, minimize = 'scro
     };
     React.useLayoutEffect(() => {
         if (pending.current)
-            animateLayoutFrom(pending.current, { spring: LAB_SPRINGS.snappy });
+            animateLayoutFrom(pending.current, { spring: SPRINGS.snappy });
         pending.current = null;
     }, [minimized]);
     // Shrink while the person reads down; come back when they scroll up or reach the top.
@@ -84,7 +84,7 @@ export function LabTabView({ tabs, value, onChange, onReselect, minimize = 'scro
     const setMinimizedMorphRef = React.useRef(setMinimizedMorph);
     setMinimizedMorphRef.current = setMinimizedMorph;
     // A switched-to panel fades in quickly; it never slides (tabs are siblings, not depth).
-    const fade = React.useRef(new LabMotionValue(1, 0.004)).current;
+    const fade = React.useRef(new MotionValue(1, 0.004)).current;
     const previous = React.useRef(value);
     React.useLayoutEffect(() => {
         if (previous.current === value)
@@ -138,7 +138,7 @@ export function LabTabView({ tabs, value, onChange, onReselect, minimize = 'scro
                         panels.current.set(tab.id, el);
                     else
                         panels.current.delete(tab.id);
-                }, id: `${id}-panel-${tab.id}`, role: "tabpanel", "aria-labelledby": `${id}-tab-${tab.id}`, className: "lab-tab-panel", "data-active": tab.id === value || undefined, inert: tab.id !== value || undefined, children: tab.content }, tab.id)) : null), _jsxs("div", { ref: chrome, className: "lab-tab-chrome", "data-minimized": minimized || undefined, children: [accessory && (_jsx(LabGlassGroup, { className: "lab-tab-accessory", "data-lab-tab-piece": "", children: accessory })), _jsx(LabGlassGroup, { ref: bar, className: "lab-tab-bar", role: "tablist", "aria-label": label, "data-lab-tab-piece": "", onKeyDown: onKeyDown, onClick: () => minimized && setMinimizedMorph(false), children: tabs.map((tab) => {
+                }, id: `${id}-panel-${tab.id}`, role: "tabpanel", "aria-labelledby": `${id}-tab-${tab.id}`, className: "lab-tab-panel", "data-active": tab.id === value || undefined, inert: tab.id !== value || undefined, children: tab.content }, tab.id)) : null), _jsxs("div", { ref: chrome, className: "lab-tab-chrome", "data-minimized": minimized || undefined, children: [accessory && (_jsx(GlassGroup, { className: "lab-tab-accessory", "data-lab-tab-piece": "", children: accessory })), _jsx(GlassGroup, { ref: bar, className: "lab-tab-bar", role: "tablist", "aria-label": label, "data-lab-tab-piece": "", onKeyDown: onKeyDown, onClick: () => minimized && setMinimizedMorph(false), children: tabs.map((tab) => {
                             const selected = tab.id === value;
                             return (_jsxs("button", { id: `${id}-tab-${tab.id}`, type: "button", role: "tab", className: "lab-tab", "aria-selected": selected, "aria-controls": `${id}-panel-${tab.id}`, tabIndex: selected ? 0 : -1, "data-selected": selected || undefined, onClick: (event) => {
                                     if (minimized) {

@@ -3,7 +3,7 @@
  * velocity on release. A least-squares fit over the last `window` ms smooths jitter; a pointer
  * that stopped before lifting reports 0, so a careful drop never flings.
  */
-export class LabVelocityTracker {
+export class VelocityTracker {
     window;
     stopAfter;
     maxSpeed;

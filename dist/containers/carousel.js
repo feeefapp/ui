@@ -2,11 +2,11 @@
 import { jsx as _jsx, Fragment as _Fragment, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { LabIconButton } from '../primitives/button.js';
-import { LabToolbarGroup } from '../toolbar.js';
+import { IconButton } from '../primitives/button.js';
+import { ToolbarGroup } from '../toolbar.js';
 import { attachPan } from '../physics/gesture.js';
-import { LabMotionValue, prefersReducedMotion } from '../physics/motion-value.js';
-import { LAB_SPRINGS } from '../physics/spring.js';
+import { MotionValue, prefersReducedMotion } from '../physics/motion-value.js';
+import { SPRINGS } from '../physics/spring.js';
 import { centeredIndex, flickTarget, slideEffect, slideProgress } from './carousel-model.js';
 import { cn } from '../utils.js';
 import './carousel.css';
@@ -16,7 +16,7 @@ import './carousel.css';
  * `--lab-carousel-progress` property for custom effects). A mouse can drag and flick it; the
  * flick lands on the slide its momentum projects to.
  */
-export function LabCarousel({ children, label, slideWidth = 0.82, gap = 12, align = 'center', effect = 'scale', index: controlled, onIndexChange, dots = true, controls = 'auto', className, }) {
+export function Carousel({ children, label, slideWidth = 0.82, gap = 12, align = 'center', effect = 'scale', index: controlled, onIndexChange, dots = true, controls = 'auto', className, }) {
     const slides = React.Children.toArray(children).filter(React.isValidElement);
     const track = React.useRef(null);
     const [current, setCurrent] = React.useState(controlled ?? 0);
@@ -98,7 +98,7 @@ export function LabCarousel({ children, label, slideWidth = 0.82, gap = 12, alig
         const el = track.current;
         if (!el)
             return;
-        const scroll = new LabMotionValue(0, 0.5);
+        const scroll = new MotionValue(0, 0.5);
         scroll.subscribe((v) => (el.scrollLeft = v));
         let start = 0;
         return attachPan(el, () => ({
@@ -117,7 +117,7 @@ export function LabCarousel({ children, label, slideWidth = 0.82, gap = 12, alig
                 const now = el.scrollLeft;
                 const offsets = slideEls().map((_, i) => now + deltaTo(i));
                 const target = flickTarget(now, velocity, offsets, live.current.current);
-                void scroll.animateTo(offsets[target], { spring: LAB_SPRINGS.release, velocity }).then(() => {
+                void scroll.animateTo(offsets[target], { spring: SPRINGS.release, velocity }).then(() => {
                     delete el.dataset.dragging;
                 });
             },
@@ -137,6 +137,6 @@ export function LabCarousel({ children, label, slideWidth = 0.82, gap = 12, alig
         event.preventDefault();
     };
     const width = typeof slideWidth === 'number' ? `${slideWidth * 100}%` : slideWidth;
-    return (_jsxs("section", { className: cn('lab-carousel', className), "aria-roledescription": "carousel", "aria-label": label, "data-controls": controls, "data-effect": effect, style: { '--lab-carousel-slide': width, '--lab-carousel-gap': `${gap}px` }, children: [_jsxs("div", { className: "lab-carousel-frame", children: [_jsx("div", { ref: track, className: "lab-carousel-track", "data-align": align, tabIndex: 0, "aria-label": `${label}, slide ${current + 1} of ${slides.length}`, onKeyDown: onKeyDown, children: slides.map((slide, i) => (_jsx("div", { className: "lab-carousel-slide", role: "group", "aria-roledescription": "slide", "aria-label": `${i + 1} of ${slides.length}`, children: _jsx("div", { className: "lab-carousel-slide-body", children: slide }) }, slide.key ?? i))) }), controls !== 'never' && slides.length > 1 && (_jsxs(_Fragment, { children: [_jsx(LabToolbarGroup, { label: "Previous slide", className: "lab-carousel-control", "data-side": "start", children: _jsx(LabIconButton, { variant: "text", appearance: "toolbar", "aria-label": "Previous slide", disabled: current === 0, onClick: () => go(current - 1), children: _jsx(ChevronLeft, { className: "lab-dir-flip" }) }) }), _jsx(LabToolbarGroup, { label: "Next slide", className: "lab-carousel-control", "data-side": "end", children: _jsx(LabIconButton, { variant: "text", appearance: "toolbar", "aria-label": "Next slide", disabled: current === slides.length - 1, onClick: () => go(current + 1), children: _jsx(ChevronRight, { className: "lab-dir-flip" }) }) })] }))] }), dots && slides.length > 1 && (_jsx("div", { className: "lab-carousel-dots", role: "group", "aria-label": `${label} slides`, children: slides.map((_, i) => (_jsx("button", { type: "button", className: "lab-carousel-dot", "aria-label": `Go to slide ${i + 1}`, "aria-current": i === current || undefined, onClick: () => go(i) }, i))) }))] }));
+    return (_jsxs("section", { className: cn('lab-carousel', className), "aria-roledescription": "carousel", "aria-label": label, "data-controls": controls, "data-effect": effect, style: { '--lab-carousel-slide': width, '--lab-carousel-gap': `${gap}px` }, children: [_jsxs("div", { className: "lab-carousel-frame", children: [_jsx("div", { ref: track, className: "lab-carousel-track", "data-align": align, tabIndex: 0, "aria-label": `${label}, slide ${current + 1} of ${slides.length}`, onKeyDown: onKeyDown, children: slides.map((slide, i) => (_jsx("div", { className: "lab-carousel-slide", role: "group", "aria-roledescription": "slide", "aria-label": `${i + 1} of ${slides.length}`, children: _jsx("div", { className: "lab-carousel-slide-body", children: slide }) }, slide.key ?? i))) }), controls !== 'never' && slides.length > 1 && (_jsxs(_Fragment, { children: [_jsx(ToolbarGroup, { label: "Previous slide", className: "lab-carousel-control", "data-side": "start", children: _jsx(IconButton, { variant: "text", appearance: "toolbar", "aria-label": "Previous slide", disabled: current === 0, onClick: () => go(current - 1), children: _jsx(ChevronLeft, { className: "lab-dir-flip" }) }) }), _jsx(ToolbarGroup, { label: "Next slide", className: "lab-carousel-control", "data-side": "end", children: _jsx(IconButton, { variant: "text", appearance: "toolbar", "aria-label": "Next slide", disabled: current === slides.length - 1, onClick: () => go(current + 1), children: _jsx(ChevronRight, { className: "lab-dir-flip" }) }) })] }))] }), dots && slides.length > 1 && (_jsx("div", { className: "lab-carousel-dots", role: "group", "aria-label": `${label} slides`, children: slides.map((_, i) => (_jsx("button", { type: "button", className: "lab-carousel-dot", "aria-label": `Go to slide ${i + 1}`, "aria-current": i === current || undefined, onClick: () => go(i) }, i))) }))] }));
 }
 //# sourceMappingURL=carousel.js.map

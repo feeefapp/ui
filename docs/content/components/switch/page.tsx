@@ -1,4 +1,4 @@
-import { LabSlideSwitch } from '@feeef.dev/ui/primitives/slider'
+import { SlideSwitch } from '@feeef.dev/ui/primitives/slider'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground, jsx } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section } from '../../../src/blocks/prose'
@@ -21,7 +21,7 @@ function Overview() {
         render={(v) => (
           <div className="demo-row">
             <span aria-hidden="true">Cash on delivery</span>
-            <LabSlideSwitch
+            <SlideSwitch
               label="Cash on delivery"
               defaultChecked
               controlSize={v.controlSize as 'regular' | 'compact'}
@@ -35,7 +35,7 @@ function Overview() {
         )}
         code={(v) =>
           jsx(
-            'LabSlideSwitch',
+            'SlideSwitch',
             {
               label: 'Cash on delivery',
               checked: '__CHECKED__',
@@ -63,7 +63,7 @@ function Overview() {
           longer explanation, use a checkbox.
         </p>
         <p>
-          <C>LabSlideSwitch</C> shares the slider’s track, thumb and spring. It can be tapped to toggle,
+          <C>SlideSwitch</C> shares the slider’s track, thumb and spring. It can be tapped to toggle,
           or dragged; when dragged it settles on the side the thumb is released on.
         </p>
       </Section>
@@ -94,7 +94,7 @@ function Overview() {
         <p>
           A menu item or list row that already toggles a setting, such as a{' '}
           <C>menuitemcheckbox</C>, must not contain a second interactive switch. Draw{' '}
-          <C>LabSlideSwitchIndicator</C> inside it instead: the same picture and spring, with no role,
+          <C>SlideSwitchIndicator</C> inside it instead: the same picture and spring, with no role,
           no focus and <C>aria-hidden</C>. The row carries <C>aria-checked</C> and handles the click.
         </p>
       </Section>
@@ -111,7 +111,7 @@ function Overview() {
             'Use a switch inside a form that needs a Save button; use a checkbox.',
             'Ask for confirmation after every flip; confirm only destructive settings.',
             'Change the label text to describe the state (“On” / “Off”).',
-            'Nest a LabSlideSwitch inside a clickable row or menu item.',
+            'Nest a SlideSwitch inside a clickable row or menu item.',
           ]}
         />
       </Section>
@@ -153,9 +153,9 @@ export default definePage({
   group: 'Inputs',
   order: 4,
   summary: 'Switches turn a setting on or off immediately. They can be tapped or dragged and show a saving state.',
-  importLine: "import { LabSlideSwitch, LabSlideSwitchIndicator } from '@feeef.dev/ui/primitives/slider'",
+  importLine: "import { SlideSwitch, SlideSwitchIndicator } from '@feeef.dev/ui/primitives/slider'",
   source: 'src/primitives/slider.tsx',
-  api: ['LabSlideSwitch', 'LabSlideSwitchIndicator'],
+  api: ['SlideSwitch', 'SlideSwitchIndicator'],
   keywords: ['toggle', 'on off', 'setting', 'slide switch', 'indicator', 'menu'],
   Overview,
   examples: examplesFrom(
@@ -164,8 +164,8 @@ export default definePage({
   ),
   Preview: () => (
     <>
-      <LabSlideSwitch label="Preview on" defaultChecked />
-      <LabSlideSwitch label="Preview off" />
+      <SlideSwitch label="Preview on" defaultChecked />
+      <SlideSwitch label="Preview off" />
     </>
   ),
 })

@@ -28,29 +28,29 @@ Peer dependencies: `react`, `react-dom` (19), `lucide-react`, `intl-messageforma
 ## Use
 
 ```tsx
-import { LabProvider, LabButton, LabTextField } from '@feeef.dev/ui'
+import { Provider, Button, TextField } from '@feeef.dev/ui'
 // Deep imports for everything else, same layout as src/:
-import { LabScaffold } from '@feeef.dev/ui/workspace/scaffold'
-import { LabDock } from '@feeef.dev/ui/dock'
+import { Scaffold } from '@feeef.dev/ui/workspace/scaffold'
+import { Dock } from '@feeef.dev/ui/dock'
 import '@feeef.dev/ui/workspace.css'
 
 export function App({ locale, translations, url, children }) {
   return (
-    <LabProvider
+    <Provider
       i18n={{ locale, translations, url, navigate: (to) => router.visit(to) }}
       services={{ navigate: (to) => router.visit(to) }}
     >
       {children}
-    </LabProvider>
+    </Provider>
   )
 }
 ```
 
-`LabProvider` composes services → i18n → theme → scaffold and loads the brand fonts.
+`Provider` composes services → i18n → theme → scaffold and loads the brand fonts.
 
 - **i18n**: the host owns `locale`, `dir`, `availableLocales` and a flat `translations` map
   (`{ "lab.common.close": "…" }`, ICU messages). The kit ships English/Arabic/French defaults
-  for its own strings (`LAB_UI_MESSAGES`); host translations override them. A language change
+  for its own strings (`UI_MESSAGES`); host translations override them. A language change
   calls `navigate(url + '?hl=<code>')` so the host can persist it. `url` defaults to
   `window.location`.
 - **services**: `navigate`, `preferences` (storage), `copyText`, `readClipboard`,
@@ -63,13 +63,13 @@ export function App({ locale, translations, url, children }) {
 Each app picks its look once and passes it down; components never branch on it.
 
 ```tsx
-import type { LabThemeConfig } from '@feeef.dev/ui/theme-config'
+import type { ThemeConfig } from '@feeef.dev/ui/theme-config'
 
-export const theme: LabThemeConfig = { palette: 'mono', density: 'compact', radius: 0.35 }
+export const theme: ThemeConfig = { palette: 'mono', density: 'compact', radius: 0.35 }
 
-<LabProvider theme={theme}>…</LabProvider>
+<Provider theme={theme}>…</Provider>
 // Server-rendered hosts also put it on <html> for the first paint:
-<html {...labThemeAttributes(theme)}>
+<html {...themeAttributes(theme)}>
 ```
 
 | Option | Values | What it drives |
@@ -78,7 +78,7 @@ export const theme: LabThemeConfig = { palette: 'mono', density: 'compact', radi
 | `density` | `comfortable` (default), `compact` | `--lab-control-height`, `--lab-control-compact`, `--lab-field-height`, `--lab-control-small`, `--lab-row-height`, `--lab-control-padding`, `--lab-space-3…8`, `--lab-sidebar-width`, `--lab-navigation-rail-width` (coarse pointers keep 44px targets) |
 | `radius` | number, `1` default, `0` square, max `1.5` | `--lab-radius-scale`, which multiplies every radius token and component radius (circles such as radios stay round) |
 
-How it works: `labThemeAttributes()` / `applyLabThemeConfig()` set `data-lab-palette`,
+How it works: `themeAttributes()` / `applyThemeConfig()` set `data-lab-palette`,
 `data-lab-density` and `--lab-radius-scale` on `<html>`; the kit CSS reads them. To add a
 palette or density, add its token block next to the existing ones (`theme-tokens.css`,
 `system.css`) and extend the union in `theme-config.ts`. Kit CSS must use these tokens, never
@@ -117,14 +117,14 @@ Then bump each consumer's `"@feeef.dev/ui": "github:feeefapp/ui#vX.Y.Z"` and rei
 ## Rules
 
 See [AGENTS.md](AGENTS.md). In short: change shared look and behaviour here, never by
-copying or overriding kit files inside an app; keep platform access behind `LabServices`;
+copying or overriding kit files inside an app; keep platform access behind `Services`;
 update the `/ui` reference in the Lab when a public primitive changes.
 
 ## Scaffold brand transitions
 
-`LabMovingBrand` from `@feeef.dev/ui/workspace/moving-brand` keeps one visual wordmark
-following the accessible logo links as `LabScaffold` changes sidebar mode or opens its drawer.
-Mount it under `LabScaffold` and pass a `host` ref for the surrounding workspace. Mark the
+`MovingBrand` from `@feeef.dev/ui/workspace/moving-brand` keeps one visual wordmark
+following the accessible logo links as `Scaffold` changes sidebar mode or opens its drawer.
+Mount it under `Scaffold` and pass a `host` ref for the surrounding workspace. Mark the
 sidebar link `data-tool-brand-anchor="side"` and the compact header link
 `data-tool-brand-anchor="header"`; both retain their accessible names and navigation.
 Anchors reserve 104 × 26 pixels for the logo; product suffixes sit outside the anchor.
@@ -136,8 +136,8 @@ cannot collapse the workspace navigation rail.
 
 ## Prompt composers
 
-`@feeef.dev/ui/composer/composer` exports `LabPromptComposer`, `LabComposerCard`,
-`LabComposerHint`, and `useComposerLayout`. These are the same measured card and
+`@feeef.dev/ui/composer/composer` exports `PromptComposer`, `ComposerCard`,
+`ComposerHint`, and `useComposerLayout`. These are the same measured card and
 input layout used by Lab Chat and Image and the Cloud playground.
 
 Use controlled `value`/`onValueChange`, `onSubmit`, an accessible `label`,
@@ -146,30 +146,30 @@ Use controlled `value`/`onValueChange`, `onSubmit`, an accessible `label`,
 remeasures when host tool content changes. Enter sends, Shift+Enter inserts a
 line, and IME composition preserves Enter. Busy, disabled and submitDisabled
 gate keyboard submission. Native selection and the editable node remain stable.
-Advanced editors can keep their field and controls using `LabComposerCard` with
+Advanced editors can keep their field and controls using `ComposerCard` with
 `useComposerLayout`; reusable geometry and motion stay in the package.
 
-Composer file-drop outlines appear only with `LabPromptComposer dropActive` (or `LabComposerCard data-dragging`). Focus keeps the normal shared focus treatment.
+Composer file-drop outlines appear only with `PromptComposer dropActive` (or `ComposerCard data-dragging`). Focus keeps the normal shared focus treatment.
 
 Measured composers also expand when toolbar slots leave less than eight glyphs of editing space, keeping an empty prompt usable on narrow screens.
 
 ### Expanding toolbar search
 
-`LabToolbarSearch` (`@feeef.dev/ui/toolbar-search`) is the reusable toolbar search pattern.
+`ToolbarSearch` (`@feeef.dev/ui/toolbar-search`) is the reusable toolbar search pattern.
 Put adjacent filter/navigation bubbles in `children` and persistent actions in `trailing`.
-The same glass host grows from its search icon into a full-width `LabRawInput`; never nest a
+The same glass host grows from its search icon into a full-width `RawInput`; never nest a
 painted text field inside it. Input text is not scaled. Closing/Escape clears the query and
 restores the search button's focus. Filter state remains owned by the caller. The material
 morph supports interrupted reversals, logical directions, resize and reduced motion.
 
 ```tsx
-<LabToolbarSearch label="Search models" value={query} onValueChange={setQuery}
-  trailing={<LabToolbarGroup label="Close">…</LabToolbarGroup>}>
-  <LabFilterBar {...filters} />
-</LabToolbarSearch>
+<ToolbarSearch label="Search models" value={query} onValueChange={setQuery}
+  trailing={<ToolbarGroup label="Close">…</ToolbarGroup>}>
+  <FilterBar {...filters} />
+</ToolbarSearch>
 ```
 
-Search across Lab and Cloud uses `LabToolbarSearch`, including list filters, catalogs, sidebar
+Search across Lab and Cloud uses `ToolbarSearch`, including list filters, catalogs, sidebar
 history, and model/voice pickers. Command palettes can pass `renderInput` to retain their own
 combobox registration; the shared surface still owns search interaction and geometry.
 `inputRef` and `onInputKeyDown` preserve catalog focus and arrow navigation. `defaultExpanded`
@@ -180,7 +180,7 @@ retargeting on resize. Adjacent controls occupy a stable grid cell throughout th
 Their visibility interval never overlaps the editor's; closing text is retained until the
 editor is invisible. Reduced motion snaps to the final geometry.
 
-Speech cards are shared through `@feeef.dev/ui/speech/block`. `LabSpeechBlock` owns the Lab voice-page material, typing texture, one-row toolbar and accessible drag handle; hosts supply voice/actions and native editors. Use stable block keys and pass `onMove` as one state edit. `speech/block-order` preserves whole block identity and measured mixed-height slots. Pointer drag auto-scrolls the nearest LabScrollArea; Up/Down reorders from the handle and Escape cancels. Lab `/voice` and `/ui` examples use this same component.
+Speech cards are shared through `@feeef.dev/ui/speech/block`. `SpeechBlock` owns the Lab voice-page material, typing texture, one-row toolbar and accessible drag handle; hosts supply voice/actions and native editors. Use stable block keys and pass `onMove` as one state edit. `speech/block-order` preserves whole block identity and measured mixed-height slots. Pointer drag auto-scrolls the nearest ScrollArea; Up/Down reorders from the handle and Escape cancels. Lab `/voice` and `/ui` examples use this same component.
 
 Image studios share `image/freeform-board` (pointer pan, pinch/keyboard-modified zoom, measured card fitting, versions and pending/error states) and `image/prompt-composer` (the Lab compact-to-expanded composer, references, clipboard and output settings). Hosts supply model/provider capabilities and billing actions; omit `onEnhance` when no prompt assistant is configured. `image/workspace` bounds that same canvas inside an application panel and measures floating toolbar/composer insets with 12px edges. Lab `/image` and Cloud consume these modules directly.
 

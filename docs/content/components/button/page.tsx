@@ -1,5 +1,5 @@
 import { Plus } from 'lucide-react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { Button } from '@feeef.dev/ui/primitives/button'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground, jsx } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
@@ -22,7 +22,7 @@ function Overview() {
       <Playground
         controls={controls}
         render={(v) => (
-          <LabButton
+          <Button
             variant={v.variant as (typeof VARIANTS)[number]}
             controlSize={v.controlSize as 'regular' | 'compact' | 'inline'}
             loading={v.loading}
@@ -30,11 +30,11 @@ function Overview() {
           >
             {v.icon && <Plus size={18} />}
             {v.label}
-          </LabButton>
+          </Button>
         )}
         code={(v) =>
           jsx(
-            'LabButton',
+            'Button',
             { variant: v.variant, controlSize: v.controlSize, loading: v.loading, disabled: v.disabled },
             v.icon ? `<Plus size={18} />\n${v.label}` : v.label,
             { controlSize: 'regular' }
@@ -80,7 +80,7 @@ function Overview() {
           ]}
           dontItems={[
             'Put two filled buttons side by side; make the second one tonal or text.',
-            'Use an icon-only button without an aria-label (LabIconButton requires one).',
+            'Use an icon-only button without an aria-label (IconButton requires one).',
             'Style a button with your own classes; pick a variant and size instead.',
             'Nest interactive elements inside a button.',
           ]}
@@ -89,7 +89,7 @@ function Overview() {
 
       <Section title="Accessibility">
         <p>
-          <C>LabButton</C> renders a native <C>{'<button type="button">'}</C>, so it keeps form semantics
+          <C>Button</C> renders a native <C>{'<button type="button">'}</C>, so it keeps form semantics
           and keyboard behavior. <C>loading</C> sets <C>aria-busy</C>; <C>disabled</C> and <C>loading</C>{' '}
           both set <C>aria-disabled</C> and swallow clicks, keys and middle-clicks, including on an{' '}
           <C>asChild</C> link. A toggle button should set <C>aria-pressed</C>, which also paints its
@@ -104,7 +104,7 @@ function Overview() {
         />
         <Callout title="Icon-only buttons">
           <p>
-            <C>LabIconButton</C> makes <C>aria-label</C> a required prop. Use a short noun or verb, like
+            <C>IconButton</C> makes <C>aria-label</C> a required prop. Use a short noun or verb, like
             “Settings” or “Delete order”.
           </p>
         </Callout>
@@ -120,9 +120,9 @@ export default definePage({
   group: 'Actions',
   order: 1,
   summary: 'Buttons start actions. Seven variants express emphasis; three sizes fit forms, toolbars and text.',
-  importLine: "import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'",
+  importLine: "import { Button, IconButton } from '@feeef.dev/ui/primitives/button'",
   source: 'src/primitives/button.tsx',
-  api: ['LabButton', 'LabIconButton'],
+  api: ['Button', 'IconButton'],
   keywords: ['icon button', 'link', 'cta', 'submit', 'loading'],
   Overview,
   examples: examplesFrom(
@@ -131,8 +131,8 @@ export default definePage({
   ),
   Preview: () => (
     <>
-      <LabButton variant="filled">Save</LabButton>
-      <LabButton variant="text">Cancel</LabButton>
+      <Button variant="filled">Save</Button>
+      <Button variant="text">Cancel</Button>
     </>
   ),
 })

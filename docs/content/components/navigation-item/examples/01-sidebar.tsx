@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { BarChart3, Package, Settings, ShoppingBag, Truck, Users } from 'lucide-react'
-import { LabNavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
+import { NavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
 import '../nav-demo.css'
 
 const MAIN = [
@@ -17,7 +17,7 @@ const MORE = [
 export default function Sidebar() {
   const [page, setPage] = useState('Orders')
   const item = ({ label, icon }: { label: string; icon: ReactNode }) => (
-    <LabNavigationItem
+    <NavigationItem
       key={label}
       compact={false}
       label={label}

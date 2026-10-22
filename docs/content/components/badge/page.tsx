@@ -1,4 +1,4 @@
-import { LabProBadge } from '@feeef.dev/ui/primitives/badge'
+import { ProBadge } from '@feeef.dev/ui/primitives/badge'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Callout, DoDont, Section } from '../../../src/blocks/prose'
 import { C } from '../../../src/blocks/code'
@@ -8,19 +8,19 @@ function Overview() {
     <>
       <Section title="Usage">
         <p>
-          <C>LabProBadge</C> is a small lock icon with the word “PRO”. Put it after the label of an
+          <C>ProBadge</C> is a small lock icon with the word “PRO”. Put it after the label of an
           action or a feature that needs a paid plan, so people see the requirement before they click.
           It takes no props: the text, icon and size are fixed so every paid feature reads the same.
         </p>
         <div className="docs-stage" style={{ minHeight: 0, padding: 24 }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            Voice cloning <LabProBadge />
+            Voice cloning <ProBadge />
           </span>
         </div>
         <Callout title="Free and Pro tags on models">
           <p>
             Model pickers show access with their own Free / Pro tags (<C>access</C> on a ladder stop).
-            Use <C>LabProBadge</C> for features, not for model rows.
+            Use <C>ProBadge</C> for features, not for model rows.
           </p>
         </Callout>
       </Section>
@@ -58,9 +58,9 @@ export default definePage({
   group: 'Containment',
   order: 60,
   summary: 'A small “PRO” tag that marks actions and features which need a paid plan.',
-  importLine: "import { LabProBadge } from '@feeef.dev/ui/primitives/badge'",
+  importLine: "import { ProBadge } from '@feeef.dev/ui/primitives/badge'",
   source: 'src/primitives/badge.tsx',
-  api: ['LabProBadge'],
+  api: ['ProBadge'],
   keywords: ['pro', 'plan', 'paid', 'upgrade', 'lock', 'tag', 'chip'],
   Overview,
   examples: examplesFrom(
@@ -69,7 +69,7 @@ export default definePage({
   ),
   Preview: () => (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-      Voice cloning <LabProBadge />
+      Voice cloning <ProBadge />
     </span>
   ),
 })

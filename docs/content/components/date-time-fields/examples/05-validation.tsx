@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabDateField } from '@feeef.dev/ui/primitives/temporal-field'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { DateField } from '@feeef.dev/ui/primitives/temporal-field'
 
 const isFriday = (value: string) => new Date(`${value}T12:00`).getDay() === 5
 
@@ -15,7 +15,7 @@ export default function Validation() {
         setStatus(`Delivery scheduled for ${date}.`)
       }}
     >
-      <LabDateField
+      <DateField
         hint="Delivery date"
         name="deliveryDate"
         value={date}
@@ -28,9 +28,9 @@ export default function Validation() {
             : null
         }
       />
-      <LabButton variant="filled" type="submit">
+      <Button variant="filled" type="submit">
         Schedule delivery
-      </LabButton>
+      </Button>
       <p role="status">{status}</p>
     </form>
   )

@@ -1,14 +1,14 @@
 import { useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabTemporalFilterEditor } from '@feeef.dev/ui/filters/temporal-editor'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { TemporalFilterEditor } from '@feeef.dev/ui/filters/temporal-editor'
 import {
   readTemporalForm,
   validateTemporal,
-  type LabTemporalValue,
+  type TemporalValue,
 } from '@feeef.dev/ui/filters/temporal'
 
 export default function InAForm() {
-  const [draft, setDraft] = useState<LabTemporalValue>(null)
+  const [draft, setDraft] = useState<TemporalValue>(null)
   const [status, setStatus] = useState('Choose the hours couriers can pick up parcels.')
   return (
     <form
@@ -21,10 +21,10 @@ export default function InAForm() {
         setStatus(error ?? `Saved pickup hours: ${JSON.stringify(value)}`)
       }}
     >
-      <LabTemporalFilterEditor config={{ type: 'timeRange' }} value={draft} onChange={setDraft} />
-      <LabButton variant="filled" type="submit">
+      <TemporalFilterEditor config={{ type: 'timeRange' }} value={draft} onChange={setDraft} />
+      <Button variant="filled" type="submit">
         Save pickup hours
-      </LabButton>
+      </Button>
       <p role="status">{status}</p>
     </form>
   )

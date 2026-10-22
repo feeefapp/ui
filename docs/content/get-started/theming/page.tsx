@@ -1,15 +1,15 @@
-import { LabThemeSwitch, useLabTheme } from '@feeef.dev/ui/theme'
+import { ThemeSwitch, useTheme } from '@feeef.dev/ui/theme'
 import { definePage } from '../../../src/model'
 import { C, Code } from '../../../src/blocks/code'
 import { Callout, DoDont, Lead, Section, Table } from '../../../src/blocks/prose'
 import { Link } from '../../../src/router'
 
 function ModeDemo() {
-  const { mode, resolvedMode } = useLabTheme()
+  const { mode, resolvedMode } = useTheme()
   return (
     <div className="docs-stage">
       <div className="demo-row">
-        <LabThemeSwitch />
+        <ThemeSwitch />
         <span>
           mode <C>{mode}</C> · resolved <C>{resolvedMode}</C>
         </span>
@@ -29,13 +29,13 @@ function Overview() {
 
       <Section title="Theme config">
         <Code
-          code={`import type { LabThemeConfig } from '@feeef.dev/ui/theme-config'
-import { LabProvider } from '@feeef.dev/ui/provider'
+          code={`import type { ThemeConfig } from '@feeef.dev/ui/theme-config'
+import { Provider } from '@feeef.dev/ui/provider'
 
-export const theme: LabThemeConfig = { palette: 'lab', primary: '#2563eb', density: 'compact', radius: 0.6 }
+export const theme: ThemeConfig = { palette: 'lab', primary: '#2563eb', density: 'compact', radius: 0.6 }
 
 export function Root({ children }: { children: React.ReactNode }) {
-  return <LabProvider theme={theme}>{children}</LabProvider>
+  return <Provider theme={theme}>{children}</Provider>
 }`}
         />
         <Table
@@ -64,7 +64,7 @@ export function Root({ children }: { children: React.ReactNode }) {
           ]}
         />
         <p>
-          Unset options fall back to <C>LAB_THEME_DEFAULTS</C>:{' '}
+          Unset options fall back to <C>THEME_DEFAULTS</C>:{' '}
           <C>{"{ palette: 'lab', density: 'comfortable', radius: 1 }"}</C>. Try every combination live in
           Customize, in the top bar.
         </p>
@@ -73,23 +73,23 @@ export function Root({ children }: { children: React.ReactNode }) {
       <Section title="Light, dark and system">
         <p>
           Color mode is separate from the config because the reader chooses it, not the app.{' '}
-          <C>LabProvider</C> starts in <C>initialTheme</C> (default <C>system</C>, which follows the OS
+          <C>Provider</C> starts in <C>initialTheme</C> (default <C>system</C>, which follows the OS
           and updates when it changes) and remembers the reader’s choice in the <C>preferences</C>{' '}
           service under <C>feeef-lab-theme</C>.
         </p>
         <ModeDemo />
         <p>
-          <C>LabThemeSwitch</C> is a ready-made icon button that cycles system → light → dark. For your
-          own control, use <C>useLabTheme()</C>:
+          <C>ThemeSwitch</C> is a ready-made icon button that cycles system → light → dark. For your
+          own control, use <C>useTheme()</C>:
         </p>
         <Code
-          code={`import { useLabTheme } from '@feeef.dev/ui/theme'
-import { LabSlideSwitch } from '@feeef.dev/ui/primitives/slider'
+          code={`import { useTheme } from '@feeef.dev/ui/theme'
+import { SlideSwitch } from '@feeef.dev/ui/primitives/slider'
 
 function DarkModeToggle() {
-  const { resolvedMode, setMode } = useLabTheme()
+  const { resolvedMode, setMode } = useTheme()
   return (
-    <LabSlideSwitch
+    <SlideSwitch
       label="Dark mode"
       checked={resolvedMode === 'dark'}
       onCheckedChange={(dark) => setMode(dark ? 'dark' : 'light')}
@@ -115,7 +115,7 @@ function DarkModeToggle() {
         </p>
         <ul>
           <li>
-            <C>labThemeAttributes(theme)</C>: <C>data-lab-palette</C>, <C>data-lab-density</C> and the{' '}
+            <C>themeAttributes(theme)</C>: <C>data-lab-palette</C>, <C>data-lab-density</C> and the{' '}
             <C>--lab-radius-scale</C> style.
           </li>
           <li>
@@ -125,9 +125,9 @@ function DarkModeToggle() {
         </ul>
         <Code
           title="app/layout.tsx (Next.js)"
-          code={`import { labThemeAttributes } from '@feeef.dev/ui/theme-config'
+          code={`import { themeAttributes } from '@feeef.dev/ui/theme-config'
 import { theme } from './theme'
-import { Providers } from './providers' // 'use client' wrapper around LabProvider
+import { Providers } from './providers' // 'use client' wrapper around Provider
 
 const THEME_BOOT = \`(function(){try{var s=localStorage.getItem('feeef-lab-theme')||'system';
 var d=s==='dark'||(s==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);
@@ -136,7 +136,7 @@ catch(e){document.documentElement.setAttribute('data-lab-theme','light')}})()\`
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" {...labThemeAttributes(theme)} suppressHydrationWarning>
+    <html lang="en" {...themeAttributes(theme)} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
       </head>
@@ -178,14 +178,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
       <Section title="Applying a config outside React">
         <p>
-          <C>applyLabThemeConfig(element, config)</C> sets the same attributes imperatively. The provider
+          <C>applyThemeConfig(element, config)</C> sets the same attributes imperatively. The provider
           calls it on <C>document.documentElement</C>; use it yourself for a preview iframe or a
           standalone widget.
         </p>
         <Code
-          code={`import { applyLabThemeConfig } from '@feeef.dev/ui/theme-config'
+          code={`import { applyThemeConfig } from '@feeef.dev/ui/theme-config'
 
-applyLabThemeConfig(previewFrame.contentDocument!.documentElement, {
+applyThemeConfig(previewFrame.contentDocument!.documentElement, {
   palette: 'mono',
   radius: 0.5,
 })`}
@@ -243,6 +243,6 @@ export default definePage({
   title: 'Theming',
   order: 2,
   summary: 'Choose a palette, density and radius, support light and dark mode, and theme server-rendered pages.',
-  keywords: ['theme', 'LabThemeConfig', 'palette', 'mono', 'density', 'radius', 'dark mode', 'ssr', 'next.js', 'inertia', 'labThemeAttributes'],
+  keywords: ['theme', 'ThemeConfig', 'palette', 'mono', 'density', 'radius', 'dark mode', 'ssr', 'next.js', 'inertia', 'themeAttributes'],
   Overview,
 })

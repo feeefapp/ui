@@ -1,21 +1,21 @@
 import { Mic, Sparkles } from 'lucide-react'
-import { LabProBadge } from '@feeef.dev/ui/primitives/badge'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { ProBadge } from '@feeef.dev/ui/primitives/badge'
+import { Button } from '@feeef.dev/ui/primitives/button'
 
 export default function OnAButton() {
   const paid = false
   return (
     <div className="demo-row">
-      <LabButton variant="outlined">
+      <Button variant="outlined">
         <Mic size={18} />
         Clone a voice
-        {!paid && <LabProBadge />}
-      </LabButton>
-      <LabButton variant="outlined">
+        {!paid && <ProBadge />}
+      </Button>
+      <Button variant="outlined">
         <Sparkles size={18} />
         Design a voice
-        {!paid && <LabProBadge />}
-      </LabButton>
+        {!paid && <ProBadge />}
+      </Button>
     </div>
   )
 }

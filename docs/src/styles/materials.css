@@ -1,6 +1,6 @@
 /* Docs blocks on the kit's materials: content on opaque surfaces with the kit's panel radius and
    superellipse corners; tools float together in the kit's glass groups; long content scrolls in
-   LabScrollArea with its washes. Tokens only, so Customize (palette, radius, mode) reshapes them. */
+   ScrollArea with its washes. Tokens only, so Customize (palette, radius, mode) reshapes them. */
 
 .docs-surface,
 .docs-code,
@@ -27,7 +27,7 @@
   --lab-scroll-surface: var(--lab-surface);
 }
 .docs-code[data-layout='box'] {
-  /* Bounded height for LabScrollArea: the rows shown plus the floating toolbar's reservation. */
+  /* Bounded height for ScrollArea: the rows shown plus the floating toolbar's reservation. */
   height: calc(var(--docs-code-rows) * var(--docs-code-line) + 92px);
   overflow: hidden;
 }

@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { ArrowRight, Pencil } from 'lucide-react'
-import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
-import { LabOption, LabSelect } from '@feeef.dev/ui/primitives/select'
-import { LabModal } from '@feeef.dev/ui/primitives/modal'
-import { LabDock } from '@feeef.dev/ui/dock'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
+import { Option, Select } from '@feeef.dev/ui/primitives/select'
+import { Modal } from '@feeef.dev/ui/primitives/modal'
+import { Dock } from '@feeef.dev/ui/dock'
 import '../patterns.css'
 
 const phoneError = (phone: string) =>
@@ -33,13 +33,13 @@ function PhoneRow() {
             <small>Phone</small>
             {phone}
           </span>
-          <LabIconButton variant="text" aria-label="Edit phone" onClick={() => setDraft(phone)}>
+          <IconButton variant="text" aria-label="Edit phone" onClick={() => setDraft(phone)}>
             <Pencil />
-          </LabIconButton>
+          </IconButton>
         </>
       ) : (
         <form className="pt-inline-form" onSubmit={save}>
-          <LabTextField
+          <TextField
             hint="Phone"
             type="tel"
             autoFocus
@@ -54,12 +54,12 @@ function PhoneRow() {
               }
             }}
           />
-          <LabButton variant="text" type="button" onClick={() => { setDraft(null); setError(null) }}>
+          <Button variant="text" type="button" onClick={() => { setDraft(null); setError(null) }}>
             Cancel
-          </LabButton>
-          <LabButton variant="filled" type="submit">
+          </Button>
+          <Button variant="filled" type="submit">
             Save
-          </LabButton>
+          </Button>
         </form>
       )}
     </div>
@@ -78,7 +78,7 @@ function AddressRow() {
         <small>Delivery address</small>
         {address.street}, {address.commune}, {address.wilaya}
       </span>
-      <LabButton
+      <Button
         variant="tonal"
         onClick={() => {
           setDraft(address)
@@ -86,20 +86,20 @@ function AddressRow() {
         }}
       >
         Change address
-      </LabButton>
-      <LabModal
+      </Button>
+      <Modal
         open={open}
         close={close}
         label="Change delivery address"
         scrollable
         fitContent
         bottom={
-          <LabDock label="Address actions">
+          <Dock label="Address actions">
             <div className="pt-dock-row">
-              <LabButton variant="text" onClick={close}>
+              <Button variant="text" onClick={close}>
                 Cancel
-              </LabButton>
-              <LabButton
+              </Button>
+              <Button
                 variant="filled"
                 onClick={() => {
                   setAddress(draft)
@@ -107,21 +107,21 @@ function AddressRow() {
                 }}
               >
                 Save address
-              </LabButton>
+              </Button>
             </div>
-          </LabDock>
+          </Dock>
         }
       >
         <div style={{ display: 'grid', gap: 16 }}>
-          <LabSelect hint="Wilaya" value={draft.wilaya} onValueChange={(wilaya) => setDraft({ ...draft, wilaya: wilaya ?? draft.wilaya })}>
-            <LabOption>16 · Alger</LabOption>
-            <LabOption>31 · Oran</LabOption>
-            <LabOption>25 · Constantine</LabOption>
-          </LabSelect>
-          <LabTextField hint="Commune" value={draft.commune} onValueChange={(commune) => setDraft({ ...draft, commune })} />
-          <LabTextField hint="Street and building" value={draft.street} onValueChange={(street) => setDraft({ ...draft, street })} />
+          <Select hint="Wilaya" value={draft.wilaya} onValueChange={(wilaya) => setDraft({ ...draft, wilaya: wilaya ?? draft.wilaya })}>
+            <Option>16 · Alger</Option>
+            <Option>31 · Oran</Option>
+            <Option>25 · Constantine</Option>
+          </Select>
+          <TextField hint="Commune" value={draft.commune} onValueChange={(commune) => setDraft({ ...draft, commune })} />
+          <TextField hint="Street and building" value={draft.street} onValueChange={(street) => setDraft({ ...draft, street })} />
         </div>
-      </LabModal>
+      </Modal>
     </div>
   )
 }
@@ -136,10 +136,10 @@ export default function QuickEdit() {
           <small>Products, prices and delivery</small>3 items · 9 600 DA
         </span>
         {/* Many fields, long work, or something to come back to: a page of its own. */}
-        <LabButton variant="text">
+        <Button variant="text">
           Edit order
           <ArrowRight className="lab-dir-flip" />
-        </LabButton>
+        </Button>
       </div>
     </div>
   )

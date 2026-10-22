@@ -2,14 +2,14 @@
 
 import * as React from 'react'
 import { cn } from '../utils'
-import { LabRawInput } from '../primitives/raw-input'
+import { RawInput } from '../primitives/raw-input'
 import { useComposerLayout } from './use-composer-layout'
 import './composer.css'
 
 export { useComposerLayout } from './use-composer-layout'
 
 /** Shared Chat/Image card. Domain-specific controls remain in named layout slots. */
-export const LabComposerCard = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement> & {
+export const ComposerCard = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement> & {
   /** Two-row layout (field above, tools below) instead of one line. Sets `data-expanded`. */
   expanded?: boolean
   /** Ref to the inner layout grid, for `useComposerLayout`. */
@@ -18,7 +18,7 @@ export const LabComposerCard = React.forwardRef<HTMLDivElement, React.HTMLAttrib
   layoutClassName?: string
   /** Content inside the card, above the layout grid. */
   above?: React.ReactNode
-}>(function LabComposerCard({ expanded, layoutRef, layoutClassName, above, children, className, ...props }, ref) {
+}>(function ComposerCard({ expanded, layoutRef, layoutClassName, above, children, className, ...props }, ref) {
   return <div {...props} ref={ref} className={cn('lab-pc-card lab-light-edge', className)} data-expanded={expanded}>
     {above}
     <div ref={layoutRef} className={cn('lab-pc-layout', layoutClassName)}>{children}</div>
@@ -26,14 +26,14 @@ export const LabComposerCard = React.forwardRef<HTMLDivElement, React.HTMLAttrib
 })
 
 /** Placeholder that fades in word by word. Decorative (`aria-hidden`); label the field separately. */
-export function LabComposerHint({ text }: {
+export function ComposerHint({ text }: {
   /** The hint text. Changing it replays the animation. */
   text: string
 }) {
   return <span className="lab-pc-hint" aria-hidden="true" key={text}>{text.split(/(\s+)/).map((word, index) => /\s+/.test(word) ? word : <span key={index} style={{ animationDelay: `${Math.min(index, 40) * 28}ms` }}>{word}</span>)}</span>
 }
 
-export type LabPromptComposerProps = Omit<React.FormHTMLAttributes<HTMLFormElement>, 'onSubmit' | 'onChange' | 'children'> & {
+export type PromptComposerProps = Omit<React.FormHTMLAttributes<HTMLFormElement>, 'onSubmit' | 'onChange' | 'children'> & {
   /** The prompt text (controlled). */
   value: string
   /** Called with the new text on every edit. */
@@ -67,21 +67,21 @@ export type LabPromptComposerProps = Omit<React.FormHTMLAttributes<HTMLFormEleme
 }
 
 /** Canonical measured Lab composer with stable caret, growing input and responsive tool slots. */
-export function LabPromptComposer({ value, onValueChange, onSubmit, label, placeholder, disabled, busy, dropActive, submitDisabled, maxLength, above, tools, submit, footer, contentRevision, className, ...props }: LabPromptComposerProps) {
+export function PromptComposer({ value, onValueChange, onSubmit, label, placeholder, disabled, busy, dropActive, submitDisabled, maxLength, above, tools, submit, footer, contentRevision, className, ...props }: PromptComposerProps) {
   const { card, layout, field, expanded } = useComposerLayout(value, contentRevision)
   const canSubmit = !disabled && !busy && !submitDisabled && !!value.trim()
   return <form {...props} className={cn('lab-pc lab-prompt-composer', className)} aria-busy={busy || undefined} onSubmit={event => { event.preventDefault(); if (canSubmit) onSubmit() }}>
     {above}
-    <LabComposerCard data-dragging={dropActive || undefined} ref={card} layoutRef={layout} layoutClassName="lab-prompt-composer-layout" expanded={expanded}>
+    <ComposerCard data-dragging={dropActive || undefined} ref={card} layoutRef={layout} layoutClassName="lab-prompt-composer-layout" expanded={expanded}>
       <div className="lab-pc-field">
-        {!value && placeholder && <LabComposerHint text={placeholder} />}
-        <LabRawInput multiline autoResize={false} ref={field} className="lab-textarea" dir="auto" rows={1} value={value} maxLength={maxLength} aria-label={label} disabled={disabled} readOnly={busy} onValueChange={onValueChange} onKeyDown={event => {
+        {!value && placeholder && <ComposerHint text={placeholder} />}
+        <RawInput multiline autoResize={false} ref={field} className="lab-textarea" dir="auto" rows={1} value={value} maxLength={maxLength} aria-label={label} disabled={disabled} readOnly={busy} onValueChange={onValueChange} onKeyDown={event => {
           if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); if (canSubmit) onSubmit() }
         }} />
       </div>
       <span className="lab-pc-slot lab-prompt-composer-tools">{tools}</span>
       <span className="lab-pc-slot lab-pc-slot--send">{submit}</span>
-    </LabComposerCard>
+    </ComposerCard>
     {footer}
   </form>
 }

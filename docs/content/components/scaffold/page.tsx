@@ -1,15 +1,15 @@
 import { Package, Plus, ShoppingBag, Truck } from 'lucide-react'
 import {
-  LabScaffold,
-  LabScaffoldAppBar,
-  LabScaffoldSide,
-  LabScaffoldToggleButton,
-  type LabScaffoldSideMode,
+  Scaffold,
+  ScaffoldAppBar,
+  ScaffoldSide,
+  ScaffoldToggleButton,
+  type ScaffoldSideMode,
 } from '@feeef.dev/ui/workspace/scaffold'
-import { LabNavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
-import { LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { NavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { Dock } from '@feeef.dev/ui/dock'
+import { Button } from '@feeef.dev/ui/primitives/button'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
@@ -39,26 +39,26 @@ function PlaygroundScaffold(v: {
 }) {
   return (
     <div className="scaffold-demo-frame" style={{ height: 360 }}>
-      <LabScaffold
+      <Scaffold
         key={v.sideMode}
         compactBreakpoint={560}
         dir={v.dir as 'ltr' | 'rtl'}
-        defaultSideMode={v.sideMode as LabScaffoldSideMode}
+        defaultSideMode={v.sideMode as ScaffoldSideMode}
         compact={v.layout === 'auto' ? undefined : v.layout === 'compact'}
         side={(state) => {
           const rail = state.sideMode === 'rail' && !state.drawerOpen
           return (
-            <LabScaffoldSide
+            <ScaffoldSide
               leading={
                 <div className="scaffold-demo-brand">
                   {!rail && <strong>Atlas Store</strong>}
-                  {!state.drawerOpen && <LabScaffoldToggleButton />}
+                  {!state.drawerOpen && <ScaffoldToggleButton />}
                 </div>
               }
             >
               <nav aria-label="Store pages" className="scaffold-demo-nav">
                 {PAGES.map((item, index) => (
-                  <LabNavigationItem
+                  <NavigationItem
                     key={item.label}
                     compact={rail}
                     label={item.label}
@@ -68,36 +68,36 @@ function PlaygroundScaffold(v: {
                   />
                 ))}
               </nav>
-            </LabScaffoldSide>
+            </ScaffoldSide>
           )
         }}
         appBar={
           v.appBar
             ? (state) => (
-                <LabScaffoldAppBar
+                <ScaffoldAppBar
                   leading={
                     (state.compact || state.sideMode === 'hidden') && (
-                      <LabToolbarGroup label="Navigation">
-                        <LabScaffoldToggleButton />
-                      </LabToolbarGroup>
+                      <ToolbarGroup label="Navigation">
+                        <ScaffoldToggleButton />
+                      </ToolbarGroup>
                     )
                   }
                 >
-                  <LabToolbarGroup label="Current page">
+                  <ToolbarGroup label="Current page">
                     <span className="scaffold-demo-title">Orders</span>
-                  </LabToolbarGroup>
-                </LabScaffoldAppBar>
+                  </ToolbarGroup>
+                </ScaffoldAppBar>
               )
             : undefined
         }
         bottom={
           v.bottom ? (
-            <LabDock label="Order actions">
-              <LabButton variant="filled">
+            <Dock label="Order actions">
+              <Button variant="filled">
                 <Plus />
                 New order
-              </LabButton>
-            </LabDock>
+              </Button>
+            </Dock>
           ) : undefined
         }
       >
@@ -113,7 +113,7 @@ function PlaygroundScaffold(v: {
             )
           )}
         </div>
-      </LabScaffold>
+      </Scaffold>
     </div>
   )
 }
@@ -124,10 +124,10 @@ function playgroundCode(v: { sideMode: string; layout: string; dir: string; appB
     v.layout !== 'auto' && `  compact={${v.layout === 'compact'}}`,
     v.dir !== 'ltr' && `  dir="${v.dir}"`,
     '  side={(state) => <StoreSidebar rail={state.sideMode === \'rail\'} />}',
-    v.appBar && '  appBar={<LabScaffoldAppBar leading={<LabScaffoldToggleButton />}>Orders</LabScaffoldAppBar>}',
-    v.bottom && '  bottom={<LabDock label="Order actions">…</LabDock>}',
+    v.appBar && '  appBar={<ScaffoldAppBar leading={<ScaffoldToggleButton />}>Orders</ScaffoldAppBar>}',
+    v.bottom && '  bottom={<Dock label="Order actions">…</Dock>}',
   ].filter(Boolean)
-  const body = `<LabScaffold\n${props.join('\n')}\n>\n  <OrdersList />\n</LabScaffold>`
+  const body = `<Scaffold\n${props.join('\n')}\n>\n  <OrdersList />\n</Scaffold>`
   return `<div style={{ height: '100dvh' }}>\n  ${body.split('\n').join('\n  ')}\n</div>`
 }
 
@@ -164,7 +164,7 @@ function Overview() {
 
       <Section title="Anatomy">
         <p>
-          <C>LabScaffold</C> is the frame of a workspace page. It is pure structure: it draws the tinted
+          <C>Scaffold</C> is the frame of a workspace page. It is pure structure: it draws the tinted
           ground, sizes the sidebar and the content panel, and floats chrome over the content. It never
           renders a logo, an account menu or routes; you pass those in as slots.
         </p>
@@ -172,24 +172,24 @@ function Overview() {
         <ol>
           <li>
             <strong>Top row</strong> (<C>topSide</C>): optional full-width row above everything, usually a{' '}
-            <C>LabScaffoldTopBar</C>. Empty means no row.
+            <C>ScaffoldTopBar</C>. Empty means no row.
           </li>
           <li>
-            <strong>Sidebar</strong> (<C>side</C>): usually a <C>LabScaffoldSide</C>, transparent on the
+            <strong>Sidebar</strong> (<C>side</C>): usually a <C>ScaffoldSide</C>, transparent on the
             ground. 304px expanded, 64px as a rail, or hidden. In compact layouts it moves into a drawer.
           </li>
           <li>
             <strong>App bar</strong> (<C>appBar</C>): floats over the top of the content panel, usually a{' '}
-            <C>LabScaffoldAppBar</C> with <C>LabToolbarGroup</C>s.
+            <C>ScaffoldAppBar</C> with <C>ToolbarGroup</C>s.
           </li>
           <li>
             <strong>Content</strong> (<C>children</C>): the only part that scrolls. It sits in one rounded,
-            opaque panel inset 8px from the ground, inside a <C>LabScrollArea</C> that reserves room for the
+            opaque panel inset 8px from the ground, inside a <C>ScrollArea</C> that reserves room for the
             floats so the first and last rows can always scroll clear of them.
           </li>
           <li>
             <strong>Bottom</strong> (<C>bottom</C>): floats over the bottom of the content panel, usually a{' '}
-            <C>LabDock</C> with the page's main action.
+            <C>Dock</C> with the page's main action.
           </li>
         </ol>
       </Section>
@@ -199,7 +199,7 @@ function Overview() {
           head={['Mode', 'Width', 'Use it for']}
           rows={[
             [<C>expanded</C>, '304px (248px in compact density)', 'The default. Icons and labels, room for a brand and an account tile.'],
-            [<C>rail</C>, '64px (52px in compact density)', 'More room for content while keeping navigation one click away. Render LabNavigationItem with compact so labels become tooltips.'],
+            [<C>rail</C>, '64px (52px in compact density)', 'More room for content while keeping navigation one click away. Render NavigationItem with compact so labels become tooltips.'],
             [<C>hidden</C>, '0', 'Focused editors. Keep a way back: a toggle in the app bar or a top row.'],
           ]}
         />
@@ -214,7 +214,7 @@ function Overview() {
         <p>
           The scaffold measures its own width, not the window. Below <C>compactBreakpoint</C> (720px) it
           drops the sidebar column and renders <C>side</C> in a modal drawer attached to the start edge,
-          up to 320px wide. <C>LabScaffoldToggleButton</C> opens it, and its state is{' '}
+          up to 320px wide. <C>ScaffoldToggleButton</C> opens it, and its state is{' '}
           <C>drawerOpen</C> / <C>setDrawerOpen</C>. Close the drawer yourself when a navigation item is
           chosen. Pass <C>compact</C> to force either layout, for example in an embedded preview.
         </p>
@@ -224,24 +224,24 @@ function Overview() {
         <p>
           Every slot accepts either a node or a function of the scaffold state, so the sidebar can switch
           its items to rail mode and the app bar can show a toggle only when the sidebar is out of view.
-          Components rendered inside the scaffold can read the same state with <C>useLabScaffold()</C>.
+          Components rendered inside the scaffold can read the same state with <C>useScaffold()</C>.
         </p>
         <Code
           code={`const { compact, sideMode, setSideMode, cycleSide, drawerOpen, setDrawerOpen, sideId } =
-  useLabScaffold()
+  useScaffold()
 
-<LabScaffold
+<Scaffold
   side={(state) => <StoreSidebar rail={state.sideMode === 'rail' && !state.drawerOpen} />}
   appBar={(state) => (
-    <LabScaffoldAppBar
-      leading={(state.compact || state.sideMode === 'hidden') && <LabScaffoldToggleButton />}
+    <ScaffoldAppBar
+      leading={(state.compact || state.sideMode === 'hidden') && <ScaffoldToggleButton />}
     >
       Orders
-    </LabScaffoldAppBar>
+    </ScaffoldAppBar>
   )}
 >
   <OrdersList />
-</LabScaffold>`}
+</Scaffold>`}
         />
         <Table
           head={['Toggle action', 'What it does']}
@@ -257,14 +257,14 @@ function Overview() {
         <p>
           A scaffold fills its parent's height (<C>height: 100%</C>), so give the parent a bounded height,
           usually <C>100dvh</C> for a page. If the parent grows with its content, the content panel cannot
-          scroll. Use <C>renderViewport</C> when a page already owns a <C>LabScrollArea</C> (for example an
+          scroll. Use <C>renderViewport</C> when a page already owns a <C>ScrollArea</C> (for example an
           editor that needs the viewport ref); it receives the rendered <C>appBar</C> and <C>bottom</C> to
           float itself.
         </p>
         <Callout title="One scaffold per page">
           <p>
             Nest pages inside the content, not scaffolds inside scaffolds. Dialogs and sheets have their own
-            scroll areas (<C>LabModal scrollable</C>).
+            scroll areas (<C>Modal scrollable</C>).
           </p>
         </Callout>
       </Section>
@@ -317,10 +317,10 @@ export default definePage({
   summary:
     'The workspace frame: a sidebar that expands, collapses to a rail or hides, and one content panel with floating app bar and dock.',
   importLine:
-    "import { LabScaffold, LabScaffoldSide, LabScaffoldAppBar, LabScaffoldToggleButton } from '@feeef.dev/ui/workspace/scaffold'",
+    "import { Scaffold, ScaffoldSide, ScaffoldAppBar, ScaffoldToggleButton } from '@feeef.dev/ui/workspace/scaffold'",
   source: 'src/workspace/scaffold.tsx',
-  api: ['LabScaffold', 'LabScaffoldSide', 'LabScaffoldAppBar', 'LabScaffoldTopBar', 'LabScaffoldToggleButton'],
-  keywords: ['layout', 'sidebar', 'rail', 'drawer', 'app bar', 'shell', 'workspace', 'useLabScaffold'],
+  api: ['Scaffold', 'ScaffoldSide', 'ScaffoldAppBar', 'ScaffoldTopBar', 'ScaffoldToggleButton'],
+  keywords: ['layout', 'sidebar', 'rail', 'drawer', 'app bar', 'shell', 'workspace', 'useScaffold'],
   Overview,
   examples: examplesFrom(
     import.meta.glob('./examples/*.tsx', { eager: true }),

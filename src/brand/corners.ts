@@ -54,7 +54,7 @@ const radius = (value: string, width: number, height: number) => {
 
 /**
  * Optional SVG fallback for browsers without native corner-shape support.
- * LabProvider leaves this engine disabled unless enableCornerFallback is true.
+ * Provider leaves this engine disabled unless enableCornerFallback is true.
  * Interactive hosts are never clipped; cleanup restores their original paint.
  */
 export function installFoContinuousCorners(root?: Document | HTMLElement) {

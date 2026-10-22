@@ -1,19 +1,19 @@
 'use client'
 
 import * as React from 'react'
-import { useLabI18n } from '../i18n'
+import { useI18n } from '../i18n'
 import { X } from 'lucide-react'
 import { cn } from '../utils'
 import { usePresence, useLatched, type PresenceState } from '../motion'
-import { LabButton, LabIconButton } from './button'
-import { LabToolbarGroup } from '../toolbar'
-import { LabScrollArea, type LabScrollAreaProps } from '../scroll'
+import { Button, IconButton } from './button'
+import { ToolbarGroup } from '../toolbar'
+import { ScrollArea, type ScrollAreaProps } from '../scroll'
 
 /**
  * A modal dialog on the native `<dialog>`: focus is trapped, Escape and a backdrop click call
  * `close`, and focus returns to the opener after the exit transition.
  */
-export function LabModal({
+export function Modal({
   open = true,
   children,
   close,
@@ -52,14 +52,14 @@ export function LabModal({
   fitContent?: boolean
   /** Optional leading header content. The default is the dialog label as a quiet title. */
   top?: React.ReactNode
-  /** Floating bottom chrome for a scrollable dialog, usually a `LabDock` with the dialog's actions. */
+  /** Floating bottom chrome for a scrollable dialog, usually a `Dock` with the dialog's actions. */
   bottom?: React.ReactNode
   /** Focused after the native dialog opens; keep the ref stable across content edits. */
   initialFocusRef?: React.RefObject<HTMLElement | null>
   /** Focus restored after the dialog finishes closing, even if its original trigger unmounted. */
   returnFocusRef?: React.RefObject<HTMLElement | null>
-  /** Scrollable dialogs only: spacing passed to the inner `LabScrollArea`. */
-  scrollOptions?: Pick<LabScrollAreaProps, 'edgeGap' | 'contentPadding'>
+  /** Scrollable dialogs only: spacing passed to the inner `ScrollArea`. */
+  scrollOptions?: Pick<ScrollAreaProps, 'edgeGap' | 'contentPadding'>
 }) {
   const { mounted, state } = usePresence(open, 200)
   const content = useLatched(
@@ -82,13 +82,13 @@ export function LabModal({
   )
   if (!mounted) return null
   return (
-    <LabDialog state={state} close={close} {...content}>
+    <Dialog state={state} close={close} {...content}>
       {content.children}
-    </LabDialog>
+    </Dialog>
   )
 }
 
-function LabDialog({
+function Dialog({
   state,
   children,
   close,
@@ -120,9 +120,9 @@ function LabDialog({
   initialFocusRef?: React.RefObject<HTMLElement | null>
   /** Focus restored after the dialog finishes closing, even if its original trigger unmounted. */
   returnFocusRef?: React.RefObject<HTMLElement | null>
-  scrollOptions?: Pick<LabScrollAreaProps, 'edgeGap' | 'contentPadding'>
+  scrollOptions?: Pick<ScrollAreaProps, 'edgeGap' | 'contentPadding'>
 }) {
-  const { t } = useLabI18n()
+  const { t } = useI18n()
   const ref = React.useRef<HTMLDialogElement>(null)
   const bodyRef = React.useRef<HTMLDivElement>(null)
   const [contentHeight, setContentHeight] = React.useState<number>()
@@ -212,7 +212,7 @@ function LabDialog({
       }}
     >
       {scrollable ? (
-        <LabScrollArea
+        <ScrollArea
           {...scrollOptions}
           label={label}
           top={
@@ -227,16 +227,16 @@ function LabDialog({
               >
                 <div className="lab-modal-floating-title">
                   {top ?? (
-                    <LabToolbarGroup label="Dialog title">
+                    <ToolbarGroup label="Dialog title">
                       <h2 id={titleId} className="lab-modal-title">
                         {label}
                       </h2>
-                    </LabToolbarGroup>
+                    </ToolbarGroup>
                   )}
                 </div>
                 {showClose && (
-                  <LabToolbarGroup label="Dialog close action">
-                    <LabIconButton
+                  <ToolbarGroup label="Dialog close action">
+                    <IconButton
                       variant="text"
                       appearance="toolbar"
                       controlSize="compact"
@@ -246,8 +246,8 @@ function LabDialog({
                       onClick={close}
                     >
                       <X size={20} aria-hidden="true" />
-                    </LabIconButton>
-                  </LabToolbarGroup>
+                    </IconButton>
+                  </ToolbarGroup>
                 )}
               </header>
             )
@@ -261,11 +261,11 @@ function LabDialog({
           ) : (
             children
           )}
-        </LabScrollArea>
+        </ScrollArea>
       ) : (
         <>
           {!headerless && showClose && (
-            <LabButton
+            <Button
               variant="ghost"
               controlSize="icon"
               className="lab-close"
@@ -273,7 +273,7 @@ function LabDialog({
               onClick={close}
             >
               <X size={18} />
-            </LabButton>
+            </Button>
           )}
           {children}
         </>

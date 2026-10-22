@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
 
 const TAKEN = ['dzshop', 'feeef', 'store']
 
@@ -17,7 +17,7 @@ export default function ServerError() {
   }
   return (
     <div className="demo-column">
-      <LabTextField
+      <TextField
         hint="Store address"
         value={slug}
         onValueChange={(next) => {
@@ -28,9 +28,9 @@ export default function ServerError() {
         error={error}
         supportingText="Letters, numbers and dashes."
       />
-      <LabButton variant="tonal" loading={checking} onClick={check}>
+      <Button variant="tonal" loading={checking} onClick={check}>
         Check availability
-      </LabButton>
+      </Button>
     </div>
   )
 }

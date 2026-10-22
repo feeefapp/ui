@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { FoAnimatedLogo } from '@feeef.dev/ui/brand/logo'
-import { LabNavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
-import { LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabToolbarSearch } from '@feeef.dev/ui/toolbar-search'
-import { LabThemeSwitch } from '@feeef.dev/ui/theme'
-import { LabScaffoldSide, LabScaffoldToggleButton, useLabScaffold } from '@feeef.dev/ui/workspace/scaffold'
+import { NavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { ToolbarSearch } from '@feeef.dev/ui/toolbar-search'
+import { ThemeSwitch } from '@feeef.dev/ui/theme'
+import { ScaffoldSide, ScaffoldToggleButton, useScaffold } from '@feeef.dev/ui/workspace/scaffold'
 import { GROUPS, SECTIONS } from '../model'
 import { pageHref, pagesIn } from '../registry'
 import { Link } from '../router'
@@ -17,14 +17,14 @@ import pkg from '../../../package.json'
  * navigation items by section and group, appearance controls pinned at the bottom.
  */
 export function DocsSide({ path }: { path: string }) {
-  const { sideMode, drawerOpen, setDrawerOpen } = useLabScaffold()
+  const { sideMode, drawerOpen, setDrawerOpen } = useScaffold()
   const rail = sideMode === 'rail' && !drawerOpen
   const [query, setQuery] = useState('')
   const q = query.trim().toLowerCase()
   const matches = (text: string) => !q || text.toLowerCase().includes(q)
   let shown = 0
   return (
-    <LabScaffoldSide
+    <ScaffoldSide
       className="docs-side"
       leading={
         <div className="docs-side-leading">
@@ -36,16 +36,16 @@ export function DocsSide({ path }: { path: string }) {
                 <span className="docs-version">v{pkg.version}</span>
               </Link>
             )}
-            {!drawerOpen && <LabScaffoldToggleButton />}
+            {!drawerOpen && <ScaffoldToggleButton />}
           </div>
-          {!rail && <LabToolbarSearch label="Filter pages" value={query} onValueChange={setQuery} />}
+          {!rail && <ToolbarSearch label="Filter pages" value={query} onValueChange={setQuery} />}
         </div>
       }
       trailing={
-        <LabToolbarGroup label="Appearance" className="docs-side-trailing">
+        <ToolbarGroup label="Appearance" className="docs-side-trailing">
           <Customize />
-          <LabThemeSwitch />
-        </LabToolbarGroup>
+          <ThemeSwitch />
+        </ToolbarGroup>
       }
     >
       <nav aria-label="Documentation" className="docs-side-nav">
@@ -69,7 +69,7 @@ export function DocsSide({ path }: { path: string }) {
                     const href = pageHref(page)
                     const Icon = iconFor(page)
                     return (
-                      <LabNavigationItem
+                      <NavigationItem
                         key={page.id}
                         label={page.title}
                         icon={<Icon size={20} />}
@@ -87,6 +87,6 @@ export function DocsSide({ path }: { path: string }) {
         })}
         {shown === 0 && <p className="docs-side-empty">No pages match “{query}”.</p>}
       </nav>
-    </LabScaffoldSide>
+    </ScaffoldSide>
   )
 }

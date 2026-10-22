@@ -1,0 +1,95 @@
+/* GlassContainer: one material behind every bubble in a row. The container keeps the caller's
+layout; the material sits behind its children and reaches GLASS_MARGIN (32px) past its box so
+springs can overshoot. Never set filter, opacity, mask or clip-path on a container or its
+ancestors: they would stop the backdrop blur from seeing the page. */
+:where(.lab-glass-container) {
+  position: relative;
+  z-index: 0;
+}
+.lab-glass-material {
+  position: absolute;
+  inset: -32px;
+  z-index: -1;
+  pointer-events: none;
+}
+.lab-glass-material > * {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.lab-glass-backdrop {
+  background: var(--lab-glass-fill);
+  backdrop-filter: blur(18px) saturate(1.1);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  clip-path: inset(50%);
+}
+.lab-glass-edge,
+.lab-glass-rim {
+  fill: none;
+  stroke-width: 2;
+}
+.lab-glass-edge {
+  stroke: var(--lab-line);
+}
+.lab-glass-stop-light {
+  stop-color: var(--lab-glass-edge-light);
+}
+.lab-glass-stop-low {
+  stop-color: var(--lab-glass-edge-low);
+}
+.lab-glass-stop-none {
+  stop-color: transparent;
+}
+.lab-glass-shadow-shape {
+  fill: var(--lab-glass-shadow-color);
+}
+
+/* Once the container has measured, its bubbles stop painting their own glass. Layout (the 1px
+border) is unchanged, so nothing moves when the container takes over. */
+@media not (forced-colors: active) {
+  .lab-glass-container[data-glass-ready] .lab-glass-group[data-glass-member] {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .lab-glass-container[data-glass-ready] .lab-glass-group[data-glass-member]::before,
+  .lab-glass-container[data-glass-ready] .lab-glass-group[data-glass-member]::after {
+    display: none;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .lab-glass-backdrop {
+    background: var(--lab-surface);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .lab-glass-backdrop {
+    background: var(--lab-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .lab-glass-rim {
+    display: none;
+  }
+}
+@media (prefers-contrast: more) {
+  .lab-glass-backdrop {
+    background: var(--lab-surface);
+  }
+  .lab-glass-edge {
+    stroke: var(--lab-ink);
+  }
+  .lab-glass-rim {
+    display: none;
+  }
+}
+@media (forced-colors: active) {
+  .lab-glass-material {
+    display: none;
+  }
+}

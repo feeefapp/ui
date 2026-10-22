@@ -3,11 +3,11 @@ import { jsx as _jsx } from "react/jsx-runtime";
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FoAnimatedLogo } from '../brand/logo.js';
-import { useLabScaffold } from './scaffold.js';
+import { useScaffold } from './scaffold.js';
 import './moving-brand.css';
 /** One persistent visual follows the real, accessible logo links as navigation changes. */
-export function LabMovingBrand({ host, }) {
-    const state = useLabScaffold();
+export function MovingBrand({ host, }) {
+    const state = useScaffold();
     const visual = useRef(null);
     const [portal, setPortal] = useState(null);
     const position = useRef(null);

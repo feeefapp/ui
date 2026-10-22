@@ -1,5 +1,5 @@
 /** The config every unset option falls back to. `primary` unset means the palette's own color. */
-export const LAB_THEME_DEFAULTS = {
+export const THEME_DEFAULTS = {
     palette: 'lab',
     density: 'comfortable',
     radius: 1,
@@ -35,8 +35,8 @@ function resolve(config = {}) {
     const radius = Number.isFinite(config.radius) ? Math.min(1.5, Math.max(0, config.radius)) : 1;
     // `??`, not spread: the provider passes explicit `undefined` for unset options.
     return {
-        palette: config.palette ?? LAB_THEME_DEFAULTS.palette,
-        density: config.density ?? LAB_THEME_DEFAULTS.density,
+        palette: config.palette ?? THEME_DEFAULTS.palette,
+        density: config.density ?? THEME_DEFAULTS.density,
         radius,
         primary: config.primary && parseHexColor(config.primary) ? config.primary.toLowerCase() : null,
     };
@@ -55,10 +55,10 @@ function variables(theme) {
 /**
  * Attributes for the root `<html>` element (React props), e.g. in a Next.js root layout:
  * `data-lab-palette`, `data-lab-density`, `data-lab-primary` (when set) and the style variables.
- * Unset options use `LAB_THEME_DEFAULTS`; `radius` is clamped to 0–1.5 and an invalid `primary`
- * is ignored. Color mode (`data-lab-theme`) is not included; `LabThemeProvider` sets it.
+ * Unset options use `THEME_DEFAULTS`; `radius` is clamped to 0–1.5 and an invalid `primary`
+ * is ignored. Color mode (`data-lab-theme`) is not included; `ThemeProvider` sets it.
  */
-export function labThemeAttributes(config) {
+export function themeAttributes(config) {
     const theme = resolve(config);
     return {
         'data-lab-palette': theme.palette,
@@ -70,9 +70,9 @@ export function labThemeAttributes(config) {
 const SEED_VARS = ['--lab-seed', '--lab-seed-on', '--lab-seed-on-dark'];
 /**
  * Applies the config to an element (the provider uses `document.documentElement`): the same
- * attributes and variables as `labThemeAttributes`, set imperatively; a removed `primary` is cleared.
+ * attributes and variables as `themeAttributes`, set imperatively; a removed `primary` is cleared.
  */
-export function applyLabThemeConfig(element, config) {
+export function applyThemeConfig(element, config) {
     const theme = resolve(config);
     element.setAttribute('data-lab-palette', theme.palette);
     element.setAttribute('data-lab-density', theme.density);

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import {
-  LabDateRangeField,
-  LabDateTimeRangeField,
-  LabTimeRangeField,
+  DateRangeField,
+  DateTimeRangeField,
+  TimeRangeField,
 } from '@feeef.dev/ui/primitives/temporal-field'
 
 type Range = { from: string; to: string } | null
@@ -13,14 +13,14 @@ export default function Ranges() {
   const [promo, setPromo] = useState<Range>(null)
   return (
     <div className="demo-column">
-      <LabDateRangeField
+      <DateRangeField
         hint="Reporting period"
         value={period}
         onValueChange={setPeriod}
         clearable
       />
-      <LabTimeRangeField hint="Delivery hours" value={hours} onValueChange={setHours} />
-      <LabDateTimeRangeField
+      <TimeRangeField hint="Delivery hours" value={hours} onValueChange={setHours} />
+      <DateTimeRangeField
         hint="Flash sale window"
         value={promo}
         onValueChange={setPromo}

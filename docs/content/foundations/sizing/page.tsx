@@ -1,5 +1,5 @@
-import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
 import { Plus } from 'lucide-react'
 import { definePage } from '../../../src/model'
 import { C, Code } from '../../../src/blocks/code'
@@ -92,20 +92,20 @@ function Overview() {
         </p>
         <div className="fd-stage">
           <Measured label="regular">
-            <LabButton variant="filled">Save changes</LabButton>
+            <Button variant="filled">Save changes</Button>
           </Measured>
           <Measured label="compact">
-            <LabButton variant="tonal" controlSize="compact">
+            <Button variant="tonal" controlSize="compact">
               Save changes
-            </LabButton>
+            </Button>
           </Measured>
           <Measured label="icon">
-            <LabIconButton variant="outlined" aria-label="Add item">
+            <IconButton variant="outlined" aria-label="Add item">
               <Plus />
-            </LabIconButton>
+            </IconButton>
           </Measured>
           <Measured label="text field">
-            <LabTextField hint="Order number" />
+            <TextField hint="Order number" />
           </Measured>
         </div>
         <Callout title="Touch keeps 44px">

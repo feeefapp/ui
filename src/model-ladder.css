@@ -267,7 +267,7 @@ html[data-lab-theme] .lab-control.lab-ladder-reset[data-variant] {
 }
 
 /* Track ------------------------------------------------------------------------------------ */
-/* Geometry and interaction are shared with LabSlider. */
+/* Geometry and interaction are shared with Slider. */
 .lab-ladder-track {
   margin-top: 14px;
 }

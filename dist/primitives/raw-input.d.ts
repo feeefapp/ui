@@ -1,12 +1,12 @@
 import * as React from 'react';
 import './raw-input.css';
-export type LabInputElement = HTMLInputElement | HTMLTextAreaElement;
-export type LabInputValidator = (value: string) => string | null | undefined;
+export type InputElement = HTMLInputElement | HTMLTextAreaElement;
+export type InputValidator = (value: string) => string | null | undefined;
 type CommonProps = {
     /** An error to show now, such as one from the server. Blocks form submission while set. */
     error?: string | null;
     /** Synchronous check run on the value; return an actionable error, or nothing when it is valid. */
-    validator?: LabInputValidator;
+    validator?: InputValidator;
     /** When errors appear: after the first blur (`blur`), on every change (`change`) or only on submit (`submit`). */
     validationMode?: 'blur' | 'change' | 'submit';
     /** Called with the visible error message, or `null` when it clears. */
@@ -31,12 +31,12 @@ type MultilineProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
     maxLines?: number;
     type?: never;
 };
-export type LabRawInputProps = CommonProps & (SingleLineProps | MultilineProps);
+export type RawInputProps = CommonProps & (SingleLineProps | MultilineProps);
 /**
  * An unpainted native `<input>` or `<textarea>` with the kit's validation and auto-growing
  * lines. Native selection, IME, autofill and form semantics stay intact. Use it inside bespoke
- * editors that draw their own surface; use `LabTextField` everywhere else.
+ * editors that draw their own surface; use `TextField` everywhere else.
  */
-export declare const LabRawInput: React.ForwardRefExoticComponent<LabRawInputProps & React.RefAttributes<LabInputElement>>;
+export declare const RawInput: React.ForwardRefExoticComponent<RawInputProps & React.RefAttributes<InputElement>>;
 export {};
 //# sourceMappingURL=raw-input.d.ts.map

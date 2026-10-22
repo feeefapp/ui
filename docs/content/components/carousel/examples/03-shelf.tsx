@@ -1,10 +1,10 @@
-import { LabCarousel } from '@feeef.dev/ui/containers'
+import { Carousel } from '@feeef.dev/ui/containers'
 import '../carousel-demo.css'
 
 export default function Shelf() {
   return (
     <div className="cd-wide">
-      <LabCarousel label="Recent customers" slideWidth="150px" align="start" effect="none" dots={false} gap={10}>
+      <Carousel label="Recent customers" slideWidth="150px" align="start" effect="none" dots={false} gap={10}>
         {['Amina', 'Yacine', 'Sara', 'Karim', 'Lina', 'Omar', 'Nour', 'Riad'].map((name, i) => (
           <div key={name} className="cd-card">
             <div className="cd-art" style={{ aspectRatio: 1, background: `hsl(${i * 40} 45% 70%)` }} />
@@ -12,7 +12,7 @@ export default function Shelf() {
             <span>{3 + i} orders</span>
           </div>
         ))}
-      </LabCarousel>
+      </Carousel>
     </div>
   )
 }

@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { LabRadioGroup } from '@feeef.dev/ui/primitives/choice'
+import { RadioGroup } from '@feeef.dev/ui/primitives/choice'
 
 export default function Basic() {
   const [payment, setPayment] = useState('cod')
   return (
     <div className="demo-column">
-      <LabRadioGroup
+      <RadioGroup
         label="Payment method"
         value={payment}
         onValueChange={setPayment}

@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { LabRawInput } from '@feeef.dev/ui/primitives/raw-input'
+import { RawInput } from '@feeef.dev/ui/primitives/raw-input'
 
-export default function RawInput() {
+export default function RawInputExample() {
   const [title, setTitle] = useState('Summer collection 2026')
   const [error, setError] = useState<string | null>(null)
   return (
     <div className="demo-wide">
-      <LabRawInput
+      <RawInput
         aria-label="Collection title"
         multiline
         maxLines={3}
@@ -38,5 +38,5 @@ export default function RawInput() {
 
 export const meta = {
   title: 'Bespoke editor',
-  description: 'LabRawInput is the unpainted editor inside the field: same validation and growing lines, your own surface.',
+  description: 'RawInput is the unpainted editor inside the field: same validation and growing lines, your own surface.',
 }

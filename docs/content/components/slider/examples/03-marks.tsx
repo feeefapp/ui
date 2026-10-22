@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LabSlider } from '@feeef.dev/ui/primitives/slider'
+import { Slider } from '@feeef.dev/ui/primitives/slider'
 
 const LEVELS = ['Draft', 'Standard', 'High', 'Best']
 
@@ -7,7 +7,7 @@ export default function Marks() {
   const [quality, setQuality] = useState(1)
   return (
     <div className="demo-wide">
-      <LabSlider
+      <Slider
         label="Image quality"
         min={0}
         max={3}

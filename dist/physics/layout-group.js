@@ -1,8 +1,8 @@
 'use client';
 import { jsx as _jsx } from "react/jsx-runtime";
 import * as React from 'react';
-import { LabMotionValue, prefersReducedMotion } from './motion-value.js';
-import { LAB_SPRINGS } from './spring.js';
+import { MotionValue, prefersReducedMotion } from './motion-value.js';
+import { SPRINGS } from './spring.js';
 /** Running layout animations, per element, so a new layout change can take over their speed. */
 const tracks = new WeakMap();
 const boxOf = (el) => {
@@ -24,7 +24,7 @@ export function snapshotLayout(elements) {
 export function animateLayoutFrom(before, options = {}) {
     if (prefersReducedMotion())
         return;
-    const spring = options.spring ?? LAB_SPRINGS.snappy;
+    const spring = options.spring ?? SPRINGS.snappy;
     for (const [el, first] of before) {
         if (!el.isConnected)
             continue;
@@ -50,10 +50,10 @@ export function animateLayoutFrom(before, options = {}) {
     }
 }
 function move(el, from, speed, spring) {
-    const x = new LabMotionValue(from.dx, 0.25);
-    const y = new LabMotionValue(from.dy, 0.25);
-    const sx = new LabMotionValue(from.sx, 0.001);
-    const sy = new LabMotionValue(from.sy, 0.001);
+    const x = new MotionValue(from.dx, 0.25);
+    const y = new MotionValue(from.dy, 0.25);
+    const sx = new MotionValue(from.sx, 0.001);
+    const sy = new MotionValue(from.sy, 0.001);
     const paint = () => {
         el.style.transformOrigin = '0 0';
         el.style.transform = `translate3d(${x.get()}px, ${y.get()}px, 0) scale(${sx.get()}, ${sy.get()})`;
@@ -86,7 +86,7 @@ function move(el, from, speed, spring) {
     void sy.animateTo(1, { spring, velocity: speed?.sy ?? 0 }).then(done);
 }
 function enter(el, spring) {
-    const p = new LabMotionValue(0, 0.002);
+    const p = new MotionValue(0, 0.002);
     const paint = (v) => {
         el.style.opacity = String(Math.min(1, Math.max(0, v)));
         el.style.transform = `scale(${0.94 + 0.06 * v})`;
@@ -106,7 +106,7 @@ function enter(el, spring) {
  * size too (it scales, so prefer it for media and plain shapes). An interrupted move continues
  * from where it is on screen at the speed it had, so rapid changes never jump.
  */
-export class LabLayoutGroup extends React.Component {
+export class LayoutGroup extends React.Component {
     root = React.createRef();
     elements() {
         const root = this.root.current;
@@ -123,7 +123,7 @@ export class LabLayoutGroup extends React.Component {
     componentDidUpdate(_, __, before) {
         if (!before || prefersReducedMotion())
             return;
-        const spring = this.props.spring ?? LAB_SPRINGS.snappy;
+        const spring = this.props.spring ?? SPRINGS.snappy;
         const moved = new Map();
         for (const el of this.elements()) {
             const first = before.get(el.dataset.labLayoutId);

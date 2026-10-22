@@ -7,7 +7,7 @@ import { cn } from '../utils.js';
  * inert (focus moves to the dock first), then the new content fades in. Same-key changes keep focus
  * and child state.
  */
-export function LabDockContentSwap({ swapKey, children, }) {
+export function DockContentSwap({ swapKey, children, }) {
     const latest = useRef({ key: swapKey, node: children });
     latest.current = { key: swapKey, node: children };
     const [shown, setShown] = useState(latest.current);

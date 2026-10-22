@@ -19,24 +19,24 @@ function Overview() {
         <Table
           head={['Tool', 'Like SwiftUI', 'Use it for']}
           rows={[
-            [<C>LabAdaptiveStack</C>, 'AnyLayout (HStack ↔ VStack)', 'The same items in a row when they fit, a column when not; items fly between layouts.'],
-            [<C>LabViewThatFits</C>, 'ViewThatFits', 'Several versions of one thing, most preferred first: labels, icons, a menu.'],
-            [<C>useLabSizeClass</C>, 'horizontalSizeClass', 'Your own layout decisions: compact or regular by the element’s width.'],
+            [<C>AdaptiveStack</C>, 'AnyLayout (HStack ↔ VStack)', 'The same items in a row when they fit, a column when not; items fly between layouts.'],
+            [<C>ViewThatFits</C>, 'ViewThatFits', 'Several versions of one thing, most preferred first: labels, icons, a menu.'],
+            [<C>useSizeClass</C>, 'horizontalSizeClass', 'Your own layout decisions: compact or regular by the element’s width.'],
           ]}
         />
         <Code
-          code={`<LabAdaptiveStack>                 {/* row while it fits, else column */}
+          code={`<AdaptiveStack>                 {/* row while it fits, else column */}
   <Stat label="To confirm" value={24} />
   <Stat label="Cash to collect" value="184 500 DA" />
-</LabAdaptiveStack>
+</AdaptiveStack>
 
-<LabViewThatFits>
+<ViewThatFits>
   <FullActions />   {/* preferred */}
   <IconActions />
   <MenuButton />    {/* always fits */}
-</LabViewThatFits>
+</ViewThatFits>
 
-const size = useLabSizeClass(ref, 420) // 'compact' | 'regular'`}
+const size = useSizeClass(ref, 420) // 'compact' | 'regular'`}
         />
       </Section>
       <Section title="Guidelines">
@@ -44,7 +44,7 @@ const size = useLabSizeClass(ref, 420) // 'compact' | 'regular'`}
           doItems={[
             'Decide from the component’s own width so it works inside panes and sheets.',
             'Keep every version complete: icons-only buttons still have labels for assistive technology.',
-            'End a LabViewThatFits with something that always fits.',
+            'End a ViewThatFits with something that always fits.',
           ]}
           dontItems={['Hide functionality in the smaller version without another way to reach it.', 'Use window media queries for components that also appear in panes.']}
         />
@@ -60,9 +60,9 @@ export default definePage({
   group: 'Navigation and layout',
   order: 3,
   summary: 'Rows that become columns, views that pick the version that fits, and size classes measured on the component.',
-  importLine: "import { LabAdaptiveStack, LabViewThatFits, useLabSizeClass } from '@feeef.dev/ui/containers'",
+  importLine: "import { AdaptiveStack, ViewThatFits, useSizeClass } from '@feeef.dev/ui/containers'",
   source: 'src/containers/adaptive.tsx',
-  api: ['LabAdaptiveStack', 'LabViewThatFits'],
+  api: ['AdaptiveStack', 'ViewThatFits'],
   keywords: ['responsive', 'adaptive', 'container query', 'size class', 'view that fits', 'hstack', 'vstack'],
   Overview,
   examples: examplesFrom(

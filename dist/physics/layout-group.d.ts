@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { type LabSpring } from './spring.js';
+import { type Spring } from './spring.js';
 type Box = {
     x: number;
     y: number;
@@ -14,16 +14,16 @@ export declare function snapshotLayout(elements: Iterable<HTMLElement>): Map<HTM
  * `size`, an element also scales from its old size (use it for media and plain shapes).
  */
 export declare function animateLayoutFrom(before: Map<HTMLElement, Box>, options?: {
-    spring?: LabSpring;
+    spring?: Spring;
     size?: (el: HTMLElement) => boolean;
 }): void;
-export type LabLayoutGroupProps = {
+export type LayoutGroupProps = {
     /** The subtree to watch. Elements with `data-lab-layout-id` move; ids must be unique in the group. */
     children: React.ReactNode;
     /** Animate only when this value changes (cheaper on busy screens). Default: after every render. */
     layoutKey?: unknown;
     /** Spring for movement. Default `snappy`. */
-    spring?: LabSpring;
+    spring?: Spring;
     /** Elements that are new in a render fade and scale in. Default true. */
     animateEnter?: boolean;
 };
@@ -34,11 +34,11 @@ export type LabLayoutGroupProps = {
  * size too (it scales, so prefer it for media and plain shapes). An interrupted move continues
  * from where it is on screen at the speed it had, so rapid changes never jump.
  */
-export declare class LabLayoutGroup extends React.Component<LabLayoutGroupProps> {
+export declare class LayoutGroup extends React.Component<LayoutGroupProps> {
     private root;
     private elements;
-    getSnapshotBeforeUpdate(previous: LabLayoutGroupProps): Map<string, Box> | null;
-    componentDidUpdate(_: LabLayoutGroupProps, __: unknown, before: Map<string, Box> | null): void;
+    getSnapshotBeforeUpdate(previous: LayoutGroupProps): Map<string, Box> | null;
+    componentDidUpdate(_: LayoutGroupProps, __: unknown, before: Map<string, Box> | null): void;
     render(): React.JSX.Element;
 }
 export {};

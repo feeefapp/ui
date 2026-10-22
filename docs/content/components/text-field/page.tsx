@@ -1,6 +1,6 @@
 import { Link } from '../../../src/router'
 import { Search } from 'lucide-react'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground, jsx } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
@@ -22,11 +22,11 @@ const controls = {
   disabled: { type: 'boolean', default: false },
 } as const
 
-const SHELL_CODE = `<LabFieldShell hint="Order note" supportingText="Visible to your team only.">
+const SHELL_CODE = `<FieldShell hint="Order note" supportingText="Visible to your team only.">
   {({ id, describedBy, invalid }) => (
     <MyRichEditor id={id} aria-describedby={describedBy} aria-invalid={invalid} />
   )}
-</LabFieldShell>`
+</FieldShell>`
 
 function Overview() {
   return (
@@ -50,16 +50,16 @@ function Overview() {
           return (
             <div className="demo-column">
               {v.multiline ? (
-                <LabTextField {...field} multiline minLines={2} maxLines={5} />
+                <TextField {...field} multiline minLines={2} maxLines={5} />
               ) : (
-                <LabTextField {...field} />
+                <TextField {...field} />
               )}
             </div>
           )
         }}
         code={(v) =>
           jsx(
-            'LabTextField',
+            'TextField',
             {
               hint: v.hint || undefined,
               labelStyle: v.labelStyle,
@@ -90,7 +90,7 @@ function Overview() {
           select; for a number on a continuous range, a slider.
         </p>
         <p>
-          <C>LabTextField</C> renders a native <C>{'<input>'}</C>, or a <C>{'<textarea>'}</C> with{' '}
+          <C>TextField</C> renders a native <C>{'<input>'}</C>, or a <C>{'<textarea>'}</C> with{' '}
           <C>multiline</C>, so every native attribute works: <C>type</C>, <C>name</C>,{' '}
           <C>autoComplete</C>, <C>inputMode</C>, <C>required</C>, <C>pattern</C>, <C>maxLength</C>.
           Read the text with <C>onValueChange</C>, which receives the string, or with the usual{' '}
@@ -184,14 +184,14 @@ function Overview() {
 
       <Section title="Building blocks">
         <p>
-          The text field is two parts you can use on their own. <C>LabFieldShell</C> draws the frame:
+          The text field is two parts you can use on their own. <C>FieldShell</C> draws the frame:
           surface, floating hint, icons, affixes, supporting text and counter. Its child is a function
           that receives the <C>id</C>, <C>describedBy</C> and <C>invalid</C> values to put on your
           control, so the label and messages stay connected to it.
         </p>
         <Code code={SHELL_CODE} title="A custom control in the field frame" />
         <p>
-          <C>LabRawInput</C> is the unpainted editor inside it: a native input or textarea with the same
+          <C>RawInput</C> is the unpainted editor inside it: a native input or textarea with the same
           validation and auto-growing lines, and no styling of its own. Use it for bespoke editors that
           draw their own surface, such as an inline title. Both are listed on the API tab.
         </p>
@@ -249,9 +249,9 @@ export default definePage({
   order: 1,
   summary:
     'Text fields let people type a value or a paragraph, with a floating hint, affixes, supporting text and built-in validation.',
-  importLine: "import { LabTextField } from '@feeef.dev/ui/primitives/text-field'",
+  importLine: "import { TextField } from '@feeef.dev/ui/primitives/text-field'",
   source: 'src/primitives/text-field.tsx',
-  api: ['LabTextField', 'LabFieldShell', 'LabRawInput'],
+  api: ['TextField', 'FieldShell', 'RawInput'],
   keywords: ['input', 'textarea', 'form', 'validation', 'field shell', 'raw input', 'counter', 'multiline'],
   Overview,
   examples: examplesFrom(
@@ -260,7 +260,7 @@ export default definePage({
   ),
   Preview: () => (
     <div style={{ width: 220 }}>
-      <LabTextField hint="Customer name" defaultValue="Amina Belkacem" />
+      <TextField hint="Customer name" defaultValue="Amina Belkacem" />
     </div>
   ),
 })

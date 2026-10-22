@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabModal } from '@feeef.dev/ui/primitives/modal'
-import { LabOption, LabSelect } from '@feeef.dev/ui/primitives/select'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { Modal } from '@feeef.dev/ui/primitives/modal'
+import { Option, Select } from '@feeef.dev/ui/primitives/select'
 import '../patterns.css'
 
 export default function CancelOrder() {
@@ -25,33 +25,33 @@ export default function CancelOrder() {
     <div className="demo-column">
       <p role="status">{status}</p>
       <div className="demo-row" style={{ justifyContent: 'flex-start' }}>
-        <LabButton variant="destructive" onClick={() => setOpen(true)}>
+        <Button variant="destructive" onClick={() => setOpen(true)}>
           Cancel order
-        </LabButton>
+        </Button>
       </div>
-      <LabModal open={open} close={close} label="Cancel order #1048?" showClose={false}>
+      <Modal open={open} close={close} label="Cancel order #1048?" showClose={false}>
         <div className="pt-dialog">
           <h2>Cancel order #1048?</h2>
           <p>
             Amina Benali won’t be called again, the 2 reserved items go back to stock and the order moves to
             Failed. You can’t undo this.
           </p>
-          <LabSelect hint="Reason" value={reason} error={error} onValueChange={(value) => { setReason(value); setError(null) }}>
-            <LabOption>Customer refused</LabOption>
-            <LabOption>Duplicate order</LabOption>
-            <LabOption>Fake order</LabOption>
-            <LabOption>Out of stock</LabOption>
-          </LabSelect>
+          <Select hint="Reason" value={reason} error={error} onValueChange={(value) => { setReason(value); setError(null) }}>
+            <Option>Customer refused</Option>
+            <Option>Duplicate order</Option>
+            <Option>Fake order</Option>
+            <Option>Out of stock</Option>
+          </Select>
           <div className="pt-dialog-actions">
-            <LabButton variant="text" onClick={close}>
+            <Button variant="text" onClick={close}>
               Keep order
-            </LabButton>
-            <LabButton variant="destructive" onClick={cancel}>
+            </Button>
+            <Button variant="destructive" onClick={cancel}>
               Cancel order
-            </LabButton>
+            </Button>
           </div>
         </div>
-      </LabModal>
+      </Modal>
     </div>
   )
 }

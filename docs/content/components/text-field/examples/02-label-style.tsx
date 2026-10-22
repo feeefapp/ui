@@ -1,10 +1,10 @@
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
 
 export default function LabelStyle() {
   return (
     <div className="demo-column">
-      <LabTextField hint="Store name" labelStyle="outlined" defaultValue="Dar El Beida Shop" />
-      <LabTextField hint="Store name" labelStyle="inside" variant="tonal" defaultValue="Dar El Beida Shop" />
+      <TextField hint="Store name" labelStyle="outlined" defaultValue="Dar El Beida Shop" />
+      <TextField hint="Store name" labelStyle="inside" variant="tonal" defaultValue="Dar El Beida Shop" />
     </div>
   )
 }

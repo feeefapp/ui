@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link2, Plus, RotateCw } from 'lucide-react'
 import { PixelLoader } from '@feeef.dev/ui/pixel-art'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 import '../patterns.css'
 
 type State = 'loading' | 'empty' | 'error' | 'ready'
@@ -24,14 +24,14 @@ function OrdersEmpty() {
       <h4>No orders yet</h4>
       <p>Orders from your store, Instagram and Facebook land here. Share your store link to get the first one.</p>
       <div className="pt-state-actions">
-        <LabButton variant="tonal">
+        <Button variant="tonal">
           <Link2 />
           Copy store link
-        </LabButton>
-        <LabButton variant="text">
+        </Button>
+        <Button variant="text">
           <Plus />
           Add an order by hand
-        </LabButton>
+        </Button>
       </div>
     </div>
   )
@@ -43,10 +43,10 @@ function OrdersError({ onRetry }: { onRetry: () => void }) {
     <div className="pt-state" role="alert">
       <h4>Orders didn’t load</h4>
       <p>The connection dropped before we got your orders. Nothing was lost; try again.</p>
-      <LabButton variant="tonal" onClick={onRetry}>
+      <Button variant="tonal" onClick={onRetry}>
         <RotateCw />
         Try again
-      </LabButton>
+      </Button>
     </div>
   )
 }
@@ -64,7 +64,7 @@ export default function States() {
 
   return (
     <div className="pt-preview">
-      <LabSegmentedControl<State>
+      <SegmentedControl<State>
         label="Preview state"
         value={state}
         onChange={(next) => {

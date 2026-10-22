@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { ArrowLeft, ArrowRight, Truck, X } from 'lucide-react'
-import { LabScrollArea } from '@feeef.dev/ui/scroll'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'
+import { ScrollArea } from '@feeef.dev/ui/scroll'
+import { Dock } from '@feeef.dev/ui/dock'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
 import '../dock-demo.css'
 
 const ORDERS = ['#1048 Amina B.', '#1047 Yacine H.', '#1046 Sara M.', '#1045 Karim S.', '#1044 Lina C.', '#1043 Omar B.']
@@ -16,41 +16,41 @@ export default function SwapKey() {
 
   return (
     <div className="dock-demo-frame">
-      <LabScrollArea
+      <ScrollArea
         label="Orders"
         bottom={
           // Key the task (browsing vs selecting), not the count: count changes keep focus and state.
-          <LabDock
+          <Dock
             label={selecting ? 'Selection actions' : 'Page navigation'}
             swapKey={selecting ? 'selected' : 'browsing'}
             content={selecting ? <strong>{selected.length} selected</strong> : <span>Page {page}</span>}
           >
             {selecting ? (
               <div className="demo-row">
-                <LabIconButton variant="text" aria-label="Clear selection" onClick={() => setSelected([])}>
+                <IconButton variant="text" aria-label="Clear selection" onClick={() => setSelected([])}>
                   <X />
-                </LabIconButton>
-                <LabButton variant="filled">
+                </IconButton>
+                <Button variant="filled">
                   <Truck />
                   Ship {selected.length}
-                </LabButton>
+                </Button>
               </div>
             ) : (
               <div className="demo-row">
-                <LabIconButton
+                <IconButton
                   variant="text"
                   aria-label="Previous page"
                   disabled={page === 1}
                   onClick={() => setPage(page - 1)}
                 >
                   <ArrowLeft className="lab-dir-flip" />
-                </LabIconButton>
-                <LabIconButton variant="text" aria-label="Next page" onClick={() => setPage(page + 1)}>
+                </IconButton>
+                <IconButton variant="text" aria-label="Next page" onClick={() => setPage(page + 1)}>
                   <ArrowRight className="lab-dir-flip" />
-                </LabIconButton>
+                </IconButton>
               </div>
             )}
-          </LabDock>
+          </Dock>
         }
       >
         <div className="dock-demo-list" role="group" aria-label="Select orders">
@@ -61,7 +61,7 @@ export default function SwapKey() {
             </label>
           ))}
         </div>
-      </LabScrollArea>
+      </ScrollArea>
     </div>
   )
 }

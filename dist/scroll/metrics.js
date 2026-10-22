@@ -1,13 +1,13 @@
-export const LAB_SCROLL_FADE_ZONE = 80;
-export const LAB_SCROLL_REST_TOP = 0.28;
-export const LAB_SCROLL_REST_BOTTOM = 0.48;
+export const SCROLL_FADE_ZONE = 80;
+export const SCROLL_REST_TOP = 0.28;
+export const SCROLL_REST_BOTTOM = 0.48;
 const nonnegative = (value) => (Number.isFinite(value) ? Math.max(0, value) : 0);
 const clamp = (value) => Math.max(0, Math.min(1, value));
 /** Mirrors Merchant ScrollGradientOverlay, including underflow and overscroll. */
-export function scrollEdgeOpacities(offset, extent, fadeZone = LAB_SCROLL_FADE_ZONE) {
+export function scrollEdgeOpacities(offset, extent, fadeZone = SCROLL_FADE_ZONE) {
     const max = nonnegative(extent);
     if (max <= 1)
-        return { top: LAB_SCROLL_REST_TOP, bottom: LAB_SCROLL_REST_BOTTOM };
+        return { top: SCROLL_REST_TOP, bottom: SCROLL_REST_BOTTOM };
     const position = Math.min(max, nonnegative(offset));
     const zone = Math.max(1, nonnegative(fadeZone));
     return { top: clamp(position / zone), bottom: clamp((max - position) / zone) };

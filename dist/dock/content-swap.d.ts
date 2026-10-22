@@ -4,7 +4,7 @@ import { type ReactNode } from 'react';
  * inert (focus moves to the dock first), then the new content fades in. Same-key changes keep focus
  * and child state.
  */
-export declare function LabDockContentSwap({ swapKey, children, }: {
+export declare function DockContentSwap({ swapKey, children, }: {
     /** Coarse task identity, e.g. `idle` / `selected`. */
     swapKey: string;
     /** The current content. */

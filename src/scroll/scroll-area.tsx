@@ -11,16 +11,16 @@ import {
   type CSSProperties,
 } from 'react'
 import { cn } from '../utils'
-import { LabScrollGradientOverlay } from './gradient-overlay'
+import { ScrollGradientOverlay } from './gradient-overlay'
 import { scrollContentReserve } from './metrics'
 import './scroll.css'
 
-export type LabScrollAreaProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
+export type ScrollAreaProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
   /** The scrolling content. */
   children: ReactNode
   /** Chrome floating over the top edge (toolbar, filter bar). Its height is reserved as top padding. */
   top?: ReactNode
-  /** Chrome floating over the bottom edge (usually a LabDock). Its height is reserved as bottom padding. */
+  /** Chrome floating over the bottom edge (usually a Dock). Its height is reserved as bottom padding. */
   bottom?: ReactNode
   /** Accessible name of the scroll region. */
   label: string
@@ -42,7 +42,7 @@ export type LabScrollAreaProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'
  * Full-bleed scroll viewport with local floating chrome, measured spacers and edge washes. Fills its
  * parent, which must have a bounded height. The forwarded ref points at the scrolling element.
  */
-export const LabScrollArea = forwardRef<HTMLDivElement, LabScrollAreaProps>(function LabScrollArea(
+export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function ScrollArea(
   {
     children,
     top,
@@ -111,7 +111,7 @@ export const LabScrollArea = forwardRef<HTMLDivElement, LabScrollAreaProps>(func
         <div className="lab-scroll-content">{children}</div>
       </div>
       {gradient && (
-        <LabScrollGradientOverlay
+        <ScrollGradientOverlay
           viewport={viewport}
           topHeight={topFadeHeight ?? Math.max(100, heights.top + edgeGap * 2)}
           bottomHeight={bottomFadeHeight ?? Math.max(140, heights.bottom + edgeGap * 2)}

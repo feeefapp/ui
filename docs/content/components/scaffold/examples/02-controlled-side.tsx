@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Package, ShoppingBag, Truck } from 'lucide-react'
 import {
-  LabScaffold,
-  LabScaffoldSide,
-  LabScaffoldToggleButton,
-  type LabScaffoldSideMode,
+  Scaffold,
+  ScaffoldSide,
+  ScaffoldToggleButton,
+  type ScaffoldSideMode,
 } from '@feeef.dev/ui/workspace/scaffold'
-import { LabNavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { NavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 import '../scaffold-demo.css'
 
 const PAGES = [
@@ -18,12 +18,12 @@ const PAGES = [
 
 export default function ControlledSide() {
   // Keep the mode in your own state (or a saved preference) and let the scaffold report changes.
-  const [mode, setMode] = useState<LabScaffoldSideMode>('rail')
+  const [mode, setMode] = useState<ScaffoldSideMode>('rail')
   const [changes, setChanges] = useState(0)
 
   return (
     <div className="scaffold-demo-stack">
-      <LabSegmentedControl
+      <SegmentedControl
         label="Sidebar mode"
         value={mode}
         onChange={setMode}
@@ -34,7 +34,7 @@ export default function ControlledSide() {
         ]}
       />
       <div className="scaffold-demo-frame">
-        <LabScaffold
+        <Scaffold
           compactBreakpoint={420}
           sideMode={mode}
           onSideModeChange={(next) => {
@@ -42,10 +42,10 @@ export default function ControlledSide() {
             setChanges((count) => count + 1)
           }}
           side={(state) => (
-            <LabScaffoldSide leading={<LabScaffoldToggleButton />}>
+            <ScaffoldSide leading={<ScaffoldToggleButton />}>
               <nav aria-label="Store pages" className="scaffold-demo-nav">
                 {PAGES.map((item, index) => (
-                  <LabNavigationItem
+                  <NavigationItem
                     key={item.label}
                     compact={state.sideMode === 'rail' && !state.drawerOpen}
                     label={item.label}
@@ -54,7 +54,7 @@ export default function ControlledSide() {
                   />
                 ))}
               </nav>
-            </LabScaffoldSide>
+            </ScaffoldSide>
           )}
         >
           <div className="scaffold-demo-list">
@@ -64,7 +64,7 @@ export default function ControlledSide() {
               {changes === 1 ? 'time' : 'times'}.
             </p>
           </div>
-        </LabScaffold>
+        </Scaffold>
       </div>
     </div>
   )

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { ChevronRight, Copy, MoreHorizontal, Printer, Trash2, Truck } from 'lucide-react'
-import { LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabPopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
+import { IconButton } from '@feeef.dev/ui/primitives/button'
+import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
 import '@feeef.dev/ui/actions/actions.css'
 
 const item = 'lab-actions-menu__item'
@@ -14,12 +14,12 @@ export default function DropdownMenuExample() {
       <span role="status">{status}</span>
       <DropdownMenu.Root modal={false}>
         <DropdownMenu.Trigger asChild>
-          <LabIconButton variant="text" aria-label="Order actions">
+          <IconButton variant="text" aria-label="Order actions">
             <MoreHorizontal size={20} />
-          </LabIconButton>
+          </IconButton>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <LabPopoverSurface asChild>
+          <PopoverSurface asChild>
             <DropdownMenu.Content className="lab-actions-menu" sideOffset={8} collisionPadding={12} align="end">
               <DropdownMenu.Item className={item} onSelect={() => setStatus('Tracking number copied.')}>
                 <Copy size={18} aria-hidden="true" />
@@ -36,7 +36,7 @@ export default function DropdownMenuExample() {
                   <ChevronRight size={16} aria-hidden="true" className="lab-dir-flip" />
                 </DropdownMenu.SubTrigger>
                 <DropdownMenu.Portal>
-                  <LabPopoverSurface asChild seed="courier-menu">
+                  <PopoverSurface asChild seed="courier-menu">
                     <DropdownMenu.SubContent className="lab-actions-menu" sideOffset={4} collisionPadding={12}>
                       {['Yalidine', 'ZR Express', 'Maystro'].map((courier) => (
                         <DropdownMenu.Item
@@ -48,7 +48,7 @@ export default function DropdownMenuExample() {
                         </DropdownMenu.Item>
                       ))}
                     </DropdownMenu.SubContent>
-                  </LabPopoverSurface>
+                  </PopoverSurface>
                 </DropdownMenu.Portal>
               </DropdownMenu.Sub>
               <DropdownMenu.Item
@@ -60,7 +60,7 @@ export default function DropdownMenuExample() {
                 Cancel order
               </DropdownMenu.Item>
             </DropdownMenu.Content>
-          </LabPopoverSurface>
+          </PopoverSurface>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
     </div>

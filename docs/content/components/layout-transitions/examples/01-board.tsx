@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ArrowRight, Shuffle } from 'lucide-react'
-import { LabLayoutGroup } from '@feeef.dev/ui/physics'
-import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'
+import { LayoutGroup } from '@feeef.dev/ui/physics'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
 import '../layout-demo.css'
 
 const COLUMNS = ['New', 'Confirmed', 'Shipped'] as const
@@ -24,14 +24,14 @@ export default function OrderBoard() {
   return (
     <div className="lt-demo">
       <div className="demo-row" style={{ justifyContent: 'flex-start' }}>
-        <LabButton variant="tonal" controlSize="compact" onClick={() => setOrders((l) => [...l].sort(() => Math.random() - 0.5))}>
+        <Button variant="tonal" controlSize="compact" onClick={() => setOrders((l) => [...l].sort(() => Math.random() - 0.5))}>
           <Shuffle size={16} /> Shuffle
-        </LabButton>
-        <LabButton variant="text" controlSize="compact" onClick={() => setOrders(START)}>
+        </Button>
+        <Button variant="text" controlSize="compact" onClick={() => setOrders(START)}>
           Reset
-        </LabButton>
+        </Button>
       </div>
-      <LabLayoutGroup>
+      <LayoutGroup>
         <div className="lt-board">
           {COLUMNS.map((column) => (
             <section key={column} className="lt-column" aria-label={column}>
@@ -44,20 +44,20 @@ export default function OrderBoard() {
                     <span>
                       <strong>#{o.id}</strong> {o.customer}
                     </span>
-                    <LabIconButton
+                    <IconButton
                       variant="text"
                       controlSize="compact"
                       aria-label={`Move #${o.id} to ${COLUMNS[(COLUMNS.indexOf(o.column) + 1) % 3]}`}
                       onClick={() => advance(o.id)}
                     >
                       <ArrowRight className="lab-dir-flip" />
-                    </LabIconButton>
+                    </IconButton>
                   </div>
                 ))}
             </section>
           ))}
         </div>
-      </LabLayoutGroup>
+      </LayoutGroup>
     </div>
   )
 }

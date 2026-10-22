@@ -1,4 +1,4 @@
-import { LabGlassGroup } from '@feeef.dev/ui/scaffold'
+import { GlassGroup } from '@feeef.dev/ui/scaffold'
 import '../glass-demo.css'
 
 export default function Materials() {
@@ -9,10 +9,10 @@ export default function Materials() {
           <strong>Surface</strong>
           <p>Content: order details, forms, lists. Opaque, so text stays readable.</p>
         </div>
-        <LabGlassGroup className="glass-demo-panel">
+        <GlassGroup className="glass-demo-panel">
           <strong>Glass</strong>
           <p>Chrome: toolbars, docks, floating controls. Lets the work show through.</p>
-        </LabGlassGroup>
+        </GlassGroup>
       </div>
     </div>
   )

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LabOption, LabSelect } from '@feeef.dev/ui/primitives/select'
+import { Option, Select } from '@feeef.dev/ui/primitives/select'
 
 const WILAYAS = ['Alger', 'Annaba', 'Blida', 'Constantine', 'Oran', 'Sétif', 'Tizi Ouzou', 'Tlemcen']
 
@@ -7,11 +7,11 @@ export default function Basic() {
   const [wilaya, setWilaya] = useState<string | null>(null)
   return (
     <div className="demo-column">
-      <LabSelect hint="Wilaya" value={wilaya} onValueChange={setWilaya}>
+      <Select hint="Wilaya" value={wilaya} onValueChange={setWilaya}>
         {WILAYAS.map((name) => (
-          <LabOption key={name}>{name}</LabOption>
+          <Option key={name}>{name}</Option>
         ))}
-      </LabSelect>
+      </Select>
     </div>
   )
 }

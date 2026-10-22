@@ -1,12 +1,12 @@
-import { LabCheckbox } from '@feeef.dev/ui/primitives/choice'
+import { Checkbox } from '@feeef.dev/ui/primitives/choice'
 
 export default function CompactAndDisabled() {
   return (
     <div className="demo-column">
-      <LabCheckbox controlSize="compact" label="Show archived products" />
-      <LabCheckbox controlSize="compact" label="Include out-of-stock variants" defaultChecked />
-      <LabCheckbox label="Sync stock with Feeef Cloud" description="Available on the Pro plan." disabled />
-      <LabCheckbox label="Track inventory" defaultChecked disabled />
+      <Checkbox controlSize="compact" label="Show archived products" />
+      <Checkbox controlSize="compact" label="Include out-of-stock variants" defaultChecked />
+      <Checkbox label="Sync stock with Feeef Cloud" description="Available on the Pro plan." disabled />
+      <Checkbox label="Track inventory" defaultChecked disabled />
     </div>
   )
 }

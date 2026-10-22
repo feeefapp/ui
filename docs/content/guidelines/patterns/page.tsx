@@ -1,5 +1,5 @@
 import { useState, type ComponentType, type ReactNode } from 'react'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 import { definePage, examplesFrom, type DocExample } from '../../../src/model'
 import { Link } from '../../../src/router'
 import { C } from '../../../src/blocks/code'
@@ -19,7 +19,7 @@ function withWidthToggle(ex: DocExample): DocExample {
     const [width, setWidth] = useState<'desktop' | 'phone'>('desktop')
     return (
       <div className="pt-preview">
-        <LabSegmentedControl<'desktop' | 'phone'>
+        <SegmentedControl<'desktop' | 'phone'>
           label="Preview width"
           value={width}
           onChange={setWidth}
@@ -64,7 +64,7 @@ function Overview() {
         <p>
           Open “Show code” on any demo: that is what you write in your page. Each demo sits in a fixed box
           standing in for the scaffold’s content panel; in an app, the <C>top</C> and <C>bottom</C> floats go
-          in <C>LabScaffold</C>’s <C>appBar</C> and <C>bottom</C> slots instead.
+          in <C>Scaffold</C>’s <C>appBar</C> and <C>bottom</C> slots instead.
         </p>
       </Callout>
 
@@ -85,7 +85,7 @@ function Overview() {
         <Example example={example('01-orders-list')} headingLevel={3} />
         <DoDont
           doItems={[
-            <>Filter with <Link to="/components/filter-bar">LabFilterBar</Link>; pin the two or three filters people use daily.</>,
+            <>Filter with <Link to="/components/filter-bar">FilterBar</Link>; pin the two or three filters people use daily.</>,
             'Swap the dock’s content on selection (swapKey) and keep one filled action in it.',
             'Show the count of what is selected and a way to clear it.',
             'Keep rows short: identity first, numbers aligned at the end.',
@@ -139,7 +139,7 @@ function Overview() {
             ['Sections', 'a title, one line on what it affects, then fields in a grid that wraps to one column on phones.'],
             [
               'Fields',
-              'LabTextField and LabSelect with a hint (their name), LabNumberField for amounts with a unit, checkboxes for on/off choices that wait for Save.',
+              'TextField and Select with a hint (their name), NumberField for amounts with a unit, checkboxes for on/off choices that wait for Save.',
             ],
             ['Dock', 'Save changes, enabled only when something changed, with Discard next to it. The status tile says whether everything is saved.'],
             ['Validation', 'at the field, on blur and on save; the first invalid field takes focus.'],
@@ -149,11 +149,11 @@ function Overview() {
         <Table
           head={['Choice', 'Control', 'Saves']}
           rows={[
-            ['Text, phone, address', <Link to="/components/text-field">LabTextField</Link>, 'With the form'],
-            ['One of many (wilaya, courier)', <Link to="/components/select">LabSelect</Link>, 'With the form'],
-            ['Money, counts, percentages', <Link to="/components/number-field">LabNumberField</Link>, 'With the form'],
-            ['On/off inside the form', <Link to="/components/checkbox">LabCheckbox</Link>, 'With the form'],
-            ['On/off that applies right away', <Link to="/components/switch">LabSlideSwitch</Link>, 'Immediately, with loading; never in a form with Save'],
+            ['Text, phone, address', <Link to="/components/text-field">TextField</Link>, 'With the form'],
+            ['One of many (wilaya, courier)', <Link to="/components/select">Select</Link>, 'With the form'],
+            ['Money, counts, percentages', <Link to="/components/number-field">NumberField</Link>, 'With the form'],
+            ['On/off inside the form', <Link to="/components/checkbox">Checkbox</Link>, 'With the form'],
+            ['On/off that applies right away', <Link to="/components/switch">SlideSwitch</Link>, 'Immediately, with loading; never in a form with Save'],
           ]}
         />
         <DoDont
@@ -186,7 +186,7 @@ function Overview() {
         <Example example={example('04-cancel-order')} headingLevel={3} />
         <DoDont
           doItems={[
-            <>Use <Link to="/components/modal">LabModal</Link> with <C>{'showClose={false}'}</C> when Keep already dismisses it.</>,
+            <>Use <Link to="/components/modal">Modal</Link> with <C>{'showClose={false}'}</C> when Keep already dismisses it.</>,
             'Name both buttons with verbs; the safe one is never filled.',
             'Return focus to the button that opened the dialog.',
           ]}
@@ -241,7 +241,7 @@ function Overview() {
         <DoDont
           doItems={[
             'Keep in-place edits to one field, and focus it when it opens.',
-            <>Use <C>LabModal scrollable</C> with a dock for dialogs that hold a form.</>,
+            <>Use <C>Modal scrollable</C> with a dock for dialogs that hold a form.</>,
             'Open a page when the edit needs its own URL, history or undo.',
           ]}
           dontItems={[

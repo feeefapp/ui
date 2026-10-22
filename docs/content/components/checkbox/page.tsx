@@ -1,4 +1,4 @@
-import { LabCheckbox } from '@feeef.dev/ui/primitives/choice'
+import { Checkbox } from '@feeef.dev/ui/primitives/choice'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground, jsx } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section } from '../../../src/blocks/prose'
@@ -21,7 +21,7 @@ function Overview() {
         controls={controls}
         render={(v) => (
           <div className="demo-column">
-            <LabCheckbox
+            <Checkbox
               label={v.label || undefined}
               aria-label={v.label ? undefined : 'Send an SMS when the order ships'}
               description={v.description || undefined}
@@ -36,7 +36,7 @@ function Overview() {
         )}
         code={(v) =>
           jsx(
-            'LabCheckbox',
+            'Checkbox',
             {
               label: v.label || undefined,
               description: v.description || undefined,
@@ -64,7 +64,7 @@ function Overview() {
           several options, use a radio group.
         </p>
         <p>
-          <C>LabCheckbox</C> is a native <C>{'<input type="checkbox">'}</C> wrapped in its label, so
+          <C>Checkbox</C> is a native <C>{'<input type="checkbox">'}</C> wrapped in its label, so
           the whole label is the click target and forms, <C>name</C>, <C>value</C>,{' '}
           <C>required</C> and reset work as usual. Use <C>checked</C> with{' '}
           <C>onCheckedChange</C> (it receives the boolean) for a controlled checkbox, or{' '}
@@ -146,9 +146,9 @@ export default definePage({
   group: 'Selection',
   order: 1,
   summary: 'Checkboxes turn an option on or off in a form, or pick any number of items from a list.',
-  importLine: "import { LabCheckbox } from '@feeef.dev/ui/primitives/choice'",
+  importLine: "import { Checkbox } from '@feeef.dev/ui/primitives/choice'",
   source: 'src/primitives/choice.tsx',
-  api: ['LabCheckbox'],
+  api: ['Checkbox'],
   keywords: ['check', 'tick', 'select all', 'indeterminate', 'mixed', 'terms'],
   Overview,
   examples: examplesFrom(
@@ -157,8 +157,8 @@ export default definePage({
   ),
   Preview: () => (
     <div style={{ display: 'grid', gap: 8 }}>
-      <LabCheckbox label="Confirmed" defaultChecked />
-      <LabCheckbox label="Shipped" />
+      <Checkbox label="Confirmed" defaultChecked />
+      <Checkbox label="Shipped" />
     </div>
   ),
 })

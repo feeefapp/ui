@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LabSlideSwitch } from '@feeef.dev/ui/primitives/slider'
+import { SlideSwitch } from '@feeef.dev/ui/primitives/slider'
 
 const savePixel = (on: boolean) =>
   new Promise<void>((resolve, reject) => setTimeout(() => (on && Math.random() < 0.3 ? reject() : resolve()), 900))
@@ -12,7 +12,7 @@ export default function Saving() {
     <div className="demo-column">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
         <span aria-hidden="true">Meta pixel</span>
-        <LabSlideSwitch
+        <SlideSwitch
           label="Meta pixel"
           checked={active}
           loading={saving}

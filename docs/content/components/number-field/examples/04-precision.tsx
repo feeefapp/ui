@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { LabNumberField } from '@feeef.dev/ui/primitives/number-field'
+import { NumberField } from '@feeef.dev/ui/primitives/number-field'
 
 export default function Precision() {
   const [rating, setRating] = useState(4.2)
   return (
     <div className="demo-column">
-      <LabNumberField
+      <NumberField
         label="Minimum courier rating"
         min={0}
         max={5}

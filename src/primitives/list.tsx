@@ -5,15 +5,15 @@ import { Slot } from '@radix-ui/react-slot'
 import { ChevronRight, GripVertical } from 'lucide-react'
 import { attachPan } from '../physics/gesture'
 import { animateLayoutFrom, snapshotLayout } from '../physics/layout-group'
-import { LabMotionValue } from '../physics/motion-value'
-import { LAB_SPRINGS, rubberBand, rubberBandClamp } from '../physics/spring'
+import { MotionValue } from '../physics/motion-value'
+import { SPRINGS, rubberBand, rubberBandClamp } from '../physics/spring'
 import {
   reorderLanding,
   reorderShifts,
   reorderTarget,
   swipeIsFull,
   swipeRelease,
-  type LabSwipeSides,
+  type SwipeSides,
 } from './list-model'
 import { cn } from '../utils'
 import './list.css'
@@ -27,7 +27,7 @@ const Reorder = React.createContext<ReorderContext>({ enabled: false })
  * their leading icon. With `onReorder`, every row gets a grip: drag it (any pointer) or focus it
  * and press the arrow keys.
  */
-export function LabListSection({
+export function ListSection({
   header,
   footer,
   children,
@@ -39,7 +39,7 @@ export function LabListSection({
   header?: React.ReactNode
   /** Help text under the card. */
   footer?: React.ReactNode
-  /** LabListRow elements. */
+  /** ListRow elements. */
   children: React.ReactNode
   className?: string
   /** Accessible name when there is no visible header. */
@@ -59,7 +59,7 @@ export function LabListSection({
     if (!pending.current) return
     const snapshot = pending.current
     pending.current = null
-    animateLayoutFrom(snapshot, { spring: LAB_SPRINGS.snappy })
+    animateLayoutFrom(snapshot, { spring: SPRINGS.snappy })
   })
 
   const items = () => (card.current ? (Array.from(card.current.children) as HTMLElement[]) : [])
@@ -78,7 +78,7 @@ export function LabListSection({
       to: number
       heights: number[]
       nodes: HTMLElement[]
-      offsets: LabMotionValue[]
+      offsets: MotionValue[]
       scroller: HTMLElement | null
       scrollStart: number
       dy: number
@@ -101,7 +101,7 @@ export function LabListSection({
       if (to !== d.to) {
         d.to = to
         reorderShifts(d.heights, d.from, to).forEach((shift, j) => {
-          if (j !== d.from) void d.offsets[j].animateTo(shift, { spring: LAB_SPRINGS.snappy })
+          if (j !== d.from) void d.offsets[j].animateTo(shift, { spring: SPRINGS.snappy })
         })
       }
     }
@@ -146,7 +146,7 @@ export function LabListSection({
           heights,
           nodes,
           offsets: nodes.map((node, j) => {
-            const value = new LabMotionValue(0, 0.25)
+            const value = new MotionValue(0, 0.25)
             value.subscribe((v) => paint(node, v, j === from))
             return value
           }),
@@ -183,7 +183,7 @@ export function LabListSection({
           })
         }
         const landing = reorderLanding(d.heights, d.from, d.to)
-        void d.offsets[d.from].animateTo(landing, { spring: LAB_SPRINGS.release }).then((arrived) => arrived && finish())
+        void d.offsets[d.from].animateTo(landing, { spring: SPRINGS.release }).then((arrived) => arrived && finish())
       },
     }))
   }, [Boolean(onReorder)])
@@ -226,7 +226,7 @@ export function LabListSection({
 }
 
 /** An action revealed by swiping a row. */
-export type LabRowAction = {
+export type RowAction = {
   /** Short verb: “Confirm”, “Archive”, “Delete”. */
   label: string
   icon?: React.ReactNode
@@ -235,7 +235,7 @@ export type LabRowAction = {
   onAction: () => void
 }
 
-export type LabListRowProps = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'title'> & {
+export type ListRowProps = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'title'> & {
   /** Main text. */
   title: React.ReactNode
   /** Second line in muted text. */
@@ -253,9 +253,9 @@ export type LabListRowProps = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>
   /** Without `onClick`, `href` or `asChild`, the row is static text. */
   static?: boolean
   /** Actions revealed by swiping toward the end (they sit at the start). The first runs on a long swipe. */
-  leadingActions?: readonly LabRowAction[]
+  leadingActions?: readonly RowAction[]
   /** Actions revealed by swiping toward the start (they sit at the end). The first runs on a long swipe. */
-  trailingActions?: readonly LabRowAction[]
+  trailingActions?: readonly RowAction[]
   /** Whether a long swipe runs the first action. Default true. */
   fullSwipe?: boolean
   /** Accessible name of the reorder grip. Defaults to “Reorder” plus the title when it is text. */
@@ -269,9 +269,9 @@ let closeOpenRow: (() => void) | null = null
 /**
  * One row of a list: a full-width button (or your link with `asChild`) with leading media, title,
  * subtitle, trailing value and an optional chevron. Swipe actions reveal behind it, and inside a
- * reorderable LabListSection it gets a grip.
+ * reorderable ListSection it gets a grip.
  */
-export const LabListRow = React.forwardRef<HTMLButtonElement, LabListRowProps>(function LabListRow(
+export const ListRow = React.forwardRef<HTMLButtonElement, ListRowProps>(function ListRow(
   {
     title,
     subtitle,
@@ -296,13 +296,13 @@ export const LabListRow = React.forwardRef<HTMLButtonElement, LabListRowProps>(f
   const swipeable = !!(leadingActions?.length || trailingActions?.length)
   const [open, setOpen] = React.useState<'leading' | 'trailing' | null>(null)
   const [full, setFull] = React.useState<'leading' | 'trailing' | null>(null)
-  const offset = React.useRef<LabMotionValue | null>(null)
-  if (!offset.current) offset.current = new LabMotionValue(0, 0.25)
+  const offset = React.useRef<MotionValue | null>(null)
+  if (!offset.current) offset.current = new MotionValue(0, 0.25)
   const live = React.useRef({ leadingActions, trailingActions, fullSwipe })
   live.current = { leadingActions, trailingActions, fullSwipe }
 
   const rtl = () => !!item.current && getComputedStyle(item.current).direction === 'rtl'
-  const sides = (): LabSwipeSides => ({
+  const sides = (): SwipeSides => ({
     leading: (live.current.leadingActions?.length ?? 0) * ACTION_WIDTH,
     trailing: (live.current.trailingActions?.length ?? 0) * ACTION_WIDTH,
     row: item.current?.clientWidth ?? 360,
@@ -325,12 +325,12 @@ export const LabListRow = React.forwardRef<HTMLButtonElement, LabListRowProps>(f
   }, [swipeable])
 
   const settle = (target: number, velocity?: number) =>
-    offset.current!.animateTo(target, { spring: LAB_SPRINGS.release, velocity })
+    offset.current!.animateTo(target, { spring: SPRINGS.release, velocity })
   const close = React.useCallback(() => {
     setOpen(null)
     void settle(0)
   }, [])
-  const run = (action: LabRowAction) => {
+  const run = (action: RowAction) => {
     close()
     action.onAction()
   }
@@ -411,7 +411,7 @@ export const LabListRow = React.forwardRef<HTMLButtonElement, LabListRowProps>(f
     'className': cn('lab-list-row', className),
     'data-selected': selected || undefined,
   }
-  const actions = (side: 'leading' | 'trailing', list?: readonly LabRowAction[]) =>
+  const actions = (side: 'leading' | 'trailing', list?: readonly RowAction[]) =>
     list?.length ? (
       <div
         className="lab-list-actions"

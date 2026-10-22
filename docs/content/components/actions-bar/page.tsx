@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Check, Printer, Download, Trash2, Truck, UserRound } from 'lucide-react'
-import { LabActionsBar, type LabAction } from '@feeef.dev/ui/actions'
+import { ActionsBar, type Action } from '@feeef.dev/ui/actions'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
@@ -26,7 +26,7 @@ function PlaygroundBar({
   icons: boolean
 }) {
   const [urgent, setUrgent] = useState(false)
-  const actions = useMemo<LabAction[]>(
+  const actions = useMemo<Action[]>(
     () => [
       { id: 'delete', type: 'action', label: 'Delete', icon: icons ? <Trash2 /> : undefined, destructive: true, priority: -1, onAction: () => {} },
       { id: 'print', type: 'action', label: 'Print labels', icon: icons ? <Printer /> : undefined, priority: 0, onAction: () => {} },
@@ -43,7 +43,7 @@ function PlaygroundBar({
   )
   return (
     <div style={{ width: `min(100%, ${width}px)`, padding: 4, outline: '1px dashed var(--lab-line)', borderRadius: 12 }}>
-      <LabActionsBar actions={actions} label="Selected orders" size={size} align={align} />
+      <ActionsBar actions={actions} label="Selected orders" size={size} align={align} />
     </div>
   )
 }
@@ -62,7 +62,7 @@ function Overview() {
           />
         )}
         code={(v) =>
-          `<div style={{ width: ${v.width} }}>\n  <LabActionsBar\n    label="Selected orders"\n    actions={actions}${v.size === 'compact' ? '\n    size="compact"' : ''}${v.align === 'start' ? '\n    align="start"' : ''}\n  />\n</div>`
+          `<div style={{ width: ${v.width} }}>\n  <ActionsBar\n    label="Selected orders"\n    actions={actions}${v.size === 'compact' ? '\n    size="compact"' : ''}${v.align === 'start' ? '\n    align="start"' : ''}\n  />\n</div>`
         }
       />
 
@@ -90,7 +90,7 @@ function Overview() {
           rows={[
             [<C>action</C>, <C>{'onAction(): void | Promise<void>'}</C>, 'Button', 'Menu item'],
             [<C>toggle</C>, <C>{'checked, onCheckedChange(checked)'}</C>, <>Button with <C>aria-pressed</C></>, 'Checkbox item'],
-            [<C>group</C>, <C>{'actions: LabAction[], onOpen?()'}</C>, 'Button that opens a menu', 'Submenu'],
+            [<C>group</C>, <C>{'actions: Action[], onOpen?()'}</C>, 'Button that opens a menu', 'Submenu'],
           ]}
         />
         <p>
@@ -102,9 +102,9 @@ function Overview() {
           selected.
         </p>
         <Code
-          code={`import { LabActionsBar, type LabAction } from '@feeef.dev/ui/actions'
+          code={`import { ActionsBar, type Action } from '@feeef.dev/ui/actions'
 
-const actions: LabAction[] = [
+const actions: Action[] = [
   { id: 'delete', type: 'action', label: 'Delete', destructive: true, priority: -1, onAction: remove },
   { id: 'export', type: 'group', label: 'Export', priority: 1, actions: [
     { id: 'csv', type: 'action', label: 'CSV', onAction: exportCsv },
@@ -113,7 +113,7 @@ const actions: LabAction[] = [
   { id: 'confirm', type: 'action', label: 'Confirm', variant: 'filled', priority: 10, onAction: confirm },
 ]
 
-<LabActionsBar label="Selected orders" actions={actions} />`}
+<ActionsBar label="Selected orders" actions={actions} />`}
         />
       </Section>
 
@@ -146,16 +146,16 @@ const actions: LabAction[] = [
         <p>
           By default the bar fits the width of its own host element. A shrink-wrapping parent, like a
           dock that is only as wide as its content, can’t give a meaningful host width, so it passes
-          the space it has through <C>LabActionsWidthProvider</C> instead. <C>LabDock</C> already does
+          the space it has through <C>ActionsWidthProvider</C> instead. <C>Dock</C> already does
           this; you only need the provider when you build a similar shrink-wrapping container
           yourself.
         </p>
         <Code
-          code={`import { LabActionsBar, LabActionsWidthProvider } from '@feeef.dev/ui/actions'
+          code={`import { ActionsBar, ActionsWidthProvider } from '@feeef.dev/ui/actions'
 
-<LabActionsWidthProvider value={availableWidth}>
-  <LabActionsBar label="Card actions" actions={actions} />
-</LabActionsWidthProvider>`}
+<ActionsWidthProvider value={availableWidth}>
+  <ActionsBar label="Card actions" actions={actions} />
+</ActionsWidthProvider>`}
         />
       </Section>
 
@@ -215,9 +215,9 @@ export default definePage({
   order: 3,
   summary:
     'A row of actions that fits any width, moving the lowest-priority ones into a “More actions” menu.',
-  importLine: "import { LabActionsBar, type LabAction } from '@feeef.dev/ui/actions'",
+  importLine: "import { ActionsBar, type Action } from '@feeef.dev/ui/actions'",
   source: 'src/actions/actions-bar.tsx',
-  api: ['LabActionsBar', 'LabActionsWidthProvider'],
+  api: ['ActionsBar', 'ActionsWidthProvider'],
   keywords: ['toolbar', 'overflow', 'more actions', 'menu', 'bulk actions', 'priority', 'responsive'],
   Overview,
   examples: examplesFrom(
@@ -226,7 +226,7 @@ export default definePage({
   ),
   Preview: () => (
     <div style={{ width: 220 }}>
-      <LabActionsBar
+      <ActionsBar
         label="Order actions"
         size="compact"
         actions={[

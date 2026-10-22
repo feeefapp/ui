@@ -1,15 +1,15 @@
-import { LabPopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
+import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
 
 export default function Static() {
   return (
-    <LabPopoverSurface
+    <PopoverSurface
       role="note"
       aria-label="Delivery estimate"
       style={{ width: 'min(100%, 300px)', padding: 16, display: 'grid', gap: 4 }}
     >
       <strong>Arrives Thursday</strong>
       <span>Home delivery to Oran · 650 DZD · Cash on delivery</span>
-    </LabPopoverSurface>
+    </PopoverSurface>
   )
 }
 

@@ -1,5 +1,5 @@
-import { type SpringState } from './primitives/spring-core.js';
-export declare function stepSearchMorph(state: SpringState, target: number, elapsed: number): SpringState;
+import { type StepSpringState } from './primitives/spring-core.js';
+export declare function stepSearchMorph(state: StepSpringState, target: number, elapsed: number): StepSpringState;
 /** Separate visibility windows keep returning controls out of the fading editor. */
 export declare function searchMorphVisibility(progress: number): {
     editor: number;

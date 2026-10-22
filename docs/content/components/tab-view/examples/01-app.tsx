@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { MessageSquare, Package, PhoneCall, Settings, ShoppingBag } from 'lucide-react'
 import {
-  LabNavigationPage,
-  LabNavigationStack,
-  LabTabView,
-  useLabNavigationPath,
+  NavigationPage,
+  NavigationStack,
+  TabView,
+  useNavigationPath,
 } from '@feeef.dev/ui/containers'
-import { LabListRow, LabListSection } from '@feeef.dev/ui/primitives/list'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { ListRow, ListSection } from '@feeef.dev/ui/primitives/list'
+import { Button } from '@feeef.dev/ui/primitives/button'
 import { Device } from '../../../../src/blocks/device'
 
 const ORDERS = Array.from({ length: 24 }, (_, i) => ({
@@ -17,13 +17,13 @@ const ORDERS = Array.from({ length: 24 }, (_, i) => ({
 }))
 
 function OrdersTab() {
-  const nav = useLabNavigationPath<number>()
+  const nav = useNavigationPath<number>()
   return (
-    <LabNavigationStack label="Orders" onBack={() => nav.pop()}>
-      <LabNavigationPage key="orders" title="Orders" subtitle="Scroll down: the tab bar steps aside.">
-        <LabListSection header="Today">
+    <NavigationStack label="Orders" onBack={() => nav.pop()}>
+      <NavigationPage key="orders" title="Orders" subtitle="Scroll down: the tab bar steps aside.">
+        <ListSection header="Today">
           {ORDERS.map((o) => (
-            <LabListRow
+            <ListRow
               key={o.id}
               chevron
               leading={<Package />}
@@ -32,31 +32,31 @@ function OrdersTab() {
               onClick={() => nav.push(o.id)}
             />
           ))}
-        </LabListSection>
-      </LabNavigationPage>
+        </ListSection>
+      </NavigationPage>
       {nav.path.map((id) => (
-        <LabNavigationPage key={id} title={`Order #${id}`}>
-          <LabListSection header="Order">
-            <LabListRow static title="Status" trailing="To confirm" />
-            <LabListRow static title="Courier" trailing="Yalidine" />
-          </LabListSection>
-        </LabNavigationPage>
+        <NavigationPage key={id} title={`Order #${id}`}>
+          <ListSection header="Order">
+            <ListRow static title="Status" trailing="To confirm" />
+            <ListRow static title="Courier" trailing="Yalidine" />
+          </ListSection>
+        </NavigationPage>
       ))}
-    </LabNavigationStack>
+    </NavigationStack>
   )
 }
 
 function SimpleTab({ title, rows }: { title: string; rows: string[] }) {
   return (
-    <LabNavigationStack label={title}>
-      <LabNavigationPage key="root" title={title}>
-        <LabListSection>
+    <NavigationStack label={title}>
+      <NavigationPage key="root" title={title}>
+        <ListSection>
           {rows.map((r) => (
-            <LabListRow key={r} chevron title={r} onClick={() => {}} />
+            <ListRow key={r} chevron title={r} onClick={() => {}} />
           ))}
-        </LabListSection>
-      </LabNavigationPage>
-    </LabNavigationStack>
+        </ListSection>
+      </NavigationPage>
+    </NavigationStack>
   )
 }
 
@@ -66,7 +66,7 @@ export default function StoreApp() {
   return (
     <Device label="A phone showing a store app with four tabs">
       <div className="demo-fill">
-        <LabTabView
+        <TabView
           label="Store"
           value={tab}
           onChange={setTab}
@@ -75,9 +75,9 @@ export default function StoreApp() {
               <div className="demo-call">
                 <PhoneCall size={18} />
                 <span>Calling Amina · 02:14</span>
-                <LabButton variant="text" appearance="toolbar" controlSize="compact" onClick={() => setCalling(false)}>
+                <Button variant="text" appearance="toolbar" controlSize="compact" onClick={() => setCalling(false)}>
                   End
-                </LabButton>
+                </Button>
               </div>
             )
           }

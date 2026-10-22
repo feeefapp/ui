@@ -1,17 +1,17 @@
 import { useMemo, useRef, useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabNumberField } from '@feeef.dev/ui/primitives/number-field'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { NumberField } from '@feeef.dev/ui/primitives/number-field'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 import {
-  LAB_SPRINGS,
+  SPRINGS,
   nearestTarget,
   projectMomentum,
   rubberBandClamp,
   solveSpring,
-  useLabMotionPaint,
-  useLabMotionValue,
-  useLabPan,
-  type LabSpring,
+  useMotionPaint,
+  useMotionValue,
+  usePan,
+  type Spring,
 } from '@feeef.dev/ui/physics'
 import { definePage } from '../../../src/model'
 import { C, Code } from '../../../src/blocks/code'
@@ -20,13 +20,13 @@ import { Link } from '../../../src/router'
 import '../_lib/foundations.css'
 import './physics.css'
 
-type Preset = keyof typeof LAB_SPRINGS
+type Preset = keyof typeof SPRINGS
 
 /** Position over time for a spring from 0 to 1, drawn as a curve, with a ball that plays it. */
 function SpringExplorer() {
   const [preset, setPreset] = useState<Preset | 'custom'>('snappy')
-  const [custom, setCustom] = useState<LabSpring>({ duration: 0.5, bounce: 0.2 })
-  const spring = preset === 'custom' ? custom : LAB_SPRINGS[preset]
+  const [custom, setCustom] = useState<Spring>({ duration: 0.5, bounce: 0.2 })
+  const spring = preset === 'custom' ? custom : SPRINGS[preset]
   const path = useMemo(() => {
     const at = solveSpring(spring, 0, 1)
     const points: string[] = []
@@ -36,15 +36,15 @@ function SpringExplorer() {
     }
     return `M${points.join(' L')}`
   }, [spring.duration, spring.bounce])
-  const ball = useLabMotionValue(0, 0.001)
+  const ball = useMotionValue(0, 0.001)
   const dot = useRef<HTMLDivElement>(null)
-  useLabMotionPaint(ball, (v) => {
+  useMotionPaint(ball, (v) => {
     if (dot.current) dot.current.style.insetInlineStart = `calc(${v} * (100% - 32px))`
   })
   return (
     <div className="fd-stage" data-layout="column">
       <div className="ph-controls">
-        <LabSegmentedControl<Preset | 'custom'>
+        <SegmentedControl<Preset | 'custom'>
           label="Spring"
           value={preset}
           onChange={setPreset}
@@ -58,7 +58,7 @@ function SpringExplorer() {
         />
         {preset === 'custom' && (
           <div className="ph-fields">
-            <LabNumberField
+            <NumberField
               label="Duration"
               controlSize="compact"
               min={0.1}
@@ -68,7 +68,7 @@ function SpringExplorer() {
               value={custom.duration}
               onValueChange={(duration) => setCustom((s) => ({ ...s, duration }))}
             />
-            <LabNumberField
+            <NumberField
               label="Bounce"
               controlSize="compact"
               min={-0.5}
@@ -89,13 +89,13 @@ function SpringExplorer() {
         <div ref={dot} className="fd-motion-dot" />
       </div>
       <div className="demo-row" style={{ justifyContent: 'flex-start' }}>
-        <LabButton
+        <Button
           variant="tonal"
           controlSize="compact"
           onClick={() => void ball.animateTo(ball.getTarget() > 0.5 ? 0 : 1, { spring })}
         >
           Play
-        </LabButton>
+        </Button>
         <span className="docs-muted">
           duration {spring.duration}s · bounce {spring.bounce}. Press Play again mid-flight: it turns around
           without a jump.
@@ -111,14 +111,14 @@ function FlickDemo() {
   const track = useRef<HTMLDivElement>(null)
   const puck = useRef<HTMLDivElement>(null)
   const ghost = useRef<HTMLDivElement>(null)
-  const x = useLabMotionValue(0, 0.5)
+  const x = useMotionValue(0, 0.5)
   const [readout, setReadout] = useState('Drag or flick the puck.')
   const width = () => (track.current?.clientWidth ?? 300) - 40
-  useLabMotionPaint(x, (v) => {
+  useMotionPaint(x, (v) => {
     if (puck.current) puck.current.style.transform = `translateX(${v}px)`
   })
   const start = useRef(0)
-  useLabPan(track, {
+  usePan(track, {
     axis: 'x',
     threshold: 2,
     onStart: () => {
@@ -141,7 +141,7 @@ function FlickDemo() {
       setReadout(
         `Released at ${Math.round(velocity)} px/s → would travel to ${Math.round(projected)}px → snaps to ${Math.round(target)}px`
       )
-      void x.animateTo(target, { spring: LAB_SPRINGS.release, velocity })
+      void x.animateTo(target, { spring: SPRINGS.release, velocity })
     },
   })
   return (
@@ -200,20 +200,20 @@ function Overview() {
         </p>
         <FlickDemo />
         <Code
-          code={`import { LAB_SPRINGS, nearestTarget, projectMomentum, rubberBandClamp,
-  useLabMotionPaint, useLabMotionValue, useLabPan } from '@feeef.dev/ui/physics'
+          code={`import { SPRINGS, nearestTarget, projectMomentum, rubberBandClamp,
+  useMotionPaint, useMotionValue, usePan } from '@feeef.dev/ui/physics'
 
-const x = useLabMotionValue(0)
-useLabMotionPaint(x, (v) => (puck.current!.style.transform = \`translateX(\${v}px)\`))
+const x = useMotionValue(0)
+useMotionPaint(x, (v) => (puck.current!.style.transform = \`translateX(\${v}px)\`))
 let start = 0
-useLabPan(track, {
+usePan(track, {
   axis: 'x',
   onStart: () => { x.stop(); start = x.get() },
   onMove: ({ dx, time }) => x.track(rubberBandClamp(start + dx, 0, max, max), time),
   onEnd: ({ time }) => {
     const velocity = x.getVelocity(time)
     const target = nearestTarget(projectMomentum(x.get(), velocity, 0.99), [0, max / 2, max])
-    void x.animateTo(target, { spring: LAB_SPRINGS.release, velocity })
+    void x.animateTo(target, { spring: SPRINGS.release, velocity })
   },
 })`}
         />
@@ -223,11 +223,11 @@ useLabPan(track, {
         <Table
           head={['API', 'What it is']}
           rows={[
-            [<C>LabMotionValue</C>, 'One animatable number with a velocity. animateTo(spring), track(pointer), set, stop; subscribers paint it without React renders.'],
-            [<C>useLabPan</C>, 'A one-axis pan recognizer with velocity: hands perpendicular movement back to the browser, leaves nested scrollers and sliders alone, and can claim touches that compete with native scrolling (touch: "claim").'],
+            [<C>MotionValue</C>, 'One animatable number with a velocity. animateTo(spring), track(pointer), set, stop; subscribers paint it without React renders.'],
+            [<C>usePan</C>, 'A one-axis pan recognizer with velocity: hands perpendicular movement back to the browser, leaves nested scrollers and sliders alone, and can claim touches that compete with native scrolling (touch: "claim").'],
             [<C>projectMomentum</C>, 'Where a value moving at a speed would come to rest (0.998 normal, 0.99 fast deceleration).'],
             [<C>rubberBand</C>, 'How far content visibly moves when pulled past a limit.'],
-            [<C>LabLayoutGroup</C>, 'Shared-element layout transitions: marked elements fly from their old place to their new one. See Layout transitions.'],
+            [<C>LayoutGroup</C>, 'Shared-element layout transitions: marked elements fly from their old place to their new one. See Layout transitions.'],
             [<C>solveSpring</C>, 'The closed-form spring itself, for custom drivers.'],
           ]}
         />

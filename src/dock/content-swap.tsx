@@ -8,7 +8,7 @@ import { cn } from '../utils'
  * inert (focus moves to the dock first), then the new content fades in. Same-key changes keep focus
  * and child state.
  */
-export function LabDockContentSwap({
+export function DockContentSwap({
   swapKey,
   children,
 }: {

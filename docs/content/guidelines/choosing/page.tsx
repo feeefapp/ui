@@ -1,16 +1,16 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Columns3, List, Printer, Tag, Truck } from 'lucide-react'
-import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
-import { LabCheckbox, LabRadioGroup } from '@feeef.dev/ui/primitives/choice'
-import { LabSlideSwitch } from '@feeef.dev/ui/primitives/slider'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
-import { LabNumberField } from '@feeef.dev/ui/primitives/number-field'
-import { LabDateRangeField } from '@feeef.dev/ui/primitives/temporal-field'
-import { LabModal } from '@feeef.dev/ui/primitives/modal'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabActionsBar, type LabAction } from '@feeef.dev/ui/actions'
-import { LabAutoHeight } from '@feeef.dev/ui/motion'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { Checkbox, RadioGroup } from '@feeef.dev/ui/primitives/choice'
+import { SlideSwitch } from '@feeef.dev/ui/primitives/slider'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
+import { NumberField } from '@feeef.dev/ui/primitives/number-field'
+import { DateRangeField } from '@feeef.dev/ui/primitives/temporal-field'
+import { Modal } from '@feeef.dev/ui/primitives/modal'
+import { Dock } from '@feeef.dev/ui/dock'
+import { ActionsBar, type Action } from '@feeef.dev/ui/actions'
+import { AutoHeight } from '@feeef.dev/ui/motion'
 import { definePage } from '../../../src/model'
 import { Link } from '../../../src/router'
 import { C } from '../../../src/blocks/code'
@@ -35,7 +35,7 @@ function Flow({ steps }: { steps: [question: ReactNode, answer: ReactNode][] }) 
 /* ---------- Demos ---------- */
 
 function SelectionDock() {
-  const actions = useMemo<LabAction[]>(
+  const actions = useMemo<Action[]>(
     () => [
       { id: 'tag', type: 'action', label: 'Add tag', icon: <Tag />, priority: 0, onAction: () => {} },
       { id: 'print', type: 'action', label: 'Print labels', icon: <Printer />, priority: 1, onAction: () => {} },
@@ -44,24 +44,24 @@ function SelectionDock() {
     []
   )
   return (
-    <LabDock label="Actions for 3 selected orders">
-      <LabActionsBar label="Selected orders" actions={actions} size="compact" />
-    </LabDock>
+    <Dock label="Actions for 3 selected orders">
+      <ActionsBar label="Selected orders" actions={actions} size="compact" />
+    </Dock>
   )
 }
 
 function ScatteredIcons() {
   return (
     <div className="demo-row" style={{ gap: 20 }}>
-      <LabIconButton variant="elevated" aria-label="Add tag">
+      <IconButton variant="elevated" aria-label="Add tag">
         <Tag size={20} />
-      </LabIconButton>
-      <LabIconButton variant="filled" aria-label="Ship orders">
+      </IconButton>
+      <IconButton variant="filled" aria-label="Ship orders">
         <Truck size={20} />
-      </LabIconButton>
-      <LabIconButton variant="elevated" aria-label="Print labels">
+      </IconButton>
+      <IconButton variant="elevated" aria-label="Print labels">
         <Printer size={20} />
-      </LabIconButton>
+      </IconButton>
     </div>
   )
 }
@@ -69,7 +69,7 @@ function ScatteredIcons() {
 function ViewSwitchGood() {
   const [view, setView] = useState<'list' | 'board'>('list')
   return (
-    <LabSegmentedControl
+    <SegmentedControl
       label="Orders view"
       value={view}
       onChange={setView}
@@ -84,7 +84,7 @@ function ViewSwitchGood() {
 function ViewSwitchBad() {
   return (
     <div className="demo-column">
-      <LabRadioGroup
+      <RadioGroup
         label="Orders view"
         defaultValue="list"
         options={[
@@ -101,11 +101,11 @@ function SettingsGood() {
     <div className="demo-column">
       <div className="gl-setting">
         <span aria-hidden="true">Cash on delivery</span>
-        <LabSlideSwitch label="Cash on delivery" defaultChecked />
+        <SlideSwitch label="Cash on delivery" defaultChecked />
       </div>
       <div className="gl-setting">
         <span aria-hidden="true">Stop desk delivery</span>
-        <LabSlideSwitch label="Stop desk delivery" />
+        <SlideSwitch label="Stop desk delivery" />
       </div>
     </div>
   )
@@ -114,8 +114,8 @@ function SettingsGood() {
 function SettingsBad() {
   return (
     <div className="demo-column">
-      <LabCheckbox label="Cash on delivery" defaultChecked />
-      <LabCheckbox label="Stop desk delivery" />
+      <Checkbox label="Cash on delivery" defaultChecked />
+      <Checkbox label="Stop desk delivery" />
       <p className="gl-caption">Saved automatically.</p>
     </div>
   )
@@ -124,7 +124,7 @@ function SettingsBad() {
 function ArithmeticField() {
   return (
     <div className="demo-column">
-      <LabNumberField label="Order total" unit="DA" min={0} step={50} defaultValue={3750} />
+      <NumberField label="Order total" unit="DA" min={0} step={50} defaultValue={3750} />
       <p className="gl-caption">
         Click the value and type <code>1250*3</code>, <code>4500+400</code> or <code>3750*10%</code>.
       </p>
@@ -135,7 +135,7 @@ function ArithmeticField() {
 function PhoneGood() {
   return (
     <div className="demo-column">
-      <LabTextField
+      <TextField
         hint="Customer phone"
         type="tel"
         inputMode="tel"
@@ -150,7 +150,7 @@ function PhoneGood() {
 function PhoneBad() {
   return (
     <div className="demo-column">
-      <LabNumberField label="Customer phone" defaultValue={555123456} />
+      <NumberField label="Customer phone" defaultValue={555123456} />
     </div>
   )
 }
@@ -162,7 +162,7 @@ function RangeGood() {
   })
   return (
     <div className="demo-column">
-      <LabDateRangeField hint="Orders placed" value={period} onValueChange={setPeriod} />
+      <DateRangeField hint="Orders placed" value={period} onValueChange={setPeriod} />
     </div>
   )
 }
@@ -170,8 +170,8 @@ function RangeGood() {
 function RangeBad() {
   return (
     <div className="demo-column">
-      <LabTextField hint="From" placeholder="DD/MM/YYYY" defaultValue="01/10/2026" />
-      <LabTextField hint="To" placeholder="DD/MM/YYYY" defaultValue="21/10/26" />
+      <TextField hint="From" placeholder="DD/MM/YYYY" defaultValue="01/10/2026" />
+      <TextField hint="To" placeholder="DD/MM/YYYY" defaultValue="21/10/26" />
     </div>
   )
 }
@@ -182,13 +182,13 @@ function DetailInline() {
     <div className="gl-card">
       <div className="gl-card-row">
         <strong>Order #10482</strong>
-        <LabButton variant="text" controlSize="compact" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <Button variant="text" controlSize="compact" aria-expanded={open} onClick={() => setOpen(!open)}>
           {open ? 'Hide address' : 'Show address'}
-        </LabButton>
+        </Button>
       </div>
-      <LabAutoHeight>
+      <AutoHeight>
         {open && <p className="gl-card-detail">Cité 500 logements, bloc C, Bab Ezzouar, 16 · Alger</p>}
-      </LabAutoHeight>
+      </AutoHeight>
     </div>
   )
 }
@@ -199,13 +199,13 @@ function DetailModal() {
     <div className="gl-card">
       <div className="gl-card-row">
         <strong>Order #10482</strong>
-        <LabButton variant="text" controlSize="compact" onClick={() => setOpen(true)}>
+        <Button variant="text" controlSize="compact" onClick={() => setOpen(true)}>
           Show address
-        </LabButton>
+        </Button>
       </div>
-      <LabModal open={open} close={() => setOpen(false)} label="Delivery address" scrollable fitContent>
+      <Modal open={open} close={() => setOpen(false)} label="Delivery address" scrollable fitContent>
         <p className="gl-modal-body">Cité 500 logements, bloc C, Bab Ezzouar, 16 · Alger</p>
-      </LabModal>
+      </Modal>
     </div>
   )
 }
@@ -218,12 +218,12 @@ function LimitNotice() {
         keep going now.
       </p>
       <div className="gl-notice-actions">
-        <LabButton variant="filled" controlSize="compact">
+        <Button variant="filled" controlSize="compact">
           Add funds
-        </LabButton>
-        <LabButton variant="text" controlSize="compact">
+        </Button>
+        <Button variant="text" controlSize="compact">
           See plans
-        </LabButton>
+        </Button>
       </div>
     </div>
   )
@@ -232,9 +232,9 @@ function LimitNotice() {
 function LimitToast() {
   return (
     <div className="demo-column" style={{ justifyItems: 'center' }}>
-      <LabButton variant="filled" className="gl-faded">
+      <Button variant="filled" className="gl-faded">
         Generate
-      </LabButton>
+      </Button>
       <span className="gl-toast" role="status">
         Error 429: quota exceeded
       </span>
@@ -245,10 +245,10 @@ function LimitToast() {
 function LoadingGood() {
   return (
     <div className="demo-row">
-      <LabButton variant="text">Cancel</LabButton>
-      <LabButton variant="filled" loading>
+      <Button variant="text">Cancel</Button>
+      <Button variant="filled" loading>
         Ship order
-      </LabButton>
+      </Button>
     </div>
   )
 }
@@ -258,12 +258,12 @@ function LoadingBad() {
     <div className="demo-column" style={{ justifyItems: 'center' }}>
       <p className="gl-caption">Please wait…</p>
       <div className="demo-row">
-        <LabButton variant="text" disabled>
+        <Button variant="text" disabled>
           Cancel
-        </LabButton>
-        <LabButton variant="filled" disabled>
+        </Button>
+        <Button variant="filled" disabled>
           Ship order
-        </LabButton>
+        </Button>
       </div>
     </div>
   )
@@ -297,7 +297,7 @@ function Overview() {
             [
               'Does it take people to another page?',
               <>
-                It is navigation, so it must be a link. Use <C>LabButton asChild</C> around your router link
+                It is navigation, so it must be a link. Use <C>Button asChild</C> around your router link
                 when it should look like a button; people can then open it in a new tab.
               </>,
             ],
@@ -311,14 +311,14 @@ function Overview() {
             [
               'Is it one of the task’s actions: the main one, commands for a selection, Save and Cancel?',
               <>
-                Put them in a <Link to="/components/dock">LabDock</Link> in the bottom slot of the scaffold,
+                Put them in a <Link to="/components/dock">Dock</Link> in the bottom slot of the scaffold,
                 scroll area or scrollable modal. On phones that is where the thumb already is.
               </>,
             ],
             [
               'Is it one of a few related tools in the app bar: view, zoom, text style?',
               <>
-                One <Link to="/components/toolbar">LabToolbarGroup</Link> per purpose, with{' '}
+                One <Link to="/components/toolbar">ToolbarGroup</Link> per purpose, with{' '}
                 <C>appearance="toolbar"</C> on every control inside (
                 <Link to="/guidelines/principles#tools-travel-together">principle 3</Link>).
               </>,
@@ -326,14 +326,14 @@ function Overview() {
             [
               'Could the row run out of width on a phone, in French, or with a long selection?',
               <>
-                <Link to="/components/actions-bar">LabActionsBar</Link>, usually inside the dock. Give the
+                <Link to="/components/actions-bar">ActionsBar</Link>, usually inside the dock. Give the
                 main action the highest <C>priority</C>; the rarest go to “More actions” first.
               </>,
             ],
             [
               'Is space tight and the icon one everybody knows?',
               <>
-                <C>LabIconButton</C> with an <C>aria-label</C>. Close, search, back, more, bold. Anything
+                <C>IconButton</C> with an <C>aria-label</C>. Close, search, back, more, bold. Anything
                 people would have to guess gets a text label.
               </>,
             ],
@@ -342,14 +342,14 @@ function Overview() {
         <Table
           head={['Situation', 'Use', 'Why']}
           rows={[
-            ['Goes to another page', <><C>LabButton asChild</C> + router link</>, 'Links open in new tabs and work with the back button.'],
+            ['Goes to another page', <><C>Button asChild</C> + router link</>, 'Links open in new tabs and work with the back button.'],
             ['Completes the view', <><C>variant="filled"</C>, once</>, 'People find the next step without reading.'],
             ['Supports the main action', <><C>tonal</C>, <C>outlined</C> or <C>text</C></>, 'Steps down so the main action stays the main one.'],
             ['Deletes or discards', <><C>variant="destructive"</C> + confirmation</>, 'Red keeps its meaning only if it is rare.'],
-            ['Task actions of a page or dialog', <C>LabDock</C>, 'Floats over content, height is reserved, reachable by thumb.'],
-            ['Related tools over the content', <C>LabToolbarGroup</C>, 'One glass bubble reads as one thing.'],
-            ['More actions than the width allows', <C>LabActionsBar</C>, 'Overflows into a menu instead of wrapping or clipping.'],
-            ['A well-known icon in tight space', <C>LabIconButton</C>, 'Compact, but only when nobody has to guess.'],
+            ['Task actions of a page or dialog', <C>Dock</C>, 'Floats over content, height is reserved, reachable by thumb.'],
+            ['Related tools over the content', <C>ToolbarGroup</C>, 'One glass bubble reads as one thing.'],
+            ['More actions than the width allows', <C>ActionsBar</C>, 'Overflows into a menu instead of wrapping or clipping.'],
+            ['A well-known icon in tight space', <C>IconButton</C>, 'Compact, but only when nobody has to guess.'],
           ]}
         />
         <Compare
@@ -382,34 +382,34 @@ function Overview() {
             [
               'Does it change what the view shows: List or Board, Day or Week?',
               <>
-                <Link to="/components/segmented-control">LabSegmentedControl</Link>. It is the only view
+                <Link to="/components/segmented-control">SegmentedControl</Link>. It is the only view
                 and mode picker in the kit, also inside toolbars (<C>appearance="plain"</C> in a group).
               </>,
             ],
             [
               'Is it on or off for one thing, and does it apply as soon as it is flipped?',
               <>
-                <Link to="/components/switch">LabSlideSwitch</Link>, with no Save button. Show{' '}
+                <Link to="/components/switch">SlideSwitch</Link>, with no Save button. Show{' '}
                 <C>loading</C> while it saves.
               </>,
             ],
             [
               'Is it on or off inside a form that is saved later?',
               <>
-                <Link to="/components/checkbox">LabCheckbox</Link>, with a positive label.
+                <Link to="/components/checkbox">Checkbox</Link>, with a positive label.
               </>,
             ],
             [
               'Exactly one of two to five options that people should compare?',
               <>
-                <Link to="/components/radio-group">LabRadioGroup</Link>. Descriptions under each option
+                <Link to="/components/radio-group">RadioGroup</Link>. Descriptions under each option
                 explain the difference (“Stop desk: the customer picks it up”).
               </>,
             ],
             [
               'Exactly one of a longer or familiar list: wilaya, courier, currency?',
               <>
-                <Link to="/components/select">LabSelect</Link>. Hundreds of items, such as products or
+                <Link to="/components/select">Select</Link>. Hundreds of items, such as products or
                 communes, need a searchable picker instead.
               </>,
             ],
@@ -425,13 +425,13 @@ function Overview() {
         <Table
           head={['Options', 'Applies', 'Is it a view?', 'Use']}
           rows={[
-            ['2–5 short', 'Immediately', 'Yes', <C>LabSegmentedControl</C>],
-            ['1 (on/off)', 'Immediately', 'No', <C>LabSlideSwitch</C>],
-            ['1 (on/off)', 'With the form', 'No', <C>LabCheckbox</C>],
-            ['2–5, worth comparing', 'With the form', 'No', <C>LabRadioGroup</C>],
-            ['About 6 or more', 'Either', 'No', <C>LabSelect</C>],
-            ['Any number', 'With the form', 'No', <>Several <C>LabCheckbox</C></>],
-            ['Narrowing a list', 'Immediately', 'No', <C>LabFilterBar</C>],
+            ['2–5 short', 'Immediately', 'Yes', <C>SegmentedControl</C>],
+            ['1 (on/off)', 'Immediately', 'No', <C>SlideSwitch</C>],
+            ['1 (on/off)', 'With the form', 'No', <C>Checkbox</C>],
+            ['2–5, worth comparing', 'With the form', 'No', <C>RadioGroup</C>],
+            ['About 6 or more', 'Either', 'No', <C>Select</C>],
+            ['Any number', 'With the form', 'No', <>Several <C>Checkbox</C></>],
+            ['Narrowing a list', 'Immediately', 'No', <C>FilterBar</C>],
           ]}
         />
         <Compare
@@ -459,50 +459,50 @@ function Overview() {
               'Is it a day, a time, or a span of either?',
               <>
                 The <Link to="/components/date-time-fields">date and time fields</Link>: pick the wrapper
-                that names the value (<C>LabDateField</C>, <C>LabDateRangeField</C>…). One range field,
+                that names the value (<C>DateField</C>, <C>DateRangeField</C>…). One range field,
                 never two date fields.
               </>,
             ],
             [
               'Is it an identifier made of digits: phone, order number, tracking code, postal code?',
               <>
-                <Link to="/components/text-field">LabTextField</Link> with <C>inputMode="tel"</C> or{' '}
+                <Link to="/components/text-field">TextField</Link> with <C>inputMode="tel"</C> or{' '}
                 <C>"numeric"</C>. Leading zeros and spaces must survive, and nobody scrubs a phone number.
               </>,
             ],
             [
               'Is it an amount people set, adjust or work out: price, fee, quantity, stock?',
               <>
-                <Link to="/components/number-field">LabNumberField</Link> with a <C>unit</C> and a real{' '}
+                <Link to="/components/number-field">NumberField</Link> with a <C>unit</C> and a real{' '}
                 <C>step</C>. Leave out <C>max</C> for open-ended amounts.
               </>,
             ],
             [
               'Is it a position in a known range, where the effect matters more than the exact number?',
               <>
-                <Link to="/components/slider">LabSlider</Link> with the value shown next to it: a discount,
-                an image strength, a volume. In a dense panel, a bounded <C>LabNumberField</C> does the same
+                <Link to="/components/slider">Slider</Link> with the value shown next to it: a discount,
+                an image strength, a volume. In a dense panel, a bounded <C>NumberField</C> does the same
                 in one row.
               </>,
             ],
-            ['Anything else people type?', <><C>LabTextField</C>; <C>multiline</C> for notes and addresses.</>],
+            ['Anything else people type?', <><C>TextField</C>; <C>multiline</C> for notes and addresses.</>],
           ]}
         />
         <Table
           head={['Value', 'Use', 'Set']}
           rows={[
-            ['Customer name, address, note', <C>LabTextField</C>, <><C>autoComplete</C>, <C>multiline</C> for long text</>],
-            ['Phone number', <C>LabTextField</C>, <><C>type="tel"</C>, <C>inputMode="tel"</C>, a <C>+213</C> prefix in <C>leading</C> if needed</>],
-            ['Order number, tracking code', <C>LabTextField</C>, <C>inputMode="numeric"</C>],
-            ['Price, delivery fee, quantity', <C>LabNumberField</C>, <><C>unit="DA"</C>, <C>{'min={0}'}</C>, <C>step</C></>],
-            ['Discount, strength, rating', <><C>LabSlider</C> or bounded <C>LabNumberField</C></>, <><C>min</C>, <C>max</C>, <C>getValueText</C></>],
-            ['Delivery date, callback time', <><C>LabDateField</C>, <C>LabTimeField</C></>, <><C>min</C>, presets like Today and Tomorrow</>],
-            ['Report period, working hours', <><C>LabDateRangeField</C>, <C>LabTimeRangeField</C></>, 'Presets that match the task'],
+            ['Customer name, address, note', <C>TextField</C>, <><C>autoComplete</C>, <C>multiline</C> for long text</>],
+            ['Phone number', <C>TextField</C>, <><C>type="tel"</C>, <C>inputMode="tel"</C>, a <C>+213</C> prefix in <C>leading</C> if needed</>],
+            ['Order number, tracking code', <C>TextField</C>, <C>inputMode="numeric"</C>],
+            ['Price, delivery fee, quantity', <C>NumberField</C>, <><C>unit="DA"</C>, <C>{'min={0}'}</C>, <C>step</C></>],
+            ['Discount, strength, rating', <><C>Slider</C> or bounded <C>NumberField</C></>, <><C>min</C>, <C>max</C>, <C>getValueText</C></>],
+            ['Delivery date, callback time', <><C>DateField</C>, <C>TimeField</C></>, <><C>min</C>, presets like Today and Tomorrow</>],
+            ['Report period, working hours', <><C>DateRangeField</C>, <C>TimeRangeField</C></>, 'Presets that match the task'],
           ]}
         />
         <Section title="When typed arithmetic helps" id="arithmetic" level={3}>
           <p>
-            <C>LabNumberField</C> evaluates what people type: <C>1250*3</C>, <C>(4500+900)/2</C>,{' '}
+            <C>NumberField</C> evaluates what people type: <C>1250*3</C>, <C>(4500+900)/2</C>,{' '}
             <C>2000*15%</C>. It saves a trip to the calculator whenever the number comes from other
             numbers:
           </p>
@@ -544,7 +544,7 @@ function Overview() {
             [
               'Must the person decide or finish something before going on?',
               <>
-                <Link to="/components/modal">LabModal</Link>: confirming a cancellation, editing an
+                <Link to="/components/modal">Modal</Link>: confirming a cancellation, editing an
                 address, choosing a courier. Use <C>scrollable</C> with the actions in a bottom dock. Never a
                 modal from a modal.
               </>,
@@ -552,7 +552,7 @@ function Overview() {
             [
               'Is it a short task about this page that should not take the person away: filters, contact options, a quick edit?',
               <>
-                A <Link to="/components/sheet">LabSheet</Link>. It rises from the bottom on phones (half
+                A <Link to="/components/sheet">Sheet</Link>. It rises from the bottom on phones (half
                 height, growing to full when dragged) and becomes a centered dialog on wide screens. The page
                 stays behind it, dimmed.
               </>,
@@ -560,7 +560,7 @@ function Overview() {
             [
               'Is it a small detail or a few quick controls tied to one element?',
               <>
-                A popover on <Link to="/components/popover-surface">LabPopoverSurface</Link>: a delivery
+                A popover on <Link to="/components/popover-surface">PopoverSurface</Link>: a delivery
                 note, a sort menu, a row’s actions. It closes when people click away, so it never holds
                 work they could lose.
               </>,
@@ -569,13 +569,13 @@ function Overview() {
               'Does it belong to the thing on screen, and is it worth seeing together with it?',
               <>
                 Expand it inline: an address, advanced options, an order’s call history. Wrap it in{' '}
-                <C>LabAutoHeight</C> so the height change is explained, not a jump.
+                <C>AutoHeight</C> so the height change is explained, not a jump.
               </>,
             ],
             [
               'Do people open item after item from a list and keep the list in view?',
               <>
-                A <Link to="/components/split-view">LabSplitView</Link>: list and item side by side on wide
+                A <Link to="/components/split-view">SplitView</Link>: list and item side by side on wide
                 screens, the item pushed over the list on phones. For editing properties of a selection, an
                 inspector at the end of the layout (
                 <Link to="/guidelines/principles#navigation-work-details">principle 4</Link>).
@@ -584,7 +584,7 @@ function Overview() {
             [
               'Is the person going deeper into one thing and expecting to come back the same way?',
               <>
-                Push a page on a <Link to="/components/navigation-stack">LabNavigationStack</Link>: back button
+                Push a page on a <Link to="/components/navigation-stack">NavigationStack</Link>: back button
                 with the previous title, swipe back, and the previous page exactly as it was left. When the page
                 grows out of a card (a product, a photo), push it with a zoom.
               </>,
@@ -598,14 +598,14 @@ function Overview() {
         <Table
           head={['Need', 'Use', 'Behavior']}
           rows={[
-            ['A decision or a short task that blocks the rest', <C>LabModal</C>, 'Page is inert; Escape or Cancel closes; focus returns.'],
-            ['A short task about the page, mostly on phones', <C>LabSheet</C>, 'Detents, drag and flick; a dialog on wide screens.'],
-            ['Going deeper and coming back', <C>LabNavigationStack</C>, 'Push and pop, swipe back, pages stay mounted.'],
-            ['Many items from one list', <C>LabSplitView</C>, 'Side by side when wide, a stack on phones.'],
-            ['Top-level places on a phone', <C>LabTabView</C>, 'Each tab keeps its stack; the bar shrinks while reading.'],
-            ['Browsing a few items sideways', <C>LabCarousel</C>, 'Snap paging, a peek of the next item, never auto-advancing.'],
-            ['A glance or a quick control on one element', <>Popover on <C>LabPopoverSurface</C></>, 'Anchored, light, dismissed by clicking away.'],
-            ['A few more lines about the same thing', <>Inline, in <C>LabAutoHeight</C></>, 'Stays in context; nothing covers the page.'],
+            ['A decision or a short task that blocks the rest', <C>Modal</C>, 'Page is inert; Escape or Cancel closes; focus returns.'],
+            ['A short task about the page, mostly on phones', <C>Sheet</C>, 'Detents, drag and flick; a dialog on wide screens.'],
+            ['Going deeper and coming back', <C>NavigationStack</C>, 'Push and pop, swipe back, pages stay mounted.'],
+            ['Many items from one list', <C>SplitView</C>, 'Side by side when wide, a stack on phones.'],
+            ['Top-level places on a phone', <C>TabView</C>, 'Each tab keeps its stack; the bar shrinks while reading.'],
+            ['Browsing a few items sideways', <C>Carousel</C>, 'Snap paging, a peek of the next item, never auto-advancing.'],
+            ['A glance or a quick control on one element', <>Popover on <C>PopoverSurface</C></>, 'Anchored, light, dismissed by clicking away.'],
+            ['A few more lines about the same thing', <>Inline, in <C>AutoHeight</C></>, 'Stays in context; nothing covers the page.'],
             ['Properties of the selected item', 'Inspector (dialog on phones)', 'List and details visible together.'],
             ['Long or shareable content', 'New page', 'Own URL, back button, bookmarks.'],
           ]}
@@ -639,7 +639,7 @@ function Overview() {
             [
               'Is the next step irreversible or costly?',
               <>
-                A <C>LabModal</C> that names the object and the consequence, with a <C>destructive</C> button
+                A <C>Modal</C> that names the object and the consequence, with a <C>destructive</C> button
                 that repeats the verb.
               </>,
             ],
@@ -651,7 +651,7 @@ function Overview() {
               'Is something still running?',
               <>
                 Show it on the control that started it: <C>loading</C> on the button or switch, a promise
-                returned to <C>LabActionsBar</C>. Long jobs show their stage in place (Queued, Generating,
+                returned to <C>ActionsBar</C>. Long jobs show their stage in place (Queued, Generating,
                 Ready).
               </>,
             ],
@@ -663,7 +663,7 @@ function Overview() {
             ['A field value is wrong', <>Field <C>error</C></>, 'Under the field, announced politely'],
             ['A limit or missing setup blocks the task', 'Notice with the next step as a button', 'Next to the task, until it is resolved'],
             ['A request failed', 'Notice with “Try again”, keeping the person’s work', 'Where the result would have appeared'],
-            ['An irreversible step', <><C>LabModal</C> confirmation</>, 'Over the page'],
+            ['An irreversible step', <><C>Modal</C> confirmation</>, 'Over the page'],
             ['An action is running', <><C>loading</C> on its control</>, 'On the button, switch or action'],
             ['A list is reloading', 'Keep the current rows; mark the control that changed', 'In place; nothing jumps'],
             ['Something finished', 'The changed result, or a short status', 'Where the change happened'],

@@ -1,16 +1,16 @@
 import { useState } from 'react'
 import { Package, Plus, Search, ShoppingBag, Truck, Users } from 'lucide-react'
 import {
-  LabScaffold,
-  LabScaffoldAppBar,
-  LabScaffoldSide,
-  LabScaffoldToggleButton,
-  type LabScaffoldState,
+  Scaffold,
+  ScaffoldAppBar,
+  ScaffoldSide,
+  ScaffoldToggleButton,
+  type ScaffoldState,
 } from '@feeef.dev/ui/workspace/scaffold'
-import { LabNavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
-import { LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'
+import { NavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { Dock } from '@feeef.dev/ui/dock'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
 import '../scaffold-demo.css'
 
 const PAGES = [
@@ -33,20 +33,20 @@ export default function Workspace() {
   const [page, setPage] = useState('Orders')
 
   // Slots can be functions of the scaffold state: here the sidebar knows when it is a rail.
-  const side = (state: LabScaffoldState) => {
+  const side = (state: ScaffoldState) => {
     const rail = state.sideMode === 'rail' && !state.drawerOpen
     return (
-      <LabScaffoldSide
+      <ScaffoldSide
         leading={
           <div className="scaffold-demo-brand">
             {!rail && <strong>Atlas Store</strong>}
-            {!state.drawerOpen && <LabScaffoldToggleButton />}
+            {!state.drawerOpen && <ScaffoldToggleButton />}
           </div>
         }
       >
         <nav aria-label="Store pages" className="scaffold-demo-nav">
           {PAGES.map((item) => (
-            <LabNavigationItem
+            <NavigationItem
               key={item.label}
               compact={rail}
               label={item.label}
@@ -59,51 +59,51 @@ export default function Workspace() {
             />
           ))}
         </nav>
-      </LabScaffoldSide>
+      </ScaffoldSide>
     )
   }
 
   return (
     <div className="scaffold-demo-frame">
       {/* The demo frame is a small page, so it switches to the drawer below 560px instead of 720px. */}
-      <LabScaffold
+      <Scaffold
         contentLabel={page}
         compactBreakpoint={560}
         side={side}
         appBar={(state) => (
-          <LabScaffoldAppBar
+          <ScaffoldAppBar
             leading={
               (state.compact || state.sideMode === 'hidden') && (
-                <LabToolbarGroup label="Navigation">
-                  <LabScaffoldToggleButton />
-                </LabToolbarGroup>
+                <ToolbarGroup label="Navigation">
+                  <ScaffoldToggleButton />
+                </ToolbarGroup>
               )
             }
             trailing={
-              <LabToolbarGroup label="Page actions">
-                <LabIconButton
+              <ToolbarGroup label="Page actions">
+                <IconButton
                   variant="text"
                   appearance="toolbar"
                   controlSize="compact"
                   aria-label="Search orders"
                 >
                   <Search />
-                </LabIconButton>
-              </LabToolbarGroup>
+                </IconButton>
+              </ToolbarGroup>
             }
           >
-            <LabToolbarGroup label="Current page">
+            <ToolbarGroup label="Current page">
               <span className="scaffold-demo-title">{page}</span>
-            </LabToolbarGroup>
-          </LabScaffoldAppBar>
+            </ToolbarGroup>
+          </ScaffoldAppBar>
         )}
         bottom={
-          <LabDock label="Order actions">
-            <LabButton variant="filled">
+          <Dock label="Order actions">
+            <Button variant="filled">
               <Plus />
               New order
-            </LabButton>
-          </LabDock>
+            </Button>
+          </Dock>
         }
       >
         <div className="scaffold-demo-list">
@@ -119,7 +119,7 @@ export default function Workspace() {
             </div>
           ))}
         </div>
-      </LabScaffold>
+      </Scaffold>
     </div>
   )
 }

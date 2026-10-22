@@ -1,10 +1,10 @@
-import { LabVelocityTracker } from './velocity'
+import { VelocityTracker } from './velocity'
 
-export type LabPanAxis = 'x' | 'y'
-export type LabPointerKind = 'mouse' | 'touch' | 'pen'
+export type PanAxis = 'x' | 'y'
+export type PointerKind = 'mouse' | 'touch' | 'pen'
 
 /** A pan's state: movement since it was recognized, and the pointer's speed. */
-export type LabPanPoint = {
+export type PanPoint = {
   /** Horizontal movement in px since the pan was recognized (client coordinates, never mirrored). */
   dx: number
   /** Vertical movement in px since the pan was recognized. */
@@ -16,34 +16,34 @@ export type LabPanPoint = {
   /** Client position where the pan was recognized. */
   originX: number
   originY: number
-  pointerType: LabPointerKind
+  pointerType: PointerKind
   /** The event's timestamp (ms, same clock as `performance.now()`), for velocity tracking. */
   time: number
 }
 
 /** What `shouldStart` sees: the first decisive movement and the element under the pointer. */
-export type LabPanBegin = LabPanPoint & {
+export type PanBegin = PanPoint & {
   /** Element the pointer went down on. */
   target: Element | null
   /** Sign of the movement along the pan's axis: 1 = right/down, -1 = left/up (physical). */
   direction: 1 | -1
 }
 
-export type LabPanOptions = {
+export type PanOptions = {
   /** The axis this pan owns. Movement mostly along the other axis is left to the browser. */
-  axis: LabPanAxis
+  axis: PanAxis
   /** Travel in px before the pan decides. Defaults to 10 for touch, 4 for mouse and pen. */
   threshold?: number
   /** Pointer kinds that may drive the pan. Default: all. */
-  pointers?: readonly LabPointerKind[]
+  pointers?: readonly PointerKind[]
   /** On contact. Return false to ignore this pointer (e.g. it is not near the edge). */
-  canBegin?: (info: { x: number; y: number; target: Element | null; pointerType: LabPointerKind }) => boolean
+  canBegin?: (info: { x: number; y: number; target: Element | null; pointerType: PointerKind }) => boolean
   /** Once movement passes the threshold along `axis`. Return false to hand it back to the browser. */
-  shouldStart?: (info: LabPanBegin) => boolean
-  onStart?: (point: LabPanPoint) => void
-  onMove?: (point: LabPanPoint) => void
+  shouldStart?: (info: PanBegin) => boolean
+  onStart?: (point: PanPoint) => void
+  onMove?: (point: PanPoint) => void
   /** The pan ended; `cancelled` when the browser took the pointer (e.g. a system gesture). */
-  onEnd?: (point: LabPanPoint & { cancelled: boolean }) => void
+  onEnd?: (point: PanPoint & { cancelled: boolean }) => void
   /**
    * How touch competes with native scrolling. `pointer` (default) relies on CSS `touch-action` on
    * the element (`pan-y` for an x pan, `pan-x` for a y pan). `claim` decides on the first few
@@ -56,7 +56,7 @@ export type LabPanOptions = {
 type Session = {
   id: number
   touch: boolean
-  pointerType: LabPointerKind
+  pointerType: PointerKind
   downX: number
   downY: number
   originX: number
@@ -64,8 +64,8 @@ type Session = {
   target: Element | null
   started: boolean
   rejected: boolean
-  x: LabVelocityTracker
-  y: LabVelocityTracker
+  x: VelocityTracker
+  y: VelocityTracker
   lastX: number
   lastY: number
 }
@@ -93,10 +93,10 @@ function lockSelection(lock: boolean) {
  * to callbacks: the gesture layer under sheets, stacks and anything you drag. It never moves
  * anything itself. `options` is read on every event, so callers can pass a live getter.
  */
-export function attachPan(element: HTMLElement, options: () => LabPanOptions): () => void {
+export function attachPan(element: HTMLElement, options: () => PanOptions): () => void {
   let session: Session | null = null
 
-  const point = (s: Session, x: number, y: number, now: number): LabPanPoint => ({
+  const point = (s: Session, x: number, y: number, now: number): PanPoint => ({
     dx: x - s.originX,
     dy: y - s.originY,
     vx: s.x.velocity(now),
@@ -110,7 +110,7 @@ export function attachPan(element: HTMLElement, options: () => LabPanOptions): (
   const begin = (
     id: number,
     touch: boolean,
-    pointerType: LabPointerKind,
+    pointerType: PointerKind,
     x: number,
     y: number,
     target: EventTarget | null,
@@ -132,8 +132,8 @@ export function attachPan(element: HTMLElement, options: () => LabPanOptions): (
       target: el,
       started: false,
       rejected: false,
-      x: new LabVelocityTracker(),
-      y: new LabVelocityTracker(),
+      x: new VelocityTracker(),
+      y: new VelocityTracker(),
       lastX: x,
       lastY: y,
     }
@@ -165,7 +165,7 @@ export function attachPan(element: HTMLElement, options: () => LabPanOptions): (
       s.rejected = true
       return false
     }
-    const info: LabPanBegin = {
+    const info: PanBegin = {
       ...point(s, x, y, time),
       dx: 0,
       dy: 0,
@@ -201,7 +201,7 @@ export function attachPan(element: HTMLElement, options: () => LabPanOptions): (
     if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return
     const touch = event.pointerType === 'touch'
     if (touch && options().touch === 'claim') return
-    const kind = (['mouse', 'touch', 'pen'].includes(event.pointerType) ? event.pointerType : 'touch') as LabPointerKind
+    const kind = (['mouse', 'touch', 'pen'].includes(event.pointerType) ? event.pointerType : 'touch') as PointerKind
     if (!begin(event.pointerId, false, kind, event.clientX, event.clientY, event.target, event.timeStamp)) return
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerUp)
@@ -282,7 +282,7 @@ export function attachPan(element: HTMLElement, options: () => LabPanOptions): (
 export function canChildPan(
   target: Element | null,
   boundary: Element,
-  axis: LabPanAxis,
+  axis: PanAxis,
   direction: 1 | -1
 ): boolean {
   for (let el: Element | null = target; el && el !== boundary; el = el.parentElement) {

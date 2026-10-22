@@ -1,8 +1,8 @@
 import { type ReactNode } from 'react';
-import { type LabTemporalConfig } from './filters/temporal.js';
+import { type TemporalConfig } from './filters/temporal.js';
 import './filter-bar.css';
 /** A filter's value: `true` for on/off filters, a string, a `{from, to}` range, or `null` (any). */
-export type LabFilterValue = string | boolean | {
+export type FilterValue = string | boolean | {
     from: string;
     to: string;
 } | null;
@@ -11,7 +11,7 @@ export type LabFilterValue = string | boolean | {
  * list), a temporal type (`date`, `time`, `datetime`, `dateRange`, `timeRange`, `datetimeRange`)
  * or `custom` (your own editor in a dialog).
  */
-export type LabFilterOption = {
+export type FilterOption = {
     /** Stable id; the key in `value` / `values` / `pinned`. */
     id: string;
     /** Name shown in the catalog and on the pinned chip. */
@@ -23,7 +23,7 @@ export type LabFilterOption = {
     /** Extra words the catalog search matches. */
     keywords?: readonly string[];
     /** Returns an error message to block Apply, or null. Runs after the built-in temporal checks. */
-    validate?: (value: LabFilterValue) => string | null;
+    validate?: (value: FilterValue) => string | null;
 } & ({
     type?: 'boolean';
 } | {
@@ -33,26 +33,26 @@ export type LabFilterOption = {
         value: string;
         label: string;
     }[];
-} | LabTemporalConfig | {
+} | TemporalConfig | {
     type: 'custom';
     /** Renders the editor inside the filter dialog. Call `onChange` with the draft value. */
-    renderEditor: (value: LabFilterValue, onChange: (value: LabFilterValue) => void) => ReactNode;
+    renderEditor: (value: FilterValue, onChange: (value: FilterValue) => void) => ReactNode;
     /** Text for the chip and catalog row. Defaults to the raw value. */
-    formatValue?: (value: LabFilterValue) => string;
+    formatValue?: (value: FilterValue) => string;
 });
-export type LabFilterBarProps = {
+export type FilterBarProps = {
     /** Accessible name of the bar. */
     label: string;
     /** The filter catalog. */
-    options: readonly LabFilterOption[];
+    options: readonly FilterOption[];
     /** Enabled boolean filters. */
     value: readonly string[];
     /** Called with the new list of enabled boolean filter ids. */
     onChange: (value: string[]) => void;
     /** Non-boolean values can be controlled independently from pinned shortcuts. */
-    values?: Readonly<Record<string, LabFilterValue>>;
+    values?: Readonly<Record<string, FilterValue>>;
     /** Called with every non-boolean value after an edit; cleared filters are `null`. */
-    onValuesChange?: (values: Record<string, LabFilterValue>) => void;
+    onValuesChange?: (values: Record<string, FilterValue>) => void;
     /** Ids shown as chips in the bar (controlled). Pinning never changes a value. */
     pinned?: readonly string[];
     /** Called when filters are pinned or unpinned. Editing or toggling a filter also pins it. */
@@ -64,12 +64,12 @@ export type LabFilterBarProps = {
     onNaturalFilter?: (text: string) => Promise<readonly string[]> | readonly string[];
     /** Shows a back button before the filter controls, e.g. to leave a filtered view. */
     onBack?: () => void;
-    /** Content at the end of the bar, usually a LabToolbarGroup of view actions. */
+    /** Content at the end of the bar, usually a ToolbarGroup of view actions. */
     trailing?: ReactNode;
 };
 /**
  * Filter toolbar: a searchable catalog button, an optional natural-language button, pinned filter
  * chips and trailing actions. Pinning controls shortcuts, clearing controls query values.
  */
-export declare function LabFilterBar({ label, options, value, onChange, values: controlledValues, onValuesChange, pinned: controlledPins, onPinnedChange, onNaturalFilter, onBack, trailing, }: LabFilterBarProps): import("react").JSX.Element;
+export declare function FilterBar({ label, options, value, onChange, values: controlledValues, onValuesChange, pinned: controlledPins, onPinnedChange, onNaturalFilter, onBack, trailing, }: FilterBarProps): import("react").JSX.Element;
 //# sourceMappingURL=filter-bar.d.ts.map

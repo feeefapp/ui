@@ -1,12 +1,12 @@
 import { Printer, Truck } from 'lucide-react'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { Dock } from '@feeef.dev/ui/dock'
+import { Button } from '@feeef.dev/ui/primitives/button'
 import '../dock-demo.css'
 
 export default function Basic() {
   return (
     <div className="dock-demo-host">
-      <LabDock
+      <Dock
         label="Order actions"
         content={
           <>
@@ -16,16 +16,16 @@ export default function Basic() {
         }
       >
         <div className="demo-row">
-          <LabButton variant="text">
+          <Button variant="text">
             <Printer />
             Print label
-          </LabButton>
-          <LabButton variant="filled">
+          </Button>
+          <Button variant="filled">
             <Truck />
             Ship order
-          </LabButton>
+          </Button>
         </div>
-      </LabDock>
+      </Dock>
     </div>
   )
 }

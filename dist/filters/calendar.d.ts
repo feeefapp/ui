@@ -2,7 +2,7 @@
  * One month grid. The heading is a plain row on the host surface: previous, a title that opens a
  * month/year grid, next. Days support arrow, Home/End and Page Up/Down navigation; a range paints one continuous band.
  */
-export declare function LabCalendarMonth({ month, onMonthChange, from, to, min, max, onSelect, locale, label, navigation, }: {
+export declare function CalendarMonth({ month, onMonthChange, from, to, min, max, onSelect, locale, label, navigation, }: {
     /** Visible month as `YYYY-MM`. */
     month: string;
     /** Called when the person pages or picks another month or year. */

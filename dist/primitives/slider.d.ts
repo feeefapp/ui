@@ -1,7 +1,7 @@
 import * as React from 'react';
 import './slider.css';
 /** What the `render*` slots receive on every frame of interaction. */
-export type LabSliderState = {
+export type SliderState = {
     /** The committed value, snapped to `step`. */
     value: number;
     /** Smooth pointer position, useful for progressive effects between discrete stops. */
@@ -14,11 +14,11 @@ export type LabSliderState = {
     disabled: boolean;
 };
 /** A stop on the track, optionally labelled under it. */
-export type LabSliderMark = {
+export type SliderMark = {
     value: number;
     label?: React.ReactNode;
 };
-export type LabSliderProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange' | 'defaultValue' | 'children' | 'role' | 'aria-valuenow' | 'aria-valuemin' | 'aria-valuemax' | 'aria-checked'> & {
+export type SliderProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange' | 'defaultValue' | 'children' | 'role' | 'aria-valuenow' | 'aria-valuemin' | 'aria-valuemax' | 'aria-checked'> & {
     /** Track height: `regular` (44px) or `compact` (40px). */
     controlSize?: 'regular' | 'compact';
     /** `thick`: the track is the control surface. `thin`: a 4px rail with a round thumb. */
@@ -46,13 +46,13 @@ export type LabSliderProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'onChang
     /** Draws a dot at every step (up to 101 steps). Ignored when `marks` is set. */
     showStops?: boolean;
     /** Dots at chosen values; marks with a `label` also print it under the track. */
-    marks?: LabSliderMark[];
+    marks?: SliderMark[];
     /** Decoration drawn behind the rail, such as a waveform or gradient. */
-    renderTrack?: (state: LabSliderState) => React.ReactNode;
+    renderTrack?: (state: SliderState) => React.ReactNode;
     /** Content inside the filled part of the track. */
-    renderFill?: (state: LabSliderState) => React.ReactNode;
+    renderFill?: (state: SliderState) => React.ReactNode;
     /** Content inside the thumb, such as an icon or the value. */
-    renderThumb?: (state: LabSliderState) => React.ReactNode;
+    renderThumb?: (state: SliderState) => React.ReactNode;
     /** Form field name; the value is submitted through a hidden input. */
     name?: string;
     /** Id of a form outside the slider that its hidden input belongs to. */
@@ -62,7 +62,7 @@ export type LabSliderProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'onChang
  * A single-value slider with a large touch-friendly track, springy thumb, optional stops and
  * marks, and render slots for custom track, fill and thumb decoration.
  */
-export declare const LabSlider: React.ForwardRefExoticComponent<Omit<React.HTMLAttributes<HTMLDivElement>, "children" | "defaultValue" | "role" | "aria-checked" | "aria-valuemax" | "aria-valuemin" | "aria-valuenow" | "onChange"> & {
+export declare const Slider: React.ForwardRefExoticComponent<Omit<React.HTMLAttributes<HTMLDivElement>, "children" | "defaultValue" | "role" | "aria-checked" | "aria-valuemax" | "aria-valuemin" | "aria-valuenow" | "onChange"> & {
     /** Track height: `regular` (44px) or `compact` (40px). */
     controlSize?: "regular" | "compact";
     /** `thick`: the track is the control surface. `thin`: a 4px rail with a round thumb. */
@@ -90,19 +90,19 @@ export declare const LabSlider: React.ForwardRefExoticComponent<Omit<React.HTMLA
     /** Draws a dot at every step (up to 101 steps). Ignored when `marks` is set. */
     showStops?: boolean;
     /** Dots at chosen values; marks with a `label` also print it under the track. */
-    marks?: LabSliderMark[];
+    marks?: SliderMark[];
     /** Decoration drawn behind the rail, such as a waveform or gradient. */
-    renderTrack?: (state: LabSliderState) => React.ReactNode;
+    renderTrack?: (state: SliderState) => React.ReactNode;
     /** Content inside the filled part of the track. */
-    renderFill?: (state: LabSliderState) => React.ReactNode;
+    renderFill?: (state: SliderState) => React.ReactNode;
     /** Content inside the thumb, such as an icon or the value. */
-    renderThumb?: (state: LabSliderState) => React.ReactNode;
+    renderThumb?: (state: SliderState) => React.ReactNode;
     /** Form field name; the value is submitted through a hidden input. */
     name?: string;
     /** Id of a form outside the slider that its hidden input belongs to. */
     form?: string;
 } & React.RefAttributes<HTMLDivElement>>;
-export type LabSlideSwitchProps = Omit<LabSliderProps, 'value' | 'defaultValue' | 'min' | 'max' | 'step' | 'onValueChange' | 'onValueCommit' | 'getValueText' | 'showStops' | 'marks'> & {
+export type SlideSwitchProps = Omit<SliderProps, 'value' | 'defaultValue' | 'min' | 'max' | 'step' | 'onValueChange' | 'onValueCommit' | 'getValueText' | 'showStops' | 'marks'> & {
     /** Disables the switch and marks it busy while a change is saving. */
     loading?: boolean;
     /** The state, for a controlled switch. */
@@ -122,7 +122,7 @@ export type LabSlideSwitchProps = Omit<LabSliderProps, 'value' | 'defaultValue' 
  * An on/off switch that can be tapped or dragged. It shares the slider's track, thumb and spring;
  * the state maps to 0 and 1.
  */
-export declare const LabSlideSwitch: React.ForwardRefExoticComponent<Omit<LabSliderProps, "value" | "defaultValue" | "min" | "max" | "step" | "onValueChange" | "onValueCommit" | "getValueText" | "showStops" | "marks"> & {
+export declare const SlideSwitch: React.ForwardRefExoticComponent<Omit<SliderProps, "value" | "defaultValue" | "min" | "max" | "step" | "onValueChange" | "onValueCommit" | "getValueText" | "showStops" | "marks"> & {
     /** Disables the switch and marks it busy while a change is saving. */
     loading?: boolean;
     /** The state, for a controlled switch. */
@@ -142,7 +142,7 @@ export declare const LabSlideSwitch: React.ForwardRefExoticComponent<Omit<LabSli
  * A non-interactive switch picture for menu items and rows that already carry the checked
  * semantics (for example `menuitemcheckbox`). Same geometry and spring, hidden from assistive technology.
  */
-export declare function LabSlideSwitchIndicator({ checked, loading, controlSize, }: {
+export declare function SlideSwitchIndicator({ checked, loading, controlSize, }: {
     /** The state to draw. */
     checked: boolean;
     /** Dims the indicator while a change is saving. */

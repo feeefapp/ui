@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Truck } from 'lucide-react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabOption, LabSelect } from '@feeef.dev/ui/primitives/select'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { Option, Select } from '@feeef.dev/ui/primitives/select'
 
 export default function Validation() {
   const [method, setMethod] = useState<string | null>(null)
@@ -15,7 +15,7 @@ export default function Validation() {
         setStatus(`Shipping ${method} to ${wilaya}.`)
       }}
     >
-      <LabSelect
+      <Select
         hint="Delivery method"
         name="method"
         required
@@ -24,10 +24,10 @@ export default function Validation() {
         value={method}
         onValueChange={setMethod}
       >
-        <LabOption value="home">Home delivery</LabOption>
-        <LabOption value="desk">Stop desk</LabOption>
-      </LabSelect>
-      <LabSelect
+        <Option value="home">Home delivery</Option>
+        <Option value="desk">Stop desk</Option>
+      </Select>
+      <Select
         hint="Wilaya"
         name="wilaya"
         value={wilaya}
@@ -38,13 +38,13 @@ export default function Validation() {
         validationMode="change"
         supportingText="Try home delivery to Tamanrasset."
       >
-        <LabOption>Alger</LabOption>
-        <LabOption>Oran</LabOption>
-        <LabOption>Tamanrasset</LabOption>
-      </LabSelect>
-      <LabButton variant="filled" type="submit">
+        <Option>Alger</Option>
+        <Option>Oran</Option>
+        <Option>Tamanrasset</Option>
+      </Select>
+      <Button variant="filled" type="submit">
         Ship order
-      </LabButton>
+      </Button>
       <p role="status">{status}</p>
     </form>
   )

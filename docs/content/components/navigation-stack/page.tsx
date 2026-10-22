@@ -26,19 +26,19 @@ function Overview() {
           The stack has no router of its own. Its children are the pages, root first, each with a
           stable <C>key</C>. Append a page and the stack pushes it; remove the top page and it pops;
           change the top page to a different key and it cross-fades. Keep the path in state (or derive
-          it from the URL) and map it to pages. <C>useLabNavigationPath</C> is the small state helper.
+          it from the URL) and map it to pages. <C>useNavigationPath</C> is the small state helper.
         </p>
         <Code
-          code={`const nav = useLabNavigationPath<Route>()
+          code={`const nav = useNavigationPath<Route>()
 
-<LabNavigationStack label="Orders" onBack={() => nav.pop()}>
-  <LabNavigationPage key="orders" title="Orders">
-    <LabListRow chevron title="#1048" onClick={() => nav.push({ page: 'order', id: 1048 })} />
-  </LabNavigationPage>
+<NavigationStack label="Orders" onBack={() => nav.pop()}>
+  <NavigationPage key="orders" title="Orders">
+    <ListRow chevron title="#1048" onClick={() => nav.push({ page: 'order', id: 1048 })} />
+  </NavigationPage>
   {nav.path.map((route) => (
-    <LabNavigationPage key={\`order-\${route.id}\`} title={\`Order #\${route.id}\`}>…</LabNavigationPage>
+    <NavigationPage key={\`order-\${route.id}\`} title={\`Order #\${route.id}\`}>…</NavigationPage>
   ))}
-</LabNavigationStack>`}
+</NavigationStack>`}
         />
         <p>
           Every page stays mounted while it is in the path, hidden and inert under the top one, so its
@@ -71,7 +71,7 @@ function Overview() {
 
       <Section title="Titles and bars">
         <p>
-          <C>LabNavigationPage</C> draws a floating glass bar: the back group, the title, and your{' '}
+          <C>NavigationPage</C> draws a floating glass bar: the back group, the title, and your{' '}
           <C>trailing</C> actions in their own group. The root page uses a large title that scrolls
           under the bar and then appears in it; pushed pages put the title in the bar. Set{' '}
           <C>titleDisplay</C> to choose. <C>bottom</C> floats a dock with the page’s main action.
@@ -98,16 +98,16 @@ function Overview() {
   {product.name}
 </button>
 
-<LabNavigationPage key={product.id} title={product.name} zoomSource={product.id}>…</LabNavigationPage>`}
+<NavigationPage key={product.id} title={product.name} zoomSource={product.id}>…</NavigationPage>`}
         />
       </Section>
 
       <Section title="Physics">
         <p>
-          All transitions run on one analytic spring (<C>LAB_SPRINGS.smooth</C>, no overshoot) that
+          All transitions run on one analytic spring (<C>SPRINGS.smooth</C>, no overshoot) that
           knows its velocity at every frame. Going back in the middle of a push reverses the same motion
           without a jump, and a released swipe continues at the finger’s speed (
-          <C>LAB_SPRINGS.release</C>). Only <C>transform</C>, <C>opacity</C> and <C>clip-path</C>{' '}
+          <C>SPRINGS.release</C>). Only <C>transform</C>, <C>opacity</C> and <C>clip-path</C>{' '}
           change while pages move. See <Link to="/foundations/physics">Physics</Link>.
         </p>
       </Section>
@@ -136,9 +136,9 @@ export default definePage({
   order: 0,
   summary: 'Push-and-pop pages with interactive swipe back, collapsing large titles and zoom transitions.',
   importLine:
-    "import { LabNavigationStack, LabNavigationPage, useLabNavigationPath } from '@feeef.dev/ui/containers'",
+    "import { NavigationStack, NavigationPage, useNavigationPath } from '@feeef.dev/ui/containers'",
   source: 'src/containers/navigation-stack.tsx',
-  api: ['LabNavigationStack', 'LabNavigationPage'],
+  api: ['NavigationStack', 'NavigationPage'],
   keywords: ['navigation', 'push', 'pop', 'back', 'swipe', 'drill down', 'zoom', 'hero', 'ios', 'page'],
   Overview,
   examples: examplesFrom(

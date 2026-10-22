@@ -3,8 +3,9 @@ import { jsx as _jsx } from "react/jsx-runtime";
 import * as React from 'react';
 import { createPortal, flushSync } from 'react-dom';
 import { cn } from './utils.js';
+import { GlassContext } from './glass/context.js';
 import './scaffold.css';
-const useLabLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
+const useIsomorphicLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
 const ScaffoldContext = React.createContext(null);
 const reserveProperties = [
     '--lab-player-reserve',
@@ -22,12 +23,12 @@ const reserveProperties = [
 ];
 /**
  * Page-level host for floating chrome. Mount it once near the root: it creates the viewport-fixed
- * portal that LabFloatingLayer renders into and writes each region's measured size as CSS custom
+ * portal that FloatingLayer renders into and writes each region's measured size as CSS custom
  * properties (`--lab-header-reserve`, `--lab-player-reserve`, `--lab-floating-bottom`, …) on
  * `<html>`, its own root and the portal. The portal host has no transform/filter, so every floating
  * region stays viewport-fixed.
  */
-export function LabScaffoldProvider({ children, className, }) {
+export function ScaffoldProvider({ children, className, }) {
     const root = React.useRef(null);
     const regions = React.useRef(new Map());
     const host = React.useRef(null);
@@ -84,7 +85,7 @@ export function LabScaffoldProvider({ children, className, }) {
             regions.current.delete(id);
         write();
     }, [write]);
-    useLabLayoutEffect(() => {
+    useIsomorphicLayoutEffect(() => {
         const previous = new Map(reserveProperties.map((name) => [name, document.documentElement.style.getPropertyValue(name)]));
         const floating = document.createElement('div');
         floating.className = 'lab-floating-root';
@@ -115,7 +116,7 @@ export function LabScaffoldProvider({ children, className, }) {
     return (_jsx(ScaffoldContext.Provider, { value: context, children: _jsx("div", { ref: root, className: cn('lab-scaffold', className), "data-lab-scaffold": true, children: children }) }));
 }
 /**
- * Registers an existing fixed surface with the nearest LabScaffoldProvider so its size is reserved,
+ * Registers an existing fixed surface with the nearest ScaffoldProvider so its size is reserved,
  * without moving it or changing its semantic element. Remeasures on resize, animation and
  * transition end. Does nothing outside a provider.
  */
@@ -123,7 +124,7 @@ export function useFloatingReserve(slot, ref, { active = true, edge = 'auto', ga
     const scaffold = React.useContext(ScaffoldContext);
     const id = React.useId();
     const reserve = scaffold?.reserve;
-    useLabLayoutEffect(() => {
+    useIsomorphicLayoutEffect(() => {
         if (!reserve || !active || !ref.current)
             return;
         const region = ref.current;
@@ -198,11 +199,11 @@ export function useFloatingReserve(slot, ref, { active = true, edge = 'auto', ga
  * the provider's viewport-fixed layer, and reserves their measured size under `slot`. The layer
  * fills the viewport and ignores pointer input; position the child yourself.
  */
-export function LabFloatingLayer({ children, slot, active = true, edge = 'auto', gap = 12, className, }) {
+export function FloatingLayer({ children, slot, active = true, edge = 'auto', gap = 12, className, }) {
     const scaffold = React.useContext(ScaffoldContext);
     const region = React.useRef(null);
     const [ready, setReady] = React.useState(false);
-    useLabLayoutEffect(() => setReady(true), []);
+    useIsomorphicLayoutEffect(() => setReady(true), []);
     // Late-mounted notices must register after their portal ref is attached.
     useFloatingReserve(slot, region, { active: active && ready, edge, gap, measureChildren: true });
     if (!ready)
@@ -213,19 +214,41 @@ export function LabFloatingLayer({ children, slot, active = true, edge = 'auto',
 /**
  * One translucent glass material (blur, light edge, neutral shadow) around a group of related
  * controls. Glass belongs to grouped navigation/actions, not to the editing content. Falls back to
- * an opaque surface without backdrop-filter or with reduced transparency.
+ * an opaque surface without backdrop-filter or with reduced transparency. Inside a GlassContainer
+ * the container paints it, so neighbouring bubbles can merge, split and share light.
  */
-export const LabGlassGroup = React.forwardRef(({ as = 'div', className, children, ...props }, ref) => React.createElement(as, {
-    ...props,
-    ref,
-    'className': cn('lab-glass-group lab-light-edge', className),
-    'data-lab-corners': '',
-}, children));
-LabGlassGroup.displayName = 'LabGlassGroup';
+export const GlassGroup = React.forwardRef(({ as = 'div', className, children, glassId, glassUnion, glassMotion, ...props }, ref) => {
+    const glass = React.useContext(GlassContext);
+    const autoId = React.useId();
+    const id = glassId ?? autoId;
+    const element = React.useRef(null);
+    const setRef = React.useCallback((node) => {
+        element.current = node;
+        if (typeof ref === 'function')
+            ref(node);
+        else if (ref)
+            ref.current = node;
+    }, [ref]);
+    useIsomorphicLayoutEffect(() => {
+        if (!glass || !element.current)
+            return;
+        return glass.register(id, element.current, { union: glassUnion, motion: glassMotion });
+    }, [glass, id, glassUnion, glassMotion]);
+    // Content changes can resize the bubble without a resize the container would notice in time.
+    useIsomorphicLayoutEffect(() => glass?.requestMeasure());
+    return React.createElement(as, {
+        ...props,
+        'ref': setRef,
+        'className': cn('lab-glass-group lab-light-edge', className),
+        'data-lab-corners': '',
+        'data-glass-member': glass ? '' : undefined,
+    }, children);
+});
+GlassGroup.displayName = 'GlassGroup';
 let currentTransition = null;
 let navigationSerial = 0;
 /** Keep the media engine mounted while navigation crossfades only the content surface. */
-export function useLabNavigation() {
+export function useNavigation() {
     return React.useCallback((update) => {
         const serial = ++navigationSerial;
         const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -255,9 +278,9 @@ export function useLabNavigation() {
     }, []);
 }
 /** Its key changes trigger motion; the React subtree is never keyed/remounted by the scaffold. */
-export function LabViewTransition({ as = 'div', viewKey, className, children, ...props }) {
+export function ViewTransition({ as = 'div', viewKey, className, children, ...props }) {
     const ref = React.useRef(null);
-    useLabLayoutEffect(() => {
+    useIsomorphicLayoutEffect(() => {
         const element = ref.current;
         // The shared content frame keeps draft state while each newly selected view
         // begins at its heading, before the browser captures its transition snapshot.

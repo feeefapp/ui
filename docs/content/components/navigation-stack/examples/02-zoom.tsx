@@ -1,13 +1,13 @@
 import { Heart, Share } from 'lucide-react'
 import {
-  LabNavigationPage,
-  LabNavigationStack,
-  useLabNavigationPath,
+  NavigationPage,
+  NavigationStack,
+  useNavigationPath,
 } from '@feeef.dev/ui/containers'
-import { LabListRow, LabListSection } from '@feeef.dev/ui/primitives/list'
-import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabDock } from '@feeef.dev/ui/dock'
+import { ListRow, ListSection } from '@feeef.dev/ui/primitives/list'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { Dock } from '@feeef.dev/ui/dock'
 import { Device } from '../../../../src/blocks/device'
 import '../stack-demo.css'
 
@@ -24,11 +24,11 @@ const art = (hue: number) => ({
 })
 
 export default function ZoomGallery() {
-  const nav = useLabNavigationPath<string>()
+  const nav = useNavigationPath<string>()
   return (
     <Device label="A phone showing a product gallery with zoom transitions">
-      <LabNavigationStack label="Products" onBack={() => nav.pop()}>
-        <LabNavigationPage key="products" title="Products" subtitle="Tap a product. Drag its page down to put it back.">
+      <NavigationStack label="Products" onBack={() => nav.pop()}>
+        <NavigationPage key="products" title="Products" subtitle="Tap a product. Drag its page down to put it back.">
           <div className="stack-demo-grid">
             {PRODUCTS.map((product) => (
               <button
@@ -44,30 +44,30 @@ export default function ZoomGallery() {
               </button>
             ))}
           </div>
-        </LabNavigationPage>
+        </NavigationPage>
 
         {nav.path.map((id) => {
           const product = PRODUCTS.find((p) => p.id === id)!
           return (
-            <LabNavigationPage
+            <NavigationPage
               key={id}
               title={product.name}
               zoomSource={id}
               contentPadding={0}
               trailing={
-                <LabToolbarGroup label="Product actions">
-                  <LabIconButton variant="text" appearance="toolbar" aria-label="Save">
+                <ToolbarGroup label="Product actions">
+                  <IconButton variant="text" appearance="toolbar" aria-label="Save">
                     <Heart />
-                  </LabIconButton>
-                  <LabIconButton variant="text" appearance="toolbar" aria-label="Share">
+                  </IconButton>
+                  <IconButton variant="text" appearance="toolbar" aria-label="Share">
                     <Share />
-                  </LabIconButton>
-                </LabToolbarGroup>
+                  </IconButton>
+                </ToolbarGroup>
               }
               bottom={
-                <LabDock label="Buy">
-                  <LabButton variant="filled">Order · {product.price}</LabButton>
-                </LabDock>
+                <Dock label="Buy">
+                  <Button variant="filled">Order · {product.price}</Button>
+                </Dock>
               }
             >
               <div className="stack-demo-hero" style={art(product.hue)} />
@@ -77,16 +77,16 @@ export default function ZoomGallery() {
                   Handmade in small batches. Cash on delivery to all 58 wilayas, delivered in two to
                   four days.
                 </p>
-                <LabListSection header="Details">
-                  <LabListRow static title="Price" trailing={product.price} />
-                  <LabListRow static title="In stock" trailing="14" />
-                  <LabListRow static title="Delivery" trailing="2–4 days" />
-                </LabListSection>
+                <ListSection header="Details">
+                  <ListRow static title="Price" trailing={product.price} />
+                  <ListRow static title="In stock" trailing="14" />
+                  <ListRow static title="Delivery" trailing="2–4 days" />
+                </ListSection>
               </div>
-            </LabNavigationPage>
+            </NavigationPage>
           )
         })}
-      </LabNavigationStack>
+      </NavigationStack>
     </Device>
   )
 }

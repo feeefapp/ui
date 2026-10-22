@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Trash2 } from 'lucide-react'
-import { LabSpeechBlock } from '@feeef.dev/ui/speech/block'
+import { SpeechBlock } from '@feeef.dev/ui/speech/block'
 import { moveSpeechBlock } from '@feeef.dev/ui/speech/block-order'
 import { PixelArtwork } from '@feeef.dev/ui/pixel-art'
-import { LabRawInput } from '@feeef.dev/ui/primitives/raw-input'
-import { LabIconButton } from '@feeef.dev/ui/primitives/button'
+import { RawInput } from '@feeef.dev/ui/primitives/raw-input'
+import { IconButton } from '@feeef.dev/ui/primitives/button'
 
 type Block = { id: string; speaker: string; text: string }
 
@@ -21,7 +21,7 @@ export default function Script() {
   return (
     <div className="demo-wide lab-voice-writing" style={{ display: 'grid', gap: 8 }}>
       {blocks.map((block, index) => (
-        <LabSpeechBlock
+        <SpeechBlock
           key={block.id}
           seed={block.id}
           index={index}
@@ -31,7 +31,7 @@ export default function Script() {
             <>
               <PixelArtwork variant="voice" seed={block.speaker} size={24} />
               <strong style={{ flex: 1, fontSize: 13 }}>{block.speaker}</strong>
-              <LabIconButton
+              <IconButton
                 variant="ghost"
                 appearance="toolbar"
                 controlSize="compact"
@@ -40,11 +40,11 @@ export default function Script() {
                 onClick={() => setBlocks((old) => old.filter((b) => b.id !== block.id))}
               >
                 <Trash2 size={18} />
-              </LabIconButton>
+              </IconButton>
             </>
           }
         >
-          <LabRawInput
+          <RawInput
             multiline
             className="lab-textarea"
             aria-label={`Speech for block ${index + 1}`}
@@ -52,7 +52,7 @@ export default function Script() {
             onValueChange={(text) => edit(block.id, text)}
             style={{ width: '100%', border: 0, background: 'transparent', padding: '4px 6px' }}
           />
-        </LabSpeechBlock>
+        </SpeechBlock>
       ))}
     </div>
   )

@@ -1,33 +1,33 @@
 /** Structural containers: navigation stack, split view and sheet. */
 export {
-  LabNavigationPage,
-  LabNavigationStack,
-  useLabNavigationPath,
-  useLabNavigationStack,
+  NavigationPage,
+  NavigationStack,
+  useNavigationPath,
+  useNavigationStack,
 } from './navigation-stack'
 export type {
-  LabNavigationPageProps,
-  LabNavigationStackPage,
-  LabNavigationStackProps,
+  NavigationPageProps,
+  NavigationStackPage,
+  NavigationStackProps,
 } from './navigation-stack'
 export { diffStack, dragDismissRect, mixRect, slideFrame, zoomFrame } from './stack-model'
-export type { LabRect, LabStackChange } from './stack-model'
-export { LabSheet } from './sheet'
-export type { LabSheetProps, LabSheetDetent } from './sheet'
+export type { Rect, StackChange } from './stack-model'
+export { Sheet } from './sheet'
+export type { SheetProps, SheetDetent } from './sheet'
 export { detentHeight, detentHeights, dragHeight, releaseTarget, sheetDim, sheetRecede } from './sheet-model'
-export type { LabSheetMetrics } from './sheet-model'
-export { LabSplitView, LabSplitPlaceholder } from './split-view'
-export type { LabSplitViewProps } from './split-view'
-export { LabTabView } from './tab-view'
-export type { LabTab, LabTabViewProps } from './tab-view'
-export { LabCarousel } from './carousel'
-export type { LabCarouselProps } from './carousel'
+export type { SheetMetrics } from './sheet-model'
+export { SplitView, SplitPlaceholder } from './split-view'
+export type { SplitViewProps } from './split-view'
+export { TabView } from './tab-view'
+export type { Tab, TabViewProps } from './tab-view'
+export { Carousel } from './carousel'
+export type { CarouselProps } from './carousel'
 export { centeredIndex, flickTarget, slideEffect, slideProgress } from './carousel-model'
 export {
-  LabAdaptiveStack,
-  LabViewThatFits,
-  useLabElementWidth,
-  useLabSizeClass,
+  AdaptiveStack,
+  ViewThatFits,
+  useElementWidth,
+  useSizeClass,
 } from './adaptive'
-export type { LabAdaptiveStackProps, LabSizeClass, LabViewThatFitsProps } from './adaptive'
+export type { AdaptiveStackProps, SizeClass, ViewThatFitsProps } from './adaptive'
 export { pickFitting } from './adaptive-model'

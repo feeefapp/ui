@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Check, SlidersHorizontal } from 'lucide-react'
-import { LabSheet, LabNavigationPage, LabNavigationStack } from '@feeef.dev/ui/containers'
-import { LabListRow, LabListSection } from '@feeef.dev/ui/primitives/list'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabDock } from '@feeef.dev/ui/dock'
+import { Sheet, NavigationPage, NavigationStack } from '@feeef.dev/ui/containers'
+import { ListRow, ListSection } from '@feeef.dev/ui/primitives/list'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { Dock } from '@feeef.dev/ui/dock'
 import { Device } from '../../../../src/blocks/device'
 
 const STATUSES = ['New', 'Confirmed', 'Shipped', 'Delivered', 'Returned', 'Cancelled']
@@ -20,22 +20,22 @@ export default function FilterSheet() {
         <>
           {/* data-lab-sheet-backdrop marks what recedes behind a full-height sheet. */}
           <div className="demo-fill" data-lab-sheet-backdrop="">
-            <LabNavigationStack label="Orders">
-              <LabNavigationPage
+            <NavigationStack label="Orders">
+              <NavigationPage
                 key="orders"
                 title="Orders"
                 subtitle={`${status} · ${wilayas.length ? wilayas.join(', ') : 'All wilayas'}`}
                 trailing={
-                  <LabToolbarGroup label="Orders tools">
-                    <LabButton variant="text" appearance="toolbar" onClick={() => setOpen(true)}>
+                  <ToolbarGroup label="Orders tools">
+                    <Button variant="text" appearance="toolbar" onClick={() => setOpen(true)}>
                       <SlidersHorizontal size={18} /> Filters
-                    </LabButton>
-                  </LabToolbarGroup>
+                    </Button>
+                  </ToolbarGroup>
                 }
               >
-                <LabListSection header="Results">
+                <ListSection header="Results">
                   {Array.from({ length: 12 }, (_, i) => (
-                    <LabListRow
+                    <ListRow
                       key={i}
                       static
                       title={`#${1048 - i} · ${wilayas[0] ?? 'Alger'}`}
@@ -43,12 +43,12 @@ export default function FilterSheet() {
                       trailing={`${(2 + i) * 450} DA`}
                     />
                   ))}
-                </LabListSection>
-              </LabNavigationPage>
-            </LabNavigationStack>
+                </ListSection>
+              </NavigationPage>
+            </NavigationStack>
           </div>
 
-          <LabSheet
+          <Sheet
             open={open}
             onOpenChange={setOpen}
             label="Filters"
@@ -56,37 +56,37 @@ export default function FilterSheet() {
             detents={['medium', 'large']}
             top={
               <div className="demo-sheet-bar">
-                <LabToolbarGroup label="Sheet title">
+                <ToolbarGroup label="Sheet title">
                   <strong className="demo-sheet-title">Filters</strong>
-                </LabToolbarGroup>
-                <LabToolbarGroup label="Sheet actions">
-                  <LabButton variant="text" appearance="toolbar" onClick={() => setWilayas([])}>
+                </ToolbarGroup>
+                <ToolbarGroup label="Sheet actions">
+                  <Button variant="text" appearance="toolbar" onClick={() => setWilayas([])}>
                     Reset
-                  </LabButton>
-                </LabToolbarGroup>
+                  </Button>
+                </ToolbarGroup>
               </div>
             }
             bottom={
-              <LabDock label="Apply filters">
-                <LabButton variant="filled" onClick={() => setOpen(false)}>
+              <Dock label="Apply filters">
+                <Button variant="filled" onClick={() => setOpen(false)}>
                   Show 24 orders
-                </LabButton>
-              </LabDock>
+                </Button>
+              </Dock>
             }
           >
-            <LabListSection header="Status">
+            <ListSection header="Status">
               {STATUSES.map((s) => (
-                <LabListRow
+                <ListRow
                   key={s}
                   title={s}
                   trailing={s === status ? <Check size={18} aria-label="Selected" /> : undefined}
                   onClick={() => setStatus(s)}
                 />
               ))}
-            </LabListSection>
-            <LabListSection header="Wilaya" footer="Drag the sheet up to see every wilaya.">
+            </ListSection>
+            <ListSection header="Wilaya" footer="Drag the sheet up to see every wilaya.">
               {WILAYAS.map((w) => (
-                <LabListRow
+                <ListRow
                   key={w}
                   title={w}
                   trailing={wilayas.includes(w) ? <Check size={18} aria-label="Selected" /> : undefined}
@@ -95,8 +95,8 @@ export default function FilterSheet() {
                   }
                 />
               ))}
-            </LabListSection>
-          </LabSheet>
+            </ListSection>
+          </Sheet>
         </>
       )}
     </Device>

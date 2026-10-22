@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import * as Tooltip from '@radix-ui/react-tooltip'
 import { Search } from 'lucide-react'
-import { LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
-import { LabToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { LabDock } from '@feeef.dev/ui/dock'
+import { IconButton } from '@feeef.dev/ui/primitives/button'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { Dock } from '@feeef.dev/ui/dock'
 import { FoAnimatedLogo } from '@feeef.dev/ui/brand/logo'
-import { LabPresence } from '@feeef.dev/ui/motion'
-import { LabScaffoldAppBar, LabScaffoldToggleButton, useLabScaffold } from '@feeef.dev/ui/workspace/scaffold'
+import { Presence } from '@feeef.dev/ui/motion'
+import { ScaffoldAppBar, ScaffoldToggleButton, useScaffold } from '@feeef.dev/ui/workspace/scaffold'
 import { Link, navigate } from '../router'
 import { pageHref, type ComponentTab, type Route } from '../registry'
 import { Customize } from './customize'
@@ -37,7 +37,7 @@ function PageTabs({ route }: { route: Route }) {
   if (tabs.length < 2) return null
   const href = pageHref(route.page)
   return (
-    <LabSegmentedControl<ComponentTab>
+    <SegmentedControl<ComponentTab>
       label={`${route.page.title} documentation`}
       appearance="plain"
       value={route.tab}
@@ -51,9 +51,9 @@ function SearchButton({ onSearch }: { onSearch: () => void }) {
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
-        <LabIconButton variant="text" appearance="toolbar" aria-label="Search the docs" onClick={onSearch}>
+        <IconButton variant="text" appearance="toolbar" aria-label="Search the docs" onClick={onSearch}>
           <Search size={20} />
-        </LabIconButton>
+        </IconButton>
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content className="lab-navigation-tooltip" sideOffset={8}>
@@ -106,67 +106,67 @@ export function DocsAppBar({
   path: string
   onSearch: () => void
 }) {
-  const { compact, sideMode } = useLabScaffold()
+  const { compact, sideMode } = useScaffold()
   const minimal = compact || sideMode !== 'expanded'
   // In rail mode the sidebar keeps its own toggle.
   const toggle = compact ? 'drawer' : sideMode === 'hidden' ? 'restore' : null
   const titleAway = useTitleScrolledAway(path)
   const views = !compact && tabsFor(route).length > 1 && (
-    <LabToolbarGroup label="Page views" className="docs-app-bar-tabs">
+    <ToolbarGroup label="Page views" className="docs-app-bar-tabs">
       <PageTabs route={route} />
-    </LabToolbarGroup>
+    </ToolbarGroup>
   )
   return (
-    <LabScaffoldAppBar
+    <ScaffoldAppBar
       className="docs-app-bar"
       leading={
         minimal ? (
-          <LabToolbarGroup label="Navigation" className="docs-app-bar-brand">
-            {toggle && <LabScaffoldToggleButton action={toggle} />}
+          <ToolbarGroup label="Navigation" className="docs-app-bar-brand">
+            {toggle && <ScaffoldToggleButton action={toggle} />}
             <Link to="/" className="docs-brand docs-app-bar-logo" aria-label="Feeef UI home">
               <FoAnimatedLogo width={64} height={18} />
               <span>UI</span>
             </Link>
             {compact && <SearchButton onSearch={onSearch} />}
-          </LabToolbarGroup>
+          </ToolbarGroup>
         ) : undefined
       }
       trailing={
         <>
           {views}
           {compact ? (
-            <LabToolbarGroup label="Appearance" className="docs-app-bar-tools">
+            <ToolbarGroup label="Appearance" className="docs-app-bar-tools">
               <Customize />
-            </LabToolbarGroup>
+            </ToolbarGroup>
           ) : (
-            <LabToolbarGroup label="Tools" className="docs-app-bar-tools">
+            <ToolbarGroup label="Tools" className="docs-app-bar-tools">
               <SearchButton onSearch={onSearch} />
-            </LabToolbarGroup>
+            </ToolbarGroup>
           )}
         </>
       }
     >
       {route.kind !== 'home' && !compact && (
-        <LabPresence
+        <Presence
           open={titleAway}
           render={(state) => (
-            <LabToolbarGroup label="Page title" className="docs-app-bar-title" data-state={state}>
+            <ToolbarGroup label="Page title" className="docs-app-bar-title" data-state={state}>
               <span>{title}</span>
-            </LabToolbarGroup>
+            </ToolbarGroup>
           )}
         />
       )}
-    </LabScaffoldAppBar>
+    </ScaffoldAppBar>
   )
 }
 
 /** Compact layouts: the page views float at the bottom, like an iOS tab bar. */
 export function DocsViewsDock({ route }: { route: Route }) {
-  const { compact } = useLabScaffold()
+  const { compact } = useScaffold()
   if (!compact || tabsFor(route).length < 2) return null
   return (
-    <LabDock label="Page views" className="docs-views-dock">
+    <Dock label="Page views" className="docs-views-dock">
       <PageTabs route={route} />
-    </LabDock>
+    </Dock>
   )
 }

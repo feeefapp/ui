@@ -10,20 +10,21 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
 ## Principles
 
 1. **Content first; chrome floats.** Content sits on opaque surfaces (the scaffold panel, cards,
-   dialogs). Tools float over it in glass groups (app bar, docks); `LabScrollArea` reserves their space
+   dialogs). Tools float over it in glass groups (app bar, docks), one `GlassContainer` per floating row so
+   neighbouring bubbles merge, split and share light; `ScrollArea` reserves their space
    and fades content under them. Never stack fixed header bars. Remove chrome before adding it.
 2. **One primary action per view.** One `filled` button per view or dialog, at the end of the reading
    direction. Supporting actions `tonal`, cancel/secondary `text`. Destructive is `destructive`, never
    the default, and confirms.
-3. **Related tools travel together.** One `LabToolbarGroup` (bubble) per purpose: navigation/identity,
+3. **Related tools travel together.** One `ToolbarGroup` (bubble) per purpose: navigation/identity,
    title, page views, tools, page actions. Controls inside use `appearance="toolbar"`. When space runs
-   out, overflow into a menu (`LabActionsBar`), don't shrink or wrap.
+   out, overflow into a menu (`ActionsBar`), don't shrink or wrap.
    Two levels at most: a surface, then the bubbles on it, never a bubble inside a bubble. Content on a
    surface stays flat (a calendar heading is a plain row); bubbles on one surface share height and
-   line up with its content. Example: `LabTemporalDialog` (top bar · calendars · action bar).
+   line up with its content. Example: `TemporalDialog` (top bar · calendars · action bar).
 4. **Navigation, work, details: in that order.** Sidebar → content → inspector. As the screen shrinks:
    inspector → dialog/sheet, sidebar → rail → hidden → drawer, the logo rises into the app bar, page
-   views drop to a bottom `LabDock` on phones, the page title collapses into the bar on scroll.
+   views drop to a bottom `Dock` on phones, the page title collapses into the bar on scroll.
    Nothing disappears; it moves.
 5. **Comfortable by default, dense on purpose.** Density is one app-wide `theme.density`
    (`comfortable` merchant apps, `compact` consoles, `thin` very dense tools). Never shrink one screen by
@@ -32,13 +33,13 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
    success. Everything else neutral. Never decorate with color; never rely on color alone. Brand through
    `theme.primary` / `palette`, not by painting components.
 7. **Motion explains change.** Springs for direct manipulation, short fades for presence
-   (`LabPresence`). Never animate data being read or block input. Respect reduced motion.
+   (`Presence`). Never animate data being read or block input. Respect reduced motion.
 8. **Speak like a helpful colleague.** Sentence case. Buttons name the outcome ("Confirm order", not
    "Submit"). Errors say how to fix it, at the field. Limits are next steps ("Add funds"), not toasts.
 9. **For everyone, in every language.** RTL is not a later mode: logical properties, mirrored
    directional icons (`lab-dir-flip`), check every screen in Arabic. Native elements, real labels,
    visible focus, focus that returns. Don't lighten text or borders below the tokens.
-10. **Configure, don't override.** Change the look only through `LabThemeConfig` and tokens. Lay kit
+10. **Configure, don't override.** Change the look only through `ThemeConfig` and tokens. Lay kit
     components out freely (position, gaps); never repaint them (color, radius, height, shadow). If the
     kit can't do something, extend the kit instead of hand-rolling a one-off.
 
@@ -46,59 +47,59 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
 
 | Need | Use | Not |
 |---|---|---|
-| The one main action | `LabButton variant="filled"` | two filled buttons side by side |
-| Icon-only action | `LabIconButton` with `aria-label` | an unlabeled icon in a `<div>` |
-| Navigate with button looks | `LabButton asChild` + your router link | `onClick={() => navigate()}` on a button |
-| Switch views or modes (2–5) | `LabSegmentedControl` | tabs drawn from buttons |
-| Pick one of a few, all visible | `LabRadioGroup` | a select with 3 options |
-| Pick one of many | `LabSelect` | a long radio list |
-| Independent on/off in a form | `LabCheckbox` | a switch that only applies on Save |
-| Setting that applies immediately | `LabSlideSwitch` | a checkbox plus a Save button |
-| Text | `LabTextField` (`hint`) | a label stacked above an input |
-| Numbers people tweak | `LabNumberField` (drag, type `1250*3`) | a plain text input for a price |
-| Bounded continuous value | `LabSlider` | a number field for 0–100% when feel matters |
-| Dates and times | `LabDateField`, `LabDateRangeField`… | free text dates |
-| A decision that blocks the task | `LabModal` | a popover for "Delete order?" |
-| A short task about the page (filters, contact, quick edit) | `LabSheet` (detents on phones, dialog when wide) | a new page that loses the person's place |
-| Going deeper and coming back | `LabNavigationStack` + `LabNavigationPage` | swapping content with no back or swipe |
-| Many items from one list | `LabSplitView` (stack on phones) | a modal per item |
-| Rows that open, choose or show values | `LabListSection` + `LabListRow` | hand-made `<div>` rows |
-| Things that move because of the person | `LabLayoutGroup` (`data-lab-layout-id`) | teleporting cards |
-| 2–5 top-level places on a phone | `LabTabView` (each tab its own stack) | a segmented control as app navigation |
-| Quick per-row actions | `LabListRow` `leadingActions`/`trailingActions` (also offered elsewhere) | swipe as the only way |
-| Person-defined order | `LabListSection onReorder` | up/down buttons on every row |
-| Browsing a few items sideways | `LabCarousel` | auto-advancing slides |
-| One component, any pane width | `LabAdaptiveStack`, `LabViewThatFits`, `useLabSizeClass` | window media queries in components |
-| Light, anchored, dismissable extra | `LabPopoverSurface` | a modal for a color picker |
-| Task actions for the whole view | `LabDock` (+ `LabActionsBar`) | buttons scattered through content |
+| The one main action | `Button variant="filled"` | two filled buttons side by side |
+| Icon-only action | `IconButton` with `aria-label` | an unlabeled icon in a `<div>` |
+| Navigate with button looks | `Button asChild` + your router link | `onClick={() => navigate()}` on a button |
+| Switch views or modes (2–5) | `SegmentedControl` | tabs drawn from buttons |
+| Pick one of a few, all visible | `RadioGroup` | a select with 3 options |
+| Pick one of many | `Select` | a long radio list |
+| Independent on/off in a form | `Checkbox` | a switch that only applies on Save |
+| Setting that applies immediately | `SlideSwitch` | a checkbox plus a Save button |
+| Text | `TextField` (`hint`) | a label stacked above an input |
+| Numbers people tweak | `NumberField` (drag, type `1250*3`) | a plain text input for a price |
+| Bounded continuous value | `Slider` | a number field for 0–100% when feel matters |
+| Dates and times | `DateField`, `DateRangeField`… | free text dates |
+| A decision that blocks the task | `Modal` | a popover for "Delete order?" |
+| A short task about the page (filters, contact, quick edit) | `Sheet` (detents on phones, dialog when wide) | a new page that loses the person's place |
+| Going deeper and coming back | `NavigationStack` + `NavigationPage` | swapping content with no back or swipe |
+| Many items from one list | `SplitView` (stack on phones) | a modal per item |
+| Rows that open, choose or show values | `ListSection` + `ListRow` | hand-made `<div>` rows |
+| Things that move because of the person | `LayoutGroup` (`data-lab-layout-id`) | teleporting cards |
+| 2–5 top-level places on a phone | `TabView` (each tab its own stack) | a segmented control as app navigation |
+| Quick per-row actions | `ListRow` `leadingActions`/`trailingActions` (also offered elsewhere) | swipe as the only way |
+| Person-defined order | `ListSection onReorder` | up/down buttons on every row |
+| Browsing a few items sideways | `Carousel` | auto-advancing slides |
+| One component, any pane width | `AdaptiveStack`, `ViewThatFits`, `useSizeClass` | window media queries in components |
+| Light, anchored, dismissable extra | `PopoverSurface` | a modal for a color picker |
+| Task actions for the whole view | `Dock` (+ `ActionsBar`) | buttons scattered through content |
 | Problem the user must act on | inline error or in-page notice with the next step | a toast that disappears |
 
 ## Layout recipe
 
 ```
-LabProvider (theme once)
-└─ LabScaffold
-   ├─ side: LabScaffoldSide → brand + toggle, LabToolbarSearch filter, LabNavigationItem…, account/appearance at the bottom
-   ├─ appBar: LabScaffoldAppBar → bubbles: [nav/identity] [title] … [views] [tools] [page actions]
-   ├─ children: page content on opaque surfaces (scrolls in the scaffold's LabScrollArea)
-   └─ bottom: LabDock → task actions (and page views on phones)
+Provider (theme once)
+└─ Scaffold
+   ├─ side: ScaffoldSide → brand + toggle, ToolbarSearch filter, NavigationItem…, account/appearance at the bottom
+   ├─ appBar: ScaffoldAppBar → bubbles: [nav/identity] [title] … [views] [tools] [page actions]
+   ├─ children: page content on opaque surfaces (scrolls in the scaffold's ScrollArea)
+   └─ bottom: Dock → task actions (and page views on phones)
 ```
 
 Drill-down areas swap the scaffold's scroll area for a container (`renderViewport`):
 
 ```
-LabScaffold renderViewport
-└─ LabSplitView                        (wide: list | detail · phones: one stack)
-   ├─ list:   LabNavigationPage → LabListSection → LabListRow selected…
-   └─ detail: LabNavigationPage (bar: back · title · actions, bottom: LabDock) → deeper pages push
-LabSheet over any of it                (filters, contact, quick edits; recedes the scaffold)
+Scaffold renderViewport
+└─ SplitView                        (wide: list | detail · phones: one stack)
+   ├─ list:   NavigationPage → ListSection → ListRow selected…
+   └─ detail: NavigationPage (bar: back · title · actions, bottom: Dock) → deeper pages push
+Sheet over any of it                (filters, contact, quick edits; recedes the scaffold)
 ```
 
 ## Physics
 
 Direct manipulation follows the finger 1:1, releases with its velocity (`getVelocity(event time)`),
 decides by momentum projection (`projectMomentum`), rubber-bands at limits and settles on springs
-(`LAB_SPRINGS`: smooth for layout, snappy for small changes, release after drags). Only transform and
+(`SPRINGS`: smooth for layout, snappy for small changes, release after drags). Only transform and
 opacity animate; layout switches once at rest. Gestures never replace a visible control.
 
 ## Before shipping a screen

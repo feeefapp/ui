@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { ArrowUp } from 'lucide-react'
-import { LabImageWorkspace } from '@feeef.dev/ui/image/workspace'
+import { ImageWorkspace } from '@feeef.dev/ui/image/workspace'
 import { FreeformBoard } from '@feeef.dev/ui/image/freeform-board'
 import type { ImageTake } from '@feeef.dev/ui/image/types'
-import { LabPromptComposer } from '@feeef.dev/ui/composer/composer'
-import { LabGlassGroup } from '@feeef.dev/ui/scaffold'
-import { LabIconButton } from '@feeef.dev/ui/primitives/button'
+import { PromptComposer } from '@feeef.dev/ui/composer/composer'
+import { GlassGroup } from '@feeef.dev/ui/scaffold'
+import { IconButton } from '@feeef.dev/ui/primitives/button'
 
 const art = (w: number, h: number, fill: string) =>
   `data:image/svg+xml,${encodeURIComponent(
@@ -51,23 +51,23 @@ export default function Workspace() {
   }, [])
   return (
     <div style={{ display: 'flex', width: '100%', height: 520, borderRadius: 12, overflow: 'hidden' }}>
-      <LabImageWorkspace
+      <ImageWorkspace
         top={
-          <LabGlassGroup style={{ display: 'inline-flex', padding: '8px 14px' }}>
+          <GlassGroup style={{ display: 'inline-flex', padding: '8px 14px' }}>
             <strong>Vase campaign</strong>
-          </LabGlassGroup>
+          </GlassGroup>
         }
         bottom={
-          <LabPromptComposer
+          <PromptComposer
             label="Describe a change"
             placeholder="Make the light warmer"
             value={prompt}
             onValueChange={setPrompt}
             onSubmit={() => setPrompt('')}
             submit={
-              <LabIconButton type="submit" variant="filled" aria-label="Create image" disabled={!prompt.trim()}>
+              <IconButton type="submit" variant="filled" aria-label="Create image" disabled={!prompt.trim()}>
                 <ArrowUp size={20} />
-              </LabIconButton>
+              </IconButton>
             }
           />
         }

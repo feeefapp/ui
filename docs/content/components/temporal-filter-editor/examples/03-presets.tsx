@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { LabTemporalFilterEditor } from '@feeef.dev/ui/filters/temporal-editor'
+import { TemporalFilterEditor } from '@feeef.dev/ui/filters/temporal-editor'
 import {
   temporalPresets,
-  type LabTemporalConfig,
-  type LabTemporalValue,
+  type TemporalConfig,
+  type TemporalValue,
 } from '@feeef.dev/ui/filters/temporal'
 
 const today = new Date()
@@ -14,7 +14,7 @@ const daysAgo = (count: number) => {
   return iso(date)
 }
 
-const config: LabTemporalConfig = {
+const config: TemporalConfig = {
   type: 'dateRange',
   // Delivered orders are only kept for 90 days, so older presets are hidden automatically.
   min: daysAgo(89),
@@ -27,10 +27,10 @@ const config: LabTemporalConfig = {
 }
 
 export default function Presets() {
-  const [value, setValue] = useState<LabTemporalValue>(null)
+  const [value, setValue] = useState<TemporalValue>(null)
   return (
     <div className="demo-wide">
-      <LabTemporalFilterEditor config={config} value={value} onChange={setValue} />
+      <TemporalFilterEditor config={config} value={value} onChange={setValue} />
     </div>
   )
 }

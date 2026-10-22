@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { LabSlider } from '@feeef.dev/ui/primitives/slider'
+import { Slider } from '@feeef.dev/ui/primitives/slider'
 
 export default function RenderSlots() {
   const [strength, setStrength] = useState(70)
   return (
     <div className="demo-wide">
-      <LabSlider
+      <Slider
         label="Background removal strength"
         value={strength}
         onValueChange={setStrength}

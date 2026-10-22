@@ -1,7 +1,7 @@
 import { Bold, Italic, Underline } from 'lucide-react'
-import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
-import { LabToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
 import { definePage } from '../../../src/model'
 import { Link } from '../../../src/router'
 import { C } from '../../../src/blocks/code'
@@ -50,17 +50,17 @@ function Overview() {
         <Compare
           good={
             <div className="demo-row">
-              <LabButton variant="text">Cancel</LabButton>
-              <LabButton variant="tonal">Save draft</LabButton>
-              <LabButton variant="filled">Confirm order</LabButton>
+              <Button variant="text">Cancel</Button>
+              <Button variant="tonal">Save draft</Button>
+              <Button variant="filled">Confirm order</Button>
             </div>
           }
           goodNote="One filled action; the rest step down in emphasis."
           bad={
             <div className="demo-row">
-              <LabButton variant="filled">Cancel</LabButton>
-              <LabButton variant="filled">Save draft</LabButton>
-              <LabButton variant="filled">Confirm order</LabButton>
+              <Button variant="filled">Cancel</Button>
+              <Button variant="filled">Save draft</Button>
+              <Button variant="filled">Confirm order</Button>
             </div>
           }
           badNote="Three equal buttons: nothing tells the agent which one matters."
@@ -73,38 +73,38 @@ function Overview() {
         title="Related tools travel together"
         why="People find a tool by finding its group. Scattered buttons each demand attention; a group reads as one thing."
         how={[
-          <>Put related controls in one <C>LabToolbarGroup</C>: navigation, view, tools, page actions. One bubble per purpose.</>,
+          <>Put related controls in one <C>ToolbarGroup</C>: navigation, view, tools, page actions. One bubble per purpose.</>,
           <>Controls inside a group use <C>appearance="toolbar"</C>, so they share its material instead of painting their own.</>,
-          <>When space runs out, a group overflows into a menu (<C>LabActionsBar</C>); it does not wrap or shrink its targets.</>,
+          <>When space runs out, a group overflows into a menu (<C>ActionsBar</C>); it does not wrap or shrink its targets.</>,
           <>Two levels at most: a surface, then the bubbles on it. Never a bubble inside a bubble. Content inside a surface stays flat (a calendar heading is a plain row), and the bubbles on one surface share their height and line up with its content.</>,
         ]}
       >
         <Compare
           good={
-            <LabToolbarGroup label="Text style">
-              <LabIconButton variant="text" appearance="toolbar" aria-label="Bold" aria-pressed="true">
+            <ToolbarGroup label="Text style">
+              <IconButton variant="text" appearance="toolbar" aria-label="Bold" aria-pressed="true">
                 <Bold size={18} />
-              </LabIconButton>
-              <LabIconButton variant="text" appearance="toolbar" aria-label="Italic">
+              </IconButton>
+              <IconButton variant="text" appearance="toolbar" aria-label="Italic">
                 <Italic size={18} />
-              </LabIconButton>
-              <LabIconButton variant="text" appearance="toolbar" aria-label="Underline">
+              </IconButton>
+              <IconButton variant="text" appearance="toolbar" aria-label="Underline">
                 <Underline size={18} />
-              </LabIconButton>
-            </LabToolbarGroup>
+              </IconButton>
+            </ToolbarGroup>
           }
           goodNote="One glass group, one purpose, shared material."
           bad={
             <div className="demo-row" style={{ gap: 24 }}>
-              <LabIconButton variant="elevated" aria-label="Bold">
+              <IconButton variant="elevated" aria-label="Bold">
                 <Bold size={18} />
-              </LabIconButton>
-              <LabIconButton variant="elevated" aria-label="Italic">
+              </IconButton>
+              <IconButton variant="elevated" aria-label="Italic">
                 <Italic size={18} />
-              </LabIconButton>
-              <LabIconButton variant="elevated" aria-label="Underline">
+              </IconButton>
+              <IconButton variant="elevated" aria-label="Underline">
                 <Underline size={18} />
-              </LabIconButton>
+              </IconButton>
             </div>
           }
           badNote="Three raised buttons that look unrelated and compete for attention."
@@ -149,15 +149,15 @@ function Overview() {
         <Compare
           good={
             <div className="demo-row">
-              <LabButton variant="text">Keep order</LabButton>
-              <LabButton variant="destructive">Cancel order</LabButton>
+              <Button variant="text">Keep order</Button>
+              <Button variant="destructive">Cancel order</Button>
             </div>
           }
           goodNote="Red only for the action that destroys something."
           bad={
             <div className="demo-row">
-              <LabButton variant="destructive">Save changes</LabButton>
-              <LabButton variant="destructive">Export CSV</LabButton>
+              <Button variant="destructive">Save changes</Button>
+              <Button variant="destructive">Export CSV</Button>
             </div>
           }
           badNote="Red used for emphasis: people learn to ignore it, then miss a real danger."
@@ -170,7 +170,7 @@ function Overview() {
         title="Motion explains change"
         why="Motion tells people where something came from and where it went. Motion that explains nothing only slows them down."
         how={[
-          <>Springs for direct manipulation (sliders, docks resizing); short fades for things that appear and leave (<C>LabPresence</C>).</>,
+          <>Springs for direct manipulation (sliders, docks resizing); short fades for things that appear and leave (<C>Presence</C>).</>,
           <>Never animate data that people are reading, and never block input while something animates.</>,
           <>Everything respects reduced motion. See <Link to="/foundations/motion">Motion</Link>.</>,
         ]}
@@ -190,7 +190,7 @@ function Overview() {
         <Compare
           good={
             <div className="demo-column">
-              <LabTextField
+              <TextField
                 hint="Customer phone"
                 defaultValue="0555 12 34"
                 error="Enter all 10 digits, starting with 05, 06 or 07."
@@ -200,7 +200,7 @@ function Overview() {
           goodNote="Says exactly what to fix, at the field."
           bad={
             <div className="demo-column">
-              <LabTextField hint="Customer phone" defaultValue="0555 12 34" error="Invalid input." />
+              <TextField hint="Customer phone" defaultValue="0555 12 34" error="Invalid input." />
             </div>
           }
           badNote="True, but useless: the agent still doesn’t know what to type."
@@ -225,7 +225,7 @@ function Overview() {
         title="Configure, don’t override"
         why="Every override is a fork of the design system that nobody maintains. The kit stays consistent only if apps change it through its own settings."
         how={[
-          <>Change the look through <C>LabThemeConfig</C> and tokens; never restyle a kit component with your own CSS or class names.</>,
+          <>Change the look through <C>ThemeConfig</C> and tokens; never restyle a kit component with your own CSS or class names.</>,
           <>Lay components out (position, gaps) freely; don’t repaint them (color, radius, height, shadow).</>,
           <>If the kit can’t do what a screen needs, extend the kit for everyone instead of hand-rolling a one-off.</>,
         ]}

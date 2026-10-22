@@ -1,16 +1,16 @@
 import { ArrowRight } from 'lucide-react'
-import { useLabI18n } from '@feeef.dev/ui/i18n'
-import { LAB_UI_MESSAGES } from '@feeef.dev/ui/messages'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { useI18n } from '@feeef.dev/ui/i18n'
+import { UI_MESSAGES } from '@feeef.dev/ui/messages'
+import { Button } from '@feeef.dev/ui/primitives/button'
 import { definePage } from '../../../src/model'
 import { C, Code } from '../../../src/blocks/code'
 import { Callout, DoDont, Lead, Section, Table } from '../../../src/blocks/prose'
 import { Link } from '../../../src/router'
 
-const SAMPLE_KEYS = Object.keys(LAB_UI_MESSAGES.en!).filter((key) => key.startsWith('lab.common.'))
+const SAMPLE_KEYS = Object.keys(UI_MESSAGES.en!).filter((key) => key.startsWith('lab.common.'))
 
 function LiveStrings() {
-  const { t, locale, dir } = useLabI18n()
+  const { t, locale, dir } = useI18n()
   return (
     <>
       <p>
@@ -29,7 +29,7 @@ function LiveStrings() {
 }
 
 function Overview() {
-  const keyCount = Object.keys(LAB_UI_MESSAGES.en!).length
+  const keyCount = Object.keys(UI_MESSAGES.en!).length
   return (
     <>
       <Lead>
@@ -40,11 +40,11 @@ function Overview() {
 
       <Section title="Pass the locale">
         <p>
-          Give <C>LabProvider</C> an <C>i18n</C> source. Everything is optional; with nothing set the kit
+          Give <C>Provider</C> an <C>i18n</C> source. Everything is optional; with nothing set the kit
           renders in Arabic, right to left.
         </p>
         <Code
-          code={`<LabProvider
+          code={`<Provider
   i18n={{
     locale: 'fr',                      // active locale
     dir: 'ltr',                        // default: derived from the locale
@@ -55,7 +55,7 @@ function Overview() {
   }}
 >
   {children}
-</LabProvider>`}
+</Provider>`}
         />
         <Table
           head={['Field', 'Default', 'Meaning']}
@@ -77,7 +77,7 @@ function Overview() {
       <Section title="Built-in strings">
         <p>
           Kit widgets read {keyCount} <C>lab.*</C> keys (close buttons, search, theme and language
-          switches, loading states) from <C>LAB_UI_MESSAGES</C>, which has <C>en</C>, <C>ar</C> and{' '}
+          switches, loading states) from <C>UI_MESSAGES</C>, which has <C>en</C>, <C>ar</C> and{' '}
           <C>fr</C>. A locale without its own set falls back to English. Any key you pass in{' '}
           <C>translations</C> wins, so you can reword a kit string without forking it:
         </p>
@@ -94,16 +94,16 @@ function Overview() {
 
       <Section title="Translate your own strings">
         <p>
-          <C>useLabI18n().t(key, params)</C> formats ICU messages with <C>intl-messageformat</C> in the
+          <C>useI18n().t(key, params)</C> formats ICU messages with <C>intl-messageformat</C> in the
           active locale: plurals, selects, numbers and dates. Unknown keys return the key itself, and a
           malformed message returns its raw pattern instead of throwing.
         </p>
         <Code
-          code={`import { useLabI18n } from '@feeef.dev/ui/i18n'
+          code={`import { useI18n } from '@feeef.dev/ui/i18n'
 
 // translations: { "orders.count": "{count, plural, =0 {No orders} one {# order} other {# orders}}" }
 function OrdersTitle({ count }: { count: number }) {
-  const { t } = useLabI18n()
+  const { t } = useI18n()
   return <h2>{t('orders.count', { count })}</h2>
 }`}
         />
@@ -117,25 +117,25 @@ function OrdersTitle({ count }: { count: number }) {
 
       <Section title="Switching language">
         <p>
-          <C>LabLanguageSwitcher</C> lists the built-in languages that are in <C>availableLocales</C> and
+          <C>LanguageSwitcher</C> lists the built-in languages that are in <C>availableLocales</C> and
           hides itself when fewer than two are available. Pass <C>iconOnly</C> for a globe button with a
           menu, the form used in toolbars and sidebars.
         </p>
         <Code
-          code={`import { LabLanguageSwitcher } from '@feeef.dev/ui/i18n'
+          code={`import { LanguageSwitcher } from '@feeef.dev/ui/i18n'
 
-<LabLanguageSwitcher iconOnly />`}
+<LanguageSwitcher iconOnly />`}
         />
         <p>
           Choosing a language calls <C>setLocale</C>, which does not change state in the browser. It
-          builds the current URL with <C>?hl=&lt;code&gt;</C> (<C>labLocaleUrl</C>) and calls{' '}
+          builds the current URL with <C>?hl=&lt;code&gt;</C> (<C>localeUrl</C>) and calls{' '}
           <C>navigate</C>. The server reads <C>hl</C>, stores the choice (usually a cookie) and renders
           the page in the new locale with its translations.
         </p>
         <Code
-          code={`import { labLocaleUrl } from '@feeef.dev/ui/i18n'
+          code={`import { localeUrl } from '@feeef.dev/ui/i18n'
 
-labLocaleUrl('/orders?page=2#top', 'ar') // → '/orders?page=2&hl=ar#top'`}
+localeUrl('/orders?page=2#top', 'ar') // → '/orders?page=2&hl=ar#top'`}
         />
         <Callout title="Inertia and Next.js">
           <p>
@@ -168,11 +168,11 @@ labLocaleUrl('/orders?page=2#top', 'ar') // → '/orders?page=2&hl=ar#top'`}
           <C>{"[dir='rtl']"}</C> it mirrors the icon.
         </p>
         <div className="docs-stage">
-          <LabButton variant="tonal">
+          <Button variant="tonal">
             Continue <ArrowRight className="lab-dir-flip" />
-          </LabButton>
+          </Button>
         </div>
-        <Code code={`<LabButton variant="tonal">\n  Continue <ArrowRight className="lab-dir-flip" />\n</LabButton>`} />
+        <Code code={`<Button variant="tonal">\n  Continue <ArrowRight className="lab-dir-flip" />\n</Button>`} />
         <DoDont
           doItems={[
             <>Use <C>start</C>/<C>end</C> and <C>inline</C>/<C>block</C> properties.</>,
@@ -199,6 +199,6 @@ export default definePage({
   title: 'Languages and RTL',
   order: 3,
   summary: 'Pass the locale and translations, use the built-in en/ar/fr strings, and build layouts that mirror for Arabic.',
-  keywords: ['i18n', 'internationalization', 'translation', 'locale', 'arabic', 'french', 'rtl', 'direction', 'ICU', 'useLabI18n', 'LabLanguageSwitcher'],
+  keywords: ['i18n', 'internationalization', 'translation', 'locale', 'arabic', 'french', 'rtl', 'direction', 'ICU', 'useI18n', 'LanguageSwitcher'],
   Overview,
 })

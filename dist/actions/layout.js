@@ -5,7 +5,7 @@
  */
 export function computeLabActionsLayout({ actions, maxWidth, measure, overflowWidth = 40, gap = 4, }) {
     if (Number.isNaN(maxWidth) || maxWidth < 0) {
-        throw new RangeError('Lab actions maxWidth must be non-negative.');
+        throw new RangeError('Actions maxWidth must be non-negative.');
     }
     for (const [name, value] of [
         ['overflowWidth', overflowWidth],

@@ -18,7 +18,7 @@ function Overview() {
           everywhere: the language switcher calls <C>navigate</C> instead of assigning{' '}
           <C>window.location</C>, and the theme switch calls <C>preferences</C> instead of{' '}
           <C>localStorage</C>. Your own components can use the same services through{' '}
-          <C>useLabServices()</C>.
+          <C>useServices()</C>.
         </p>
       </Section>
 
@@ -52,15 +52,15 @@ function Overview() {
         <Code
           title="Inertia"
           code={`import { router } from '@inertiajs/react'
-import { LabProvider } from '@feeef.dev/ui/provider'
-import type { LabServices } from '@feeef.dev/ui/services'
+import { Provider } from '@feeef.dev/ui/provider'
+import type { Services } from '@feeef.dev/ui/services'
 
-const services: Partial<LabServices> = {
+const services: Partial<Services> = {
   navigate: (url) => router.visit(url),
 }
 
 export function Root({ children }: { children: React.ReactNode }) {
-  return <LabProvider services={services}>{children}</LabProvider>
+  return <Provider services={services}>{children}</Provider>
 }`}
         />
         <Code
@@ -68,12 +68,12 @@ export function Root({ children }: { children: React.ReactNode }) {
           code={`'use client'
 import { useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { LabProvider } from '@feeef.dev/ui/provider'
+import { Provider } from '@feeef.dev/ui/provider'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const services = useMemo(() => ({ navigate: (url: string) => router.push(url) }), [router])
-  return <LabProvider services={services}>{children}</LabProvider>
+  return <Provider services={services}>{children}</Provider>
 }`}
         />
         <p>
@@ -81,7 +81,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <Link to="/get-started/theming">Theming</Link>):
         </p>
         <Code
-          code={`const cookiePreferences: LabServices['preferences'] = {
+          code={`const cookiePreferences: Services['preferences'] = {
   get: (key) => document.cookie.match(new RegExp(\`(?:^|; )\${key}=([^;]*)\`))?.[1] ?? null,
   set: (key, value) => {
     document.cookie = \`\${key}=\${value}; path=/; max-age=31536000; samesite=lax\`
@@ -91,29 +91,29 @@ export function Providers({ children }: { children: React.ReactNode }) {
   },
 }
 
-<LabProvider services={{ preferences: cookiePreferences }}>…</LabProvider>`}
+<Provider services={{ preferences: cookiePreferences }}>…</Provider>`}
         />
       </Section>
 
       <Section title="Use them in your components">
         <Code
-          code={`import { useLabServices } from '@feeef.dev/ui/services'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+          code={`import { useServices } from '@feeef.dev/ui/services'
+import { Button } from '@feeef.dev/ui/primitives/button'
 
 export function ExportButton({ rows }: { rows: string[][] }) {
-  const { downloadText } = useLabServices()
+  const { downloadText } = useServices()
   return (
-    <LabButton
+    <Button
       variant="outlined"
       onClick={() => downloadText('orders.csv', rows.map((r) => r.join(',')).join('\\n'), 'text/csv')}
     >
       Export CSV
-    </LabButton>
+    </Button>
   )
 }`}
         />
         <p>
-          Without a provider, <C>useLabServices()</C> returns the browser defaults, so components still
+          Without a provider, <C>useServices()</C> returns the browser defaults, so components still
           work in isolation.
         </p>
       </Section>
@@ -124,13 +124,13 @@ export function ExportButton({ rows }: { rows: string[][] }) {
           without a real router, storage or clipboard.
         </p>
         <Code
-          code={`import { LabServicesProvider } from '@feeef.dev/ui/services'
+          code={`import { ServicesProvider } from '@feeef.dev/ui/services'
 
 const memory = new Map<string, string>()
 const calls: string[] = []
 
 render(
-  <LabServicesProvider
+  <ServicesProvider
     services={{
       navigate: (url) => calls.push(url),
       preferences: {
@@ -142,13 +142,13 @@ render(
     }}
   >
     <OrderActions />
-  </LabServicesProvider>
+  </ServicesProvider>
 )`}
         />
         <Callout title="Full provider in tests">
           <p>
-            Widgets that also need translations or the theme (for example <C>LabThemeSwitch</C>) need{' '}
-            <C>LabProvider</C>, which takes the same <C>services</C> prop.
+            Widgets that also need translations or the theme (for example <C>ThemeSwitch</C>) need{' '}
+            <C>Provider</C>, which takes the same <C>services</C> prop.
           </p>
         </Callout>
       </Section>
@@ -157,7 +157,7 @@ render(
         <DoDont
           doItems={[
             'Route navigation through your router so client-side transitions keep state.',
-            <>Use <C>useLabServices()</C> in shared components instead of browser globals.</>,
+            <>Use <C>useServices()</C> in shared components instead of browser globals.</>,
             'Handle clipboard rejections with a visible message.',
           ]}
           dontItems={[
@@ -177,6 +177,6 @@ export default definePage({
   title: 'Services',
   order: 4,
   summary: 'Inject navigation, storage, clipboard and downloads so kit widgets work in any host and in tests.',
-  keywords: ['LabServices', 'useLabServices', 'navigate', 'router', 'preferences', 'clipboard', 'download', 'testing'],
+  keywords: ['Services', 'useServices', 'navigate', 'router', 'preferences', 'clipboard', 'download', 'testing'],
   Overview,
 })

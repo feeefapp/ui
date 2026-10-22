@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useRef } from 'react';
-import { LabButton } from './button.js';
+import { Button } from './button.js';
 import { cn } from '../utils.js';
 import { revealScrollChild } from '../scroll/reveal.js';
 import './segmented.css';
@@ -8,7 +8,7 @@ import './segmented.css';
  * A single choice among two to five short options, shown side by side. Radio semantics: one Tab
  * stop, arrow keys move and select.
  */
-export function LabSegmentedControl({ value, onChange, options, label, disabled = false, className, appearance = 'grouped', }) {
+export function SegmentedControl({ value, onChange, options, label, disabled = false, className, appearance = 'grouped', }) {
     const group = useRef(null);
     const enabled = options.filter((option) => !disabled && !option.disabled);
     const tabValue = enabled.some((option) => option.value === value) ? value : enabled[0]?.value;
@@ -36,6 +36,6 @@ export function LabSegmentedControl({ value, onChange, options, label, disabled 
             inline: false,
         });
     };
-    return (_jsx("div", { ref: group, className: cn('lab-segmented', appearance === 'grouped' && 'lab-light-edge', className), "data-appearance": appearance, role: "radiogroup", "aria-label": label, "aria-disabled": disabled || undefined, onKeyDown: navigate, "data-lab-corners": true, children: options.map((option) => (_jsxs(LabButton, { variant: "ghost", appearance: "toolbar", controlSize: "regular", className: "lab-segmented-option", role: "radio", "aria-checked": option.value === value, tabIndex: option.value === tabValue ? 0 : -1, disabled: disabled || option.disabled, "data-state": option.value === value ? 'on' : 'off', onClick: () => onChange(option.value), children: [option.icon && (_jsx("span", { className: "lab-segmented-icon", "aria-hidden": "true", children: option.icon })), _jsx("span", { className: "lab-segmented-label", children: option.label })] }, option.value))) }));
+    return (_jsx("div", { ref: group, className: cn('lab-segmented', appearance === 'grouped' && 'lab-light-edge', className), "data-appearance": appearance, role: "radiogroup", "aria-label": label, "aria-disabled": disabled || undefined, onKeyDown: navigate, "data-lab-corners": true, children: options.map((option) => (_jsxs(Button, { variant: "ghost", appearance: "toolbar", controlSize: "regular", className: "lab-segmented-option", role: "radio", "aria-checked": option.value === value, tabIndex: option.value === tabValue ? 0 : -1, disabled: disabled || option.disabled, "data-state": option.value === value ? 'on' : 'off', onClick: () => onChange(option.value), children: [option.icon && (_jsx("span", { className: "lab-segmented-icon", "aria-hidden": "true", children: option.icon })), _jsx("span", { className: "lab-segmented-label", children: option.label })] }, option.value))) }));
 }
 //# sourceMappingURL=segmented.js.map

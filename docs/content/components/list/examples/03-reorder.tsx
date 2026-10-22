@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { MapPin } from 'lucide-react'
-import { LabListRow, LabListSection } from '@feeef.dev/ui/primitives/list'
+import { ListRow, ListSection } from '@feeef.dev/ui/primitives/list'
 
 export default function DeliveryRoute() {
   const [stops, setStops] = useState([
@@ -12,7 +12,7 @@ export default function DeliveryRoute() {
   ])
   return (
     <div className="demo-wide">
-      <LabListSection
+      <ListSection
         header="Today’s route"
         footer="Drag a grip to change the order, or focus it and use the up and down arrow keys."
         onReorder={(from, to) =>
@@ -25,9 +25,9 @@ export default function DeliveryRoute() {
         }
       >
         {stops.map((s, i) => (
-          <LabListRow key={s.id} static leading={<MapPin />} title={`${i + 1}. ${s.name}`} subtitle={s.place} reorderLabel={`Reorder ${s.name}`} />
+          <ListRow key={s.id} static leading={<MapPin />} title={`${i + 1}. ${s.name}`} subtitle={s.place} reorderLabel={`Reorder ${s.name}`} />
         ))}
-      </LabListSection>
+      </ListSection>
     </div>
   )
 }

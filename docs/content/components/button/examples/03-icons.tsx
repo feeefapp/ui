@@ -1,21 +1,21 @@
 import { ArrowRight, Download, Plus } from 'lucide-react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { Button } from '@feeef.dev/ui/primitives/button'
 
 export default function WithIcons() {
   return (
     <div className="demo-row">
-      <LabButton variant="filled">
+      <Button variant="filled">
         <Plus size={18} />
         New order
-      </LabButton>
-      <LabButton variant="elevated">
+      </Button>
+      <Button variant="elevated">
         <Download size={18} />
         Export CSV
-      </LabButton>
-      <LabButton variant="text">
+      </Button>
+      <Button variant="text">
         Continue
         <ArrowRight size={18} />
-      </LabButton>
+      </Button>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-/* Editing only: decoration belongs to LabTextField or the owning composer. */
+/* Editing only: decoration belongs to TextField or the owning composer. */
 .lab-raw-editor {
   box-sizing: border-box;
   min-width: 0;

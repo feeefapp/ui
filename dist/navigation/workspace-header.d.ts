@@ -4,8 +4,8 @@ import type { ReactNode, RefObject } from 'react';
  * detail, then optional `tools` and `actions` groups at the end. Pages supply context and
  * commands, never a second navbar skin.
  */
-export declare function LabWorkspaceHeader({ toggle, title, detail, actions, tools, toolsLabel, headerRef, embedded, brandHref, brandLabel, brandSuffix, }: {
-    /** The sidebar toggle, shown before the logo (e.g. LabScaffoldToggleButton). */
+export declare function WorkspaceHeader({ toggle, title, detail, actions, tools, toolsLabel, headerRef, embedded, brandHref, brandLabel, brandSuffix, }: {
+    /** The sidebar toggle, shown before the logo (e.g. ScaffoldToggleButton). */
     toggle: ReactNode;
     /** Current page title. */
     title: string;

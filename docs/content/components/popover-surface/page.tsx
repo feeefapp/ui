@@ -1,4 +1,4 @@
-import { LabPopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
+import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
 import { C, Code } from '../../../src/blocks/code'
@@ -9,16 +9,16 @@ function Overview() {
   return (
     <>
       <Stage>
-        <LabPopoverSurface style={{ width: 'min(100%, 280px)', padding: 16, display: 'grid', gap: 6 }}>
+        <PopoverSurface style={{ width: 'min(100%, 280px)', padding: 16, display: 'grid', gap: 6 }}>
           <strong>Order #10482</strong>
           <span>Yacine Benali · Bab Ezzouar, Alger</span>
           <span>2 × Air Max 90 · 7 800 DZD</span>
-        </LabPopoverSurface>
+        </PopoverSurface>
       </Stage>
 
       <Section title="When to use">
         <p>
-          <C>LabPopoverSurface</C> is the material every floating panel in the kit shares: menus,
+          <C>PopoverSurface</C> is the material every floating panel in the kit shares: menus,
           select lists, the date picker, the actions overflow. Use it when you build your own popover
           or menu, so it looks like the rest of the app: an opaque surface, a hairline border, group
           corners, a soft shadow and a faint animated pixel grain.
@@ -40,18 +40,18 @@ function Overview() {
         </p>
         <Code
           code={`import * as Popover from '@radix-ui/react-popover'
-import { LabPopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
+import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
 
 <Popover.Root>
   <Popover.Trigger asChild>
-    <LabButton variant="tonal">Delivery note</LabButton>
+    <Button variant="tonal">Delivery note</Button>
   </Popover.Trigger>
   <Popover.Portal>
-    <LabPopoverSurface asChild>
+    <PopoverSurface asChild>
       <Popover.Content sideOffset={8} collisionPadding={12} aria-label="Delivery note">
         …
       </Popover.Content>
-    </LabPopoverSurface>
+    </PopoverSurface>
   </Popover.Portal>
 </Popover.Root>`}
         />
@@ -120,9 +120,9 @@ export default definePage({
   group: 'Containment',
   order: 2,
   summary: 'The shared material for menus and popovers. Wrap a Radix Popover or DropdownMenu content with asChild.',
-  importLine: "import { LabPopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'",
+  importLine: "import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'",
   source: 'src/primitives/popover-surface.tsx',
-  api: ['LabPopoverSurface'],
+  api: ['PopoverSurface'],
   keywords: ['popover', 'menu', 'dropdown', 'radix', 'floating', 'surface', 'panel'],
   Overview,
   examples: examplesFrom(
@@ -130,9 +130,9 @@ export default definePage({
     import.meta.glob('./examples/*.tsx', { eager: true, query: '?raw', import: 'default' })
   ),
   Preview: () => (
-    <LabPopoverSurface style={{ width: 180, padding: 12, display: 'grid', gap: 4, fontSize: 13 }}>
+    <PopoverSurface style={{ width: 180, padding: 12, display: 'grid', gap: 4, fontSize: 13 }}>
       <strong>Order #10482</strong>
       <span>7 800 DZD · Alger</span>
-    </LabPopoverSurface>
+    </PopoverSurface>
   ),
 })

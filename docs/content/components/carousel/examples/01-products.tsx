@@ -1,4 +1,4 @@
-import { LabCarousel } from '@feeef.dev/ui/containers'
+import { Carousel } from '@feeef.dev/ui/containers'
 import '../carousel-demo.css'
 
 const PRODUCTS = [
@@ -12,7 +12,7 @@ const PRODUCTS = [
 export default function ProductCarousel() {
   return (
     <div className="cd-wide">
-      <LabCarousel label="Featured products" slideWidth={0.62}>
+      <Carousel label="Featured products" slideWidth={0.62}>
         {PRODUCTS.map((p) => (
           <div key={p.name} className="cd-card">
             <div className="cd-art" style={{ background: `linear-gradient(135deg, hsl(${p.hue} 70% 72%), hsl(${p.hue + 40} 55% 46%))` }} />
@@ -20,7 +20,7 @@ export default function ProductCarousel() {
             <span>{p.price}</span>
           </div>
         ))}
-      </LabCarousel>
+      </Carousel>
     </div>
   )
 }

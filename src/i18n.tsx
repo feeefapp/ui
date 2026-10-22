@@ -1,6 +1,6 @@
 'use client'
 
-import { LabPopoverSurface } from './ui'
+import { PopoverSurface } from './ui'
 import {
   createContext,
   useContext,
@@ -13,14 +13,14 @@ import {
 import { IntlMessageFormat } from 'intl-messageformat'
 import { Check, Globe } from 'lucide-react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { LabButton, LabSelect, LabOption } from './ui'
+import { Button, Select, Option } from './ui'
 import './actions/actions.css'
-import { LAB_LANGUAGES, labDirectionFor } from './i18n-core'
-import { LAB_UI_MESSAGES } from './messages'
-import { useLabServices } from './services'
+import { LANGUAGES, directionFor } from './i18n-core'
+import { UI_MESSAGES } from './messages'
+import { useServices } from './services'
 
-/** What the host app passes to `LabProvider i18n={…}` (or `LabI18nProvider`). */
-export interface LabI18nSource {
+/** What the host app passes to `Provider i18n={…}` (or `I18nProvider`). */
+export interface I18nSource {
   /** Active locale code, e.g. `en`, `ar`, `fr`. Default: `ar`. */
   locale?: string
   /** Text direction. Default: derived from `locale` (`rtl` for ar, fa, he, ur). */
@@ -35,8 +35,8 @@ export interface LabI18nSource {
   navigate?: (url: string) => void
 }
 
-/** The value of `useLabI18n()`. */
-export interface LabI18n {
+/** The value of `useI18n()`. */
+export interface I18n {
   /** Active locale code. */
   locale: string
   /** Active text direction. */
@@ -51,9 +51,9 @@ export interface LabI18n {
 
 const FALLBACK_LOCALE = 'ar'
 /** Stable default so the context value is not rebuilt on every render. */
-const DEFAULT_LOCALES: readonly string[] = LAB_LANGUAGES.map((l) => l.code)
+const DEFAULT_LOCALES: readonly string[] = LANGUAGES.map((l) => l.code)
 
-const LabI18nContext = createContext<LabI18n>({
+const I18nContext = createContext<I18n>({
   locale: FALLBACK_LOCALE,
   dir: 'rtl',
   availableLocales: DEFAULT_LOCALES,
@@ -61,11 +61,11 @@ const LabI18nContext = createContext<LabI18n>({
   setLocale: () => {},
 })
 
-/** Locale, direction and `t()` for the nearest `LabI18nProvider` (Arabic, RTL, keys as text without one). */
-export const useLabI18n = () => useContext(LabI18nContext)
+/** Locale, direction and `t()` for the nearest `I18nProvider` (Arabic, RTL, keys as text without one). */
+export const useI18n = () => useContext(I18nContext)
 
 /** Append/replace `?hl=<code>` on a path+query URL (mirrors the global provider). */
-export function labLocaleUrl(currentUrl: string, code: string): string {
+export function localeUrl(currentUrl: string, code: string): string {
   try {
     const url = new URL(currentUrl, 'http://localhost')
     url.searchParams.set('hl', code)
@@ -103,7 +103,7 @@ function makeFormatter(locale: string) {
  * strings. Switching language opens the current URL with `?hl=<code>` so the
  * host can persist the choice server-side.
  */
-export function LabI18nProvider({
+export function I18nProvider({
   children,
   locale: localeProp,
   dir: dirProp,
@@ -111,12 +111,12 @@ export function LabI18nProvider({
   translations: translationsProp,
   url,
   navigate: navigateProp,
-}: LabI18nSource & { children: ReactNode }) {
-  const services = useLabServices()
+}: I18nSource & { children: ReactNode }) {
+  const services = useServices()
   const locale = localeProp ?? FALLBACK_LOCALE
-  const dir: 'rtl' | 'ltr' = dirProp ?? labDirectionFor(locale)
+  const dir: 'rtl' | 'ltr' = dirProp ?? directionFor(locale)
   const translations = useMemo(
-    () => ({ ...(LAB_UI_MESSAGES[locale] ?? LAB_UI_MESSAGES.en), ...translationsProp }),
+    () => ({ ...(UI_MESSAGES[locale] ?? UI_MESSAGES.en), ...translationsProp }),
     [locale, translationsProp]
   )
   const availableLocales = availableProp ?? DEFAULT_LOCALES
@@ -135,7 +135,7 @@ export function LabI18nProvider({
     document.documentElement.dir = dir
   }, [locale, dir])
 
-  const value = useMemo<LabI18n>(() => {
+  const value = useMemo<I18n>(() => {
     const format = formatterRef.current
     return {
       locale,
@@ -154,19 +154,19 @@ export function LabI18nProvider({
           (typeof window !== 'undefined'
             ? window.location.pathname + window.location.search + window.location.hash
             : '/')
-        navigate(labLocaleUrl(current, code))
+        navigate(localeUrl(current, code))
       },
     }
   }, [locale, dir, availableLocales, translations, url, navigate])
 
-  return <LabI18nContext.Provider value={value}>{children}</LabI18nContext.Provider>
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
 }
 
 /**
  * Language picker for Lab chrome; lists only server-available locales and renders nothing
  * when fewer than two are available. Choosing one calls `setLocale`.
  */
-export function LabLanguageSwitcher({
+export function LanguageSwitcher({
   className,
   iconOnly = false,
 }: {
@@ -174,10 +174,10 @@ export function LabLanguageSwitcher({
   /** Show a globe icon button with a menu instead of the labeled select. */
   iconOnly?: boolean
 }) {
-  const { locale, setLocale, availableLocales, t, dir } = useLabI18n()
+  const { locale, setLocale, availableLocales, t, dir } = useI18n()
   const trigger = useRef<HTMLButtonElement>(null)
   const [portalContainer, setPortalContainer] = useState<HTMLElement>()
-  const visible = LAB_LANGUAGES.filter((l) => availableLocales.includes(l.code))
+  const visible = LANGUAGES.filter((l) => availableLocales.includes(l.code))
   if (visible.length < 2) return null
   if (iconOnly)
     return (
@@ -189,7 +189,7 @@ export function LabLanguageSwitcher({
         }}
       >
         <DropdownMenu.Trigger asChild>
-          <LabButton
+          <Button
             ref={trigger}
             className={className}
             variant="ghost"
@@ -199,10 +199,10 @@ export function LabLanguageSwitcher({
             title={visible.find((language) => language.code === locale)?.name}
           >
             <Globe size={20} />
-          </LabButton>
+          </Button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal container={portalContainer}>
-          <LabPopoverSurface asChild>
+          <PopoverSurface asChild>
             <DropdownMenu.Content
               className="lab-actions-menu"
               aria-label={t('lab.common.language')}
@@ -231,25 +231,25 @@ export function LabLanguageSwitcher({
                 ))}
               </DropdownMenu.RadioGroup>
             </DropdownMenu.Content>
-          </LabPopoverSurface>
+          </PopoverSurface>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
     )
   return (
     <span className={className} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
       <Globe size={16} aria-hidden="true" />
-      <LabSelect
+      <Select
         hint={t('lab.common.language')}
         aria-label={t('lab.common.language')}
         value={locale}
         onValueChange={(next) => setLocale(next)}
       >
         {visible.map((language) => (
-          <LabOption key={language.code} value={language.code}>
+          <Option key={language.code} value={language.code}>
             {language.name}
-          </LabOption>
+          </Option>
         ))}
-      </LabSelect>
+      </Select>
     </span>
   )
 }

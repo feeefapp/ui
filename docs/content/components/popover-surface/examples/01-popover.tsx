@@ -1,22 +1,22 @@
 import { useState } from 'react'
 import * as Popover from '@radix-ui/react-popover'
 import { StickyNote } from 'lucide-react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabPopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
 
 export default function PopoverExample() {
   const [note, setNote] = useState('Call before arriving, 2nd floor.')
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <LabButton variant="tonal">
+        <Button variant="tonal">
           <StickyNote size={18} />
           Delivery note
-        </LabButton>
+        </Button>
       </Popover.Trigger>
       <Popover.Portal>
-        <LabPopoverSurface asChild>
+        <PopoverSurface asChild>
           <Popover.Content
             aria-label="Delivery note"
             sideOffset={8}
@@ -24,12 +24,12 @@ export default function PopoverExample() {
             style={{ width: 'min(320px, calc(100vw - 24px))', padding: 16, display: 'grid', gap: 16 }}
           >
             <strong>Note for the courier</strong>
-            <LabTextField hint="Note" multiline minLines={2} value={note} onValueChange={setNote} />
+            <TextField hint="Note" multiline minLines={2} value={note} onValueChange={setNote} />
             <Popover.Close asChild>
-              <LabButton variant="filled">Done</LabButton>
+              <Button variant="filled">Done</Button>
             </Popover.Close>
           </Popover.Content>
-        </LabPopoverSurface>
+        </PopoverSurface>
       </Popover.Portal>
     </Popover.Root>
   )

@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabRadioGroup } from '@feeef.dev/ui/primitives/choice'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { RadioGroup } from '@feeef.dev/ui/primitives/choice'
 
 export default function Required() {
   const [plan, setPlan] = useState<string | undefined>(undefined)
@@ -16,7 +16,7 @@ export default function Required() {
         setStatus(`Switched to the ${plan} plan.`)
       }}
     >
-      <LabRadioGroup
+      <RadioGroup
         label="Plan"
         name="plan"
         required
@@ -31,9 +31,9 @@ export default function Required() {
           { value: 'pro', label: 'Pro', description: 'Unlimited orders, inventory and finance.' },
         ]}
       />
-      <LabButton variant="filled" type="submit">
+      <Button variant="filled" type="submit">
         Continue
-      </LabButton>
+      </Button>
       <p role="status">{status}</p>
     </form>
   )

@@ -1,16 +1,16 @@
 import { type RefObject } from 'react';
-import { type LabPanOptions } from './gesture.js';
-import { LabMotionValue } from './motion-value.js';
+import { type PanOptions } from './gesture.js';
+import { MotionValue } from './motion-value.js';
 /** Live `prefers-reduced-motion`; false on the server. */
-export declare function useLabReducedMotion(): boolean;
+export declare function useReducedMotion(): boolean;
 /** A motion value that lives as long as the component. `restDelta` is in the value's units. */
-export declare function useLabMotionValue(initial: number, restDelta?: number): LabMotionValue;
+export declare function useMotionValue(initial: number, restDelta?: number): MotionValue;
 /** Calls `paint` with every value (and once on mount), before the browser paints. */
-export declare function useLabMotionPaint(value: LabMotionValue, paint: (value: number) => void): void;
+export declare function useMotionPaint(value: MotionValue, paint: (value: number) => void): void;
 /**
  * Attaches a pan recognizer to `ref`. Options are read live, so callbacks may close over fresh
  * state. Set `touch-action` on the element (`pan-y` for an x pan, `pan-x` for a y pan) unless
  * the pan uses `touch: 'claim'`.
  */
-export declare function useLabPan(ref: RefObject<HTMLElement | null>, options: LabPanOptions, enabled?: boolean): void;
+export declare function usePan(ref: RefObject<HTMLElement | null>, options: PanOptions, enabled?: boolean): void;
 //# sourceMappingURL=react.d.ts.map

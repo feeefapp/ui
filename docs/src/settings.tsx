@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import type { LabThemeConfig } from '@feeef.dev/ui/theme-config'
-import { LAB_THEME_DEFAULTS } from '@feeef.dev/ui/theme-config'
-import { labDirectionFor } from '@feeef.dev/ui/i18n-core'
+import type { ThemeConfig } from '@feeef.dev/ui/theme-config'
+import { THEME_DEFAULTS } from '@feeef.dev/ui/theme-config'
+import { directionFor } from '@feeef.dev/ui/i18n-core'
 
 /**
  * What the docs reader can change: the kit's own theme config, plus the demo language. The docs
@@ -9,12 +9,12 @@ import { labDirectionFor } from '@feeef.dev/ui/i18n-core'
  */
 export interface DocsSettings {
   locale: 'en' | 'ar' | 'fr'
-  theme: typeof LAB_THEME_DEFAULTS & { primary?: string }
+  theme: typeof THEME_DEFAULTS & { primary?: string }
 }
 
-type SettingsPatch = { locale?: DocsSettings['locale']; theme?: LabThemeConfig }
+type SettingsPatch = { locale?: DocsSettings['locale']; theme?: ThemeConfig }
 
-const DEFAULTS: DocsSettings = { locale: 'en', theme: { ...LAB_THEME_DEFAULTS } }
+const DEFAULTS: DocsSettings = { locale: 'en', theme: { ...THEME_DEFAULTS } }
 const KEY = 'feeef-ui-docs-settings'
 
 function read(): DocsSettings {
@@ -35,7 +35,7 @@ const Context = createContext<{
 
 export function DocsSettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState(read)
-  const dir = labDirectionFor(settings.locale)
+  const dir = directionFor(settings.locale)
   useEffect(() => {
     try {
       localStorage.setItem(KEY, JSON.stringify(settings))

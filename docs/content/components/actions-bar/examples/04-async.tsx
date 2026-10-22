@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { Printer, RefreshCw } from 'lucide-react'
-import { LabActionsBar, type LabAction } from '@feeef.dev/ui/actions'
+import { ActionsBar, type Action } from '@feeef.dev/ui/actions'
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export default function Async() {
   const [log, setLog] = useState('')
-  const actions = useMemo<LabAction[]>(
+  const actions = useMemo<Action[]>(
     () => [
       {
         id: 'sync',
@@ -34,7 +34,7 @@ export default function Async() {
   )
   return (
     <div className="demo-wide" style={{ display: 'grid', gap: 12 }}>
-      <LabActionsBar
+      <ActionsBar
         label="Shipping actions"
         actions={actions}
         onActionError={(error, action) =>

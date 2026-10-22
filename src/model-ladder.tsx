@@ -1,10 +1,10 @@
 'use client'
 
-import { LabToolbarSearch } from './toolbar-search'
-import { LabPopoverSurface, LabSlider } from './ui'
+import { ToolbarSearch } from './toolbar-search'
+import { PopoverSurface, Slider } from './ui'
 
-import { LabButton } from './ui'
-import { LabScrollArea, revealScrollChild } from './scroll'
+import { Button } from './ui'
+import { ScrollArea, revealScrollChild } from './scroll'
 import {
   useEffect,
   useId,
@@ -17,7 +17,7 @@ import {
 } from 'react'
 import * as Popover from '@radix-ui/react-popover'
 import { ArrowLeft, Brain, Check, ChevronDown, RotateCcw, Zap } from 'lucide-react'
-import { useLabI18n } from './i18n'
+import { useI18n } from './i18n'
 import './model-ladder.css'
 
 import {
@@ -40,8 +40,8 @@ export * from './model-ladder-core'
 // ---------------------------------------------------------------------------------- trigger
 
 /** Localized ladder copy; an explicit `copy` prop still wins (docs fixtures, tests). */
-function useLabLadderCopy(copy?: LadderCopy): LadderCopy {
-  const { t } = useLabI18n()
+function useLadderCopy(copy?: LadderCopy): LadderCopy {
+  const { t } = useI18n()
   if (copy) return copy
   return {
     quality: t('lab.ladder.quality'),
@@ -114,7 +114,7 @@ export function ModelLadder({
   side?: 'top' | 'bottom'
   className?: string
 }) {
-  copy = useLabLadderCopy(copy)
+  copy = useLadderCopy(copy)
   const [open, setOpen] = useState(false)
   const [container, setContainer] = useState<HTMLElement | null>(null)
   const trigger = useRef<HTMLButtonElement>(null)
@@ -138,7 +138,7 @@ export function ModelLadder({
       }}
     >
       <Popover.Trigger asChild disabled={!enabled}>
-        <LabButton
+        <Button
           ref={trigger}
           type="button"
           variant="ghost"
@@ -161,10 +161,10 @@ export function ModelLadder({
             </span>
           )}
           {variant === 'chip' && <ChevronDown size={14} aria-hidden="true" />}
-        </LabButton>
+        </Button>
       </Popover.Trigger>
       <Popover.Portal container={container ?? undefined}>
-        <LabPopoverSurface asChild>
+        <PopoverSurface asChild>
           <Popover.Content
             ref={popover}
             className="lab-ladder-popover"
@@ -209,7 +209,7 @@ export function ModelLadder({
               copy={copy}
             />
           </Popover.Content>
-        </LabPopoverSurface>
+        </PopoverSurface>
       </Popover.Portal>
     </Popover.Root>
   )
@@ -257,8 +257,8 @@ export function ModelLadderCard({
   /** `false` turns the title into a plain label with no model list. */
   pickable?: boolean
 }) {
-  const { t } = useLabI18n()
-  copy = useLabLadderCopy(copy)
+  const { t } = useI18n()
+  copy = useLadderCopy(copy)
   const [view, setView] = useState<'ladder' | 'pick'>('ladder')
   const titleButton = useRef<HTMLButtonElement>(null)
   const restoreTitleFocus = useRef(false)
@@ -304,7 +304,7 @@ export function ModelLadderCard({
     <div className="lab-ladder-card lab-light-edge">
       <div className="lab-ladder-head">
         <Zap className="lab-ladder-bolt" size={18} strokeWidth={1.5} aria-hidden="true" />
-        <LabButton
+        <Button
           ref={titleButton}
           type="button"
           variant="ghost"
@@ -331,8 +331,8 @@ export function ModelLadderCard({
           {pickable && (count > 1 || !!catalog?.length || !!onBrowseModels) && (
             <ChevronDown size={14} aria-hidden="true" />
           )}
-        </LabButton>
-        <LabButton
+        </Button>
+        <Button
           type="button"
           variant="ghost"
           appearance="toolbar"
@@ -344,7 +344,7 @@ export function ModelLadderCard({
           onClick={() => onChange(safeDefault)}
         >
           <RotateCcw size={16} strokeWidth={1.6} />
-        </LabButton>
+        </Button>
       </div>
       {stop.priceUsd && stop.access !== 'free' ? (
         <p className="lab-ladder-price">{copy.typical(formatUsd(stop.priceUsd))}</p>
@@ -409,7 +409,7 @@ function LadderTrack({
   valueText(index: number): string
 }) {
   return (
-    <LabSlider
+    <Slider
       className="lab-ladder-track"
       label={label}
       min={0}
@@ -498,7 +498,7 @@ function ModelList({
   onBack(): void
   onPick(modelId: string): void
 }) {
-  const { t } = useLabI18n()
+  const { t } = useI18n()
   const [query, setQuery] = useState('')
   const [activeId, setActiveId] = useState(selectedId)
   const listId = useId()
@@ -572,7 +572,7 @@ function ModelList({
         onBack()
       }}
     >
-      <LabScrollArea
+      <ScrollArea
         ref={viewport}
         className="lab-ladder-list-scroll"
         label={copy.pickModel}
@@ -582,7 +582,7 @@ function ModelList({
         top={
           <div className="lab-ladder-list-tools">
             <div className="lab-ladder-list-head">
-              <LabButton
+              <Button
                 type="button"
                 variant="elevated"
                 controlSize="icon"
@@ -591,12 +591,12 @@ function ModelList({
                 onClick={onBack}
               >
                 <ArrowLeft size={20} strokeWidth={1.75} className="lab-dir-flip" />
-              </LabButton>
+              </Button>
               <b id={titleId}>{copy.pickModel}</b>
             </div>
             {count > 6 && (
               <div className="lab-ladder-search">
-                <LabToolbarSearch
+                <ToolbarSearch
                   label={copy.searchModels}
                   value={query}
                   onValueChange={setQuery}
@@ -621,7 +621,7 @@ function ModelList({
         >
           {rows.length === 0 && <p className="lab-ladder-empty">{copy.noMatches}</p>}
           {rows.map(({ stop, name, tier }) => (
-            <LabButton
+            <Button
               key={stop.modelId}
               ref={(button) => {
                 if (button) optionButtons.current.set(stop.modelId, button)
@@ -655,10 +655,10 @@ function ModelList({
                 <em className="lab-ladder-option-price">{formatUsd(stop.priceUsd)}</em>
               ) : null}
               {stop.modelId === selectedId && <Check size={15} aria-hidden="true" />}
-            </LabButton>
+            </Button>
           ))}
         </div>
-      </LabScrollArea>
+      </ScrollArea>
     </div>
   )
 }

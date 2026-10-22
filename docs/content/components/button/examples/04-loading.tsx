@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
+import { Button } from '@feeef.dev/ui/primitives/button'
 
 export default function Loading() {
   const [saving, setSaving] = useState(false)
@@ -9,12 +9,12 @@ export default function Loading() {
   }
   return (
     <div className="demo-row">
-      <LabButton variant="filled" loading={saving} onClick={save}>
+      <Button variant="filled" loading={saving} onClick={save}>
         {saving ? 'Saving…' : 'Save'}
-      </LabButton>
-      <LabButton variant="elevated" disabled>
+      </Button>
+      <Button variant="elevated" disabled>
         Disabled
-      </LabButton>
+      </Button>
     </div>
   )
 }

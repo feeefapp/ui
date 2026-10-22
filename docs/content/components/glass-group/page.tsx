@@ -1,6 +1,6 @@
 import { Minus, Plus } from 'lucide-react'
-import { LabGlassGroup } from '@feeef.dev/ui/scaffold'
-import { LabButton, LabIconButton } from '@feeef.dev/ui/primitives/button'
+import { GlassGroup } from '@feeef.dev/ui/scaffold'
+import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground, jsx } from '../../../src/blocks/playground'
 import { Callout, DoDont, Section, Table } from '../../../src/blocks/prose'
@@ -19,31 +19,31 @@ function Overview() {
         controls={controls}
         render={(v) => (
           <div className="glass-demo-backdrop">
-            <LabGlassGroup
+            <GlassGroup
               as={v.as as 'div'}
               role={v.as === 'div' ? 'group' : undefined}
               aria-label="Quantity"
               className="glass-demo-group-content"
             >
-              <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Remove one">
+              <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Remove one">
                 <Minus />
-              </LabIconButton>
-              <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Add one">
+              </IconButton>
+              <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Add one">
                 <Plus />
-              </LabIconButton>
+              </IconButton>
               {v.primary && (
-                <LabButton variant="filled" appearance="toolbar" controlSize="compact">
+                <Button variant="filled" appearance="toolbar" controlSize="compact">
                   Add to order
-                </LabButton>
+                </Button>
               )}
-            </LabGlassGroup>
+            </GlassGroup>
           </div>
         )}
         code={(v) =>
           jsx(
-            'LabGlassGroup',
+            'GlassGroup',
             { as: v.as, role: v.as === 'div' ? 'group' : undefined, 'aria-label': 'Quantity' },
-            `<LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Remove one">…</LabIconButton>\n<LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Add one">…</LabIconButton>${v.primary ? '\n<LabButton variant="filled" appearance="toolbar" controlSize="compact">Add to order</LabButton>' : ''}`,
+            `<IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Remove one">…</IconButton>\n<IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Add one">…</IconButton>${v.primary ? '\n<Button variant="filled" appearance="toolbar" controlSize="compact">Add to order</Button>' : ''}`,
             { as: 'div' }
           )
         }
@@ -57,16 +57,16 @@ function Overview() {
           blur, a light edge and a neutral shadow, drawn once around a group of related controls.
         </p>
         <p>
-          <C>LabGlassGroup</C> is that material. The kit's own floating pieces are built on it:{' '}
-          <C>LabToolbarGroup</C>, <C>LabDock</C> and the filter bar's chips. Reach for it directly when you
+          <C>GlassGroup</C> is that material. The kit's own floating pieces are built on it:{' '}
+          <C>ToolbarGroup</C>, <C>Dock</C> and the filter bar's chips. Reach for it directly when you
           build a floating control group those do not cover.
         </p>
         <Table
           head={['Use', 'Material']}
           rows={[
-            ['Toolbar or app bar controls', <C>LabToolbarGroup</C>],
-            ['Task actions at the bottom of a view', <C>LabDock</C>],
-            ['Any other floating group of related controls', <C>LabGlassGroup</C>],
+            ['Toolbar or app bar controls', <C>ToolbarGroup</C>],
+            ['Task actions at the bottom of a view', <C>Dock</C>],
+            ['Any other floating group of related controls', <C>GlassGroup</C>],
             ['Content, forms, cards, panels', 'An opaque surface (--lab-surface)'],
           ]}
         />
@@ -87,8 +87,8 @@ function Overview() {
         <Table
           head={['Piece', 'Job']}
           rows={[
-            [<C>LabScaffoldProvider</C>, 'Mount once near the page root. Creates the viewport-fixed portal and publishes reservations as CSS custom properties.'],
-            [<C>LabFloatingLayer</C>, 'Portals its child into that layer under a named slot and reserves the child’s measured size.'],
+            [<C>ScaffoldProvider</C>, 'Mount once near the page root. Creates the viewport-fixed portal and publishes reservations as CSS custom properties.'],
+            [<C>FloatingLayer</C>, 'Portals its child into that layer under a named slot and reserves the child’s measured size.'],
             [<C>useFloatingReserve</C>, 'Registers an element you already position yourself, without moving it.'],
           ]}
         />
@@ -109,13 +109,13 @@ function Overview() {
           as padding so content never ends under a floating surface:
         </p>
         <Code
-          code={`<LabScaffoldProvider>
+          code={`<ScaffoldProvider>
   <main style={{ paddingBottom: 'var(--lab-floating-bottom)' }}>…</main>
 
-  <LabFloatingLayer slot="player">
-    <LabGlassGroup className="order-call-player">…</LabGlassGroup>
-  </LabFloatingLayer>
-</LabScaffoldProvider>
+  <FloatingLayer slot="player">
+    <GlassGroup className="order-call-player">…</GlassGroup>
+  </FloatingLayer>
+</ScaffoldProvider>
 
 // An element you already render and position:
 const bar = useRef<HTMLElement>(null)
@@ -125,13 +125,13 @@ useFloatingReserve('header', bar)
         />
         <Callout title="The layer does not position its child">
           <p>
-            <C>LabFloatingLayer</C> covers the viewport and ignores pointer input; its child gets pointer
+            <C>FloatingLayer</C> covers the viewport and ignores pointer input; its child gets pointer
             input back and must place itself (<C>position: absolute</C> with insets). For a <C>position: fixed</C>{' '}
             surface, a pure translation (a slide-in) is not counted, so the reservation does not jump.
           </p>
         </Callout>
         <p>
-          Inside a scroll area or scaffold you rarely need any of this: <C>LabScrollArea</C>'s{' '}
+          Inside a scroll area or scaffold you rarely need any of this: <C>ScrollArea</C>'s{' '}
           <C>top</C> and <C>bottom</C> floats already reserve their own space locally.
         </p>
       </Section>
@@ -155,7 +155,7 @@ useFloatingReserve('header', bar)
 
       <Section title="Accessibility">
         <p>
-          <C>LabGlassGroup</C> renders a plain element, so give it meaning: <C>role="group"</C> with an{' '}
+          <C>GlassGroup</C> renders a plain element, so give it meaning: <C>role="group"</C> with an{' '}
           <C>aria-label</C> for a set of controls, or a landmark (<C>as="nav"</C>, <C>"header"</C>) when it is
           one. Contrast never depends on the blur: text and controls on glass stay readable on the fallback
           surface. Floating layers render outside the page's DOM
@@ -176,9 +176,9 @@ export default definePage({
   summary:
     'The glass material for floating chrome, and the floating layer that keeps viewport-fixed surfaces from covering content.',
   importLine:
-    "import { LabGlassGroup, LabFloatingLayer, LabScaffoldProvider, useFloatingReserve } from '@feeef.dev/ui/scaffold'",
+    "import { GlassGroup, FloatingLayer, ScaffoldProvider, useFloatingReserve } from '@feeef.dev/ui/scaffold'",
   source: 'src/scaffold.tsx',
-  api: ['LabGlassGroup', 'LabFloatingLayer', 'LabScaffoldProvider'],
+  api: ['GlassGroup', 'FloatingLayer', 'ScaffoldProvider'],
   keywords: ['glass', 'material', 'blur', 'floating', 'fixed', 'portal', 'reserve', 'liquid glass', 'useFloatingReserve'],
   Overview,
   examples: examplesFrom(
@@ -186,13 +186,13 @@ export default definePage({
     import.meta.glob('./examples/*.tsx', { eager: true, query: '?raw', import: 'default' })
   ),
   Preview: () => (
-    <LabGlassGroup className="glass-demo-group-content">
-      <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Remove one">
+    <GlassGroup className="glass-demo-group-content">
+      <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Remove one">
         <Minus />
-      </LabIconButton>
-      <LabIconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Add one">
+      </IconButton>
+      <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Add one">
         <Plus />
-      </LabIconButton>
-    </LabGlassGroup>
+      </IconButton>
+    </GlassGroup>
   ),
 })

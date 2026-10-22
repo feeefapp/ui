@@ -2,20 +2,20 @@
 
 import * as React from 'react'
 import { ChevronLeft } from 'lucide-react'
-import { LabButton } from '../primitives/button'
-import { LabScrollArea } from '../scroll'
-import { LabToolbarGroup } from '../toolbar'
-import { LabScaffoldAppBar } from '../workspace/scaffold'
-import { useLabI18n } from '../i18n'
-import { attachPan, canChildPan, type LabPanPoint } from '../physics/gesture'
-import { LabMotionValue, prefersReducedMotion } from '../physics/motion-value'
-import { LAB_SPRINGS, mix, progressBetween, projectMomentum } from '../physics/spring'
-import { diffStack, dragDismissRect, mixRect, slideFrame, zoomFrame, type LabRect } from './stack-model'
+import { Button } from '../primitives/button'
+import { ScrollArea } from '../scroll'
+import { ToolbarGroup } from '../toolbar'
+import { ScaffoldAppBar } from '../workspace/scaffold'
+import { useI18n } from '../i18n'
+import { attachPan, canChildPan, type PanPoint } from '../physics/gesture'
+import { MotionValue, prefersReducedMotion } from '../physics/motion-value'
+import { SPRINGS, mix, progressBetween, projectMomentum } from '../physics/spring'
+import { diffStack, dragDismissRect, mixRect, slideFrame, zoomFrame, type Rect } from './stack-model'
 import { cn } from '../utils'
 import './navigation-stack.css'
 
-/** What a page inside a LabNavigationStack knows about its place in it. */
-export type LabNavigationStackPage = {
+/** What a page inside a NavigationStack knows about its place in it. */
+export type NavigationStackPage = {
   /** Distance from the root page; 0 for the root. */
   depth: number
   /** True for the page on top, the one people see and use. */
@@ -27,18 +27,18 @@ export type LabNavigationStackPage = {
   /** Title of the page underneath, shown by the back button. */
   previousTitle?: string
 }
-const ROOT_PAGE: LabNavigationStackPage = { depth: 0, isTop: true, canGoBack: false, back: () => {} }
-const PageContext = React.createContext<LabNavigationStackPage | null>(null)
+const ROOT_PAGE: NavigationStackPage = { depth: 0, isTop: true, canGoBack: false, back: () => {} }
+const PageContext = React.createContext<NavigationStackPage | null>(null)
 /** The nearest stack page's position and `back()`. Outside a stack: a root page that cannot go back. */
-export function useLabNavigationStack() {
+export function useNavigationStack() {
   return React.useContext(PageContext) ?? ROOT_PAGE
 }
 
 /**
  * Path state for a stack: an array of route values, root page not included. Map it to pages
- * (`path.map((route) => <LabNavigationPage key=… />)`) and pass `pop` as the stack's `onBack`.
+ * (`path.map((route) => <NavigationPage key=… />)`) and pass `pop` as the stack's `onBack`.
  */
-export function useLabNavigationPath<T>(initial: T[] = []) {
+export function useNavigationPath<T>(initial: T[] = []) {
   const [path, setPath] = React.useState<T[]>(initial)
   const push = React.useCallback((route: T) => setPath((p) => [...p, route]), [])
   const pop = React.useCallback((count = 1) => setPath((p) => p.slice(0, Math.max(0, p.length - count))), [])
@@ -142,9 +142,9 @@ function focusPage(host: HTMLElement | null) {
   ;(heading ?? host).focus({ preventScroll: true })
 }
 
-export type LabNavigationStackProps = {
+export type NavigationStackProps = {
   /**
-   * The pages, root first, each a keyed element (usually a LabNavigationPage). Append a page to
+   * The pages, root first, each a keyed element (usually a NavigationPage). Append a page to
    * push it; remove the top one to pop. The stack animates whatever changed.
    */
   children: React.ReactNode
@@ -168,14 +168,14 @@ export type LabNavigationStackProps = {
  * pushed with `zoomSource` grows out of that element instead and can be dragged down to shrink
  * back into it. Every page stays mounted, so scroll positions and drafts survive.
  */
-export function LabNavigationStack({
+export function NavigationStack({
   children,
   onBack,
   swipeBack = 'content',
   label = 'Pages',
   className,
   style,
-}: LabNavigationStackProps) {
+}: NavigationStackProps) {
   const pages: React.ReactElement[] = []
   React.Children.forEach(children, (child) => {
     if (React.isValidElement(child)) pages.push(child)
@@ -200,8 +200,8 @@ export function LabNavigationStack({
 
   const root = React.useRef<HTMLDivElement>(null)
   const hosts = React.useRef(new Map<string, HTMLElement>())
-  const shown = React.useRef<LabMotionValue | null>(null)
-  if (!shown.current) shown.current = new LabMotionValue(1, 0.0005)
+  const shown = React.useRef<MotionValue | null>(null)
+  if (!shown.current) shown.current = new MotionValue(1, 0.0005)
   const painter = React.useRef<((value: number) => void) | null>(null)
   const activeFront = React.useRef<string | null>(null)
   const returnFocus = React.useRef(new Map<string, Element | null>())
@@ -285,7 +285,7 @@ export function LabNavigationStack({
   }
   const zoomPainter = (front: HTMLElement, frontKey: string, back: HTMLElement | null) => {
     const page = pageSize()
-    const full: LabRect = { x: 0, y: 0, ...page }
+    const full: Rect = { x: 0, y: 0, ...page }
     const source = zoomSourceOf(frontKey, back)
     if (source.element) source.element.dataset.labZoomHidden = ''
     return (value: number) => {
@@ -353,7 +353,7 @@ export function LabNavigationStack({
     painter.current = paint
     paint(value.get())
     void value
-      .animateTo(transition.to, { spring: reduced ? { duration: 0.2, bounce: 0 } : LAB_SPRINGS.smooth })
+      .animateTo(transition.to, { spring: reduced ? { duration: 0.2, bounce: 0 } : SPRINGS.smooth })
       .then((arrived) => {
         if (arrived) finish()
       })
@@ -372,8 +372,8 @@ export function LabNavigationStack({
       sign: 1 | -1
       page: { width: number; height: number }
       anchor: { x: number; y: number }
-      motion: LabMotionValue
-      rect: LabRect
+      motion: MotionValue
+      rect: Rect
       radius: number
       /** Screen px per layout px. */
       k: number
@@ -382,7 +382,7 @@ export function LabNavigationStack({
     const topKey = () => live.current.keys[live.current.keys.length - 1]
     const ready = () => live.current.keys.length > 1 && !live.current.transition && !session
 
-    const start = (axis: 'x' | 'y', point: LabPanPoint) => {
+    const start = (axis: 'x' | 'y', point: PanPoint) => {
       const key = topKey()
       const front = hosts.current.get(key)
       if (!front) return
@@ -399,7 +399,7 @@ export function LabNavigationStack({
         sign: rtl() ? -1 : 1,
         page: pageSize(),
         anchor: { x: (point.originX - origin.left) / k, y: (point.originY - origin.top) / k },
-        motion: new LabMotionValue(0, 0.0005),
+        motion: new MotionValue(0, 0.0005),
         rect: { x: 0, y: 0, ...pageSize() },
         radius: 0,
         k,
@@ -414,14 +414,14 @@ export function LabNavigationStack({
     }
 
     /** Pointer movement in layout px. */
-    const local = <P extends LabPanPoint>(point: P, k: number): P => ({
+    const local = <P extends PanPoint>(point: P, k: number): P => ({
       ...point,
       dx: point.dx / k,
       dy: point.dy / k,
       vx: point.vx / k,
       vy: point.vy / k,
     })
-    const move = (screen: LabPanPoint) => {
+    const move = (screen: PanPoint) => {
       const s = session
       if (!s) return
       const point = local(screen, s.k)
@@ -466,11 +466,11 @@ export function LabNavigationStack({
         s.front.dataset.moving = ''
         if (s.back) s.back.dataset.moving = ''
         painter.current = s.style === 'slide' ? slidePainter(s.front, s.back) : fadePainter(s.front)
-        void shown.current!.animateTo(1, { spring: LAB_SPRINGS.release }).then((done) => done && settle(s))
+        void shown.current!.animateTo(1, { spring: SPRINGS.release }).then((done) => done && settle(s))
       }, 500)
     }
 
-    const end = (screen: LabPanPoint & { cancelled: boolean }) => {
+    const end = (screen: PanPoint & { cancelled: boolean }) => {
       const s = session
       session = null
       if (!s) return
@@ -480,7 +480,7 @@ export function LabNavigationStack({
           speed = point.vx * s.sign
         const complete = !point.cancelled && projectMomentum(travel, speed, 0.99) > s.page.width / 2 && speed > -250
         const velocity = shown.current!.getVelocity(point.time)
-        void shown.current!.animateTo(complete ? 0 : 1, { spring: LAB_SPRINGS.release, velocity }).then((done) => {
+        void shown.current!.animateTo(complete ? 0 : 1, { spring: SPRINGS.release, velocity }).then((done) => {
           if (!done) return
           if (complete) popped(s)
           else settle(s)
@@ -493,7 +493,7 @@ export function LabNavigationStack({
       const from = s.rect,
         fromRadius = s.radius
       const source = zoomSourceOf(s.key, s.back)
-      const to: LabRect = dismiss ? source.rect : { x: 0, y: 0, ...s.page }
+      const to: Rect = dismiss ? source.rect : { x: 0, y: 0, ...s.page }
       const toRadius = dismiss ? source.radius : 0
       const dx = to.x - from.x,
         dy = to.y - from.y
@@ -512,7 +512,7 @@ export function LabNavigationStack({
         }
       })
       void motion
-        .animateTo(1, { spring: LAB_SPRINGS.release, velocity: Math.max(0, Math.min(8, toward)) })
+        .animateTo(1, { spring: SPRINGS.release, velocity: Math.max(0, Math.min(8, toward)) })
         .then((done) => {
           unsubscribe()
           if (!done) return
@@ -611,14 +611,14 @@ function StackPage({
   previousTitle?: string
   children: React.ReactNode
 }) {
-  const value = React.useMemo<LabNavigationStackPage>(
+  const value = React.useMemo<NavigationStackPage>(
     () => ({ depth, isTop, canGoBack: depth > 0, back, previousTitle }),
     [depth, isTop, back, previousTitle]
   )
   return <PageContext.Provider value={value}>{children}</PageContext.Provider>
 }
 
-export type LabNavigationPageProps = {
+export type NavigationPageProps = {
   /** Page title: the large title, the bar title once it scrolls away, and the next page's back label. */
   title: string
   /** `large` shows a big title in the content that collapses into the bar; `inline` shows it in the bar. Default: large on the root page, inline when pushed. */
@@ -627,9 +627,9 @@ export type LabNavigationPageProps = {
   subtitle?: React.ReactNode
   /** Extra controls after the back button, in the same glass group. */
   leading?: React.ReactNode
-  /** Controls at the end of the bar; wrap them in a LabToolbarGroup. */
+  /** Controls at the end of the bar; wrap them in a ToolbarGroup. */
   trailing?: React.ReactNode
-  /** Floats over the bottom, usually a LabDock with the page's actions. */
+  /** Floats over the bottom, usually a Dock with the page's actions. */
   bottom?: React.ReactNode
   /** What the back button of the next page says for this one. Defaults to `title`. */
   backTitle?: string
@@ -646,11 +646,11 @@ export type LabNavigationPageProps = {
 }
 
 /**
- * One page of a LabNavigationStack: its own scroll area with a floating glass bar (back button
+ * One page of a NavigationStack: its own scroll area with a floating glass bar (back button
  * with the previous title, the page title, trailing actions) and an optional bottom dock. A large
  * title scrolls under the bar and reappears in it, like iOS.
  */
-export function LabNavigationPage({
+export function NavigationPage({
   title,
   titleDisplay,
   subtitle,
@@ -662,9 +662,9 @@ export function LabNavigationPage({
   contentLabel,
   children,
   className,
-}: LabNavigationPageProps) {
-  const page = useLabNavigationStack()
-  const { t } = useLabI18n()
+}: NavigationPageProps) {
+  const page = useNavigationStack()
+  const { t } = useI18n()
   const display = titleDisplay ?? (page.depth === 0 ? 'large' : 'inline')
   const viewport = React.useRef<HTMLDivElement>(null)
   const bar = React.useRef<HTMLElement>(null)
@@ -705,13 +705,13 @@ export function LabNavigationPage({
   const titleShown = display === 'inline' || collapsed
   const backLabel = page.previousTitle ? t('lab.nav.backTo', { title: page.previousTitle }) : t('lab.nav.back')
   const header = hideBar ? undefined : (
-    <LabScaffoldAppBar
+    <ScaffoldAppBar
       className="lab-nav-bar"
       leading={
         page.canGoBack || leading ? (
-          <LabToolbarGroup label="Navigation" className="lab-nav-bar-leading">
+          <ToolbarGroup label="Navigation" className="lab-nav-bar-leading">
             {page.canGoBack && (
-              <LabButton
+              <Button
                 variant="text"
                 appearance="toolbar"
                 className="lab-nav-back"
@@ -720,15 +720,15 @@ export function LabNavigationPage({
               >
                 <ChevronLeft className="lab-dir-flip" aria-hidden="true" />
                 <span className="lab-nav-back-label">{page.previousTitle ?? t('lab.nav.back')}</span>
-              </LabButton>
+              </Button>
             )}
             {leading}
-          </LabToolbarGroup>
+          </ToolbarGroup>
         ) : undefined
       }
       trailing={trailing}
     >
-      <LabToolbarGroup
+      <ToolbarGroup
         label="Page title"
         className="lab-nav-bar-title"
         data-shown={titleShown}
@@ -741,11 +741,11 @@ export function LabNavigationPage({
         ) : (
           <span className="lab-nav-bar-heading">{title}</span>
         )}
-      </LabToolbarGroup>
-    </LabScaffoldAppBar>
+      </ToolbarGroup>
+    </ScaffoldAppBar>
   )
   return (
-    <LabScrollArea
+    <ScrollArea
       ref={viewport}
       className={cn('lab-nav-page', className)}
       label={contentLabel ?? title}
@@ -762,6 +762,6 @@ export function LabNavigationPage({
         </header>
       )}
       {children}
-    </LabScrollArea>
+    </ScrollArea>
   )
 }

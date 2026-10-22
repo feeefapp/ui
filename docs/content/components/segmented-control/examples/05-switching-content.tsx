@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LabSegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 
 const STATS = {
   today: { orders: 38, confirmed: 29, revenue: '113 100' },
@@ -12,7 +12,7 @@ export default function SwitchingContent() {
   const stats = STATS[range]
   return (
     <div className="demo-wide" style={{ display: 'grid', gap: 16, justifyItems: 'start' }}>
-      <LabSegmentedControl
+      <SegmentedControl
         label="Summary period"
         value={range}
         onChange={setRange}

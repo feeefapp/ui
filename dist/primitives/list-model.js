@@ -1,13 +1,13 @@
 /** Pure decisions for list rows: where a swipe lands, and where a dragged row would drop. */
 import { projectMomentum } from '../physics/spring.js';
 /** Fraction of the row past which a swipe runs the first action. */
-export const LAB_FULL_SWIPE = 0.55;
+export const FULL_SWIPE = 0.55;
 /**
  * Where a released row goes. `offset` is logical: positive moves the row toward the end and shows
  * leading actions; negative shows trailing ones. Velocity is in the same units per second.
  */
 export function swipeRelease(offset, velocity, s) {
-    const full = s.row * LAB_FULL_SWIPE;
+    const full = s.row * FULL_SWIPE;
     if (offset > full && s.fullLeading && s.leading)
         return { offset: s.row, commit: 'leading' };
     if (offset < -full && s.fullTrailing && s.trailing)
@@ -21,7 +21,7 @@ export function swipeRelease(offset, velocity, s) {
 }
 /** Whether a row dragged to `offset` is in full-swipe territory (the first action takes over). */
 export function swipeIsFull(offset, s) {
-    const full = s.row * LAB_FULL_SWIPE;
+    const full = s.row * FULL_SWIPE;
     return (offset > full && s.fullLeading && s.leading > 0) || (offset < -full && s.fullTrailing && s.trailing > 0);
 }
 /**

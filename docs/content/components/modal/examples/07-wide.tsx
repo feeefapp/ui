@@ -1,18 +1,18 @@
 import { useState } from 'react'
-import { LabButton } from '@feeef.dev/ui/primitives/button'
-import { LabModal } from '@feeef.dev/ui/primitives/modal'
-import { LabDock } from '@feeef.dev/ui/dock'
-import { LabTextField } from '@feeef.dev/ui/primitives/text-field'
+import { Button } from '@feeef.dev/ui/primitives/button'
+import { Modal } from '@feeef.dev/ui/primitives/modal'
+import { Dock } from '@feeef.dev/ui/dock'
+import { TextField } from '@feeef.dev/ui/primitives/text-field'
 
 export default function Wide() {
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)
   return (
     <>
-      <LabButton variant="outlined" onClick={() => setOpen(true)}>
+      <Button variant="outlined" onClick={() => setOpen(true)}>
         Compare addresses
-      </LabButton>
-      <LabModal
+      </Button>
+      <Modal
         open={open}
         close={close}
         label="Merge duplicate customers"
@@ -20,14 +20,14 @@ export default function Wide() {
         fitContent
         wide
         bottom={
-          <LabDock label="Merge actions">
-            <LabButton variant="text" onClick={close}>
+          <Dock label="Merge actions">
+            <Button variant="text" onClick={close}>
               Keep both
-            </LabButton>
-            <LabButton variant="filled" onClick={close}>
+            </Button>
+            <Button variant="filled" onClick={close}>
               Merge customers
-            </LabButton>
-          </LabDock>
+            </Button>
+          </Dock>
         }
       >
         <div
@@ -43,13 +43,13 @@ export default function Wide() {
           ].map((customer, index) => (
             <div key={index} style={{ display: 'grid', gap: 12 }}>
               <strong>{index === 0 ? 'Existing customer' : 'New order'}</strong>
-              <LabTextField hint="Name" defaultValue={customer.name} />
-              <LabTextField hint="Phone" defaultValue={customer.phone} />
-              <LabTextField hint="City" defaultValue={customer.city} />
+              <TextField hint="Name" defaultValue={customer.name} />
+              <TextField hint="Phone" defaultValue={customer.phone} />
+              <TextField hint="City" defaultValue={customer.city} />
             </div>
           ))}
         </div>
-      </LabModal>
+      </Modal>
     </>
   )
 }

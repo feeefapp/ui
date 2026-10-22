@@ -45,7 +45,7 @@
   color: var(--lab-muted);
   font-size: 11px;
 }
-/* Buttons passed straight to the dock sit in one row; a LabActionsBar child overflows into its menu. */
+/* Buttons passed straight to the dock sit in one row; a ActionsBar child overflows into its menu. */
 .lab-dock-actions {
   display: flex;
   flex: 0 1 auto;

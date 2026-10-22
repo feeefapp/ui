@@ -1,7 +1,7 @@
 /** Pure decisions for list rows: where a swipe lands, and where a dragged row would drop. */
 import { projectMomentum } from '../physics/spring'
 
-export type LabSwipeSides = {
+export type SwipeSides = {
   /** Width revealed by the start-side actions (0 = none). */
   leading: number
   /** Width revealed by the end-side actions (0 = none). */
@@ -14,7 +14,7 @@ export type LabSwipeSides = {
 }
 
 /** Fraction of the row past which a swipe runs the first action. */
-export const LAB_FULL_SWIPE = 0.55
+export const FULL_SWIPE = 0.55
 
 /**
  * Where a released row goes. `offset` is logical: positive moves the row toward the end and shows
@@ -23,9 +23,9 @@ export const LAB_FULL_SWIPE = 0.55
 export function swipeRelease(
   offset: number,
   velocity: number,
-  s: LabSwipeSides
+  s: SwipeSides
 ): { offset: number; commit: 'leading' | 'trailing' | null } {
-  const full = s.row * LAB_FULL_SWIPE
+  const full = s.row * FULL_SWIPE
   if (offset > full && s.fullLeading && s.leading) return { offset: s.row, commit: 'leading' }
   if (offset < -full && s.fullTrailing && s.trailing) return { offset: -s.row, commit: 'trailing' }
   const projected = projectMomentum(offset, velocity, 0.99)
@@ -35,8 +35,8 @@ export function swipeRelease(
 }
 
 /** Whether a row dragged to `offset` is in full-swipe territory (the first action takes over). */
-export function swipeIsFull(offset: number, s: LabSwipeSides) {
-  const full = s.row * LAB_FULL_SWIPE
+export function swipeIsFull(offset: number, s: SwipeSides) {
+  const full = s.row * FULL_SWIPE
   return (offset > full && s.fullLeading && s.leading > 0) || (offset < -full && s.fullTrailing && s.trailing > 0)
 }
 

@@ -15,7 +15,7 @@ export function diffStack(previous, next) {
     return { kind: 'replace', enter: nextTop, exit: prevTop, removed: previous.slice(shared) };
 }
 /** How far (fraction of the width) the page underneath slides while a page covers it, like iOS. */
-export const LAB_STACK_PARALLAX = 0.3;
+export const STACK_PARALLAX = 0.3;
 /**
  * Horizontal offsets in px for a slide transition. `shown` is how much the front page covers the
  * back one: 0 = front fully off its trailing edge, 1 = front in place. Mirrored for RTL.
@@ -24,7 +24,7 @@ export function slideFrame(shown, width, rtl) {
     const sign = rtl ? -1 : 1;
     return {
         front: sign * (1 - shown) * width,
-        back: -sign * LAB_STACK_PARALLAX * Math.max(0, Math.min(1, shown)) * width,
+        back: -sign * STACK_PARALLAX * Math.max(0, Math.min(1, shown)) * width,
         dim: Math.max(0, Math.min(1, shown)),
     };
 }

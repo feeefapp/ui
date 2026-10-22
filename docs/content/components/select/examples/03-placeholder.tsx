@@ -1,21 +1,21 @@
 import { useState } from 'react'
-import { LabOption, LabSelect } from '@feeef.dev/ui/primitives/select'
+import { Option, Select } from '@feeef.dev/ui/primitives/select'
 
 export default function Placeholder() {
   const [sort, setSort] = useState<string | null>(null)
   return (
     <div className="demo-row">
-      <LabSelect
+      <Select
         aria-label="Sort orders"
         placeholder="Sort by"
         controlSize="compact"
         value={sort}
         onValueChange={setSort}
       >
-        <LabOption value="newest">Newest first</LabOption>
-        <LabOption value="oldest">Oldest first</LabOption>
-        <LabOption value="total">Highest total</LabOption>
-      </LabSelect>
+        <Option value="newest">Newest first</Option>
+        <Option value="oldest">Oldest first</Option>
+        <Option value="total">Highest total</Option>
+      </Select>
     </div>
   )
 }
