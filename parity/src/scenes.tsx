@@ -112,6 +112,20 @@ export const SCENES: Record<string, () => ReactNode> = {
           <IconButton appearance="toolbar" controlSize="compact" aria-label="Bold"><LucideBold /></IconButton>
         </ToolbarGroup>
       </GlassContainer>
+      <GlassContainer spacing={16} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+        <SegmentedControl
+          label="View"
+          value="grid"
+          onChange={() => {}}
+          options={[
+            { value: 'list', label: 'List' },
+            { value: 'grid', label: 'Grid' },
+          ]}
+        />
+        <ToolbarGroup label="Add">
+          <IconButton appearance="toolbar" controlSize="compact" aria-label="Bold"><LucideBold /></IconButton>
+        </ToolbarGroup>
+      </GlassContainer>
     </>
   ),
   text: () => (

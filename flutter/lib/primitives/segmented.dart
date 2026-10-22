@@ -4,9 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
+import '../glass/member.dart';
 import '../theme.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
+import '../theme/light_edge.dart';
 
 /// One choice of a segmented control.
 class SegmentOption<T> {
@@ -164,12 +166,17 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
         skipTraversal: true,
         onKeyEvent: _onKey,
         child: grouped
-            ? CustomPaint(
-                painter: _GroupPainter(
-                  fill: c.glassFill,
-                  edge: c.line,
-                  highlight: c.glassEdgeLow,
-                  radius: s.radiusGroup,
+            ? GlassMemberBox(
+                radius: s.radiusGroup,
+                standalone: (child) => CustomPaint(
+                  painter: _GroupPainter(
+                    fill: c.glassFill,
+                    edge: c.line,
+                    highlight: c.glassEdgeLow,
+                    light: c.glassEdgeLight,
+                    radius: s.radiusGroup,
+                  ),
+                  child: child,
                 ),
                 // 4px padding inside the group's 1px border.
                 child: Padding(
@@ -326,15 +333,17 @@ class _SegmentState<T> extends State<_Segment<T>> {
   }
 }
 
-/// `.lab-segmented`: glass fill, 1px line edge, `--lab-glass-light` (a light top edge).
+/// `.lab-segmented.lab-light-edge`: glass fill, 1px line edge, `--lab-glass-light` (a light top
+/// edge) and the 135° specular rim.
 class _GroupPainter extends CustomPainter {
   _GroupPainter({
     required this.fill,
     required this.edge,
     required this.highlight,
+    required this.light,
     required this.radius,
   });
-  final Color fill, edge, highlight;
+  final Color fill, edge, highlight, light;
   final double radius;
 
   @override
@@ -371,10 +380,12 @@ class _GroupPainter extends CustomPainter {
         ..strokeWidth = 1
         ..color = edge,
     );
+    paintLightEdge(canvas, size, radius, light: light, low: highlight);
   }
 
   @override
   bool shouldRepaint(_GroupPainter old) =>
+      old.light != light ||
       old.fill != fill ||
       old.edge != edge ||
       old.radius != radius ||

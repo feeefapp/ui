@@ -4,7 +4,9 @@ import 'package:flutter/widgets.dart';
 
 import 'brand/geometry.dart';
 import 'glass/container.dart';
+import 'glass/member.dart';
 import 'theme.dart';
+import 'theme/light_edge.dart';
 
 /// One glass bubble for related floating controls: the twin of `GlassGroup` in
 /// `@feeef.dev/ui/scaffold`. Inside a [GlassContainer] it hands its shape to the container's
@@ -43,96 +45,24 @@ class GlassGroup extends StatefulWidget {
   State<GlassGroup> createState() => _GlassGroupState();
 }
 
-/// Marks a subtree that already belongs to a bubble: never a bubble inside a bubble.
-class _InsideBubble extends InheritedWidget {
-  const _InsideBubble({required super.child});
-  @override
-  bool updateShouldNotify(_InsideBubble old) => false;
-}
-
 class _GlassGroupState extends State<GlassGroup> {
-  final _box = GlobalKey();
-  GlassMemberHandle? _handle;
-  GlassMemberRegistry? _registry;
-  String? _id;
-  double _radius = 0;
-  static int _serial = 0;
-  late final String _autoId = 'glass-group-${_serial++}';
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _sync();
-  }
-
-  @override
-  void didUpdateWidget(GlassGroup old) {
-    super.didUpdateWidget(old);
-    _sync(
-      force:
-          old.glassUnion != widget.glassUnion ||
-          old.glassMotion != widget.glassMotion,
-    );
-  }
-
-  void _sync({bool force = false}) {
-    final nested =
-        context.dependOnInheritedWidgetOfExactType<_InsideBubble>() != null;
-    final registry = nested ? null : GlassMember.of(context);
-    final id = widget.glassId ?? _autoId;
-    if (!force && registry == _registry && id == _id) return;
-    _handle?.unregister();
-    _handle = null;
-    _registry = registry;
-    _id = id;
-    if (registry != null) {
-      _handle = registry.register(
-        id,
-        _box,
-        radius: () => _radius,
-        union: widget.glassUnion,
-        motion: widget.glassMotion,
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _handle?.unregister();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeProvider.of(context);
-    final s = theme.sizes;
+    final s = ThemeProvider.of(context).sizes;
     final narrow = (MediaQuery.maybeSizeOf(context)?.width ?? 1000) <= 720;
-    _radius = widget.radius ?? (narrow ? 27 * s.radiusScale : s.radiusGlass);
-    final nested =
-        context.dependOnInheritedWidgetOfExactType<_InsideBubble>() != null;
-    Widget content = Padding(
+    final radius =
+        widget.radius ?? (narrow ? 27 * s.radiusScale : s.radiusGlass);
+    return GlassMemberBox(
+      glassId: widget.glassId,
+      union: widget.glassUnion,
+      motion: widget.glassMotion,
+      radius: radius,
+      standalone: (child) => _StandaloneGlass(radius: radius, child: child),
       // The CSS border stays in the layout even when the container paints the glass.
-      padding: const EdgeInsets.all(1),
-      child: Padding(padding: widget.padding, child: widget.child),
-    );
-    content = _InsideBubble(child: content);
-    final handle = _handle;
-    if (handle != null) {
-      // Content rides with its glass while the bubble moves, and swells with a press.
-      content = ValueListenableBuilder<(Offset, double)>(
-        valueListenable: handle.content,
-        builder: (context, value, child) => Transform.translate(
-          offset: value.$1,
-          child: Transform.scale(scale: value.$2, child: child),
-        ),
-        child: content,
-      );
-      return KeyedSubtree(key: _box, child: content);
-    }
-    if (nested) return KeyedSubtree(key: _box, child: content);
-    return KeyedSubtree(
-      key: _box,
-      child: _StandaloneGlass(radius: _radius, child: content),
+      child: Padding(
+        padding: const EdgeInsets.all(1),
+        child: Padding(padding: widget.padding, child: widget.child),
+      ),
     );
   }
 }
@@ -270,30 +200,8 @@ class _GlassGroupPainter extends CustomPainter {
         ..strokeWidth = 1
         ..color = line,
     );
-    if (rim) {
-      // .lab-light-edge::after: a 135° gradient on the 1px border ring.
-      final half = (size.width + size.height) / 2 * 0.7071067811865476;
-      final c = rect.center;
-      const light = Offset(-0.7071067811865476, -0.7071067811865476);
-      canvas.drawPath(
-        border,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
-          ..shader = ui.Gradient.linear(
-            c + light * half,
-            c - light * half,
-            [
-              edgeLight,
-              edgeLow,
-              const Color(0x00000000),
-              const Color(0x00000000),
-              edgeLow,
-            ],
-            const [0, 0.22, 0.48, 0.72, 1],
-          ),
-      );
-    }
+    if (rim)
+      paintLightEdge(canvas, size, radius, light: edgeLight, low: edgeLow);
   }
 
   @override

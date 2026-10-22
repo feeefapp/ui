@@ -177,6 +177,36 @@ final Map<String, List<Widget> Function()> scenes = {
         ],
       ),
     ),
+    GlassContainer(
+      spacing: 16,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 4,
+        children: [
+          SegmentedControl<String>(
+            label: 'View',
+            value: 'grid',
+            onChange: (_) {},
+            options: const [
+              SegmentOption(value: 'list', label: 'List'),
+              SegmentOption(value: 'grid', label: 'Grid'),
+            ],
+          ),
+          ToolbarGroup(
+            label: 'Add',
+            children: [
+              IconButton(
+                appearance: .toolbar,
+                controlSize: .compact,
+                ariaLabel: 'Bold',
+                onClick: _noop,
+                icon: const LucideBold(),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
   ],
   'text': () => [
     Builder(

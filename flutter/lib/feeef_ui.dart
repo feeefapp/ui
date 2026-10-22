@@ -9,6 +9,7 @@ library;
 export 'brand/geometry.dart'
     show SuperellipseBorder, superellipsePath, superellipsePoints;
 export 'glass/container.dart';
+export 'glass/member.dart';
 export 'glass/geometry.dart' show GlassShape, GlassPath, glassPaths;
 export 'icons/lucide.dart';
 export 'primitives/badge.dart';
