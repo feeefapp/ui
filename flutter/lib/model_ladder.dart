@@ -18,13 +18,13 @@ import 'model_ladder_core.dart';
 import 'primitives/button.dart';
 import 'primitives/popover_surface.dart';
 import 'primitives/slider.dart';
-import 'scaffold.dart';
 import 'scroll/scroll_area.dart';
 import 'theme.dart';
 import 'theme/color_mix.dart';
 import 'theme/light_edge.dart';
 import 'theme/surfaces.dart';
 import 'theme/tokens.dart';
+import 'toolbar_search.dart';
 
 export 'model_ladder_core.dart';
 
@@ -1223,7 +1223,7 @@ class _ModelList extends StatefulWidget {
 }
 
 class _ModelListState extends State<_ModelList> {
-  final _query = TextEditingController();
+  String _query = '';
   final _search = FocusNode(debugLabel: 'ladder search');
   final _options = <String, FocusNode>{};
   late String _activeId = widget.selectedId;
@@ -1234,7 +1234,6 @@ class _ModelListState extends State<_ModelList> {
   @override
   void initState() {
     super.initState();
-    _query.addListener(() => setState(() {}));
     SchedulerBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (widget.items.length > 6) {
@@ -1251,7 +1250,6 @@ class _ModelListState extends State<_ModelList> {
 
   @override
   void dispose() {
-    _query.dispose();
     _search.dispose();
     for (final node in _options.values) {
       node.dispose();
@@ -1261,7 +1259,7 @@ class _ModelListState extends State<_ModelList> {
 
   List<_Row> _rows() {
     final copy = widget.copy;
-    final q = _query.text.trim().toLowerCase();
+    final q = _query.trim().toLowerCase();
     final count = widget.items.length;
     final rows = <_Row>[];
     for (var i = 0; i < widget.items.length; i++) {
@@ -1392,16 +1390,31 @@ class _ModelListState extends State<_ModelList> {
               ),
             ),
             if (widget.items.length > 6)
-              _SearchField(
-                label: copy.searchModels,
-                controller: _query,
-                focusNode: _search,
-                onArrow: (down) {
-                  if (rows.isEmpty) return;
-                  _focusId(
-                    down ? rows.first.stop.modelId : rows.last.stop.modelId,
-                  );
-                },
+              // The search opens with the list (it is the point of a long list) and takes the
+              // keyboard; arrows move into the options.
+              SizedBox(
+                width: double.infinity,
+                child: ToolbarSearch(
+                  label: copy.searchModels,
+                  value: _query,
+                  onValueChange: (value) => setState(() => _query = value),
+                  defaultExpanded: true,
+                  inputRef: _search,
+                  onInputKeyDown: (event) {
+                    if (event is! KeyDownEvent ||
+                        rows.isEmpty ||
+                        (event.logicalKey != LogicalKeyboardKey.arrowDown &&
+                            event.logicalKey != LogicalKeyboardKey.arrowUp)) {
+                      return KeyEventResult.ignored;
+                    }
+                    final down =
+                        event.logicalKey == LogicalKeyboardKey.arrowDown;
+                    _focusId(
+                      down ? rows.first.stop.modelId : rows.last.stop.modelId,
+                    );
+                    return KeyEventResult.handled;
+                  },
+                ),
               ),
           ],
         ),
@@ -1566,92 +1579,6 @@ class _OptionRow extends StatelessWidget {
               ),
             if (selected) LucideCheck(size: 18, color: c.primary),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// The model search field. A plain field in a glass pill until `ToolbarSearch` is ported.
-class _SearchField extends StatelessWidget {
-  const _SearchField({
-    required this.label,
-    required this.controller,
-    required this.focusNode,
-    required this.onArrow,
-  });
-  final String label;
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final ValueChanged<bool> onArrow;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = ThemeProvider.of(context);
-    final c = theme.colors;
-    final style = TextStyle(
-      fontSize: 13,
-      height: 20 / 13,
-      leadingDistribution: TextLeadingDistribution.even,
-      color: c.ink,
-      fontFamilyFallback: const [kitFontFamily],
-    );
-    return SizedBox(
-      width: double.infinity,
-      child: GlassGroup(
-        padding: const EdgeInsetsDirectional.symmetric(horizontal: 14),
-        child: SizedBox(
-          height: theme.sizes.controlHeight,
-          child: Row(
-            spacing: 8,
-            children: [
-              LucideSearch(size: 18, color: c.muted, strokeWidth: 1.75),
-              Expanded(
-                child: Focus(
-                  canRequestFocus: false,
-                  skipTraversal: true,
-                  onKeyEvent: (_, event) {
-                    if (event is! KeyDownEvent) return KeyEventResult.ignored;
-                    if (event.logicalKey == LogicalKeyboardKey.arrowDown ||
-                        event.logicalKey == LogicalKeyboardKey.arrowUp) {
-                      onArrow(event.logicalKey == LogicalKeyboardKey.arrowDown);
-                      return KeyEventResult.handled;
-                    }
-                    return KeyEventResult.ignored;
-                  },
-                  child: Semantics(
-                    label: label,
-                    textField: true,
-                    child: Stack(
-                      alignment: AlignmentDirectional.centerStart,
-                      children: [
-                        ListenableBuilder(
-                          listenable: controller,
-                          builder: (context, _) => controller.text.isEmpty
-                              ? Text(
-                                  label,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: style.copyWith(color: c.muted),
-                                )
-                              : const SizedBox.shrink(),
-                        ),
-                        EditableText(
-                          controller: controller,
-                          focusNode: focusNode,
-                          style: style,
-                          cursorColor: c.ink,
-                          backgroundCursorColor: c.muted,
-                          maxLines: 1,
-                          textInputAction: TextInputAction.search,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

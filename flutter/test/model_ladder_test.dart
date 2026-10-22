@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:feeef_ui/i18n/i18n.dart';
 import 'package:feeef_ui/model_ladder.dart';
+import 'package:feeef_ui/toolbar_search.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -216,7 +217,11 @@ void main() {
       await settle(tester, 4);
       await tester.tap(find.text('T0'));
       await settle(tester, 4);
+      // The kit's ToolbarSearch, open from the start with the keyboard in it.
+      expect(find.byType(ToolbarSearch), findsOneWidget);
       expect(find.byType(EditableText), findsOneWidget);
+      final field = tester.widget<EditableText>(find.byType(EditableText));
+      expect(field.focusNode.hasFocus, isTrue);
       await tester.enterText(find.byType(EditableText), 'model 3');
       await settle(tester, 4);
       expect(find.text('Model 3'), findsOneWidget);
@@ -224,6 +229,12 @@ void main() {
       await tester.enterText(find.byType(EditableText), 'zzz');
       await settle(tester, 4);
       expect(find.text('No models match.'), findsOneWidget);
+      // Arrow down from the field moves into the options.
+      await tester.enterText(find.byType(EditableText), 'model');
+      await settle(tester, 4);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await settle(tester, 2);
+      expect(field.focusNode.hasFocus, isFalse);
     });
 
     testWidgets('a canvas readout shows the size, aspect and a fitted box', (

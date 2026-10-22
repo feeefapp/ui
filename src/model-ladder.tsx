@@ -596,7 +596,10 @@ function ModelList({
             </div>
             {count > 6 && (
               <div className="lab-ladder-search">
+                {/* Open from the start: a collapsed editor is inert, so the focus call above
+                    would land nowhere, and search is the point of a long list. */}
                 <ToolbarSearch
+                  defaultExpanded
                   label={copy.searchModels}
                   value={query}
                   onValueChange={setQuery}

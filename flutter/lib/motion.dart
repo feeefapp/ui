@@ -166,12 +166,33 @@ enum PresenceMotion {
   backdrop,
 }
 
+/// One side of a presence animation: the hidden pose the content enters from or exits to
+/// (opacity 0, moved [dy] px down, scaled by [scale]) and how long the move takes. Entrances ease
+/// out, exits ease in, like `--lab-ease-out` / `--lab-ease-in` keyframes in app CSS.
+@immutable
+class PresenceFrame {
+  const PresenceFrame({required this.duration, this.dy = 0, this.scale = 1});
+
+  /// How long the keyframes run.
+  final Duration duration;
+
+  /// Vertical offset of the hidden pose, in logical pixels.
+  final double dy;
+
+  /// Scale of the hidden pose.
+  final double scale;
+}
+
 /// Plays a [PresenceMotion] whenever the surrounding [Presence] state (or [state]) changes: the
-/// `[data-state]` animations of `motion.css`. [alignment] is the transform origin.
+/// `[data-state]` animations of `motion.css`. [alignment] is the transform origin. [enter] and
+/// [exit] replace the preset's keyframes with an app's own (what a `[data-state]` rule in app CSS
+/// does on the web).
 class PresenceTransition extends StatefulWidget {
   const PresenceTransition({
     super.key,
     this.motion = PresenceMotion.dialog,
+    this.enter,
+    this.exit,
     this.state,
     this.alignment = Alignment.center,
     required this.child,
@@ -179,6 +200,12 @@ class PresenceTransition extends StatefulWidget {
 
   /// Which keyframes to play.
   final PresenceMotion motion;
+
+  /// Custom entrance keyframes (from this pose to rest); null keeps [motion]'s.
+  final PresenceFrame? enter;
+
+  /// Custom exit keyframes (from rest to this pose, held there); null keeps [motion]'s.
+  final PresenceFrame? exit;
 
   /// Overrides the state read from the nearest [Presence].
   final PresenceState? state;
@@ -196,7 +223,15 @@ class _PresenceTransitionState extends State<PresenceTransition>
   late final _controller = AnimationController(vsync: this);
   PresenceState? _shown;
 
-  ({Duration duration, double dy, double scale}) _frame(bool entering) =>
+  ({Duration duration, double dy, double scale}) _frame(bool entering) {
+    final custom = entering ? widget.enter : widget.exit;
+    if (custom != null) {
+      return (duration: custom.duration, dy: custom.dy, scale: custom.scale);
+    }
+    return _preset(entering);
+  }
+
+  ({Duration duration, double dy, double scale}) _preset(bool entering) =>
       switch ((widget.motion, entering)) {
         (PresenceMotion.dialog, true) => (
           duration: const Duration(milliseconds: 300),

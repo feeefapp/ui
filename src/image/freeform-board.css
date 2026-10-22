@@ -167,6 +167,7 @@
     transition: none;
   }
   .lab-ff-card,
+  .lab-ff-card:is([data-status='pending'], [data-status='processing']),
   .lab-ff-card > img {
     animation: none;
   }

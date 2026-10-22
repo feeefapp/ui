@@ -273,6 +273,8 @@ html[data-lab-theme] .lab-pc .lab-pc-field textarea.lab-textarea {
 }
 .lab-pc-hint {
   position: absolute;
+  /* dir="auto" follows the hint's text; the alignment still follows the page. */
+  text-align: match-parent;
   inset: 8px 8px auto;
   overflow: hidden;
   color: var(--pc-muted);

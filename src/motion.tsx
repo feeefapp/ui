@@ -81,9 +81,26 @@ export function AutoHeight({
   React.useLayoutEffect(() => {
     const element = inner.current
     if (!element || typeof ResizeObserver === 'undefined') return
-    const observer = new ResizeObserver(() => setHeight(element.offsetHeight))
+    // The height goes on the outer box: under `box-sizing: border-box` it has to include that
+    // box's own border and padding, or a bordered AutoHeight ends short of its content.
+    const measure = () => {
+      const outer = element.parentElement
+      let frame = 0
+      if (outer) {
+        const css = getComputedStyle(outer)
+        if (css.boxSizing === 'border-box') {
+          frame =
+            parseFloat(css.borderTopWidth) +
+            parseFloat(css.borderBottomWidth) +
+            parseFloat(css.paddingTop) +
+            parseFloat(css.paddingBottom)
+        }
+      }
+      setHeight(element.offsetHeight + (frame || 0))
+    }
+    const observer = new ResizeObserver(measure)
     observer.observe(element)
-    setHeight(element.offsetHeight)
+    measure()
     return () => observer.disconnect()
   }, [])
   return (

@@ -123,6 +123,33 @@ void main() {
     expect(opacityOf(tester, find.text('menu')), closeTo(0, 1e-9));
   });
 
+  testWidgets('PresenceTransition plays an app\'s own enter and exit frames', (
+    tester,
+  ) async {
+    Widget build(PresenceState state) => host(
+      PresenceTransition(
+        state: state,
+        enter: const PresenceFrame(
+          duration: Duration(milliseconds: 240),
+          dy: 8,
+          scale: 0.98,
+        ),
+        exit: const PresenceFrame(duration: Duration(milliseconds: 160), dy: 4),
+        child: const Text('notice'),
+      ),
+    );
+    await tester.pumpWidget(build(PresenceState.open));
+    expect(opacityOf(tester, find.text('notice')), closeTo(0, 1e-9));
+    // The menu preset would be done at 200ms; these frames still run until 240ms.
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(opacityOf(tester, find.text('notice')), lessThan(1));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(opacityOf(tester, find.text('notice')), 1);
+    await tester.pumpWidget(build(PresenceState.closed));
+    await tester.pump(const Duration(milliseconds: 170));
+    expect(opacityOf(tester, find.text('notice')), closeTo(0, 1e-9));
+  });
+
   testWidgets('StableText keeps the widest option\'s width and shows one', (
     tester,
   ) async {

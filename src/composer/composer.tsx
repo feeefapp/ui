@@ -43,12 +43,16 @@ const GlassCard = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivE
   }} data-glass-member={member ? '' : undefined}/>
 })
 
-/** Placeholder that fades in word by word. Decorative (`aria-hidden`); label the field separately. */
+/**
+ * Placeholder that fades in word by word. Decorative (`aria-hidden`); label the field separately.
+ * Its words are inline blocks, so it takes the direction of its own text (`dir="auto"`): an English
+ * hint on an Arabic page keeps its word order, still aligned to the page's start.
+ */
 export function ComposerHint({ text }: {
   /** The hint text. Changing it replays the animation. */
   text: string
 }) {
-  return <span className="lab-pc-hint" aria-hidden="true" key={text}>{text.split(/(\s+)/).map((word, index) => /\s+/.test(word) ? word : <span key={index} style={{ animationDelay: `${Math.min(index, 40) * 28}ms` }}>{word}</span>)}</span>
+  return <span className="lab-pc-hint" aria-hidden="true" dir="auto" key={text}>{text.split(/(\s+)/).map((word, index) => /\s+/.test(word) ? word : <span key={index} style={{ animationDelay: `${Math.min(index, 40) * 28}ms` }}>{word}</span>)}</span>
 }
 
 export type PromptComposerProps = Omit<React.FormHTMLAttributes<HTMLFormElement>, 'onSubmit' | 'onChange' | 'children'> & {

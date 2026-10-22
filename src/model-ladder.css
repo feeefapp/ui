@@ -228,7 +228,8 @@ html[data-lab-theme] .lab-control.lab-ladder-reset[data-variant] {
   opacity: 0.3;
   cursor: default;
 }
-.lab-ladder-price {
+/* Two classes: `.lab-app p { margin: 0 }` (system.css) would otherwise drop the inset. */
+.lab-ladder-card .lab-ladder-price {
   margin-block: 4px 0;
   margin-inline-start: 34px;
   margin-inline-end: 0;
@@ -406,7 +407,7 @@ html[data-lab-theme] .lab-control.lab-ladder-option[aria-selected='true'] {
   flex: none;
   align-self: center;
 }
-.lab-ladder-empty {
+.lab-ladder-options .lab-ladder-empty {
   margin: 8px 4px;
   font-size: 12px;
   color: var(--ladder-muted);
