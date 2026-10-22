@@ -15,7 +15,7 @@ import { Dock } from '@feeef.dev/ui/dock'
 import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
 import { ScrollArea } from '@feeef.dev/ui/scroll'
 import { Modal } from '@feeef.dev/ui/primitives/modal'
-import { Carousel, Sheet, TabView } from '@feeef.dev/ui/containers'
+import { Carousel, NavigationPage, NavigationStack, Sheet, TabView } from '@feeef.dev/ui/containers'
 import { LucidePackage, LucideUsers, LucideSettings } from 'lucide-react'
 import { Select, Option } from '@feeef.dev/ui/primitives/select'
 import { ListSection, ListRow } from '@feeef.dev/ui/primitives/list'
@@ -330,6 +330,32 @@ export const SCENES: Record<string, () => ReactNode> = {
       />
     </div>
   ),
+  stack: () => {
+    const rows = ['Order #1040', 'Order #1041', 'Order #1042', 'Order #1043']
+    const body = (
+      <div style={{ font: "15px/22px 'Parity Plex'" }}>
+        {rows.map((r) => (
+          <div key={r} style={{ padding: '10px 0', borderBottom: '1px solid var(--lab-line)' }}>{r}</div>
+        ))}
+      </div>
+    )
+    const frame: React.CSSProperties = { height: 360, position: 'relative', background: 'var(--lab-surface)', border: '1px solid var(--lab-line)', borderRadius: 'var(--lab-radius-panel)', overflow: 'hidden' }
+    return (
+      <div className="grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        <div style={frame}>
+          <NavigationStack onBack={() => {}}>
+            <NavigationPage key="orders" title="Orders">{body}</NavigationPage>
+          </NavigationStack>
+        </div>
+        <div style={frame}>
+          <NavigationStack onBack={() => {}}>
+            <NavigationPage key="orders" title="Orders">{body}</NavigationPage>
+            <NavigationPage key="o1042" title="Order #1042" titleDisplay="inline">{body}</NavigationPage>
+          </NavigationStack>
+        </div>
+      </div>
+    )
+  },
   sheet: () => (
     <Sheet open onOpenChange={() => {}} label="Order #1042" detents={['medium']} regular="sheet">
       <div style={{ font: "15px/22px 'Parity Plex'" }}>

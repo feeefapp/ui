@@ -1414,6 +1414,16 @@ class _NavigationPageState extends State<NavigationPage> {
                       child: Button(
                         variant: ButtonVariant.text,
                         appearance: ButtonAppearance.toolbar,
+                        // .lab-nav-back: 6px 12px with a 2px gap; 8px each side when narrow.
+                        padding: narrow
+                            ? const EdgeInsetsDirectional.symmetric(
+                                horizontal: 8,
+                              )
+                            : const EdgeInsetsDirectional.only(
+                                start: 6,
+                                end: 12,
+                              ),
+                        gap: 2,
                         ariaLabel: backLabel,
                         onClick: page.back,
                         children: [

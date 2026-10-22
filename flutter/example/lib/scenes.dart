@@ -675,6 +675,80 @@ final Map<String, List<Widget> Function()> scenes = {
       ),
     ),
   ],
+  'stack': () {
+    Widget body(BuildContext context) => DefaultTextStyle.merge(
+      style: const TextStyle(
+        fontSize: 15,
+        height: 22 / 15,
+        leadingDistribution: TextLeadingDistribution.even,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final r in const [
+            'Order #1040',
+            'Order #1041',
+            'Order #1042',
+            'Order #1043',
+          ])
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: ThemeProvider.of(context).colors.line,
+                  ),
+                ),
+              ),
+              child: CssBaseline(lineHeight: 22, child: Text(r)),
+            ),
+        ],
+      ),
+    );
+    Widget frame(List<Widget> pages) => Builder(
+      builder: (context) {
+        final theme = ThemeProvider.of(context);
+        return Container(
+          height: 360,
+          clipBehavior: Clip.antiAlias,
+          decoration: ShapeDecoration(
+            color: theme.colors.surface,
+            shape: SuperellipseBorder(
+              radius: theme.sizes.radiusPanel,
+              side: BorderSide(color: theme.colors.line),
+            ),
+          ),
+          child: NavigationStack(onBack: _noop, children: pages),
+        );
+      },
+    );
+    return [
+      grid([
+        frame([
+          Builder(
+            key: const ValueKey('orders'),
+            builder: (context) =>
+                NavigationPage(title: 'Orders', child: body(context)),
+          ),
+        ]),
+        frame([
+          Builder(
+            key: const ValueKey('orders'),
+            builder: (context) =>
+                NavigationPage(title: 'Orders', child: body(context)),
+          ),
+          Builder(
+            key: const ValueKey('o1042'),
+            builder: (context) => NavigationPage(
+              title: 'Order #1042',
+              titleDisplay: TitleDisplay.inline,
+              child: body(context),
+            ),
+          ),
+        ]),
+      ]),
+    ];
+  },
   'sheet': () => [
     Builder(
       builder: (context) => Sheet(

@@ -35,7 +35,7 @@ function serve(root) {
   })
 }
 
-const SCENES = process.argv.slice(2).length ? process.argv.slice(2) : ['buttons', 'button-states', 'segmented', 'icons', 'choices', 'sliders', 'fields', 'glass', 'dock', 'popover', 'scroll', 'numbers', 'actions', 'list', 'select', 'carousel', 'tabs', 'sheet', 'modal', 'text', 'corners']
+const SCENES = process.argv.slice(2).length ? process.argv.slice(2) : ['buttons', 'button-states', 'segmented', 'icons', 'choices', 'sliders', 'fields', 'glass', 'dock', 'popover', 'scroll', 'numbers', 'actions', 'list', 'select', 'carousel', 'tabs', 'stack', 'sheet', 'modal', 'text', 'corners']
 const VARIANTS = [
   { theme: 'light', palette: 'lab', density: 'comfortable' },
   { theme: 'dark', palette: 'lab', density: 'comfortable' },

@@ -89,6 +89,8 @@ class Button extends StatefulWidget {
     this.ariaLabel,
     this.focusNode,
     this.autofocus = false,
+    this.padding,
+    this.gap = 6,
     required this.children,
   });
 
@@ -121,7 +123,14 @@ class Button extends StatefulWidget {
   final FocusNode? focusNode;
   final bool autofocus;
 
-  /// Content: icons and text, laid out in a row with a 6px gap.
+  /// Inline padding inside the 1px border, where a component's CSS overrides the control's
+  /// (`.lab-nav-back` is `padding-inline: 6px 12px`). Null keeps the size's padding.
+  final EdgeInsetsDirectional? padding;
+
+  /// Space between the content's icons and text.
+  final double gap;
+
+  /// Content: icons and text, laid out in a row.
   final List<Widget> children;
 
   @override
@@ -236,7 +245,7 @@ class _ButtonState extends State<Button> {
 
     final content = Row(
       mainAxisSize: MainAxisSize.min,
-      spacing: 6,
+      spacing: widget.gap,
       children: [
         if (widget.loading) PixelLoader(size: 16, decorative: true, color: ink),
         if (!(widget.loading && icon)) ...widget.children,
@@ -257,10 +266,14 @@ class _ButtonState extends State<Button> {
         height: height,
         width: icon ? height : null,
         child: Padding(
-          padding: EdgeInsetsDirectional.symmetric(
-            // CSS boxes are border-box with a 1px border: it adds to the padding.
-            horizontal: icon ? 0 : (compact ? 14 : s.space4) + 1,
-          ),
+          // CSS boxes are border-box with a 1px border: it adds to the padding.
+          padding: icon
+              ? EdgeInsetsDirectional.zero
+              : EdgeInsetsDirectional.only(
+                  start:
+                      (widget.padding?.start ?? (compact ? 14 : s.space4)) + 1,
+                  end: (widget.padding?.end ?? (compact ? 14 : s.space4)) + 1,
+                ),
           child: Center(
             widthFactor: 1,
             child: IconTheme.merge(
