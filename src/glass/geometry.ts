@@ -61,12 +61,45 @@ export function smoothMin(a: number, b: number, k: number) {
   return Math.min(a, b) - (h * h * k) / 4
 }
 
-/** Distance to the union of `shapes`, blended with `spacing`. */
+/** Share of `spacing` two touching shapes blend with (measured on rendered Liquid Glass). */
+export const GLASS_MERGE_BASE = 0.65
+/** How much the blend widens per unit of gap / spacing, up to the full `spacing`. */
+export const GLASS_MERGE_GAP = 0.65
+
+/**
+ * Blend width for two shapes `gap` px apart in a container with `spacing`: the full spacing while
+ * they approach (so they start to bend at `spacing` and join at half of it, like Apple's
+ * GlassEffectContainer), then narrower as they close in, so the neck between touching shapes
+ * stays slim instead of swelling into one blob.
+ */
+export function mergeWidth(gap: number, spacing: number) {
+  if (!(spacing > 0)) return 0
+  return spacing * Math.min(1, GLASS_MERGE_BASE + (GLASS_MERGE_GAP * Math.max(0, gap)) / spacing)
+}
+
+const widths = new WeakMap<readonly GlassShape[], { spacing: number; k: number[] }>()
+
+/** Each shape's blend width against the shapes before it (its nearest one), cached per array. */
+function blendWidths(shapes: readonly GlassShape[], spacing: number) {
+  const cached = widths.get(shapes)
+  if (cached && cached.spacing === spacing && cached.k.length === shapes.length) return cached.k
+  const k = shapes.map((shape, i) => {
+    if (i === 0) return 0
+    let gap = Infinity
+    for (let j = 0; j < i; j++) gap = Math.min(gap, rectGap(shape, shapes[j]))
+    return mergeWidth(gap, spacing)
+  })
+  widths.set(shapes, { spacing, k })
+  return k
+}
+
+/** Distance to the union of `shapes`, blended by `spacing` (see `mergeWidth`). */
 export function unionDistance(px: number, py: number, shapes: readonly GlassShape[], spacing: number) {
+  const k = shapes.length > 1 ? blendWidths(shapes, spacing) : null
   let d = Infinity
-  for (const shape of shapes) {
-    const s = shapeDistance(px, py, shape)
-    d = d === Infinity ? s : smoothMin(d, s, spacing)
+  for (let i = 0; i < shapes.length; i++) {
+    const s = shapeDistance(px, py, shapes[i])
+    d = d === Infinity ? s : smoothMin(d, s, k![i])
   }
   return d
 }

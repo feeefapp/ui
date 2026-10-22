@@ -183,6 +183,10 @@ Kit rows (ScaffoldAppBar, ScaffoldTopBar, Toolbar, Dock host, ToolbarSearch) are
 a container unless one encloses them. Wrap any other standalone ToolbarGroup row in GlassScope.
 Bubbles leave the glass when they or an ancestor are `inert`, `hidden` or `data-glass-hidden`
 (use it for a bubble that fades out but stays mounted).
+The material (blur, saturation, veil, rim, shadow), the refraction profile and the merge width are
+our own fit to measured Liquid Glass (`research/liquid-glass/FINDINGS.md`, `data/model.json`); change
+them there first and keep `material.ts`/`refraction.ts`/`geometry.ts`, their Dart twins,
+`shaders/glass_refraction.frag` and the tokens in step.
 ThemeConfig `glass` (liquid/frosted/solid) and `glassRenderer` (css/canvas) are read live from
 `<html>`; canvas refraction (glass/refraction.ts, pure) only runs on settled glass in Chromium.
 The glass scene measures in the container's own pixels (`hostFrame`), so scaled ancestors (demo

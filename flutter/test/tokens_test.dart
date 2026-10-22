@@ -79,10 +79,12 @@ void main() {
         'control-pressed': tokens.controlPressed,
         'control-selected': tokens.controlSelected,
         'glass-fill': tokens.glassFill,
+        'glass-fill-large': tokens.glassFillLarge,
         'glass-fill-flat': tokens.glassFillFlat,
         'glass-edge-light': tokens.glassEdgeLight,
         'glass-edge-low': tokens.glassEdgeLow,
         'glass-shadow-color': tokens.glassShadowColor,
+        'glass-shadow-small': tokens.glassShadowSmall,
         'glass-glow': tokens.glassGlow,
         'control-highlight': tokens.controlHighlight,
       };
@@ -118,7 +120,7 @@ void main() {
     expect(dark.ink, const Color(0xFFF2F5F0));
     expect(dark.focus, dark.ink);
     expect(dark.muted, const Color(0xFFB7C0B4));
-    expect(dark.glassFill.a, closeTo(0.62, 1e-3));
+    expect(dark.glassFill.a, closeTo(0.75, 1e-3));
     // The palette's own colours stay.
     expect(dark.primary, base.primary);
     expect(dark.ground, base.ground);
@@ -128,7 +130,7 @@ void main() {
     ).backdrop(Brightness.light);
     expect(light.surface, const Color(0xFFFBFCFA));
     expect(light.ink, const Color(0xFF151A16));
-    expect(light.glassFill.a, closeTo(0.72, 1e-3));
+    expect(light.glassFill.a, closeTo(0.87, 1e-3));
     expect(light.backdropTone, Brightness.light);
   });
 }

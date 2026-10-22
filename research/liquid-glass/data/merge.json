@@ -1,0 +1,185 @@
+{
+ "radius": 32.0,
+ "rows": [
+  {
+   "spacing": 0,
+   "gap": 40,
+   "neck": 0.0,
+   "bulge": -1.0,
+   "k": null
+  },
+  {
+   "spacing": 0,
+   "gap": 32,
+   "neck": 0.0,
+   "bulge": -1.0,
+   "k": null
+  },
+  {
+   "spacing": 0,
+   "gap": 24,
+   "neck": 0.0,
+   "bulge": -1.0,
+   "k": null
+  },
+  {
+   "spacing": 0,
+   "gap": 16,
+   "neck": 0.0,
+   "bulge": -1.0,
+   "k": null
+  },
+  {
+   "spacing": 0,
+   "gap": 12,
+   "neck": 0.0,
+   "bulge": -1.0,
+   "k": null
+  },
+  {
+   "spacing": 0,
+   "gap": 8,
+   "neck": 0.0,
+   "bulge": -1.0,
+   "k": null
+  },
+  {
+   "spacing": 0,
+   "gap": 4,
+   "neck": 0.0,
+   "bulge": -1.0,
+   "k": null
+  },
+  {
+   "spacing": 0,
+   "gap": 0,
+   "neck": 2.67,
+   "bulge": 63.0,
+   "k": 0.449854105877449
+  },
+  {
+   "spacing": 20,
+   "gap": 40,
+   "neck": 0.0,
+   "bulge": -1.0,
+   "k": null
+  },
+  {
+   "spacing": 20,
+   "gap": 32,
+   "neck": 0.0,
+   "bulge": -1.0,
+   "k": null
+  },
+  {
+   "spacing": 20,
+   "gap": 24,
+   "neck": 0.0,
+   "bulge": -1.0,
+   "k": null
+  },
+  {
+   "spacing": 20,
+   "gap": 16,
+   "neck": 0.0,
+   "bulge": -0.67,
+   "k": null
+  },
+  {
+   "spacing": 20,
+   "gap": 12,
+   "neck": 0.0,
+   "bulge": 0.67,
+   "k": null
+  },
+  {
+   "spacing": 20,
+   "gap": 8,
+   "neck": 6.67,
+   "bulge": 71.0,
+   "k": 18.442350979574826
+  },
+  {
+   "spacing": 20,
+   "gap": 4,
+   "neck": 12.0,
+   "bulge": 67.0,
+   "k": 16.243268028345145
+  },
+  {
+   "spacing": 20,
+   "gap": 0,
+   "neck": 15.33,
+   "bulge": 63.0,
+   "k": 13.94422676115048
+  },
+  {
+   "spacing": 40,
+   "gap": 40,
+   "neck": 0.0,
+   "bulge": -1.0,
+   "k": null
+  },
+  {
+   "spacing": 40,
+   "gap": 32,
+   "neck": 0.0,
+   "bulge": -0.67,
+   "k": null
+  },
+  {
+   "spacing": 40,
+   "gap": 24,
+   "neck": 0.0,
+   "bulge": 2.0,
+   "k": null
+  },
+  {
+   "spacing": 40,
+   "gap": 16,
+   "neck": 9.67,
+   "bulge": 79.0,
+   "k": 36.58478532721968
+  },
+  {
+   "spacing": 40,
+   "gap": 12,
+   "neck": 13.67,
+   "bulge": 75.0,
+   "k": 33.53605669028762
+  },
+  {
+   "spacing": 40,
+   "gap": 8,
+   "neck": 16.67,
+   "bulge": 71.0,
+   "k": 30.68724468528554
+  },
+  {
+   "spacing": 40,
+   "gap": 4,
+   "neck": 19.0,
+   "bulge": 67.0,
+   "k": 27.788453522300962
+  },
+  {
+   "spacing": 40,
+   "gap": 0,
+   "neck": 21.0,
+   "bulge": 63.0,
+   "k": 25.089578991246356
+  },
+  {
+   "union": true,
+   "gap": 40,
+   "neck": 31.0,
+   "bulge": -31.67
+  },
+  {
+   "union": true,
+   "gap": 16,
+   "neck": 31.0,
+   "bulge": -31.67
+  }
+ ]
+}

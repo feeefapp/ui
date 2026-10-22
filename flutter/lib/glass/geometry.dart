@@ -90,17 +90,63 @@ double smoothMin(double a, double b, double k) {
   return math.min(a, b) - (h * h * k) / 4;
 }
 
-/// Distance to the union of [shapes], blended with [spacing].
+/// Share of `spacing` two touching shapes blend with (measured on rendered Liquid Glass).
+const double glassMergeBase = 0.65;
+
+/// How much the blend widens per unit of gap / spacing, up to the full `spacing`.
+const double glassMergeGap = 0.65;
+
+/// Blend width for two shapes [gap] px apart in a container with [spacing]: the full spacing while
+/// they approach (they bend at `spacing` and join at half of it), then narrower as they close in,
+/// so the neck between touching shapes stays slim. Twin of the web kit's `mergeWidth`.
+double mergeWidth(double gap, double spacing) {
+  if (!(spacing > 0)) return 0;
+  return spacing *
+      math.min(
+        1.0,
+        glassMergeBase + glassMergeGap * math.max(0.0, gap) / spacing,
+      );
+}
+
+final _widths = Expando<(double, List<double>)>();
+
+/// Each shape's blend width against the shapes before it (its nearest one), cached per list.
+List<double> _blendWidths(List<GlassShape> shapes, double spacing) {
+  final cached = _widths[shapes];
+  if (cached != null &&
+      cached.$1 == spacing &&
+      cached.$2.length == shapes.length) {
+    return cached.$2;
+  }
+  final k = <double>[
+    for (var i = 0; i < shapes.length; i++)
+      if (i == 0)
+        0
+      else
+        mergeWidth(
+          [for (var j = 0; j < i; j++) rectGap(shapes[i], shapes[j])]
+              .reduce(math.min),
+          spacing,
+        ),
+  ];
+  _widths[shapes] = (spacing, k);
+  return k;
+}
+
+/// Distance to the union of [shapes], blended by [spacing] (see [mergeWidth]).
 double unionDistance(
   double px,
   double py,
   List<GlassShape> shapes,
   double spacing,
 ) {
+  final k = shapes.length > 1
+      ? _blendWidths(shapes, spacing)
+      : const <double>[];
   var d = double.infinity;
-  for (final shape in shapes) {
-    final s = shapeDistance(px, py, shape);
-    d = d == double.infinity ? s : smoothMin(d, s, spacing);
+  for (var i = 0; i < shapes.length; i++) {
+    final s = shapeDistance(px, py, shapes[i]);
+    d = d == double.infinity ? s : smoothMin(d, s, k[i]);
   }
   return d;
 }

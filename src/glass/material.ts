@@ -1,0 +1,70 @@
+/**
+ * The glass material: how much it blurs, saturates and veils what is behind it, how its rim
+ * catches the light and how far its shadow falls. Our own model, fitted to measurements of
+ * rendered Liquid Glass (ui/research/liquid-glass/FINDINGS.md, data/model.json); colours live in
+ * the theme tokens (`--lab-glass-*`), sizes and laws here. Pure, so the Flutter twin
+ * (`glass/material.dart`) shares the numbers.
+ *
+ * Glass comes in two sizes: control-sized glass (shorter side up to `GLASS_SMALL_SIDE`) is denser
+ * and lets more colour through; larger panels are more transparent.
+ */
+
+/** Glass whose shorter side is at most this (px) uses the small, denser material. */
+export const GLASS_SMALL_SIDE = 72
+
+export type GlassSize = 'small' | 'large'
+
+export function glassSize(side: number): GlassSize {
+  return side <= GLASS_SMALL_SIDE ? 'small' : 'large'
+}
+
+/** Backdrop blur (standard deviation, px): this much up to 64 px, growing to `max` on panels. */
+export const GLASS_BLUR = { min: 2.9, max: 5.2, from: 64, slope: 0.025 } as const
+
+/** Blur (px, a CSS `blur()` length = standard deviation) for glass whose shorter side is `side` px. */
+export function glassBlur(side: number) {
+  const { min, max, from, slope } = GLASS_BLUR
+  return Math.min(max, Math.max(min, min + (side - from) * slope))
+}
+
+/**
+ * Saturation applied to the blurred backdrop before the veil: the veil keeps 13–29% of the
+ * backdrop's brightness but ~70% of its colour, so saturation makes up the difference.
+ */
+export const GLASS_SATURATE = {
+  light: { small: 5.5, large: 2.2 },
+  dark: { small: 2.9, large: 2.4 },
+} as const
+
+/** Share of the theme surface laid over the backdrop (`--lab-glass-fill*` mix in the tokens). */
+export const GLASS_VEIL = {
+  light: { small: 0.87, large: 0.71 },
+  dark: { small: 0.75, large: 0.72 },
+} as const
+
+/**
+ * Rim light: a 1 px line of white along the inner edge. Its alpha follows the angle `a` between
+ * the edge's normal and the light axis, lit at both ends of the axis: `base + (peak - base) cos²a`.
+ */
+export const GLASS_RIM = {
+  light: { base: 0.27, peak: 0.72 },
+  dark: { base: 0.14, peak: 0.25 },
+} as const
+
+/** Rim alpha at `angle` (radians) between the edge normal and the light axis. */
+export function rimAlpha(angle: number, scheme: 'light' | 'dark') {
+  const { base, peak } = GLASS_RIM[scheme]
+  return base + (peak - base) * Math.cos(angle) ** 2
+}
+
+/**
+ * Stops for the rim's gradient line (offset 0 and 1 at the lit ends, through the centre): the
+ * share of the lit colour laid over the base rim at each offset, cos² of the angle a round shape's
+ * edge makes with the light axis there.
+ */
+export const GLASS_RIM_STOPS: readonly (readonly [number, number])[] = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1].map(
+  (offset) => [offset, Math.round((1 - 2 * offset) ** 2 * 1000) / 1000] as const
+)
+
+/** Shadow under the glass: black at the token's alpha, `dy` px down, blurred by `blur` (std dev). */
+export const GLASS_SHADOW = { dy: 7.5, blur: 19.5 } as const

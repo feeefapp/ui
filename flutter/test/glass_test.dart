@@ -4,6 +4,8 @@ import 'dart:ui';
 
 import 'package:feeef_ui/glass/geometry.dart';
 import 'package:feeef_ui/glass/light.dart';
+import 'package:feeef_ui/glass/material.dart';
+import 'package:feeef_ui/glass/refraction.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 GlassShape shape(Map<String, dynamic> j) => GlassShape(
@@ -88,6 +90,34 @@ void main() {
       expect(start.dy, closeTo(n(g['y1']), 1e-9));
       expect(end.dx, closeTo(n(g['x2']), 1e-9));
       expect(end.dy, closeTo(n(g['y2']), 1e-9));
+    }
+  });
+
+  test('the measured model: merge width, bend and material match', () {
+    for (final row in fixture['mergeWidth'] as List) {
+      expect(mergeWidth(n(row[0]), n(row[1])), closeTo(n(row[2]), 1e-12));
+    }
+    for (final row in fixture['refraction'] as List) {
+      final bend = refractionAt(n(row[0]), n(row[1]), n(row[2]), n(row[3]));
+      expect(bend.x, closeTo(n(row[4]['x']), 1e-12));
+      expect(bend.y, closeTo(n(row[4]['y']), 1e-12));
+    }
+    for (final row in fixture['refractionScale'] as List) {
+      expect(refractionScale(n(row[0])), closeTo(n(row[1]), 1e-12));
+    }
+    for (final row in fixture['material'] as List) {
+      expect(glassBlur(n(row[0])), closeTo(n(row[1]), 1e-12));
+      expect(glassSize(n(row[0])).name, row[2]);
+    }
+    for (final row in fixture['rimAlpha'] as List) {
+      expect(rimAlpha(n(row[0]), dark: false), closeTo(n(row[1]), 1e-12));
+      expect(rimAlpha(n(row[0]), dark: true), closeTo(n(row[2]), 1e-12));
+    }
+    final stops = fixture['rimStops'] as List;
+    expect(glassRimStops.length, stops.length);
+    for (var i = 0; i < stops.length; i++) {
+      expect(glassRimStops[i].$1, closeTo(n(stops[i][0]), 1e-12));
+      expect(glassRimStops[i].$2, closeTo(n(stops[i][1]), 1e-12));
     }
   });
 }

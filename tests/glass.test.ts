@@ -278,3 +278,50 @@ test('only running animations that move or resize count as geometry', () => {
   assert.equal(movesGeometry(keyframes([{ offset: 0, transform: 'scale(0.9)' }])), true)
   assert.equal(movesGeometry(keyframes([{ offset: 0, maxHeight: '0px' }])), true)
 })
+
+import { GLASS_REFRACTION, refractionScale } from '../src/glass/refraction.ts'
+import { GLASS_BLUR, GLASS_RIM, GLASS_RIM_STOPS, glassBlur, glassSize, rimAlpha } from '../src/glass/material.ts'
+import { mergeWidth } from '../src/glass/geometry.ts'
+
+test('the bend follows the fitted profile: (1 - t)^4 of the bezel, smaller glass scales down', () => {
+  assert.ok(Math.abs(refractionAt(-1e-6, 1, 0).x + 1) < 1e-4, 'full shift at the edge')
+  assert.ok(Math.abs(refractionAt(-GLASS_BEZEL / 2, 1, 0).x + 0.0625) < 1e-9, 'half way: 1/16')
+  assert.equal(refractionScale(200), 1)
+  assert.equal(refractionScale(88), 1)
+  assert.ok(Math.abs(refractionScale(44) - 0.5 ** 0.78) < 1e-9)
+  const small = displacementMap(60, 60, [[{ x: 8, y: 8, width: 44, height: 44, radius: 22 }]], 8)
+  assert.ok(Math.abs(small.scale - 2 * GLASS_REFRACTION * refractionScale(44)) < 1e-9, 'filter scale follows the size')
+})
+
+test('material: denser control glass, blur grows with size, rim lit at both ends of the axis', () => {
+  assert.equal(glassSize(44), 'small')
+  assert.equal(glassSize(72), 'small')
+  assert.equal(glassSize(120), 'large')
+  assert.equal(glassBlur(30), GLASS_BLUR.min)
+  assert.equal(glassBlur(400), GLASS_BLUR.max)
+  assert.ok(glassBlur(100) > GLASS_BLUR.min && glassBlur(100) < GLASS_BLUR.max)
+  assert.ok(Math.abs(rimAlpha(0, 'light') - GLASS_RIM.light.peak) < 1e-9)
+  assert.ok(Math.abs(rimAlpha(Math.PI, 'light') - GLASS_RIM.light.peak) < 1e-9, 'symmetric')
+  assert.ok(Math.abs(rimAlpha(Math.PI / 2, 'light') - GLASS_RIM.light.base) < 1e-9)
+  assert.deepEqual(GLASS_RIM_STOPS[0], [0, 1])
+  assert.deepEqual(GLASS_RIM_STOPS[5], [0.5, 0])
+  assert.deepEqual(GLASS_RIM_STOPS[10], [1, 1])
+})
+
+test('merging: full spacing while apart, a slimmer blend as shapes touch', () => {
+  assert.equal(mergeWidth(22, 40), 40)
+  assert.equal(mergeWidth(40, 40), 40)
+  assert.ok(Math.abs(mergeWidth(0, 40) - 26) < 1e-9)
+  assert.equal(mergeWidth(5, 0), 0)
+  // Two 64px bubbles 16px apart in a 40px container join, with a slimmer neck than a constant blend.
+  const a = { x: 0, y: 0, width: 64, height: 64, radius: 32 }
+  const b = { x: 80, y: 0, width: 64, height: 64, radius: 32 }
+  const neckOf = (distance: (y: number) => number) => {
+    let neck = 0
+    for (let y = 0; y <= 32; y += 0.25) if (distance(32 - y) <= 0) neck = y
+    return neck
+  }
+  const neck = neckOf((y) => unionDistance(72, y, [a, b], 40))
+  const constant = neckOf((y) => smoothMin(shapeDistance(72, y, a), shapeDistance(72, y, b), 40))
+  assert.ok(neck > 4 && neck < constant - 2, `neck ${neck} vs ${constant}`)
+})

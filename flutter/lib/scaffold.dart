@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/widgets.dart';
 
 import 'brand/geometry.dart';
+import 'glass/material.dart';
 import 'glass/container.dart';
 import 'glass/member.dart';
 import 'theme.dart';
@@ -143,7 +144,21 @@ class _StandaloneGlass extends StatelessWidget {
           child: ClipPath(
             clipper: _SuperellipseClipper(radius),
             child: BackdropFilter(
-              filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+              // `--lab-glass-blur` and `--lab-glass-saturate`: the control-sized material.
+              filter: ui.ImageFilter.compose(
+                outer: ColorFilter.matrix(
+                  saturateMatrix(
+                    glassSaturate(
+                      dark: theme.brightness == Brightness.dark,
+                      size: GlassSize.small,
+                    ),
+                  ),
+                ),
+                inner: ui.ImageFilter.blur(
+                  sigmaX: glassBlurMin,
+                  sigmaY: glassBlurMin,
+                ),
+              ),
               child: const SizedBox.expand(),
             ),
           ),

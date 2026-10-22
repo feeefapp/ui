@@ -12,7 +12,9 @@ import '../physics/spring.dart';
 import '../theme.dart';
 import 'geometry.dart';
 import 'light.dart';
+import 'material.dart';
 import 'press.dart';
+import 'refraction_filter.dart';
 import 'transitions.dart';
 
 /// How a bubble's glass follows its layout: `spring` animates every change (default); `follow`
@@ -295,13 +297,26 @@ class _GlassMaterial {
 
   bool get blurred =>
       style != GlassStyle.solid && renderer != GlassRenderer.fill;
-  Color get fill => style == GlassStyle.solid
+  bool get dark => brightness == Brightness.dark;
+
+  /// The veil over a cluster whose smallest bubble's shorter side is [side] px.
+  Color fillFor(double side) => style == GlassStyle.solid
       ? colors.surface
-      : blurred
+      : !blurred
+      ? colors.glassFillFlat
+      : glassSize(side) == GlassSize.small
       ? colors.glassFill
-      : colors.glassFillFlat;
+      : colors.glassFillLarge;
   bool get rim => style != GlassStyle.solid;
+
+  /// The drawn outline: only solid glass keeps it; liquid glass is defined by rim light and shadow.
+  bool get outline => style == GlassStyle.solid;
 }
+
+/// Shorter side of the smallest bubble in a cluster: the material and bend follow it.
+double _smallestSide(GlassPath path) => path.shapes
+    .map((s) => math.min(s.width, s.height))
+    .fold(double.infinity, math.min);
 
 /// Shadow, backdrop, edge, light and glow, behind the bubbles.
 class _GlassLayers extends StatelessWidget {
@@ -316,7 +331,12 @@ class _GlassLayers extends StatelessWidget {
       size: Size.infinite,
     );
     if (!material.blurred) return paint;
-    // Blurred renderers: one backdrop per cluster, clipped to its outline.
+    // Blurred renderers: one backdrop per cluster, clipped to its outline: a light blur sized to
+    // the cluster, strong saturation, and (canvas renderer on Impeller) the measured refraction.
+    final refract =
+        material.renderer == GlassRenderer.canvas &&
+        GlassRefraction.supported &&
+        !(MediaQuery.maybeHighContrastOf(context) ?? false);
     return ListenableBuilder(
       listenable: scene,
       builder: (context, _) => Stack(
@@ -326,14 +346,34 @@ class _GlassLayers extends StatelessWidget {
             Positioned.fill(
               child: ClipPath(
                 clipper: _PathClipper(path.path),
-                child: BackdropFilter(
-                  // blur(18px) saturate(1.1): the CSS blur length is the standard deviation.
-                  filter: ui.ImageFilter.compose(
-                    outer: ColorFilter.matrix(_saturate(1.1)),
-                    inner: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                  ),
-                  child: const SizedBox.expand(),
-                ),
+                child: refract
+                    ? GlassRefraction(
+                        path: path,
+                        spacing: scene.spacing,
+                        blur: glassBlur(_smallestSide(path)),
+                        saturate: glassSaturate(
+                          dark: material.dark,
+                          size: glassSize(_smallestSide(path)),
+                        ),
+                      )
+                    : BackdropFilter(
+                        // blur() then saturate(): the CSS blur length is the standard deviation.
+                        filter: ui.ImageFilter.compose(
+                          outer: ColorFilter.matrix(
+                            saturateMatrix(
+                              glassSaturate(
+                                dark: material.dark,
+                                size: glassSize(_smallestSide(path)),
+                              ),
+                            ),
+                          ),
+                          inner: ui.ImageFilter.blur(
+                            sigmaX: glassBlur(_smallestSide(path)),
+                            sigmaY: glassBlur(_smallestSide(path)),
+                          ),
+                        ),
+                        child: const SizedBox.expand(),
+                      ),
               ),
             ),
           Positioned.fill(child: paint),
@@ -342,14 +382,6 @@ class _GlassLayers extends StatelessWidget {
     );
   }
 }
-
-/// The CSS `saturate()` matrix.
-List<double> _saturate(double s) => [
-  0.213 + 0.787 * s, 0.715 - 0.715 * s, 0.072 - 0.072 * s, 0, 0, //
-  0.213 - 0.213 * s, 0.715 + 0.285 * s, 0.072 - 0.072 * s, 0, 0, //
-  0.213 - 0.213 * s, 0.715 - 0.715 * s, 0.072 + 0.928 * s, 0, 0, //
-  0, 0, 0, 1, 0,
-];
 
 class _PathClipper extends CustomClipper<Path> {
   _PathClipper(this.path);
@@ -375,37 +407,60 @@ class _GlassPainter extends CustomPainter {
     for (final p in paths) {
       all.addPath(p.path, Offset.zero);
     }
-    // A soft shadow outside the glass only (blur 7, 6px down), like the web kit's SVG shadow.
+    // A wide, soft shadow outside the glass only (7.5px down, blur 19.5), lighter under
+    // control-sized glass, like the web kit's SVG shadow.
     canvas.save();
     canvas.clipPath(
       Path.combine(
         PathOperation.difference,
-        Path()..addRect(all.getBounds().inflate(64)),
+        Path()..addRect(
+          all.getBounds().inflate(glassShadowBlur * 3 + glassShadowDy),
+        ),
         all,
       ),
     );
-    canvas.drawPath(
-      all.shift(const Offset(0, 6)),
-      Paint()
-        ..color = c.glassShadowColor
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7),
-    );
+    for (final p in paths) {
+      canvas.drawPath(
+        p.path.shift(const Offset(0, glassShadowDy)),
+        Paint()
+          ..color = glassSize(_smallestSide(p)) == GlassSize.small
+              ? c.glassShadowSmall
+              : c.glassShadowColor
+          ..maskFilter = const MaskFilter.blur(
+            BlurStyle.normal,
+            glassShadowBlur,
+          ),
+      );
+    }
     canvas.restore();
     for (final p in paths) {
-      canvas.drawPath(p.path, Paint()..color = material.fill);
+      canvas.drawPath(
+        p.path,
+        Paint()..color = material.fillFor(_smallestSide(p)),
+      );
     }
     for (final p in paths) {
       // Edge and rim are 2px strokes clipped to the outline: 1px inside, like a CSS border.
       canvas.save();
       canvas.clipPath(p.path);
-      canvas.drawPath(
-        p.path,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = c.line,
-      );
+      if (material.outline) {
+        canvas.drawPath(
+          p.path,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2
+            ..color = c.line,
+        );
+      }
       if (material.rim) {
+        // A base rim all round, plus light at both ends of the light axis (cos² of the angle).
+        canvas.drawPath(
+          p.path,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2
+            ..color = c.glassEdgeLow,
+        );
         final (start, end) = rimGradient(p.bounds, scene.lightFor(p.bounds));
         canvas.drawPath(
           p.path,
@@ -416,13 +471,12 @@ class _GlassPainter extends CustomPainter {
               start,
               end,
               [
-                c.glassEdgeLight,
-                c.glassEdgeLow,
-                const Color(0x00000000),
-                const Color(0x00000000),
-                c.glassEdgeLow,
+                for (final (_, share) in glassRimStops)
+                  c.glassEdgeLight.withValues(
+                    alpha: c.glassEdgeLight.a * share,
+                  ),
               ],
-              const [0, 0.22, 0.48, 0.72, 1],
+              [for (final (offset, _) in glassRimStops) offset],
             ),
         );
       }
@@ -450,7 +504,8 @@ class _GlassPainter extends CustomPainter {
   @override
   bool shouldRepaint(_GlassPainter old) =>
       old.scene != scene ||
-      old.material.fill != material.fill ||
+      old.material.style != material.style ||
+      old.material.renderer != material.renderer ||
       old.material.rim != material.rim ||
       old.material.colors != material.colors;
 }

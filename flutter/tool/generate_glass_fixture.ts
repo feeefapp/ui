@@ -15,6 +15,9 @@ import {
   type GlassShape,
 } from '../../src/glass/geometry'
 import { glassLightToward, rimGradient, DEFAULT_GLASS_LIGHT } from '../../src/glass/light'
+import { mergeWidth } from '../../src/glass/geometry'
+import { refractionAt, refractionScale } from '../../src/glass/refraction'
+import { glassBlur, glassSize, rimAlpha, GLASS_RIM_STOPS } from '../../src/glass/material'
 import { SPRINGS, solveSpring, springCoefficients, rubberBand } from '../../src/physics/spring'
 import { glassStretch, pressedShape } from '../../src/glass/press'
 import { planGlassTransition } from '../../src/glass/transitions'
@@ -61,6 +64,13 @@ const fixture = {
     { bounds: { x: 0, y: 0, width: 200, height: 46 }, light: DEFAULT_GLASS_LIGHT },
     { bounds: { x: 10, y: 5, width: 50, height: 120 }, light: { x: 0.6, y: -0.8 } },
   ].map(({ bounds, light }) => ({ bounds, light, gradient: rimGradient(bounds, light) })),
+  // The measured Liquid Glass model (research/liquid-glass): merge width, bend, material.
+  mergeWidth: [[0, 40], [8, 40], [16, 40], [30, 40], [5, 0], [3, 12]].map(([gap, spacing]) => [gap, spacing, mergeWidth(gap, spacing)]),
+  refraction: [[-0.2, 1, 0, 27], [-5, 0.6, -0.8, 27], [-13.5, 0, 1, 27], [-30, 1, 0, 27], [1, 1, 0, 27], [-4, 1, 0, 12]].map(([d, nx, ny, bezel]) => [d, nx, ny, bezel, refractionAt(d, nx, ny, bezel)]),
+  refractionScale: [20, 44, 64, 88, 300].map((side) => [side, refractionScale(side)]),
+  material: [20, 44, 64, 72, 73, 100, 160, 400].map((side) => [side, glassBlur(side), glassSize(side)]),
+  rimAlpha: [0, 0.4, Math.PI / 2, 2.5, Math.PI].map((a) => [a, rimAlpha(a, 'light'), rimAlpha(a, 'dark')]),
+  rimStops: GLASS_RIM_STOPS,
 }
 writeFileSync(new URL('../test/fixtures/glass.json', import.meta.url), JSON.stringify(fixture, null, 1) + '\n')
 console.log('wrote glass.json')

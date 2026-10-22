@@ -47,14 +47,23 @@ html[data-lab-theme] {
   --lab-control-border: color-mix(in srgb, var(--lab-ink) 15%, var(--lab-surface));
   --lab-control-hover: color-mix(in srgb, var(--lab-ink) 5%, var(--lab-surface));
   --lab-control-pressed: color-mix(in srgb, var(--lab-ink) 10%, var(--lab-surface));
-  --lab-glass-fill: color-mix(in srgb, var(--lab-surface) 76%, transparent);
+  /* Glass material, fitted to rendered Liquid Glass (research/liquid-glass/FINDINGS.md): the surface
+  veils the blurred, saturated backdrop. Control-sized glass (up to 72px) is denser than panels;
+  glass/material.ts holds the blur and the size rule. */
+  --lab-glass-fill: color-mix(in srgb, var(--lab-surface) 87%, transparent);
+  --lab-glass-fill-large: color-mix(in srgb, var(--lab-surface) 71%, transparent);
+  --lab-glass-saturate: 5.5;
+  --lab-glass-saturate-large: 2.2;
+  --lab-glass-blur: 2.9px;
   /* Glass without backdrop blur (ThemeConfig glassRenderer 'fill'): denser, so text behind stays quiet. */
   --lab-glass-fill-flat: color-mix(in srgb, var(--lab-surface) 93%, transparent);
-  --lab-glass-edge-light: rgb(255 255 255 / 76%);
-  --lab-glass-edge-low: rgb(255 255 255 / 20%);
+  /* Rim light: a base line all round (low) plus light at both ends of the light axis (light). */
+  --lab-glass-edge-light: rgb(255 255 255 / 62%);
+  --lab-glass-edge-low: rgb(255 255 255 / 27%);
   --lab-glass-shadow: 0 8px 24px -14px rgb(0 0 0 / 18%);
-  /* Shadow under a GlassContainer's merged outline (offset 6px, blur 7px). */
-  --lab-glass-shadow-color: rgb(0 0 0 / 10%);
+  /* Shadow under a GlassContainer's merged outline (7.5px down, blur 19.5px); lighter under controls. */
+  --lab-glass-shadow-color: rgb(0 0 0 / 9.5%);
+  --lab-glass-shadow-small: rgb(0 0 0 / 6.6%);
   /* Light that spreads from a finger pressing glass. */
   --lab-glass-glow: rgb(255 255 255 / 45%);
   --lab-glass-light: inset 0 1px 0 var(--lab-glass-edge-low), inset 0 -1px 0 rgb(0 0 0 / 6%);
@@ -69,10 +78,15 @@ html[data-lab-theme] {
   }
 }
 html[data-lab-theme='dark'] {
-  --lab-glass-edge-light: rgb(255 255 255 / 30%);
-  --lab-glass-edge-low: rgb(255 255 255 / 10%);
+  --lab-glass-fill: color-mix(in srgb, var(--lab-surface) 75%, transparent);
+  --lab-glass-fill-large: color-mix(in srgb, var(--lab-surface) 72%, transparent);
+  --lab-glass-saturate: 2.9;
+  --lab-glass-saturate-large: 2.4;
+  --lab-glass-edge-light: rgb(255 255 255 / 13%);
+  --lab-glass-edge-low: rgb(255 255 255 / 14%);
   --lab-glass-shadow: 0 8px 24px -14px rgb(0 0 0 / 40%);
-  --lab-glass-shadow-color: rgb(0 0 0 / 26%);
+  --lab-glass-shadow-color: rgb(0 0 0 / 14%);
+  --lab-glass-shadow-small: rgb(0 0 0 / 3.3%);
   --lab-glass-glow: rgb(255 255 255 / 16%);
   --lab-danger: #ffb4ab;
   --lab-on-danger: #571812;

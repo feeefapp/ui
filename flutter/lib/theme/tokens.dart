@@ -28,10 +28,17 @@ class ColorTokens {
     required this.glassEdgeLight,
     required this.glassEdgeLow,
     required this.glassShadowColor,
+    required this.glassShadowSmall,
     required this.glassGlow,
     required this.controlHighlight,
+    required double glassVeil,
+    required double glassVeilLarge,
     this.backdropTone,
-  });
+  }) : _veil = glassVeil,
+       _veilLarge = glassVeilLarge;
+
+  /// Share of the surface in the glass veil, control-sized and panel glass (glass/material.dart).
+  final double _veil, _veilLarge;
 
   /// Set on the neutral tokens glass takes over a contrasting backdrop ([backdrop]).
   final Brightness? backdropTone;
@@ -52,6 +59,7 @@ class ColorTokens {
   final Color glassEdgeLight,
       glassEdgeLow,
       glassShadowColor,
+      glassShadowSmall,
       glassGlow,
       controlHighlight;
 
@@ -64,11 +72,12 @@ class ColorTokens {
       mixSrgb(ink, backdropTone == null ? 0.10 : 0.12, surface);
   Color get controlSelected =>
       mixSrgb(primary, backdropTone == null ? 0.22 : 0.24, surface);
-  Color get glassFill => mixSrgb(surface, switch (backdropTone) {
-    null => 0.76,
-    Brightness.dark => 0.62,
-    Brightness.light => 0.72,
-  }, transparent);
+
+  /// `--lab-glass-fill`: the veil over control-sized glass.
+  Color get glassFill => mixSrgb(surface, _veil, transparent);
+
+  /// `--lab-glass-fill-large`: the lighter veil over panel-sized glass.
+  Color get glassFillLarge => mixSrgb(surface, _veilLarge, transparent);
   Color get glassFillFlat => mixSrgb(surface, switch (backdropTone) {
     null => 0.93,
     Brightness.dark => 0.90,
@@ -97,11 +106,14 @@ class ColorTokens {
       warning: warning,
       danger: danger,
       onDanger: onDanger,
-      glassEdgeLight: white(dark ? 0.34 : 0.80),
-      glassEdgeLow: white(dark ? 0.10 : 0.22),
-      glassShadowColor: black(dark ? 0.30 : 0.12),
+      glassEdgeLight: white(dark ? 0.13 : 0.62),
+      glassEdgeLow: white(dark ? 0.14 : 0.27),
+      glassShadowColor: black(dark ? 0.14 : 0.095),
+      glassShadowSmall: black(dark ? 0.033 : 0.066),
       glassGlow: white(dark ? 0.18 : 0.45),
       controlHighlight: white(dark ? 0.20 : 0.76),
+      glassVeil: dark ? 0.75 : 0.87,
+      glassVeilLarge: dark ? 0.72 : 0.71,
       backdropTone: tone,
     );
   }
@@ -148,9 +160,13 @@ class ColorTokens {
   static ColorTokens resolve(Palette palette, Brightness brightness) {
     final dark = brightness == Brightness.dark;
     final shared = (
-      edgeLight: white(dark ? 0.30 : 0.76),
-      edgeLow: white(dark ? 0.10 : 0.20),
-      shadow: black(dark ? 0.26 : 0.10),
+      // Glass material fitted to rendered Liquid Glass (glass/material.dart).
+      edgeLight: white(dark ? 0.13 : 0.62),
+      edgeLow: white(dark ? 0.14 : 0.27),
+      shadow: black(dark ? 0.14 : 0.095),
+      shadowSmall: black(dark ? 0.033 : 0.066),
+      veil: dark ? 0.75 : 0.87,
+      veilLarge: dark ? 0.72 : 0.71,
       glow: white(dark ? 0.16 : 0.45),
       highlight: white(dark ? 0.20 : 0.76),
       danger: hex(dark ? 0xffb4ab : 0xa02b2b),
@@ -189,8 +205,11 @@ class ColorTokens {
       glassEdgeLight: shared.edgeLight,
       glassEdgeLow: shared.edgeLow,
       glassShadowColor: shared.shadow,
+      glassShadowSmall: shared.shadowSmall,
       glassGlow: shared.glow,
       controlHighlight: shared.highlight,
+      glassVeil: shared.veil,
+      glassVeilLarge: shared.veilLarge,
     );
     return switch ((palette, dark)) {
       (Palette.lab, false) => make(

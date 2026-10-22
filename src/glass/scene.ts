@@ -17,7 +17,8 @@ import {
 import { DEFAULT_GLASS_LIGHT, glassLightToward, rimGradient, type GlassLight } from './light'
 import { planGlassTransition, sameRect } from './transitions'
 import { adaptiveGlassTone, backdropTone, type BackdropSample, type GlassTone } from './adaptive'
-import { GLASS_REFRACTION, displacementMap, supportsRefraction } from './refraction'
+import { displacementMap, supportsRefraction } from './refraction'
+import { GLASS_RIM_STOPS, GLASS_SHADOW, glassBlur, glassSize } from './material'
 import { GLASS_CONTENT_FOLLOW, GLASS_PRESS_SCALE, glassStretch, pressedShape } from './press'
 import { cornerFit } from '../brand/corner-fit'
 
@@ -510,7 +511,6 @@ export class GlassScene {
     const key = `${this.spacing}|${placed.map((v) => `${v.x.toFixed(1)},${v.y.toFixed(1)},${v.width.toFixed(1)},${v.height.toFixed(1)},${v.radius.toFixed(1)}`).join(';')}`
     if (key !== this.cache.key) this.cache = { key, paths: glassPaths(placed, this.spacing) }
     const paths = this.cache.paths
-    const d = paths.map((p) => p.d).join('')
     this.syncBackdrops(paths)
 
     const frame = this.frame()
@@ -523,7 +523,7 @@ export class GlassScene {
       this.uid,
       glow ? { x: glow.x + m, y: glow.y + m, radius: glow.radius.get(), opacity: glow.opacity.get() } : null
     )
-    renderShadow(this.shadow, d, this.uid)
+    renderShadow(this.shadow, paths, this.uid)
     this.host.toggleAttribute('data-glass-ready', true)
     this.updateRefraction(key)
   }
@@ -538,7 +538,13 @@ export class GlassScene {
     while (this.pieces.length > paths.length) this.pieces.pop()!.remove()
     paths.forEach((path, i) => {
       const { x, y, width, height } = path.bounds
-      const style = this.pieces[i].style
+      const piece = this.pieces[i]
+      const style = piece.style
+      // The material follows the cluster's smallest bubble: control-sized glass is denser.
+      const side = smallestSide(path.shapes)
+      const size = glassSize(side)
+      if (piece.dataset.glassSize !== size) piece.dataset.glassSize = size
+      style.setProperty('--lab-glass-blur', `${glassBlur(side).toFixed(2)}px`)
       style.left = `${x}px`
       style.top = `${y}px`
       style.width = `${width}px`
@@ -593,6 +599,9 @@ export class GlassScene {
       const { x, y, width, height } = path.bounds
       const shifted = path.shapes.map((shape) => ({ ...shape, x: shape.x - x, y: shape.y - y }))
       const map = displacementMap(Math.ceil(width), Math.ceil(height), [shifted], this.spacing)
+      const computed = getComputedStyle(piece)
+      const saturate = Number.parseFloat(computed.getPropertyValue('--lab-glass-saturate')) || 1
+      const blur = glassBlur(smallestSide(path.shapes))
       const canvas = document.createElement('canvas')
       canvas.width = map.width
       canvas.height = map.height
@@ -602,12 +611,13 @@ export class GlassScene {
       let filter = this.filters[i]
       if (!filter) {
         filter = node('filter', { 'id': `${this.uid}-r${i}`, 'color-interpolation-filters': 'sRGB', 'filterUnits': 'userSpaceOnUse', 'x': 0, 'y': 0 }) as SVGFilterElement
-        // Bend, blur and tint the backdrop, then keep only the glass shape (the map's alpha).
+        // Blur, bend and saturate the backdrop, then keep only the glass shape (the map's alpha).
+        // The element's own background lays the veil over the result.
         filter.append(
           node('feImage', { result: 'map', preserveAspectRatio: 'none', x: 0, y: 0 }),
-          node('feDisplacementMap', { in: 'SourceGraphic', in2: 'map', xChannelSelector: 'R', yChannelSelector: 'G', scale: GLASS_REFRACTION * 2, result: 'bent' }),
-          node('feGaussianBlur', { in: 'bent', stdDeviation: 6, result: 'soft' }),
-          node('feColorMatrix', { in: 'soft', type: 'saturate', values: 1.15, result: 'tone' }),
+          node('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: 3, edgeMode: 'duplicate', result: 'soft' }),
+          node('feDisplacementMap', { in: 'soft', in2: 'map', xChannelSelector: 'R', yChannelSelector: 'G', scale: 0, result: 'bent' }),
+          node('feColorMatrix', { in: 'bent', type: 'saturate', values: 1, result: 'tone' }),
           node('feComposite', { in: 'tone', in2: 'map', operator: 'in' })
         )
         this.filterHost!.append(filter)
@@ -618,6 +628,11 @@ export class GlassScene {
         element.setAttribute('height', String(map.height))
       }
       filter.firstElementChild!.setAttribute('href', canvas.toDataURL())
+      const [, soft, bent, tone] = Array.from(filter.children)
+      soft.setAttribute('stdDeviation', blur.toFixed(2))
+      bent.setAttribute('scale', map.scale.toFixed(2))
+      // feColorMatrix saturate takes 0–1 in older engines; above 1 it is the same matrix as CSS.
+      tone.setAttribute('values', String(saturate))
       const value = `url(#${this.uid}-r${i})`
       piece.style.backdropFilter = value
       piece.style.setProperty('-webkit-backdrop-filter', value)
@@ -644,6 +659,11 @@ export class GlassScene {
   }
 }
 
+/** Shorter side of the smallest bubble in a cluster: the material and bend follow it. */
+function smallestSide(shapes: readonly GlassShape[]) {
+  return Math.min(...shapes.map((shape) => Math.min(shape.width, shape.height)))
+}
+
 function fadeIn(element: HTMLElement) {
   element.animate?.([{ opacity: 0 }, { opacity: 1 }], { duration: 220, delay: 80, easing: 'ease-out', fill: 'backwards' })
 }
@@ -668,19 +688,15 @@ function renderPaint(
     const clip = node('clipPath', { id: `${uid}-c${i}` })
     clip.append(node('path', { d: path.d }))
     const g = rimGradient(path.bounds, lights[i])
+    // Lit at both ends of the light axis (cos² of the edge's angle to it), over a base rim.
     const gradient = node('linearGradient', { id: `${uid}-g${i}`, gradientUnits: 'userSpaceOnUse', x1: g.x1, y1: g.y1, x2: g.x2, y2: g.y2 })
-    for (const [offset, stop] of [
-      [0, 'lab-glass-stop-light'],
-      [0.22, 'lab-glass-stop-low'],
-      [0.48, 'lab-glass-stop-none'],
-      [0.72, 'lab-glass-stop-none'],
-      [1, 'lab-glass-stop-low'],
-    ] as const)
-      gradient.append(node('stop', { offset, class: stop }))
+    for (const [offset, share] of GLASS_RIM_STOPS)
+      gradient.append(node('stop', { offset, 'class': 'lab-glass-stop-light', 'stop-opacity': share }))
     defs.append(clip, gradient)
     const group = node('g', { 'clip-path': `url(#${uid}-c${i})` })
     group.append(
       node('path', { d: path.d, class: 'lab-glass-edge' }),
+      node('path', { d: path.d, class: 'lab-glass-rim lab-glass-rim-base' }),
       node('path', { d: path.d, class: 'lab-glass-rim', stroke: `url(#${uid}-g${i})` })
     )
     parts.push(group)
@@ -699,19 +715,36 @@ function renderPaint(
   svg.replaceChildren(...parts)
 }
 
-/** A soft shadow outside the glass only (masked), like CSS box-shadow. */
-function renderShadow(svg: SVGSVGElement, d: string, uid: string) {
-  if (!d) {
+/**
+ * A wide, soft shadow outside the glass only (masked), like CSS box-shadow: `GLASS_SHADOW.dy` down,
+ * blurred by `GLASS_SHADOW.blur`, lighter under control-sized glass. It reaches past the material
+ * box (the SVG overflows), so its regions extend well beyond it.
+ */
+function renderShadow(svg: SVGSVGElement, paths: ReturnType<typeof glassPaths>, uid: string) {
+  if (!paths.length) {
     svg.replaceChildren()
     return
   }
+  const d = paths.map((p) => p.d).join('')
+  const reach = GLASS_SHADOW.blur * 3 + GLASS_SHADOW.dy
+  const box = boundsOf(paths.map((p) => p.bounds))
+  const region = { x: box.x - reach, y: box.y - reach, width: box.width + reach * 2, height: box.height + reach * 2 }
   const defs = node('defs', {})
-  const mask = node('mask', { id: `${uid}-m`, maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: '100%', height: '100%' })
-  mask.append(node('rect', { x: 0, y: 0, width: '100%', height: '100%', fill: 'white' }), node('path', { d, fill: 'black' }))
-  const blur = node('filter', { id: `${uid}-b`, filterUnits: 'userSpaceOnUse', x: 0, y: 0, width: '100%', height: '100%' })
-  blur.append(node('feGaussianBlur', { stdDeviation: 7 }))
+  const mask = node('mask', { id: `${uid}-m`, maskUnits: 'userSpaceOnUse', ...region })
+  mask.append(node('rect', { ...region, fill: 'white' }), node('path', { d, fill: 'black' }))
+  const blur = node('filter', { id: `${uid}-b`, filterUnits: 'userSpaceOnUse', ...region })
+  blur.append(node('feGaussianBlur', { stdDeviation: GLASS_SHADOW.blur }))
   defs.append(mask, blur)
   const group = node('g', { mask: `url(#${uid}-m)` })
-  group.append(node('path', { d, class: 'lab-glass-shadow-shape', transform: 'translate(0 6)', filter: `url(#${uid}-b)` }))
+  for (const path of paths)
+    group.append(
+      node('path', {
+        'd': path.d,
+        'class': 'lab-glass-shadow-shape',
+        'data-glass-size': glassSize(smallestSide(path.shapes)),
+        'transform': `translate(0 ${GLASS_SHADOW.dy})`,
+        'filter': `url(#${uid}-b)`,
+      })
+    )
   svg.replaceChildren(defs, group)
 }
