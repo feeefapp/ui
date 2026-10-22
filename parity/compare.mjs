@@ -68,7 +68,8 @@ const out = process.env.PARITY_OUT ?? join(here, 'out')
 await mkdir(out, { recursive: true })
 const browser = await puppeteer.launch({ executablePath: chrome, headless: true, args: ['--force-device-scale-factor=2', '--font-render-hinting=none', '--hide-scrollbars'] })
 const page = await browser.newPage()
-await page.setViewport({ width: 800, height: 700, deviceScaleFactor: 2 })
+// PARITY_VH: taller viewports for stages that render a phone or tablet frame.
+await page.setViewport({ width: 800, height: Number(process.env.PARITY_VH ?? 700), deviceScaleFactor: 2 })
 await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
 
 // Scenes that draw in the top layer (dialogs) are compared over the whole viewport.

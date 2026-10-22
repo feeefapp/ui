@@ -44,7 +44,14 @@ export function useDockSize() {
       const textWidth = (child: Element) => {
         const range = document.createRange()
         range.selectNodeContents(child)
-        return Math.max((child as HTMLElement).scrollWidth, Math.ceil(range.getBoundingClientRect().width))
+        // The range covers the text only: add the child's own inline padding and border.
+        const style = getComputedStyle(child)
+        const inline =
+          Number.parseFloat(style.paddingLeft) +
+          Number.parseFloat(style.paddingRight) +
+          Number.parseFloat(style.borderLeftWidth) +
+          Number.parseFloat(style.borderRightWidth)
+        return Math.max((child as HTMLElement).scrollWidth, Math.ceil(range.getBoundingClientRect().width + inline))
       }
       const intrinsic = tile
         ? Math.max(Math.max(0, ...[...tile.children].map(textWidth)) + tilePadding, tile.scrollWidth)

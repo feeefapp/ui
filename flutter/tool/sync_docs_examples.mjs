@@ -30,7 +30,7 @@ found.forEach((path, i) => {
   // components/button/examples/01-variants.dart → components/button/01-variants
   const id = relative(content, path).replace('/examples/', '/').replace(/\.dart$/, '')
   const source = readFileSync(path, 'utf8')
-  const widget = source.match(/^class (\w+) extends (?:StatelessWidget|StatefulWidget)/m)?.[1]
+  const widget = source.match(/^class ([A-Z]\w*) extends (?:StatelessWidget|StatefulWidget)/m)?.[1]
   if (!widget) throw new Error(`${id}: no public widget class`)
   const file = `${id.replace(/[^a-z0-9]+/gi, '_')}.dart`
   writeFileSync(join(out, file), source)

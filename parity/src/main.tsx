@@ -1,5 +1,6 @@
 import { lazy, Suspense, type ComponentType } from 'react'
 import { createRoot } from 'react-dom/client'
+import * as Tooltip from '@radix-ui/react-tooltip'
 import { Provider } from '@feeef.dev/ui/provider'
 import type { Density, Palette } from '@feeef.dev/ui/theme-config'
 import { SCENES } from './scenes'
@@ -34,11 +35,14 @@ createRoot(document.getElementById('root')!).render(
     initialTheme={mode}
     theme={{ palette: (query.get('palette') ?? 'lab') as Palette, density: (query.get('density') ?? 'comfortable') as Density }}
   >
-    {/* Apps render under .lab-app (it scopes control details such as the texture clip). */}
-    <div className="lab-app">
-      <div id="stage" className={docs ? 'docs-stage' : undefined}>
-        {scene()}
+    {/* Like the docs app: rail navigation items need a tooltip provider. */}
+    <Tooltip.Provider delayDuration={300}>
+      {/* Apps render under .lab-app (it scopes control details such as the texture clip). */}
+      <div className="lab-app">
+        <div id="stage" className={docs ? 'docs-stage' : undefined}>
+          {scene()}
+        </div>
       </div>
-    </div>
+    </Tooltip.Provider>
   </Provider>
 )
