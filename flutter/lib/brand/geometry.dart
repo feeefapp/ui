@@ -70,8 +70,25 @@ List<Offset> superellipsePoints(
   return points;
 }
 
-/// The outline as a closed path, offset to [origin].
-Path superellipsePath(Rect rect, List<double> radii, {double inset = 0}) {
+/// The outline as a closed path, offset to [origin]. With [roundEnds], a shape whose radii all
+/// reach half its shorter side (within half a pixel) is a true circle or capsule instead (Liquid
+/// Glass's round ends; glass uses this, other surfaces keep the superellipse).
+Path superellipsePath(
+  Rect rect,
+  List<double> radii, {
+  double inset = 0,
+  bool roundEnds = false,
+}) {
+  final half = math.min(rect.width, rect.height) / 2;
+  if (roundEnds && radii.every((r) => r >= half - 0.5)) {
+    final inner = rect.deflate(inset);
+    return Path()..addRRect(
+      RRect.fromRectAndRadius(
+        inner,
+        Radius.circular(math.max(0, math.min(inner.width, inner.height) / 2)),
+      ),
+    );
+  }
   final points = superellipsePoints(
     rect.width,
     rect.height,

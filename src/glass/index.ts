@@ -6,10 +6,12 @@ export type { GlassMemberOptions, GlassMotion, GlassRegistry } from './context'
 export {
   boundsOf,
   clampRadius,
+  cornerExponent,
   glassClusters,
   glassPaths,
   GLASS_MERGE_BASE,
   GLASS_MERGE_GAP,
+  isFullRound,
   mergeWidth,
   rectGap,
   shapeDistance,

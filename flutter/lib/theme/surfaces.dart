@@ -23,10 +23,11 @@ void paintFloatingSurface(
   required Color line,
   required Color edgeLow,
   required Color shadow,
+  bool roundEnds = false,
 }) {
   final rect = Offset.zero & size;
   List<double> r(double v) => [v, v, v, v];
-  final shape = superellipsePath(rect, r(radius));
+  final shape = superellipsePath(rect, r(radius), roundEnds: roundEnds);
   // --lab-glass-shadow: 0 8px 24px -14px (spread shrinks the shape; blur 24 → sigma 12).
   final spread = rect.deflate(14);
   if (!spread.isEmpty) {
@@ -39,7 +40,11 @@ void paintFloatingSurface(
       ),
     );
     canvas.drawPath(
-      superellipsePath(spread, r(radius - 14)).shift(const Offset(0, 8)),
+      superellipsePath(
+        spread,
+        r(radius - 14),
+        roundEnds: roundEnds,
+      ).shift(const Offset(0, 8)),
       Paint()
         ..color = shadow
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
@@ -48,7 +53,12 @@ void paintFloatingSurface(
   }
   canvas.drawPath(shape, Paint()..color = fill);
   // --lab-glass-light: inset 0 1px 0 edge-low, inset 0 -1px 0 rgb(0 0 0 / 6%), inside the border.
-  final inner = superellipsePath(rect, r(radius), inset: 1);
+  final inner = superellipsePath(
+    rect,
+    r(radius),
+    inset: 1,
+    roundEnds: roundEnds,
+  );
   canvas.save();
   canvas.clipPath(inner);
   canvas.drawPath(
@@ -68,7 +78,12 @@ void paintFloatingSurface(
     Paint()..color = const Color.from(alpha: 0.06, red: 0, green: 0, blue: 0),
   );
   canvas.restore();
-  final border = superellipsePath(rect, r(radius), inset: 0.5);
+  final border = superellipsePath(
+    rect,
+    r(radius),
+    inset: 0.5,
+    roundEnds: roundEnds,
+  );
   canvas.drawPath(
     border,
     Paint()
