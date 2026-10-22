@@ -14,6 +14,7 @@ class GlassMemberBox extends StatefulWidget {
     this.motion = GlassMotion.spring,
     required this.radius,
     required this.standalone,
+    this.hidden = false,
     required this.child,
   });
 
@@ -26,6 +27,10 @@ class GlassMemberBox extends StatefulWidget {
 
   /// Corner radius of the bubble's glass.
   final double radius;
+
+  /// Leaves the container's glass (it dematerializes) while the content keeps its place: the web
+  /// kit's `data-glass-hidden`, for a bar title that fades in and out.
+  final bool hidden;
 
   /// Paints the bubble on its own (no container).
   final Widget Function(Widget child) standalone;
@@ -46,6 +51,10 @@ class _GlassMemberBoxState extends State<GlassMemberBox> {
   GlassMemberHandle? _handle;
   GlassMemberRegistry? _registry;
   bool _nested = false;
+
+  /// Inside a container, even while hidden: the bubble never paints its own glass there.
+  bool _inContainer = false;
+  static final _still = ValueNotifier<(Offset, double)>((Offset.zero, 1));
   String? _id;
   static int _serial = 0;
   late final String _autoId = 'glass-member-${_serial++}';
@@ -59,13 +68,20 @@ class _GlassMemberBoxState extends State<GlassMemberBox> {
   @override
   void didUpdateWidget(GlassMemberBox old) {
     super.didUpdateWidget(old);
-    _sync(force: old.union != widget.union || old.motion != widget.motion);
+    _sync(
+      force:
+          old.union != widget.union ||
+          old.motion != widget.motion ||
+          old.hidden != widget.hidden,
+    );
   }
 
   void _sync({bool force = false}) {
     _nested =
         context.dependOnInheritedWidgetOfExactType<_InsideBubble>() != null;
-    final registry = _nested ? null : GlassMember.of(context);
+    final container = _nested ? null : GlassMember.of(context);
+    _inContainer = container != null;
+    final registry = widget.hidden ? null : container;
     final id = widget.glassId ?? _autoId;
     if (!force && registry == _registry && id == _id) return;
     _handle?.unregister();
@@ -108,13 +124,13 @@ class _GlassMemberBoxState extends State<GlassMemberBox> {
   @override
   Widget build(BuildContext context) {
     final content = _InsideBubble(child: widget.child);
-    final handle = _handle;
-    if (handle != null) {
-      // Content rides with its glass while the bubble moves, and swells with a press.
+    if (_inContainer) {
+      // Content rides with its glass while the bubble moves, and swells with a press. The tree
+      // keeps one shape whether or not the bubble is hidden, so its content keeps its state.
       return KeyedSubtree(
         key: _box,
         child: ValueListenableBuilder<(Offset, double)>(
-          valueListenable: handle.content,
+          valueListenable: _handle?.content ?? _still,
           builder: (context, value, child) => Transform.translate(
             offset: value.$1,
             child: Transform.scale(scale: value.$2, child: child),

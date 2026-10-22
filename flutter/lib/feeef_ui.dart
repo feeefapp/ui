@@ -46,6 +46,7 @@ export 'primitives/slider_core.dart';
 export 'navigation/navigation_item.dart';
 export 'physics/motion_value.dart';
 export 'physics/spring.dart';
+export 'physics/velocity.dart';
 export 'primitives/spring_core.dart';
 export 'primitives/text_field.dart';
 export 'primitives/tooltip.dart';

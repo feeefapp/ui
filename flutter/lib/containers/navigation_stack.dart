@@ -6,7 +6,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
-import '../glass/container.dart';
 import '../i18n/i18n.dart';
 import '../icons/lucide.dart';
 import '../physics/motion_value.dart';
@@ -1455,6 +1454,8 @@ class _NavigationPageState extends State<NavigationPage> {
           shown: titleShown,
           child: ToolbarGroup(
             label: 'Page title',
+            // Hidden titles leave the bar's shared glass but keep their place, as on the web.
+            glassHidden: !titleShown,
             children: [
               if (display == TitleDisplay.inline)
                 Focus(
@@ -1542,28 +1543,27 @@ class _BarTitle extends StatelessWidget {
   final bool shown;
   final Widget child;
 
+  /// `.lab-nav-bar-title`: fades and drops 6px while hidden, over the normal duration.
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeProvider.of(context);
-    final narrow = (MediaQuery.maybeSizeOf(context)?.width ?? 1000) <= 600;
-    final size = theme.coarsePointer(context) || narrow
-        ? 44.0
-        : theme.sizes.controlCompact;
-    if (!shown) return SizedBox(height: size + 6);
-    // Its own container: the bubble and its glass leave the tree together.
     final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: reduced ? 1 : 0, end: 1),
-      duration: reduced ? Duration.zero : MotionTokens.durationNormal,
-      curve: MotionTokens.easeOut,
-      builder: (context, t, child) => Opacity(
-        opacity: MotionTokens.ease.transform(t.clamp(0, 1)),
-        child: Transform.translate(
-          offset: Offset(0, 6 * (1 - t)),
-          child: child,
+    return IgnorePointer(
+      ignoring: !shown,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(end: shown ? 1 : 0),
+        duration: reduced ? Duration.zero : MotionTokens.durationNormal,
+        builder: (context, t, child) => Opacity(
+          opacity: MotionTokens.ease.transform(t.clamp(0, 1)),
+          child: Transform.translate(
+            offset: Offset(
+              0,
+              6 * (1 - MotionTokens.easeOut.transform(t.clamp(0, 1))),
+            ),
+            child: child,
+          ),
         ),
+        child: ExcludeSemantics(excluding: !shown, child: child),
       ),
-      child: GlassContainer(child: child),
     );
   }
 }

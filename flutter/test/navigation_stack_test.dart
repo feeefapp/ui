@@ -1,4 +1,5 @@
 import 'package:feeef_ui/containers/navigation_stack.dart';
+import 'package:feeef_ui/toolbar.dart';
 import 'package:feeef_ui/primitives/button.dart';
 import 'package:feeef_ui/theme.dart';
 import 'package:flutter/widgets.dart';
@@ -284,13 +285,20 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Orders'), findsOneWidget, reason: 'large title only');
+    // The bar title stays in the tree while hidden (as in the web DOM) but takes no input.
+    final barTitle = find
+        .descendant(
+          of: find.byType(ToolbarGroup),
+          matching: find.text('Orders'),
+        )
+        .hitTestable();
+    expect(barTitle, findsNothing, reason: 'large title only');
     await tester.drag(find.text('Row 3'), const Offset(0, -300));
     await tester.pumpAndSettle();
-    expect(find.text('Orders'), findsNWidgets(2), reason: 'bar title shows');
+    expect(barTitle, findsOneWidget, reason: 'bar title shows');
     await tester.drag(find.text('Row 12'), const Offset(0, 400));
     await tester.pumpAndSettle();
-    expect(find.text('Orders'), findsOneWidget, reason: 'and leaves again');
+    expect(barTitle, findsNothing, reason: 'and leaves again');
   });
 
   test('NavigationPath pushes, pops, replaces and notifies', () {

@@ -53,12 +53,16 @@ class ToolbarGroup extends StatelessWidget {
     required this.label,
     this.glassId,
     this.glassUnion,
+    this.glassHidden = false,
     required this.children,
   });
 
   /// Accessible name of the group.
   final String label;
   final String? glassId, glassUnion;
+
+  /// Leaves the container's glass while keeping its place (`data-glass-hidden`).
+  final bool glassHidden;
   final List<Widget> children;
 
   @override
@@ -77,6 +81,7 @@ class ToolbarGroup extends StatelessWidget {
       child: GlassGroup(
         glassId: glassId,
         glassUnion: glassUnion,
+        glassHidden: glassHidden,
         radius: radius,
         // 2px padding inside the 1px border; at least the control size + 6px tall.
         padding: const EdgeInsets.all(2),

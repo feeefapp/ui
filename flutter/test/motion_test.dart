@@ -6,10 +6,12 @@ import 'package:feeef_ui/glass/press.dart';
 import 'package:feeef_ui/glass/transitions.dart';
 import 'package:feeef_ui/physics/motion_value.dart';
 import 'package:feeef_ui/physics/spring.dart';
+import 'package:feeef_ui/physics/velocity.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  velocityTests();
   final fixture = jsonDecode(
     File('test/fixtures/motion.json').readAsStringSync(),
   ) as Map<String, dynamic>;
@@ -114,5 +116,24 @@ void main() {
     await tester.pump();
     expect(arrived, isFalse);
     expect(value.get(), 50);
+  });
+}
+
+void velocityTests() {
+  test('velocity tracking matches the web kit', () {
+    final cases = jsonDecode(
+      File('test/fixtures/velocity.json').readAsStringSync(),
+    ) as List;
+    for (final c in cases) {
+      final t = VelocityTracker();
+      for (final s in c['samples'] as List) {
+        t.add((s[1] as num).toDouble(), (s[0] as num).toDouble());
+      }
+      expect(
+        t.velocity((c['now'] as num).toDouble()),
+        closeTo((c['velocity'] as num).toDouble(), 1e-9),
+      );
+      expect(t.velocity(), closeTo((c['loose'] as num).toDouble(), 1e-9));
+    }
   });
 }

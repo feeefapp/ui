@@ -22,6 +22,7 @@ import { swipeRelease, swipeIsFull, reorderTarget, reorderShifts, reorderLanding
 import { parseNumberExpression, stepDecimals, clampNumber, dragValue, keyValue, fillFraction } from '../../src/primitives/number-field-core'
 import { computeActionsLayout } from '../../src/actions/layout'
 import { diffVisibleActions } from '../../src/actions/overflow-motion'
+import { VelocityTracker } from '../../src/physics/velocity'
 import { scrollWashPaths, scrollEdgeOpacities, scrollContentReserve } from '../../src/scroll/metrics'
 
 const pill: GlassShape = { x: 10, y: 20, width: 120, height: 46, radius: 23 }
@@ -157,3 +158,18 @@ const numbers = {
 }
 writeFileSync(new URL('../test/fixtures/numbers.json', import.meta.url), JSON.stringify(numbers) + '\n')
 console.log('wrote numbers.json')
+
+// Velocity tracking.
+const tracks = [
+  { samples: [[0, 0], [16, 10], [32, 20], [48, 30]], now: 50 },
+  { samples: [[0, 0], [10, 5], [20, 30], [30, 31], [140, 31]], now: 150 },
+  { samples: [[0, 0], [16, 10], [32, 20]], now: 200 },
+  { samples: [[0, 0], [1, 100]], now: 1 },
+  { samples: [[0, 0]], now: 0 },
+].map(({ samples, now }) => {
+  const t = new VelocityTracker()
+  for (const [time, value] of samples) t.add(value, time)
+  return { samples, now, velocity: t.velocity(now), loose: t.velocity() }
+})
+writeFileSync(new URL('../test/fixtures/velocity.json', import.meta.url), JSON.stringify(tracks) + '\n')
+console.log('wrote velocity.json')

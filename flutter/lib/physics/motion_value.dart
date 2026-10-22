@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/scheduler.dart';
 
 import 'spring.dart';
+import 'velocity.dart';
 
 /// One shared frame loop for every running spring (`onAnimationFrame` in the web kit).
 final class _FrameLoop {
@@ -52,9 +53,17 @@ class MotionValue {
   void Function()? _stopFrame;
   Completer<bool>? _settle;
   final _listeners = <void Function(double value)>{};
+  final _tracker = VelocityTracker();
+  bool _tracking = false;
 
   double get() => _value;
-  double get velocity => _speed;
+
+  /// Speed in units per second: the spring's, or the pointer's while tracking.
+  double get velocity => _tracking ? _tracker.velocity() : _speed;
+
+  /// The pointer's speed at [now] (ms): pass the release event's timestamp so a busy frame can't
+  /// turn a flick into a stop.
+  double velocityAt(double now) => _tracking ? _tracker.velocity(now) : _speed;
   bool get isAnimating => _solver != null;
   double get target => _solver != null ? _target : _value;
 
@@ -67,7 +76,20 @@ class MotionValue {
   /// Jumps to [value] and stops: no animation, no velocity.
   void set(double value) {
     _finish(false);
+    _tracking = false;
     _speed = 0;
+    _write(value);
+  }
+
+  /// Follows a pointer: sets [value] now and records it for velocity, so a following
+  /// [animateTo] continues at the pointer's speed. [time] is the event's timestamp in ms.
+  void track(double value, double time) {
+    _finish(false);
+    if (!_tracking) {
+      _tracker.reset();
+      _tracking = true;
+    }
+    _tracker.add(value, time);
     _write(value);
   }
 
@@ -93,7 +115,13 @@ class MotionValue {
   }) {
     final solver = _solver;
     final v =
-        velocity ?? (solver != null ? solver(_elapsed()).velocity : _speed);
+        velocity ??
+        (_tracking
+            ? _tracker.velocity()
+            : solver != null
+            ? solver(_elapsed()).velocity
+            : _speed);
+    _tracking = false;
     if (solver != null) _write(solver(_elapsed()).position);
     _finish(false);
     if (instant ||

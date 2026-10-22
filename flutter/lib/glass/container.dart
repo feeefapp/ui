@@ -484,6 +484,7 @@ class _GlassScene extends ChangeNotifier {
   Duration? _firstMeasure;
   Offset? _pointer;
   _Glow? glow;
+  final _timers = <Timer>{};
   ({String id, int pointer, Offset start})? _pressed;
 
   ValueNotifier<(Offset, double)> _contentFor(String id) =>
@@ -597,7 +598,10 @@ class _GlassScene extends ChangeNotifier {
       _contents[death.id]?.value = (Offset.zero, 1);
       dirty = true;
       final token = ++shape.token;
+      Timer? fallback;
       void done([_]) {
+        fallback?.cancel();
+        _timers.remove(fallback);
         if (shape.token == token &&
             shape.leaving &&
             _shapes[death.id] == shape) {
@@ -615,8 +619,9 @@ class _GlassScene extends ChangeNotifier {
           case GlassDematerialize():
             shape.scale.animateTo(0, spring: _spring).then(done);
         }
-        // Never leave a departed bubble's glass behind for long.
-        Timer(const Duration(milliseconds: 900), done);
+        // Never leave a departed bubble's glass behind for long, even when frames stop.
+        fallback = Timer(const Duration(milliseconds: 900), done);
+        _timers.add(fallback);
       }
     }
     for (final MapEntry(key: id, value: target) in targets.entries) {
@@ -773,6 +778,9 @@ class _GlassScene extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    for (final timer in _timers) {
+      timer.cancel();
+    }
     for (final id in [..._shapes.keys]) {
       _drop(id);
     }

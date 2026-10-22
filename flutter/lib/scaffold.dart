@@ -20,6 +20,7 @@ class GlassGroup extends StatefulWidget {
     this.glassId,
     this.glassUnion,
     this.glassMotion = GlassMotion.spring,
+    this.glassHidden = false,
     this.radius,
     this.padding = EdgeInsets.zero,
     required this.child,
@@ -34,6 +35,9 @@ class GlassGroup extends StatefulWidget {
 
   /// `follow` for bubbles that animate their own size, so the glass tracks them exactly.
   final GlassMotion glassMotion;
+
+  /// Leaves the container's glass while keeping its place (`data-glass-hidden`).
+  final bool glassHidden;
 
   /// Corner radius; defaults to the theme's glass radius (32, 27 on screens up to 720px wide).
   final double? radius;
@@ -57,6 +61,7 @@ class _GlassGroupState extends State<GlassGroup> {
       glassId: widget.glassId,
       union: widget.glassUnion,
       motion: widget.glassMotion,
+      hidden: widget.glassHidden,
       radius: radius,
       standalone: (child) => _StandaloneGlass(radius: radius, child: child),
       // The CSS border stays in the layout even when the container paints the glass.
