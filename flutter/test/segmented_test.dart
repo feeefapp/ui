@@ -563,4 +563,98 @@ void main() {
       expect(changes, ['calling']);
     });
   });
+
+  group('right-to-left drag', () {
+    testWidgets('tap selects the option under the pointer', (tester) async {
+      final changes = <String>[];
+      await tester.pumpWidget(
+        host(_Harness(changes: changes), direction: TextDirection.rtl),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        tester.getCenter(find.text('List')).dx,
+        greaterThan(tester.getCenter(find.text('Grid')).dx),
+        reason: 'first option on the right',
+      );
+      await tester.tap(find.text('Grid'));
+      await tester.pumpAndSettle();
+      expect(changes, ['grid']);
+    });
+
+    testWidgets('dragging the pill left selects the option it lands on', (
+      tester,
+    ) async {
+      final changes = <String>[];
+      await tester.pumpWidget(
+        host(_Harness(changes: changes), direction: TextDirection.rtl),
+      );
+      await tester.pumpAndSettle();
+      await _drag(
+        tester,
+        tester.getCenter(find.text('List')),
+        tester.getCenter(find.text('Grid')),
+      );
+      await tester.pumpAndSettle();
+      expect(changes, ['grid']);
+    });
+
+    testWidgets('a short drag to the neighbour selects it', (tester) async {
+      final changes = <String>[];
+      await tester.pumpWidget(
+        host(_Harness(changes: changes), direction: TextDirection.rtl),
+      );
+      await tester.pumpAndSettle();
+      final from = tester.getCenter(find.text('List'));
+      final to = tester.getCenter(find.text('Board'));
+      final gesture = await tester.startGesture(
+        from,
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump(const Duration(milliseconds: 16));
+      for (var i = 1; i <= 10; i++) {
+        await gesture.moveTo(Offset.lerp(from, to, i / 10)!);
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await tester.pump(const Duration(milliseconds: 200));
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(changes, ['board']);
+    });
+
+    testWidgets('scrolling row: drag to the start edge scrolls and selects', (
+      tester,
+    ) async {
+      final changes = <String>[];
+      await tester.pumpWidget(
+        host(_Statuses(changes: changes, direction: TextDirection.rtl)),
+      );
+      await tester.pumpAndSettle();
+      final view = _viewport(tester);
+      final start = tester.getCenter(find.text('New'));
+      final gesture = await tester.startGesture(
+        start,
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump(const Duration(milliseconds: 16));
+      final edge = Offset(view.left + 4, view.center.dy);
+      for (var i = 1; i <= 8; i++) {
+        await gesture.moveTo(Offset.lerp(start, edge, i / 8)!);
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      final before = _scrollOf(tester).pixels;
+      for (var i = 0; i < 30; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      expect(
+        (_scrollOf(tester).pixels - before).abs(),
+        greaterThan(100),
+        reason: 'auto-scrolls toward the end of the row',
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(changes, hasLength(1));
+      expect(changes.single, isNot('new'));
+      expect(tester.takeException(), isNull);
+    });
+  });
 }

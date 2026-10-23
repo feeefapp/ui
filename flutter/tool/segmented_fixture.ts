@@ -31,6 +31,16 @@ const TRACKS: { name: string; spans: SegmentSpan[] }[] = [
     ],
   },
   {
+    // Right to left: option order runs from the right edge leftwards.
+    name: 'rtl',
+    spans: [
+      { start: 244, width: 90 },
+      { start: 168, width: 74 },
+      { start: 56, width: 110 },
+      { start: 2, width: 52 },
+    ],
+  },
+  {
     name: 'disabled',
     spans: [
       { start: 2, width: 70 },

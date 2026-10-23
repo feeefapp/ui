@@ -51,24 +51,24 @@ export function segmentIndexAt(x: number, spans: readonly SegmentSpan[]) {
  */
 export function segmentedDragCenter(pointer: number, grab: number, spans: readonly SegmentSpan[]) {
   if (!spans.length) return pointer - grab
-  return rubberBandClamp(
-    pointer - grab,
-    segmentCenter(spans[0]),
-    segmentCenter(spans[spans.length - 1]),
-    SEGMENTED_OVERDRAG
-  )
+  // Spans are in option order: right to left in RTL, so the ends are the outermost centres.
+  const first = segmentCenter(spans[0])
+  const last = segmentCenter(spans[spans.length - 1])
+  return rubberBandClamp(pointer - grab, Math.min(first, last), Math.max(first, last), SEGMENTED_OVERDRAG)
 }
 
 /** The pill's width with its centre at `center`: it changes from one segment's width to the next. */
 export function segmentedPillWidth(center: number, spans: readonly SegmentSpan[]) {
   if (!spans.length) return 0
-  if (center <= segmentCenter(spans[0])) return spans[0].width
-  for (let i = 0; i < spans.length - 1; i++) {
-    const a = segmentCenter(spans[i])
-    const b = segmentCenter(spans[i + 1])
-    if (center <= b) return mix(spans[i].width, spans[i + 1].width, b === a ? 1 : (center - a) / (b - a))
+  // Left to right on screen, whatever the option order (RTL lists them right to left).
+  const row = [...spans].sort((a, b) => segmentCenter(a) - segmentCenter(b))
+  if (center <= segmentCenter(row[0])) return row[0].width
+  for (let i = 0; i < row.length - 1; i++) {
+    const a = segmentCenter(row[i])
+    const b = segmentCenter(row[i + 1])
+    if (center <= b) return mix(row[i].width, row[i + 1].width, b === a ? 1 : (center - a) / (b - a))
   }
-  return spans[spans.length - 1].width
+  return row[row.length - 1].width
 }
 
 /**

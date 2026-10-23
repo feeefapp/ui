@@ -57,10 +57,12 @@ double segmentedDragCenter(
   List<SegmentSpan> spans,
 ) {
   if (spans.isEmpty) return pointer - grab;
+  // Spans are in option order: right to left in RTL, so the ends are the outermost centres.
+  final first = spans.first.center, last = spans.last.center;
   return rubberBandClamp(
     pointer - grab,
-    spans.first.center,
-    spans.last.center,
+    math.min(first, last),
+    math.max(first, last),
     segmentedOverdrag,
   );
 }
@@ -68,18 +70,20 @@ double segmentedDragCenter(
 /// The pill's width with its centre at [center]: it changes from one segment's width to the next.
 double segmentedPillWidth(double center, List<SegmentSpan> spans) {
   if (spans.isEmpty) return 0;
-  if (center <= spans.first.center) return spans.first.width;
-  for (var i = 0; i < spans.length - 1; i++) {
-    final a = spans[i].center, b = spans[i + 1].center;
+  // Left to right on screen, whatever the option order (RTL lists them right to left).
+  final row = [...spans]..sort((a, b) => a.center.compareTo(b.center));
+  if (center <= row.first.center) return row.first.width;
+  for (var i = 0; i < row.length - 1; i++) {
+    final a = row[i].center, b = row[i + 1].center;
     if (center <= b) {
       return mix(
-        spans[i].width,
-        spans[i + 1].width,
+        row[i].width,
+        row[i + 1].width,
         b == a ? 1 : (center - a) / (b - a),
       );
     }
   }
-  return spans.last.width;
+  return row.last.width;
 }
 
 /// Where a released pill settles: the enabled segment nearest to where its momentum would carry

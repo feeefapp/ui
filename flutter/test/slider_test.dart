@@ -363,4 +363,88 @@ void main() {
       handle.dispose();
     });
   });
+
+  group('right to left', () {
+    testWidgets('the switch turns on by dragging toward the start (left)', (
+      tester,
+    ) async {
+      var checked = false;
+      await tester.pumpWidget(
+        host(
+          StatefulBuilder(
+            builder: (context, setState) => SlideSwitch(
+              label: 'SMS',
+              checked: checked,
+              onCheckedChange: (v) => setState(() => checked = v),
+            ),
+          ),
+          direction: TextDirection.rtl,
+        ),
+      );
+      // Off sits on the right in RTL; on is to the left.
+      await tester.drag(find.byType(SlideSwitch), const Offset(-60, 0));
+      await tester.pumpAndSettle();
+      expect(checked, isTrue);
+      await tester.drag(find.byType(SlideSwitch), const Offset(60, 0));
+      await tester.pumpAndSettle();
+      expect(checked, isFalse);
+    });
+
+    testWidgets('a flick toward the start toggles the switch on', (
+      tester,
+    ) async {
+      var checked = false;
+      await tester.pumpWidget(
+        host(
+          StatefulBuilder(
+            builder: (context, setState) => SlideSwitch(
+              label: 'SMS',
+              checked: checked,
+              onCheckedChange: (v) => setState(() => checked = v),
+            ),
+          ),
+          direction: TextDirection.rtl,
+        ),
+      );
+      final box = tester.getRect(find.byType(SlideSwitch));
+      await tester.flingFrom(
+        box.centerRight - const Offset(12, 0),
+        const Offset(-14, 0),
+        800,
+      );
+      await tester.pumpAndSettle();
+      expect(checked, isTrue);
+    });
+
+    testWidgets('dragging the slider toward the start raises it', (
+      tester,
+    ) async {
+      var value = 50.0;
+      await tester.pumpWidget(
+        host(
+          SizedBox(
+            width: 244,
+            child: StatefulBuilder(
+              builder: (context, setState) => Slider(
+                label: 'Volume',
+                value: value,
+                onValueChange: (v) => setState(() => value = v),
+              ),
+            ),
+          ),
+          direction: TextDirection.rtl,
+        ),
+      );
+      final box = tester.getRect(find.byType(Slider));
+      await tester.dragFrom(box.center, const Offset(-50, 0));
+      await tester.pumpAndSettle();
+      expect(value, greaterThan(60));
+      await tester.dragFrom(
+        tester.getRect(find.byType(Slider)).center,
+        const Offset(100, 0),
+      );
+      await tester.pumpAndSettle();
+      expect(value, lessThan(40));
+    });
+  });
 }
