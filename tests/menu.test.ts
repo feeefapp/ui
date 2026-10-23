@@ -4,6 +4,7 @@ import {
   MENU_MORPH,
   menuAlign,
   menuBubblePath,
+  menuCloseDuration,
   menuCloseFrame,
   menuFadeFrame,
   menuOpenFrame,
@@ -89,6 +90,16 @@ test('reduced motion crossfades in place', () => {
   assert.deepEqual(half.box, menu)
   assert.ok(half.materialOpacity > 0.3 && half.materialOpacity < 0.7)
   assert.ok(menuFadeFrame(MENU_MORPH.fadeOut, false, menu, 32.7).materialOpacity === 0)
+})
+
+test('motion none shows the end state at once', () => {
+  const open = menuFadeFrame(0, true, menu, 32.7, 'none')
+  assert.ok(open.settled && open.materialOpacity === 1)
+  const closed = menuFadeFrame(0, false, menu, 32.7, 'none')
+  assert.ok(closed.settled && closed.materialOpacity === 0)
+  assert.equal(menuCloseDuration('none'), 0)
+  assert.equal(menuCloseDuration('reduced'), MENU_MORPH.fadeOut)
+  assert.equal(menuCloseDuration(), MENU_MORPH.closeEnd)
 })
 
 test('the bubble path is a superellipse at the box offset', () => {

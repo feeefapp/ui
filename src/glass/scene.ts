@@ -1,4 +1,4 @@
-import { MotionValue, motionOf, onMeasureFrame, onRenderFrame } from '../physics/motion-value'
+import { MotionValue, onMeasureFrame, onRenderFrame } from '../physics/motion-value'
 import { SPRINGS, type Spring } from '../physics/spring'
 import type { GlassMemberOptions } from './context'
 import {
@@ -36,6 +36,48 @@ const SPRING: Spring = SPRINGS.snappy
 const SVG = 'http://www.w3.org/2000/svg'
 /** Least time between backdrop samples while scrolling. */
 const SAMPLE_GAP_MS = 120
+
+/**
+ * What sits behind still glass changes only through the page: its DOM (content, classes, backdrop
+ * tones, the theme), images loading, transitions and animations settling, and the window's size.
+ * One page-wide watch hears those and tells every scene, which re-reads its backdrop if it is on
+ * screen (throttled like scrolling). Nothing polls, so a still page does no glass work at all.
+ * Changes made inside glass containers (their own painting) are ignored.
+ */
+const backdropListeners = new Set<() => void>()
+let backdropObserver: MutationObserver | null = null
+const BACKDROP_ATTRIBUTES = ['class', 'data-lab-backdrop', 'data-lab-theme', 'hidden', 'open', 'src']
+const BACKDROP_EVENTS = ['load', 'transitionend', 'animationend'] as const
+const outsideGlass = (node: Node | null) => {
+  const element = node instanceof Element ? node : node?.parentElement
+  return !!element && !element.closest('[data-glass-container]')
+}
+const notifyBackdrop = () => {
+  for (const listener of backdropListeners) listener()
+}
+const onBackdropEvent = (event: Event) => {
+  if (outsideGlass(event.target as Node | null)) notifyBackdrop()
+}
+function watchBackdrop(listener: () => void): () => void {
+  if (typeof document === 'undefined' || typeof MutationObserver === 'undefined') return () => {}
+  if (!backdropListeners.size) {
+    backdropObserver = new MutationObserver((records) => {
+      if (records.some((record) => outsideGlass(record.target))) notifyBackdrop()
+    })
+    backdropObserver.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: BACKDROP_ATTRIBUTES })
+    for (const type of BACKDROP_EVENTS) document.addEventListener(type, onBackdropEvent, { capture: true, passive: true })
+    window.addEventListener('resize', notifyBackdrop, { passive: true })
+  }
+  backdropListeners.add(listener)
+  return () => {
+    backdropListeners.delete(listener)
+    if (backdropListeners.size) return
+    backdropObserver?.disconnect()
+    backdropObserver = null
+    for (const type of BACKDROP_EVENTS) document.removeEventListener(type, onBackdropEvent, { capture: true })
+    window.removeEventListener('resize', notifyBackdrop)
+  }
+}
 
 type Member = { element: HTMLElement; options: GlassMemberOptions }
 
@@ -195,10 +237,10 @@ export class GlassScene {
   /** One backdrop element per cluster: a lone bubble clips with border-radius, which every
    * browser applies to backdrop-filter; only merging bubbles need a path clip, in their own box. */
   private pieces: HTMLDivElement[] = []
-  private sampleFrame = 0
-  private themeObserver: MutationObserver | null = null
+  /** Cancels a queued backdrop read (and the write that follows it). */
+  private stopSample: (() => void) | null = null
   private visibility: IntersectionObserver | null = null
-  private sampleTimer: ReturnType<typeof setInterval> | null = null
+  private unwatchBackdrop: (() => void) | null = null
   /** False while the container is off screen: scrolls and pointer moves then cost nothing. */
   private onScreen = true
   private lastSample = 0
@@ -225,15 +267,11 @@ export class GlassScene {
     }
     host.addEventListener('pointerdown', this.onPressStart, { passive: true })
     window.addEventListener('scroll', this.onScroll, { passive: true, capture: true })
-    if (typeof MutationObserver !== 'undefined') {
-      this.themeObserver = new MutationObserver(this.requestSample)
-      this.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-lab-theme'] })
-    }
-    // Content can change behind still glass (a photo loads, a tab switches): re-check twice a
-    // second, only while the glass is on screen and the page visible.
+    // Content can change behind still glass (a photo loads, a tab switches, the theme flips): the
+    // page-wide watch re-reads the backdrop on those changes, only while this glass is on screen.
+    this.unwatchBackdrop = watchBackdrop(this.onBackdropChange)
     if (typeof IntersectionObserver !== 'undefined') {
       this.visibility = new IntersectionObserver(([entry]) => {
-        if (this.sampleTimer) clearInterval(this.sampleTimer)
         const wasOnScreen = this.onScreen
         this.onScreen = !!entry?.isIntersecting
         // Coming back on screen: catch up on what changed behind it while it was away.
@@ -241,15 +279,13 @@ export class GlassScene {
           this.requestSample()
           this.scheduleDraw()
         }
-        this.sampleTimer = entry?.isIntersecting
-          ? setInterval(() => {
-              // Motion `none`: no ambient work; the glass re-samples on scrolls and theme changes only.
-              if (this.adaptive && document.visibilityState === 'visible' && motionOf() !== 'none') this.requestSample()
-            }, 500)
-          : null
       })
       this.visibility.observe(host)
     }
+  }
+
+  private onBackdropChange = () => {
+    if (this.onScreen && this.adaptive && !this.disposed) this.requestSampleWhileScrolling()
   }
 
   /** Any scroll changes what is behind the glass; a scroller inside the container also moves bubbles. */
@@ -261,7 +297,8 @@ export class GlassScene {
     }
     this.requestSampleWhileScrolling()
     // A Firefox lens samples a sibling layer: keep its image under the glass when either moves.
-    if (this.backdropSource) this.scheduleDraw()
+    // Elsewhere the backdrop filter reads the live page, so a scroll needs no repaint.
+    if (this.backdropSource && supportsElementRefraction()) this.scheduleDraw()
   }
 
   /** Reading the backdrop (elementsFromPoint + styles) at most every SAMPLE_GAP_MS while scrolling, and once after. */
@@ -281,14 +318,27 @@ export class GlassScene {
 
   /** Re-reads what is behind the glass on the next frame (scroll, theme or layout changed). */
   requestSample = () => {
-    if (this.sampleFrame || typeof requestAnimationFrame === 'undefined') return
-    this.sampleFrame = requestAnimationFrame(() => {
-      this.sampleFrame = 0
-      this.sampleBackdrop()
+    if (this.stopSample || this.disposed || typeof requestAnimationFrame === 'undefined') return
+    // Read in the shared measure phase, with every other glass read, and write in the render
+    // phase: the read never forces a style or layout pass after another scene has painted.
+    let stopRender = () => {}
+    const stopMeasure = onMeasureFrame(() => {
+      stopMeasure()
+      const tone = this.readBackdropTone()
+      stopRender = onRenderFrame(() => {
+        stopRender()
+        this.stopSample = null
+        this.applyBackdropTone(tone)
+      })
     })
+    this.stopSample = () => {
+      stopMeasure()
+      stopRender()
+    }
   }
 
-  private sampleBackdrop() {
+  /** The tone behind the glass when it should flip (adaptive tint), else null. Reads only. */
+  private readBackdropTone(): GlassTone | null {
     const paths = this.cache.paths
     let tone: GlassTone | null = null
     if (this.adaptive && paths.length && typeof document.elementsFromPoint === 'function') {
@@ -311,7 +361,11 @@ export class GlassScene {
       const mode: GlassTone = document.documentElement.getAttribute('data-lab-theme') === 'dark' ? 'dark' : 'light'
       tone = adaptiveGlassTone(tones, mode, Math.max(...paths.map((path) => path.bounds.height)))
     }
-    if ((tone ?? null) === this.host.getAttribute('data-glass-backdrop')) return
+    return tone
+  }
+
+  private applyBackdropTone(tone: GlassTone | null) {
+    if (this.disposed || (tone ?? null) === this.host.getAttribute('data-glass-backdrop')) return
     if (tone) this.host.setAttribute('data-glass-backdrop', tone)
     else this.host.removeAttribute('data-glass-backdrop')
     // Update material uniforms without remeasuring geometry or replacing the optical layer.
@@ -407,14 +461,15 @@ export class GlassScene {
   dispose() {
     this.host.removeEventListener('pointerdown', this.onPressStart)
     window.removeEventListener('scroll', this.onScroll, { capture: true })
-    this.themeObserver?.disconnect()
+    this.unwatchBackdrop?.()
+    this.unwatchBackdrop = null
     this.visibility?.disconnect()
     this.filterHost?.remove()
     for (const work of this.refractionWork) work.dispose()
     for (const map of this.decodedMaps) map.dispose()
-    if (this.sampleTimer) clearInterval(this.sampleTimer)
     if (this.sampleLater) clearTimeout(this.sampleLater)
-    if (this.sampleFrame) cancelAnimationFrame(this.sampleFrame)
+    this.stopSample?.()
+    this.stopSample = null
     window.removeEventListener('pointermove', this.onPressMove)
     window.removeEventListener('pointerup', this.onPressEnd)
     window.removeEventListener('pointercancel', this.onPressEnd)

@@ -53,7 +53,6 @@ export function useSliderMotion(
     disabled,
     overshoot,
     reduced: false,
-    rtl: false,
     pointer: null as SliderPointer | null,
   })
   const wake = useRef<() => void>(() => {})
@@ -61,12 +60,17 @@ export function useSliderMotion(
     const media = reducedMotionQuery()
     const state = simulation.current
     let alive = true
-    /** The thumb's travel (px) and inset: the edge-to-centre distance at either end. */
+    /**
+     * The thumb's travel (px) and inset (the edge-to-centre distance at either end), the track's
+     * height and direction. Every read of a frame happens here, before paint writes anything.
+     */
     const geometry = () => {
       const el = host.current
-      if (!el) return { travel: 0, inset: 0 }
-      const inset = Number.parseFloat(getComputedStyle(el).getPropertyValue('--lab-slider-inset')) || el.offsetHeight / 2
-      return { travel: Math.max(0, el.offsetWidth - 2 * inset), inset }
+      if (!el) return { travel: 0, inset: 0, height: 0, rtl: false }
+      const style = getComputedStyle(el)
+      const height = el.offsetHeight
+      const inset = Number.parseFloat(style.getPropertyValue('--lab-slider-inset')) || height / 2
+      return { travel: Math.max(0, el.offsetWidth - 2 * inset), inset, height, rtl: style.direction === 'rtl' }
     }
     const paint = (measured = geometry()) => {
       const el = host.current
@@ -84,11 +88,11 @@ export function useSliderMotion(
       const pointer = g.pointer
       if (pointer) {
         // The glow sits under the pointer: its offset from the drawn thumb's centre.
-        const { travel, inset } = measured
+        const { travel, inset, height, rtl } = measured
         const center = inset + travel * position + stretch / 2
-        const dx = (pointer.x - center) * (g.rtl ? -1 : 1)
+        const dx = (pointer.x - center) * (rtl ? -1 : 1)
         el.style.setProperty('--lab-lens-glow-x', `calc(50% + ${dx}px)`)
-        el.style.setProperty('--lab-lens-glow-y', `calc(50% + ${pointer.y - el.offsetHeight / 2}px)`)
+        el.style.setProperty('--lab-lens-glow-y', `calc(50% + ${pointer.y - height / 2}px)`)
       }
     }
     const spring = (value: StepSpringState, to: number, dt: number, { stiffness, damping }: { stiffness: number; damping: number }) => {
@@ -201,7 +205,6 @@ export function useSliderMotion(
       thin,
       disabled,
       overshoot,
-      rtl: Boolean(host.current && getComputedStyle(host.current).direction === 'rtl'),
     }
     if (!pressed) goal.current.pointer = null
     wake.current()

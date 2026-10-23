@@ -8,7 +8,8 @@ import { ToolbarGroup } from '../toolbar'
 import { ScaffoldAppBar } from '../workspace/scaffold'
 import { useI18n } from '../i18n'
 import { attachPan, canChildPan, type PanPoint } from '../physics/gesture'
-import { MotionValue, prefersReducedMotion } from '../physics/motion-value'
+import { MotionValue, motionOf, prefersReducedMotion } from '../physics/motion-value'
+import { motionFade } from '../theme-config'
 import { SPRINGS, mix, progressBetween, projectMomentum } from '../physics/spring'
 import { diffStack, dragDismissRect, mixRect, slideFrame, zoomFrame, type Rect } from './stack-model'
 import { cn } from '../utils'
@@ -339,6 +340,7 @@ export function NavigationStack({
     }
     const reduced = prefersReducedMotion()
     const style: TransitionStyle = reduced ? 'fade' : transition.style
+    const fade = motionFade(motionOf(), 0.2)
     front.dataset.moving = ''
     front.dataset.front = ''
     if (back) back.dataset.moving = ''
@@ -353,7 +355,7 @@ export function NavigationStack({
     painter.current = paint
     paint(value.get())
     void value
-      .animateTo(transition.to, { spring: reduced ? { duration: 0.2, bounce: 0 } : SPRINGS.smooth })
+      .animateTo(transition.to, { spring: reduced ? { duration: fade, bounce: 0 } : SPRINGS.smooth, instant: fade === 0 })
       .then((arrived) => {
         if (arrived) finish()
       })

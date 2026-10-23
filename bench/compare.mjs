@@ -19,7 +19,8 @@ if (args.length !== 2) {
 }
 const resolve = (x) => {
   if (existsSync(x)) return x
-  const hit = readdirSync(join(here, 'out')).filter((d) => d.endsWith(`-${x}`)).sort().at(-1)
+  // Run folders are <YYYY-MM-DD>-<label>: match the label exactly ("fixes" must not pick "web-fixes").
+  const hit = readdirSync(join(here, 'out')).filter((d) => d.replace(/^\d{4}-\d{2}-\d{2}-/, '') === x).sort().at(-1)
   if (!hit) throw new Error(`no run ${x}`)
   return join(here, 'out', hit)
 }

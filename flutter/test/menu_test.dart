@@ -150,6 +150,20 @@ void main() {
       }
     });
 
+    test('motion none shows the end state at once', () {
+      const menu = Rect.fromLTWH(0, 0, 250, 209);
+      final open = menuFadeFrame(0, true, menu, 32.7, motion: Motion.none);
+      expect(open.settled && open.materialOpacity == 1, isTrue);
+      final closed = menuFadeFrame(0, false, menu, 32.7, motion: Motion.none);
+      expect(closed.settled && closed.materialOpacity == 0, isTrue);
+      expect(menuCloseDuration(Motion.none), 0);
+      expect(
+        menuCloseDuration(Motion.reduced),
+        closeTo(MenuMorph.fadeOut, 1e-9),
+      );
+      expect(menuCloseDuration(), MenuMorph.closeEnd);
+    });
+
     test('reduced-motion fades and alignment', () {
       const menu = Rect.fromLTWH(0, 0, 250, 209);
       for (final f in fixture['fade'] as List) {

@@ -136,6 +136,7 @@ class _MenuMorph extends ChangeNotifier {
   _Phase phase = _Phase.pending;
   double t = 0;
   bool reduced = false;
+  Motion motion = Motion.full;
   bool morphing = true;
   double fromRadius = 0;
   double toRadius = 0;
@@ -162,12 +163,12 @@ class _MenuMorph extends ChangeNotifier {
       ),
       _Phase.opening =>
         reduced || from == null
-            ? menuFadeFrame(t, true, full, radius)
+            ? menuFadeFrame(t, true, full, radius, motion: motion)
             : menuOpenFrame(t, from, fromRadius, full, radius),
       _Phase.open => menuRestFrame(full, radius),
       _Phase.closing =>
         reduced || from == null || closingFrom == null
-            ? menuFadeFrame(t, false, full, radius)
+            ? menuFadeFrame(t, false, full, radius, motion: motion)
             : menuCloseFrame(t, closingFrom!, from, fromRadius),
       _Phase.closed => MenuMorphFrame(
         box: from ?? full,
@@ -194,7 +195,8 @@ class _MenuSurfaceState extends State<MenuSurface>
   void didChangeDependencies() {
     super.didChangeDependencies();
     final scope = AnchoredPanelScope.maybeOf(context);
-    _morph.reduced = reducedMotionOf(context);
+    _morph.motion = motionOf(context);
+    _morph.reduced = _morph.motion != Motion.full;
     final theme = ThemeProvider.of(context);
     _morph.toRadius = MenuTokens.of(context).radiusIn(context);
     _morph.fromRadius = theme.sizes.radiusControl;

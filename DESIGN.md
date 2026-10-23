@@ -36,7 +36,8 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
    `theme.primary` / `palette`, not by painting components.
 7. **Motion explains change.** Springs for direct manipulation, short fades for presence
    (`Presence`). Never animate data being read or block input. Respect reduced motion and the app's ThemeConfig
-   `motion` (`full`/`reduced`/`none`): read `prefersReducedMotion()` / `reducedMotionOf(context)`.
+   `motion` (`full`/`reduced`/`none`): read `prefersReducedMotion()` / `reducedMotionOf(context)`;
+   a crossfade that replaces movement under reduced motion takes its length from `motionFade()` (0 under `none`).
 8. **Speak like a helpful colleague.** Sentence case. Buttons name the outcome ("Confirm order", not
    "Submit"). Errors say how to fix it, at the field. Limits are next steps ("Add funds"), not toasts.
 9. **For everyone, in every language.** RTL is not a later mode: logical properties, mirrored

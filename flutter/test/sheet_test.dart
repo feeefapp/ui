@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:feeef_ui/containers/sheet.dart';
+import 'package:feeef_ui/theme.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' hide RadioGroup;
 import 'package:flutter_test/flutter_test.dart';
@@ -39,7 +40,9 @@ class _Harness {
   Widget app({
     List<SheetDetent> detents = const [SheetDetent.large],
     bool reduced = false,
+    Motion motion = Motion.full,
   }) => host(
+    config: ThemeConfig(motion: motion),
     Builder(
       builder: (context) => MediaQuery(
         data: MediaQuery.of(context).copyWith(disableAnimations: reduced),
@@ -292,6 +295,24 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
     await tester.pump();
     expect(find.text('Row 0'), findsNothing);
+  });
+
+  testWidgets('motion none closes at once, without the reduced fade', (
+    tester,
+  ) async {
+    _phone(tester);
+    final h = _Harness();
+    await tester.pumpWidget(h.app(motion: Motion.none));
+    h.show(true);
+    for (var i = 0; i < 4; i++) {
+      await tester.pump();
+    }
+    expect(find.text('Row 0'), findsOneWidget);
+    h.show(false);
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Row 0'), findsNothing);
+    expect(tester.hasRunningAnimations, isFalse);
   });
 
   testWidgets('wide screens present a centered dialog', (tester) async {

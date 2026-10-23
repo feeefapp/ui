@@ -737,7 +737,10 @@ html[data-lab-glass='solid'] .lab-light-edge::after {
   isolation: isolate;
   background: var(--lab-ground);
 }
-:is(.lab-app, .lab-dialog, .lab-floating-root) * {
+/* A plain list, not :is(): each branch is rejected by the ancestor filter without walking up. */
+.lab-app *,
+.lab-dialog *,
+.lab-floating-root * {
   box-sizing: border-box;
 }
 :is(.lab-app, .lab-dialog) :is(h1, h2, h3, h4) {

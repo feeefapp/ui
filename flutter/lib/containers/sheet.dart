@@ -184,6 +184,9 @@ class Sheet extends StatefulWidget {
 
 typedef _Key = (bool, Size?, double, double, bool, double, double);
 
+/// Reduced motion: a sheet leaves with this crossfade instead of sliding down.
+const _sheetFade = Duration(milliseconds: 160);
+
 class _SheetState extends State<Sheet> {
   final _portal = OverlayPortalController();
   final _scope = FocusScopeNode(debugLabel: 'Sheet');
@@ -405,6 +408,7 @@ class _SheetState extends State<Sheet> {
     if (!_ready || !_mounted) return;
     final reduced = _reduced;
     final dialog = _presentation == SheetRegular.dialog;
+    final motion = motionOf(context);
     if (!widget.open) {
       _presented = false;
       final generation = _exitGeneration;
@@ -426,17 +430,25 @@ class _SheetState extends State<Sheet> {
       }
 
       if (dialog) {
+        final fade = motionFade(motion, const Duration(milliseconds: 180));
         _shown
             .animateTo(
               0,
               spring: reduced
-                  ? const Spring(duration: 0.18, bounce: 0)
+                  ? Spring(duration: fade.inMicroseconds / 1e6, bounce: 0)
                   : Springs.smooth,
+              instant: fade == Duration.zero,
             )
             .then((arrived) => arrived ? done() : null);
       } else if (reduced) {
+        // The panel fades out (_sheetFade), then unmounts once the fade has ended.
+        final fade = motionFade(motion, _sheetFade);
         setState(() => _fading = true);
-        Timer(const Duration(milliseconds: 170), done);
+        if (fade == Duration.zero) {
+          done();
+        } else {
+          Timer(fade + const Duration(milliseconds: 10), done);
+        }
       } else {
         _visible
             .animateTo(0, spring: Springs.smooth)
@@ -450,11 +462,13 @@ class _SheetState extends State<Sheet> {
       if (!_presented) {
         _presented = true;
         if (!_shown.isAnimating) _shown.set(0);
+        final fade = motionFade(motion, const Duration(milliseconds: 200));
         _shown.animateTo(
           1,
           spring: reduced
-              ? const Spring(duration: 0.2, bounce: 0)
+              ? Spring(duration: fade.inMicroseconds / 1e6, bounce: 0)
               : Springs.smooth,
+          instant: fade == Duration.zero,
         );
       }
       return;
@@ -678,7 +692,7 @@ class _SheetState extends State<Sheet> {
         height: math.max(0, v),
         child: AnimatedOpacity(
           opacity: _fading ? 0 : 1,
-          duration: const Duration(milliseconds: 160),
+          duration: motionFade(motionOf(context), _sheetFade),
           child: panel,
         ),
       );

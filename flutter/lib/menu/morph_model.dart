@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' show Rect;
 
 import '../physics/spring.dart';
+import '../theme_config.dart' show Motion, motionFade;
 import 'placement.dart';
 
 /// The menu morph: one glass bubble that grows out of the button that opened it and flies back
@@ -79,8 +80,17 @@ abstract final class MenuMorph {
 }
 
 /// How long a dismissal takes in seconds.
-double menuCloseDuration([bool reducedMotion = false]) =>
-    reducedMotion ? MenuMorph.fadeOut : MenuMorph.closeEnd;
+double menuCloseDuration([Motion motion = Motion.full]) => motion == Motion.full
+    ? MenuMorph.closeEnd
+    : _fadeSeconds(motion, MenuMorph.fadeOut);
+
+/// [motionFade] in seconds, the unit the morph runs in.
+double _fadeSeconds(Motion motion, double seconds) =>
+    motionFade(
+      motion,
+      Duration(microseconds: (seconds * 1e6).round()),
+    ).inMicroseconds /
+    1e6;
 
 double _clamp01(double v) => v.clamp(0.0, 1.0);
 
@@ -228,10 +238,20 @@ MenuMorphFrame menuCloseFrame(
   );
 }
 
-/// Reduced motion: the menu appears or leaves in place with a short crossfade.
-MenuMorphFrame menuFadeFrame(double t, bool opening, Rect box, double radius) {
-  final duration = opening ? MenuMorph.fadeIn : MenuMorph.fadeOut;
-  final k = smoothstep(0, duration, math.max(0, t));
+/// Reduced motion: the menu appears or leaves in place with a short crossfade ([motionFade]: none
+/// under motion `none`, which shows the end state at once).
+MenuMorphFrame menuFadeFrame(
+  double t,
+  bool opening,
+  Rect box,
+  double radius, {
+  Motion motion = Motion.reduced,
+}) {
+  final duration = _fadeSeconds(
+    motion,
+    opening ? MenuMorph.fadeIn : MenuMorph.fadeOut,
+  );
+  final k = duration == 0 ? 1.0 : smoothstep(0, duration, math.max(0, t));
   final opacity = opening ? k : 1 - k;
   return MenuMorphFrame(
     box: box,

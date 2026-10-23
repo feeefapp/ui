@@ -14,6 +14,12 @@ enum GlassStyle { liquid, still, solid }
 /// How much the kit animates: everything, the reduced-motion paths, or nothing at all.
 enum Motion { full, reduced, none }
 
+/// How long the short crossfade that replaces a movement under reduced motion lasts: [fade]
+/// under `reduced`, nothing under `none`, which animates nothing at all. Every reduced-motion
+/// crossfade takes its length from here (web: `motionFade()`).
+Duration motionFade(Motion motion, Duration fade) =>
+    motion == Motion.none ? Duration.zero : fade;
+
 /// The look of an app. Unset options fall back to [ThemeConfig.defaults].
 class ThemeConfig {
   const ThemeConfig({

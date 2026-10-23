@@ -4,7 +4,7 @@ import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { cn } from '../utils'
 import { cornerFit } from '../brand/corner-fit'
-import { onAnimationFrame, prefersReducedMotion } from '../physics/motion-value'
+import { motionOf, onAnimationFrame } from '../physics/motion-value'
 import { useFloatingBoundary } from './boundary'
 import {
   MENU_MORPH,
@@ -209,7 +209,8 @@ function radiusOf(element: HTMLElement, box: MenuBox) {
 function runMorph(content: HTMLElement, layers: Layers, cover: boolean, placed: () => boolean) {
   const { shadow, bubble, body, edge } = layers
   if (!shadow || !bubble || !body || !edge) return
-  const reduced = prefersReducedMotion()
+  const motion = motionOf()
+  const reduced = motion !== 'full'
   let trigger = findTrigger(content)
   const savedOpacity = trigger?.style.opacity ?? ''
   const savedTransition = trigger?.style.transition ?? ''
@@ -308,7 +309,7 @@ function runMorph(content: HTMLElement, layers: Layers, cover: boolean, placed: 
       if (isClosing()) return beginClose(now)
       const frame =
         reduced || !from
-          ? menuFadeFrame(elapsed, true, full, menuRadius)
+          ? menuFadeFrame(elapsed, true, full, menuRadius, motion)
           : menuOpenFrame(elapsed, from, triggerRadius, full, menuRadius)
       if (elapsed >= (reduced || !from ? 0 : MENU_MORPH.hideTrigger)) hideTrigger(true)
       if (frame.settled) {
@@ -325,7 +326,7 @@ function runMorph(content: HTMLElement, layers: Layers, cover: boolean, placed: 
       const target = from ?? full
       const frame =
         reduced || !from || !closingFrom
-          ? menuFadeFrame(elapsed, false, shown?.box ?? full, shown?.radius ?? menuRadius)
+          ? menuFadeFrame(elapsed, false, shown?.box ?? full, shown?.radius ?? menuRadius, motion)
           : menuCloseFrame(elapsed, closingFrom, target, triggerRadius)
       if (reduced || !from || elapsed >= MENU_MORPH.revealTrigger) hideTrigger(false)
       paint(frame)

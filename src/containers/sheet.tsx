@@ -5,7 +5,8 @@ import { createPortal } from 'react-dom'
 import { ScrollArea } from '../scroll'
 import { useI18n } from '../i18n'
 import { attachPan, canChildPan } from '../physics/gesture'
-import { MotionValue, prefersReducedMotion } from '../physics/motion-value'
+import { MotionValue, motionOf, prefersReducedMotion } from '../physics/motion-value'
+import { motionFade } from '../theme-config'
 import { SPRINGS, projectMomentum, rubberBand, type Spring } from '../physics/spring'
 import {
   detentHeights,
@@ -270,6 +271,7 @@ function SheetPresentation({
   React.useLayoutEffect(() => {
     if (!metrics) return
     const reduced = prefersReducedMotion()
+    const motion = motionOf()
     if (!open) {
       presented.current = false
       const done = () => {
@@ -280,13 +282,17 @@ function SheetPresentation({
         onExited()
       }
       if (presentation === 'dialog') {
-        void shown.animateTo(0, { spring: reduced ? { duration: 0.18, bounce: 0 } : SPRINGS.smooth }).then((a) => a && done())
+        const fade = motionFade(motion, 0.18)
+        void shown.animateTo(0, { spring: reduced ? { duration: fade, bounce: 0 } : SPRINGS.smooth, instant: fade === 0 }).then((a) => a && done())
       } else if (reduced) {
+        // The panel fades out, then unmounts once the fade has ended.
+        const fade = motionFade(motion, 0.16)
         const el = panel.current
-        if (el) el.style.transition = 'opacity 160ms'
+        if (el) el.style.transition = fade ? `opacity ${fade * 1000}ms` : ''
         if (el) el.style.opacity = '0'
         if (scrim.current) scrim.current.style.opacity = '0'
-        window.setTimeout(done, 170)
+        if (fade) window.setTimeout(done, fade * 1000 + 10)
+        else done()
       } else {
         beginMotion()
         void visible.animateTo(0, { spring: SPRINGS.smooth }).then((a) => a && done())
@@ -304,7 +310,8 @@ function SheetPresentation({
       if (!presented.current) {
         presented.current = true
         if (!shown.isAnimating()) shown.set(0)
-        void shown.animateTo(1, { spring: reduced ? { duration: 0.2, bounce: 0 } : SPRINGS.smooth })
+        const fade = motionFade(motion, 0.2)
+        void shown.animateTo(1, { spring: reduced ? { duration: fade, bounce: 0 } : SPRINGS.smooth, instant: fade === 0 })
       } else paintDialog()
       return
     }

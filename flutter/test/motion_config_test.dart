@@ -93,6 +93,13 @@ void main() {
     expect(ThemeConfig.defaults.motion, Motion.full);
   });
 
+  test('motionFade keeps the reduced crossfade and drops it under none', () {
+    const fade = Duration(milliseconds: 200);
+    expect(motionFade(Motion.reduced, fade), fade);
+    expect(motionFade(Motion.full, fade), fade);
+    expect(motionFade(Motion.none, fade), Duration.zero);
+  });
+
   test('glassCapabilities reports blur everywhere', () {
     expect(glassCapabilities().backdropBlur, isTrue);
   });

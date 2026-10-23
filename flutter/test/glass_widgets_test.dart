@@ -1,4 +1,5 @@
 import 'package:feeef_ui/feeef_ui.dart';
+import 'package:flutter/rendering.dart' show BackdropFilterLayer;
 import 'package:flutter/widgets.dart' hide RadioGroup;
 import 'package:flutter_test/flutter_test.dart';
 
@@ -35,6 +36,36 @@ void main() {
       expect(tester.getSize(find.byType(GlassGroup).first), const Size(82, 40));
     },
   );
+
+  testWidgets('every cluster of a container shares one backdrop read', (
+    tester,
+  ) async {
+    Widget container() => GlassContainer(
+      spacing: 8,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 40,
+        children: [bubble('a'), bubble('b'), bubble('c')],
+      ),
+    );
+    await tester.pumpWidget(
+      host(
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [container(), container()],
+        ),
+      ),
+    );
+    await tester.pump();
+    final keys = [
+      for (final layer in tester.layers.whereType<BackdropFilterLayer>())
+        layer.backdropKey,
+    ];
+    // Three apart bubbles per container: three backdrops each, one key per container.
+    expect(keys, hasLength(6));
+    expect(keys, everyElement(isNotNull));
+    expect(keys.toSet(), hasLength(2));
+  });
 
   testWidgets('a bubble that moves springs its glass and carries its content', (
     tester,
@@ -171,8 +202,8 @@ void main() {
       expect(third.visiblePath.getBounds().right, moreOrLessEquals(200));
 
       // Past the container's first 300ms, layout changes spring; a scroll must not.
-    await tester.pump(const Duration(milliseconds: 400));
-    controller.jumpTo(250);
+      await tester.pump(const Duration(milliseconds: 400));
+      controller.jumpTo(250);
       await tester.pump();
       // Now 196–282, 294–380 and 392–478 sit at -54–32, 44–130 and 142–228: the first two
       // groups are gone, the glass moved with the content on the same frame.

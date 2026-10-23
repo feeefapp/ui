@@ -138,6 +138,15 @@ export type Density = 'comfortable' | 'compact' | 'thin'
 export type GlassStyle = 'liquid' | 'still' | 'solid'
 /** How much the kit animates: everything, the reduced-motion paths, or nothing at all. */
 export type Motion = 'full' | 'reduced' | 'none'
+
+/**
+ * How long (seconds) the short crossfade that replaces a movement under reduced motion lasts:
+ * `seconds` under `reduced`, 0 under `none`, which animates nothing at all. Every reduced-motion
+ * crossfade takes its length from here (Flutter: `motionFade()`).
+ */
+export function motionFade(motion: Motion, seconds: number) {
+  return motion === 'none' ? 0 : seconds
+}
 /** `on` / `off`, as boolean options appear on `<html>`. */
 export type GlassSwitch = 'on' | 'off'
 

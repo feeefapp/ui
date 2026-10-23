@@ -13,10 +13,13 @@ function runPhase(phase: Set<FrameCallback>, now: number) {
   for (const callback of [...phase]) if (phase.has(callback)) callback(now)
 }
 function loop(now: number) {
-  frame = callbacks.size || measureCallbacks.size || renderCallbacks.size ? requestAnimationFrame(loop) : 0
+  // Callbacks subscribed while the phases run request the next frame themselves; one-shot
+  // callbacks that unsubscribed leave nothing behind, so no empty frame follows them.
+  frame = 0
   runPhase(callbacks, now)
   runPhase(measureCallbacks, now)
   runPhase(renderCallbacks, now)
+  if (!frame && (callbacks.size || measureCallbacks.size || renderCallbacks.size)) frame = requestAnimationFrame(loop)
 }
 function subscribeFrame(phase: Set<FrameCallback>, callback: FrameCallback) {
   phase.add(callback)

@@ -583,6 +583,10 @@ class _NavigationStackState extends State<NavigationStack>
     }
     final reduced = _reduced;
     final style = reduced ? _Style.fade : transition.style;
+    final fade = motionFade(
+      motionOf(context),
+      const Duration(milliseconds: 200),
+    );
     _moving.add(front);
     _front = front;
     if (back != null) _moving.add(back);
@@ -600,8 +604,9 @@ class _NavigationStackState extends State<NavigationStack>
         .animateTo(
           transition.to,
           spring: reduced
-              ? const Spring(duration: 0.2, bounce: 0)
+              ? Spring(duration: fade.inMicroseconds / 1e6, bounce: 0)
               : Springs.smooth,
+          instant: fade == Duration.zero,
         )
         .then((arrived) {
           if (arrived && mounted) _finish(transition);

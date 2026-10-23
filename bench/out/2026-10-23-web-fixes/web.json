@@ -1,0 +1,769 @@
+{
+  "label": "web-fixes",
+  "theme": "default",
+  "date": "2026-10-23T15:32:55.721Z",
+  "machine": {
+    "cpus": 8,
+    "model": "Apple M1 Pro",
+    "loadavg": [
+      13,
+      15.2,
+      17.1
+    ],
+    "platform": "darwin 25.4.0"
+  },
+  "viewport": {
+    "width": 1280,
+    "height": 800,
+    "deviceScaleFactor": 2
+  },
+  "reps": 3,
+  "note": "Docs build with unminified app code. Frame metrics are medians over reps. over16 = frames > 19.2 ms (missed a 60 Hz vsync, with jitter margin).",
+  "browsers": {
+    "chrome": {
+      "version": "Chrome/155.0.8059.82",
+      "pages": {
+        "components/glass-container/examples": {
+          "idle": {
+            "rafCallbacks": 101,
+            "rafSites": [
+              [
+                "subscribeFrame (index-D6YyELGx.js:20872:71) < onMeasureFrame (index-D6YyELGx.js:20881:10) < index-D6YyELGx.js:30904:22",
+                51
+              ],
+              [
+                "loop (index-D6YyELGx.js:20865:77)",
+                51
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 52,
+              "mainFrames": 123,
+              "rafFired": 102,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 630.26
+            },
+            "cdp": {
+              "script": 92.2,
+              "layout": 0,
+              "style": 0,
+              "task": 171.5,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 20223768
+            },
+            "heap": 29454702
+          },
+          "scroll": {
+            "frames": 204,
+            "fps": 56.7,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 66.7,
+            "over16": 14,
+            "over33": 2,
+            "longTasks": 1,
+            "cdp": {
+              "script": 458,
+              "layout": 8.8,
+              "style": 202.2,
+              "task": 1011.6,
+              "layouts": 59,
+              "styles": 194,
+              "heap": 24857396
+            },
+            "heap": 34916760
+          },
+          "pointer": {
+            "frames": 122,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 144.2,
+              "layout": 0,
+              "style": 12.6,
+              "task": 228.5,
+              "layouts": 0,
+              "styles": 56,
+              "heap": 32265904
+            },
+            "heap": 42249039
+          },
+          "drag": {
+            "frames": 132,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 237.5,
+              "layout": 18.4,
+              "style": 126.4,
+              "task": 695.6,
+              "layouts": 148,
+              "styles": 168,
+              "heap": 34929640
+            },
+            "heap": 47950284
+          },
+          "split": {
+            "frames": 145,
+            "fps": 59.2,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 33.4,
+            "over16": 2,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 431.6,
+              "layout": 14.3,
+              "style": 93.1,
+              "task": 736.3,
+              "layouts": 124,
+              "styles": 144,
+              "heap": 38704620
+            },
+            "heap": 55724989
+          },
+          "repsOk": 3
+        },
+        "components/actions-bar/examples": {
+          "idle": {
+            "rafCallbacks": 91,
+            "rafSites": [
+              [
+                "loop (index-D6YyELGx.js:20865:77)",
+                45
+              ],
+              [
+                "subscribeFrame (index-D6YyELGx.js:20872:71) < onMeasureFrame (index-D6YyELGx.js:20881:10) < index-D6YyELGx.js:30904:22",
+                45
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 47,
+              "mainFrames": 94,
+              "rafFired": 94,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 328.42
+            },
+            "cdp": {
+              "script": 62.8,
+              "layout": 0,
+              "style": 0,
+              "task": 108.2,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 20236584
+            },
+            "heap": 29103914
+          },
+          "scroll": {
+            "frames": 193,
+            "fps": 57.6,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 33.5,
+            "over16": 7,
+            "over33": 1,
+            "longTasks": 0,
+            "cdp": {
+              "script": 295.2,
+              "layout": 12,
+              "style": 28.4,
+              "task": 573.3,
+              "layouts": 77,
+              "styles": 126,
+              "heap": 25812172
+            },
+            "heap": 37821091
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 127.1,
+              "layout": 0,
+              "style": 9.7,
+              "task": 211.9,
+              "layouts": 0,
+              "styles": 34,
+              "heap": 28663372
+            },
+            "heap": 40792898
+          },
+          "menu": {
+            "frames": 175,
+            "fps": 59.3,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 33.3,
+            "over16": 2,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 318.8,
+              "layout": 14.1,
+              "style": 80.1,
+              "task": 714.9,
+              "layouts": 165,
+              "styles": 214,
+              "heap": 34110484
+            },
+            "heap": 48341702
+          },
+          "repsOk": 3
+        },
+        "components/segmented-control/examples": {
+          "idle": {
+            "rafCallbacks": 99,
+            "rafSites": [
+              [
+                "subscribeFrame (index-D6YyELGx.js:20872:71) < onMeasureFrame (index-D6YyELGx.js:20881:10) < index-D6YyELGx.js:30904:22",
+                50
+              ],
+              [
+                "loop (index-D6YyELGx.js:20865:77)",
+                50
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 51,
+              "mainFrames": 121,
+              "rafFired": 102,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 99.45
+            },
+            "cdp": {
+              "script": 60.4,
+              "layout": 0,
+              "style": 0,
+              "task": 107.6,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 19234052
+            },
+            "heap": 28433622
+          },
+          "scroll": {
+            "frames": 196,
+            "fps": 54.7,
+            "p50": 16.7,
+            "p95": 33.3,
+            "max": 50,
+            "over16": 18,
+            "over33": 3,
+            "longTasks": 0,
+            "cdp": {
+              "script": 381.2,
+              "layout": 12.5,
+              "style": 33,
+              "task": 674.2,
+              "layouts": 73,
+              "styles": 123,
+              "heap": 27382900
+            },
+            "heap": 41147958
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 121.4,
+              "layout": 0,
+              "style": 9.7,
+              "task": 215.9,
+              "layouts": 0,
+              "styles": 40,
+              "heap": 27999324
+            },
+            "heap": 41485280
+          },
+          "drag": {
+            "frames": 134,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 187.7,
+              "layout": 14.6,
+              "style": 108.2,
+              "task": 621.8,
+              "layouts": 135,
+              "styles": 153,
+              "heap": 32018436
+            },
+            "heap": 45776686
+          },
+          "repsOk": 3
+        },
+        "components/toolbar/examples": {
+          "idle": {
+            "rafCallbacks": 90,
+            "rafSites": [
+              [
+                "subscribeFrame (index-D6YyELGx.js:20872:71) < onMeasureFrame (index-D6YyELGx.js:20881:10) < index-D6YyELGx.js:30904:22",
+                50
+              ],
+              [
+                "loop (index-D6YyELGx.js:20865:77)",
+                49
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 46,
+              "mainFrames": 92,
+              "rafFired": 92,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 103.91
+            },
+            "cdp": {
+              "script": 55.3,
+              "layout": 0,
+              "style": 0,
+              "task": 93.4,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 25757688
+            },
+            "heap": 36601871
+          },
+          "scroll": {
+            "frames": 182,
+            "fps": 58.7,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 33.4,
+            "over16": 4,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 277.1,
+              "layout": 9.4,
+              "style": 23.7,
+              "task": 475.5,
+              "layouts": 69,
+              "styles": 108,
+              "heap": 36011876
+            },
+            "heap": 49392176
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 122.3,
+              "layout": 0,
+              "style": 8.3,
+              "task": 198.2,
+              "layouts": 0,
+              "styles": 40,
+              "heap": 33485308
+            },
+            "heap": 47201274
+          },
+          "repsOk": 3
+        },
+        "components/switch/examples": {
+          "idle": {
+            "rafCallbacks": 98,
+            "rafSites": [
+              [
+                "subscribeFrame (index-D6YyELGx.js:20872:71) < onMeasureFrame (index-D6YyELGx.js:20881:10) < index-D6YyELGx.js:30904:22",
+                51
+              ],
+              [
+                "loop (index-D6YyELGx.js:20865:77)",
+                50
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 49,
+              "mainFrames": 118,
+              "rafFired": 99,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 100.95
+            },
+            "cdp": {
+              "script": 59.9,
+              "layout": 0,
+              "style": 0,
+              "task": 105.6,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 17981600
+            },
+            "heap": 25653591
+          },
+          "scroll": {
+            "frames": 186,
+            "fps": 59.3,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 33.4,
+            "over16": 2,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 342.4,
+              "layout": 10.1,
+              "style": 24.6,
+              "task": 570,
+              "layouts": 68,
+              "styles": 97,
+              "heap": 29328340
+            },
+            "heap": 39513740
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 154.2,
+              "layout": 0,
+              "style": 11.6,
+              "task": 253.1,
+              "layouts": 0,
+              "styles": 37,
+              "heap": 28814692
+            },
+            "heap": 38662884
+          },
+          "drag": {
+            "frames": 124,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 201.5,
+              "layout": 17,
+              "style": 76.3,
+              "task": 553.5,
+              "layouts": 123,
+              "styles": 169,
+              "heap": 27090140
+            },
+            "heap": 36907584
+          },
+          "repsOk": 3
+        },
+        "foundations/glass-reflections": {
+          "idle": {
+            "rafCallbacks": 99,
+            "rafSites": [
+              [
+                "subscribeFrame (index-D6YyELGx.js:20872:71) < onMeasureFrame (index-D6YyELGx.js:20881:10) < index-D6YyELGx.js:30904:22",
+                45
+              ],
+              [
+                "loop (index-D6YyELGx.js:20865:77)",
+                45
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 50,
+              "mainFrames": 121,
+              "rafFired": 100,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 109.22
+            },
+            "cdp": {
+              "script": 61.4,
+              "layout": 0,
+              "style": 0,
+              "task": 108.5,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 17689756
+            },
+            "heap": 40121355
+          },
+          "scroll": {
+            "frames": 195,
+            "fps": 58.3,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 33.4,
+            "over16": 5,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 309.1,
+              "layout": 12.5,
+              "style": 59.7,
+              "task": 593.4,
+              "layouts": 71,
+              "styles": 136,
+              "heap": 22279468
+            },
+            "heap": 51830281
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 129.9,
+              "layout": 0,
+              "style": 6.1,
+              "task": 213.3,
+              "layouts": 0,
+              "styles": 4,
+              "heap": 26484732
+            },
+            "heap": 56071258
+          },
+          "repsOk": 3
+        },
+        "guidelines/patterns": {
+          "idle": {
+            "rafCallbacks": 100,
+            "rafSites": [
+              [
+                "subscribeFrame (index-D6YyELGx.js:20872:71) < onMeasureFrame (index-D6YyELGx.js:20881:10) < index-D6YyELGx.js:30904:22",
+                49
+              ],
+              [
+                "loop (index-D6YyELGx.js:20865:77)",
+                49
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 50,
+              "mainFrames": 118,
+              "rafFired": 100,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 137.42
+            },
+            "cdp": {
+              "script": 58.9,
+              "layout": 0,
+              "style": 0,
+              "task": 110.5,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 38139280
+            },
+            "heap": 58647697
+          },
+          "scroll": {
+            "frames": 169,
+            "fps": 58.7,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 33.4,
+            "over16": 4,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 179,
+              "layout": 6.5,
+              "style": 12.2,
+              "task": 397.6,
+              "layouts": 38,
+              "styles": 58,
+              "heap": 39214408
+            },
+            "heap": 62792643
+          },
+          "pointer": {
+            "frames": 120,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 121.7,
+              "layout": 0,
+              "style": 24.4,
+              "task": 288.2,
+              "layouts": 0,
+              "styles": 74,
+              "heap": 32123848
+            },
+            "heap": 55389467
+          },
+          "drag": {
+            "frames": 255,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 351,
+              "layout": 35.5,
+              "style": 168.5,
+              "task": 1175.3,
+              "layouts": 230,
+              "styles": 299,
+              "heap": 43117572
+            },
+            "heap": 52741981
+          },
+          "repsOk": 3
+        },
+        "get-started/introduction": {
+          "idle": {
+            "rafCallbacks": 90,
+            "rafSites": [
+              [
+                "subscribeFrame (index-D6YyELGx.js:20872:71) < onMeasureFrame (index-D6YyELGx.js:20881:10) < index-D6YyELGx.js:30904:22",
+                45
+              ],
+              [
+                "loop (index-D6YyELGx.js:20865:77)",
+                45
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 46,
+              "mainFrames": 91,
+              "rafFired": 91,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 88.19
+            },
+            "cdp": {
+              "script": 54.3,
+              "layout": 0,
+              "style": 0,
+              "task": 90.3,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 18527844
+            },
+            "heap": 25252645
+          },
+          "scroll": {
+            "frames": 158,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 54.4,
+              "layout": 0.4,
+              "style": 0.4,
+              "task": 112.8,
+              "layouts": 1,
+              "styles": 1,
+              "heap": 19755976
+            },
+            "heap": 26880540
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 111.5,
+              "layout": 0,
+              "style": 10.6,
+              "task": 193.7,
+              "layouts": 0,
+              "styles": 40,
+              "heap": 17216432
+            },
+            "heap": 23423259
+          },
+          "repsOk": 3
+        }
+      },
+      "backdropFilter": {
+        "cssSupports": true,
+        "painted": true
+      }
+    }
+  }
+}

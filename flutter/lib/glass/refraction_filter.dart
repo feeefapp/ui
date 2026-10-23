@@ -26,7 +26,12 @@ class GlassRefraction extends StatefulWidget {
     required this.spacing,
     required this.blur,
     required this.colour,
+    this.backdropKey,
   });
+
+  /// Shared by every cluster of one container: the engine reads the backdrop once for all of
+  /// them (they never overlap, and nothing paints between them).
+  final BackdropKey? backdropKey;
 
   /// The cluster to bend: its shapes in the container's own coordinates.
   final GlassPath path;
@@ -82,7 +87,11 @@ class _GlassRefractionState extends State<GlassRefraction> {
           )
         : colour;
     if (program == null) {
-      return BackdropFilter(filter: fallback, child: const SizedBox.expand());
+      return BackdropFilter(
+        filter: fallback,
+        backdropGroupKey: widget.backdropKey,
+        child: const SizedBox.expand(),
+      );
     }
     return _RefractionBackdrop(
       program: program,
@@ -91,6 +100,7 @@ class _GlassRefractionState extends State<GlassRefraction> {
       blur: widget.blur,
       colour: widget.colour,
       dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
+      backdropKey: widget.backdropKey,
     );
   }
 }
@@ -103,11 +113,13 @@ class _RefractionBackdrop extends LeafRenderObjectWidget {
     required this.blur,
     required this.colour,
     required this.dpr,
+    required this.backdropKey,
   });
   final ui.FragmentProgram program;
   final GlassPath path;
   final double spacing, blur, dpr;
   final List<double> colour;
+  final BackdropKey? backdropKey;
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
@@ -199,7 +211,9 @@ class _RenderRefraction extends RenderBox {
             )
           : bend,
     );
-    _layer.layer = (_layer.layer ?? BackdropFilterLayer())..filter = filter;
+    _layer.layer = (_layer.layer ?? BackdropFilterLayer())
+      ..filter = filter
+      ..backdropKey = config.backdropKey;
     context.pushLayer(_layer.layer!, (context, offset) {}, offset);
   }
 

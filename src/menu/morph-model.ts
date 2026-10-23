@@ -9,6 +9,7 @@
  */
 import { SPRINGS, mix, solveSpring, springAtRest } from '../physics/spring'
 import { foSuperellipsePath } from '../brand/geometry'
+import { motionFade, type Motion } from '../theme-config'
 
 export type MenuBox = { x: number; y: number; width: number; height: number }
 
@@ -58,8 +59,8 @@ export const MENU_MORPH = {
 } as const
 
 /** How long a dismissal takes in seconds, for the host that keeps the menu mounted until it ends. */
-export function menuCloseDuration(reducedMotion = false) {
-  return reducedMotion ? MENU_MORPH.fadeOut : MENU_MORPH.closeEnd
+export function menuCloseDuration(motion: Motion = 'full') {
+  return motion === 'full' ? MENU_MORPH.closeEnd : motionFade(motion, MENU_MORPH.fadeOut)
 }
 
 const clamp01 = (value: number) => Math.max(0, Math.min(1, value))
@@ -155,10 +156,13 @@ export function menuCloseFrame(t: number, from: MenuMorphFrame, to: MenuBox, toR
   }
 }
 
-/** Reduced motion: the menu appears or leaves in place with a short crossfade. */
-export function menuFadeFrame(t: number, opening: boolean, box: MenuBox, radius: number): MenuMorphFrame {
-  const duration = opening ? MENU_MORPH.fadeIn : MENU_MORPH.fadeOut
-  const k = smoothstep(0, duration, Math.max(0, t))
+/**
+ * Reduced motion: the menu appears or leaves in place with a short crossfade (`motionFade`: none
+ * under motion `none`, which shows the end state at once).
+ */
+export function menuFadeFrame(t: number, opening: boolean, box: MenuBox, radius: number, motion: Motion = 'reduced'): MenuMorphFrame {
+  const duration = motionFade(motion, opening ? MENU_MORPH.fadeIn : MENU_MORPH.fadeOut)
+  const k = duration === 0 ? 1 : smoothstep(0, duration, Math.max(0, t))
   const opacity = opening ? k : 1 - k
   return {
     box,

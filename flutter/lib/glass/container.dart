@@ -396,7 +396,11 @@ class _GlassLayers extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final paint = CustomPaint(
-      painter: _GlassPainter(scene, material),
+      painter: _GlassPainter(
+        scene,
+        material,
+        MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
+      ),
       size: Size.infinite,
     );
     if (!material.translucent) return paint;
@@ -417,6 +421,7 @@ class _GlassLayers extends StatelessWidget {
                     ? GlassRefraction(
                         path: path,
                         spacing: scene.spacing,
+                        backdropKey: scene.backdropKey,
                         blur: material.blur
                             ? glassBlur(_smallestSide(path))
                             : 0,
@@ -426,6 +431,7 @@ class _GlassLayers extends StatelessWidget {
                       )
                     : BackdropFilter(
                         filter: material.backdropFor(_smallestSide(path)),
+                        backdropGroupKey: scene.backdropKey,
                         child: const SizedBox.expand(),
                       ),
               ),
@@ -455,9 +461,82 @@ class _PathClipper extends CustomClipper<Path> {
 }
 
 class _GlassPainter extends CustomPainter {
-  _GlassPainter(this.scene, this.material) : super(repaint: scene);
+  _GlassPainter(this.scene, this.material, this.dpr) : super(repaint: scene);
   final _GlassScene scene;
   final _GlassMaterial material;
+  final double dpr;
+
+  /// Each cluster's wide shadow (blurred, lighter under control-sized glass), cut at its clip.
+  void _shadows(Canvas canvas, List<GlassPath> paths) {
+    final c = material.colors;
+    for (final p in paths) {
+      canvas.save();
+      if (p.clip != null) canvas.clipRect(p.clip!);
+      canvas.drawPath(
+        p.path.shift(const Offset(0, glassShadowDy)),
+        Paint()
+          ..color = glassSize(_smallestSide(p)) == GlassSize.small
+              ? c.glassShadowSmall
+              : c.glassShadowColor
+          ..maskFilter = const MaskFilter.blur(
+            BlurStyle.normal,
+            glassShadowBlur,
+          ),
+      );
+      canvas.restore();
+    }
+  }
+
+  /// The shadows of still glass from an image rendered once, so the engine doesn't blur every
+  /// cluster again on every frame (Impeller has no raster cache; content scrolling behind or
+  /// past the glass repaints it each frame). Moving glass, or glass under a scaled or rotated
+  /// ancestor, draws them live. Returns false when the caller must draw them live.
+  bool _cachedShadows(Canvas canvas, List<GlassPath> paths, Rect region) {
+    final c = material.colors;
+    final key =
+        '${scene._key}|${c.glassShadowSmall.toARGB32()}|${c.glassShadowColor.toARGB32()}|$dpr';
+    final still = key == scene._shadowKey;
+    scene._shadowKey = key;
+    final cached = scene._shadowImage;
+    if (cached != null && cached.key == key) {
+      cached.draw(canvas);
+      return true;
+    }
+    // Rendered only once the glass has painted the same way twice (never during motion), and by
+    // one container per frame, so a page of glass coming to rest doesn't render them all at once.
+    if (!still || !_ShadowImage.claimFrame()) return false;
+    final host = scene.host();
+    final transform = host != null && host.attached
+        ? host.getTransformTo(null)
+        : null;
+    final at = transform == null
+        ? null
+        : MatrixUtils.getAsTranslation(transform);
+    if (at == null) return false;
+    // Line the image up with the physical pixel grid where the glass sits now.
+    final left = ((at.dx + region.left) * dpr).floorToDouble() / dpr - at.dx;
+    final top = ((at.dy + region.top) * dpr).floorToDouble() / dpr - at.dy;
+    final width = ((region.right - left) * dpr).ceil();
+    final height = ((region.bottom - top) * dpr).ceil();
+    if (width <= 0 || height <= 0 || width * height > 16e6) return false;
+    final recorder = ui.PictureRecorder();
+    final offscreen = Canvas(recorder)
+      ..scale(dpr)
+      ..translate(-left, -top);
+    _shadows(offscreen, paths);
+    final picture = recorder.endRecording();
+    final image = picture.toImageSync(width, height);
+    picture.dispose();
+    scene._shadowImage?.image.dispose();
+    final next = _ShadowImage(
+      key,
+      image,
+      Rect.fromLTWH(left, top, width / dpr, height / dpr),
+    );
+    scene._shadowImage = next;
+    next.draw(canvas);
+    return true;
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -477,31 +556,12 @@ class _GlassPainter extends CustomPainter {
 
     // A wide, soft shadow outside the glass only (7.5px down, blur 19.5), lighter under
     // control-sized glass, like the web kit's SVG shadow.
+    final region = all.getBounds().inflate(glassShadowBlur * 3 + glassShadowDy);
     canvas.save();
     canvas.clipPath(
-      Path.combine(
-        PathOperation.difference,
-        Path()..addRect(
-          all.getBounds().inflate(glassShadowBlur * 3 + glassShadowDy),
-        ),
-        all,
-      ),
+      Path.combine(PathOperation.difference, Path()..addRect(region), all),
     );
-    for (final p in paths) {
-      scissor(p);
-      canvas.drawPath(
-        p.path.shift(const Offset(0, glassShadowDy)),
-        Paint()
-          ..color = glassSize(_smallestSide(p)) == GlassSize.small
-              ? c.glassShadowSmall
-              : c.glassShadowColor
-          ..maskFilter = const MaskFilter.blur(
-            BlurStyle.normal,
-            glassShadowBlur,
-          ),
-      );
-      canvas.restore();
-    }
+    if (!_cachedShadows(canvas, paths, region)) _shadows(canvas, paths);
     canvas.restore();
     for (final p in paths) {
       scissor(p);
@@ -584,7 +644,36 @@ class _GlassPainter extends CustomPainter {
       old.material.tint != material.tint ||
       old.material.highContrast != material.highContrast ||
       old.material.rim != material.rim ||
-      old.material.colors != material.colors;
+      old.material.colors != material.colors ||
+      old.dpr != dpr;
+}
+
+/// Still glass's shadows, rendered once at device resolution (see `_cachedShadows`).
+class _ShadowImage {
+  _ShadowImage(this.key, this.image, this.rect);
+
+  static bool _rendered = false;
+
+  /// True for the first container that asks in a frame.
+  static bool claimFrame() {
+    if (_rendered) return false;
+    _rendered = true;
+    SchedulerBinding.instance.addPostFrameCallback((_) => _rendered = false);
+    return true;
+  }
+
+  final String key;
+  final ui.Image image;
+
+  /// Where it goes, in the container's pixels.
+  final Rect rect;
+
+  void draw(Canvas canvas) => canvas.drawImageRect(
+    image,
+    Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+    rect,
+    Paint()..filterQuality = FilterQuality.low,
+  );
 }
 
 class _Member {
@@ -685,6 +774,11 @@ class _GlassScene extends ChangeNotifier {
   bool followPointer = true;
   bool interactive = true;
 
+  /// One backdrop read for all of this container's clusters: they never overlap and nothing paints
+  /// between their backdrops (the edge and light paint above them all), so sharing changes nothing
+  /// drawn and saves the engine a full backdrop copy per extra cluster on every frame.
+  final backdropKey = BackdropKey();
+
   final _members = <String, _Member>{};
   final _shapes = <String, _Shape>{};
   final _contents = <String, ValueNotifier<(Offset, double)>>{};
@@ -713,6 +807,10 @@ class _GlassScene extends ChangeNotifier {
   final _scrolled = <RenderObject>{};
   bool _paintMeasured = false;
   bool _notifyQueued = false;
+
+  /// The shadows of still glass ([_GlassPainter]) and the geometry key of the last paint.
+  _ShadowImage? _shadowImage;
+  String? _shadowKey;
 
   ValueNotifier<(Offset, double)> _contentFor(String id) =>
       _contents.putIfAbsent(id, () => ValueNotifier((Offset.zero, 1)));
@@ -1092,6 +1190,8 @@ class _GlassScene extends ChangeNotifier {
     for (final content in _contents.values) {
       content.dispose();
     }
+    _shadowImage?.image.dispose();
+    _shadowImage = null;
     super.dispose();
   }
 }
