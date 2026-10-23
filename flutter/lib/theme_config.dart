@@ -40,7 +40,7 @@ class ThemeConfig {
 
   /// The Liquid Glass slider, `0` clear … `1` tinted: how much of the theme surface veils what is
   /// behind the glass. `0` is measured clear glass (no veil, no shadow, a slight brightness lift),
-  /// `1` the measured regular material; the default `0.5` is a light veil (~40 %). Clamped to 0–1
+  /// `1` the measured regular material; the default `0.5` is a light veil (~40 %), as on the web. Clamped to 0–1
   /// ([tint]); the curve is `glassMaterial` in `glass/material.dart`.
   final double glassTint;
 
@@ -59,7 +59,7 @@ class ThemeConfig {
 
   double get radiusScale => radius.isFinite ? radius.clamp(0.0, 1.5) : 1;
 
-  /// [glassTint] clamped to 0–1; not finite → 0.5.
+  /// [glassTint] clamped to 0–1; not finite → 0.5 (`glassTintDefault`).
   double get tint => glassTint.isFinite ? glassTint.clamp(0.0, 1.0) : 0.5;
 
   /// Same look with the given options replaced. Callers that only change density (or one glass

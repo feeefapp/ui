@@ -33,7 +33,7 @@ class Gallery extends StatelessWidget {
             palette: Palette.values.byName(query['palette'] ?? 'lab'),
             density: Density.values.byName(query['density'] ?? 'comfortable'),
             // ?glassTint=0…1&glassBlur=true&glassRefraction=false, like the React harness.
-            glassTint: double.tryParse(query['glassTint'] ?? '') ?? 0.5,
+            glassTint: double.tryParse(query['glassTint'] ?? '') ?? glassTintDefault,
             glassBlur: query['glassBlur'] == 'true',
             glassRefraction: query['glassRefraction'] != 'false',
           ),

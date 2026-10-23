@@ -168,7 +168,7 @@ class ColorTokens {
   };
 
   /// The tokens for [palette] in [brightness], with the glass at [glassTint] (ThemeConfig
-  /// `glassTint`; the CSS default 0.5 when omitted).
+  /// `glassTint`; the CSS default when omitted).
   static ColorTokens resolve(
     Palette palette,
     Brightness brightness, {

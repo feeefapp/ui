@@ -201,9 +201,10 @@ frames, receding sheets) stay exact; bubbles moved by a running transform/transi
 (on them or an ancestor below the container) are followed every frame; departed glass is removed
 within 900 ms even when frames are paused; dispose clears every painted piece.
 
-Web glass defaults to clear tint (0); Flutter defaults stay independent. ScrollArea supplies
-a disjoint live viewport source through GlassBackdropContext to top/bottom slots, never
-to source descendants. Explicit backdropSource wins. Keep source ancestry guards and
+Glass defaults to tint 0.5 (a light veil) on web and Flutter alike (`GLASS_TINT_DEFAULT`,
+`glassTintDefault`). Firefox bends only glass given an explicit backdropSource: a separate,
+non-scrolling background layer (a scroller is refused: Firefox scrolls it on the compositor,
+so an element-image copy trails it). Keep source ancestry guards and
 reduced-transparency/contrast handling when changing Firefox refraction.
 Merged paint bounds include smooth-union growth and an antialias fringe. Keep rim canvases at
 their exact sampling scale through fractional sizes. Firefox clips the live outline independently

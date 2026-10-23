@@ -34,8 +34,8 @@ test('tint 0 is measured clear glass: no veil, no shadow, full colour, the brigh
     }
 })
 
-test('web defaults to clear while the midpoint material remains a light veil', () => {
-  assert.equal(GLASS_TINT_DEFAULT, 0)
+test('the default is the midpoint, a light veil, on web and Flutter', () => {
+  assert.equal(GLASS_TINT_DEFAULT, 0.5)
   // Vectors shared with flutter/test/fixtures/glass.json (tint).
   const vectors: [number, 'light' | 'dark', 'small' | 'large', number, number][] = [
     [0.5, 'light', 'small', 0.435, 1.5177],

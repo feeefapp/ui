@@ -90,7 +90,7 @@ html[data-lab-theme] {
   panel-sized. glass/material.ts glassMaterial is the same curve: veil = tint · veil₁, colour kept
   1 - tint · colour-loss₁ (colour-loss₁ = 1 - (1 - veil₁) · saturate₁), saturate = colour / (1 - veil),
   shadow = tint · shadow₁, and the clear lift 1.03 · x + 0.076 fades out as tint grows. */
-  --lab-glass-tint: 0;
+  --lab-glass-tint: 0.5;
   --lab-glass-veil: 0.87;
   --lab-glass-veil-large: 0.71;
   --lab-glass-colour-loss: 0.285;

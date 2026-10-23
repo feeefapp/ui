@@ -18,7 +18,7 @@ test('defaults render the Lab look', () => {
     'data-lab-glass': THEME_DEFAULTS.glass,
     'data-lab-glass-blur': 'off',
     'data-lab-glass-refraction': 'on',
-    style: { '--lab-radius-scale': '1', '--lab-glass-tint': '0' },
+    style: { '--lab-radius-scale': '1', '--lab-glass-tint': '0.5' },
   })
 })
 
@@ -60,7 +60,7 @@ test('explicitly undefined options fall back to the defaults', () => {
       'data-lab-glass': THEME_DEFAULTS.glass,
       'data-lab-glass-blur': 'off',
       'data-lab-glass-refraction': 'on',
-      style: { '--lab-radius-scale': '1', '--lab-glass-tint': '0' },
+      style: { '--lab-radius-scale': '1', '--lab-glass-tint': '0.5' },
     }
   )
 })
@@ -69,7 +69,7 @@ test('glass tint is clamped to 0–1 and non-numbers fall back to the default', 
   const tint = (glassTint: number) => (themeAttributes({ glassTint }).style as Record<string, string>)['--lab-glass-tint']
   assert.equal(tint(-0.3), '0')
   assert.equal(tint(4), '1')
-  assert.equal(tint(Number.NaN), '0')
+  assert.equal(tint(Number.NaN), '0.5')
   assert.equal(tint(0.25), '0.25')
 })
 
