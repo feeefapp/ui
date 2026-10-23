@@ -25,13 +25,16 @@ bool _onKey(KeyEvent event) {
 }
 
 void _onPointer(PointerEvent event) {
-  if (event is PointerDownEvent) _set(FocusHighlightStrategy.alwaysTouch);
+  if (event is PointerDownEvent) {
+    _set(FocusHighlightStrategy.alwaysTouch);
+  }
 }
 
 void _set(FocusHighlightStrategy strategy) {
   final manager = FocusManager.instance;
-  if (manager.highlightStrategy != strategy)
+  if (manager.highlightStrategy != strategy) {
     manager.highlightStrategy = strategy;
+  }
 }
 
 class _FocusVisibilityState extends State<FocusVisibility> {
