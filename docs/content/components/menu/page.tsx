@@ -175,8 +175,9 @@ ActionsMenuAnchor(
             [<C>--lab-menu-separator</C>, '21px band, hairline in the middle', '15px · 11px'],
             [<C>--lab-menu-inset</C>, '10px around the rows', '6px · 4px'],
             [<C>--lab-menu-radius</C>, <C>--lab-radius-glass</C>, 'same'],
-            [<C>--lab-menu-tint</C>, 'the theme tint, at least 0.85', 'same'],
-            [<C>--lab-menu-blur</C>, 'the large glass blur, at least 10px', 'same'],
+            [<C>--lab-menu-tint</C>, '1: the full regular material', 'same'],
+            [<C>--lab-menu-veil</C>, 'the large glass veil, at least 88%', 'same'],
+            [<C>--lab-menu-blur</C>, 'the large glass blur, at least 20px', 'same'],
           ]}
         />
         <p>

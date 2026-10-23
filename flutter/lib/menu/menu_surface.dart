@@ -92,11 +92,15 @@ class MenuTokensScope extends InheritedWidget {
   bool updateShouldNotify(MenuTokensScope old) => old.tokens != tokens;
 }
 
-/// Menus carry text over anything: their glass is at least this tinted (`--lab-menu-tint`).
-const double menuGlassTint = 0.85;
+/// Menus carry text over anything: their glass is the full regular material (`--lab-menu-tint`).
+const double menuGlassTint = 1;
+
+/// The least share of the surface veiling what is under a menu (`--lab-menu-veil`): thicker than
+/// the regular material, so content under it never reads as drawn on top of it.
+const double menuGlassVeil = 0.88;
 
 /// Backdrop blur of menu glass in px (`--lab-menu-blur`).
-const double menuGlassBlur = 10;
+const double menuGlassBlur = 20;
 
 /// The kit's menu: one Liquid Glass bubble that grows out of the button that opened it (the button
 /// pinches, the bubble springs to the menu's size on `Springs.menu`, the rows sharpen inside it)
@@ -302,11 +306,13 @@ class _MenuSurfaceState extends State<MenuSurface>
     final solid = glassStyleOf(context) == GlassStyle.solid;
     final contrast = glassHighContrastOf(context);
     final material = glassMaterial(
-      math.max(c.glassTint, menuGlassTint),
+      menuGlassTint,
       dark: dark,
       size: GlassSize.large,
     );
-    final fill = solid ? c.surface : c.surface.withValues(alpha: material.veil);
+    final fill = solid
+        ? c.surface
+        : c.surface.withValues(alpha: math.max(material.veil, menuGlassVeil));
     final filter = ui.ImageFilter.compose(
       outer: ColorFilter.matrix(glassBackdropMatrix(material)),
       inner: ui.ImageFilter.blur(sigmaX: menuGlassBlur, sigmaY: menuGlassBlur),
