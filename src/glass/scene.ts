@@ -4,12 +4,17 @@ import type { GlassMemberOptions } from './context'
 import {
   boundsOf,
   clampRadius,
-  glassPaths,
+  clipAxes,
+  clipInset,
+  clippedGlassPaths,
   hostFrame,
+  memberClip,
+  openClip,
   toLocalPoint,
   toLocalRect,
   toScreenPoint,
   translatePath,
+  type GlassClusterPath,
   type GlassRect,
   type GlassShape,
   type HostFrame,
@@ -48,6 +53,8 @@ class Shape {
   radius = 0
   cornerExponent?: number
   layout: GlassRect | null = null
+  /** The part of the container this bubble may paint in (its clipping ancestors); undefined when unclipped. */
+  clip?: GlassRect
   /** Translation written to the element so its content rides with the glass. */
   offset = { x: 0, y: 0 }
   /** The scale actually written to the content, which may lag the spring's next value. */
@@ -145,7 +152,9 @@ export class GlassScene {
   private resize: ResizeObserver | null = null
   private mutations: MutationObserver | null = null
   private pointer: { x: number; y: number } | null = null
-  private cache = { key: '', paths: [] as ReturnType<typeof glassPaths> }
+  private cache = { key: '', paths: [] as GlassClusterPath[] }
+  /** Scrollers inside the container that scrolled since the last measure: their bubbles follow exactly. */
+  private scrolled = new Set<Element>()
   private uid: string
   private pressed: { id: string; pointer: number; x: number; y: number } | null = null
   private glow: { x: number; y: number; radius: MotionValue; opacity: MotionValue } | null = null
@@ -245,7 +254,10 @@ export class GlassScene {
   /** Any scroll changes what is behind the glass; a scroller inside the container also moves bubbles. */
   private onScroll = (event: Event) => {
     if (!this.onScreen) return
-    if (event.target instanceof Node && event.target !== this.host && this.host.contains(event.target)) this.requestMeasure()
+    if (event.target instanceof Element && event.target !== this.host && this.host.contains(event.target)) {
+      this.scrolled.add(event.target)
+      this.requestMeasure()
+    }
     this.requestSampleWhileScrolling()
     // A Firefox lens samples a sibling layer: keep its image under the glass when either moves.
     if (this.backdropSource) this.scheduleDraw()
@@ -431,8 +443,9 @@ export class GlassScene {
     if (this.disposed) return
     const frame = this.frame()
     let tracking = false
-    const targets = new Map<string, { rect: GlassRect; radius: number; member: Member | null; animated?: boolean }>()
+    const targets = new Map<string, { rect: GlassRect; radius: number; member: Member | null; animated?: boolean; clip?: GlassRect; scrolled?: boolean }>()
     const unions = new Map<string, GlassRect[]>()
+    const unionViews = new Map<string, { clip?: GlassRect; scrolled: boolean }[]>()
     const unionRadius = new Map<string, number>()
     // Shapes keep the true superellipse radius; without corner-shape the CSS radius is shrunk.
     this.cornerFit = this.cornerShape === 'round' ? 1 : cornerFit()
@@ -451,13 +464,26 @@ export class GlassScene {
       const local = toLocalRect(frame, box)
       const rect = glassLayoutRect(local, offset, shape?.contentScale)
       const radius = radiusOf(element) / this.cornerFit
+      const view = this.clipOf(element, frame)
       if (options.union) {
         const key = `union:${options.union}`
         unions.set(key, [...(unions.get(key) ?? []), rect])
+        unionViews.set(key, [...(unionViews.get(key) ?? []), view])
         unionRadius.set(key, Math.min(unionRadius.get(key) ?? Infinity, radius))
-      } else targets.set(id, { rect, radius, member, animated })
+      } else targets.set(id, { rect, radius, member, animated, ...view })
     }
-    for (const [key, rects] of unions) targets.set(key, { rect: boundsOf(rects), radius: unionRadius.get(key)!, member: null })
+    this.scrolled.clear()
+    for (const [key, rects] of unions) {
+      const views = unionViews.get(key)!
+      const clips = views.map((view) => view.clip)
+      targets.set(key, {
+        rect: boundsOf(rects),
+        radius: unionRadius.get(key)!,
+        member: null,
+        clip: clips.every((clip) => clip) ? boundsOf(clips as GlassRect[]) : undefined,
+        scrolled: views.some((view) => view.scrolled),
+      })
+    }
 
     // Bubbles present when the page appears just appear: no growing in on load, even when they
     // register a little after the container (lazy or conditional content).
@@ -470,6 +496,7 @@ export class GlassScene {
       const grow = birth.kind === 'grow' && !instant
       const shape = new Shape(grow ? birth.from : target.rect, grow || instant ? 1 : 0)
       shape.carry = !grow
+      shape.clip = target.clip
       this.shapes.set(birth.id, shape)
       if (!instant && target.member) fadeIn(target.member.element)
     }
@@ -498,9 +525,10 @@ export class GlassScene {
       shape.leaving = false
       shape.radius = target.radius
       shape.cornerExponent = this.cornerShape === 'round' ? 2 : undefined
-      // Bubbles that animate their own size, or that something else is animating right now, are
-      // followed exactly instead of sprung, so the glass never lags behind them.
-      const follow = target.member?.options.motion === 'follow' || !!target.animated
+      shape.clip = target.clip
+      // Bubbles that animate their own size, that something else is animating right now, or that a
+      // scroller moved, are followed exactly instead of sprung, so the glass never lags behind them.
+      const follow = target.member?.options.motion === 'follow' || !!target.animated || !!target.scrolled
       const changed = !shape.layout || !sameRect(shape.layout, target.rect)
       shape.layout = target.rect
       if (shape.scale.getTarget() !== 1) void shape.scale.animateTo(1, { spring: SPRING, instant })
@@ -517,6 +545,32 @@ export class GlassScene {
     this.tracking = tracking
     this.scheduleDraw()
     this.requestSampleWhileScrolling()
+  }
+
+  /**
+   * The part of the container `element`'s glass may paint in: the boxes of its ancestors below the
+   * container that clip (overflow other than visible, clip-path, contain: paint), intersected. Also
+   * whether one of them scrolled since the last measure.
+   */
+  private clipOf(element: HTMLElement, frame: HostFrame): { clip?: GlassRect; scrolled: boolean } {
+    const clips: GlassRect[] = []
+    let scrolled = false
+    if (!this.host.contains(element)) return { scrolled }
+    for (let node = element.parentElement; node && node !== this.host; node = node.parentElement) {
+      if (this.scrolled.has(node)) scrolled = true
+      const axes = clipAxes(getComputedStyle(node))
+      if (!axes.x && !axes.y) continue
+      const box = node.getBoundingClientRect()
+      const sx = node.offsetWidth ? box.width / node.offsetWidth : 1
+      const sy = node.offsetHeight ? box.height / node.offsetHeight : 1
+      // Overflow clips at the padding box (inside borders and scrollbars), clip-path at the border box.
+      const edge =
+        axes.box === 'padding'
+          ? { left: box.left + node.clientLeft * sx, top: box.top + node.clientTop * sy, width: node.clientWidth * sx, height: node.clientHeight * sy }
+          : box
+      clips.push(openClip(toLocalRect(frame, edge), axes))
+    }
+    return { clip: memberClip(clips), scrolled }
   }
 
   private release(shape: Shape, id: string) {
@@ -590,8 +644,10 @@ export class GlassScene {
     const { frame } = input
     this.sourceFrame = input.sourceFrame
     const visuals: (GlassShape & { id: string })[] = []
+    const clips: (GlassRect | undefined)[] = []
     for (const [id, shape] of this.shapes) {
       visuals.push({ ...shape.visual(), id })
+      clips.push(shape.clip && { ...shape.clip, x: shape.clip.x + GLASS_MARGIN, y: shape.clip.y + GLASS_MARGIN })
       const member = this.members.get(id)
       if (!member || shape.leaving || !shape.layout) continue
       // Content rides with its glass (centre to centre) while the bubble moves.
@@ -611,8 +667,8 @@ export class GlassScene {
     }
     const m = GLASS_MARGIN
     const placed = visuals.map((v) => ({ ...v, x: v.x + m, y: v.y + m }))
-    const key = `${this.cornerShape}|${this.spacing}|${placed.map((v) => `${v.x.toFixed(1)},${v.y.toFixed(1)},${v.width.toFixed(1)},${v.height.toFixed(1)},${v.radius.toFixed(1)}`).join(';')}`
-    if (key !== this.cache.key) this.cache = { key, paths: glassPaths(placed, this.spacing) }
+    const key = `${this.cornerShape}|${this.spacing}|${placed.map((v) => `${v.x.toFixed(1)},${v.y.toFixed(1)},${v.width.toFixed(1)},${v.height.toFixed(1)},${v.radius.toFixed(1)}`).join(';')}|${clips.map((c) => (c ? `${c.x.toFixed(1)},${c.y.toFixed(1)},${c.width.toFixed(1)},${c.height.toFixed(1)}` : '')).join(';')}`
+    if (key !== this.cache.key) this.cache = { key, paths: clippedGlassPaths(placed, clips, this.spacing) }
     const paths = this.cache.paths
     this.syncBackdrops(paths)
 
@@ -636,7 +692,7 @@ export class GlassScene {
     this.updateRefraction(key)
   }
 
-  private syncBackdrops(paths: ReturnType<typeof glassPaths>) {
+  private syncBackdrops(paths: GlassClusterPath[]) {
     while (this.pieces.length < paths.length) {
       const piece = document.createElement('div')
       piece.className = 'lab-glass-backdrop'
@@ -661,12 +717,13 @@ export class GlassScene {
       const sourceImage = piece.querySelector<HTMLElement>('.lab-glass-source')
       if (sourceImage) this.positionElementSource(piece, sourceImage)
       if (path.shapes.length === 1) {
-        // A lone shape clips with CSS: hand back the radius CSS would use (the circle fallback's).
+        // A lone shape clips with CSS: hand back the radius CSS would use (the circle fallback's),
+        // cut straight at the scroller or clip around it.
         setStyleIfChanged(style, 'borderRadius', `${clampRadius(path.shapes[0]) * this.cornerFit}px`)
-        setStyleIfChanged(style, 'clipPath', '')
+        setStyleIfChanged(style, 'clipPath', clipInset(path.bounds, path.clip))
       } else {
         setStyleIfChanged(style, 'borderRadius', '')
-        setStyleIfChanged(style, 'clipPath', `path("${translatePath(path.d, -x, -y)}")`)
+        setStyleIfChanged(style, 'clipPath', `path("${translatePath(path.visible, -x, -y)}")`)
       }
     })
   }
@@ -924,7 +981,7 @@ type RimSurface = {
 const rimSurfaces = new WeakMap<SVGSVGElement, RimSurface[]>()
 const edgeLayers = new WeakMap<SVGSVGElement, {
   defs: SVGDefsElement
-  clusters: { clip: SVGClipPathElement; outline: SVGPathElement; group: SVGGElement; edge: SVGPathElement; d: string }[]
+  clusters: { clip: SVGClipPathElement; outline: SVGPathElement; group: SVGGElement; edge: SVGPathElement; d: string; visible: string }[]
   glow?: { clip: SVGClipPathElement; outline: SVGPathElement; gradient: SVGRadialGradientElement; group: SVGGElement; circle: SVGCircleElement }
 }>()
 const reflectionLayers = new WeakMap<SVGSVGElement, HTMLDivElement>()
@@ -932,7 +989,7 @@ const reflectionLayers = new WeakMap<SVGSVGElement, HTMLDivElement>()
 /** Edge and light, one clipped group per cluster so each bubble is lit on its own. */
 function renderPaint(
   svg: SVGSVGElement,
-  paths: ReturnType<typeof glassPaths>,
+  paths: GlassClusterPath[],
   lights: GlassLight[],
   uid: string,
   spacing: number,
@@ -979,13 +1036,17 @@ function renderPaint(
       const stroke = node('path', { class: 'lab-glass-edge' })
       group.append(stroke)
       svg.append(group)
-      edge = { clip, outline, group, edge: stroke, d: '' }
+      edge = { clip, outline, group, edge: stroke, d: '', visible: '' }
       edges.clusters[i] = edge
     }
+    // The stroke keeps the whole outline; its clip is cut at the scroller, so the cut edge is bare.
     if (edge.d !== path.d) {
-      edge.outline.setAttribute('d', path.d)
       edge.edge.setAttribute('d', path.d)
       edge.d = path.d
+    }
+    if (edge.visible !== path.visible) {
+      edge.outline.setAttribute('d', path.visible)
+      edge.visible = path.visible
     }
     // Merged path bounds already include a fringe. The exact CSS box of a lone shape does
     // not, so give its reflection the same room for antialiasing without resizing the lens.
@@ -1050,6 +1111,7 @@ function renderPaint(
     setStyleIfChanged(cached.canvas.style, 'top', `${y}px`)
     setStyleIfChanged(cached.canvas.style, 'width', `${cached.canvas.width / 2}px`)
     setStyleIfChanged(cached.canvas.style, 'height', `${cached.canvas.height / 2}px`)
+    setStyleIfChanged(cached.canvas.style, 'clipPath', clipInset({ x, y, width: cached.canvas.width / 2, height: cached.canvas.height / 2 }, path.clip))
     if (cached.canvas.parentElement !== layer) layer.append(cached.canvas)
   })
   if (glow && glow.opacity > 0.01 && paths.length) {
@@ -1070,7 +1132,7 @@ function renderPaint(
       effect = edges.glow = { clip, outline, gradient, group, circle }
     }
     if (effect.group.hasAttribute('display')) effect.group.removeAttribute('display')
-    setAttributeIfChanged(effect.outline, 'd', paths.map(path => path.d).join(''))
+    setAttributeIfChanged(effect.outline, 'd', paths.map(path => path.visible).join(''))
     setAttributeIfChanged(effect.group, 'opacity', String(glow.opacity))
     for (const element of [effect.gradient, effect.circle]) {
       setAttributeIfChanged(element, 'cx', String(glow.x))
@@ -1096,11 +1158,12 @@ const shadowLayers = new WeakMap<SVGSVGElement, {
   blur: SVGFilterElement
   group: SVGGElement
   shapes: SVGPathElement[]
+  scissors: SVGClipPathElement[]
 }>()
 
-function renderShadow(svg: SVGSVGElement, paths: ReturnType<typeof glassPaths>, uid: string) {
+function renderShadow(svg: SVGSVGElement, paths: GlassClusterPath[], uid: string) {
   let layer = shadowLayers.get(svg)
-  const key = paths.map(path => `${path.d}|${glassSize(smallestSide(path.shapes))}`).join(';')
+  const key = paths.map(path => `${path.d}|${glassSize(smallestSide(path.shapes))}|${path.clip ? Object.values(path.clip).join(',') : ''}`).join(';')
   if (layer?.key === key && layer.defs.parentNode === svg) return
   if (!paths.length) {
     svg.replaceChildren()
@@ -1118,7 +1181,7 @@ function renderShadow(svg: SVGSVGElement, paths: ReturnType<typeof glassPaths>, 
     defs.append(mask, blur)
     const group = node('g', { mask: `url(#${uid}-m)` })
     svg.replaceChildren(defs, group)
-    layer = { key: '', defs, mask, bounds, cutout, blur, group, shapes: [] }
+    layer = { key: '', defs, mask, bounds, cutout, blur, group, shapes: [], scissors: [] }
     shadowLayers.set(svg, layer)
   }
   layer.key = key
@@ -1127,8 +1190,9 @@ function renderShadow(svg: SVGSVGElement, paths: ReturnType<typeof glassPaths>, 
   const region = { x: box.x - reach, y: box.y - reach, width: box.width + reach * 2, height: box.height + reach * 2 }
   for (const element of [layer.mask, layer.bounds, layer.blur])
     for (const [name, value] of Object.entries(region)) element.setAttribute(name, String(value))
-  layer.cutout.setAttribute('d', paths.map(path => path.d).join(''))
+  layer.cutout.setAttribute('d', paths.map(path => path.visible).join(''))
   while (layer.shapes.length > paths.length) layer.shapes.pop()!.remove()
+  while (layer.scissors.length > paths.length) layer.scissors.pop()!.remove()
   paths.forEach((path, i) => {
     let shape = layer.shapes[i]
     if (!shape) {
@@ -1142,5 +1206,20 @@ function renderShadow(svg: SVGSVGElement, paths: ReturnType<typeof glassPaths>, 
     }
     shape.setAttribute('d', path.d)
     shape.setAttribute('data-glass-size', glassSize(smallestSide(path.shapes)))
+    // Glass in a scroller casts its shadow inside it only. The clip is in the shape's own
+    // (translated) space, so it moves back up by the shadow's offset.
+    if (path.clip) {
+      let scissor = layer.scissors[i]
+      if (!scissor) {
+        scissor = node('clipPath', { id: `${uid}-s${i}`, clipPathUnits: 'userSpaceOnUse' })
+        scissor.append(node('rect', {}))
+        layer.defs.append(scissor)
+        layer.scissors[i] = scissor
+      }
+      const rect = scissor.firstElementChild!
+      const clip = { ...path.clip, y: path.clip.y - GLASS_SHADOW.dy }
+      for (const [name, value] of Object.entries(clip)) rect.setAttribute(name, String(value))
+      shape.setAttribute('clip-path', `url(#${uid}-s${i})`)
+    } else shape.removeAttribute('clip-path')
   })
 }

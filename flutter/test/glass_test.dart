@@ -153,4 +153,41 @@ void main() {
     }
     expect(matrix.sublist(15), [0, 0, 0, 1, 0]);
   });
+
+  test('clipped bubbles keep to their clip and merge only within it (clippedGlassPaths)', () {
+    GlassShape pill(double x) =>
+        GlassShape(x: x, y: 0, width: 86, height: 44, radius: 22);
+    expect(intersectClips(const []), isNull);
+    expect(
+      intersectClips(const [
+        Rect.fromLTWH(10, 0, 200, 44),
+        Rect.fromLTWH(0, -1e7, 150, 2e7),
+      ]),
+      const Rect.fromLTRB(10, 0, 150, 44),
+    );
+    expect(
+      intersectClips(const [
+        Rect.fromLTWH(0, 0, 200, 44),
+        Rect.fromLTWH(300, 0, 50, 44),
+      ])!.isEmpty,
+      isTrue,
+    );
+    // Five pills in a 200px strip scrolled by 250: three show, all cut to the strip.
+    const strip = Rect.fromLTWH(0, 0, 200, 44);
+    final shapes = [for (var i = 0; i < 5; i++) pill(i * 98.0 - 250)];
+    final paths = clippedGlassPaths(shapes, [for (final _ in shapes) strip], 8);
+    expect(paths, hasLength(3));
+    for (final path in paths) {
+      expect(path.clip, strip);
+      final painted = path.visiblePath.getBounds();
+      expect(painted.left, greaterThanOrEqualTo(-0.01));
+      expect(painted.right, lessThanOrEqualTo(200.01));
+    }
+    // Glass inside a clip never blends with glass outside it.
+    final near = [pill(0), pill(90)];
+    const box = Rect.fromLTWH(-10, -10, 120, 64);
+    expect(clippedGlassPaths(near, const [box, null], 8), hasLength(2));
+    expect(clippedGlassPaths(near, const [box, box], 8), hasLength(1));
+    expect(clippedGlassPaths(near, const [null, null], 8), hasLength(1));
+  });
 }

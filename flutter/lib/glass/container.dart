@@ -58,6 +58,13 @@ class GlassContainer extends StatefulWidget {
 
   @override
   State<GlassContainer> createState() => _GlassContainerState();
+
+  /// The clusters a container (its element) paints this frame, with their clips.
+  @visibleForTesting
+  static List<GlassPath> debugPathsOf(BuildContext container) =>
+      ((container as StatefulElement).state as _GlassContainerState)
+          ._scene
+          .paths;
 }
 
 /// A [GlassContainer] unless one already encloses it, then just [child]. Kit rows (toolbar, dock,
@@ -310,7 +317,14 @@ class _GlassContainerState extends State<GlassContainer> {
               child: _GlassLayers(scene: _scene, material: material),
             ),
           ),
-          widget.child,
+          // A scroll view between a bubble and the container moves and clips its glass.
+          NotificationListener<ScrollUpdateNotification>(
+            onNotification: (notification) {
+              _scene.scrolled(notification.context?.findRenderObject());
+              return false;
+            },
+            child: widget.child,
+          ),
         ],
       ),
     );
@@ -398,7 +412,7 @@ class _GlassLayers extends StatelessWidget {
           for (final path in scene.paths)
             Positioned.fill(
               child: ClipPath(
-                clipper: _PathClipper(path.path),
+                clipper: _PathClipper(scene, scene.paths.indexOf(path)),
                 child: refract
                     ? GlassRefraction(
                         path: path,
@@ -423,13 +437,21 @@ class _GlassLayers extends StatelessWidget {
   }
 }
 
+/// The outline of cluster [index], cut to its clip, read while painting: a scroll moves the
+/// glass on the same frame as its bubbles.
 class _PathClipper extends CustomClipper<Path> {
-  _PathClipper(this.path);
-  final Path path;
+  _PathClipper(this.scene, this.index) : super(reclip: scene);
+  final _GlassScene scene;
+  final int index;
   @override
-  Path getClip(Size size) => path;
+  Path getClip(Size size) {
+    scene.measureInPaint();
+    final paths = scene.paths;
+    return index < paths.length ? paths[index].visiblePath : Path();
+  }
+
   @override
-  bool shouldReclip(_PathClipper old) => old.path != path;
+  bool shouldReclip(_PathClipper old) => true;
 }
 
 class _GlassPainter extends CustomPainter {
@@ -447,6 +469,12 @@ class _GlassPainter extends CustomPainter {
     for (final p in paths) {
       all.addPath(p.path, Offset.zero);
     }
+    // Glass in a scroll view or clip is cut straight at its edge, shadow included.
+    void scissor(GlassPath p) {
+      canvas.save();
+      if (p.clip != null) canvas.clipRect(p.clip!);
+    }
+
     // A wide, soft shadow outside the glass only (7.5px down, blur 19.5), lighter under
     // control-sized glass, like the web kit's SVG shadow.
     canvas.save();
@@ -460,6 +488,7 @@ class _GlassPainter extends CustomPainter {
       ),
     );
     for (final p in paths) {
+      scissor(p);
       canvas.drawPath(
         p.path.shift(const Offset(0, glassShadowDy)),
         Paint()
@@ -471,17 +500,20 @@ class _GlassPainter extends CustomPainter {
             glassShadowBlur,
           ),
       );
+      canvas.restore();
     }
     canvas.restore();
     for (final p in paths) {
+      scissor(p);
       canvas.drawPath(
         p.path,
         Paint()..color = material.fillFor(_smallestSide(p)),
       );
+      canvas.restore();
     }
     for (final p in paths) {
       // Edge and rim are 2px strokes clipped to the outline: 1px inside, like a CSS border.
-      canvas.save();
+      scissor(p);
       canvas.clipPath(p.path);
       if (material.outline) {
         canvas.drawPath(
@@ -526,8 +558,12 @@ class _GlassPainter extends CustomPainter {
     if (glow != null && glow.opacity.get() > 0.01 && material.rim) {
       // Light from under the finger, spilling onto every bubble it reaches.
       final radius = math.max(1.0, glow.radius.get());
+      final visible = Path();
+      for (final p in paths) {
+        visible.addPath(p.visiblePath, Offset.zero);
+      }
       canvas.save();
-      canvas.clipPath(all);
+      canvas.clipPath(visible);
       canvas.drawCircle(
         glow.at,
         radius,
@@ -574,6 +610,9 @@ class _Shape {
   final stretchY = MotionValue(0, 0.05);
   double radius = 0;
   Rect? layout;
+
+  /// The visible part of the container this bubble may paint in (null: unclipped).
+  Rect? clip;
 
   /// Content follows the glass only for moves of the same bubble, not while growing out of another.
   bool carry = true;
@@ -670,6 +709,11 @@ class _GlassScene extends ChangeNotifier {
   /// Pointers that went down on a [GlassOwnPress].
   final _ownPress = <int>{};
 
+  /// Scroll views that scrolled since the last measure: bubbles inside them follow exactly.
+  final _scrolled = <RenderObject>{};
+  bool _paintMeasured = false;
+  bool _notifyQueued = false;
+
   ValueNotifier<(Offset, double)> _contentFor(String id) =>
       _contents.putIfAbsent(id, () => ValueNotifier((Offset.zero, 1)));
 
@@ -691,6 +735,12 @@ class _GlassScene extends ChangeNotifier {
   /// Paint already knows the final layout: measure there too, so glass appears on the same frame
   /// as its bubbles. Nothing may notify while painting.
   void measureInPaint() {
+    // Backdrop clips and the painter all read it: once per frame.
+    if (_paintMeasured) return;
+    _paintMeasured = true;
+    SchedulerBinding.instance.addPostFrameCallback(
+      (_) => _paintMeasured = false,
+    );
     _painting = true;
     try {
       _measure();
@@ -702,7 +752,50 @@ class _GlassScene extends ChangeNotifier {
   void _changed() {
     if (_disposed) return;
     _rebuildPaths();
-    if (!_painting) notifyListeners();
+    if (!_painting) {
+      notifyListeners();
+    } else if (!_notifyQueued) {
+      // Backdrops built before this paint catch up on the next frame.
+      _notifyQueued = true;
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        _notifyQueued = false;
+        if (!_disposed) notifyListeners();
+      });
+      SchedulerBinding.instance.ensureVisualUpdate();
+    }
+  }
+
+  /// A scroll view inside the container scrolled: its bubbles move and their clip changes. The
+  /// next paint re-measures them; at rest nothing listens.
+  void scrolled(RenderObject? scrollable) {
+    if (_disposed) return;
+    if (scrollable != null) _scrolled.add(scrollable);
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      _requestMeasure();
+    } else {
+      notifyListeners();
+    }
+  }
+
+  /// The part of the container [render] is visible in (the paint clips of every render object
+  /// between them: viewports, ClipRect, ClipRRect, …), and whether one of those scrolled.
+  (Rect?, bool) _clipOf(RenderObject render, RenderBox host) {
+    final clips = <Rect>[];
+    var scrolled = false;
+    var child = render;
+    for (
+      var parent = render.parent;
+      parent != null && parent != host;
+      child = parent, parent = parent.parent
+    ) {
+      if (_scrolled.contains(parent)) scrolled = true;
+      final clip = parent.describeApproximatePaintClip(child);
+      if (clip != null) {
+        clips.add(MatrixUtils.transformRect(parent.getTransformTo(host), clip));
+      }
+    }
+    return (intersectClips(clips), scrolled);
   }
 
   void _watch(String id, _Shape shape) {
@@ -724,8 +817,9 @@ class _GlassScene extends ChangeNotifier {
   void _measure() {
     final box = host();
     if (box == null || !box.attached || !box.hasSize) return;
-    final targets = <String, (Rect, double, _Member?)>{};
-    final unions = <String, (Rect, double)>{};
+    final targets =
+        <String, (Rect, double, _Member?, ({Rect? clip, bool scrolled}))>{};
+    final unions = <String, (Rect, double, ({Rect? clip, bool scrolled}))>{};
     for (final MapEntry(key: id, value: member) in _members.entries) {
       final render = member.key.currentContext?.findRenderObject();
       if (render is! RenderBox || !render.attached || !render.hasSize) continue;
@@ -735,21 +829,30 @@ class _GlassScene extends ChangeNotifier {
         Offset.zero & render.size,
       );
       final radius = member.radius();
+      final (clip, scrolled) = _clipOf(render, box);
+      final view = (clip: clip, scrolled: scrolled);
       if (member.union != null) {
         final key = 'union:${member.union}';
         final previous = unions[key];
         unions[key] = previous == null
-            ? (rect, radius)
+            ? (rect, radius, view)
             : (
                 previous.$1.expandToInclude(rect),
                 math.min(previous.$2, radius),
+                (
+                  clip: previous.$3.clip == null || clip == null
+                      ? null
+                      : previous.$3.clip!.expandToInclude(clip),
+                  scrolled: previous.$3.scrolled || scrolled,
+                ),
               );
       } else {
-        targets[id] = (rect, radius, member);
+        targets[id] = (rect, radius, member, view);
       }
     }
+    _scrolled.clear();
     for (final MapEntry(key: key, value: union) in unions.entries) {
-      targets[key] = (union.$1, union.$2, null);
+      targets[key] = (union.$1, union.$2, null, union.$3);
     }
     final now = SchedulerBinding.instance.currentSystemFrameTimeStamp;
     final first = _firstMeasure ??= now;
@@ -769,6 +872,7 @@ class _GlassScene extends ChangeNotifier {
         grow || instant ? 1 : 0,
       );
       shape.carry = !grow;
+      shape.clip = target.$4.clip;
       _shapes[birth.id] = shape;
       _watch(birth.id, shape);
       dirty = true;
@@ -814,7 +918,13 @@ class _GlassScene extends ChangeNotifier {
         shape.radius = target.$2;
         dirty = true;
       }
-      final follow = target.$3?.motion == GlassMotion.follow;
+      if (shape.clip != target.$4.clip) {
+        shape.clip = target.$4.clip;
+        dirty = true;
+      }
+      // Bubbles moved by a scroll view ride with it exactly, like content.
+      final follow =
+          target.$3?.motion == GlassMotion.follow || target.$4.scrolled;
       final changed =
           shape.layout == null || !sameRect(shape.layout!, target.$1);
       shape.layout = target.$1;
@@ -842,11 +952,12 @@ class _GlassScene extends ChangeNotifier {
     final visuals = <GlassShape>[
       for (final shape in _shapes.values) shape.visual(),
     ];
+    final clips = <Rect?>[for (final shape in _shapes.values) shape.clip];
     final key =
-        '$spacing|${visuals.map((v) => '${v.x.toStringAsFixed(1)},${v.y.toStringAsFixed(1)},${v.width.toStringAsFixed(1)},${v.height.toStringAsFixed(1)},${v.radius.toStringAsFixed(1)}').join(';')}';
+        '$spacing|${visuals.map((v) => '${v.x.toStringAsFixed(1)},${v.y.toStringAsFixed(1)},${v.width.toStringAsFixed(1)},${v.height.toStringAsFixed(1)},${v.radius.toStringAsFixed(1)}').join(';')}|${clips.map((c) => c == null ? '' : '${c.left.toStringAsFixed(1)},${c.top.toStringAsFixed(1)},${c.right.toStringAsFixed(1)},${c.bottom.toStringAsFixed(1)}').join(';')}';
     if (key != _key) {
       _key = key;
-      paths = glassPaths(visuals, spacing);
+      paths = clippedGlassPaths(visuals, clips, spacing);
     }
     // Content rides with its glass (centre to centre) while the bubble moves.
     for (final MapEntry(key: id, value: shape) in _shapes.entries) {

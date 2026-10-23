@@ -32,3 +32,17 @@
   display: block;
   color: var(--lab-muted);
 }
+/* A horizontal strip of groups that scrolls inside the toolbar's leading side. */
+.toolbar-demo-strip {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.toolbar-demo-strip > * {
+  flex: 0 0 auto;
+}
+.toolbar-demo-strip::-webkit-scrollbar {
+  display: none;
+}

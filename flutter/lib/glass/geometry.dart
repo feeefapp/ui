@@ -377,11 +377,79 @@ Path clusterPath(List<GlassShape> shapes, double spacing, [double cell = 2]) {
 
 /// One cluster of blended bubbles and its outline.
 class GlassPath {
-  const GlassPath(this.shapes, this.bounds, this.path);
+  const GlassPath(this.shapes, this.bounds, this.path, [this.clip]);
   final List<GlassShape> shapes;
   final Rect bounds;
   final Path path;
+
+  /// The scissor its paint (material, rim, shadow, refraction) is cut to, in the container's
+  /// pixels: the visible part of the scroll view or clip around its bubbles; null when none is.
+  /// The outline itself stays whole, so the cut is a straight edge, like CSS overflow clip.
+  final Rect? clip;
+
+  /// The outline cut to [clip]: what the backdrop and the glow are clipped to.
+  Path get visiblePath {
+    final clip = this.clip;
+    if (clip == null || _covers(clip, path.getBounds())) return path;
+    return Path.combine(PathOperation.intersect, path, Path()..addRect(clip));
+  }
 }
+
+/// The visible part of the container a bubble may paint in: the intersection of the clips of the
+/// render objects between it and the container (viewports, ClipRect, …), or null when nothing clips
+/// it. Disjoint clips give an empty rect: the bubble is scrolled or clipped out of view.
+Rect? intersectClips(Iterable<Rect> clips) {
+  Rect? visible;
+  for (final clip in clips) {
+    visible = visible == null ? clip : visible.intersect(clip);
+  }
+  if (visible == null) return null;
+  return visible.width <= 0 || visible.height <= 0
+      ? Rect.fromLTWH(visible.left, visible.top, 0, 0)
+      : visible;
+}
+
+/// [glassPaths] for bubbles that may sit in clipped views: [clips] holds each shape's visible rect
+/// ([intersectClips]; null = unclipped). Only bubbles sharing a clip blend (glass inside a scroll
+/// view never merges with glass outside it); each cluster is cut straight at its clip, and a
+/// cluster wholly outside its clip draws nothing. A clipped-out bubble stays in its cluster while
+/// it is within [spacing] of the visible part, so the neck toward it is cut, not dropped.
+List<GlassPath> clippedGlassPaths(
+  List<GlassShape> shapes,
+  List<Rect?> clips,
+  double spacing, [
+  double cell = 2,
+]) {
+  final groups = <String, (Rect?, List<GlassShape>)>{};
+  for (var i = 0; i < shapes.length; i++) {
+    final clip = i < clips.length ? clips[i] : null;
+    final shape = shapes[i];
+    if (clip != null && !clip.overlaps(shape.rect.inflate(spacing))) continue;
+    final key = clip == null
+        ? ''
+        : [
+            clip.left,
+            clip.top,
+            clip.right,
+            clip.bottom,
+          ].map((v) => v.toStringAsFixed(2)).join(',');
+    groups.putIfAbsent(key, () => (clip, <GlassShape>[])).$2.add(shape);
+  }
+  return [
+    for (final (clip, members) in groups.values)
+      for (final path in glassPaths(members, spacing, cell))
+        if (clip == null)
+          path
+        else if (clip.overlaps(path.bounds))
+          GlassPath(path.shapes, path.bounds, path.path, clip),
+  ];
+}
+
+bool _covers(Rect outer, Rect inner) =>
+    outer.left <= inner.left &&
+    outer.top <= inner.top &&
+    outer.right >= inner.right &&
+    outer.bottom >= inner.bottom;
 
 /// Outline of every cluster, one path per cluster.
 List<GlassPath> glassPaths(

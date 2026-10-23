@@ -114,4 +114,80 @@ void main() {
     expect(tester.getSize(find.byType(IconButton)), const Size(38, 38));
     handle.dispose();
   }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+
+  testWidgets(
+    'glass in a clipped scroll view is cut to it and follows its scroll',
+    (tester) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        host(
+          GlassContainer(
+            child: ClipRect(
+              child: SizedBox(
+                width: 200,
+                child: SingleChildScrollView(
+                  controller: controller,
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    spacing: 12,
+                    children: [
+                      for (var i = 0; i < 5; i++)
+                        ToolbarGroup(
+                          label: 'Group $i',
+                          glassId: 'g$i',
+                          children: const [SizedBox(width: 80, height: 38)],
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      final container = tester.element(find.byType(GlassContainer));
+      final strip = Offset.zero & const Size(200, 44);
+
+      void expectCutToStrip(int visible) {
+        final paths = GlassContainer.debugPathsOf(container);
+        // Only the groups with a visible part paint glass; the rest contribute nothing.
+        expect(paths, hasLength(visible));
+        for (final path in paths) {
+          expect(path.clip, isNotNull);
+          expect(path.clip!.left, moreOrLessEquals(strip.left));
+          expect(path.clip!.right, moreOrLessEquals(strip.right));
+          final painted = path.visiblePath.getBounds();
+          expect(painted.left, greaterThanOrEqualTo(strip.left - 0.01));
+          expect(painted.right, lessThanOrEqualTo(strip.right + 0.01));
+        }
+      }
+
+      // 86px groups 12px apart: 0–86, 98–184 and 196–282 (cut at 200) show.
+      expectCutToStrip(3);
+      final third = GlassContainer.debugPathsOf(container).last;
+      expect(third.bounds.left, moreOrLessEquals(196));
+      expect(third.visiblePath.getBounds().right, moreOrLessEquals(200));
+
+      // Past the container's first 300ms, layout changes spring; a scroll must not.
+    await tester.pump(const Duration(milliseconds: 400));
+    controller.jumpTo(250);
+      await tester.pump();
+      // Now 196–282, 294–380 and 392–478 sit at -54–32, 44–130 and 142–228: the first two
+      // groups are gone, the glass moved with the content on the same frame.
+      expectCutToStrip(3);
+      final lefts = [
+        for (final path in GlassContainer.debugPathsOf(container))
+          path.bounds.left,
+      ]..sort();
+      expect(lefts[0], moreOrLessEquals(-54));
+      expect(lefts[1], moreOrLessEquals(44));
+      expect(lefts[2], moreOrLessEquals(142));
+      await tester.pumpAndSettle();
+      expectCutToStrip(3);
+      expect(tester.takeException(), isNull);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.macOS),
+  );
 }

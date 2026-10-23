@@ -118,7 +118,9 @@ function Overview() {
         />
         <p>
           When space runs out, <C>leading</C> shrinks and <C>trailing</C> keeps its size. For actions that
-          should collapse into a More menu, put a <C>ActionsBar</C> in a group.
+          should collapse into a More menu, put a <C>ActionsBar</C> in a group. Many groups (filter chips)
+          can sit in a horizontal scroller inside <C>leading</C>: their glass is clipped to the scroller and
+          moves with it, so no extra container is needed.
         </p>
       </Section>
 

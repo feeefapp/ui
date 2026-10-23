@@ -181,7 +181,10 @@ glass (`SPRINGS.snappy`) and plans splits, merges and materialize/dematerialize 
 squares) and light (`light.ts`) are pure and tested in `tests/glass.test.ts`; keep them pure, they
 are the contract the Flutter twin ports. Bubbles that animate their own size pass
 `glassMotion="follow"`. Hide bubbles with `inert`/removal, never with opacity, filter, mask or
-clip-path on a container or its ancestors (they cut the backdrop). One container per floating row;
+clip-path on a container or its ancestors (they cut the backdrop). Glass is clipped like content: a bubble inside a clipping ancestor below its container (overflow,
+clip-path, contain: paint; Flutter: any render object's `describeApproximatePaintClip`, e.g. a scroll
+view or ClipRect) paints only inside it, cut straight at the edge (`clippedGlassPaths`), and only
+bubbles sharing a clip merge; a scroll there moves the glass exactly. One container per floating row;
 never nest containers or put one inside a bubble.
 Kit rows (ScaffoldAppBar, ScaffoldTopBar, Toolbar, Dock host, ToolbarSearch) are GlassScopes:
 a container unless one encloses them. Wrap any other standalone ToolbarGroup row in GlassScope.
