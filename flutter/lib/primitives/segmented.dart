@@ -222,13 +222,23 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
       final changed = _measure();
       if (_drag?.active ?? false) return;
       if (!_placed) {
-        _moveTo(_selected, Springs.snappy);
+        // Not laid out yet: the next layout queues another measure.
+        if (_boxes.isEmpty) return;
+        // No option selected: placed with no pill. Only one rebuild either way, so a value
+        // that matches no option settles instead of measuring every frame.
+        if (_selected >= 0 && _selected < _boxes.length) {
+          _moveTo(_selected, Springs.snappy);
+        } else {
+          _placed = true;
+        }
         setState(() {});
         return;
       }
       final index = _selected;
       if (index < 0 || index >= _boxes.length) return;
       final box = _boxes[index];
+      // The pill appears for the first time (the value had no option): jump, don't grow from 0.
+      if (width.get() <= 0) _placed = false;
       if (follow) {
         // A released pill already heading here keeps its release spring.
         if (center.isAnimating && (center.target - box.center.dx).abs() < 0.5) {

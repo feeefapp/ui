@@ -1,6 +1,8 @@
 import 'package:feeef_ui/feeef_ui.dart';
-import 'package:flutter/foundation.dart' show debugDefaultTargetPlatformOverride;
+import 'package:flutter/foundation.dart'
+    show debugDefaultTargetPlatformOverride;
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
+import 'package:flutter/scheduler.dart' show SchedulerBinding;
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter/widgets.dart' hide RadioGroup;
 import 'package:flutter_test/flutter_test.dart';
@@ -22,9 +24,8 @@ class _HarnessState extends State<_Harness> {
 
   @override
   Widget build(BuildContext context) => MediaQuery(
-    data: MediaQuery.of(
-      context,
-    ).copyWith(disableAnimations: widget.reduceMotion),
+    data: MediaQuery.of(context)
+        .copyWith(disableAnimations: widget.reduceMotion),
     child: SegmentedControl<String>(
       label: 'Orders view',
       value: value,
@@ -216,9 +217,7 @@ void main() {
     expect(changes.last, 'board');
   });
 
-  testWidgets('a reduced-motion drag still selects on release', (
-    tester,
-  ) async {
+  testWidgets('a reduced-motion drag still selects on release', (tester) async {
     final changes = <String>[];
     await tester.pumpWidget(
       host(_Harness(changes: changes, reduceMotion: true)),
@@ -232,4 +231,42 @@ void main() {
     await tester.pumpAndSettle();
     expect(changes, ['board']);
   });
+
+  testWidgets(
+    'a value that matches no option settles, and the pill appears without growing',
+    (tester) async {
+      String? value;
+      late StateSetter set;
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          builder: (context, _) => ThemeProvider(
+            child: Center(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  set = setState;
+                  return SegmentedControl<String?>(
+                    label: 'Pick',
+                    value: value,
+                    onChange: (_) {},
+                    options: const [
+                      SegmentOption(value: 'a', label: 'A'),
+                      SegmentOption(value: 'b', label: 'B'),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      // One frame to lay out and one to place (no pill); then nothing more is scheduled.
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(SchedulerBinding.instance.hasScheduledFrame, isFalse);
+      set(() => value = 'b');
+      await tester.pumpAndSettle();
+      expect(SchedulerBinding.instance.hasScheduledFrame, isFalse);
+    },
+  );
 }
