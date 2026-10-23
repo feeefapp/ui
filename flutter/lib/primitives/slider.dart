@@ -1,19 +1,26 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/gestures.dart' show DragStartBehavior;
+import 'package:flutter/gestures.dart'
+    show DeviceGestureSettings, DragStartBehavior;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
+import '../glass/geometry.dart';
+import '../glass/press.dart';
+import '../physics/spring.dart';
 import '../theme.dart';
 import '../theme/surfaces.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
 import 'button.dart' show ControlSize;
+import 'lens.dart';
+import 'lens_model.dart';
 import 'slider_core.dart';
 import 'spring_core.dart';
+import 'touch_target.dart';
 
 /// What the `render*` slots receive on every frame of interaction.
 class SliderState {
@@ -297,10 +304,16 @@ class _SliderControl extends StatefulWidget {
 }
 
 class _Gesture {
-  _Gesture(this.start) : value = start;
+  _Gesture(this.start, this.origin) : value = start, thumb = start;
   final double start;
+
+  /// Where the press started, in the control's own pixels.
+  final Offset origin;
   double value;
   bool moved = false;
+
+  /// A dragged switch thumb: where it is (0 off … 1 on, rubber-banded past either end).
+  double thumb;
 }
 
 class _SliderControlState extends State<_SliderControl>
@@ -438,11 +451,18 @@ class _SliderControlState extends State<_SliderControl>
     if (active != null) _publish(active.start);
   }
 
-  void _end(Offset? local) {
+  /// Ends a press: a tap toggles a switch, a dragged switch thumb settles where its momentum
+  /// ([velocity], px/s, physical: right is positive) carries it, a slider takes [local].
+  void _end(Offset? local, {double velocity = 0}) {
     final active = _gesture;
     if (active == null) return;
     if (widget.switchMode && !active.moved) {
       active.value = _publish(1 - active.start);
+    } else if (widget.switchMode) {
+      // Settles where the thumb's momentum carries it: a flick toggles.
+      final travel = _travel;
+      final speed = travel > 0 ? velocity * (_rtl ? -1 : 1) / travel : 0.0;
+      active.value = _publish(switchSnap(active.thumb, speed));
     } else if (local != null) {
       _move(local);
     }
@@ -462,9 +482,28 @@ class _SliderControlState extends State<_SliderControl>
     setState(() {
       _tracking = false;
       _pressed = true;
-      _gesture = _Gesture(_current);
+      _gesture = _Gesture(_current, local);
     });
+    _motion.pointer(_logical(local));
     if (!widget.switchMode) _move(local);
+  }
+
+  /// [local] with x measured from the inline start (the glow and the switch drag are logical).
+  Offset _logical(Offset local) =>
+      _rtl ? Offset(_width - local.dx, local.dy) : local;
+
+  /// How far (px) the switch thumb travels from off to on.
+  double get _travel => math.max(0, _width - 2 * _inset);
+
+  /// Drags the switch thumb by the pointer's travel since the press; the state flips at halfway.
+  void _dragSwitch(Offset local) {
+    final active = _gesture;
+    if (active == null) return;
+    final dx = (local.dx - active.origin.dx) * (_rtl ? -1 : 1);
+    final travel = _travel;
+    active.thumb = switchDragPosition(active.start, dx, travel);
+    setState(() => _position = active.thumb);
+    active.value = _publish(active.thumb);
   }
 
   KeyEventResult _onKey(FocusNode _, KeyEvent event) {
@@ -517,7 +556,10 @@ class _SliderControlState extends State<_SliderControl>
     final current = _current;
     final inert = _inert;
     final displayPosition = inert ? current : (_position ?? current);
-    final fraction = sliderFraction(displayPosition, r.min, r.max);
+    // A dragged switch thumb shows its rubber band; everything else stays on the track.
+    final fraction = widget.switchMode && _position != null && !inert
+        ? _position!
+        : sliderFraction(displayPosition, r.min, r.max);
     final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     _motion.retarget(
       target: fraction,
@@ -526,7 +568,6 @@ class _SliderControlState extends State<_SliderControl>
       thin: _thin,
       disabled: inert,
       reduced: reduced,
-      rtl: _rtl,
     );
     final state = SliderState(
       value: current,
@@ -547,6 +588,8 @@ class _SliderControlState extends State<_SliderControl>
               ]
             : const <SliderMark>[]);
     final dark = theme.brightness == Brightness.dark;
+    // A solid thumb where the web kit hides its lens (lens.css): it still grows and stretches.
+    final solid = glassStyleOf(context) == GlassStyle.solid;
     final checked = current == 1;
     final offFill = mixSrgb(c.ink, 0.18, c.surface);
 
@@ -560,16 +603,34 @@ class _SliderControlState extends State<_SliderControl>
           return ListenableBuilder(
             listenable: _motion,
             builder: (context, _) {
-              final f = _motion.position.clamp(0.0, 1.0);
+              final f = widget.switchMode
+                  ? _motion.position
+                  : _motion.position.clamp(0.0, 1.0);
               final travel = width - 2 * geometry.inset;
+              _motion
+                ..travel = travel
+                ..thumbWidth = geometry.thumbWidth;
               final fillWidth = geometry.inset + geometry.fillCap + travel * f;
-              final thumbStart =
-                  geometry.inset - geometry.thumbWidth / 2 + travel * f;
               final trackTop = (height - geometry.trackHeight) / 2;
               final fillColor = widget.switchMode && !checked
                   ? offFill
                   : c.primary;
-              final shape = _motion.shape.clamp(-0.18, 1.25);
+              // The drawn thumb: grown by the press and stretched along its travel
+              // (pressedShape, like the web kit's --lab-slider-thumb-drawn-*).
+              final stretch = _motion.stretch;
+              final drawn = pressedShape(
+                GlassShape(
+                  x: geometry.inset - geometry.thumbWidth / 2 + travel * f,
+                  y: (height - geometry.thumbHeight) / 2,
+                  width: geometry.thumbWidth,
+                  height: geometry.thumbHeight,
+                  radius: geometry.thumbRadius,
+                ),
+                _motion.press,
+                stretch,
+                0,
+              );
+              final pointer = _motion.pointerAt;
               return Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -620,38 +681,37 @@ class _SliderControlState extends State<_SliderControl>
                       ),
                     ),
                   PositionedDirectional(
-                    start: thumbStart,
-                    top: (height - geometry.thumbHeight) / 2,
-                    width: geometry.thumbWidth,
-                    height: geometry.thumbHeight,
-                    child: Transform(
-                      alignment: AlignmentDirectional(
-                        -1 + 2 * f,
-                        0,
-                      ).resolve(Directionality.of(context)),
-                      transform: Matrix4.translationValues(_motion.lean, 0, 0)
-                        ..scaleByDouble(
-                          1 + shape * 0.18,
-                          1 - shape * 0.07,
-                          1,
-                          1,
-                        ),
-                      child: _Thumb(
-                        radius: geometry.thumbRadius,
-                        fill: dark ? c.ink : c.surface,
-                        ink: dark ? c.surface : c.ink,
-                        pressed: _pressed && !inert,
-                        thin: _thin,
-                        child: widget.renderThumb?.call(state),
-                      ),
+                    start: drawn.x,
+                    top: drawn.y,
+                    width: drawn.width,
+                    height: drawn.height,
+                    child: _Thumb(
+                      radius: drawn.radius,
+                      fill: dark ? c.ink : c.surface,
+                      ink: dark ? c.surface : c.ink,
+                      thin: _thin,
+                      lens: solid ? 0 : _motion.lens,
+                      lensPaint: LensPaint.of(c),
+                      // The glow under the pointer, in the thumb's own (physical) pixels.
+                      glowAt: pointer == null
+                          ? Offset(drawn.width / 2, drawn.height / 2)
+                          : Offset(
+                              _rtl
+                                  ? drawn.x + drawn.width - pointer.dx
+                                  : pointer.dx - drawn.x,
+                              pointer.dy - drawn.y,
+                            ),
+                      glowRadius: _motion.glowRadius,
+                      glowOpacity: _motion.glowOpacity,
+                      child: widget.renderThumb?.call(state),
                     ),
                   ),
                   if (widget.switchMode && !_thin)
                     Positioned.fill(
                       child: Padding(
                         padding: EdgeInsetsDirectional.only(
-                          start: geometry.thumbWidth * (1 - f),
-                          end: geometry.thumbWidth * f,
+                          start: geometry.thumbWidth * (1 - f.clamp(0.0, 1.0)),
+                          end: geometry.thumbWidth * f.clamp(0.0, 1.0),
                         ),
                         child: Center(
                           child: _switchText(
@@ -678,52 +738,72 @@ class _SliderControlState extends State<_SliderControl>
 
     track = MouseRegion(
       cursor: inert ? SystemMouseCursors.forbidden : SystemMouseCursors.click,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        dragStartBehavior: DragStartBehavior.down,
-        onHorizontalDragDown: inert
-            ? null
-            : (details) {
-                _focus.requestFocus();
-                _down(details.localPosition);
-              },
-        onHorizontalDragStart: inert
-            ? null
-            : (details) {
-                final active = _gesture;
-                if (active == null) return;
-                active.moved = true;
-                setState(() => _tracking = true);
-              },
-        onHorizontalDragUpdate: inert
-            ? null
-            : (details) {
-                if (_gesture == null) return;
-                if (!widget.switchMode || _gesture!.moved) {
-                  _move(details.localPosition);
-                }
-              },
-        onHorizontalDragEnd: inert ? null : (_) => _end(null),
-        // A press without movement ends the drag recognizer; the tap that follows commits it.
-        // Anything else (a scroll took the pointer) reverts to the starting value.
-        onHorizontalDragCancel: inert
-            ? null
-            : () {
-                _cancelPending = true;
-                scheduleMicrotask(() {
-                  if (_cancelPending && mounted) {
+      // A switch keeps its 63 × 28 look on touch screens and reaches 44px tall (TouchTarget).
+      child: TouchTarget(
+        minSize: widget.switchMode ? null : 0,
+        child: MediaQuery(
+          // A switch starts dragging after the web kit's slop (SWITCH_SLOP), not Flutter's 18px.
+          data: widget.switchMode
+              ? MediaQuery.of(context).copyWith(
+                  gestureSettings: const DeviceGestureSettings(
+                    touchSlop: switchSlopTouch,
+                  ),
+                )
+              : MediaQuery.of(context),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            dragStartBehavior: DragStartBehavior.down,
+            onHorizontalDragDown: inert
+                ? null
+                : (details) {
+                    _focus.requestFocus();
+                    _down(details.localPosition);
+                  },
+            onHorizontalDragStart: inert
+                ? null
+                : (details) {
+                    final active = _gesture;
+                    if (active == null) return;
+                    active.moved = true;
+                    setState(() => _tracking = true);
+                  },
+            onHorizontalDragUpdate: inert
+                ? null
+                : (details) {
+                    if (_gesture == null) return;
+                    _motion.pointer(_logical(details.localPosition));
+                    if (!widget.switchMode) {
+                      _move(details.localPosition);
+                    } else if (_gesture!.moved) {
+                      _dragSwitch(details.localPosition);
+                    }
+                  },
+            onHorizontalDragEnd: inert
+                ? null
+                : (details) =>
+                      _end(null, velocity: details.primaryVelocity ?? 0),
+            // A press without movement ends the drag recognizer; the tap that follows commits it.
+            // Anything else (a scroll took the pointer) reverts to the starting value.
+            onHorizontalDragCancel: inert
+                ? null
+                : () {
+                    _cancelPending = true;
+                    scheduleMicrotask(() {
+                      if (_cancelPending && mounted) {
+                        _cancelPending = false;
+                        _cancel();
+                      }
+                    });
+                  },
+            onTapUp: inert
+                ? null
+                : (details) {
                     _cancelPending = false;
-                    _cancel();
-                  }
-                });
-              },
-        onTapUp: inert
-            ? null
-            : (details) {
-                _cancelPending = false;
-                _end(widget.switchMode ? null : details.localPosition);
-              },
-        child: track,
+                    _end(widget.switchMode ? null : details.localPosition);
+                  },
+            child: track,
+          ),
+        ),
       ),
     );
 
@@ -922,19 +1002,26 @@ class _ShapeClipper extends CustomClipper<Path> {
 }
 
 /// The thumb: surface (ink in dark), superellipse corners (45 % on the thick slider, a capsule
-/// on the switch and the thin slider), two soft shadows.
+/// on the switch and the thin slider), soft shadows. Pressed or dragged it turns into a glass lens
+/// ([LensPaint]): the rest paint and shadows fade out as the glass fades in ([lens]).
 class _Thumb extends StatelessWidget {
   const _Thumb({
     required this.radius,
     required this.fill,
     required this.ink,
-    required this.pressed,
     required this.thin,
+    required this.lens,
+    required this.lensPaint,
+    required this.glowAt,
+    required this.glowRadius,
+    required this.glowOpacity,
     this.child,
   });
-  final double radius;
+  final double radius, lens, glowRadius, glowOpacity;
   final Color fill, ink;
-  final bool pressed, thin;
+  final bool thin;
+  final LensPaint lensPaint;
+  final Offset glowAt;
   final Widget? child;
 
   @override
@@ -942,11 +1029,14 @@ class _Thumb extends StatelessWidget {
     painter: _ThumbPainter(
       fill: fill,
       radius: radius,
-      shadows: thin && !pressed
+      shadows: thin
           ? const [(0, 1, 4, 0.18)]
-          : pressed
-          ? const [(0, 2, 4, 0.18), (0, 4, 12, 0.16)]
           : const [(0, 1, 2, 0.20), (0, 3, 8, 0.12)],
+      lens: lens.clamp(0.0, 1.0),
+      lensPaint: lensPaint,
+      glowAt: glowAt,
+      glowRadius: glowRadius,
+      glowOpacity: glowOpacity,
     ),
     child: child == null
         ? null
@@ -967,35 +1057,64 @@ class _ThumbPainter extends CustomPainter {
     required this.fill,
     required this.radius,
     required this.shadows,
+    required this.lens,
+    required this.lensPaint,
+    required this.glowAt,
+    required this.glowRadius,
+    required this.glowOpacity,
   });
   final Color fill;
-  final double radius;
+  final double radius, lens, glowRadius, glowOpacity;
+  final LensPaint lensPaint;
+  final Offset glowAt;
 
   /// CSS box-shadows as (x, y, blur, black alpha); sigma = blur / 2.
   final List<(double, double, double, double)> shadows;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final shape = superellipsePath(Offset.zero & size, [
-      radius,
-      radius,
-      radius,
-      radius,
-    ]);
-    for (final (x, y, blur, alpha) in shadows) {
+    final r = math.min(radius, math.min(size.width, size.height) / 2);
+    final rect = Offset.zero & size;
+    final shape = superellipsePath(rect, [r, r, r, r]);
+    final rest = 1 - lens;
+    if (rest > 0.001) {
+      for (final (x, y, blur, alpha) in shadows) {
+        canvas.drawPath(
+          shape.shift(Offset(x, y)),
+          Paint()
+            ..color = Color.from(alpha: alpha * rest, red: 0, green: 0, blue: 0)
+            ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur / 2),
+        );
+      }
+    }
+    lensPaint.paintShadow(canvas, shape, lens);
+    if (rest > 0.001) {
       canvas.drawPath(
-        shape.shift(Offset(x, y)),
-        Paint()
-          ..color = Color.from(alpha: alpha, red: 0, green: 0, blue: 0)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur / 2),
+        shape,
+        Paint()..color = fill.withValues(alpha: fill.a * rest),
       );
     }
-    canvas.drawPath(shape, Paint()..color = fill);
+    lensPaint.paint(
+      canvas,
+      rect,
+      r,
+      lens: lens,
+      glowAt: glowAt,
+      glowRadius: glowRadius,
+      glowOpacity: glowOpacity,
+    );
   }
 
   @override
   bool shouldRepaint(_ThumbPainter old) =>
-      old.fill != fill || old.radius != radius || old.shadows != shadows;
+      old.fill != fill ||
+      old.radius != radius ||
+      old.shadows != shadows ||
+      old.lens != lens ||
+      old.lensPaint != lensPaint ||
+      old.glowAt != glowAt ||
+      old.glowRadius != glowRadius ||
+      old.glowOpacity != glowOpacity;
 }
 
 class _Marks extends StatelessWidget {
@@ -1042,20 +1161,49 @@ class _Marks extends StatelessWidget {
   );
 }
 
-/// One spring clock for fill, thumb travel and deformation (`useSliderMotion` in the web kit).
+/// One spring clock for fill, thumb travel and the thumb's glass lens (`useSliderMotion` in the
+/// web kit). While pressed the thumb turns into a lens ([lensThumbScale], [lensStretch], the touch
+/// glow) and springs back on release, on the segmented pill's springs. Reduced motion and a
+/// disabled control skip all of it.
 class _SliderMotion extends ChangeNotifier {
   _SliderMotion(TickerProvider vsync) {
     _ticker = vsync.createTicker(_tick);
   }
 
+  static final _snappy = springCoefficients(Springs.snappy);
+  static final _bouncy = springCoefficients(Springs.bouncy);
+  static final _smooth = springCoefficients(Springs.smooth);
+  static final _interactive = springCoefficients(Springs.interactive);
+
   late final Ticker _ticker;
   double position = double.nan;
-  double velocity = 0, shape = 0, shapeVelocity = 0, lean = 0;
+  double velocity = 0;
+  StepSpringState _press = (position: 1, velocity: 0);
+  StepSpringState _lens = (position: 0, velocity: 0);
+  StepSpringState _stretch = (position: 0, velocity: 0);
+  StepSpringState _glowRadius = (position: glassGlowStart, velocity: 0);
+  StepSpringState _glowOpacity = (position: 0, velocity: 0);
+  bool _lensing = false;
   Duration? _last;
+
+  /// The thumb's travel (px), set at layout: turns the speed into the lens stretch.
+  double travel = 0;
+
+  /// The thumb's rest width (px), set at layout: the glow spreads to [glassGlowRadius] of it.
+  double thumbWidth = 0;
+
+  /// Where the pointer is (x from the inline start), for the glow; null when not pressed.
+  Offset? pointerAt;
+
+  double get press => _press.position;
+  double get lens => _lens.position.clamp(0.0, 1.0);
+  double get stretch => _stretch.position;
+  double get glowRadius => _glowRadius.position;
+  double get glowOpacity => _glowOpacity.position.clamp(0.0, 1.0);
 
   double _target = 0;
   bool _tracking = false, _pressed = false, _thin = false;
-  bool _disabled = false, _reduced = false, _rtl = false;
+  bool _disabled = false, _reduced = false;
 
   void retarget({
     required double target,
@@ -1064,7 +1212,6 @@ class _SliderMotion extends ChangeNotifier {
     required bool thin,
     required bool disabled,
     required bool reduced,
-    required bool rtl,
   }) {
     if (position.isNaN) position = target;
     _target = target;
@@ -1073,12 +1220,39 @@ class _SliderMotion extends ChangeNotifier {
     _thin = thin;
     _disabled = disabled;
     _reduced = reduced;
-    _rtl = rtl;
+    if (!pressed) pointerAt = null;
+    _wake();
+  }
+
+  /// Moves the touch glow to [at] (x from the inline start).
+  void pointer(Offset at) {
+    pointerAt = at;
+    _wake();
+  }
+
+  void _wake() {
     if (!_ticker.isActive) {
       _last = null;
       _ticker.start();
     }
   }
+
+  static StepSpringState _step(
+    StepSpringState value,
+    double to,
+    double dt,
+    ({double stiffness, double damping}) spring,
+  ) => stepSpring(
+    value,
+    to,
+    dt,
+    stiffness: spring.stiffness,
+    damping: spring.damping,
+  );
+
+  static bool _resting(StepSpringState value, double to, double delta) =>
+      (value.position - to).abs() <= delta &&
+      value.velocity.abs() <= delta * 10;
 
   void _tick(Duration elapsed) {
     final dt = _last == null
@@ -1088,9 +1262,11 @@ class _SliderMotion extends ChangeNotifier {
     if (_reduced || _disabled) {
       position = _target;
       velocity = 0;
-      shape = 0;
-      shapeVelocity = 0;
-      lean = 0;
+      _press = (position: 1, velocity: 0);
+      _lens = (position: 0, velocity: 0);
+      _stretch = (position: 0, velocity: 0);
+      _glowOpacity = (position: 0, velocity: 0);
+      _lensing = false;
       _stop();
       return;
     }
@@ -1109,31 +1285,47 @@ class _SliderMotion extends ChangeNotifier {
       position = next.position;
       velocity = next.velocity;
     }
-    final speed = velocity.abs();
-    final shapeTarget =
-        (_pressed ? 0.25 : 0.0) +
-        (_thin && !_pressed ? 0.0 : math.min(1.0, speed * 0.32));
-    final s = stepSpring(
-      (position: shape, velocity: shapeVelocity),
-      shapeTarget,
+    // The lens: in on a press (the glow starts small under the finger and spreads), out on release.
+    if (_pressed && !_lensing) {
+      _lensing = true;
+      _glowRadius = (position: glassGlowStart, velocity: 0);
+      _glowOpacity = (position: 1, velocity: 0);
+    } else if (!_pressed) {
+      _lensing = false;
+    }
+    final lensing = _lensing;
+    final glowTo = glassGlowRadius(thumbWidth);
+    _press = _step(
+      _press,
+      lensing ? lensThumbScale : 1,
       dt,
-      stiffness: 330,
-      damping: 20,
+      lensing ? _snappy : _bouncy,
     );
-    shape = s.position;
-    shapeVelocity = s.velocity;
-    lean = (velocity * 0.2).clamp(-1.0, 1.0) * (_rtl ? -1 : 1);
+    _lens = _step(_lens, lensing ? 1 : 0, dt, _snappy);
+    final stretchTarget = lensing ? lensStretch(velocity * travel) : 0.0;
+    _stretch = _step(
+      _stretch,
+      stretchTarget,
+      dt,
+      lensing ? _interactive : _bouncy,
+    );
+    _glowRadius = _step(_glowRadius, glowTo, dt, _smooth);
+    _glowOpacity = _step(_glowOpacity, lensing ? 1 : 0, dt, _smooth);
     final moving =
         (position - _target).abs() > 0.0001 ||
         velocity.abs() > 0.002 ||
-        (shape - shapeTarget).abs() > 0.001 ||
-        shapeVelocity.abs() > 0.01;
+        !_resting(_press, lensing ? lensThumbScale : 1, 0.0005) ||
+        !_resting(_lens, lensing ? 1 : 0, 0.002) ||
+        !_resting(_stretch, stretchTarget, 0.05) ||
+        !_resting(_glowOpacity, lensing ? 1 : 0, 0.005) ||
+        (lensing && !_resting(_glowRadius, glowTo, 0.5));
     if (!moving) {
       position = _target;
       velocity = 0;
-      shape = _pressed ? 0.25 : 0;
-      shapeVelocity = 0;
-      lean = 0;
+      _press = (position: lensing ? lensThumbScale : 1, velocity: 0);
+      _lens = (position: lensing ? 1 : 0, velocity: 0);
+      _stretch = (position: 0, velocity: 0);
+      _glowOpacity = (position: lensing ? 1 : 0, velocity: 0);
       _stop();
       return;
     }

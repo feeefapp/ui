@@ -1,3 +1,9 @@
+/* Registered so the touch glow of a pressed glass button spreads on a spring (see .lab-control[data-press]). */
+@property --lab-press-glow-r {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 8px;
+}
 /* Lab UI contract. Theme owns colors; this file owns shared geometry and controls.
 Geometry follows the theme config (theme-config.ts): every radius is multiplied by
 --lab-corner-scale (--lab-radius-scale × the corner fit), and data-lab-density='compact' or 'thin' swaps the size tokens below. */
@@ -57,6 +63,16 @@ html[data-lab-theme] {
   --lab-sidebar-width: 304px;
   --lab-navigation-rail-width: 64px;
   --lab-control-touch-target: 44px;
+  /* Press response (lens-model.ts, glass/press.ts): glass controls swell by GLASS_PRESS_SCALE,
+  filled/tonal/elevated/outlined/destructive buttons in content by CONTENT_PRESS_SCALE. */
+  --lab-press-scale-glass: 1.06;
+  --lab-press-scale: 1.03;
+  /* SPRINGS as CSS transitions (physics/spring.ts springTiming; tests/press.test.ts keeps them in
+  step): `transition: scale var(--lab-spring-snappy)`. */
+  --lab-spring-snappy: 540ms linear(0, 0.026, 0.089, 0.175, 0.271, 0.37, 0.466, 0.554, 0.635, 0.705, 0.766, 0.818, 0.861, 0.896, 0.924, 0.946, 0.964, 0.977, 0.987, 0.994, 0.999, 1.002, 1.004, 1.006, 1.006, 1.006, 1.006, 1.006, 1.005, 1.004, 1.004, 1.003, 1.003, 1.002, 1.002, 1.001, 1.001, 1.001, 1.001, 1, 1);
+  --lab-spring-bouncy: 860ms linear(0, 0.032, 0.113, 0.221, 0.343, 0.466, 0.582, 0.687, 0.778, 0.854, 0.914, 0.961, 0.996, 1.019, 1.034, 1.043, 1.046, 1.045, 1.042, 1.037, 1.032, 1.026, 1.021, 1.016, 1.011, 1.008, 1.005, 1.002, 1.001, 0.999, 0.999, 0.998, 0.998, 0.998, 0.998, 0.998, 0.998, 0.999, 0.999, 0.999, 1);
+  --lab-spring-smooth: 760ms linear(0, 0.024, 0.083, 0.161, 0.248, 0.335, 0.419, 0.498, 0.569, 0.633, 0.689, 0.738, 0.78, 0.816, 0.847, 0.872, 0.894, 0.913, 0.928, 0.941, 0.951, 0.96, 0.967, 0.973, 0.978, 0.982, 0.985, 0.988, 0.99, 0.992, 0.994, 0.995, 0.996, 0.997, 0.997, 0.998, 0.998, 0.999, 0.999, 0.999, 1);
+  --lab-spring-smooth-duration: 760ms;
   /* Derived: capsule radii (half the height), the control inside a toolbar bubble (2px padding and
   a 1px border a side). */
   --lab-radius-control: calc(var(--lab-control-height) / 2 * var(--lab-corner-scale, 1));
@@ -461,16 +477,110 @@ html[data-lab-density='thin'][data-lab-theme] {
   --lab-sidebar-width: 224px;
   --lab-navigation-rail-width: 44px;
 }
-/* Touch keeps 44px targets: controls grow to the touch target, never shrink. A host whose own
-surface is the target (a toolbar bubble) sets --lab-control-touch-target to its control height. */
+/* Touch keeps 44px targets without changing anything you see: a control smaller than
+--lab-control-touch-target keeps its size (a 36px iOS button stays 36px on a phone) and gains an
+invisible hit area at least that big, centred on it. Layout is untouched; where two reaches overlap,
+the later control wins. Inside a toolbar bubble the bubble is the target (toolbar.css), so nothing
+reaches out there. Flutter: TouchTarget (touch_target.dart). */
 @media (pointer: coarse) {
-  html[data-lab-theme] .lab-control[data-variant] {
-    height: max(var(--lab-control-size), var(--lab-control-touch-target));
-    min-height: max(var(--lab-control-size), var(--lab-control-touch-target));
-    min-width: var(--lab-control-touch-target);
+  html[data-lab-theme] :is(.lab-control[data-variant], .lab-choice, .lab-slider[data-switch])::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, var(--lab-control-touch-target));
+    height: max(100%, var(--lab-control-touch-target));
+    translate: -50% -50%;
   }
-  html[data-lab-theme] .lab-control[data-control-size='icon'] {
-    width: max(var(--lab-control-size), var(--lab-control-touch-target));
+  html[data-lab-theme] .lab-toolbar-group .lab-control[data-variant]::before {
+    content: none;
+  }
+}
+/* Press response. Glass controls (toolbar appearance) swell by --lab-press-scale-glass and show the
+touch glow under the finger (button.tsx writes its centre and reach), like a pressed GlassContainer
+bubble; filled, tonal, elevated, outlined and destructive buttons in content grow a little
+(--lab-press-scale), no glow. Both spring back. A control inside a glass bubble leaves the response to
+the bubble (GlassContainer swells and glows the whole bubble), and so does one inside a control that
+answers with glass of its own (a segmented control). Still and solid glass don't respond; the
+:active fills stay. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-lab-theme] .lab-control[data-press] {
+    transition:
+      background-color var(--lab-duration-fast) var(--lab-ease),
+      border-color var(--lab-duration-fast) var(--lab-ease),
+      box-shadow var(--lab-duration-fast) var(--lab-ease),
+      color var(--lab-duration-fast) var(--lab-ease),
+      scale var(--lab-spring-bouncy);
+  }
+  html[data-lab-theme]
+    .lab-control[data-press='content']:active:not(
+      :disabled,
+      [data-disabled],
+      [data-glass-member],
+      [data-glass-member] *,
+      [data-glass-own-press] *
+    ) {
+    scale: var(--lab-press-scale);
+    transition:
+      background-color var(--lab-duration-fast) var(--lab-ease),
+      border-color var(--lab-duration-fast) var(--lab-ease),
+      box-shadow var(--lab-duration-fast) var(--lab-ease),
+      color var(--lab-duration-fast) var(--lab-ease),
+      scale var(--lab-spring-snappy);
+  }
+  html[data-lab-theme]:not([data-lab-glass='still'], [data-lab-glass='solid'])
+    .lab-control[data-press='glass']:active:not(
+      :disabled,
+      [data-disabled],
+      [data-glass-member],
+      [data-glass-member] *,
+      [data-glass-own-press] *
+    ) {
+    scale: var(--lab-press-scale-glass);
+    transition:
+      background-color var(--lab-duration-fast) var(--lab-ease),
+      border-color var(--lab-duration-fast) var(--lab-ease),
+      box-shadow var(--lab-duration-fast) var(--lab-ease),
+      color var(--lab-duration-fast) var(--lab-ease),
+      scale var(--lab-spring-snappy);
+  }
+  /* The glow: starts small under the finger and spreads (SPRINGS.smooth), fades on release. */
+  html[data-lab-theme] .lab-control[data-press='glass']::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    z-index: -1;
+    border-radius: inherit;
+    corner-shape: inherit;
+    background: radial-gradient(
+      circle var(--lab-press-glow-r) at var(--lab-press-x, 50%) var(--lab-press-y, 50%),
+      var(--lab-glass-glow),
+      transparent
+    );
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity var(--lab-spring-smooth),
+      --lab-press-glow-r 0s var(--lab-spring-smooth-duration);
+  }
+  html[data-lab-theme]:not([data-lab-glass='still'], [data-lab-glass='solid'])
+    .lab-control[data-press='glass']:active:not(
+      :disabled,
+      [data-disabled],
+      [data-glass-member],
+      [data-glass-member] *,
+      [data-glass-own-press] *
+    )::after {
+    --lab-press-glow-r: var(--lab-press-glow-to, 120px);
+    opacity: 1;
+    transition:
+      opacity 0s,
+      --lab-press-glow-r var(--lab-spring-smooth);
+  }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
+  html[data-lab-theme] .lab-control[data-press='glass']::after {
+    content: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {

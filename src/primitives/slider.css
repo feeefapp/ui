@@ -94,31 +94,48 @@ switch is iOS's too: a --lab-switch-width × --lab-switch-height track with the 
   pointer-events: none;
 }
 .lab-slider-thumb {
+  /* The drawn thumb: pressed it grows by --lab-slider-press and stretches by --lab-slider-stretch
+  along its travel (px, logical, signed), narrowing a quarter of that across, like glass/press.ts
+  pressedShape; slider-motion.ts writes both. */
+  --lab-slider-thumb-drawn-width: calc(
+    var(--lab-slider-thumb-width) * var(--lab-slider-press, 1) + var(--lab-slider-stretch-size, 0px)
+  );
+  --lab-slider-thumb-drawn-height: calc(
+    var(--lab-slider-thumb-height) * var(--lab-slider-press, 1) - var(--lab-slider-stretch-size, 0px) / 4
+  );
+  --lab-slider-thumb-paint: var(--lab-surface);
+  --lab-slider-thumb-rest-shadow:
+    0 1px 2px rgb(0 0 0 / calc(20% * (1 - var(--lab-lens, 0)))),
+    0 3px 8px rgb(0 0 0 / calc(12% * (1 - var(--lab-lens, 0))));
   position: absolute;
-  inset-block-start: calc((100% - var(--lab-slider-thumb-height)) / 2);
+  isolation: isolate;
+  inset-block-start: calc((100% - var(--lab-slider-thumb-drawn-height)) / 2);
   inset-inline-start: calc(
-    var(--lab-slider-inset) - var(--lab-slider-thumb-width) / 2 +
+    var(--lab-slider-inset) - var(--lab-slider-thumb-drawn-width) / 2 + var(--lab-slider-stretch, 0px) / 2 +
       (100% - 2 * var(--lab-slider-inset)) *
       var(--lab-slider-visual-fraction, var(--lab-slider-fraction))
   );
   display: grid;
   place-items: center;
-  width: var(--lab-slider-thumb-width);
-  height: var(--lab-slider-thumb-height);
-  border-radius: calc(var(--lab-slider-thumb-radius) * var(--lab-corner-fit, 1));
+  width: var(--lab-slider-thumb-drawn-width);
+  height: var(--lab-slider-thumb-drawn-height);
+  border-radius: calc(var(--lab-slider-thumb-radius) * var(--lab-slider-press, 1) * var(--lab-corner-fit, 1));
   corner-shape: superellipse(1.5);
-  background: var(--lab-surface);
+  /* Rest paint fades out as the glass lens (.lab-lens, lens.css) fades in. */
+  background: color-mix(
+    in srgb,
+    var(--lab-slider-thumb-paint) calc((1 - var(--lab-lens, 0)) * 100%),
+    transparent
+  );
   color: var(--lab-ink);
   box-shadow:
-    0 1px 2px rgb(0 0 0 / 20%),
-    0 3px 8px rgb(0 0 0 / 12%);
-  transform-origin: calc(var(--lab-slider-visual-fraction, var(--lab-slider-fraction)) * 100%)
-    center;
-  transform: translateX(calc(var(--lab-slider-lean, 0) * 1px))
-    scaleX(calc(1 + var(--lab-slider-stretch, 0) * 0.18))
-    scaleY(calc(1 - var(--lab-slider-stretch, 0) * 0.07));
-  transition: box-shadow 120ms ease;
+    var(--lab-slider-thumb-rest-shadow),
+    0 4px 14px color-mix(in srgb, var(--lab-glass-shadow-small) calc(var(--lab-lens, 0) * 100%), transparent);
   pointer-events: none;
+}
+/* The lens sits on the thumb's background, under its content (renderThumb). */
+.lab-slider-thumb > :is(.lab-lens, .lab-lens-glow) {
+  z-index: -1;
 }
 .lab-slider-stop {
   position: absolute;
@@ -136,15 +153,6 @@ switch is iOS's too: a --lab-switch-width × --lab-switch-height track with the 
 }
 .lab-slider-stop[data-active='true'] {
   background: color-mix(in srgb, var(--lab-on-primary) 35%, transparent);
-}
-.lab-slider[data-pressed='true'] .lab-slider-thumb {
-  box-shadow:
-    0 2px 4px rgb(0 0 0 / 18%),
-    0 4px 12px rgb(0 0 0 / 16%);
-}
-.lab-slider:dir(rtl) .lab-slider-thumb {
-  transform-origin: calc((1 - var(--lab-slider-visual-fraction, var(--lab-slider-fraction))) * 100%)
-    center;
 }
 .lab-slider-marks {
   position: relative;
@@ -202,16 +210,19 @@ switch is iOS's too: a --lab-switch-width × --lab-switch-height track with the 
   background: color-mix(in srgb, var(--lab-ink) 18%, var(--lab-surface));
 }
 html[data-lab-theme='dark'] .lab-slider-thumb {
-  background: var(--lab-ink);
+  --lab-slider-thumb-paint: var(--lab-ink);
   color: var(--lab-surface);
 }
-@media (prefers-reduced-motion: reduce) {
-  .lab-slider :is(.lab-slider-fill, .lab-slider-thumb) {
-    transition: none;
+/* A solid thumb where the lens is hidden (lens.css): it still grows and stretches. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .lab-slider-thumb {
+    background: var(--lab-slider-thumb-paint);
+    --lab-lens: 0;
   }
-  .lab-slider .lab-slider-thumb {
-    transform: none;
-  }
+}
+html[data-lab-glass='solid'] .lab-slider-thumb {
+  background: var(--lab-slider-thumb-paint);
+  --lab-lens: 0;
 }
 @media (forced-colors: active) {
   .lab-slider-rail {
@@ -251,7 +262,7 @@ html[data-lab-theme='dark'] .lab-slider-thumb {
   display: none;
 }
 .lab-slider[data-track-style='thin'] .lab-slider-thumb {
-  box-shadow: 0 1px 4px rgb(0 0 0 / 18%);
+  --lab-slider-thumb-rest-shadow: 0 1px 4px rgb(0 0 0 / calc(18% * (1 - var(--lab-lens, 0))));
 }
 @media (pointer: coarse) {
   .lab-slider[data-control-size='small']:not([data-switch]) {
@@ -259,17 +270,6 @@ html[data-lab-theme='dark'] .lab-slider-thumb {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .lab-slider :is(.lab-slider-fill, .lab-slider-thumb) {
-    transition: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lab-slider-switch-text {
-    transition: none;
-  }
-}
 .lab-slider-track-decoration {
   position: absolute;
   inset: 0;

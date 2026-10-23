@@ -101,7 +101,8 @@ function Overview() {
         </p>
         <p>
           The control is as tall as a regular button at every density (36px comfortable, 30px compact,
-          26px thin; a toolbar bubble’s control height inside one, 44px on touch screens). The pill sits{' '}
+          26px thin; a toolbar bubble’s control height inside one). On touch screens it keeps that height
+          and each option’s hit area reaches 44px. The pill sits{' '}
           <C>--lab-segmented-inset</C> (2px) inside it and options are no farther apart than that inset.
           Labels are 13px semibold. Change the inset app-wide with <C>ThemeConfig.metrics.segmentedInset</C>{' '}
           and the height with <C>controlHeight.regular</C>.

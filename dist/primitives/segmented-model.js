@@ -1,9 +1,6 @@
-import { glassStretch } from '../glass/press.js';
 import { mix, projectMomentum, rubberBandClamp } from '../physics/spring.js';
 /** How far (px) the pill can be pulled past either end, with rubber-band resistance. */
 export const SEGMENTED_OVERDRAG = 12;
-/** The lens stretches by the distance the pointer covers in this many seconds (rubber-banded). */
-export const SEGMENTED_STRETCH_TIME = 0.1;
 /** Deceleration a release is projected with (`projectMomentum`): quicker than a scroll view (0.99), so
  * a flick reaches the next segment without skipping one. */
 export const SEGMENTED_DECELERATION = 0.97;
@@ -68,9 +65,5 @@ export function segmentedSnapIndex(center, velocity, spans) {
         }
     });
     return best;
-}
-/** How far (px, signed) the lens stretches along a drag moving at `velocity` px/s. */
-export function segmentedStretch(velocity) {
-    return glassStretch(velocity * SEGMENTED_STRETCH_TIME, 0).x;
 }
 //# sourceMappingURL=segmented-model.js.map

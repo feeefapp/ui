@@ -60,8 +60,18 @@ function Overview() {
           longer explanation, use a checkbox.
         </p>
         <p>
-          <C>SlideSwitch</C> shares the slider’s track, thumb and spring. It can be tapped to toggle,
-          or dragged; when dragged it settles on the side the thumb is released on.
+          <C>SlideSwitch</C> shares the slider’s track, thumb and spring. A tap toggles it. The thumb
+          can also be dragged: it follows the finger, rubber-bands a little past either end and on
+          release settles on the side its momentum carries it to, so a flick toggles and a careful drop
+          stays where it is.
+        </p>
+        <p>
+          Pressed or dragged, the thumb turns into a glass lens like iOS 26’s: it grows to 1.4×{' '}
+          (<C>LENS_THUMB_SCALE</C>), stretches along a quick drag, shows the glass touch glow under the
+          finger and springs back on release. Reduced motion keeps the solid thumb with no swell,
+          stretch or glow; reduced transparency, more contrast and the <C>solid</C> glass style keep a
+          solid thumb that still grows. On touch screens the switch keeps its 63 × 28px look and its hit
+          area reaches 44px tall.
         </p>
       </Section>
 

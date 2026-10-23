@@ -6,7 +6,7 @@ import { FO_ANIMATED_LOGO_SVG } from '@feeef.dev/ui/brand/animated-logo'
 import { PixelArtwork, PixelTexture } from '@feeef.dev/ui/pixel-art'
 import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
 import { Input, Label } from '@feeef.dev/ui/primitives/fields'
-import { Switch } from '@feeef.dev/ui/primitives/switch'
+import { SlideSwitch } from '@feeef.dev/ui/primitives/slider'
 import '@feeef.dev/ui/account-sidebar.css'
 
 /**
@@ -120,8 +120,8 @@ export function AvatarScene() {
           <Label>Phone</Label>
           <Input aria-label="Phone" placeholder="0550 00 00 00" />
         </div>
-        <Switch label="SMS" checked onCheckedChange={() => {}} />
-        <Switch label="Email" checked={false} onCheckedChange={() => {}} />
+        <SlideSwitch label="SMS" checked onCheckedChange={() => {}} />
+        <SlideSwitch label="Email" checked={false} onCheckedChange={() => {}} />
       </div>
     </>
   )

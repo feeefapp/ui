@@ -21,7 +21,7 @@ function Overview() {
             ['Focus', <>Keyboard focus (<C>:focus-visible</C>; in Flutter, traditional highlight mode) shows a thin ring that hugs the control, 2px at 1px out, in the focus color at reduced strength, plus the control’s hover fill. Fields show it on their own edge instead. Pointer and touch focus show nothing. Increased contrast and forced colors get a strong 3px ring. See <a href="#focus">Focus</a>.</>],
             ['Dialogs', <>Focus is trapped while open, Escape closes, and focus returns to the opener (or to <C>returnFocusRef</C> if the opener is gone). <C>initialFocusRef</C> picks the first focused element.</>],
             ['State', <>Loading buttons set <C>aria-busy</C> and block activation; pressed toggle buttons are styled from <C>aria-pressed</C>; segmented controls use radio semantics.</>],
-            ['Touch', <>On coarse pointers, buttons, icon buttons, fields, selects and menu options are at least 44px (<C>--lab-control-touch-target</C>) at any density.</>],
+            ['Touch', <>On coarse pointers, buttons, icon buttons, chips, switches, segmented options, checkboxes and radios keep their size and gain an invisible hit area of at least 44 × 44px (<C>--lab-control-touch-target</C>; Flutter <C>TouchTarget</C>) without changing layout; fields, selects and menu rows are at least 44px tall. At any density.</>],
             ['Motion', <>Under <C>prefers-reduced-motion</C>, durations become 0ms, keyframe animations 1ms, springs jump to their target and view transitions are skipped.</>],
             ['Transparency', <>Under <C>prefers-reduced-transparency</C>, or without <C>backdrop-filter</C>, glass becomes an opaque surface.</>],
             ['Forced colors', <>In Windows high contrast, controls use system colors (<C>ButtonFace</C>, <C>Highlight</C>, <C>CanvasText</C>), glass becomes <C>Canvas</C> with a border, and decorative rims are hidden.</>],
@@ -119,7 +119,13 @@ function Overview() {
   .order-card { border: 1px solid CanvasText; }
 }
 @media (pointer: coarse) {
-  .order-card .quick-action { min-block-size: var(--lab-control-touch-target); }
+  /* Keep the look; reach 44px (the kit's buttons do this already). */
+  .order-card .quick-action { position: relative; }
+  .order-card .quick-action::before {
+    content: ''; position: absolute; left: 50%; top: 50%; translate: -50% -50%;
+    width: max(100%, var(--lab-control-touch-target));
+    height: max(100%, var(--lab-control-touch-target));
+  }
 }`}
         />
         <Callout title="Color is never the only signal">

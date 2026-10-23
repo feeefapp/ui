@@ -58,10 +58,4 @@ void main() {
       });
     });
   }
-
-  test('segmentedStretch', () {
-    for (final v in fixture['stretch'] as List) {
-      expect(segmentedStretch(n(v[0])), closeTo(n(v[1]), 1e-5));
-    }
-  });
 }

@@ -7,7 +7,7 @@ import 'package:feeef_ui/pixel_art.dart';
 import 'package:feeef_ui/primitives/button.dart';
 import 'package:feeef_ui/primitives/fields.dart';
 import 'package:feeef_ui/primitives/layout.dart';
-import 'package:feeef_ui/primitives/switch.dart';
+import 'package:feeef_ui/primitives/slider.dart';
 import 'package:feeef_ui/icons/lucide.dart';
 import 'package:feeef_ui/scroll/reveal.dart';
 import 'package:feeef_ui/theme.dart';
@@ -161,13 +161,13 @@ void main() {
     expect(taps, 1);
   });
 
-  testWidgets('Switch is a compact SlideSwitch', (tester) async {
+  testWidgets('SlideSwitch toggles on tap', (tester) async {
     var value = false;
     await tester.pumpWidget(
       app(
         StatefulBuilder(
           builder: (context, setState) => Center(
-            child: Switch(
+            child: SlideSwitch(
               label: 'SMS',
               checked: value,
               onCheckedChange: (v) => setState(() => value = v),
@@ -176,7 +176,7 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.byType(SlideSwitch));
     await settle(tester);
     expect(value, isTrue);
   });

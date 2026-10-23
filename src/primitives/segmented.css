@@ -6,8 +6,8 @@ box) has the right shape. Motion and the pill's geometry are written by segmente
 .lab-segmented {
   --lab-segmented-size: var(--lab-control-height);
   --lab-segmented-option: calc(var(--lab-segmented-size) - 2 * var(--lab-segmented-inset));
-  --lab-segmented-lens: 0;
-  --lab-segmented-glow: 0;
+  --lab-lens: 0;
+  --lab-lens-glow: 0;
   position: relative;
   isolation: isolate;
   box-sizing: border-box;
@@ -81,7 +81,7 @@ html[data-lab-theme] .lab-segmented[data-dragging] > .lab-segmented-option.lab-c
   padding: inherit;
   color: var(--lab-on-primary);
   clip-path: var(--lab-segmented-clip);
-  opacity: calc(1 - var(--lab-segmented-lens));
+  opacity: calc(1 - var(--lab-lens));
   pointer-events: none;
 }
 .lab-segmented-icon {
@@ -114,7 +114,7 @@ html[data-lab-density='thin'][data-lab-theme] .lab-segmented > .lab-segmented-op
   pointer-events: none;
   border-radius: calc(var(--lab-segmented-option) / 2 * var(--lab-corner-scale, 1) * var(--lab-segmented-press, 1));
   corner-shape: superellipse(1.5);
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--lab-glass-shadow-small) calc(var(--lab-segmented-lens) * 100%), transparent);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--lab-glass-shadow-small) calc(var(--lab-lens) * 100%), transparent);
   will-change: transform;
 }
 .lab-segmented-pill[data-hidden] {
@@ -129,21 +129,7 @@ html[data-lab-density='thin'][data-lab-theme] .lab-segmented > .lab-segmented-op
 }
 .lab-segmented-fill {
   background: var(--lab-primary);
-  opacity: calc(1 - var(--lab-segmented-lens));
-}
-.lab-segmented-pill > .lab-segmented-lens {
-  border: 1px solid var(--lab-line);
-  background: var(--lab-glass-fill);
-  box-shadow: var(--lab-glass-light);
-  opacity: var(--lab-segmented-lens);
-}
-.lab-segmented-glow {
-  background: radial-gradient(
-    circle var(--lab-segmented-glow-r, 8px) at var(--lab-segmented-glow-x, 50%) var(--lab-segmented-glow-y, 50%),
-    var(--lab-glass-glow),
-    transparent
-  );
-  opacity: calc(var(--lab-segmented-glow) * var(--lab-segmented-lens));
+  opacity: calc(1 - var(--lab-lens));
 }
 /* Solid pill: no lens when transparency is unwanted, contrast is raised or glass is solid. */
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
@@ -151,33 +137,17 @@ html[data-lab-density='thin'][data-lab-theme] .lab-segmented > .lab-segmented-op
   .lab-segmented-option > .lab-segmented-ink {
     opacity: 1;
   }
-  .lab-segmented-pill > .lab-segmented-lens,
-  .lab-segmented-glow {
-    display: none;
-  }
 }
 html[data-lab-glass='solid'] .lab-segmented-fill,
 html[data-lab-glass='solid'] .lab-segmented-option > .lab-segmented-ink {
   opacity: 1;
 }
-html[data-lab-glass='solid'] .lab-segmented-pill > .lab-segmented-lens,
-html[data-lab-glass='solid'] .lab-segmented-glow {
-  display: none;
-}
 .lab-segmented[aria-disabled='true'] > .lab-segmented-pill {
   opacity: 0.42;
 }
 
-/* Touch keeps 44px targets, except inside a host whose bubble is the target. */
-@media (pointer: coarse) {
-  .lab-segmented {
-    --lab-segmented-size: max(var(--lab-control-height), var(--lab-control-touch-target));
-  }
-  .lab-toolbar-group .lab-segmented,
-  .lab-dock .lab-segmented {
-    --lab-segmented-size: var(--lab-control-height);
-  }
-}
+/* Touch keeps its look: each option's hit area reaches out to --lab-control-touch-target
+(system.css), the control stays a regular button tall. */
 @media (forced-colors: active) {
   .lab-segmented-pill {
     forced-color-adjust: none;
@@ -186,10 +156,6 @@ html[data-lab-glass='solid'] .lab-segmented-glow {
   .lab-segmented-fill {
     background: Highlight;
     opacity: 1;
-  }
-  .lab-segmented-pill > .lab-segmented-lens,
-  .lab-segmented-glow {
-    display: none;
   }
   .lab-segmented-option > .lab-segmented-ink {
     forced-color-adjust: none;

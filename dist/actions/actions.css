@@ -111,9 +111,6 @@ html[data-lab-theme]
   flex: 0 0 auto;
   margin-inline-start: var(--lab-space-3);
 }
-[dir='rtl'] .lab-actions-menu__chevron {
-  transform: rotate(180deg);
-}
 @media (pointer: coarse) {
   .lab-actions-bar__row {
     min-block-size: var(--lab-control-touch-target);

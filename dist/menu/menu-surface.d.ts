@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { type MenuSide } from './placement.js';
 import './menu.css';
 /** Minimum distance between a floating panel and the edges of its bounds, in px. */
 export declare const MENU_COLLISION_PADDING = 12;
@@ -7,9 +8,16 @@ export type MenuSurfaceProps = React.HTMLAttributes<HTMLDivElement> & {
     asChild?: boolean;
     /**
      * The menu covers the button that opened it and grows out of it (default). False opens it beside
-     * its trigger, `gap` away, for submenus.
+     * its trigger on `side`, `gap` away and lined up with the trigger's start edge: submenus, or a
+     * sidebar rail item's menu.
      */
     cover?: boolean;
+    /**
+     * Where the menu opens when `cover` is false (logical: `end` is right in LTR). Radix flips it when
+     * there is no room; a menu beside its trigger that fits neither side drops below the trigger
+     * instead of being squeezed. Submenus always open toward the inline end (Radix `SubContent`).
+     */
+    side?: MenuSide;
     /** Distance from the trigger when `cover` is false, in px. */
     gap?: number;
 };
@@ -28,9 +36,16 @@ export declare const MenuSurface: React.ForwardRefExoticComponent<React.HTMLAttr
     asChild?: boolean;
     /**
      * The menu covers the button that opened it and grows out of it (default). False opens it beside
-     * its trigger, `gap` away, for submenus.
+     * its trigger on `side`, `gap` away and lined up with the trigger's start edge: submenus, or a
+     * sidebar rail item's menu.
      */
     cover?: boolean;
+    /**
+     * Where the menu opens when `cover` is false (logical: `end` is right in LTR). Radix flips it when
+     * there is no room; a menu beside its trigger that fits neither side drops below the trigger
+     * instead of being squeezed. Submenus always open toward the inline end (Radix `SubContent`).
+     */
+    side?: MenuSide;
     /** Distance from the trigger when `cover` is false, in px. */
     gap?: number;
 } & React.RefAttributes<HTMLDivElement>>;

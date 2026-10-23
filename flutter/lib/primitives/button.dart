@@ -1,13 +1,21 @@
+import 'package:flutter/gestures.dart' show PointerDeviceKind, kPrimaryButton;
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
 import '../brand/pixel_loader.dart';
 import '../brand/pixel_texture.dart';
+import '../glass/container.dart' show GlassMember;
+import '../glass/press.dart';
 import '../icons/lucide.dart';
+import '../physics/motion_value.dart';
+import '../physics/spring.dart';
 import '../theme.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
 import '../theme/surfaces.dart';
+import 'lens.dart';
+import 'lens_model.dart';
+import 'touch_target.dart';
 
 /// Emphasis. Use filled for primary actions (the twin of `ButtonVariant` in the web kit).
 enum ButtonVariant {
@@ -84,7 +92,11 @@ class ControlOverrides extends InheritedWidget {
 
 /// A button painted by one of the emphasis variants: the Flutter twin of `Button` in
 /// `@feeef.dev/ui/primitives/button`. Same props, same sizes, same colours (checked against the
-/// browser in `test/tokens_test.dart`), same superellipse corners.
+/// browser in `test/tokens_test.dart`), same superellipse corners. A press answers like iOS:
+/// toolbar (glass) buttons swell and glow under the finger, filled, tonal, elevated, outlined and
+/// destructive buttons grow a little; inside a glass bubble the bubble answers instead. Reduced
+/// motion turns it off. On touch screens a button keeps its size and reaches 44 × 44 px
+/// ([TouchTarget]).
 class Button extends StatefulWidget {
   const Button({
     super.key,
@@ -153,10 +165,97 @@ class Button extends StatefulWidget {
   State<Button> createState() => _ButtonState();
 }
 
+/// How a button answers a press (the web kit's `data-press`).
+enum _Press { none, glass, content }
+
 class _ButtonState extends State<Button> {
   bool _hovered = false;
   bool _down = false;
   bool _focusVisible = false;
+
+  // Press response: scale (1 at rest), the glow's reach and strength, where it is.
+  final _scale = MotionValue(1, 0.0005);
+  final _glowRadius = MotionValue(glassGlowStart, 0.5);
+  final _glowOpacity = MotionValue(0, 0.005);
+  final _pressMotion = _PressMotion();
+  final _unsubscribe = <void Function()>[];
+  Offset _glowAt = Offset.zero;
+  int? _pressPointer;
+  _Press _press = _Press.none;
+
+  @override
+  void initState() {
+    super.initState();
+    for (final value in [_scale, _glowRadius, _glowOpacity]) {
+      _unsubscribe.add(value.subscribe((_) => _pressMotion.changed()));
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final off in _unsubscribe) {
+      off();
+    }
+    for (final value in [_scale, _glowRadius, _glowOpacity]) {
+      value.stop();
+    }
+    _pressMotion.dispose();
+    super.dispose();
+  }
+
+  /// The press response for this button here: glass for toolbar buttons (liquid glass only),
+  /// a small grow for painted buttons in content, nothing inside a glass bubble (the bubble
+  /// answers), with reduced motion or while it can't be pressed.
+  _Press _pressFor(BuildContext context, bool interactive) {
+    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (!interactive || reduced || GlassMember.of(context) != null) {
+      return _Press.none;
+    }
+    if (widget.appearance == ButtonAppearance.toolbar) {
+      // The app's glass style: more contrast keeps the swell but drops the glow (below).
+      return ThemeProvider.of(context).config.glass == GlassStyle.liquid
+          ? _Press.glass
+          : _Press.none;
+    }
+    return switch (widget.variant) {
+      ButtonVariant.filled ||
+      ButtonVariant.tonal ||
+      ButtonVariant.elevated ||
+      ButtonVariant.outlined ||
+      ButtonVariant.destructive => _Press.content,
+      _ => _Press.none,
+    };
+  }
+
+  void _pressIn(PointerDownEvent event) {
+    if (_press == _Press.none || _pressPointer != null) return;
+    if (event.kind == PointerDeviceKind.mouse &&
+        event.buttons != kPrimaryButton) {
+      return;
+    }
+    _pressPointer = event.pointer;
+    final glass = _press == _Press.glass;
+    _scale.animateTo(
+      glass ? glassPressScale : contentPressScale,
+      spring: Springs.snappy,
+    );
+    if (glass) {
+      _glowAt = event.localPosition;
+      _glowRadius.set(glassGlowStart);
+      _glowOpacity.set(1);
+      _glowRadius.animateTo(
+        glassGlowRadius(context.size?.width ?? 0),
+        spring: Springs.smooth,
+      );
+    }
+  }
+
+  void _pressOut(PointerEvent event) {
+    if (event.pointer != _pressPointer) return;
+    _pressPointer = null;
+    _scale.animateTo(1, spring: Springs.bouncy);
+    _glowOpacity.animateTo(0, spring: Springs.smooth);
+  }
 
   bool get _blocked =>
       widget.disabled || widget.loading || widget.onClick == null;
@@ -174,7 +273,6 @@ class _ButtonState extends State<Button> {
     final icon = widget.controlSize == ControlSize.icon;
     // The size whose tokens apply: an icon button takes its iconSize.
     final size = icon ? widget.iconSize : widget.controlSize;
-    final coarse = theme.coarsePointer(context);
     final toolbar = widget.appearance == ButtonAppearance.toolbar;
 
     // Paint recipe: the shared variants, plus destructive and ghost from system.css.
@@ -239,6 +337,7 @@ class _ButtonState extends State<Button> {
       raised = false;
     }
     final interactive = !widget.disabled && !widget.loading;
+    _press = _pressFor(context, interactive && widget.onClick != null);
     final fill = interactive && _down
         ? paint.pressed
         // Keyboard focus also shows the hover fill (`:focus-visible`).
@@ -248,15 +347,14 @@ class _ButtonState extends State<Button> {
 
     // A host (toolbar group, dock) sets the regular height; small and large keep their tokens.
     final regular = overrides?.height ?? s.controlHeight;
-    double height = switch (size) {
+    final height = switch (size) {
       ControlSize.small => s.controlSmall,
       ControlSize.large => s.controlLarge,
       _ => regular,
     };
-    // Touch keeps 44px targets (CSS `pointer: coarse`), except inside a toolbar bubble, where
-    // the bubble is the target.
+    // Touch keeps 44px targets without growing (TouchTarget), except inside a toolbar bubble,
+    // where the bubble is the target.
     final touch = overrides?.touchTarget ?? s.touchTarget;
-    if (coarse && height < touch) height = touch;
     // A capsule: half the control's height, times the radius scale.
     final radius = overrides?.radius ?? height / 2 * s.radiusScale;
     final fontSize = switch (size) {
@@ -295,42 +393,63 @@ class _ButtonState extends State<Button> {
         width: icon
             ? height
             : (widget.alignment != null ? double.infinity : null),
-        child: Padding(
-          // CSS boxes are border-box with a 1px border: it adds to the padding.
-          padding: icon
-              ? EdgeInsetsDirectional.zero
-              : EdgeInsetsDirectional.only(
-                  start: (widget.padding?.start ?? padX) + 1,
-                  end: (widget.padding?.end ?? padX) + 1,
-                ),
-          child: Align(
-            alignment: widget.alignment ?? Alignment.center,
-            widthFactor: widget.alignment != null ? null : 1,
-            child: IconTheme.merge(
-              data: IconThemeData(
-                size: size == ControlSize.small ? 18 : (icon ? 20 : 18),
-                color: ink,
-              ),
-              child: DefaultTextStyle.merge(
-                style: TextStyle(
-                  fontSize: fontSize,
-                  height: lineHeight / fontSize,
-                  leadingDistribution: TextLeadingDistribution.even,
-                  fontWeight: FontWeight.w400,
+        child: _PressGlow(
+          // A pressed glass button glows under the finger, over its fill, under its content.
+          visible: _press == _Press.glass && !glassHighContrastOf(context),
+          motion: _pressMotion,
+          radius: radius,
+          color: c.glassGlow,
+          at: () => _glowAt,
+          glowRadius: _glowRadius.get,
+          opacity: _glowOpacity.get,
+          child: Padding(
+            // CSS boxes are border-box with a 1px border: it adds to the padding.
+            padding: icon
+                ? EdgeInsetsDirectional.zero
+                : EdgeInsetsDirectional.only(
+                    start: (widget.padding?.start ?? padX) + 1,
+                    end: (widget.padding?.end ?? padX) + 1,
+                  ),
+            child: Align(
+              alignment: widget.alignment ?? Alignment.center,
+              widthFactor: widget.alignment != null ? null : 1,
+              child: IconTheme.merge(
+                data: IconThemeData(
+                  size: size == ControlSize.small ? 18 : (icon ? 20 : 18),
                   color: ink,
                 ),
-                maxLines: 1,
-                softWrap: false,
-                // Icons in controls use a 1.75 stroke (`.lab-control[data-variant] svg.lucide`).
-                child: LucideStroke(
-                  width: 1.75,
-                  child: CssBaseline(lineHeight: lineHeight, child: content),
+                child: DefaultTextStyle.merge(
+                  style: TextStyle(
+                    fontSize: fontSize,
+                    height: lineHeight / fontSize,
+                    leadingDistribution: TextLeadingDistribution.even,
+                    fontWeight: FontWeight.w400,
+                    color: ink,
+                  ),
+                  maxLines: 1,
+                  softWrap: false,
+                  // Icons in controls use a 1.75 stroke (`.lab-control[data-variant] svg.lucide`).
+                  child: LucideStroke(
+                    width: 1.75,
+                    child: CssBaseline(lineHeight: lineHeight, child: content),
+                  ),
                 ),
               ),
             ),
           ),
         ),
       ),
+    );
+    // The press scale, around the centre (the web kit's `scale` on `:active`).
+    result = ListenableBuilder(
+      listenable: _pressMotion,
+      builder: (context, child) {
+        final scale = _scale.get();
+        return scale == 1
+            ? child!
+            : Transform.scale(scale: scale, child: child);
+      },
+      child: result,
     );
 
     result = AnimatedOpacity(
@@ -364,17 +483,86 @@ class _ButtonState extends State<Button> {
             onInvoke: (_) => _activate(),
           ),
         },
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTapDown: interactive ? (_) => setState(() => _down = true) : null,
-          onTapUp: interactive ? (_) => setState(() => _down = false) : null,
-          onTapCancel: interactive ? () => setState(() => _down = false) : null,
-          onTap: interactive ? _activate : null,
-          child: result,
+        child: TouchTarget(
+          minSize: touch,
+          child: Listener(
+            onPointerDown: _pressIn,
+            onPointerUp: _pressOut,
+            onPointerCancel: _pressOut,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapDown: interactive
+                  ? (_) => setState(() => _down = true)
+                  : null,
+              onTapUp: interactive
+                  ? (_) => setState(() => _down = false)
+                  : null,
+              onTapCancel: interactive
+                  ? () => setState(() => _down = false)
+                  : null,
+              onTap: interactive ? _activate : null,
+              child: result,
+            ),
+          ),
         ),
       ),
     );
   }
+}
+
+/// Notifies the press painters whenever a press value moves.
+class _PressMotion extends ChangeNotifier {
+  void changed() => notifyListeners();
+}
+
+/// The touch glow of a pressed glass button ([LensPaint.paintGlow]), painted before [child]: over
+/// the button's fill, under its content, like the web kit's `.lab-control[data-press='glass']::after`.
+class _PressGlow extends StatelessWidget {
+  const _PressGlow({
+    required this.visible,
+    required this.motion,
+    required this.radius,
+    required this.color,
+    required this.at,
+    required this.glowRadius,
+    required this.opacity,
+    required this.child,
+  });
+  final bool visible;
+  final Listenable motion;
+  final double radius;
+  final Color color;
+  final Offset Function() at;
+  final double Function() glowRadius, opacity;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+    painter: visible ? _PressGlowPainter(this) : null,
+    child: child,
+  );
+}
+
+class _PressGlowPainter extends CustomPainter {
+  _PressGlowPainter(this.glow) : super(repaint: glow.motion);
+  final _PressGlow glow;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final r = glow.radius;
+    LensPaint.paintGlow(
+      canvas,
+      superellipsePath(Offset.zero & size, [r, r, r, r]),
+      glow.color,
+      glow.at(),
+      glow.glowRadius(),
+      glow.opacity(),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_PressGlowPainter old) =>
+      old.glow.radius != glow.radius || old.glow.color != glow.color;
 }
 
 /// Paints the button surface like the CSS: superellipse fill, 1px inside edge, the raised shadow

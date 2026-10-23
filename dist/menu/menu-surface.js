@@ -7,6 +7,7 @@ import { cornerFit } from '../brand/corner-fit.js';
 import { onAnimationFrame, prefersReducedMotion } from '../physics/motion-value.js';
 import { useFloatingBoundary } from './boundary.js';
 import { MENU_MORPH, menuAlign, menuBubblePath, menuCloseFrame, menuFadeFrame, menuOpenFrame, menuRestFrame, } from './morph-model.js';
+import { physicalMenuSide, sidePanelFallback } from './placement.js';
 import './menu.css';
 /** Minimum distance between a floating panel and the edges of its bounds, in px. */
 export const MENU_COLLISION_PADDING = 12;
@@ -20,7 +21,7 @@ export const MENU_COLLISION_PADDING = 12;
  * `collisionPadding`) that the content's own props override. Reduced motion crossfades instead;
  * reduced transparency and more contrast paint it solid.
  */
-export const MenuSurface = React.forwardRef(({ asChild = false, cover = true, gap = 4, className, children, ...props }, ref) => {
+export const MenuSurface = React.forwardRef(({ asChild = false, cover = true, side = 'bottom', gap = 4, className, children, ...props }, ref) => {
     const boundary = useFloatingBoundary();
     const node = React.useRef(null);
     const layers = React.useRef({ shadow: null, bubble: null, body: null, edge: null });
@@ -39,18 +40,46 @@ export const MenuSurface = React.forwardRef(({ asChild = false, cover = true, ga
         const trigger = findTrigger(node.current);
         const bounds = (boundary ?? trigger?.closest('[data-lab-boundary]') ?? null);
         const rtl = getComputedStyle(node.current).direction === 'rtl';
-        let align = 'center';
-        if (trigger && cover) {
+        const area = bounds?.getBoundingClientRect() ?? {
+            left: 0,
+            top: 0,
+            right: window.innerWidth,
+            bottom: window.innerHeight,
+        };
+        let align = cover ? 'center' : 'start';
+        // Radix forces a submenu (opened from a menu row) toward the inline end.
+        const physical = physicalMenuSide(isSubmenuTrigger(trigger) ? 'end' : side, rtl);
+        let offset = cover && trigger ? -trigger.offsetHeight : gap;
+        let alignOffset = 0;
+        if (trigger) {
             const rect = trigger.getBoundingClientRect();
-            const area = bounds?.getBoundingClientRect() ?? { left: 0, right: window.innerWidth };
-            align = menuAlign(isToolbarTrigger(trigger), rect.left + rect.width / 2, area.left, area.right, rtl);
+            if (cover) {
+                align = menuAlign(isToolbarTrigger(trigger), rect.left + rect.width / 2, area.left, area.right, rtl);
+            }
+            else if (physical === 'left' || physical === 'right') {
+                const pad = MENU_COLLISION_PADDING;
+                const fallback = sidePanelFallback({
+                    trigger: rect,
+                    bounds: {
+                        left: area.left + pad,
+                        top: area.top + pad,
+                        right: area.right - pad,
+                        bottom: area.bottom - pad,
+                    },
+                    // Its natural width before Radix sizes it (at least the menu's minimum).
+                    width: Math.min(node.current.offsetWidth, area.right - area.left - 2 * pad),
+                    gap,
+                    side: physical,
+                    rtl,
+                });
+                if (fallback) {
+                    offset = fallback.sideOffset;
+                    alignOffset = fallback.alignOffset;
+                }
+            }
         }
-        setPlacement({
-            offset: cover && trigger ? -trigger.offsetHeight : gap,
-            align,
-            boundary: bounds,
-        });
-    }, [asChild, boundary, cover, gap]);
+        setPlacement({ offset, alignOffset, align, side: physical, boundary: bounds });
+    }, [asChild, boundary, cover, side, gap]);
     React.useLayoutEffect(() => {
         placed.current = !!placement;
     }, [placement]);
@@ -66,7 +95,8 @@ export const MenuSurface = React.forwardRef(({ asChild = false, cover = true, ga
     const child = React.Children.only(children);
     const radix = {
         sideOffset: placement?.offset ?? 0,
-        ...(cover ? { align: placement?.align ?? 'center' } : {}),
+        align: placement?.align ?? (cover ? 'center' : 'start'),
+        ...(cover ? {} : { side: placement?.side ?? physicalMenuSide(side, false), alignOffset: placement?.alignOffset ?? 0 }),
         collisionPadding: MENU_COLLISION_PADDING,
         collisionBoundary: placement?.boundary ?? undefined,
     };
@@ -78,6 +108,10 @@ function findTrigger(content) {
     if (!content.id)
         return null;
     return content.ownerDocument.querySelector(`[aria-controls="${CSS.escape(content.id)}"]`);
+}
+/** A Radix submenu trigger: a menu row that opens a menu. */
+function isSubmenuTrigger(trigger) {
+    return trigger?.getAttribute('role') === 'menuitem' && trigger.hasAttribute('aria-haspopup');
 }
 function isToolbarTrigger(trigger) {
     return !!trigger.closest('[role="toolbar"], .lab-toolbar-group, .lab-glass-group, .lab-actions-bar, .lab-dock, .lab-scaffold-app-bar');

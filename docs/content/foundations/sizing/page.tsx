@@ -176,9 +176,13 @@ function Overview() {
         </div>
         <Callout title="Touch keeps 44px">
           <p>
-            On coarse pointers (<C>@media (pointer: coarse)</C>) buttons, icon buttons, fields, selects
-            and menu options grow to <C>--lab-control-touch-target</C>, 44px, whatever their size or the
-            app’s density. Never shrink a hit area below it.
+            On coarse pointers (<C>@media (pointer: coarse)</C>) buttons, icon buttons, chips, switches,
+            segmented options, checkboxes and radios keep their size, so phones show iOS’s 36px buttons,
+            and gain an invisible hit area of at least <C>--lab-control-touch-target</C> (44 × 44px)
+            centred on them: a <C>::before</C> that changes no layout (Flutter: <C>TouchTarget</C>). Where
+            two reaches overlap the later control wins; a press on a control itself is always its own.
+            Inside a toolbar bubble the bubble is the target. Fields, selects and menu rows still grow
+            to 44px. Never shrink a hit area below it.
           </p>
         </Callout>
       </Section>
@@ -243,10 +247,19 @@ function Overview() {
 .order-toolbar {
   height: var(--lab-control-height);
 }
+/* A custom control: keep its size, reach 44px on touch screens. */
+.order-row .quick-action {
+  position: relative;
+}
 @media (pointer: coarse) {
-  .order-row .quick-action {
-    min-width: var(--lab-control-touch-target);
-    min-height: var(--lab-control-touch-target);
+  .order-row .quick-action::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, var(--lab-control-touch-target));
+    height: max(100%, var(--lab-control-touch-target));
+    translate: -50% -50%;
   }
 }`}
         />

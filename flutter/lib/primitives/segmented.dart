@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'dart:ui' as ui show Gradient, SemanticsRole;
+import 'dart:ui' as ui show SemanticsRole;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
@@ -16,10 +16,12 @@ import '../physics/spring.dart';
 import '../theme.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
-import '../theme/light_edge.dart';
 import '../theme/surfaces.dart';
 import 'button.dart' show ControlOverrides;
+import 'lens.dart';
+import 'lens_model.dart';
 import 'segmented_model.dart';
+import 'touch_target.dart';
 
 /// One choice of a segmented control.
 class SegmentOption<T> {
@@ -400,7 +402,7 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
       center.track(target, time);
     }
     stretch.animateTo(
-      segmentedStretch(center.velocityAt(time)),
+      lensStretch(center.velocityAt(time)),
       spring: Springs.interactive,
     );
     _motion.changed();
@@ -484,12 +486,11 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
     final tabIndex = enabled.contains(selected)
         ? selected
         : (enabled.isEmpty ? -1 : enabled.first);
-    // A regular button tall (a host's control height inside one); 44 on touch unless the host is
-    // the target. The pill sits the inset inside it.
+    // A regular button tall (a host's control height inside one); on touch each option reaches
+    // out to the touch target instead (TouchTarget). The pill sits the inset inside it.
     final overrides = ControlOverrides.maybeOf(context);
-    var height = overrides?.height ?? s.controlHeight;
+    final height = overrides?.height ?? s.controlHeight;
     final touch = overrides?.touchTarget ?? s.touchTarget;
-    if (theme.coarsePointer(context) && height < touch) height = touch;
     final inset = s.segmentedInset;
     final optionHeight = height - 2 * inset;
     final solid = glassStyleOf(context) == GlassStyle.solid;
@@ -508,6 +509,7 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
         focusNode: _node(i),
         tabbable: i == tabIndex,
         height: optionHeight,
+        touchTarget: touch,
         padding: s.controlPadding,
         radius: optionHeight / 2 * s.radiusScale,
         // 13px semibold, iOS; 12px in the thin density.
@@ -573,12 +575,7 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
                     painter: _PillPainter(
                       state: this,
                       primary: c.primary,
-                      fill: c.glassFill,
-                      edge: c.line,
-                      highlight: c.glassEdgeLow,
-                      light: c.glassEdgeLight,
-                      shadow: c.glassShadowSmall,
-                      glow: c.glassGlow,
+                      lensPaint: LensPaint.of(c),
                       radiusScale: s.radiusScale,
                       solid: solid,
                       disabled: widget.disabled,
@@ -698,7 +695,6 @@ class _InkClip {
     if (cut.width <= 0 || cut.height <= 0) return RRect.zero;
     return RRect.fromRectAndRadius(cut, Radius.circular(radius));
   }
-
 }
 
 /// Paints its child, then paints it again in [color] inside [ink]'s clip: the selected ink of an
@@ -795,24 +791,21 @@ class _RenderInkOverlay extends RenderProxyBox {
   }
 }
 
-/// The pill: filled at rest; pressed or dragged it becomes a glass lens (fill → glass), swells and
-/// shows the touch glow, like a pressed GlassContainer bubble. Solid styles keep the fill.
+/// The pill: filled at rest; pressed or dragged it becomes a glass lens (fill → glass, [LensPaint]),
+/// swells and shows the touch glow, like a pressed GlassContainer bubble. Solid styles keep the
+/// fill.
 class _PillPainter extends CustomPainter {
   _PillPainter({
     required this.state,
     required this.primary,
-    required this.fill,
-    required this.edge,
-    required this.highlight,
-    required this.light,
-    required this.shadow,
-    required this.glow,
+    required this.lensPaint,
     required this.radiusScale,
     required this.solid,
     required this.disabled,
   }) : super(repaint: state._motion);
   final _SegmentedControlState<dynamic> state;
-  final Color primary, fill, edge, highlight, light, shadow, glow;
+  final Color primary;
+  final LensPaint lensPaint;
   final double radiusScale;
   final bool solid, disabled;
 
@@ -824,8 +817,7 @@ class _PillPainter extends CustomPainter {
     final base =
         state._boxes.first.height / 2 * radiusScale * state.press.get();
     final radius = math.min(base, math.min(rect.width, rect.height) / 2);
-    final radii = [radius, radius, radius, radius];
-    final shape = superellipsePath(rect, radii);
+    final shape = superellipsePath(rect, [radius, radius, radius, radius]);
     final lens = solid ? 0.0 : state.lens.get().clamp(0.0, 1.0);
     final alpha = disabled ? 0.42 : 1.0;
     if (alpha < 1) {
@@ -834,79 +826,22 @@ class _PillPainter extends CustomPainter {
         Paint()..color = Color.from(alpha: alpha, red: 0, green: 0, blue: 0),
       );
     }
-    if (lens > 0.001) {
-      // 0 4px 14px: a lifted lens casts a small shadow.
-      canvas.drawPath(
-        shape.shift(const Offset(0, 4)),
-        Paint()
-          ..color = shadow.withValues(alpha: shadow.a * lens)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7),
-      );
-    }
+    lensPaint.paintShadow(canvas, shape, lens);
     if (lens < 0.999) {
       canvas.drawPath(
         shape,
         Paint()..color = primary.withValues(alpha: primary.a * (1 - lens)),
       );
     }
-    if (lens > 0.001) {
-      canvas.saveLayer(
-        rect.inflate(1),
-        Paint()..color = Color.from(alpha: lens, red: 0, green: 0, blue: 0),
-      );
-      canvas.drawPath(shape, Paint()..color = fill);
-      // `--lab-glass-light`: inset highlight on top, a faint shade at the bottom.
-      final inner = superellipsePath(rect, radii, inset: 1);
-      canvas.save();
-      canvas.clipPath(inner);
-      canvas.drawPath(
-        Path.combine(
-          PathOperation.difference,
-          inner,
-          inner.shift(const Offset(0, 1)),
-        ),
-        Paint()..color = highlight,
-      );
-      canvas.drawPath(
-        Path.combine(
-          PathOperation.difference,
-          inner,
-          inner.shift(const Offset(0, -1)),
-        ),
-        Paint()
-          ..color = const Color.from(alpha: 0.06, red: 0, green: 0, blue: 0),
-      );
-      canvas.restore();
-      canvas.drawPath(
-        superellipsePath(rect, radii, inset: 0.5),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
-          ..color = edge,
-      );
-      canvas.save();
-      canvas.translate(rect.left, rect.top);
-      paintLightEdge(canvas, rect.size, radius, light: light, low: highlight);
-      canvas.restore();
-      // The touch glow, clipped to the lens.
-      final glowAlpha = state.glowOpacity.get().clamp(0.0, 1.0);
-      if (glowAlpha > 0.01) {
-        final r = math.max(1.0, state.glowRadius.get());
-        canvas.save();
-        canvas.clipPath(shape);
-        canvas.drawCircle(
-          state._glowAt,
-          r,
-          Paint()
-            ..shader = ui.Gradient.radial(state._glowAt, r, [
-              glow.withValues(alpha: glow.a * glowAlpha),
-              glow.withValues(alpha: 0),
-            ]),
-        );
-        canvas.restore();
-      }
-      canvas.restore();
-    }
+    lensPaint.paint(
+      canvas,
+      rect,
+      radius,
+      lens: lens,
+      glowAt: state._glowAt,
+      glowRadius: state.glowRadius.get(),
+      glowOpacity: state.glowOpacity.get(),
+    );
     if (alpha < 1) canvas.restore();
   }
 
@@ -914,12 +849,7 @@ class _PillPainter extends CustomPainter {
   bool shouldRepaint(_PillPainter old) =>
       old.state != state ||
       old.primary != primary ||
-      old.fill != fill ||
-      old.edge != edge ||
-      old.highlight != highlight ||
-      old.light != light ||
-      old.shadow != shadow ||
-      old.glow != glow ||
+      old.lensPaint != lensPaint ||
       old.radiusScale != radiusScale ||
       old.solid != solid ||
       old.disabled != disabled;
@@ -936,6 +866,7 @@ class _Segment<T> extends StatefulWidget {
     required this.focusNode,
     required this.tabbable,
     required this.height,
+    required this.touchTarget,
     required this.padding,
     required this.radius,
     required this.fontSize,
@@ -957,6 +888,9 @@ class _Segment<T> extends StatefulWidget {
   final bool fill;
   final FocusNode focusNode;
   final double height, padding, radius, fontSize;
+
+  /// The smallest hit area on touch screens ([TouchTarget]).
+  final double touchTarget;
   final VoidCallback onSelect;
   final _InkClip ink;
   final double Function() inkOpacity;
@@ -1051,47 +985,50 @@ class _SegmentState<T> extends State<_Segment<T>> {
               onInvoke: (_) => widget.onSelect(),
             ),
           },
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapDown: widget.disabled
-                ? null
-                : (_) => setState(() => _down = true),
-            onTapUp: widget.disabled
-                ? null
-                : (_) => setState(() => _down = false),
-            onTapCancel: widget.disabled
-                ? null
-                : () => setState(() => _down = false),
-            onTap: widget.disabled ? null : widget.onSelect,
-            child: AnimatedOpacity(
-              opacity: widget.disabled ? 0.42 : 1,
-              duration: const Duration(milliseconds: 140),
-              child: TweenAnimationBuilder<Color?>(
-                tween: ColorTween(end: fill),
+          child: TouchTarget(
+            minSize: widget.touchTarget,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapDown: widget.disabled
+                  ? null
+                  : (_) => setState(() => _down = true),
+              onTapUp: widget.disabled
+                  ? null
+                  : (_) => setState(() => _down = false),
+              onTapCancel: widget.disabled
+                  ? null
+                  : () => setState(() => _down = false),
+              onTap: widget.disabled ? null : widget.onSelect,
+              child: AnimatedOpacity(
+                opacity: widget.disabled ? 0.42 : 1,
                 duration: const Duration(milliseconds: 140),
-                curve: const Cubic(0.2, 0.8, 0.2, 1),
-                builder: (context, color, child) => FocusRing(
-                  visible: _focusVisible,
-                  radius: widget.radius,
-                  child: DecoratedBox(
-                    decoration: ShapeDecoration(
-                      color: color,
-                      shape: SuperellipseBorder(radius: widget.radius),
+                child: TweenAnimationBuilder<Color?>(
+                  tween: ColorTween(end: fill),
+                  duration: const Duration(milliseconds: 140),
+                  curve: const Cubic(0.2, 0.8, 0.2, 1),
+                  builder: (context, color, child) => FocusRing(
+                    visible: _focusVisible,
+                    radius: widget.radius,
+                    child: DecoratedBox(
+                      decoration: ShapeDecoration(
+                        color: color,
+                        shape: SuperellipseBorder(radius: widget.radius),
+                      ),
+                      child: child,
                     ),
-                    child: child,
                   ),
-                ),
-                child: SizedBox(
-                  height: widget.height,
-                  // The selected ink, cut to the pill's shape as it passes.
-                  child: _InkOverlay(
-                    ink: widget.ink,
-                    color: c.onPrimary,
-                    opacity: widget.inkOpacity,
-                    repaint: widget.motion,
-                    child: Padding(
-                      padding: padding,
-                      child: _content(c.muted),
+                  child: SizedBox(
+                    height: widget.height,
+                    // The selected ink, cut to the pill's shape as it passes.
+                    child: _InkOverlay(
+                      ink: widget.ink,
+                      color: c.onPrimary,
+                      opacity: widget.inkOpacity,
+                      repaint: widget.motion,
+                      child: Padding(
+                        padding: padding,
+                        child: _content(c.muted),
+                      ),
                     ),
                   ),
                 ),

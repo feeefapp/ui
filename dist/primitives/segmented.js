@@ -7,7 +7,9 @@ import { revealScrollChild } from '../scroll/reveal.js';
 import { GLASS_GLOW_START, GLASS_PRESS_SCALE, glassGlowRadius, pressedShape } from '../glass/press.js';
 import { useMotionValue, useReducedMotion } from '../physics/react.js';
 import { SPRINGS } from '../physics/spring.js';
-import { SEGMENTED_SLOP, segmentIndexAt, segmentedDragCenter, segmentedPillWidth, segmentedSnapIndex, segmentedStretch, } from './segmented-model.js';
+import { SEGMENTED_SLOP, segmentIndexAt, segmentedDragCenter, segmentedPillWidth, segmentedSnapIndex, } from './segmented-model.js';
+import { lensStretch } from './lens-model.js';
+import './lens.css';
 import './segmented.css';
 /**
  * A single choice among two to five short options, shown side by side. A filled pill marks the
@@ -89,11 +91,11 @@ export function SegmentedControl({ value, onChange, options, label, disabled = f
         pill.style.width = `${shape.width}px`;
         pill.style.height = `${shape.height}px`;
         el.style.setProperty('--lab-segmented-press', String(scale));
-        el.style.setProperty('--lab-segmented-lens', String(Math.max(0, Math.min(1, lens.get()))));
-        el.style.setProperty('--lab-segmented-glow-x', `${glowAt.current.x - shape.x}px`);
-        el.style.setProperty('--lab-segmented-glow-y', `${glowAt.current.y - shape.y}px`);
-        el.style.setProperty('--lab-segmented-glow-r', `${Math.max(1, glowRadius.get())}px`);
-        el.style.setProperty('--lab-segmented-glow', String(Math.max(0, Math.min(1, glowOpacity.get()))));
+        el.style.setProperty('--lab-lens', String(Math.max(0, Math.min(1, lens.get()))));
+        el.style.setProperty('--lab-lens-glow-x', `${glowAt.current.x - shape.x}px`);
+        el.style.setProperty('--lab-lens-glow-y', `${glowAt.current.y - shape.y}px`);
+        el.style.setProperty('--lab-lens-glow-r', `${Math.max(1, glowRadius.get())}px`);
+        el.style.setProperty('--lab-lens-glow', String(Math.max(0, Math.min(1, glowOpacity.get()))));
         // Selected ink shows exactly where the pill is, so a label turns over as the pill crosses it.
         const radius = (Math.min(shape.width, shape.height) / 2) * corner;
         buttons().forEach((button, i) => {
@@ -284,7 +286,7 @@ export function SegmentedControl({ value, onChange, options, label, disabled = f
         }
         else
             center.track(target, event.timeStamp);
-        void stretch.animateTo(segmentedStretch(center.getVelocity(event.timeStamp)), { spring: SPRINGS.interactive });
+        void stretch.animateTo(lensStretch(center.getVelocity(event.timeStamp)), { spring: SPRINGS.interactive });
         paint();
     };
     const onPointerEnd = (event, cancelled) => {
@@ -340,7 +342,7 @@ export function SegmentedControl({ value, onChange, options, label, disabled = f
                 return;
             event.preventDefault();
             event.stopPropagation();
-        }, "data-lab-corners": true, children: [_jsxs("span", { ref: pillRef, className: "lab-segmented-pill", "aria-hidden": "true", "data-hidden": "", children: [_jsx("span", { className: "lab-segmented-fill" }), _jsx("span", { className: "lab-segmented-lens lab-light-edge" }), _jsx("span", { className: "lab-segmented-glow" })] }), options.map((option) => {
+        }, "data-lab-corners": true, children: [_jsxs("span", { ref: pillRef, className: "lab-segmented-pill", "aria-hidden": "true", "data-hidden": "", children: [_jsx("span", { className: "lab-segmented-fill" }), _jsx("span", { className: "lab-lens lab-light-edge" }), _jsx("span", { className: "lab-lens-glow" })] }), options.map((option) => {
                 const content = (_jsxs(_Fragment, { children: [option.icon && (_jsx("span", { className: "lab-segmented-icon", "aria-hidden": "true", children: option.icon })), _jsx("span", { className: "lab-segmented-label", children: option.label })] }));
                 return (_jsxs(Button, { variant: "ghost", appearance: "toolbar", controlSize: "regular", className: "lab-segmented-option", role: "radio", "aria-checked": option.value === value, tabIndex: option.value === tabValue ? 0 : -1, disabled: disabled || option.disabled, onClick: () => onChange(option.value), children: [_jsx("span", { className: "lab-segmented-content", children: content }), _jsx("span", { className: "lab-segmented-content lab-segmented-ink", "aria-hidden": "true", children: content })] }, option.value));
             })] }));

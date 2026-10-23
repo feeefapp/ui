@@ -86,21 +86,141 @@ void main() {
       },
     );
 
-    testWidgets('touch keeps 44px targets in any size and density', (
+    testWidgets(
+      'touch keeps the look and reaches 44px without changing layout',
+      (tester) async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.android;
+        addTearDown(() => debugDefaultTargetPlatformOverride = null);
+        var clicks = 0;
+        await tester.pumpWidget(
+          host(
+            Button(
+              controlSize: ControlSize.small,
+              onClick: () => clicks++,
+              children: const [Text('Save')],
+            ),
+            config: const ThemeConfig(density: Density.thin),
+          ),
+        );
+        final box = tester.getRect(find.byType(Button));
+        expect(box.height, 22, reason: 'thin small: the visual size stays');
+        // Just outside the button, within the 44px reach: it still presses it.
+        await tester.tapAt(box.center.translate(0, box.height / 2 + 9));
+        expect(clicks, 1);
+        await tester.tapAt(box.center.translate(0, -box.height / 2 - 9));
+        expect(clicks, 2);
+        // Beyond the reach: nothing.
+        await tester.tapAt(box.center.translate(0, 23));
+        expect(clicks, 2);
+        debugDefaultTargetPlatformOverride = null;
+      },
+    );
+
+    testWidgets(
+      'segmented options and checkboxes keep their size and reach 44px',
+      (tester) async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.android;
+        var value = 'a';
+        var checked = false;
+        await tester.pumpWidget(
+          host(
+            StatefulBuilder(
+              builder: (context, setState) => Column(
+                mainAxisSize: MainAxisSize.min,
+                spacing: 40,
+                children: [
+                  SegmentedControl<String>(
+                    label: 'View',
+                    value: value,
+                    onChange: (v) => setState(() => value = v),
+                    options: const [
+                      SegmentOption(value: 'a', label: 'List'),
+                      SegmentOption(value: 'b', label: 'Board'),
+                    ],
+                  ),
+                  Checkbox(
+                    label: const Text('Paid'),
+                    controlSize: ControlSize.small,
+                    checked: checked,
+                    onCheckedChange: (v) => setState(() => checked = v),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        final segmented = tester.getRect(find.byType(SegmentedControl<String>));
+        expect(
+          segmented.height,
+          36,
+          reason: 'a regular button tall on touch too',
+        );
+        final board = tester.getRect(find.text('Board'));
+        // Below the control, under "Board": within the option's 44px reach.
+        await tester.tapAt(Offset(board.center.dx, segmented.bottom + 3));
+        await tester.pumpAndSettle();
+        expect(value, 'b');
+        final box = tester.getRect(find.byType(Checkbox));
+        expect(box.height, 30);
+        await tester.tapAt(box.bottomCenter + const Offset(0, 6));
+        await tester.pumpAndSettle();
+        expect(checked, isTrue);
+        debugDefaultTargetPlatformOverride = null;
+      },
+    );
+
+    testWidgets('the reach never takes a press from another control', (
       tester,
     ) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      final pressed = <String>[];
+      await tester.pumpWidget(
+        host(
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Button(
+                controlSize: ControlSize.small,
+                onClick: () => pressed.add('a'),
+                children: const [Text('A')],
+              ),
+              Button(
+                controlSize: ControlSize.small,
+                onClick: () => pressed.add('b'),
+                children: const [Text('B')],
+              ),
+            ],
+          ),
+        ),
+      );
+      final b = tester.getRect(find.widgetWithText(Button, 'B'));
+      // The top edge of B is inside A's reach, but on B itself.
+      await tester.tapAt(b.topCenter.translate(0, 2));
+      expect(pressed, ['b']);
+      // Above A, in its reach only.
+      final a = tester.getRect(find.widgetWithText(Button, 'A'));
+      await tester.tapAt(a.topCenter.translate(0, -5));
+      expect(pressed, ['b', 'a']);
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    testWidgets('desktop pointers get no reach', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      var clicks = 0;
       await tester.pumpWidget(
         host(
           Button(
             controlSize: ControlSize.small,
-            onClick: () {},
+            onClick: () => clicks++,
             children: const [Text('Save')],
           ),
-          config: const ThemeConfig(density: Density.thin),
         ),
       );
-      expect(tester.getSize(find.byType(Button)).height, 44);
+      final box = tester.getRect(find.byType(Button));
+      await tester.tapAt(box.bottomCenter.translate(0, 5));
+      expect(clicks, 0);
       debugDefaultTargetPlatformOverride = null;
     });
 
@@ -127,10 +247,10 @@ void main() {
       expect(clicks, 2);
 
       await tester.pumpWidget(button(disabled: true));
-      await tester.tap(find.text('Ship order'), warnIfMissed: false);
+      await tester.tap(find.text('Ship order'));
       expect(clicks, 2);
       await tester.pumpWidget(button(loading: true));
-      await tester.tap(find.text('Ship order'), warnIfMissed: false);
+      await tester.tap(find.text('Ship order'));
       expect(clicks, 2);
     });
 
@@ -319,7 +439,7 @@ void main() {
       await tester.pump();
       expect(checked, isFalse);
       await tester.pumpWidget(box(disabled: true));
-      await tester.tap(find.text('Send SMS'), warnIfMissed: false);
+      await tester.tap(find.text('Send SMS'));
       expect(checked, isFalse);
     });
 

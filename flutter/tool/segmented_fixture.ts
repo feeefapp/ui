@@ -4,7 +4,6 @@ import {
   segmentedDragCenter,
   segmentedPillWidth,
   segmentedSnapIndex,
-  segmentedStretch,
   type SegmentSpan,
 } from '../../src/primitives/segmented-model'
 
@@ -53,6 +52,5 @@ export function segmentedFixture() {
       pillWidth: POINTS.map((x) => [x, round(segmentedPillWidth(x, spans))]),
       snap: CENTERS.flatMap((c) => VELOCITIES.map((v) => [c, v, segmentedSnapIndex(c, v, spans)])),
     })),
-    stretch: VELOCITIES.map((v) => [v, round(segmentedStretch(v))]),
   }
 }

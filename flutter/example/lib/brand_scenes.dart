@@ -134,7 +134,7 @@ List<Widget> avatarScene() => [
         ],
       ),
     ),
-    Switch(label: 'SMS', checked: true, onCheckedChange: (_) {}),
-    Switch(label: 'Email', checked: false, onCheckedChange: (_) {}),
+    SlideSwitch(label: 'SMS', checked: true, onCheckedChange: (_) {}),
+    SlideSwitch(label: 'Email', checked: false, onCheckedChange: (_) {}),
   ]),
 ];

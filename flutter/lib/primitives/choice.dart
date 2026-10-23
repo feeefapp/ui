@@ -10,6 +10,7 @@ import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
 import '../theme/surfaces.dart';
 import 'button.dart' show ControlSize;
+import 'touch_target.dart';
 
 /// A checkbox with a label, description, error and indeterminate state: the twin of `Checkbox` in
 /// `@feeef.dev/ui/primitives/choice`. Clicking the label toggles it. Pass [checked] to control it,
@@ -377,7 +378,7 @@ class _Choice extends StatefulWidget {
   State<_Choice> createState() => _ChoiceState();
 }
 
-/// `.lab-choice`: the label row (44px, 6/10 padding, 10px gap, control radius, 4% hover) with the
+/// `.lab-choice`: the label row (control height, 6/10 padding, 10px gap, control radius, 4% hover) with the
 /// mark (20px, 1.5px muted border, 7px superellipse or round) and its check, dash or dot.
 class _ChoiceState extends State<_Choice> {
   bool _hovered = false;
@@ -395,9 +396,8 @@ class _ChoiceState extends State<_Choice> {
     final invalid = widget.invalid || widget.error != null;
     final markSize = compact ? 18.0 : 20.0;
     final markRadius = (compact ? 6.0 : 7.0) * s.radiusScale;
-    final minHeight = theme.coarsePointer(context)
-        ? 44.0
-        : (compact ? s.controlSmall : s.controlHeight);
+    // Touch keeps the look and reaches out to 44px instead (TouchTarget).
+    final minHeight = compact ? s.controlSmall : s.controlHeight;
     final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final spring = reduced ? Duration.zero : const Duration(milliseconds: 320);
 
@@ -553,13 +553,15 @@ class _ChoiceState extends State<_Choice> {
             onInvoke: (_) => widget.onToggle?.call(),
           ),
         },
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTapDown: enabled ? (_) => setState(() => _down = true) : null,
-          onTapUp: enabled ? (_) => setState(() => _down = false) : null,
-          onTapCancel: enabled ? () => setState(() => _down = false) : null,
-          onTap: enabled ? widget.onToggle : null,
-          child: Opacity(opacity: widget.disabled ? 0.5 : 1, child: row),
+        child: TouchTarget(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapDown: enabled ? (_) => setState(() => _down = true) : null,
+            onTapUp: enabled ? (_) => setState(() => _down = false) : null,
+            onTapCancel: enabled ? () => setState(() => _down = false) : null,
+            onTap: enabled ? widget.onToggle : null,
+            child: Opacity(opacity: widget.disabled ? 0.5 : 1, child: row),
+          ),
         ),
       ),
     );

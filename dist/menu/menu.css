@@ -14,10 +14,13 @@ html[data-lab-theme] {
   --lab-menu-row-inline: 14px;
   --lab-menu-radius: var(--lab-radius-glass);
   /* Menus carry text over anything, so their glass is at least this tinted and this blurred. */
-  --lab-menu-tint: max(var(--lab-glass-tint), 0.85);
-  --lab-menu-blur: max(var(--lab-glass-blur-large), 10px);
+  --lab-menu-tint: 1;
+  /* A menu is read over anything: thicker than the regular material (veil at least 88 %, blurred
+  20px) so content under it never reads as drawn on top of it. */
+  --lab-menu-veil: max(var(--lab-glass-veil-large), 0.88);
+  --lab-menu-blur: max(var(--lab-glass-blur-large), 20px);
   /* The large glass material (system.css formulas, glass/material.ts glassMaterial) at that tint. */
-  --lab-menu-fill: color-mix(in srgb, var(--lab-surface) calc(var(--lab-menu-tint) * var(--lab-glass-veil-large) * 100%), transparent);
+  --lab-menu-fill: color-mix(in srgb, var(--lab-surface) calc(var(--lab-menu-veil) * 100%), transparent);
   --lab-menu-saturate: calc(
     (1 - var(--lab-menu-tint) * var(--lab-glass-colour-loss-large)) / (1 - var(--lab-menu-tint) * var(--lab-glass-veil-large))
   );

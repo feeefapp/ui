@@ -48,4 +48,12 @@ export function computeActionsLayout({ actions, maxWidth, measure, overflowWidth
         requiredWidth: Math.max(overflowWidth, requiredWidth),
     };
 }
+/**
+ * Whether a menu of `actions` reserves the leading slot on every row: some row has an icon, is a
+ * toggle (its check) or is loading. A menu of plain labels has no empty slot. The Flutter twin is
+ * `menuHasLeading` in `actions/layout.dart`.
+ */
+export function menuHasLeading(actions, pending) {
+    return actions.some((action) => !!action.icon || action.type === 'toggle' || !!action.loading || pending.has(action.id));
+}
 //# sourceMappingURL=layout.js.map

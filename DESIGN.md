@@ -30,7 +30,7 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
    (`comfortable` merchant apps, `compact` consoles, `thin` very dense tools). Comfortable is iOS's
    control sizes (capsule buttons 30 / 36 / 52, 44px toolbar bubbles, 54px list rows); compact steps
    one size down. Change a single size app-wide with `theme.metrics`, never one screen by hand. Touch
-   keeps 44px targets.
+   keeps the look and reaches 44px: controls gain an invisible 44 × 44 hit area, layout untouched.
 6. **Color means something.** Primary = main action, selection, focus. Red = destructive/error. Green =
    success. Everything else neutral. Never decorate with color; never rely on color alone. Brand through
    `theme.primary` / `palette`, not by painting components.

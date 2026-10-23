@@ -144,11 +144,7 @@
 .lab-radio-group-options {
   display: grid;
 }
-@media (pointer: coarse) {
-  .lab-choice[data-control-size='small'] {
-    min-height: var(--lab-control-touch-target, 44px);
-  }
-}
+/* Touch keeps its look: the hit area reaches out to --lab-control-touch-target (system.css). */
 @media (prefers-reduced-motion: reduce) {
   .lab-choice,
   .lab-choice-mark,

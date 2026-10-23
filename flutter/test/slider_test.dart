@@ -1,6 +1,7 @@
 import 'dart:ui' show Tristate;
 
 import 'package:feeef_ui/feeef_ui.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' hide RadioGroup;
 import 'package:flutter_test/flutter_test.dart';
@@ -90,6 +91,48 @@ void main() {
       expect(value, 50);
     });
 
+    testWidgets(
+      'dragged, the thumb becomes a stretched lens, then springs back',
+      (tester) async {
+        await tester.pumpWidget(
+          host(
+            const SizedBox(
+              width: 300,
+              child: Slider(label: 'Volume', trackStyle: TrackStyle.thin),
+            ),
+          ),
+        );
+        double thumbWidth() => tester
+            .widgetList<PositionedDirectional>(
+              find.descendant(
+                of: find.byType(Slider),
+                matching: find.byType(PositionedDirectional),
+              ),
+            )
+            .map((p) => p.width ?? 0)
+            .reduce((a, b) => a > b ? a : b);
+        expect(thumbWidth(), closeTo(37, 0.01));
+        final box = tester.getRect(find.byType(Slider));
+        final gesture = await tester.startGesture(
+          box.centerLeft + const Offset(40, 0),
+        );
+        for (var i = 0; i < 40; i++) {
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+        final pressed = thumbWidth();
+        expect(pressed, closeTo(37 * lensThumbScale, 0.5));
+        // Moving quickly stretches it along the drag.
+        for (var i = 0; i < 4; i++) {
+          await gesture.moveBy(const Offset(24, 0));
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+        expect(thumbWidth(), greaterThan(pressed + 1));
+        await gesture.up();
+        await tester.pumpAndSettle();
+        expect(thumbWidth(), closeTo(37, 0.01));
+      },
+    );
+
     testWidgets('semantics: a named slider with its value', (tester) async {
       final handle = tester.ensureSemantics();
       await tester.pumpWidget(
@@ -161,6 +204,152 @@ void main() {
       await tester.pumpAndSettle();
       expect(checked, isTrue);
       expect(commits, [true]);
+    });
+
+    testWidgets('the thumb drags back and forth; a careful drop stays', (
+      tester,
+    ) async {
+      final commits = <bool>[];
+      var checked = true;
+      await tester.pumpWidget(
+        host(
+          StatefulBuilder(
+            builder: (context, setState) => SlideSwitch(
+              label: 'SMS',
+              checked: checked,
+              onCheckedChange: (v) => setState(() => checked = v),
+              onCheckedCommit: commits.add,
+            ),
+          ),
+        ),
+      );
+      final box = tester.getRect(find.byType(SlideSwitch));
+      // Drag off, slowly, and hold still before lifting: it lands off.
+      final gesture = await tester.startGesture(
+        box.centerRight - const Offset(12, 0),
+      );
+      for (var i = 0; i < 8; i++) {
+        await gesture.moveBy(const Offset(-5, 0));
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      expect(checked, isFalse, reason: 'past halfway the state flips mid-drag');
+      await tester.pump(const Duration(milliseconds: 200));
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(checked, isFalse);
+      expect(commits, [false]);
+      // Past halfway and back, held still before lifting: it stays off.
+      final careful = await tester.startGesture(
+        box.centerLeft + const Offset(12, 0),
+      );
+      for (final dx in [6.0, 6.0, 4.0, -4.0, -6.0, -6.0]) {
+        await careful.moveBy(Offset(dx, 0));
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await tester.pump(const Duration(milliseconds: 200));
+      await careful.up();
+      await tester.pumpAndSettle();
+      expect(checked, isFalse);
+      expect(commits, [false, false]);
+    });
+
+    testWidgets('a flick toggles even short of halfway', (tester) async {
+      var checked = false;
+      await tester.pumpWidget(
+        host(
+          StatefulBuilder(
+            builder: (context, setState) => SlideSwitch(
+              label: 'SMS',
+              checked: checked,
+              onCheckedChange: (v) => setState(() => checked = v),
+            ),
+          ),
+        ),
+      );
+      final box = tester.getRect(find.byType(SlideSwitch));
+      await tester.flingFrom(
+        box.centerLeft + const Offset(12, 0),
+        const Offset(22, 0),
+        800,
+      );
+      await tester.pumpAndSettle();
+      expect(checked, isTrue);
+    });
+
+    testWidgets('pressed, the thumb becomes a larger lens and springs back', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(const SlideSwitch(label: 'SMS')));
+      double thumbWidth() => tester
+          .widgetList<PositionedDirectional>(
+            find.descendant(
+              of: find.byType(SlideSwitch),
+              matching: find.byType(PositionedDirectional),
+            ),
+          )
+          .map((p) => p.width ?? 0)
+          .reduce((a, b) => a > b ? a : b);
+      expect(thumbWidth(), closeTo(37, 0.01));
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byType(SlideSwitch)),
+      );
+      for (var i = 0; i < 40; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      expect(thumbWidth(), closeTo(37 * lensThumbScale, 0.5));
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(thumbWidth(), closeTo(37, 0.01));
+    });
+
+    testWidgets('reduced motion: no lens, no swell', (tester) async {
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: host(const SlideSwitch(label: 'SMS')),
+        ),
+      );
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byType(SlideSwitch)),
+      );
+      for (var i = 0; i < 40; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      final widths = tester
+          .widgetList<PositionedDirectional>(
+            find.descendant(
+              of: find.byType(SlideSwitch),
+              matching: find.byType(PositionedDirectional),
+            ),
+          )
+          .map((p) => p.width ?? 0);
+      expect(widths.reduce((a, b) => a > b ? a : b), closeTo(37, 0.01));
+      await gesture.up();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('touch: 63 × 28 stays, a press 8px above still toggles', (
+      tester,
+    ) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      var checked = false;
+      await tester.pumpWidget(
+        host(
+          StatefulBuilder(
+            builder: (context, setState) => SlideSwitch(
+              label: 'SMS',
+              checked: checked,
+              onCheckedChange: (v) => setState(() => checked = v),
+            ),
+          ),
+        ),
+      );
+      final box = tester.getRect(find.byType(SlideSwitch));
+      expect(box.size, const Size(63, 28));
+      await tester.tapAt(box.topCenter - const Offset(0, 7));
+      await tester.pumpAndSettle();
+      expect(checked, isTrue);
+      debugDefaultTargetPlatformOverride = null;
     });
 
     testWidgets('semantics: a toggled, named control', (tester) async {

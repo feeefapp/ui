@@ -1,4 +1,5 @@
 import { type ReactNode } from 'react';
+import './lens.css';
 import './segmented.css';
 /** One choice of a segmented control. */
 export type SegmentOption<T extends string> = {

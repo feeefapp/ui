@@ -1,4 +1,5 @@
 import * as React from 'react';
+import './lens.css';
 import './slider.css';
 /** What the `render*` slots receive on every frame of interaction. */
 export type SliderState = {
@@ -60,7 +61,8 @@ export type SliderProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange' 
 };
 /**
  * A single-value slider with a large touch-friendly track, springy thumb, optional stops and
- * marks, and render slots for custom track, fill and thumb decoration.
+ * marks, and render slots for custom track, fill and thumb decoration. While dragged the thumb turns
+ * into a larger glass lens that stretches with its speed, glows under the finger and springs back.
  */
 export declare const Slider: React.ForwardRefExoticComponent<Omit<React.HTMLAttributes<HTMLDivElement>, "children" | "defaultValue" | "role" | "aria-checked" | "aria-valuemax" | "aria-valuemin" | "aria-valuenow" | "onChange"> & {
     /** Control height: `regular` (36px) or `small` (30px). A switch has one size and ignores it. */
@@ -119,9 +121,11 @@ export type SlideSwitchProps = Omit<SliderProps, 'controlSize' | 'value' | 'defa
     offText?: string;
 };
 /**
- * An on/off switch that can be tapped or dragged, sized like iOS's (63 × 28 track, 37 × 24 thumb at
- * comfortable density; ThemeConfig `metrics.switchSize` / `thumbSize`). It shares the slider's
- * track, thumb and spring; the state maps to 0 and 1.
+ * An on/off switch, sized like iOS's (63 × 28 track, 37 × 24 thumb at comfortable density;
+ * ThemeConfig `metrics.switchSize` / `thumbSize`). A tap toggles it; the thumb can also be dragged
+ * and settles on the side its momentum carries it to. Pressed or dragged, the thumb turns into a
+ * larger glass lens that stretches as it moves, glows under the finger and springs back. It shares
+ * the slider's track, thumb and spring; the state maps to 0 and 1.
  */
 export declare const SlideSwitch: React.ForwardRefExoticComponent<Omit<SliderProps, "value" | "defaultValue" | "controlSize" | "min" | "max" | "step" | "onValueChange" | "onValueCommit" | "getValueText" | "showStops" | "marks"> & {
     /** Disables the switch and marks it busy while a change is saving. */

@@ -1,0 +1,39 @@
+/* A control's glass lens: the moving part of a segmented control, a switch or a slider turns into
+clear glass while pressed or dragged (lens-model.ts; Flutter lens.dart paints the same). The owner
+writes --lab-lens (0 its rest paint … 1 glass), --lab-lens-glow (the touch glow, 0 … 1) and the
+glow's centre and radius (--lab-lens-glow-x, -y, -r) on an ancestor. .lab-lens is the glass layer
+and .lab-lens-glow the glow; both fill their positioned parent and take its corners. Owners keep
+their rest paint where this layer is hidden: reduced transparency, more contrast, forced colours
+and glass: 'solid'. */
+.lab-lens,
+.lab-lens-glow {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border-radius: inherit;
+  corner-shape: inherit;
+  pointer-events: none;
+}
+.lab-lens {
+  border: 1px solid var(--lab-line);
+  background: var(--lab-glass-fill);
+  box-shadow: var(--lab-glass-light);
+  opacity: var(--lab-lens, 0);
+}
+.lab-lens-glow {
+  background: radial-gradient(
+    circle var(--lab-lens-glow-r, 8px) at var(--lab-lens-glow-x, 50%) var(--lab-lens-glow-y, 50%),
+    var(--lab-glass-glow),
+    transparent
+  );
+  opacity: calc(var(--lab-lens-glow, 0) * var(--lab-lens, 0));
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
+  .lab-lens,
+  .lab-lens-glow {
+    display: none;
+  }
+}
+html[data-lab-glass='solid'] :is(.lab-lens, .lab-lens-glow) {
+  display: none;
+}

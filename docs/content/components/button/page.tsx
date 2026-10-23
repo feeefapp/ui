@@ -69,7 +69,15 @@ function Overview() {
           button into running text. Inside a toolbar group or a dock, keep the default size: the host sets
           it. Under <C>density="compact"</C> the whole app steps one size down without touching each
           button, and <C>ThemeConfig.metrics.controlHeight</C> changes the sizes themselves. On touch
-          screens every size keeps a 44px hit target.
+          screens every size keeps its look (a 36px button stays 36px on a phone) and gains an invisible
+          hit area of at least 44 × 44px around it, without moving anything.
+        </p>
+        <p>
+          A press answers like iOS. Toolbar (glass) buttons swell by 1.06 and show the glass touch glow
+          under the finger; filled, tonal, elevated, outlined and destructive buttons grow a little
+          (1.03), no glow; both spring back. Inside a glass bubble the bubble answers instead (it swells
+          and glows as a whole), so nothing doubles up. The <C>:active</C> fills stay. Reduced motion
+          turns the movement off; still and solid glass have no glass press.
         </p>
       </Section>
 

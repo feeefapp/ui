@@ -13,9 +13,10 @@ import {
   segmentedDragCenter,
   segmentedPillWidth,
   segmentedSnapIndex,
-  segmentedStretch,
   type SegmentSpan,
 } from './segmented-model'
+import { lensStretch } from './lens-model'
+import './lens.css'
 import './segmented.css'
 
 /** One choice of a segmented control. */
@@ -161,11 +162,11 @@ export function SegmentedControl<const T extends string>({
     pill.style.width = `${shape.width}px`
     pill.style.height = `${shape.height}px`
     el.style.setProperty('--lab-segmented-press', String(scale))
-    el.style.setProperty('--lab-segmented-lens', String(Math.max(0, Math.min(1, lens.get()))))
-    el.style.setProperty('--lab-segmented-glow-x', `${glowAt.current.x - shape.x}px`)
-    el.style.setProperty('--lab-segmented-glow-y', `${glowAt.current.y - shape.y}px`)
-    el.style.setProperty('--lab-segmented-glow-r', `${Math.max(1, glowRadius.get())}px`)
-    el.style.setProperty('--lab-segmented-glow', String(Math.max(0, Math.min(1, glowOpacity.get()))))
+    el.style.setProperty('--lab-lens', String(Math.max(0, Math.min(1, lens.get()))))
+    el.style.setProperty('--lab-lens-glow-x', `${glowAt.current.x - shape.x}px`)
+    el.style.setProperty('--lab-lens-glow-y', `${glowAt.current.y - shape.y}px`)
+    el.style.setProperty('--lab-lens-glow-r', `${Math.max(1, glowRadius.get())}px`)
+    el.style.setProperty('--lab-lens-glow', String(Math.max(0, Math.min(1, glowOpacity.get()))))
     // Selected ink shows exactly where the pill is, so a label turns over as the pill crosses it.
     const radius = (Math.min(shape.width, shape.height) / 2) * corner
     buttons().forEach((button, i) => {
@@ -346,7 +347,7 @@ export function SegmentedControl<const T extends string>({
       void center.animateTo(target, { spring: SPRINGS.interactive })
       if (Math.abs(center.get() - target) < 1) d.catching = false
     } else center.track(target, event.timeStamp)
-    void stretch.animateTo(segmentedStretch(center.getVelocity(event.timeStamp)), { spring: SPRINGS.interactive })
+    void stretch.animateTo(lensStretch(center.getVelocity(event.timeStamp)), { spring: SPRINGS.interactive })
     paint()
   }
 
@@ -422,8 +423,8 @@ export function SegmentedControl<const T extends string>({
     >
       <span ref={pillRef} className="lab-segmented-pill" aria-hidden="true" data-hidden="">
         <span className="lab-segmented-fill" />
-        <span className="lab-segmented-lens lab-light-edge" />
-        <span className="lab-segmented-glow" />
+        <span className="lab-lens lab-light-edge" />
+        <span className="lab-lens-glow" />
       </span>
       {options.map((option) => {
         const content = (

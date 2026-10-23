@@ -7,10 +7,8 @@ import {
   segmentedDragCenter,
   segmentedPillWidth,
   segmentedSnapIndex,
-  segmentedStretch,
   type SegmentSpan,
 } from '../src/primitives/segmented-model.ts'
-import { GLASS_STRETCH_LIMIT } from '../src/glass/press.ts'
 import { segmentedFixture } from '../flutter/tool/segmented_fixture.ts'
 
 const spans: SegmentSpan[] = [
@@ -69,13 +67,6 @@ test('a release never lands on a disabled segment', () => {
   assert.equal(segmentedSnapIndex(0, 0, spans.map((s) => ({ ...s, disabled: true }))), -1)
 })
 
-test('the lens stretches with speed, signed and bounded', () => {
-  assert.equal(segmentedStretch(0), 0)
-  assert.ok(segmentedStretch(800) > 0 && segmentedStretch(-800) < 0)
-  assert.equal(segmentedStretch(800), -segmentedStretch(-800))
-  assert.ok(segmentedStretch(1600) > segmentedStretch(800))
-  assert.ok(segmentedStretch(1e6) <= GLASS_STRETCH_LIMIT)
-})
 
 test('the shared fixture is current', () => {
   const file = JSON.parse(readFileSync(new URL('../flutter/test/fixtures/segmented.json', import.meta.url), 'utf8'))

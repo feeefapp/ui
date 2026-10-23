@@ -1,7 +1,7 @@
 /**
  * Pure geometry of a segmented control's moving pill: where a drag puts it, how wide it is on the
- * way, where a release lands and how far the glass lens stretches. Shared with the Flutter twin
- * (`segmented_model.dart`, vectors in `flutter/test/fixtures/segmented.json`).
+ * way and where a release lands (its lens stretch is `lensStretch`, lens-model.ts). Shared with the
+ * Flutter twin (`segmented_model.dart`, vectors in `flutter/test/fixtures/segmented.json`).
  */
 /** One segment along the track, in px from the track's left edge (physical, never mirrored). */
 export type SegmentSpan = {
@@ -12,8 +12,6 @@ export type SegmentSpan = {
 };
 /** How far (px) the pill can be pulled past either end, with rubber-band resistance. */
 export declare const SEGMENTED_OVERDRAG = 12;
-/** The lens stretches by the distance the pointer covers in this many seconds (rubber-banded). */
-export declare const SEGMENTED_STRETCH_TIME = 0.1;
 /** Deceleration a release is projected with (`projectMomentum`): quicker than a scroll view (0.99), so
  * a flick reaches the next segment without skipping one. */
 export declare const SEGMENTED_DECELERATION = 0.97;
@@ -39,6 +37,4 @@ export declare function segmentedPillWidth(center: number, spans: readonly Segme
  * (a quick flick reaches the next segment, a careful drop stays put). -1 when every one is disabled.
  */
 export declare function segmentedSnapIndex(center: number, velocity: number, spans: readonly SegmentSpan[]): number;
-/** How far (px, signed) the lens stretches along a drag moving at `velocity` px/s. */
-export declare function segmentedStretch(velocity: number): number;
 //# sourceMappingURL=segmented-model.d.ts.map

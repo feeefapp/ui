@@ -85,6 +85,12 @@ function Overview() {
         <p>
           Pressing Escape during a drag cancels it and returns to the value from before the drag.
         </p>
+        <p>
+          While pressed or dragged the thumb becomes a glass lens, the switch’s and the segmented
+          control’s: 1.4× larger, stretched along the drag with its speed, with the touch glow under the
+          finger, springing back when released. Reduced motion turns it off; reduced transparency, more
+          contrast and the <C>solid</C> glass style keep a solid thumb.
+        </p>
       </Section>
 
       <Section title="Stops, marks and track style">

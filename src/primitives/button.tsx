@@ -4,6 +4,7 @@ import { cn } from '../utils'
 import { PixelTexture, PixelLoader } from '../pixel-art'
 import type { ControlVariant } from './control-variants'
 import { legacyButtonHasTexture } from './button-compat'
+import { glassGlowRadius } from '../glass/press'
 import '../system.css'
 import './control-variants.css'
 
@@ -25,7 +26,7 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   loading?: boolean
   /** Emphasis. Use filled for primary actions. The primary spelling is deprecated. */
   variant?: ButtonVariant
-  /** Height: `small` 30px, `regular` 36px, `large` 52px, `inline` fits running text; `icon` is square. Every size grows to 44px on touch screens. */
+  /** Height: `small` 30px, `regular` 36px, `large` 52px, `inline` fits running text; `icon` is square. On touch screens every size keeps its look and gains an invisible hit area of at least 44 × 44px. */
   controlSize?: ControlSize
   /** Square icon geometry when `controlSize` is `icon`: `small`, `regular` or `large` (the button heights), or `inline`. */
   iconSize?: 'small' | 'regular' | 'large' | 'inline'
@@ -33,7 +34,28 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   appearance?: ButtonAppearance
 }
 
-/** A native `<button>` (or, with `asChild`, your link) painted by one of the emphasis variants. */
+/** Variants whose painted shape grows a little while pressed (CONTENT_PRESS_SCALE). */
+const CONTENT_PRESS = new Set(['filled', 'tonal', 'elevated', 'outlined', 'destructive', 'secondary'])
+
+/**
+ * Puts the touch glow of a pressed glass button under the pointer: its centre in the button's own
+ * pixels and how far it spreads (`glassGlowRadius`). The press itself is CSS (`:active`, system.css).
+ */
+function placePressGlow(event: React.PointerEvent<HTMLElement>) {
+  const el = event.currentTarget
+  const rect = el.getBoundingClientRect()
+  const scale = el.offsetWidth ? rect.width / el.offsetWidth : 1
+  el.style.setProperty('--lab-press-x', `${(event.clientX - rect.left) / scale}px`)
+  el.style.setProperty('--lab-press-y', `${(event.clientY - rect.top) / scale}px`)
+  el.style.setProperty('--lab-press-glow-to', `${glassGlowRadius(el.offsetWidth)}px`)
+}
+
+/**
+ * A native `<button>` (or, with `asChild`, your link) painted by one of the emphasis variants. A
+ * press answers like iOS: toolbar (glass) buttons swell and glow under the finger, filled, tonal,
+ * elevated, outlined and destructive buttons grow a little; inside a glass bubble the bubble answers
+ * instead. Reduced motion turns it off.
+ */
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
@@ -57,6 +79,13 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       variant === 'filled' ||
       (!variant && legacyButtonHasTexture(className))
     const disabled = Boolean(props.disabled || loading)
+    const press = !variant
+      ? undefined
+      : appearance === 'toolbar'
+        ? 'glass'
+        : CONTENT_PRESS.has(variant)
+          ? 'content'
+          : undefined
     const Component = asChild ? Slot : 'button'
     const nativeButton = !asChild || (React.isValidElement(children) && children.type === 'button')
     // Slot normally invokes child handlers first. Guard the actual child during
@@ -103,6 +132,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         data-icon-size={controlSize === 'icon' ? iconSize : undefined}
         data-control-appearance={variant ? appearance : undefined}
         data-loading={loading || undefined}
+        data-press={press}
+        onPointerDown={(event: React.PointerEvent<HTMLButtonElement>) => {
+          if (press === 'glass') placePressGlow(event)
+          props.onPointerDown?.(event)
+        }}
         disabled={nativeButton ? disabled : undefined}
         onClickCapture={disabled ? stopActivation : props.onClickCapture}
         onAuxClickCapture={disabled ? stopActivation : props.onAuxClickCapture}

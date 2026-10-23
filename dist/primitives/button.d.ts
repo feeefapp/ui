@@ -19,14 +19,19 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
     loading?: boolean;
     /** Emphasis. Use filled for primary actions. The primary spelling is deprecated. */
     variant?: ButtonVariant;
-    /** Height: `small` 30px, `regular` 36px, `large` 52px, `inline` fits running text; `icon` is square. Every size grows to 44px on touch screens. */
+    /** Height: `small` 30px, `regular` 36px, `large` 52px, `inline` fits running text; `icon` is square. On touch screens every size keeps its look and gains an invisible hit area of at least 44 × 44px. */
     controlSize?: ControlSize;
     /** Square icon geometry when `controlSize` is `icon`: `small`, `regular` or `large` (the button heights), or `inline`. */
     iconSize?: 'small' | 'regular' | 'large' | 'inline';
     /** Toolbar controls share their enclosing material instead of adding another raised surface. */
     appearance?: ButtonAppearance;
 };
-/** A native `<button>` (or, with `asChild`, your link) painted by one of the emphasis variants. */
+/**
+ * A native `<button>` (or, with `asChild`, your link) painted by one of the emphasis variants. A
+ * press answers like iOS: toolbar (glass) buttons swell and glow under the finger, filled, tonal,
+ * elevated, outlined and destructive buttons grow a little; inside a glass bubble the bubble answers
+ * instead. Reduced motion turns it off.
+ */
 export declare const Button: React.ForwardRefExoticComponent<React.ButtonHTMLAttributes<HTMLButtonElement> & {
     /** Render the single child (an `<a>` or router link) with button styling instead of a `<button>`. */
     asChild?: boolean;
@@ -36,7 +41,7 @@ export declare const Button: React.ForwardRefExoticComponent<React.ButtonHTMLAtt
     loading?: boolean;
     /** Emphasis. Use filled for primary actions. The primary spelling is deprecated. */
     variant?: ButtonVariant;
-    /** Height: `small` 30px, `regular` 36px, `large` 52px, `inline` fits running text; `icon` is square. Every size grows to 44px on touch screens. */
+    /** Height: `small` 30px, `regular` 36px, `large` 52px, `inline` fits running text; `icon` is square. On touch screens every size keeps its look and gains an invisible hit area of at least 44 × 44px. */
     controlSize?: ControlSize;
     /** Square icon geometry when `controlSize` is `icon`: `small`, `regular` or `large` (the button heights), or `inline`. */
     iconSize?: "small" | "regular" | "large" | "inline";

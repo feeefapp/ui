@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import 'primitives/touch_target.dart';
 import 'theme/focus_visible.dart';
 import 'theme/tokens.dart';
 import 'theme_config.dart';
@@ -109,6 +110,10 @@ class ThemeProvider extends StatelessWidget {
         MediaQuery.maybePlatformBrightnessOf(context) ??
         Brightness.light;
     final data = ThemeData(config: config, brightness: mode, colors: colors);
+    // The root provider resolves the touch reach of the controls below it (TouchTarget).
+    final Widget content = TouchTargetScope.exists(context)
+        ? child
+        : TouchTargetScope(child: child);
     return _ThemeScope(
       data: data,
       child: FocusVisibility(
@@ -117,7 +122,7 @@ class ThemeProvider extends StatelessWidget {
             color: data.colors.ink,
             fontFamilyFallback: const [kitFontFamily],
           ),
-          child: child,
+          child: content,
         ),
       ),
     );
