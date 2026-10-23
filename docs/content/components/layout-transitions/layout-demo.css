@@ -33,7 +33,7 @@
   padding-block: 4px;
   padding-inline: 12px 4px;
   border: 1px solid var(--lab-line);
-  border-radius: var(--lab-radius-control-compact);
+  border-radius: var(--lab-radius-control-small);
   background: var(--lab-surface);
   font-size: 14px;
   line-height: 22px;

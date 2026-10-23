@@ -14,6 +14,7 @@ import '../physics/spring.dart';
 import '../scroll/metrics.dart';
 import '../scroll/scroll_area.dart';
 import '../theme.dart';
+import '../theme/surfaces.dart';
 import '../theme/color_mix.dart';
 import 'sheet_model.dart';
 import '../glass/container.dart';
@@ -894,7 +895,9 @@ class _SheetState extends State<Sheet> {
                 size: const Size(64, 20),
                 painter: _GrabberPainter(
                   pill: mixSrgb(c.ink, 0.22, transparent),
-                  focus: _focusVisible ? c.focus : null,
+                  focus: _focusVisible
+                      ? FocusRingStyle.of(context, inside: true)
+                      : null,
                 ),
               ),
             ),
@@ -1009,11 +1012,12 @@ class _PanelPainter extends CustomPainter {
       old.spread != spread;
 }
 
-/// `.lab-sheet-grabber::before`: 36×5 at (14, 7), radius 3; focus ring 2px inside, radius 10.
+/// `.lab-sheet-grabber::before`: 36×5 at (14, 7), radius 3; the keyboard focus ring just inside,
+/// radius 10.
 class _GrabberPainter extends CustomPainter {
   const _GrabberPainter({required this.pill, this.focus});
   final Color pill;
-  final Color? focus;
+  final FocusRingStyle? focus;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1022,15 +1026,7 @@ class _GrabberPainter extends CustomPainter {
       Paint()..color = pill,
     );
     final f = focus;
-    if (f != null) {
-      canvas.drawPath(
-        superellipsePath(Offset.zero & size, [10, 10, 10, 10], inset: 1),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = f,
-      );
-    }
+    if (f != null) paintFocusRing(canvas, Offset.zero & size, 10, f);
   }
 
   @override

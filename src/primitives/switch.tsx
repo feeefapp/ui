@@ -8,5 +8,5 @@ export function Switch(props: {
   disabled?: boolean
   loading?: boolean
 }) {
-  return <SlideSwitch {...props} controlSize="compact" />
+  return <SlideSwitch {...props} />
 }

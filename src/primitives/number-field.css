@@ -8,8 +8,10 @@ html[data-lab-theme] .lab-number-field {
   gap: 0;
   width: 100%;
   min-width: 0;
-  height: var(--lab-control-height);
-  min-height: var(--lab-control-height);
+  /* Field heights: it sits in forms next to text fields. */
+  --lab-number-height: var(--lab-field-height);
+  height: var(--lab-number-height);
+  min-height: var(--lab-number-height);
   padding: 0;
   overflow: hidden;
   border: 1px solid var(--lab-variant-edge);
@@ -28,15 +30,14 @@ html[data-lab-theme] .lab-number-field {
     background-color var(--lab-duration-fast) var(--lab-ease),
     border-color var(--lab-duration-fast) var(--lab-ease);
 }
-html[data-lab-theme] .lab-number-field[data-control-size='compact'] {
+html[data-lab-theme] .lab-number-field[data-control-size='small'] {
   --lab-number-pad: 12px;
-  height: var(--lab-control-compact);
-  min-height: var(--lab-control-compact);
-  border-radius: var(--lab-radius-control-compact);
+  --lab-number-height: var(--lab-field-height-small);
+  border-radius: var(--lab-radius-control-small);
   font-size: 13px;
 }
-/* The field is also a .lab-control: out-specify the compact button rule's 0 14px padding, which
-would otherwise inset the steppers and the row (bundle order must not decide this). */
+/* The field is also a .lab-control: out-specify a sized button rule's padding, which would
+otherwise inset the steppers and the row (bundle order must not decide this). */
 html[data-lab-theme] .lab-number-field.lab-control[data-control-size] {
   padding: 0;
 }
@@ -49,11 +50,17 @@ html[data-lab-theme] .lab-number-field[data-dragging] {
   background: var(--lab-variant-pressed);
   cursor: ew-resize;
 }
-html[data-lab-theme] .lab-number-field:focus-visible,
+/* Keyboard focus: the hugging ring and the hover fill. Editing it is a field: its own edge turns
+the focus colour and thickens inward, no ring outside. */
+html[data-lab-theme] .lab-number-field:focus-visible:not([data-editing]) {
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
+  background: var(--lab-variant-hover);
+}
 html[data-lab-theme] .lab-number-field[data-editing] {
   border-color: var(--lab-focus);
-  outline: 2px solid var(--lab-focus);
-  outline-offset: 2px;
+  box-shadow: inset 0 0 0 calc(var(--lab-focus-ring-width) - 1px) var(--lab-focus);
+  outline: none;
 }
 html[data-lab-theme] .lab-number-field[data-editing] {
   cursor: text;
@@ -147,8 +154,8 @@ html[data-lab-theme] .lab-number-field[data-dragging] > .lab-number-field-steppe
 
 @media (pointer: coarse) {
   html[data-lab-theme] .lab-number-field[data-control-size] {
-    height: var(--lab-control-touch-target);
-    min-height: var(--lab-control-touch-target);
+    height: max(var(--lab-number-height), var(--lab-control-touch-target));
+    min-height: max(var(--lab-number-height), var(--lab-control-touch-target));
   }
 }
 @media (prefers-reduced-motion: reduce) {

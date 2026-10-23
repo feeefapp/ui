@@ -18,7 +18,7 @@ function Overview() {
           rows={[
             ['Native elements', <>Buttons are <C>{'<button>'}</C>, checkboxes and radios are native inputs, dialogs are the native <C>{'<dialog>'}</C>. Browser keyboard behavior, form submission and validity come for free.</>],
             ['Names', <>Fields take a <C>hint</C>, their visible floating label. <C>IconButton</C> requires an <C>aria-label</C>. <C>Modal</C> requires a <C>label</C>. Kit-generated labels (close, search, theme, language) are translated.</>],
-            ['Focus', <>Every focusable control shows a 2px <C>--lab-focus</C> outline on <C>:focus-visible</C>, drawn outside the painted corner and never clipped.</>],
+            ['Focus', <>Keyboard focus (<C>:focus-visible</C>; in Flutter, traditional highlight mode) shows a thin ring that hugs the control, 2px at 1px out, in the focus color at reduced strength, plus the control’s hover fill. Fields show it on their own edge instead. Pointer and touch focus show nothing. Increased contrast and forced colors get a strong 3px ring. See <a href="#focus">Focus</a>.</>],
             ['Dialogs', <>Focus is trapped while open, Escape closes, and focus returns to the opener (or to <C>returnFocusRef</C> if the opener is gone). <C>initialFocusRef</C> picks the first focused element.</>],
             ['State', <>Loading buttons set <C>aria-busy</C> and block activation; pressed toggle buttons are styled from <C>aria-pressed</C>; segmented controls use radio semantics.</>],
             ['Touch', <>On coarse pointers, buttons, icon buttons, fields, selects and menu options are at least 44px (<C>--lab-control-touch-target</C>) at any density.</>],
@@ -28,6 +28,36 @@ function Overview() {
             ['Direction', <>Layouts use logical properties and mirror under <C>dir="rtl"</C>; directional icons flip with <C>lab-dir-flip</C>; select menus inherit the trigger’s direction.</>],
             ['Zoom', 'Sizes are in CSS pixels and layouts reflow; browser zoom is never disabled.'],
           ]}
+        />
+      </Section>
+
+      <Section title="Focus">
+        <p>
+          Focus looks like iOS's keyboard focus: a highlight that hugs the element, never a ring floating
+          a few pixels outside it. It only appears for keyboard focus; a click or a tap shows nothing.
+        </p>
+        <Table
+          head={['What', 'Keyboard focus shows']}
+          rows={[
+            ['Buttons, icon buttons, segments, tabs, chips, list rows, sliders, switches', <>A <C>--lab-focus-ring-width</C> (2px) line in <C>--lab-focus-ring-color</C> (the focus color at 65%) <C>--lab-focus-ring-offset</C> (1px) outside the shape, following its corners, plus the hover fill. Rows, tabs and other edge-to-edge items draw it just inside.</>],
+            ['Text fields, selects, number fields while typing, composers', 'No ring outside. The field’s own edge turns the focus color and thickens inward to the ring width; the floating hint takes the focus color.'],
+            ['Increased contrast, forced colors', <>A strong ring: 3px, 2px out, the full focus color (<C>Highlight</C> in forced colors). It wins over the app’s <C>metrics</C>.</>],
+            ['Scrolled-to elements', <><C>ScrollArea</C> sets <C>scroll-padding</C> to the space its floating bars (and a tab bar) reserve, so a focused element never lands under them.</>],
+          ]}
+        />
+        <p>
+          The three tokens restyle it app-wide: set <C>metrics.focusRingWidth</C> and{' '}
+          <C>focusRingOffset</C> in the theme config, or override <C>--lab-focus-ring-color</C>. In
+          Flutter, <C>FocusRingStyle.of(context)</C> resolves the same values (and the high-contrast ring)
+          for custom widgets, and <C>FocusRing</C> paints it.
+        </p>
+        <Code
+          lang="dart"
+          title="Flutter"
+          code={`FocusableActionDetector(
+  onShowFocusHighlight: (visible) => setState(() => _focused = visible),
+  child: FocusRing(visible: _focused, radius: 12, child: card),
+)`}
         />
       </Section>
 
@@ -78,8 +108,9 @@ function Overview() {
         <Code
           lang="css"
           code={`.order-card:focus-visible {
-  outline: 2px solid var(--lab-focus);
-  outline-offset: 3px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
+  background: var(--lab-control-hover);
 }
 .order-card {
   transition: transform var(--lab-duration-normal) var(--lab-ease); /* 0ms under reduced motion */
@@ -117,6 +148,7 @@ function Overview() {
             'Hit areas smaller than 44px on touch screens.',
             'Information that only appears during an animation or on hover.',
             'Clipping a control to fake a shape; it cuts off the focus ring.',
+            'A focus ring floating a few pixels outside a control; use the focus tokens so it hugs the shape.',
           ]}
         />
       </Section>

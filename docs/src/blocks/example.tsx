@@ -50,7 +50,6 @@ export function Example({ example, headingLevel = 2 }: { example: DocExample; he
               <Button
                 variant="text"
                 appearance="toolbar"
-                controlSize="compact"
                 aria-expanded={open}
                 onClick={() => setOpen(!open)}
               >

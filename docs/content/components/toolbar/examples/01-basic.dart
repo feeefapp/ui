@@ -14,7 +14,6 @@ class Basic extends StatelessWidget {
           IconButton(
             variant: .text,
             appearance: .toolbar,
-            controlSize: .compact,
             ariaLabel: 'Back to store',
             onClick: () {},
             // `lab-dir-flip`: points toward the inline start in both directions.
@@ -43,7 +42,6 @@ class Basic extends StatelessWidget {
           IconButton(
             variant: .text,
             appearance: .toolbar,
-            controlSize: .compact,
             ariaLabel: 'Export CSV',
             onClick: () {},
             icon: const LucideIcon(LucideIcons.download),
@@ -51,7 +49,6 @@ class Basic extends StatelessWidget {
           IconButton(
             variant: .text,
             appearance: .toolbar,
-            controlSize: .compact,
             ariaLabel: 'More actions',
             onClick: () {},
             icon: const LucideIcon(LucideIcons.moreHorizontal),
@@ -59,7 +56,6 @@ class Basic extends StatelessWidget {
           Button(
             variant: .filled,
             appearance: .toolbar,
-            controlSize: .compact,
             onClick: () {},
             children: const [LucideIcon(LucideIcons.plus), Text('Add product')],
           ),

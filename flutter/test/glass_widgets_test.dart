@@ -96,7 +96,6 @@ void main() {
               children: [
                 IconButton(
                   appearance: ButtonAppearance.toolbar,
-                  controlSize: ControlSize.compact,
                   ariaLabel: 'Bold',
                   onClick: () {},
                   icon: const LucideBold(),
@@ -110,9 +109,9 @@ void main() {
     await tester.pump();
     expect(find.bySemanticsLabel('Format'), findsOneWidget);
     expect(find.bySemanticsLabel('Editor'), findsOneWidget);
-    // 40px control + 2px padding + 1px border on each side.
-    expect(tester.getSize(find.byType(GlassGroup)).height, 46);
-    expect(tester.getSize(find.byType(IconButton)), const Size(40, 40));
+    // The 44px toolbar item: a 38px control + 2px padding + 1px border on each side.
+    expect(tester.getSize(find.byType(GlassGroup)).height, 44);
+    expect(tester.getSize(find.byType(IconButton)), const Size(38, 38));
     handle.dispose();
   }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
 }

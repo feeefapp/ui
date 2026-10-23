@@ -45,7 +45,7 @@ class _LoaderState extends State<Loader> {
         ),
         Button(
           variant: .outlined,
-          controlSize: .compact,
+          controlSize: .small,
           onClick: () => setState(() => _exporting = !_exporting),
           children: [Text(_exporting ? 'Finish export' : 'Start again')],
         ),

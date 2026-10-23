@@ -44,7 +44,7 @@ export function ThemeProvider({
   initialMode?: Mode
   /** Start the SVG superellipse fallback on browsers without `corner-shape` support. */
   enableCornerFallback?: boolean
-  /** App-level palette, density, radius and glass (theme-config.ts). */
+  /** App-level palette, density, radius, glass and metrics (theme-config.ts). */
   config?: ThemeConfig
 }) {
   const { preferences } = useServices()
@@ -63,10 +63,15 @@ export function ThemeProvider({
   useEffect(() => {
     if (enableCornerFallback) return installFoContinuousCorners()
   }, [enableCornerFallback])
-  const { palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction } = config ?? {}
+  const { palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction, metrics } = config ?? {}
+  // Metrics are an object, often written inline: compare them by value, not identity.
+  const metricsKey = JSON.stringify(metrics ?? {})
   layoutEffect(() => {
-    applyThemeConfig(document.documentElement, { palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction })
-  }, [palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction])
+    applyThemeConfig(document.documentElement, {
+      palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction,
+      metrics: JSON.parse(metricsKey),
+    })
+  }, [palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction, metricsKey])
   layoutEffect(() => {
     const root = document.documentElement,
       previous = root.getAttribute('data-lab-theme'),

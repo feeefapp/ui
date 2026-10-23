@@ -27,8 +27,8 @@
   padding-inline: calc((100cqw - var(--lab-carousel-slide)) / 2);
 }
 .lab-carousel-track:focus-visible {
-  outline: 2px solid var(--lab-focus);
-  outline-offset: 2px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
   border-radius: var(--lab-radius-group);
 }
 .lab-carousel-track[data-dragging] {
@@ -132,8 +132,8 @@ html[data-lab-theme] .lab-carousel-control.lab-toolbar-group {
   background: var(--lab-primary);
 }
 .lab-carousel-dot:focus-visible {
-  outline: 2px solid var(--lab-focus);
-  outline-offset: -2px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: calc(-1 * var(--lab-focus-ring-width));
   border-radius: calc(10px * var(--lab-corner-scale, 1));
 }
 @media (prefers-reduced-motion: reduce) {

@@ -249,12 +249,14 @@ class _NumberFieldState extends State<NumberField>
     final c = theme.colors;
     final s = theme.sizes;
     final paint = c.variant(widget.variant);
-    final compact = widget.controlSize == ControlSize.compact;
-    final height = theme.coarsePointer(context)
+    // Field heights: it sits in forms next to text fields.
+    final small = widget.controlSize == ControlSize.small;
+    final base = small ? s.fieldHeightSmall : s.fieldHeight;
+    final height = theme.coarsePointer(context) && base < s.touchTarget
         ? s.touchTarget
-        : (compact ? s.controlCompact : s.controlHeight);
-    final radius = compact ? s.radiusControlCompact : s.radiusControl;
-    final pad = compact ? 12.0 : 14.0;
+        : base;
+    final radius = small ? s.radiusControlSmall : s.radiusControl;
+    final pad = small ? 12.0 : 14.0;
     final value = _value;
     final decimals = stepDecimals(_step);
     final display = widget.format?.call(value) ?? formatNumber(value, decimals);
@@ -266,7 +268,7 @@ class _NumberFieldState extends State<NumberField>
     final active = !widget.disabled && !editing;
     final fill = _dragging
         ? paint.pressed
-        : (_hovered && active ? paint.hover : paint.fill);
+        : ((_hovered || _focusVisible) && active ? paint.hover : paint.fill);
     final showSteppers =
         (_hovered || _focusVisible || theme.coarsePointer(context)) &&
         !_dragging;
@@ -312,8 +314,8 @@ class _NumberFieldState extends State<NumberField>
     }
 
     final textStyle = TextStyle(
-      fontSize: compact ? 13 : 14,
-      height: 20 / (compact ? 13 : 14),
+      fontSize: small ? 13 : 14,
+      height: 20 / (small ? 13 : 14),
       leadingDistribution: TextLeadingDistribution.even,
       color: paint.ink,
     );
@@ -391,14 +393,16 @@ class _NumberFieldState extends State<NumberField>
     Widget field = CustomPaint(
       painter: ControlSurfacePainter(
         fill: fill,
-        edge: (_focusVisible || editing) ? c.focus : paint.edge,
+        edge: editing ? c.focus : paint.edge,
+        // Editing reads as a field: its own edge thickens inward, no outer ring.
+        edgeWidth: editing ? FocusRingStyle.of(context).width : 1,
         radius: radius,
         raised:
             widget.variant == ControlVariant.elevated ||
             widget.variant == ControlVariant.filled,
         highlight: c.controlHighlight,
         depth: theme.brightness == Brightness.dark ? 0.18 : 0.08,
-        focus: (_focusVisible || editing) ? c.focus : null,
+        focus: _focusVisible && !editing ? FocusRingStyle.of(context) : null,
       ),
       child: ClipPath(
         clipper: ShapeBorderClipper(shape: SuperellipseBorder(radius: radius)),

@@ -10,7 +10,7 @@ const VARIANTS = ['filled', 'tonal', 'elevated', 'outlined', 'text', 'ghost', 'd
 const controls = {
   label: { type: 'text', default: 'Save changes' },
   variant: { type: 'select', options: VARIANTS, default: 'filled' },
-  controlSize: { type: 'select', options: ['regular', 'compact', 'inline'], default: 'regular' },
+  controlSize: { type: 'select', options: ['small', 'regular', 'large', 'inline'], default: 'regular' },
   icon: { type: 'boolean', label: 'Leading icon', default: false },
   loading: { type: 'boolean', default: false },
   disabled: { type: 'boolean', default: false },
@@ -24,7 +24,7 @@ function Overview() {
         render={(v) => (
           <Button
             variant={v.variant as (typeof VARIANTS)[number]}
-            controlSize={v.controlSize as 'regular' | 'compact' | 'inline'}
+            controlSize={v.controlSize as 'small' | 'regular' | 'large' | 'inline'}
             loading={v.loading}
             disabled={v.disabled}
           >
@@ -63,10 +63,13 @@ function Overview() {
 
       <Section title="Sizes">
         <p>
-          <C>controlSize</C> sets the height: <C>regular</C> is 44px and <C>compact</C> is 40px, for dense
-          toolbars and forms. <C>inline</C> fits a button into running text. Under{' '}
-          <C>density="compact"</C> the whole app gets smaller controls without touching each button. On
-          touch screens every size keeps a 44px hit target.
+          <C>controlSize</C> sets the height, iOS's three: <C>small</C> 30px, <C>regular</C> 36px and{' '}
+          <C>large</C> 52px, with 10 / 12 / 20px side padding and 15 / 17 / 17px labels. Every button is a
+          capsule (radius half its height) drawn with the kit's superellipse corners. <C>inline</C> fits a
+          button into running text. Inside a toolbar group or a dock, keep the default size: the host sets
+          it. Under <C>density="compact"</C> the whole app steps one size down without touching each
+          button, and <C>ThemeConfig.metrics.controlHeight</C> changes the sizes themselves. On touch
+          screens every size keeps a 44px hit target.
         </p>
       </Section>
 

@@ -18,8 +18,11 @@
   overflow: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
+  /* Focus and find-in-page scroll targets clear the floating chrome (and a host's tab bar). */
   scroll-padding-top: calc(var(--lab-scroll-top-reserve) + env(safe-area-inset-top, 0px));
-  scroll-padding-bottom: calc(var(--lab-scroll-bottom-reserve) + env(safe-area-inset-bottom, 0px));
+  scroll-padding-bottom: calc(
+    var(--lab-scroll-bottom-reserve) + var(--lab-scroll-extra-bottom, 0px) + env(safe-area-inset-bottom, 0px)
+  );
 }
 .lab-scroll-content {
   min-height: 100%;

@@ -7,6 +7,7 @@ import '../icons/lucide.dart';
 import '../physics/motion_value.dart';
 import '../physics/spring.dart';
 import '../theme.dart';
+import '../theme/surfaces.dart';
 import '../theme/color_mix.dart';
 import 'list_model.dart';
 
@@ -139,13 +140,11 @@ class _ListSectionState extends State<ListSection> {
       clipBehavior: _drag != null ? Clip.none : Clip.antiAlias,
       clipper: _drag != null
           ? null
-          : ShapeBorderClipper(
-              shape: SuperellipseBorder(radius: s.radiusGroup),
-            ),
+          : ShapeBorderClipper(shape: SuperellipseBorder(radius: s.listRadius)),
       child: DecoratedBox(
         decoration: ShapeDecoration(
           color: mixSrgb(c.ink, 0.04, c.surface),
-          shape: SuperellipseBorder(radius: s.radiusGroup),
+          shape: SuperellipseBorder(radius: s.listRadius),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -154,13 +153,13 @@ class _ListSectionState extends State<ListSection> {
               _RowSlot(
                 key: _key(i),
                 index: i,
-                // Hairline above every row but the first, after the leading icon (16 + 32 + 14).
+                // Hairline above every row but the first, after the leading icon (inset + 32 + 14).
                 hairline: i == 0
                     ? null
                     : (leading(widget.children[i]) ||
                               leading(widget.children[i - 1])
-                          ? 62
-                          : 16),
+                          ? s.listInset + 32 + 14
+                          : s.listInset),
                 hairlineColor: _drag != null ? null : c.line,
                 offset: _offsets[i]?.get() ?? 0,
                 lifted: _lifted == i,
@@ -181,7 +180,7 @@ class _ListSectionState extends State<ListSection> {
         children: [
           if (widget.header != null)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: s.listInset),
               child: Semantics(
                 header: true,
                 child: DefaultTextStyle.merge(
@@ -201,7 +200,7 @@ class _ListSectionState extends State<ListSection> {
           card,
           if (widget.footer != null)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: s.listInset),
               child: DefaultTextStyle.merge(
                 style: TextStyle(
                   color: c.muted,
@@ -387,15 +386,10 @@ class _GripState extends State<_Grip> {
             onVerticalDragUpdate: (d) => widget.onUpdate(d.delta.dy),
             onVerticalDragEnd: (_) => widget.onEnd(),
             onVerticalDragCancel: widget.onEnd,
-            child: DecoratedBox(
-              decoration: ShapeDecoration(
-                shape: SuperellipseBorder(
-                  radius: theme.sizes.radiusControlCompact,
-                  side: _focus
-                      ? BorderSide(color: c.focus, width: 2)
-                      : BorderSide.none,
-                ),
-              ),
+            child: FocusRing(
+              visible: _focus,
+              inside: true,
+              radius: theme.sizes.radiusControlSmall,
               child: Center(
                 child: LucideGripVertical(size: 20, color: c.muted),
               ),
@@ -637,7 +631,7 @@ class _ListRowState extends State<ListRow> {
         ? mixSrgb(c.primary, 0.14, c.surface)
         : interactive && _down
         ? c.controlPressed
-        : interactive && _hovered
+        : interactive && (_hovered || _focus)
         ? (_swipeable ? mixSrgb(c.ink, 0.05, card) : c.controlHover)
         : (_swipeable ? card : const Color(0x00000000));
 
@@ -729,9 +723,14 @@ class _ListRowState extends State<ListRow> {
     Widget row = DecoratedBox(
       decoration: BoxDecoration(color: fill),
       child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: s.controlHeight + 12),
+        constraints: BoxConstraints(minHeight: s.listRowHeight),
         child: Padding(
-          padding: EdgeInsetsDirectional.fromSTEB(16, 8, reorder ? 52 : 14, 8),
+          padding: EdgeInsetsDirectional.fromSTEB(
+            s.listInset,
+            8,
+            reorder ? 52 : s.listInset,
+            8,
+          ),
           child: DefaultTextStyle.merge(
             style: TextStyle(color: c.ink),
             child: body,
@@ -739,13 +738,8 @@ class _ListRowState extends State<ListRow> {
         ),
       ),
     );
-    if (_focus) {
-      row = DecoratedBox(
-        position: DecorationPosition.foreground,
-        decoration: BoxDecoration(border: Border.all(color: c.focus, width: 2)),
-        child: row,
-      );
-    }
+    // Keyboard focus: a ring just inside the row (the card clips its corners).
+    row = FocusRing(visible: _focus, inside: true, radius: 0, child: row);
     row = Opacity(opacity: widget.disabled ? 0.5 : 1, child: row);
 
     if (widget.onClick != null) {

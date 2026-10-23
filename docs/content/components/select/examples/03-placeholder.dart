@@ -23,7 +23,7 @@ class _PlaceholderState extends State<Placeholder> {
         child: Select(
           ariaLabel: 'Sort orders',
           placeholder: 'Sort by',
-          controlSize: .compact,
+          controlSize: .small,
           value: sort,
           onValueChange: (value) => setState(() => sort = value),
           children: const [

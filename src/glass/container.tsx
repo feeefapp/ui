@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { cn } from '../utils'
 import { useReducedMotion } from '../physics/react'
-import { GlassContext, type GlassRegistry } from './context'
+import { GlassBackdropContext, GlassContext, type GlassRegistry } from './context'
 import { GlassScene } from './scene'
 import { clampGlassTint } from './material'
 import type { GlassStyle } from '../theme-config'
@@ -56,7 +56,7 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
    * Keep it below the gap between bubbles at rest so separate bubbles stay apart. Default 8.
    */
   spacing?: number
-  /** Corner profile of the glass: kit superellipse (default) or circular `round` corners. */
+  /** Corner profile of the glass: circular `round` corners (default) or kit superellipse. */
   cornerShape?: 'superellipse' | 'round'
   /** `pointer` (default) turns the light toward a mouse or pen; `static` keeps it at the top-left. */
   light?: 'pointer' | 'static'
@@ -72,16 +72,18 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
    * colour. Glass taller than 72px never flips. Default true.
    */
   adaptive?: boolean
-  /** Reflective bevel width in CSS px, 0–20; default 5. Small bubbles cap it to fit. */
+  /** Reflective bevel width in CSS px, 0–100; default 1. Small bubbles cap it to fit. */
   highlightWidth?: number
-  /** `surface` (default) uses a convex bevel; `rim` uses the thin, symmetric screenshot-fitted highlight. */
+  /** `surface` uses a convex bevel; `rim` (default) uses the thin, symmetric screenshot-fitted highlight. */
   highlightProfile?: 'surface' | 'rim'
   /** Local material tint, 0 clear–1 tinted, preserving bright backdrop detail; omitted inherits ThemeConfig glassTint. */
   tint?: number
-  /** Surface highlight opacity multiplier, 0–3; default 1. */
+  /** Surface highlight opacity multiplier, 0–10; default 1. */
   highlightStrength?: number
-  /** Backdrop bend multiplier, 0–3; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
+  /** Backdrop bend multiplier, 0–10; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
   refractionStrength?: number
+  /** `gentle` avoids edge reversal; `measured` (default) restores the screenshot-fitted mirrored lens band. */
+  refractionProfile?: 'gentle' | 'measured'
   /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
   backdropSource?: string
 }
@@ -96,9 +98,11 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
  * JavaScript, or in forced colors, every bubble paints its own glass as before.
  */
 export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>(function GlassContainer(
-  { as = 'div', spacing = 8, cornerShape = 'superellipse', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 5, highlightProfile = 'surface', highlightStrength = 1, refractionStrength = 1, tint, backdropSource, className, children, ...props },
+  { as = 'div', spacing = 8, cornerShape = 'round', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 1, highlightProfile = 'rim', highlightStrength = 1, refractionStrength = 1, refractionProfile = 'measured', tint, backdropSource, className, children, ...props },
   ref
 ) {
+  const inheritedBackdrop = React.useContext(GlassBackdropContext)
+  backdropSource ??= inheritedBackdrop
   const host = React.useRef<HTMLElement | null>(null)
   const backdrop = React.useRef<HTMLDivElement>(null)
   const paint = React.useRef<SVGSVGElement>(null)
@@ -164,13 +168,14 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
     current.followPointer = light === 'pointer' && liquid
     current.interactive = interactive && liquid
     current.adaptive = adaptive
-    current.preserveHighlights = tint !== undefined
+    current.preserveHighlights = true
     current.tint = tint === undefined ? options.tint : clampGlassTint(tint)
     current.blur = options.blur
-    current.highlightWidth = Number.isFinite(highlightWidth) ? Math.min(20, Math.max(0, highlightWidth)) : 5
+    current.highlightWidth = Number.isFinite(highlightWidth) ? Math.min(100, Math.max(0, highlightWidth)) : 1
     current.highlightProfile = highlightProfile
-    current.highlightStrength = Number.isFinite(highlightStrength) ? Math.min(3, Math.max(0, highlightStrength)) : 1
-    current.refractionStrength = Number.isFinite(refractionStrength) ? Math.min(3, Math.max(0, refractionStrength)) : 1
+    current.highlightStrength = Number.isFinite(highlightStrength) ? Math.min(10, Math.max(0, highlightStrength)) : 1
+    current.refractionProfile = refractionProfile
+    current.refractionStrength = Number.isFinite(refractionStrength) ? Math.min(10, Math.max(0, refractionStrength)) : 1
     current.backdropSource = backdropSource
     current.refraction = options.refraction
     current.requestMeasure()
@@ -211,7 +216,7 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
 
   return React.createElement(
     as,
-    { ...props, 'ref': setHost, 'className': cn('lab-glass-container', className), 'data-glass-container': '', 'data-glass-corners': cornerShape, 'data-glass-local-tint': tint === undefined ? undefined : '', style: { ...props.style, ...(tint === undefined ? {} : { '--lab-glass-tint': clampGlassTint(tint) }) } as React.CSSProperties },
+    { ...props, 'ref': setHost, 'className': cn('lab-glass-container', className), 'data-glass-container': '', 'data-glass-corners': cornerShape, 'data-glass-local-tint': '', style: { ...props.style, ...(tint === undefined ? {} : { '--lab-glass-tint': clampGlassTint(tint) }) } as React.CSSProperties },
     <div className="lab-glass-material" aria-hidden="true">
       <svg ref={shadow} className="lab-glass-shadow" />
       <div ref={backdrop} className="lab-glass-backdrops" />
@@ -226,10 +231,10 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
  * toolbar, dock, search) use it so they share one material without ever nesting containers.
  */
 export const GlassScope = React.forwardRef<HTMLElement, GlassContainerProps>(function GlassScope(
-  { as = 'div', spacing, cornerShape, light, interactive, adaptive, tint, highlightWidth, highlightProfile, highlightStrength, refractionStrength, backdropSource, ...props },
+  { as = 'div', spacing, cornerShape, light, interactive, adaptive, tint, highlightWidth, highlightProfile, highlightStrength, refractionStrength, refractionProfile, backdropSource, ...props },
   ref
 ) {
   const outer = React.useContext(GlassContext)
   if (outer) return React.createElement(as, { ...props, ref })
-  return <GlassContainer {...props} as={as} spacing={spacing} cornerShape={cornerShape} light={light} interactive={interactive} adaptive={adaptive} tint={tint} highlightWidth={highlightWidth} highlightProfile={highlightProfile} highlightStrength={highlightStrength} refractionStrength={refractionStrength} backdropSource={backdropSource} ref={ref} />
+  return <GlassContainer {...props} as={as} spacing={spacing} cornerShape={cornerShape} light={light} interactive={interactive} adaptive={adaptive} tint={tint} highlightWidth={highlightWidth} highlightProfile={highlightProfile} highlightStrength={highlightStrength} refractionStrength={refractionStrength} refractionProfile={refractionProfile} backdropSource={backdropSource} ref={ref} />
 })

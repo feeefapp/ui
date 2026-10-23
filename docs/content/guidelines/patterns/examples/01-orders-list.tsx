@@ -119,7 +119,7 @@ export default function OrdersList() {
           <div className="pt-list">
             <div className="pt-list-head">
               <Checkbox
-                controlSize="compact"
+                controlSize="small"
                 label={`${rows.length} orders`}
                 checked={allSelected}
                 indeterminate={visibleSelected.length > 0 && !allSelected}

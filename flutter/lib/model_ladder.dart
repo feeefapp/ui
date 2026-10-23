@@ -13,7 +13,7 @@ import 'package:flutter/widgets.dart';
 import 'brand/geometry.dart';
 import 'i18n/i18n.dart';
 import 'icons/lucide.dart';
-import 'layout/size_reporter.dart';
+import 'menu/anchored_panel.dart';
 import 'model_ladder_core.dart';
 import 'primitives/button.dart';
 import 'primitives/popover_surface.dart';
@@ -52,12 +52,6 @@ LadderCopy ladderCopyOf(BuildContext context, [LadderCopy? copy]) {
 /// `chip` shows the tier and model name; `icon` is a compact brain button like marchant.
 enum ModelLadderVariant { chip, icon }
 
-/// Popover alignment against the trigger.
-enum ModelLadderAlign { start, center, end }
-
-/// Which side of the trigger the popover opens on.
-enum ModelLadderSide { top, bottom }
-
 // --------------------------------------------------------------------------------- trigger
 
 /// Quality picker: a trigger (chip or icon) that opens a popover with the ladder card. Moves
@@ -79,8 +73,8 @@ class ModelLadder extends StatefulWidget {
     this.selectedModel,
     this.copy,
     this.variant = ModelLadderVariant.chip,
-    this.align = ModelLadderAlign.start,
-    this.side = ModelLadderSide.top,
+    this.align = PanelAlign.start,
+    this.side = PanelSide.top,
   });
 
   /// The quality rungs, cheapest first. Nothing renders when empty.
@@ -126,10 +120,10 @@ class ModelLadder extends StatefulWidget {
   final ModelLadderVariant variant;
 
   /// Popover alignment against the trigger.
-  final ModelLadderAlign align;
+  final PanelAlign align;
 
-  /// Which side of the trigger the popover opens on.
-  final ModelLadderSide side;
+  /// Which side of the trigger the popover opens on (it flips when there is no room).
+  final PanelSide side;
 
   @override
   State<ModelLadder> createState() => _ModelLadderState();
@@ -137,15 +131,13 @@ class ModelLadder extends StatefulWidget {
 
 class _ModelLadderState extends State<ModelLadder>
     with SingleTickerProviderStateMixin {
-  final _portal = OverlayPortalController();
-  final _link = LayerLink();
   final _trigger = GlobalKey();
   final _focus = FocusNode(debugLabel: 'ladder trigger');
   late final _pop = AnimationController(vsync: this);
-  double? _popoverHeight;
+  bool _shown = false;
   bool _closing = false;
 
-  bool get _open => _portal.isShowing && !_closing;
+  bool get _open => _shown && !_closing;
 
   @override
   void dispose() {
@@ -159,9 +151,8 @@ class _ModelLadderState extends State<ModelLadder>
     if (next) {
       setState(() {
         _closing = false;
-        _popoverHeight = null;
+        _shown = true;
       });
-      _portal.show();
       _pop.duration = const Duration(milliseconds: 220);
       if (_reduced(context)) {
         _pop.value = 1;
@@ -173,8 +164,10 @@ class _ModelLadderState extends State<ModelLadder>
       _pop.duration = const Duration(milliseconds: 140);
       void hide() {
         if (!mounted || !_closing) return;
-        _portal.hide();
-        setState(() => _closing = false);
+        setState(() {
+          _closing = false;
+          _shown = false;
+        });
       }
 
       if (_reduced(context)) {
@@ -200,26 +193,27 @@ class _ModelLadderState extends State<ModelLadder>
         : visibleLabel(current, safe, stops.length, copy);
     final name = displayName(current, safe, stops.length, copy);
     final top = safe == stops.length - 1 && stops.length > 1;
-    return CompositedTransformTarget(
-      link: _link,
-      child: OverlayPortal(
-        controller: _portal,
-        overlayChildBuilder: (context) => _popover(context, copy, safe),
-        child: TapRegion(
-          groupId: this,
-          child: KeyedSubtree(
-            key: _trigger,
-            child: _Trigger(
-              variant: widget.variant,
-              enabled: widget.enabled,
-              open: _open,
-              top: top,
-              tier: tier,
-              name: name,
-              focusNode: _focus,
-              label: '${copy.quality}: $tier${tier == name ? '' : ', $name'}',
-              onTap: () => _setOpen(!_open),
-            ),
+    // Radix: flips to the other side when it doesn't fit, shifts to stay 12px inside its bounds.
+    return AnchoredPanel(
+      open: _shown,
+      side: widget.side,
+      align: widget.align,
+      sideOffset: 8,
+      panel: (context) => _popover(context, copy, safe),
+      child: TapRegion(
+        groupId: this,
+        child: KeyedSubtree(
+          key: _trigger,
+          child: _Trigger(
+            variant: widget.variant,
+            enabled: widget.enabled,
+            open: _open,
+            top: top,
+            tier: tier,
+            name: name,
+            focusNode: _focus,
+            label: '${copy.quality}: $tier${tier == name ? '' : ', $name'}',
+            onTap: () => _setOpen(!_open),
           ),
         ),
       ),
@@ -228,44 +222,13 @@ class _ModelLadderState extends State<ModelLadder>
 
   Widget _popover(BuildContext context, LadderCopy copy, int safe) {
     final theme = ThemeProvider.of(context);
-    final screen = MediaQuery.sizeOf(context);
     final rtl = Directionality.of(context) == TextDirection.rtl;
-    final width = math.min(350.0, screen.width - 24);
-    final box = _trigger.currentContext?.findRenderObject() as RenderBox?;
-    final rect = box != null && box.hasSize
-        ? box.localToGlobal(Offset.zero) & box.size
-        : Rect.zero;
-    // Radix: flip to the other side when the popover doesn't fit, shift to stay 12px inside.
-    var side = widget.side;
-    final height = _popoverHeight ?? 0;
-    final above = rect.top - 8 - 12,
-        below = screen.height - rect.bottom - 8 - 12;
-    if (side == ModelLadderSide.top && height > above && below > above) {
-      side = ModelLadderSide.bottom;
-    } else if (side == ModelLadderSide.bottom &&
-        height > below &&
-        above > below) {
-      side = ModelLadderSide.top;
-    }
-    final start = switch ((widget.align, rtl)) {
-      (ModelLadderAlign.start, false) ||
-      (ModelLadderAlign.end, true) => rect.left,
-      (ModelLadderAlign.end, false) ||
-      (ModelLadderAlign.start, true) => rect.right - width,
-      (ModelLadderAlign.center, _) => rect.center.dx - width / 2,
-    };
-    final left = math.max(12.0, math.min(start, screen.width - 12 - width));
-    final onTop = side == ModelLadderSide.top;
+    final onTop = widget.side == PanelSide.top;
     final originX = switch ((widget.align, rtl)) {
-      (ModelLadderAlign.start, false) || (ModelLadderAlign.end, true) => -1.0,
-      (ModelLadderAlign.end, false) || (ModelLadderAlign.start, true) => 1.0,
-      (ModelLadderAlign.center, _) => 0.0,
+      (PanelAlign.start, false) || (PanelAlign.end, true) => -1.0,
+      (PanelAlign.end, false) || (PanelAlign.start, true) => 1.0,
+      (PanelAlign.center, _) => 0.0,
     };
-    final available = onTop ? above : below;
-    final listHeight = math.max(
-      120.0,
-      math.min(440.0, math.min(screen.height - 24, available)),
-    );
     final card = ModelLadderCard(
       stops: widget.stops,
       index: safe,
@@ -284,69 +247,57 @@ class _ModelLadderState extends State<ModelLadder>
       selectedModel: widget.selectedModel,
       copy: copy,
     );
-    return CompositedTransformFollower(
-      link: _link,
-      targetAnchor: onTop ? Alignment.topLeft : Alignment.bottomLeft,
-      followerAnchor: onTop ? Alignment.bottomLeft : Alignment.topLeft,
-      offset: Offset(left - rect.left, onTop ? -8 : 8),
-      child: Align(
-        alignment: onTop ? Alignment.bottomLeft : Alignment.topLeft,
-        child: TapRegion(
-          groupId: this,
-          onTapOutside: (_) => _setOpen(false),
-          child: Focus(
-            onKeyEvent: (_, event) {
-              if (event is KeyDownEvent &&
-                  event.logicalKey == LogicalKeyboardKey.escape) {
-                _setOpen(false);
-                return KeyEventResult.handled;
-              }
-              return KeyEventResult.ignored;
+    return LayoutBuilder(
+      builder: (context, constraints) => TapRegion(
+        groupId: this,
+        onTapOutside: (_) => _setOpen(false),
+        child: Focus(
+          onKeyEvent: (_, event) {
+            if (event is KeyDownEvent &&
+                event.logicalKey == LogicalKeyboardKey.escape) {
+              _setOpen(false);
+              return KeyEventResult.handled;
+            }
+            return KeyEventResult.ignored;
+          },
+          child: AnimatedBuilder(
+            animation: _pop,
+            builder: (context, child) {
+              // lab-ladder-pop: from opacity 0, translateY(4px) scale(.97); out with ease-in.
+              final t = _closing
+                  ? 1 - Curves.easeIn.transform(1 - _pop.value)
+                  : MotionTokens.easeOut.transform(_pop.value);
+              final s = 0.97 + 0.03 * t;
+              return IgnorePointer(
+                ignoring: _closing,
+                child: Opacity(
+                  opacity: t.clamp(0.0, 1.0),
+                  child: Transform(
+                    alignment: Alignment(originX, onTop ? 1 : -1),
+                    transform: Matrix4.translationValues(0, 4 * (1 - t), 0)
+                      ..scaleByDouble(s, s, 1, 1),
+                    child: child,
+                  ),
+                ),
+              );
             },
-            child: AnimatedBuilder(
-              animation: _pop,
-              builder: (context, child) {
-                // lab-ladder-pop: from opacity 0, translateY(4px) scale(.97); out with ease-in.
-                final t = _closing
-                    ? 1 - Curves.easeIn.transform(1 - _pop.value)
-                    : MotionTokens.easeOut.transform(_pop.value);
-                final s = 0.97 + 0.03 * t;
-                return IgnorePointer(
-                  ignoring: _closing,
-                  child: Opacity(
-                    opacity: t.clamp(0.0, 1.0),
-                    child: Transform(
-                      alignment: Alignment(originX, onTop ? 1 : -1),
-                      transform: Matrix4.translationValues(0, 4 * (1 - t), 0)
-                        ..scaleByDouble(s, s, 1, 1),
-                      child: child,
-                    ),
-                  ),
-                );
-              },
-              child: SizeReporter(
-                onSize: (size) {
-                  if (size.height != _popoverHeight && mounted) {
-                    setState(() => _popoverHeight = size.height);
-                  }
-                },
-                child: SizedBox(
-                  width: width,
-                  child: _PopoverScope(
-                    autofocus: true,
-                    listHeight: listHeight,
-                    child: CustomPaint(
-                      foregroundPainter:
-                          glassStyleOf(context) == GlassStyle.solid
-                          ? null
-                          : _RimPainter(
-                              theme.sizes.radiusGroup,
-                              theme.colors.glassEdgeLight,
-                              theme.colors.glassEdgeLow,
-                            ),
-                      child: PopoverSurface(seed: 'lab-ladder', child: card),
-                    ),
-                  ),
+            child: SizedBox(
+              width: math.min(350.0, constraints.maxWidth),
+              child: _PopoverScope(
+                autofocus: true,
+                listHeight: math.max(
+                  120.0,
+                  math.min(440.0, constraints.maxHeight),
+                ),
+                child: CustomPaint(
+                  foregroundPainter: glassStyleOf(context) == GlassStyle.solid
+                      ? null
+                      : _RimPainter(
+                          theme.sizes.radiusGroup,
+                          theme.colors.glassEdgeLight,
+                          theme.colors.glassEdgeLow,
+                        ),
+                  child: PopoverSurface(seed: 'lab-ladder', child: card),
                 ),
               ),
             ),
@@ -1589,7 +1540,7 @@ class _OptionRow extends StatelessWidget {
 // --------------------------------------------------------------------------------- control
 
 /// A `.lab-control` with the ladder's overrides: its own fills, corners and padding, a 1px edge,
-/// the pressed inset shadow, a 2px focus ring 3px out, and 0.42 opacity when disabled.
+/// the pressed inset shadow, the keyboard focus ring, and 0.42 opacity when disabled.
 class _LadderControl extends StatefulWidget {
   const _LadderControl({
     required this.onTap,
@@ -1644,7 +1595,7 @@ class _LadderControlState extends State<_LadderControl> {
     final c = theme.colors;
     final fill = _interactive && _down
         ? widget.pressed
-        : _interactive && _hovered
+        : _interactive && (_hovered || _focusVisible)
         ? widget.hover
         : widget.fill;
     final content = ConstrainedBox(
@@ -1664,7 +1615,9 @@ class _LadderControlState extends State<_LadderControl> {
             child: DefaultTextStyle.merge(
               style: TextStyle(
                 fontSize: theme.sizes.controlFont,
-                height: 20 / theme.sizes.controlFont,
+                height:
+                    SizeTokens.controlLine(theme.sizes.controlFont) /
+                    theme.sizes.controlFont,
                 leadingDistribution: TextLeadingDistribution.even,
                 color: c.ink,
               ),
@@ -1720,7 +1673,7 @@ class _LadderControlState extends State<_LadderControl> {
                   edge: widget.edge,
                   radius: widget.radius,
                   pressed: _interactive && _down,
-                  focus: _focusVisible ? c.focus : null,
+                  focus: _focusVisible ? FocusRingStyle.of(context) : null,
                 ),
                 child: child,
               ),
@@ -1744,7 +1697,7 @@ class _ControlPainter extends CustomPainter {
   final Color fill, edge;
   final double radius;
   final bool pressed;
-  final Color? focus;
+  final FocusRingStyle? focus;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1777,16 +1730,7 @@ class _ControlPainter extends CustomPainter {
           ..color = edge,
       );
     }
-    if (focus != null) {
-      // outline: 2px, offset 3px: the stroke's centre line sits 4px outside.
-      canvas.drawPath(
-        superellipsePath(rect.inflate(4), [for (final r in radii) r + 4]),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = focus!,
-      );
-    }
+    if (focus != null) paintFocusRing(canvas, rect, radius, focus!);
   }
 
   @override

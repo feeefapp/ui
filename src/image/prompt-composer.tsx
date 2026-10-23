@@ -2,6 +2,8 @@
 
 import { ComposerCard, ComposerHint as AnimatedHint } from '../composer/composer'
 import { PopoverSurface } from '../ui'
+import { MenuSurface } from '../menu/menu-surface'
+import { useFloatingBoundary } from '../menu/boundary'
 import { Button, RawInput } from '../ui'
 import { useI18n } from '../i18n'
 import { useServices } from '../services'
@@ -163,7 +165,8 @@ export function ImagePromptComposer({
   const [focused, setFocused] = useState(false)
   // Focus changes emphasis; text overflow or an explicit newline changes layout.
   const { card, layout, field, expanded } = useComposerLayout(prompt)
-  const updatePortal = () => setPortalContainer(root.current?.closest('dialog') ?? null)
+  const boundary = useFloatingBoundary()
+  const updatePortal = () => setPortalContainer(root.current?.closest('dialog') ?? boundary)
   useEffect(() => {
     if (settingsDisabled) setSettingsOpen(false)
   }, [settingsDisabled])
@@ -451,14 +454,12 @@ onMouseDown={(e) => {
                 </Button>
               </Menu.Trigger>
               <Menu.Portal container={portalContainer}>
-                <PopoverSurface asChild>
+                <MenuSurface asChild>
                   <Menu.Content
                     className="lab-pc-menu"
                     side="top"
                     align="start"
-                    sideOffset={8}
-                    collisionPadding={12}
-                    collisionBoundary={portalContainer ?? undefined}
+                    {...(portalContainer ? { collisionBoundary: portalContainer } : {})}
                   >
                     <Menu.Label className="lab-pc-menu-label">
                       {canReference
@@ -489,12 +490,10 @@ onMouseDown={(e) => {
                           <History size={15} /> From your images
                         </Menu.SubTrigger>
                         <Menu.Portal container={portalContainer}>
-                          <PopoverSurface asChild>
+                          <MenuSurface asChild cover={false}>
                             <Menu.SubContent
                               className="lab-pc-menu lab-pc-recent"
-                              sideOffset={6}
-                              collisionPadding={12}
-                              collisionBoundary={portalContainer ?? undefined}
+                              {...(portalContainer ? { collisionBoundary: portalContainer } : {})}
                             >
                               {recent.slice(0, 12).map((image) => (
                                 <Menu.Item
@@ -507,7 +506,7 @@ onMouseDown={(e) => {
                                 </Menu.Item>
                               ))}
                             </Menu.SubContent>
-                          </PopoverSurface>
+                          </MenuSurface>
                         </Menu.Portal>
                       </Menu.Sub>
                     )}
@@ -522,12 +521,10 @@ onMouseDown={(e) => {
                             <Sparkle size={15} /> {resolvedTemplatesLabel}
                           </Menu.SubTrigger>
                           <Menu.Portal container={portalContainer}>
-                            <PopoverSurface asChild>
+                            <MenuSurface asChild cover={false}>
                               <Menu.SubContent
                                 className="lab-pc-menu lab-pc-idea-menu"
-                                sideOffset={6}
-                                collisionPadding={12}
-                                collisionBoundary={portalContainer ?? undefined}
+                                {...(portalContainer ? { collisionBoundary: portalContainer } : {})}
                               >
                                 {templates.slice(0, 10).map((template) => (
                                   <Menu.Item
@@ -540,7 +537,7 @@ onMouseDown={(e) => {
                                   </Menu.Item>
                                 ))}
                               </Menu.SubContent>
-                            </PopoverSurface>
+                            </MenuSurface>
                           </Menu.Portal>
                         </Menu.Sub>
                       )
@@ -550,7 +547,7 @@ onMouseDown={(e) => {
                       <Brush size={15} /> Edit a photo…
                     </Menu.Item>
                   </Menu.Content>
-                </PopoverSurface>
+                </MenuSurface>
               </Menu.Portal>
             </Menu.Root>
           </span>

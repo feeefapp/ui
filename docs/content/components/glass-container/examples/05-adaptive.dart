@@ -19,7 +19,6 @@ class _AdaptiveState extends State<Adaptive> {
   Widget _icon(String label, LucideIconData icon) => IconButton(
     variant: .text,
     appearance: .toolbar,
-    controlSize: .compact,
     ariaLabel: label,
     onClick: () {},
     icon: LucideIcon(icon),

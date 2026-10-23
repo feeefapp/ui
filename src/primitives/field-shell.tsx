@@ -29,8 +29,8 @@ export type FieldDecorationProps = {
   containerClassName?: string
   /** Surface emphasis, shared with buttons. */
   variant?: ControlVariant
-  /** Field height: `regular` (44px) or `compact` (40px). */
-  controlSize?: 'regular' | 'compact'
+  /** Field height: `regular` (44px, the toolbar and search height) or `small` (36px, a regular button's height). */
+  controlSize?: 'small' | 'regular'
 }
 /** What `FieldShell` hands its child control so the label and messages stay connected. */
 export type FieldControlState = {

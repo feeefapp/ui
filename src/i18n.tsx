@@ -1,6 +1,5 @@
 'use client'
 
-import { PopoverSurface } from './ui'
 import {
   createContext,
   useContext,
@@ -15,6 +14,8 @@ import { Check, Globe } from 'lucide-react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { Button, Select, Option } from './ui'
 import './actions/actions.css'
+import { MenuSurface } from './menu/menu-surface'
+import { useFloatingBoundary } from './menu/boundary'
 import { LANGUAGES, directionFor } from './i18n-core'
 import { UI_MESSAGES } from './messages'
 import { useServices } from './services'
@@ -177,6 +178,7 @@ export function LanguageSwitcher({
   const { locale, setLocale, availableLocales, t, dir } = useI18n()
   const trigger = useRef<HTMLButtonElement>(null)
   const [portalContainer, setPortalContainer] = useState<HTMLElement>()
+  const boundary = useFloatingBoundary()
   const visible = LANGUAGES.filter((l) => availableLocales.includes(l.code))
   if (visible.length < 2) return null
   if (iconOnly)
@@ -185,7 +187,7 @@ export function LanguageSwitcher({
         modal={false}
         dir={dir}
         onOpenChange={(open) => {
-          if (open) setPortalContainer(trigger.current?.closest('dialog') || undefined)
+          if (open) setPortalContainer(trigger.current?.closest('dialog') || boundary || undefined)
         }}
       >
         <DropdownMenu.Trigger asChild>
@@ -202,16 +204,8 @@ export function LanguageSwitcher({
           </Button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal container={portalContainer}>
-          <PopoverSurface asChild>
-            <DropdownMenu.Content
-              className="lab-actions-menu"
-              aria-label={t('lab.common.language')}
-              side="top"
-              align="end"
-              sideOffset={8}
-              collisionPadding={12}
-              data-lab-corners
-            >
+          <MenuSurface asChild>
+            <DropdownMenu.Content className="lab-actions-menu" aria-label={t('lab.common.language')}>
               <DropdownMenu.RadioGroup value={locale} onValueChange={setLocale}>
                 {visible.map((language) => (
                   <DropdownMenu.RadioItem
@@ -231,7 +225,7 @@ export function LanguageSwitcher({
                 ))}
               </DropdownMenu.RadioGroup>
             </DropdownMenu.Content>
-          </PopoverSurface>
+          </MenuSurface>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
     )

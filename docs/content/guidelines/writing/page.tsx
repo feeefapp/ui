@@ -27,10 +27,10 @@ function DialogMock({
       <h4>{title}</h4>
       <p>{body}</p>
       <div className="gw-dialog-actions">
-        <Button variant="text" controlSize="compact">
+        <Button variant="text" controlSize="small">
           {cancel}
         </Button>
-        <Button variant="destructive" controlSize="compact">
+        <Button variant="destructive" controlSize="small">
           {confirm}
         </Button>
       </div>

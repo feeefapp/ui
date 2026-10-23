@@ -5,8 +5,9 @@ import { cn } from '../utils.js';
 import { PixelTexture } from '../pixel-art.js';
 import './popover-surface.css';
 /**
- * The shared opaque material for menus and popovers: surface, border, group corners and a faint
- * animated pixel grain. Paint only; the owner (usually Radix) keeps positioning and interaction.
+ * The shared opaque material for popovers (pickers, editors, settings panels): surface, border,
+ * group corners and a faint animated pixel grain. Paint only; the owner (usually Radix) keeps
+ * positioning and interaction. Menus (a trigger that opens a list of choices) use `MenuSurface`.
  */
 export const PopoverSurface = React.forwardRef(({ asChild = false, seed = 'lab-popover', className, children, ...props }, ref) => {
     const decoration = (_jsx("div", { className: "lab-popover-decoration", "aria-hidden": "true", children: _jsx(PixelTexture, { variant: "grain", density: "sparse", seed: seed, animated: true }) }));

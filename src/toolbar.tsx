@@ -34,8 +34,9 @@ export function Toolbar({
 }
 
 /**
- * One glass pill for related toolbar controls (`role="group"`). Children should use
- * `appearance="toolbar"` and `controlSize="compact"`; the group sizes them to 40px (44px on touch).
+ * One glass pill for related toolbar controls (`role="group"`). Children use
+ * `appearance="toolbar"` and the default `regular` size, which the group sets to fill its
+ * `--lab-toolbar-item` bubble (44px comfortable, controls 38px; the bubble is at least 44px on touch).
  */
 export const ToolbarGroup = forwardRef<HTMLElement, Omit<ComponentPropsWithoutRef<typeof GlassGroup>, 'as'> & {
   /** Accessible name of the group. */

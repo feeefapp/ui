@@ -16,7 +16,7 @@ export default function IconsAndAffixes() {
         onValueChange={setQuery}
         trailing={
           query && (
-            <IconButton variant="text" controlSize="compact" aria-label="Clear search" onClick={() => setQuery('')}>
+            <IconButton variant="text" controlSize="small" aria-label="Clear search" onClick={() => setQuery('')}>
               <X size={16} />
             </IconButton>
           )

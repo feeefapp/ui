@@ -8,6 +8,7 @@ import { FieldShell, type FieldDecorationProps } from './field-shell'
 import { Button, IconButton } from './button'
 import { RawInput } from './raw-input'
 import { PopoverSurface } from './popover-surface'
+import { useFloatingBoundary } from '../menu/boundary'
 import { TemporalFilterEditor } from '../filters/temporal-editor'
 import { TemporalDialog } from '../filters/temporal-dialog'
 import { ToolbarGroup } from '../toolbar'
@@ -145,6 +146,7 @@ export const TemporalField = React.forwardRef<HTMLButtonElement, TemporalFieldPr
     const touched = React.useRef(false),
       editing = React.useRef(false)
     const [container, setContainer] = React.useState<HTMLElement>()
+    const boundary = useFloatingBoundary()
     const [direction, setDirection] = React.useState<'rtl' | 'ltr'>(dir === 'rtl' ? 'rtl' : 'ltr')
     const valueKey = JSON.stringify(value)
     const validate = React.useCallback(
@@ -189,7 +191,7 @@ export const TemporalField = React.forwardRef<HTMLButtonElement, TemporalFieldPr
     }
     const begin = () => {
       if (disabled || readOnly) return
-      setContainer(trigger.current?.closest('dialog') || undefined)
+      setContainer(trigger.current?.closest('dialog') || boundary || undefined)
       setDirection(getComputedStyle(trigger.current!).direction === 'rtl' ? 'rtl' : 'ltr')
       setDraft(value)
       setDraftError(null)
@@ -257,14 +259,14 @@ export const TemporalField = React.forwardRef<HTMLButtonElement, TemporalFieldPr
           <Button
             variant="text"
             appearance="toolbar"
-            controlSize="compact"
+            controlSize="regular"
             disabled={normalizeTemporal(draft) == null}
             onClick={clear}
           >
             Clear
           </Button>
           {!instant && (
-            <Button variant="filled" appearance="toolbar" controlSize="compact" type="submit" form={formId}>
+            <Button variant="filled" appearance="toolbar" controlSize="regular" type="submit" form={formId}>
               Apply
             </Button>
           )}
@@ -306,7 +308,7 @@ export const TemporalField = React.forwardRef<HTMLButtonElement, TemporalFieldPr
               {clearable && populated && !disabled && !readOnly && (
                 <IconButton
                   variant="text"
-                  controlSize="compact"
+                  controlSize="small"
                   className="lab-temporal-field-clear"
                   aria-label={`Clear ${title}`}
                   onClick={() => {
@@ -419,6 +421,7 @@ export const TemporalField = React.forwardRef<HTMLButtonElement, TemporalFieldPr
               align="start"
               sideOffset={8}
               collisionPadding={12}
+              collisionBoundary={container}
               onCloseAutoFocus={(event) => {
                 event.preventDefault()
                 trigger.current?.focus({ preventScroll: true })

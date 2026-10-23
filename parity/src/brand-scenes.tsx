@@ -29,12 +29,12 @@ export function HeaderScene() {
         brandLabel="Feeef Lab"
         brandSuffix="lab"
         tools={
-          <IconButton variant="ghost" appearance="toolbar" controlSize="compact" aria-label="Zoom in">
+          <IconButton variant="ghost" appearance="toolbar" aria-label="Zoom in">
             <LucideZoomIn />
           </IconButton>
         }
         actions={
-          <Button variant="filled" appearance="toolbar" controlSize="compact">
+          <Button variant="filled" appearance="toolbar">
             Share
           </Button>
         }

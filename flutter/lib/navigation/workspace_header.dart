@@ -91,9 +91,7 @@ class WorkspaceHeader extends StatelessWidget {
       ariaLabel: brandLabel,
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          minHeight: narrow || theme.coarsePointer(context)
-              ? 44
-              : theme.sizes.controlCompact,
+          minHeight: _toolbarItem(context, theme) - 6,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -203,12 +201,8 @@ class WorkspaceHeader extends StatelessWidget {
                 ),
             ],
           );
-    // A toolbar group is its control size + 6px (44px controls on touch and narrow screens).
-    final groupHeight =
-        (narrow || theme.coarsePointer(context)
-            ? 44
-            : theme.sizes.controlCompact) +
-        6;
+    // A toolbar group is the toolbar item (at least 44px on touch).
+    final groupHeight = _toolbarItem(context, theme);
     final toolbar = Toolbar(
       label: t('lab.nav.labWorkspace'),
       leading: Row(
@@ -235,4 +229,12 @@ class WorkspaceHeader extends StatelessWidget {
       ),
     );
   }
+}
+
+/// `ToolbarGroup`'s bubble height: the toolbar item, at least the touch target on touch screens.
+double _toolbarItem(BuildContext context, ThemeData theme) {
+  final s = theme.sizes;
+  return theme.coarsePointer(context) && s.toolbarItem < s.touchTarget
+      ? s.touchTarget
+      : s.toolbarItem;
 }

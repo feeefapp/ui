@@ -96,7 +96,7 @@ class _SwipeInboxState extends State<SwipeInbox> {
             ),
             Button(
               variant: .text,
-              controlSize: .compact,
+              controlSize: .small,
               onClick: () => setState(() {
                 orders = [..._start];
                 confirmed = [];

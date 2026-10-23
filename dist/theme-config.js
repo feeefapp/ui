@@ -48,13 +48,57 @@ function resolve(config = {}) {
         glassRefraction: config.glassRefraction ?? THEME_DEFAULTS.glassRefraction,
         radius,
         primary: config.primary && parseHexColor(config.primary) ? config.primary.toLowerCase() : null,
+        metrics: config.metrics ?? {},
     };
+}
+/** Every metric and the CSS variable it writes. */
+const METRIC_VARIABLES = [
+    [(m) => m.controlHeight?.small, '--lab-control-small'],
+    [(m) => m.controlHeight?.regular, '--lab-control-height'],
+    [(m) => m.controlHeight?.large, '--lab-control-large'],
+    [(m) => m.controlPadding?.small, '--lab-control-padding-small'],
+    [(m) => m.controlPadding?.regular, '--lab-control-padding'],
+    [(m) => m.controlPadding?.large, '--lab-control-padding-large'],
+    [(m) => m.controlFont?.small, '--lab-control-font-small'],
+    [(m) => m.controlFont?.regular, '--lab-control-font'],
+    [(m) => m.controlFont?.large, '--lab-control-font-large'],
+    [(m) => m.fieldHeight?.small, '--lab-field-height-small'],
+    [(m) => m.fieldHeight?.regular, '--lab-field-height'],
+    [(m) => m.rowHeight, '--lab-row-height'],
+    [(m) => m.toolbarItem, '--lab-toolbar-item'],
+    [(m) => m.toolbarGap, '--lab-toolbar-gap'],
+    [(m) => m.toolbarInset, '--lab-toolbar-inset'],
+    [(m) => m.segmentedHeight, '--lab-segmented-height'],
+    [(m) => m.segmentedInset, '--lab-segmented-inset'],
+    [(m) => m.switchSize?.width, '--lab-switch-width'],
+    [(m) => m.switchSize?.height, '--lab-switch-height'],
+    [(m) => m.thumbSize?.width, '--lab-thumb-width'],
+    [(m) => m.thumbSize?.height, '--lab-thumb-height'],
+    [(m) => m.sliderTrack, '--lab-slider-track'],
+    [(m) => m.listRowHeight, '--lab-list-row-height'],
+    [(m) => m.listRadius, '--lab-list-corner'],
+    [(m) => m.listInset, '--lab-list-inset'],
+    [(m) => m.focusRingWidth, '--lab-focus-ring-width'],
+    [(m) => m.focusRingOffset, '--lab-focus-ring-offset'],
+];
+/** The variable names `metrics` can set; `applyThemeConfig` clears the ones a new config drops. */
+export const METRIC_VARIABLE_NAMES = METRIC_VARIABLES.map(([, name]) => name);
+/** `metrics` as CSS variables: finite, non-negative values only, in px. */
+export function metricVariables(metrics = {}) {
+    const vars = {};
+    for (const [read, name] of METRIC_VARIABLES) {
+        const value = read(metrics);
+        if (typeof value === 'number' && Number.isFinite(value) && value >= 0)
+            vars[name] = `${value}px`;
+    }
+    return vars;
 }
 /** The CSS variables a config sets on `<html>`. */
 function variables(theme) {
     const vars = {
         '--lab-radius-scale': String(theme.radius),
         '--lab-glass-tint': String(theme.glassTint),
+        ...metricVariables(theme.metrics),
     };
     const rgb = theme.primary && parseHexColor(theme.primary);
     if (rgb) {
@@ -68,7 +112,7 @@ function variables(theme) {
  * Attributes for the root `<html>` element (React props), e.g. in a Next.js root layout:
  * `data-lab-palette`, `data-lab-density`, `data-lab-glass`, `data-lab-glass-blur`,
  * `data-lab-glass-refraction`, `data-lab-primary` (when set) and the style variables
- * (`--lab-radius-scale`, `--lab-glass-tint`, the seed colours).
+ * (`--lab-radius-scale`, `--lab-glass-tint`, the seed colours, and one variable per set `metrics` value).
  * Unset options use `THEME_DEFAULTS`; `radius` is clamped to 0–1.5, `glassTint` to 0–1, and an invalid `primary`
  * is ignored. Color mode (`data-lab-theme`) is not included; `ThemeProvider` sets it.
  */
@@ -100,7 +144,7 @@ export function applyThemeConfig(element, config) {
         element.setAttribute('data-lab-primary', '');
     else
         element.removeAttribute('data-lab-primary');
-    for (const name of SEED_VARS)
+    for (const name of [...SEED_VARS, ...METRIC_VARIABLE_NAMES])
         element.style.removeProperty(name);
     for (const [name, value] of Object.entries(variables(theme)))
         element.style.setProperty(name, value);

@@ -72,7 +72,6 @@ class _CustomEditorState extends State<CustomEditor> {
               IconButton(
                 variant: .text,
                 appearance: .toolbar,
-                controlSize: .compact,
                 ariaLabel: 'Export CSV',
                 onClick: () {},
                 icon: const LucideIcon(LucideIcons.download),

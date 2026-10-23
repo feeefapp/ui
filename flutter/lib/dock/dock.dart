@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import '../actions/actions_bar.dart';
 import '../glass/container.dart';
 import '../scaffold.dart';
+import '../primitives/button.dart';
 import '../theme.dart';
 import '../theme/tokens.dart';
 import 'content_swap.dart';
@@ -83,7 +84,7 @@ class _DockState extends State<Dock> {
           0.0,
           math.min(
             math.min(available * 0.4, _tileIntrinsic ?? double.infinity),
-            available - 44 - gap,
+            available - theme.sizes.toolbarControl - gap,
           ),
         );
         // `.lab-dock-content` min-width (48px on narrow screens), which wins over its max.
@@ -120,10 +121,16 @@ class _DockState extends State<Dock> {
                   0.0,
                   available - (content == null ? 0 : tileMax + gap),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  spacing: 4,
-                  children: children,
+                // Controls take the toolbar control height (`--lab-control-height` inside the
+                // dock): 38 + 4px inset + 1px border a side = 48, the iOS bottom bar.
+                child: ControlOverrides.merge(
+                  context,
+                  height: theme.sizes.toolbarControl,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: 4,
+                    children: children,
+                  ),
                 ),
               ),
             ),

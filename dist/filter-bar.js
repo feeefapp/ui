@@ -8,6 +8,7 @@ import { ToolbarGroup } from './toolbar.js';
 import { IconButton, Button } from './primitives/button.js';
 import { TextField } from './primitives/text-field.js';
 import { PopoverSurface } from './primitives/popover-surface.js';
+import { useFloatingBoundary } from './menu/boundary.js';
 import { Modal } from './primitives/modal.js';
 import { ScrollArea } from './scroll/index.js';
 import { Dock } from './dock/index.js';
@@ -47,6 +48,7 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
     const [localPins, setLocalPins] = useState([]);
     const values = controlledValues ?? localValues, pins = controlledPins ?? localPins;
     const [container, setContainer] = useState();
+    const boundary = useFloatingBoundary();
     const [dir, setDir] = useState('ltr');
     const [catalog, setCatalog] = useState(false), [query, setQuery] = useState('');
     const [editing, setEditing] = useState(null), [draft, setDraft] = useState(null), [editError, setEditError] = useState('');
@@ -79,7 +81,7 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
     const pin = (id) => setPins([...new Set([...pins, id])]);
     const prepare = (open) => {
         if (open) {
-            setContainer(host.current?.closest('dialog') || undefined);
+            setContainer(host.current?.closest('dialog') || boundary || undefined);
             setDir(host.current && getComputedStyle(host.current).direction === 'rtl' ? 'rtl' : 'ltr');
         }
     };
@@ -114,18 +116,18 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
         setLocalValues(cleared);
         onValuesChange?.(cleared);
     };
-    return (_jsxs(GlassScope, { ref: host, className: "lab-filter-bar", role: "group", "aria-label": label, children: [onBack && (_jsx(ToolbarGroup, { label: "Filter navigation", children: _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": "Back from filtered view", onClick: onBack, children: _jsx(ArrowLeft, { className: "lab-dir-flip" }) }) })), _jsxs(ToolbarGroup, { label: "Filter controls", children: [_jsxs(Popover.Root, { open: catalog, onOpenChange: (open) => {
+    return (_jsxs(GlassScope, { ref: host, className: "lab-filter-bar", role: "group", "aria-label": label, children: [onBack && (_jsx(ToolbarGroup, { label: "Filter navigation", children: _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "regular", "aria-label": "Back from filtered view", onClick: onBack, children: _jsx(ArrowLeft, { className: "lab-dir-flip" }) }) })), _jsxs(ToolbarGroup, { label: "Filter controls", children: [_jsxs(Popover.Root, { open: catalog, onOpenChange: (open) => {
                             prepare(open);
                             setCatalog(open);
                             if (open)
                                 setQuery('');
-                        }, children: [_jsx(Popover.Trigger, { asChild: true, children: _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": `Choose filters${active ? ` (${active} active)` : ''}`, children: _jsx(ListFilter, {}) }) }), _jsx(Popover.Portal, { container: container, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(Popover.Content, { dir: dir, className: "lab-filter-panel lab-filter-catalog", "aria-label": "Available filters", sideOffset: 8, collisionPadding: 12, align: "start", onOpenAutoFocus: (event) => {
+                        }, children: [_jsx(Popover.Trigger, { asChild: true, children: _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "regular", "aria-label": `Choose filters${active ? ` (${active} active)` : ''}`, children: _jsx(ListFilter, {}) }) }), _jsx(Popover.Portal, { container: container, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(Popover.Content, { dir: dir, className: "lab-filter-panel lab-filter-catalog", "aria-label": "Available filters", sideOffset: 8, collisionPadding: 12, collisionBoundary: container, align: "start", onOpenAutoFocus: (event) => {
                                             event.preventDefault();
                                             search.current?.focus();
                                         }, onCloseAutoFocus: (event) => {
                                             if (editing)
                                                 event.preventDefault();
-                                        }, children: _jsx(ScrollArea, { label: "Filter catalog rows", contentPadding: 8, edgeGap: 8, top: _jsx(ToolbarSearch, { label: "Find a filter", value: query, onValueChange: setQuery, inputRef: search, defaultExpanded: true }), bottom: _jsx(Dock, { label: "Filter catalog actions", content: _jsxs("span", { children: [active, " active \u00B7 ", pins.length, " pinned"] }), children: _jsx(Button, { variant: "text", controlSize: "compact", disabled: !active, onClick: clearAll, children: "Clear values" }) }), children: _jsxs("div", { className: "lab-filter-catalog-list", children: [options
+                                        }, children: _jsx(ScrollArea, { label: "Filter catalog rows", contentPadding: 8, edgeGap: 8, top: _jsx(ToolbarSearch, { label: "Find a filter", value: query, onValueChange: setQuery, inputRef: search, defaultExpanded: true }), bottom: _jsx(Dock, { label: "Filter catalog actions", content: _jsxs("span", { children: [active, " active \u00B7 ", pins.length, " pinned"] }), children: _jsx(Button, { variant: "text", controlSize: "regular", disabled: !active, onClick: clearAll, children: "Clear values" }) }), children: _jsxs("div", { className: "lab-filter-catalog-list", children: [options
                                                         .filter((option) => `${option.label} ${option.description || ''} ${option.keywords?.join(' ') || ''}`
                                                         .toLowerCase()
                                                         .includes(query.toLowerCase()))
@@ -142,7 +144,7 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
                                                                                         ? 'On / off'
                                                                                         : option.type === 'enum'
                                                                                             ? 'Choose a value'
-                                                                                            : 'Open editor') })] }), _jsx("span", { className: "lab-filter-row-value", children: summary(option, read(option)) })] }), _jsx(IconButton, { variant: "text", controlSize: "compact", "aria-label": `${pins.includes(option.id) ? 'Unpin' : 'Pin'} ${option.label}`, "aria-pressed": pins.includes(option.id), onClick: () => pins.includes(option.id)
+                                                                                            : 'Open editor') })] }), _jsx("span", { className: "lab-filter-row-value", children: summary(option, read(option)) })] }), _jsx(IconButton, { variant: "text", controlSize: "regular", "aria-label": `${pins.includes(option.id) ? 'Unpin' : 'Pin'} ${option.label}`, "aria-pressed": pins.includes(option.id), onClick: () => pins.includes(option.id)
                                                                     ? setPins(pins.filter((id) => id !== option.id))
                                                                     : pin(option.id), children: pins.includes(option.id) ? _jsx(PinOff, {}) : _jsx(Pin, {}) })] }, option.id))), !options.some((option) => `${option.label} ${option.description || ''} ${option.keywords?.join(' ') || ''}`
                                                         .toLowerCase()
@@ -150,11 +152,11 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
                             prepare(open);
                             setNatural(open);
                             setError('');
-                        }, children: [_jsx(Popover.Trigger, { asChild: true, children: _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": "Create filter from natural language", children: _jsx(Sparkles, {}) }) }), _jsx(Popover.Portal, { container: container, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(Popover.Content, { dir: dir, className: "lab-filter-panel lab-filter-natural", "aria-label": "Describe a filter", sideOffset: 8, collisionPadding: 12, align: "start", onOpenAutoFocus: (event) => {
+                        }, children: [_jsx(Popover.Trigger, { asChild: true, children: _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "regular", "aria-label": "Create filter from natural language", children: _jsx(Sparkles, {}) }) }), _jsx(Popover.Portal, { container: container, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(Popover.Content, { dir: dir, className: "lab-filter-panel lab-filter-natural", "aria-label": "Describe a filter", sideOffset: 8, collisionPadding: 12, collisionBoundary: container, align: "start", onOpenAutoFocus: (event) => {
                                             // Start in the description field, not on the scroll region.
                                             event.preventDefault();
                                             naturalInput.current?.focus();
-                                        }, children: _jsx(ScrollArea, { label: "Natural filter description", edgeGap: 8, contentPadding: 12, bottom: _jsx(Dock, { label: "Natural filter actions", children: _jsx(Button, { type: "submit", form: `${formId}-natural`, variant: "filled", controlSize: "compact", loading: busy, disabled: busy || !text.trim(), children: "Apply filters" }) }), children: _jsxs("form", { id: `${formId}-natural`, onSubmit: async (event) => {
+                                        }, children: _jsx(ScrollArea, { label: "Natural filter description", edgeGap: 8, contentPadding: 12, bottom: _jsx(Dock, { label: "Natural filter actions", children: _jsx(Button, { type: "submit", form: `${formId}-natural`, variant: "filled", controlSize: "regular", loading: busy, disabled: busy || !text.trim(), children: "Apply filters" }) }), children: _jsxs("form", { id: `${formId}-natural`, onSubmit: async (event) => {
                                                     event.preventDefault();
                                                     if (busy || !text.trim())
                                                         return;
@@ -184,15 +186,15 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
                                                             .map((option) => option.label)
                                                             .join(', ')}.` })] }) }) }) }) })] }))] }), !!pins.length && (_jsx("div", { className: "lab-filter-pins", role: "group", "aria-label": "Pinned filters", children: options
                     .filter((option) => pins.includes(option.id))
-                    .map((option) => (_jsxs(ToolbarGroup, { label: `${option.label} filter`, children: [_jsxs(Button, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": `Edit ${option.label} filter`, onClick: (event) => edit(option, event.currentTarget), children: [option.label, _jsx("span", { className: "lab-filter-chip-value", children: summary(option, read(option)) })] }), _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": `Clear ${option.label} value`, disabled: read(option) == null, onClick: (event) => {
+                    .map((option) => (_jsxs(ToolbarGroup, { label: `${option.label} filter`, children: [_jsxs(Button, { variant: "text", appearance: "toolbar", controlSize: "regular", "aria-label": `Edit ${option.label} filter`, onClick: (event) => edit(option, event.currentTarget), children: [option.label, _jsx("span", { className: "lab-filter-chip-value", children: summary(option, read(option)) })] }), _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "regular", "aria-label": `Clear ${option.label} value`, disabled: read(option) == null, onClick: (event) => {
                                 event.currentTarget.parentElement
                                     ?.querySelector('button')
                                     ?.focus({ preventScroll: true });
                                 change(option, null);
-                            }, children: _jsx(X, { size: 16 }) }), _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "compact", "aria-label": `Unpin ${option.label}`, onClick: () => setPins(pins.filter((id) => id !== option.id)), children: _jsx(PinOff, { size: 16 }) })] }, option.id))) })), trailing && _jsx("div", { className: "lab-filter-trailing", children: trailing }), _jsxs(Popover.Root, { open: !!smallSelected, onOpenChange: (open) => {
+                            }, children: _jsx(X, { size: 16 }) }), _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "regular", "aria-label": `Unpin ${option.label}`, onClick: () => setPins(pins.filter((id) => id !== option.id)), children: _jsx(PinOff, { size: 16 }) })] }, option.id))) })), trailing && _jsx("div", { className: "lab-filter-trailing", children: trailing }), _jsxs(Popover.Root, { open: !!smallSelected, onOpenChange: (open) => {
                     if (!open)
                         setEditing(null);
-                }, children: [_jsx(Popover.Anchor, { virtualRef: anchor }), _jsx(Popover.Portal, { container: container, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(Popover.Content, { dir: dir, className: "lab-filter-panel lab-filter-value-menu", "aria-label": smallSelected ? `Edit ${smallSelected.label} filter` : 'Edit filter', align: "start", sideOffset: 8, collisionPadding: 12, onOpenAutoFocus: (event) => {
+                }, children: [_jsx(Popover.Anchor, { virtualRef: anchor }), _jsx(Popover.Portal, { container: container, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(Popover.Content, { dir: dir, className: "lab-filter-panel lab-filter-value-menu", "aria-label": smallSelected ? `Edit ${smallSelected.label} filter` : 'Edit filter', align: "start", sideOffset: 8, collisionPadding: 12, collisionBoundary: container, onOpenAutoFocus: (event) => {
                                     if (smallSelected?.type === 'enum') {
                                         event.preventDefault();
                                         enumSearch.current?.focus();
@@ -200,11 +202,11 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
                                 }, onCloseAutoFocus: (event) => {
                                     event.preventDefault();
                                     returnFocus.current?.focus({ preventScroll: true });
-                                }, children: smallSelected && (_jsx(ScrollArea, { label: `${smallSelected.label} options`, edgeGap: 8, contentPadding: 8, top: smallSelected.type === 'enum' ? (_jsx(ToolbarSearch, { label: `Search ${smallSelected.label.toLowerCase()}`, value: choiceQuery, onValueChange: setChoiceQuery, inputRef: enumSearch, defaultExpanded: true })) : undefined, bottom: _jsxs(Dock, { label: "Filter value actions", children: [_jsx(Button, { variant: "text", controlSize: "compact", onClick: () => {
+                                }, children: smallSelected && (_jsx(ScrollArea, { label: `${smallSelected.label} options`, edgeGap: 8, contentPadding: 8, top: smallSelected.type === 'enum' ? (_jsx(ToolbarSearch, { label: `Search ${smallSelected.label.toLowerCase()}`, value: choiceQuery, onValueChange: setChoiceQuery, inputRef: enumSearch, defaultExpanded: true })) : undefined, bottom: _jsxs(Dock, { label: "Filter value actions", children: [_jsx(Button, { variant: "text", controlSize: "regular", onClick: () => {
                                                     change(smallSelected, null);
                                                     pin(smallSelected.id);
                                                     setEditing(null);
-                                                }, children: "Clear value" }), isTemporalType(smallSelected.type) && (_jsx(Button, { variant: "filled", type: "submit", form: `${formId}-date`, controlSize: "compact", children: "Apply" }))] }), children: smallSelected.type === 'enum' ? (_jsxs("div", { className: "lab-filter-options", role: "group", "aria-label": `${smallSelected.label} choices`, children: [smallSelected.choices
+                                                }, children: "Clear value" }), isTemporalType(smallSelected.type) && (_jsx(Button, { variant: "filled", type: "submit", form: `${formId}-date`, controlSize: "regular", children: "Apply" }))] }), children: smallSelected.type === 'enum' ? (_jsxs("div", { className: "lab-filter-options", role: "group", "aria-label": `${smallSelected.label} choices`, children: [smallSelected.choices
                                                 .filter((choice) => choice.label.toLowerCase().includes(choiceQuery.toLowerCase()))
                                                 .map((choice) => (_jsxs(Button, { variant: "text", className: "lab-filter-choice", "aria-pressed": read(smallSelected) === choice.value, onClick: () => {
                                                     change(smallSelected, choice.value);

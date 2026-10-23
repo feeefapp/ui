@@ -29,7 +29,7 @@ class _ParcelPanelState extends State<ParcelPanel> {
         NumberField(
           label: 'Length',
           unit: 'cm',
-          controlSize: .compact,
+          controlSize: .small,
           min: 1,
           max: 120,
           value: size['length'],
@@ -38,7 +38,7 @@ class _ParcelPanelState extends State<ParcelPanel> {
         NumberField(
           label: 'Width',
           unit: 'cm',
-          controlSize: .compact,
+          controlSize: .small,
           min: 1,
           max: 120,
           value: size['width'],
@@ -47,7 +47,7 @@ class _ParcelPanelState extends State<ParcelPanel> {
         NumberField(
           label: 'Height',
           unit: 'cm',
-          controlSize: .compact,
+          controlSize: .small,
           min: 1,
           max: 120,
           value: size['height'],
@@ -56,7 +56,7 @@ class _ParcelPanelState extends State<ParcelPanel> {
         NumberField(
           label: 'Weight',
           unit: 'kg',
-          controlSize: .compact,
+          controlSize: .small,
           min: 0,
           step: 0.1,
           value: size['weight'],

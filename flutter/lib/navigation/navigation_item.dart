@@ -46,7 +46,7 @@ class NavigationItem extends StatelessWidget {
     final item = ControlOverrides.merge(
       context,
       height: s.rowHeight,
-      radius: s.radiusControlCompact,
+      radius: s.radiusControlSmall,
       // aria-current="page": the selected fill, no edge.
       pressedFill: c.controlSelected,
       pressedEdge: const Color(0x00000000),

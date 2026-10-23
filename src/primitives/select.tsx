@@ -1,6 +1,8 @@
 'use client'
 
-import { PopoverSurface } from './popover-surface'
+import { MenuSurface } from '../menu/menu-surface'
+import { useFloatingBoundary } from '../menu/boundary'
+import { menuCloseDuration } from '../menu/morph-model'
 import * as React from 'react'
 import * as SelectPrimitive from '@radix-ui/react-select'
 import { Check, ChevronDown } from 'lucide-react'
@@ -47,7 +49,8 @@ const EMPTY = '__lab_natural__'
 
 /**
  * A single-choice dropdown in the same field frame as `TextField`: floating hint, icons,
- * supporting text and validation. The menu opens in a popover; options are `Option`.
+ * supporting text and validation. The options (`Option`) open in a glass menu that grows out of
+ * the field and covers it (`MenuSurface`).
  */
 export function Select({
   children,
@@ -143,7 +146,8 @@ export function Select({
     return () => observer.disconnect()
   }, [dir])
   const [container, setContainer] = React.useState<HTMLElement>()
-  // Radix unmounts Select content immediately, so hold it open while it fades.
+  const boundary = useFloatingBoundary()
+  // Radix unmounts Select content immediately, so hold it open while the menu flies back.
   const [open, setOpen] = React.useState(false),
     [closing, setClosing] = React.useState(false)
   const closeTimer = React.useRef(0)
@@ -170,7 +174,7 @@ export function Select({
       onOpenChange={(next) => {
         clearTimeout(closeTimer.current)
         if (next) {
-          setContainer(trigger.current?.closest('dialog') || undefined)
+          setContainer(trigger.current?.closest('dialog') || boundary || undefined)
           setClosing(false)
           setOpen(true)
           return
@@ -183,7 +187,7 @@ export function Select({
             setOpen(false)
             setClosing(false)
           },
-          window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 140
+          menuCloseDuration(!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) * 1000 + 20
         )
       }}
       disabled={props.disabled}
@@ -289,20 +293,17 @@ export function Select({
         />
       )}
       <SelectPrimitive.Portal container={container}>
-        <PopoverSurface asChild>
+        <MenuSurface asChild>
           <SelectPrimitive.Content
             className="lab-select-menu"
-            data-lab-corners
             data-closing={closing || undefined}
             inert={closing || undefined}
             position="popper"
-            sideOffset={6}
-            collisionPadding={12}
-            collisionBoundary={container}
+            {...(container ? { collisionBoundary: container } : {})}
           >
             <SelectPrimitive.Viewport>{children}</SelectPrimitive.Viewport>
           </SelectPrimitive.Content>
-        </PopoverSurface>
+        </MenuSurface>
       </SelectPrimitive.Portal>
     </SelectPrimitive.Root>
   )

@@ -40,15 +40,19 @@ export declare class GlassScene {
     preserveHighlights: boolean;
     /** ThemeConfig `glassBlur`: the measured backdrop blur, sized per cluster. */
     blur: boolean;
-    /** ThemeConfig `glassRefraction`: bend the backdrop at the edges once the glass settles, where supported. */
+    /** ThemeConfig `glassRefraction`: bend the backdrop continuously at the edges, where supported. */
     refraction: boolean;
     backdropSource?: string;
     highlightWidth: number;
     highlightProfile: 'surface' | 'rim';
     highlightStrength: number;
+    refractionProfile: 'gentle' | 'measured';
     refractionStrength: number;
+    private sourceFrame;
     private refractKey;
-    private refractTimer;
+    private refractionMaps;
+    private decodedMaps;
+    private decodedScales;
     private filters;
     private filterHost;
     private disposed;
@@ -85,10 +89,7 @@ export declare class GlassScene {
     /** Paints the current frame: element offsets, backdrop clip, edge, light and shadow. */
     draw(): void;
     private syncBackdrops;
-    /**
-     * Refraction: CSS glass while anything moves; once the outline has been still for a moment,
-     * build a displacement map for it and bend the backdrop (native in Chromium, a live source in Firefox).
-     */
+    /** Keep the same optical layer alive through motion, merges and adaptive tone changes. */
     private updateRefraction;
     /** Sampling a separate paint layer avoids Firefox's recursive element-image prohibition. */
     private elementSource;

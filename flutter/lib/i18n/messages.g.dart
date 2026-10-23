@@ -23,7 +23,8 @@ const Map<String, Map<String, String>> uiMessages = {
     'lab.speech.block': 'Speech block {index}',
     'lab.speech.reorder': 'Reorder speech block {index}',
     'lab.speech.hint': 'Drag to reorder, or use the up and down arrow keys. Escape cancels a drag.',
-    'lab.speech.picked': 'Speech block {index} picked up. Drag to move; Escape cancels.',
+    'lab.speech.picked':
+        'Speech block {index} picked up. Drag to move; Escape cancels.',
     'lab.speech.position': 'Position {index} of {count}. Release to place.',
     'lab.speech.cancelled': 'Reorder cancelled.',
     'lab.speech.moved': 'Speech block moved to position {index} of {count}.',
@@ -37,10 +38,12 @@ const Map<String, Map<String, String>> uiMessages = {
     'lab.canvas.op_upscale': 'Upscaled',
     'lab.canvas.op_remove_bg': 'Cutout',
     'lab.canvas.op_expand': 'Expanded',
-    'lab.board.canvasHint': 'Canvas. Drag to move, pinch or Ctrl+scroll to zoom.',
+    'lab.board.canvasHint':
+        'Canvas. Drag to move, pinch or Ctrl+scroll to zoom.',
     'lab.board.creating': 'Creating your image',
     'lab.board.describeSignIn': 'Describe an image below and sign in to create it. Your idea is saved on this device.',
-    'lab.board.describeBelow': 'Describe an image below. Every version lands here, side by side.',
+    'lab.board.describeBelow':
+        'Describe an image below. Every version lands here, side by side.',
     'lab.board.fitSelection': 'Fit selection',
     'lab.board.generatedImage': 'Generated image',
     'lab.board.showAll': 'Show all',
@@ -56,8 +59,10 @@ const Map<String, Map<String, String>> uiMessages = {
     'lab.board.err_request_too_large': 'This writing model can’t take a poster this size. Choose a stronger writing model and try again.',
     'lab.board.err_copy_failed': 'Writing the poster copy failed. Try again.',
     'lab.board.err_copy_empty': 'The writing model returned no copy. Try again or choose another model.',
-    'lab.board.err_model_unavailable': 'This model is no longer available. Choose another one.',
-    'lab.board.err_image_missing': 'The image model returned no picture. Try again.',
+    'lab.board.err_model_unavailable':
+        'This model is no longer available. Choose another one.',
+    'lab.board.err_image_missing':
+        'The image model returned no picture. Try again.',
     'lab.imgcomposer.add': 'Add',
     'lab.imgcomposer.addImages': 'Add images',
     'lab.imgcomposer.describeImage': 'Describe your image',
@@ -123,7 +128,8 @@ const Map<String, Map<String, String>> uiMessages = {
     'lab.speech.block': 'مقطع الكلام {index}',
     'lab.speech.reorder': 'إعادة ترتيب مقطع الكلام {index}',
     'lab.speech.hint': 'اسحب لإعادة الترتيب، أو استخدم سهمي الأعلى والأسفل. اضغط Escape للإلغاء.',
-    'lab.speech.picked': 'تم التقاط مقطع الكلام {index}. اسحب للنقل؛ Escape للإلغاء.',
+    'lab.speech.picked':
+        'تم التقاط مقطع الكلام {index}. اسحب للنقل؛ Escape للإلغاء.',
     'lab.speech.position': 'الموضع {index} من {count}. أفلت لوضع المقطع.',
     'lab.speech.cancelled': 'تم إلغاء إعادة الترتيب.',
     'lab.speech.moved': 'تم نقل مقطع الكلام إلى الموضع {index} من {count}.',
@@ -139,8 +145,10 @@ const Map<String, Map<String, String>> uiMessages = {
     'lab.canvas.op_expand': 'وُسّعت',
     'lab.board.canvasHint': 'اللوحة. اسحب للتحريك، قرّب أو Ctrl+تمرير للتكبير.',
     'lab.board.creating': 'جارٍ إنشاء صورتك',
-    'lab.board.describeSignIn': 'صف صورة أدناه وسجّل الدخول لإنشائها. فكرتك محفوظة على هذا الجهاز.',
-    'lab.board.describeBelow': 'صف صورة أدناه. كل إصدار يصل هنا، جنبًا إلى جنب.',
+    'lab.board.describeSignIn':
+        'صف صورة أدناه وسجّل الدخول لإنشائها. فكرتك محفوظة على هذا الجهاز.',
+    'lab.board.describeBelow':
+        'صف صورة أدناه. كل إصدار يصل هنا، جنبًا إلى جنب.',
     'lab.board.fitSelection': 'ملاءمة التحديد',
     'lab.board.generatedImage': 'الصورة المولّدة',
     'lab.board.showAll': 'عرض الكل',
@@ -155,8 +163,10 @@ const Map<String, Map<String, String>> uiMessages = {
     'lab.board.usually': 'عادةً 10–40 ثانية',
     'lab.board.err_request_too_large': 'نموذج الكتابة هذا لا يستوعب ملصقًا بهذا الحجم. اختر نموذج كتابة أقوى وحاول مجددًا.',
     'lab.board.err_copy_failed': 'تعذّرت كتابة نص الملصق. حاول مجددًا.',
-    'lab.board.err_copy_empty': 'لم يُرجع نموذج الكتابة أي نص. حاول مجددًا أو اختر نموذجًا آخر.',
-    'lab.board.err_model_unavailable': 'هذا النموذج لم يعد متاحًا. اختر نموذجًا آخر.',
+    'lab.board.err_copy_empty':
+        'لم يُرجع نموذج الكتابة أي نص. حاول مجددًا أو اختر نموذجًا آخر.',
+    'lab.board.err_model_unavailable':
+        'هذا النموذج لم يعد متاحًا. اختر نموذجًا آخر.',
     'lab.board.err_image_missing': 'لم يُرجع نموذج الصور أي صورة. حاول مجددًا.',
     'lab.imgcomposer.add': 'إضافة',
     'lab.imgcomposer.addImages': 'إضافة صور',
@@ -223,8 +233,10 @@ const Map<String, Map<String, String>> uiMessages = {
     'lab.speech.block': 'Bloc vocal {index}',
     'lab.speech.reorder': 'Réordonner le bloc vocal {index}',
     'lab.speech.hint': 'Glissez pour réordonner, ou utilisez les flèches haut et bas. Échap annule le déplacement.',
-    'lab.speech.picked': 'Bloc vocal {index} saisi. Glissez pour déplacer ; Échap annule.',
-    'lab.speech.position': 'Position {index} sur {count}. Relâchez pour placer.',
+    'lab.speech.picked':
+        'Bloc vocal {index} saisi. Glissez pour déplacer ; Échap annule.',
+    'lab.speech.position':
+        'Position {index} sur {count}. Relâchez pour placer.',
     'lab.speech.cancelled': 'Déplacement annulé.',
     'lab.speech.moved': 'Bloc vocal déplacé en position {index} sur {count}.',
     'lab.composer.removeItem': 'Retirer {name}',
@@ -237,7 +249,8 @@ const Map<String, Map<String, String>> uiMessages = {
     'lab.canvas.op_upscale': 'Agrandie',
     'lab.canvas.op_remove_bg': 'Détourage',
     'lab.canvas.op_expand': 'Étendue',
-    'lab.board.canvasHint': 'Canevas. Glissez pour déplacer, pincez ou Ctrl+défilez pour zoomer.',
+    'lab.board.canvasHint':
+        'Canevas. Glissez pour déplacer, pincez ou Ctrl+défilez pour zoomer.',
     'lab.board.creating': 'Création de votre image',
     'lab.board.describeSignIn': 'Décrivez une image ci-dessous et connectez-vous pour la créer. Votre idée est enregistrée sur cet appareil.',
     'lab.board.describeBelow': 'Décrivez une image ci-dessous. Chaque version arrive ici, côte à côte.',
@@ -254,14 +267,18 @@ const Map<String, Map<String, String>> uiMessages = {
     'lab.board.zoomOut': 'Dézoomer',
     'lab.board.usually': 'généralement 10–40 s',
     'lab.board.err_request_too_large': 'Ce modèle d’écriture ne peut pas traiter une affiche de cette taille. Choisissez un modèle plus puissant et réessayez.',
-    'lab.board.err_copy_failed': 'La rédaction du texte de l’affiche a échoué. Réessayez.',
+    'lab.board.err_copy_failed':
+        'La rédaction du texte de l’affiche a échoué. Réessayez.',
     'lab.board.err_copy_empty': 'Le modèle d’écriture n’a renvoyé aucun texte. Réessayez ou choisissez un autre modèle.',
-    'lab.board.err_model_unavailable': 'Ce modèle n’est plus disponible. Choisissez-en un autre.',
-    'lab.board.err_image_missing': 'Le modèle d’image n’a renvoyé aucune image. Réessayez.',
+    'lab.board.err_model_unavailable':
+        'Ce modèle n’est plus disponible. Choisissez-en un autre.',
+    'lab.board.err_image_missing':
+        'Le modèle d’image n’a renvoyé aucune image. Réessayez.',
     'lab.imgcomposer.add': 'Ajouter',
     'lab.imgcomposer.addImages': 'Ajouter des images',
     'lab.imgcomposer.describeImage': 'Décrivez votre image',
-    'lab.imgcomposer.describeProductOffer': 'Décrivez votre produit et votre offre',
+    'lab.imgcomposer.describeProductOffer':
+        'Décrivez votre produit et votre offre',
     'lab.imgcomposer.files': 'Fichiers',
     'lab.imgcomposer.generatedImage': 'Image générée',
     'lab.imgcomposer.composer': 'Compositeur image',
@@ -278,7 +295,8 @@ const Map<String, Map<String, String>> uiMessages = {
     'lab.imgcomposer.startFromIdea': 'Partir d’une idée',
     'lab.imgcomposer.suggestIdeas': 'Suggérer des idées',
     'lab.imgcomposer.suggestThree': 'Suggérer trois idées',
-    'lab.imgcomposer.modelNoReference': 'Ce modèle ne prend pas d’images de référence',
+    'lab.imgcomposer.modelNoReference':
+        'Ce modèle ne prend pas d’images de référence',
     'lab.imgcomposer.closeSettings': 'Fermer les paramètres de sortie',
     'lab.imgcomposer.auto': 'Auto',
     'lab.imgcomposer.moreShapes': 'Plus de formes',

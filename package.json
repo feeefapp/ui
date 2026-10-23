@@ -46,6 +46,10 @@
       "types": "./dist/physics/index.d.ts",
       "default": "./dist/physics/index.js"
     },
+    "./menu": {
+      "types": "./dist/menu/index.d.ts",
+      "default": "./dist/menu/index.js"
+    },
     "./*.css": "./dist/*.css",
     "./*": {
       "types": "./dist/*.d.ts",

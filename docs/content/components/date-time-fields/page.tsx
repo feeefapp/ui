@@ -23,7 +23,7 @@ const controls = {
   type: { type: 'select', options: TYPES, default: 'date' },
   hint: { type: 'text', default: 'Delivery date' },
   variant: { type: 'select', options: VARIANTS, default: 'outlined' },
-  controlSize: { type: 'select', options: ['regular', 'compact'], default: 'regular' },
+  controlSize: { type: 'select', options: ['small', 'regular'], default: 'regular' },
   labelStyle: { type: 'select', options: ['outlined', 'inside'], default: 'outlined' },
   clearable: { type: 'boolean', default: true },
   required: { type: 'boolean', default: false },
@@ -36,7 +36,7 @@ function PlaygroundField(props: {
   type: TemporalType
   hint: string
   variant: (typeof VARIANTS)[number]
-  controlSize: 'regular' | 'compact'
+  controlSize: 'small' | 'regular'
   labelStyle: 'outlined' | 'inside'
   clearable: boolean
   required: boolean
@@ -62,7 +62,7 @@ function Overview() {
             type={v.type as TemporalType}
             hint={v.hint}
             variant={v.variant as (typeof VARIANTS)[number]}
-            controlSize={v.controlSize as 'regular' | 'compact'}
+            controlSize={v.controlSize as 'small' | 'regular'}
             labelStyle={v.labelStyle as 'outlined' | 'inside'}
             clearable={v.clearable}
             required={v.required}

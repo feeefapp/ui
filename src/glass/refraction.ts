@@ -1,4 +1,4 @@
-import { unionDistance, type GlassShape, type GlassRect } from './geometry'
+import { prepareUnionDistance, unionBounds, type GlassShape, type GlassRect } from './geometry'
 
 /**
  * Refraction for the canvas renderer: glass that bends the content behind it near its edges, as a
@@ -6,7 +6,7 @@ import { unionDistance, type GlassShape, type GlassRect } from './geometry'
  * bevel bends; the flat middle shows the backdrop straight. The profile is our own fit to
  * measurements of rendered Liquid Glass (ui/research/liquid-glass/FINDINGS.md): at depth `t` from
  * the edge a pixel shows the backdrop from `shift · (1 - t / bezel)^4` deeper inside, so the rim
- * compresses the background. The web map caps the shift to prevent mirrored folds. Pure, so the Flutter twin (a fragment
+ * compresses the background. The default web map caps the shift to prevent mirrored folds; the measured profile restores the native fit. Pure, so the Flutter twin (a fragment
  * shader there) follows the same profile.
  */
 
@@ -62,38 +62,105 @@ export function displacementMap(
   height: number,
   clusters: readonly (readonly GlassShape[])[],
   spacing: number,
-  bezel = GLASS_BEZEL
+  bezel = GLASS_BEZEL,
+  profile: 'gentle' | 'measured' = 'gentle'
 ) {
   const w = Math.max(1, Math.round(width))
   const h = Math.max(1, Math.round(height))
+  return sampleDisplacementMap(w, h, w, h, clusters, spacing, bezel, profile)
+}
+
+/** Maximum raster work per live map, independent of browser zoom or the host's area. */
+export const GLASS_LIVE_MAP_PIXELS = 32768
+
+/**
+ * A bounded map for both moving and settled glass. Sampling always uses material coordinates:
+ * lowering raster density changes neither the bezel nor the returned displacement scale in CSS
+ * pixels. The caller stretches this image to the logical width/height. One density policy for
+ * motion and rest avoids a visible change of lens when a gesture finishes.
+ */
+export function liveDisplacementMap(
+  width: number,
+  height: number,
+  clusters: readonly (readonly GlassShape[])[],
+  spacing: number,
+  profile: 'gentle' | 'measured' = 'measured'
+) {
+  const logicalWidth = Number.isFinite(width) ? Math.max(1, width) : 1
+  const logicalHeight = Number.isFinite(height) ? Math.max(1, height) : 1
+  const density = Math.min(1, Math.sqrt(GLASS_LIVE_MAP_PIXELS / logicalWidth / logicalHeight))
+  // Both axes start from one density. Clamp also covers an unusually thin, very long host where
+  // the minimum one-pixel short side otherwise makes the total exceed the work budget.
+  const w = Math.max(1, Math.min(GLASS_LIVE_MAP_PIXELS, Math.floor(logicalWidth * density)))
+  const h = Math.max(1, Math.min(Math.floor(GLASS_LIVE_MAP_PIXELS / w), Math.floor(logicalHeight * density)))
+  return sampleDisplacementMap(logicalWidth, logicalHeight, w, h, clusters, spacing, GLASS_BEZEL, profile)
+}
+
+function sampleDisplacementMap(
+  logicalWidth: number,
+  logicalHeight: number,
+  w: number,
+  h: number,
+  clusters: readonly (readonly GlassShape[])[],
+  spacing: number,
+  bezel: number,
+  profile: 'gentle' | 'measured'
+) {
+  const pixelWidth = logicalWidth / w
+  const pixelHeight = logicalHeight / h
+  const coverageWidth = Math.max(pixelWidth, pixelHeight)
   const data = new Uint8ClampedArray(w * h * 4)
   for (let i = 0; i < data.length; i += 4) {
     data[i] = 128
     data[i + 1] = 128
   }
   const sizes = clusters.map((shapes) => (shapes.length ? refractionScale(Math.min(...shapes.map((s) => Math.min(s.width, s.height)))) : 0))
-  const shifts = clusters.map(shapes => shapes.length ? webRefractionShift(Math.min(...shapes.map(s => Math.min(s.width, s.height))), bezel) : 0)
+  const shifts = clusters.map((shapes, index) => profile === 'measured'
+    ? GLASS_REFRACTION * sizes[index]
+    : shapes.length ? webRefractionShift(Math.min(...shapes.map(s => Math.min(s.width, s.height))), bezel) : 0)
   const largest = Math.max(0, ...shifts)
   clusters.forEach((shapes, index) => {
     if (!shapes.length) return
     const size = sizes[index]
     // This cluster's shift as a share of the map's (the largest cluster's) shift.
     const share = largest > 0 ? shifts[index] / largest : 0
-    const x0 = Math.max(0, Math.floor(Math.min(...shapes.map((s) => s.x))) - 1)
-    const y0 = Math.max(0, Math.floor(Math.min(...shapes.map((s) => s.y))) - 1)
-    const x1 = Math.min(w, Math.ceil(Math.max(...shapes.map((s) => s.x + s.width))) + 1)
-    const y1 = Math.min(h, Math.ceil(Math.max(...shapes.map((s) => s.y + s.height))) + 1)
+    // A blended contour can extend outside all member boxes. Its map must cover the same
+    // expanded surface as the clip and reflection, including the antialiased outer samples.
+    const bounds = unionBounds(shapes, spacing)
+    const x0 = Math.max(0, Math.floor(bounds.x / pixelWidth) - 1)
+    const y0 = Math.max(0, Math.floor(bounds.y / pixelHeight) - 1)
+    const x1 = Math.min(w, Math.ceil((bounds.x + bounds.width) / pixelWidth) + 1)
+    const y1 = Math.min(h, Math.ceil((bounds.y + bounds.height) / pixelHeight) + 1)
     const band = Math.min(bezel * size, ...shapes.map((s) => Math.min(s.width, s.height) / 2))
-    const distance = (x: number, y: number) => unionDistance(x, y, shapes, spacing)
-    for (let y = y0; y < y1; y++)
-      for (let x = x0; x < x1; x++) {
-        const px = x + 0.5
-        const py = y + 0.5
+    const distance = prepareUnionDistance(shapes, spacing)
+    // Circular/superellipse SDFs and their smooth minimum are 1-Lipschitz. A tile entirely
+    // outside the silhouette or inside the flat centre needs no per-pixel distance/normal
+    // work. Keep a small safety margin for interpolation of the superellipse norm table.
+    const tile = 8
+    const canCull = shapes.every(shape => shape.cornerExponent === undefined || shape.cornerExponent >= 2)
+    const neutralDepth = Math.max(band, coverageWidth / 2)
+    for (let row = y0; row < y1; row += tile) for (let column = x0; column < x1; column += tile) {
+      const bottom = Math.min(y1, row + tile)
+      const right = Math.min(x1, column + tile)
+      if (canCull) {
+        const cx = (column + right) * pixelWidth / 2
+        const cy = (row + bottom) * pixelHeight / 2
+        const reach = Math.hypot((right - column - 1) * pixelWidth, (bottom - row - 1) * pixelHeight) * 0.505 + 1e-8
+        const centre = distance(cx, cy)
+        if (centre - reach >= coverageWidth / 2) continue
+        if (centre + reach <= -neutralDepth) {
+          for (let y = row; y < bottom; y++) for (let x = column; x < right; x++) data[(y * w + x) * 4 + 3] = 255
+          continue
+        }
+      }
+      for (let y = row; y < bottom; y++) for (let x = column; x < right; x++) {
+        const px = (x + 0.5) * pixelWidth
+        const py = (y + 0.5) * pixelHeight
         const d = distance(px, py)
         const i = (y * w + x) * 4
         // Clusters' boxes can overlap: only ever add coverage.
-        data[i + 3] = Math.max(data[i + 3], Math.round(Math.min(1, Math.max(0, 0.5 - d)) * 255))
-        if (d >= 0.5 || d <= -band) continue
+        data[i + 3] = Math.max(data[i + 3], Math.round(Math.min(1, Math.max(0, 0.5 - d / coverageWidth)) * 255))
+        if (d >= coverageWidth / 2 || d <= -band) continue
         const gx = distance(px + 1, py) - distance(px - 1, py)
         const gy = distance(px, py + 1) - distance(px, py - 1)
         const length = Math.hypot(gx, gy) || 1
@@ -101,8 +168,54 @@ export function displacementMap(
         data[i] = Math.round(128 + bend.x * share * 127)
         data[i + 1] = Math.round(128 + bend.y * share * 127)
       }
+    }
   })
   return { width: w, height: h, data, scale: 2 * largest }
+}
+
+/**
+ * Encode an RGBA map without canvas readback or synchronous PNG compression. A top-down 32-bit
+ * BITMAPV4HEADER carries explicit RGB/alpha masks, preserving the map's anti-aliased coverage in
+ * Chromium and Firefox. The byte order is BGRA; the input remains unchanged.
+ */
+export function rgbaBmpBytes(width: number, height: number, rgba: Uint8ClampedArray | Uint8Array) {
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || rgba.length !== width * height * 4) {
+    throw new RangeError('A bitmap requires positive integer dimensions and one RGBA value per pixel')
+  }
+  const offset = 14 + 108
+  const bytes = new Uint8Array(offset + rgba.length)
+  const header = new DataView(bytes.buffer)
+  bytes[0] = 0x42
+  bytes[1] = 0x4d
+  header.setUint32(2, bytes.length, true)
+  header.setUint32(10, offset, true)
+  header.setUint32(14, 108, true)
+  header.setInt32(18, width, true)
+  header.setInt32(22, -height, true)
+  header.setUint16(26, 1, true)
+  header.setUint16(28, 32, true)
+  header.setUint32(30, 3, true) // BI_BITFIELDS: use the explicit masks, including alpha.
+  header.setUint32(34, rgba.length, true)
+  header.setUint32(54, 0x00ff0000, true)
+  header.setUint32(58, 0x0000ff00, true)
+  header.setUint32(62, 0x000000ff, true)
+  header.setUint32(66, 0xff000000, true)
+  header.setUint32(70, 0x73524742, true) // LCS_sRGB
+  for (let i = 0; i < rgba.length; i += 4) {
+    bytes[offset + i] = rgba[i + 2]
+    bytes[offset + i + 1] = rgba[i + 1]
+    bytes[offset + i + 2] = rgba[i]
+    bytes[offset + i + 3] = rgba[i + 3]
+  }
+  return bytes
+}
+
+/** Inline transport for engines that synchronously sample the map as a backdrop filter. */
+export function rgbaBmpDataUrl(width: number, height: number, rgba: Uint8ClampedArray | Uint8Array) {
+  const bytes = rgbaBmpBytes(width, height, rgba)
+  const chunks: string[] = []
+  for (let i = 0; i < bytes.length; i += 0x8000) chunks.push(String.fromCharCode(...bytes.subarray(i, i + 0x8000)))
+  return `data:image/bmp;base64,${btoa(chunks.join(''))}`
 }
 
 /**

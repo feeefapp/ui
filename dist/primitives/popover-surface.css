@@ -38,12 +38,6 @@ html[data-lab-theme] .lab-popover-surface > .lab-pc-panel::before {
 html[data-lab-theme] .lab-popover-surface .lab-pc-panel-content {
   background: transparent;
 }
-html[data-lab-theme]
-  .lab-popover-surface
-  :is(.lab-actions-menu__item, .lab-pc-menu-item, .lab-select-option) {
-  border-radius: calc(var(--lab-radius-group) - var(--lab-space-1) - 1px);
-  corner-shape: superellipse(1.5);
-}
 @media (prefers-reduced-transparency: reduce) {
   .lab-popover-decoration {
     display: none;

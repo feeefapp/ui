@@ -13,6 +13,7 @@ import '../icons/lucide.dart';
 import '../physics/spring.dart';
 import '../primitives/button.dart';
 import '../theme.dart';
+import '../theme/surfaces.dart';
 import '../theme/color_mix.dart';
 import '../theme/tokens.dart';
 import '../toolbar.dart';
@@ -301,7 +302,6 @@ class _CarouselState extends State<Carousel> {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
-    final c = theme.colors;
     _rtl = Directionality.of(context) == TextDirection.rtl;
     _syncProgress();
     final n = _count;
@@ -412,14 +412,9 @@ class _CarouselState extends State<Carousel> {
         child: Semantics(
           container: true,
           label: '${widget.label}, slide ${_current + 1} of $n',
-          child: CustomPaint(
-            foregroundPainter: _focusVisible
-                ? _OutlinePainter(
-                    color: c.focus,
-                    radius: theme.sizes.radiusGroup,
-                    offset: 2,
-                  )
-                : null,
+          child: FocusRing(
+            visible: _focusVisible,
+            radius: theme.sizes.radiusGroup,
             child: dragTrack,
           ),
         ),
@@ -646,33 +641,6 @@ class _SuperellipseClip extends CustomClipper<Path> {
   bool shouldReclip(_SuperellipseClip old) => old.radius != radius;
 }
 
-/// A 2px focus outline [offset] px outside (negative: inside) the box.
-class _OutlinePainter extends CustomPainter {
-  _OutlinePainter({
-    required this.color,
-    required this.radius,
-    required this.offset,
-  });
-  final Color color;
-  final double radius, offset;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = (Offset.zero & size).inflate(offset + 1);
-    canvas.drawPath(
-      superellipsePath(rect, [radius, radius, radius, radius]),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = color,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_OutlinePainter old) =>
-      old.color != color || old.radius != radius || old.offset != offset;
-}
-
 class _Dot extends StatefulWidget {
   const _Dot({required this.index, required this.current, required this.onTap});
   final int index;
@@ -707,10 +675,10 @@ class _DotState extends State<_Dot> {
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: widget.onTap,
-          child: CustomPaint(
-            foregroundPainter: _focusVisible
-                ? _OutlinePainter(color: c.focus, radius: 10, offset: -2)
-                : null,
+          child: FocusRing(
+            visible: _focusVisible,
+            inside: true,
+            radius: 10 * ThemeProvider.of(context).sizes.radiusScale,
             child: SizedBox.square(
               dimension: 20,
               child: Center(

@@ -11,9 +11,9 @@ class CompactAndDisabled extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 16,
       children: [
-        Checkbox(controlSize: .compact, label: Text('Show archived products')),
+        Checkbox(controlSize: .small, label: Text('Show archived products')),
         Checkbox(
-          controlSize: .compact,
+          controlSize: .small,
           label: Text('Include out-of-stock variants'),
           defaultChecked: true,
         ),

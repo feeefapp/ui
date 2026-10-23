@@ -41,12 +41,10 @@
   outline: none;
   animation: lab-pc-pop 200ms var(--pc-ease);
 }
-.lab-pc-panel,
-.lab-pc-menu {
+.lab-pc-panel {
   border: 1px solid var(--pc-line);
   border-radius: calc(22px * var(--lab-corner-scale, 1));
   corner-shape: superellipse(1.5);
-  /* Menus are solid, like every kit menu (PopoverSurface): content stays readable over anything. */
   background: var(--pc-surface);
   box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
   color: var(--pc-ink);
@@ -91,16 +89,7 @@
   font-size: 14px;
   font-weight: 500;
 }
-.lab-pc-menu {
-  z-index: 60;
-  min-width: 220px;
-  max-width: calc(100vw - 24px);
-  max-height: var(--radix-dropdown-menu-content-available-height, calc(100dvh - 24px));
-  overflow-y: auto;
-  padding: 6px;
-  outline: none;
-  animation: lab-pc-pop 180ms var(--pc-ease);
-}
+/* The + menu is a MenuSurface (menu/menu.css): glass, row metrics and the morph live there. */
 .lab-pc-menu-label {
   padding: 6px 10px 4px;
   font-size: 11px;
@@ -110,9 +99,6 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  min-height: 40px;
-  padding: 0 10px;
-  border-radius: calc(13px * var(--lab-corner-scale, 1));
   font-size: 13px;
   cursor: pointer;
   outline: none;
@@ -126,12 +112,7 @@
   opacity: 0.4;
   cursor: default;
 }
-.lab-pc-menu-sep {
-  height: 1px;
-  margin: 5px 6px;
-  background: var(--pc-line);
-}
-.lab-pc-recent {
+.lab-pc-recent .lab-menu__body {
   display: grid;
   grid-template-columns: repeat(4, 56px);
   gap: 6px;
@@ -251,8 +232,7 @@
   }
   .lab-pc-card,
   .lab-pc-ref,
-  .lab-pc-popover,
-  .lab-pc-menu {
+  .lab-pc-popover {
     animation: none;
   }
 }
@@ -282,8 +262,8 @@ html[data-lab-theme] .lab-pc .lab-pc-card[data-expanded='false'] .lab-pc-field t
 .lab-pc-card:not([data-focused='true']) {
   box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
 }
-.lab-pc-idea-menu {
-  width: 300px;
+.lab-menu.lab-pc-idea-menu {
+  inline-size: min(300px, var(--radix-popper-available-width, 100vw));
 }
 .lab-pc-idea {
   height: auto !important;
@@ -342,8 +322,7 @@ html[data-lab-theme] .lab-pc .lab-pc-card[data-expanded='false'] .lab-pc-field t
 }
 @media (prefers-reduced-transparency: reduce) {
   .lab-pc-card,
-  .lab-pc-panel,
-  .lab-pc-menu {
+  .lab-pc-panel {
     background: var(--pc-surface);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -378,23 +357,20 @@ html[data-lab-theme] .lab-pc .lab-pc-icon[data-variant] {
     min-height: var(--lab-control-touch-target);
   }
   html[data-lab-theme] .lab-pc-ref .lab-control[data-variant],
-  html[data-lab-theme] .lab-pc-template-chip .lab-control[data-variant],
-  .lab-pc-menu-item {
+  html[data-lab-theme] .lab-pc-template-chip .lab-control[data-variant] {
     min-width: var(--lab-control-touch-target);
     min-height: var(--lab-control-touch-target);
   }
 }
 
 @supports not (backdrop-filter: blur(1px)) {
-  .lab-pc-card,
-  .lab-pc-menu {
+  .lab-pc-card {
     background: var(--pc-surface);
   }
 }
 @media (forced-colors: active) {
   .lab-pc-panel,
-  .lab-pc-panel-head,
-  .lab-pc-menu {
+  .lab-pc-panel-head {
     background: Canvas;
     color: CanvasText;
     border-color: CanvasText;

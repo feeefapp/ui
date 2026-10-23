@@ -4,27 +4,45 @@
   inherits: true;
   initial-value: 22px;
 }
-/* Geometry derives from the control size, so every density (comfortable, compact, thin) fits. */
+/* Geometry comes from the metric tokens, so every density and ThemeConfig `metrics` fit. The thick
+slider is the control height (the track is the surface, a square thumb inside it); the thin slider is
+iOS's: a --lab-slider-track rail and a --lab-thumb-width × --lab-thumb-height capsule thumb. The
+switch is iOS's too: a --lab-switch-width × --lab-switch-height track with the same thumb inset 2px.
+--lab-slider-inset is the distance from the edge to the thumb's centre at either end. */
 .lab-slider,
 .lab-slider-marks {
-  --lab-slider-size: var(--lab-control-height, 44px);
+  --lab-slider-size: var(--lab-control-height);
   --lab-slider-inset: calc(var(--lab-slider-size) / 2);
-  --lab-slider-thumb-size: calc(var(--lab-slider-size) - 6px);
+  --lab-slider-thumb-width: calc(var(--lab-slider-size) - 6px);
+  --lab-slider-thumb-height: calc(var(--lab-slider-size) - 6px);
+  --lab-slider-thumb-radius: calc(var(--lab-slider-thumb-height) * 0.45);
   --lab-slider-track-height: var(--lab-slider-size);
   --lab-slider-fill-cap: calc(var(--lab-slider-size) / 2);
   --lab-slider-dot-size: 6px;
 }
-.lab-slider[data-control-size='compact'],
-.lab-slider-marks[data-control-size='compact'] {
-  --lab-slider-size: var(--lab-control-compact, 40px);
+.lab-slider[data-control-size='small'],
+.lab-slider-marks[data-control-size='small'] {
+  --lab-slider-size: var(--lab-control-small);
 }
 .lab-slider[data-track-style='thin'],
 .lab-slider-marks[data-track-style='thin'] {
-  --lab-slider-inset: 8px;
-  --lab-slider-thumb-size: 16px;
-  --lab-slider-track-height: 4px;
+  --lab-slider-inset: calc(var(--lab-thumb-width) / 2);
+  --lab-slider-thumb-width: var(--lab-thumb-width);
+  --lab-slider-thumb-height: var(--lab-thumb-height);
+  --lab-slider-thumb-radius: calc(var(--lab-thumb-height) / 2);
+  --lab-slider-track-height: var(--lab-slider-track);
   --lab-slider-fill-cap: 0px;
   --lab-slider-dot-size: 3px;
+}
+.lab-slider[data-switch] {
+  --lab-slider-size: var(--lab-switch-height);
+  --lab-slider-inset: calc(var(--lab-thumb-width) / 2 + (var(--lab-switch-height) - var(--lab-thumb-height)) / 2);
+  --lab-slider-thumb-width: var(--lab-thumb-width);
+  --lab-slider-thumb-height: var(--lab-thumb-height);
+  --lab-slider-thumb-radius: calc(var(--lab-thumb-height) / 2);
+}
+.lab-slider[data-switch][data-track-style='thin'] {
+  --lab-slider-inset: calc(var(--lab-thumb-width) / 2);
 }
 .lab-slider {
   position: relative;
@@ -54,8 +72,8 @@
   background: color-mix(in srgb, var(--lab-ink) 9%, var(--lab-surface));
 }
 .lab-slider:focus-visible {
-  outline: 2px solid var(--lab-focus);
-  outline-offset: 3px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
 }
 .lab-slider[data-disabled] {
   opacity: 0.5;
@@ -77,17 +95,17 @@
 }
 .lab-slider-thumb {
   position: absolute;
-  inset-block-start: calc((100% - var(--lab-slider-thumb-size)) / 2);
+  inset-block-start: calc((100% - var(--lab-slider-thumb-height)) / 2);
   inset-inline-start: calc(
-    var(--lab-slider-inset) - var(--lab-slider-thumb-size) / 2 +
+    var(--lab-slider-inset) - var(--lab-slider-thumb-width) / 2 +
       (100% - 2 * var(--lab-slider-inset)) *
       var(--lab-slider-visual-fraction, var(--lab-slider-fraction))
   );
   display: grid;
   place-items: center;
-  width: var(--lab-slider-thumb-size);
-  height: var(--lab-slider-thumb-size);
-  border-radius: calc(var(--lab-slider-thumb-size) * 0.45 * var(--lab-corner-fit, 1));
+  width: var(--lab-slider-thumb-width);
+  height: var(--lab-slider-thumb-height);
+  border-radius: calc(var(--lab-slider-thumb-radius) * var(--lab-corner-fit, 1));
   corner-shape: superellipse(1.5);
   background: var(--lab-surface);
   color: var(--lab-ink);
@@ -147,7 +165,8 @@
   transform: translateX(50%);
 }
 .lab-slider[data-switch] {
-  width: 76px;
+  width: var(--lab-switch-width);
+  min-width: 0;
   flex: none;
 }
 .lab-slider-switch-text {
@@ -155,27 +174,27 @@
   inset: 0;
   display: grid;
   place-items: center;
-  font: 500 12px/18px var(--lab-font);
+  font: 500 11px/14px var(--lab-font);
   color: var(--lab-ink);
   pointer-events: none;
 }
 
 .lab-slider[data-switch][aria-checked='true'] .lab-slider-switch-text {
   padding-inline-end: calc(
-    var(--lab-slider-thumb-size) * var(--lab-slider-visual-fraction, var(--lab-slider-fraction))
+    var(--lab-slider-thumb-width) * var(--lab-slider-visual-fraction, var(--lab-slider-fraction))
   );
   padding-inline-start: calc(
-    var(--lab-slider-thumb-size) *
+    var(--lab-slider-thumb-width) *
       (1 - var(--lab-slider-visual-fraction, var(--lab-slider-fraction)))
   );
   color: var(--lab-on-primary);
 }
 .lab-slider[data-switch][aria-checked='false'] .lab-slider-switch-text {
   padding-inline-end: calc(
-    var(--lab-slider-thumb-size) * var(--lab-slider-visual-fraction, var(--lab-slider-fraction))
+    var(--lab-slider-thumb-width) * var(--lab-slider-visual-fraction, var(--lab-slider-fraction))
   );
   padding-inline-start: calc(
-    var(--lab-slider-thumb-size) *
+    var(--lab-slider-thumb-width) *
       (1 - var(--lab-slider-visual-fraction, var(--lab-slider-fraction)))
   );
 }
@@ -228,9 +247,6 @@ html[data-lab-theme='dark'] .lab-slider-thumb {
   }
 }
 
-.lab-slider[data-switch][data-control-size='compact'] {
-  width: 68px;
-}
 .lab-slider[data-switch][data-track-style='thin'] .lab-slider-switch-text {
   display: none;
 }
@@ -238,8 +254,8 @@ html[data-lab-theme='dark'] .lab-slider-thumb {
   box-shadow: 0 1px 4px rgb(0 0 0 / 18%);
 }
 @media (pointer: coarse) {
-  .lab-slider[data-control-size='compact'] {
-    height: var(--lab-control-touch-target, 44px);
+  .lab-slider[data-control-size='small']:not([data-switch]) {
+    height: var(--lab-control-touch-target);
   }
 }
 

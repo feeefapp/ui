@@ -75,7 +75,7 @@ export default function StoreApp() {
               <div className="demo-call">
                 <PhoneCall size={18} />
                 <span>Calling Amina · 02:14</span>
-                <Button variant="text" appearance="toolbar" controlSize="compact" onClick={() => setCalling(false)}>
+                <Button variant="text" appearance="toolbar" controlSize="small" onClick={() => setCalling(false)}>
                   End
                 </Button>
               </div>

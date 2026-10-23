@@ -9,7 +9,7 @@ export type { Preferences, Services } from './services'
 export { ThemeProvider, ThemeSwitch, useTheme } from './theme'
 export type { ThemeMode } from './theme'
 export { THEME_DEFAULTS, applyThemeConfig, themeAttributes } from './theme-config'
-export type { Density, Palette, ThemeConfig } from './theme-config'
+export type { Density, MetricScale, MetricSize, Metrics, Palette, ThemeConfig } from './theme-config'
 export {
   Button,
   Input,
@@ -34,6 +34,9 @@ export {
   useNavigation,
   useFloatingReserve,
 } from './scaffold'
+
+export { FloatingBoundary, MenuSurface, useFloatingBoundary } from './menu'
+export type { FloatingBoundaryProps, MenuSurfaceProps } from './menu'
 
 export { ScrollArea, ScrollGradientOverlay } from './scroll'
 export type { ScrollAreaProps, ScrollGradientOverlayProps } from './scroll'

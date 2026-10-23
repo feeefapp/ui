@@ -461,3 +461,15 @@ test('reference rim matches measured angular endpoints and fades inward without 
     assert.equal(measuredRimReflection(1, 0, -1, light, 1, base, peak), 0)
   }
 })
+
+
+test('measured lens restores native shift while preserving gentle default and shape coverage', () => {
+  const shapes = [[{ x: 0, y: 0, width: 88, height: 88, radius: 44, cornerExponent: 2 }]]
+  const gentle = displacementMap(88, 88, shapes, 0)
+  const measured = displacementMap(88, 88, shapes, 0, undefined, 'measured')
+  assert.equal(measured.scale, 94)
+  assert.ok(measured.scale > gentle.scale * 8)
+  for (let i = 3; i < measured.data.length; i += 4) assert.equal(measured.data[i], gentle.data[i])
+  const small = displacementMap(44, 44, [[{ x: 0, y: 0, width: 44, height: 44, radius: 22 }]], 0, undefined, 'measured')
+  assert.ok(Math.abs(small.scale - 94 * refractionScale(44)) < 1e-9)
+})

@@ -84,7 +84,6 @@ class _HarnessState extends State<_Harness> {
         children: [
           IconButton(
             appearance: ButtonAppearance.toolbar,
-            controlSize: ControlSize.compact,
             ariaLabel: 'Filter',
             onClick: () => setState(() => filters++),
             icon: const SizedBox(width: 20, height: 20),
@@ -164,8 +163,8 @@ void main() {
     final changes = <bool>[];
     await tester.pumpWidget(_host(_Harness(onExpanded: changes.add)));
     await tester.pump();
-    // Collapsed: control size 40 + 6.
-    expect(capsuleWidth(tester), 46);
+    // Collapsed: the 44px toolbar item.
+    expect(capsuleWidth(tester), 44);
     expect(find.semantics.byLabel('Filter'), findsOne);
 
     await tester.tap(trigger());
@@ -188,7 +187,7 @@ void main() {
     expect(state.value, '');
     expect(find.text('abc'), findsOneWidget);
     await frames(tester);
-    expect(capsuleWidth(tester), 46);
+    expect(capsuleWidth(tester), 44);
     expect(changes, [true, false]);
     expect(find.semantics.byLabel('Filter'), findsOne);
     semantics.dispose();

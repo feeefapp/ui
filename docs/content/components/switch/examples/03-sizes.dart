@@ -12,11 +12,6 @@ class Sizes extends StatelessWidget {
     crossAxisAlignment: WrapCrossAlignment.center,
     children: [
       SlideSwitch(label: 'Regular', defaultChecked: true),
-      SlideSwitch(
-        label: 'Compact',
-        controlSize: .compact,
-        defaultChecked: true,
-      ),
       SlideSwitch(label: 'Thin', trackStyle: .thin, defaultChecked: true),
       SlideSwitch(
         label: 'With text',

@@ -98,18 +98,20 @@
   outline: none;
 }
 .lab-workspace-main:focus-visible {
-  outline: 2px solid var(--lab-focus);
-  outline-offset: -3px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: calc(-1 * var(--lab-focus-ring-width));
 }
 .lab-workspace-route {
   flex: 1;
   min-height: 0;
   padding: 0;
+  /* The app bar and dock sit --lab-toolbar-inset (16px, iOS) from the panel's sides. */
+  --lab-scroll-side-gap: var(--lab-toolbar-inset);
 }
 .lab-workspace-app-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--lab-toolbar-gap);
   min-width: 0;
   padding: 0;
   width: 100%;

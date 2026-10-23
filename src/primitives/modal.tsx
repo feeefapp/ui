@@ -241,7 +241,7 @@ function Dialog({
                     <IconButton
                       variant="text"
                       appearance="toolbar"
-                      controlSize="compact"
+                      controlSize="regular"
                       className="lab-modal-close"
                       aria-label={t('lab.composer.closeLabel', { label })}
                       disabled={state !== 'open'}

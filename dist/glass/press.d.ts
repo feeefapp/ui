@@ -1,4 +1,4 @@
-import type { GlassShape } from './geometry.js';
+import type { GlassRect, GlassShape } from './geometry.js';
 /**
  * Press response for interactive glass, after Apple's `.interactive()`: a pressed bubble swells a
  * little, then stretches toward a dragging finger with rubber-band resistance, and springs back on
@@ -10,6 +10,11 @@ export declare const GLASS_PRESS_SCALE = 1.06;
 export declare const GLASS_STRETCH_LIMIT = 12;
 /** Fraction of the stretch the bubble's content follows. */
 export declare const GLASS_CONTENT_FOLLOW = 0.4;
+/** Recover layout from the content transform we last painted, before measuring it again. */
+export declare function glassLayoutRect(rect: GlassRect, offset: {
+    x: number;
+    y: number;
+}, contentScale?: number): GlassRect;
 /** Stretch (px) for a drag of `dx`, `dy` from where the press started: quick at first, then resisting. */
 export declare function glassStretch(dx: number, dy: number, limit?: number): {
     x: number;

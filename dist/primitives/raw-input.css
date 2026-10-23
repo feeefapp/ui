@@ -19,6 +19,6 @@
 }
 /* Standalone raw editors must retain a keyboard focus indicator. */
 .lab-raw-editor:focus-visible {
-  outline: 2px solid var(--lab-focus, Highlight);
-  outline-offset: 2px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
 }

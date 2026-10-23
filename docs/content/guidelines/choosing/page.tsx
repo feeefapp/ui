@@ -45,7 +45,7 @@ function SelectionDock() {
   )
   return (
     <Dock label="Actions for 3 selected orders">
-      <ActionsBar label="Selected orders" actions={actions} size="compact" />
+      <ActionsBar label="Selected orders" actions={actions} size="small" />
     </Dock>
   )
 }
@@ -182,7 +182,7 @@ function DetailInline() {
     <div className="gl-card">
       <div className="gl-card-row">
         <strong>Order #10482</strong>
-        <Button variant="text" controlSize="compact" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <Button variant="text" controlSize="small" aria-expanded={open} onClick={() => setOpen(!open)}>
           {open ? 'Hide address' : 'Show address'}
         </Button>
       </div>
@@ -199,7 +199,7 @@ function DetailModal() {
     <div className="gl-card">
       <div className="gl-card-row">
         <strong>Order #10482</strong>
-        <Button variant="text" controlSize="compact" onClick={() => setOpen(true)}>
+        <Button variant="text" controlSize="small" onClick={() => setOpen(true)}>
           Show address
         </Button>
       </div>
@@ -218,10 +218,10 @@ function LimitNotice() {
         keep going now.
       </p>
       <div className="gl-notice-actions">
-        <Button variant="filled" controlSize="compact">
+        <Button variant="filled" controlSize="small">
           Add funds
         </Button>
-        <Button variant="text" controlSize="compact">
+        <Button variant="text" controlSize="small">
           See plans
         </Button>
       </div>

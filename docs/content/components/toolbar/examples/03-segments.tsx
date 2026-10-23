@@ -14,10 +14,10 @@ export default function Segments() {
         leading={
           <>
             <ToolbarGroup label="History">
-              <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Undo">
+              <IconButton variant="text" appearance="toolbar" aria-label="Undo">
                 <Undo2 />
               </IconButton>
-              <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Redo" disabled>
+              <IconButton variant="text" appearance="toolbar" aria-label="Redo" disabled>
                 <Redo2 />
               </IconButton>
             </ToolbarGroup>
@@ -25,7 +25,6 @@ export default function Segments() {
               <IconButton
                 variant="text"
                 appearance="toolbar"
-                controlSize="compact"
                 aria-label="Bold"
                 aria-pressed={bold}
                 onClick={() => setBold(!bold)}
@@ -35,14 +34,13 @@ export default function Segments() {
               <IconButton
                 variant="text"
                 appearance="toolbar"
-                controlSize="compact"
                 aria-label="Italic"
                 aria-pressed={italic}
                 onClick={() => setItalic(!italic)}
               >
                 <Italic />
               </IconButton>
-              <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Insert link">
+              <IconButton variant="text" appearance="toolbar" aria-label="Insert link">
                 <Link2 />
               </IconButton>
             </ToolbarGroup>
@@ -50,7 +48,7 @@ export default function Segments() {
         }
         trailing={
           <ToolbarGroup label="Document">
-            <Button variant="filled" appearance="toolbar" controlSize="compact">
+            <Button variant="filled" appearance="toolbar">
               Save
             </Button>
           </ToolbarGroup>

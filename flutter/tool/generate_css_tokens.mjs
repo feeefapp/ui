@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Writes test/fixtures/css_tokens.json: every colour token and emphasis recipe as Chrome computes
-// them from the kit's CSS, per palette and mode. tokens_test.dart checks the Dart tokens against it.
+// them from the kit's CSS, per palette and mode, and test/fixtures/css_sizes.json: every size token
+// per density. tokens_test.dart checks the Dart tokens against both.
 // Build the parity app first (from ui/): npx vite build --config parity/vite.config.ts
 // Then: node flutter/tool/generate_css_tokens.mjs
 import { createServer } from 'node:http'
@@ -19,7 +20,19 @@ const TOKENS = [
   'accent', 'success', 'warning', 'danger', 'on-danger', 'control-surface', 'control-border',
   'control-hover', 'control-pressed', 'control-selected', 'glass-fill',
   'glass-edge-light', 'glass-edge-low', 'glass-shadow-color', 'glass-glow', 'control-highlight',
-  'glass-fill-large', 'glass-shadow-small',
+  'glass-fill-large', 'glass-shadow-small', 'focus-ring-color',
+]
+// Size tokens (px) per density; SizeTokens getters in tokens_test.dart.
+const SIZES = [
+  'control-small', 'control-height', 'control-large',
+  'control-padding-small', 'control-padding', 'control-padding-large',
+  'control-font-small', 'control-font', 'control-font-large',
+  'field-height-small', 'field-height', 'row-height', 'menu-row-height',
+  'toolbar-item', 'toolbar-control', 'toolbar-gap', 'toolbar-inset',
+  'segmented-height', 'segmented-inset', 'switch-width', 'switch-height',
+  'thumb-width', 'thumb-height', 'slider-track',
+  'list-row-height', 'list-radius', 'list-inset',
+  'focus-ring-width', 'focus-ring-offset', 'radius-control', 'radius-control-small',
 ]
 const VARIANTS = ['filled', 'tonal', 'elevated', 'outlined', 'text']
 const RECIPE = ['fill', 'hover', 'pressed', 'edge', 'ink']
@@ -56,6 +69,8 @@ for (const palette of ['lab', 'mono'])
         }
         const result = { tokens: {}, variants: {} }
         for (const name of tokens) result.tokens[name] = read(`var(--lab-${name})`)
+        // The glass tint the colours were computed at (the default), so Dart resolves at the same one.
+        result.glassTint = parseFloat(getComputedStyle(host).getPropertyValue('--lab-glass-tint'))
         for (const variant of variants) {
           probe.setAttribute('data-surface-variant', variant)
           result.variants[variant] = {}
@@ -69,7 +84,27 @@ for (const palette of ['lab', 'mono'])
       RECIPE
     )
   }
+const sizes = {}
+for (const density of ['comfortable', 'compact', 'thin']) {
+  await page.goto(`http://127.0.0.1:${server.address().port}/?scene=buttons&density=${density}`, {
+    waitUntil: 'networkidle0',
+  })
+  sizes[density] = await page.evaluate((names) => {
+    const host = document.querySelector('.lab-app') ?? document.body
+    const probe = document.createElement('div')
+    probe.style.position = 'absolute'
+    host.append(probe)
+    const result = {}
+    for (const name of names) {
+      probe.style.width = `var(--lab-${name})`
+      result[name] = parseFloat(getComputedStyle(probe).width)
+    }
+    probe.remove()
+    return result
+  }, SIZES)
+}
 await browser.close()
 server.close()
 await writeFile(join(ui, 'flutter/test/fixtures/css_tokens.json'), JSON.stringify(out, null, 1) + '\n')
-console.log('css_tokens.json:', Object.keys(out).join(', '))
+await writeFile(join(ui, 'flutter/test/fixtures/css_sizes.json'), JSON.stringify(sizes, null, 1) + '\n')
+console.log('css_tokens.json:', Object.keys(out).join(', '), '· css_sizes.json:', Object.keys(sizes).join(', '))

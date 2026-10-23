@@ -37,7 +37,8 @@ export type SelectProps = FieldDecorationProps & {
 };
 /**
  * A single-choice dropdown in the same field frame as `TextField`: floating hint, icons,
- * supporting text and validation. The menu opens in a popover; options are `Option`.
+ * supporting text and validation. The options (`Option`) open in a glass menu that grows out of
+ * the field and covers it (`MenuSurface`).
  */
 export declare function Select({ children, value: suppliedValue, onValueChange, className, variant, controlSize, label, hint, dir, placeholder, labelStyle, leadingIcon, leading, trailing, supportingText, error, containerClassName, name, required, requiredMessage, validator, validationMode, onValidationChange, onBlur, ...props }: SelectProps): React.JSX.Element;
 /** One choice in a `Select` menu. A check marks the selected option. */

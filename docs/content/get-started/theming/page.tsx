@@ -54,7 +54,12 @@ export function Root({ children }: { children: React.ReactNode }) {
             [
               <C>density</C>,
               <><C>comfortable</C> (default), <C>compact</C> or <C>thin</C></>,
-              <>Control and row heights, padding, spacing steps, sidebar widths, field text size. Thin is for very dense tools (28px controls). Touch keeps 44px targets. See <Link to="/foundations/sizing">Sizing and density</Link>.</>,
+              <>Control and row heights, padding, spacing steps, sidebar widths, field text size. Comfortable is iOS's sizes (36px regular buttons); compact steps one size down, thin two (26px buttons) for very dense tools. Touch keeps 44px targets. See <Link to="/foundations/sizing">Sizing and density</Link>.</>,
+            ],
+            [
+              <C>metrics</C>,
+              <>A partial <C>Metrics</C> object: <C>{'{ controlHeight: { regular: 40 }, toolbarItem: 48 }'}</C></>,
+              <>Replaces single sizes at every density: button heights, padding and label sizes, field heights, toolbar item, gap and inset, segmented control, switch and thumb, slider rail, list rows, the focus ring. Each becomes a <C>--lab-*</C> variable. See <Link to="/foundations/sizing">Sizing and density</Link>.</>,
             ],
             [
               <C>radius</C>,
@@ -88,6 +93,63 @@ export function Root({ children }: { children: React.ReactNode }) {
           <C>{"{ palette: 'lab', density: 'comfortable', radius: 1, glass: 'liquid', glassTint: 0.5, glassBlur: false, glassRefraction: true }"}</C>. Try every combination live in
           Customize, in the top bar.
         </p>
+      </Section>
+
+      <Section title="Metrics">
+        <p>
+          Density picks a whole set of sizes. When an app needs one size different, set it in{' '}
+          <C>metrics</C> instead of overriding CSS: the value replaces that token at every density and
+          everything built on it (capsule radii, toolbar controls, the thin slider's thumb) follows.
+          Values are pixels; leave the rest unset.
+        </p>
+        <Code
+          code={`export const theme: ThemeConfig = {
+  density: 'comfortable',
+  metrics: {
+    controlHeight: { regular: 40 },     // --lab-control-height: 40px
+    toolbarItem: 48,                    // --lab-toolbar-item: 48px (controls inside 42px)
+    listRowHeight: 48,                  // --lab-list-row-height: 48px
+    focusRingWidth: 3,                  // --lab-focus-ring-width: 3px
+  },
+}`}
+        />
+        <Code
+          lang="dart"
+          title="Flutter"
+          code={`const theme = ThemeConfig(
+  density: .comfortable,
+  metrics: Metrics(
+    controlHeight: MetricScale(regular: 40),
+    toolbarItem: 48,
+    listRowHeight: 48,
+    focusRingWidth: 3,
+  ),
+);
+// SizeTokens.of(theme).controlHeight == 40`}
+        />
+        <Table
+          head={['Metric', 'Default (comfortable)', 'CSS variable']}
+          rows={[
+            [<C>controlHeight</C>, 'small 30 · regular 36 · large 52', <><C>--lab-control-small</C>, <C>--lab-control-height</C>, <C>--lab-control-large</C></>],
+            [<C>controlPadding</C>, '10 · 12 · 20', <C>--lab-control-padding(-small|-large)</C>],
+            [<C>controlFont</C>, '15 · 17 · 17', <C>--lab-control-font(-small|-large)</C>],
+            [<C>fieldHeight</C>, 'small 36 · regular 44', <><C>--lab-field-height-small</C>, <C>--lab-field-height</C></>],
+            [<C>rowHeight</C>, '44', <C>--lab-row-height</C>],
+            [<C>toolbarItem</C>, '44', <C>--lab-toolbar-item</C>],
+            [<C>toolbarGap</C>, '12', <C>--lab-toolbar-gap</C>],
+            [<C>toolbarInset</C>, '16', <C>--lab-toolbar-inset</C>],
+            [<C>segmentedHeight</C>, '32', <C>--lab-segmented-height</C>],
+            [<C>segmentedInset</C>, '2', <C>--lab-segmented-inset</C>],
+            [<C>switchSize</C>, '63 × 28', <><C>--lab-switch-width</C>, <C>--lab-switch-height</C></>],
+            [<C>thumbSize</C>, '37 × 24', <><C>--lab-thumb-width</C>, <C>--lab-thumb-height</C></>],
+            [<C>sliderTrack</C>, '6', <C>--lab-slider-track</C>],
+            [<C>listRowHeight</C>, '54', <C>--lab-list-row-height</C>],
+            [<C>listRadius</C>, '26 (× radius)', <C>--lab-list-corner</C>],
+            [<C>listInset</C>, '16', <C>--lab-list-inset</C>],
+            [<C>focusRingWidth</C>, '2', <C>--lab-focus-ring-width</C>],
+            [<C>focusRingOffset</C>, '1', <C>--lab-focus-ring-offset</C>],
+          ]}
+        />
       </Section>
 
       <Section title="Light, dark and system">
@@ -136,7 +198,8 @@ function DarkModeToggle() {
         <ul>
           <li>
             <C>themeAttributes(theme)</C>: <C>data-lab-palette</C>, <C>data-lab-density</C>, <C>data-lab-glass</C>, <C>data-lab-glass-blur</C>,{' '}
-            <C>data-lab-glass-refraction</C> and the <C>--lab-radius-scale</C> and <C>--lab-glass-tint</C> styles.
+            <C>data-lab-glass-refraction</C> and the <C>--lab-radius-scale</C> and <C>--lab-glass-tint</C> styles, plus one
+            style variable per set <C>metrics</C> value.
           </li>
           <li>
             <C>data-lab-theme</C>: the color mode. Every color token hangs off this attribute, so set it
@@ -237,7 +300,8 @@ applyThemeConfig(previewFrame.contentDocument!.documentElement, {
   background: color-mix(in srgb, var(--lab-primary) 18%, var(--lab-surface));
 }
 .invoice a:focus-visible {
-  outline: 2px solid var(--lab-focus);
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
 }`}
         />
         <DoDont
@@ -262,7 +326,7 @@ export default definePage({
   id: 'theming',
   title: 'Theming',
   order: 2,
-  summary: 'Choose a palette, density and radius, support light and dark mode, and theme server-rendered pages.',
-  keywords: ['theme', 'ThemeConfig', 'palette', 'mono', 'density', 'radius', 'dark mode', 'ssr', 'next.js', 'inertia', 'themeAttributes'],
+  summary: 'Choose a palette, density, radius and metrics, support light and dark mode, and theme server-rendered pages.',
+  keywords: ['theme', 'ThemeConfig', 'palette', 'mono', 'density', 'radius', 'metrics', 'Metrics', 'control height', 'dark mode', 'ssr', 'next.js', 'inertia', 'themeAttributes'],
   Overview,
 })

@@ -40,13 +40,13 @@ final Map<String, List<Widget> Function()> scenes = {
     row([
       Button(
         variant: .filled,
-        controlSize: .compact,
+        controlSize: .small,
         onClick: _noop,
         children: const [Text('Compact')],
       ),
       Button(
         variant: .elevated,
-        controlSize: .compact,
+        controlSize: .small,
         onClick: _noop,
         children: const [Text('Compact')],
       ),
@@ -142,7 +142,6 @@ final Map<String, List<Widget> Function()> scenes = {
           ])
             IconButton(
               appearance: .toolbar,
-              controlSize: .compact,
               ariaLabel: label,
               onClick: _noop,
               icon: icon,
@@ -154,7 +153,6 @@ final Map<String, List<Widget> Function()> scenes = {
         children: [
           Button(
             appearance: .toolbar,
-            controlSize: .compact,
             variant: .filled,
             onClick: _noop,
             children: const [LucideShare(size: 18), Text('Share')],
@@ -173,14 +171,12 @@ final Map<String, List<Widget> Function()> scenes = {
             children: [
               IconButton(
                 appearance: .toolbar,
-                controlSize: .compact,
                 ariaLabel: 'Undo',
                 onClick: _noop,
                 icon: const LucideUndo2(),
               ),
               IconButton(
                 appearance: .toolbar,
-                controlSize: .compact,
                 ariaLabel: 'Redo',
                 onClick: _noop,
                 icon: const LucideRedo2(),
@@ -192,7 +188,6 @@ final Map<String, List<Widget> Function()> scenes = {
             children: [
               IconButton(
                 appearance: .toolbar,
-                controlSize: .compact,
                 ariaLabel: 'Bold',
                 onClick: _noop,
                 icon: const LucideBold(),
@@ -222,7 +217,6 @@ final Map<String, List<Widget> Function()> scenes = {
             children: [
               IconButton(
                 appearance: .toolbar,
-                controlSize: .compact,
                 ariaLabel: 'Bold',
                 onClick: _noop,
                 icon: const LucideBold(),
@@ -256,13 +250,11 @@ final Map<String, List<Widget> Function()> scenes = {
         children: [
           Button(
             variant: .tonal,
-            controlSize: .compact,
             onClick: _noop,
             children: const [LucidePrinter(size: 18), Text('Print')],
           ),
           Button(
             variant: .filled,
-            controlSize: .compact,
             onClick: _noop,
             children: const [LucideTruck(size: 18), Text('Ship')],
           ),
@@ -275,7 +267,6 @@ final Map<String, List<Widget> Function()> scenes = {
       content: const Text('2 selected'),
       children: [
         IconButton(
-          controlSize: .compact,
           ariaLabel: 'Clear',
           onClick: _noop,
           icon: const LucideX(),
@@ -361,14 +352,12 @@ final Map<String, List<Widget> Function()> scenes = {
                   Button(
                     variant: .ghost,
                     appearance: .toolbar,
-                    controlSize: .compact,
                     onClick: _noop,
                     children: const [Text('All')],
                   ),
                   Button(
                     variant: .ghost,
                     appearance: .toolbar,
-                    controlSize: .compact,
                     onClick: _noop,
                     children: const [Text('Open')],
                   ),
@@ -380,7 +369,6 @@ final Map<String, List<Widget> Function()> scenes = {
                 children: [
                   Button(
                     variant: .filled,
-                    controlSize: .compact,
                     onClick: _noop,
                     children: const [Text('New order')],
                   ),
@@ -441,7 +429,7 @@ final Map<String, List<Widget> Function()> scenes = {
         defaultValue: 1.25,
         step: 0.25,
         unit: 'kg',
-        controlSize: .compact,
+        controlSize: .small,
         steppers: false,
       ),
       NumberField(
@@ -504,7 +492,7 @@ final Map<String, List<Widget> Function()> scenes = {
         child: ActionsBar(
           label: 'Order actions',
           actions: actions,
-          size: .compact,
+          size: .small,
           align: .start,
         ),
       ),
@@ -579,7 +567,7 @@ final Map<String, List<Widget> Function()> scenes = {
       ),
       Select(
         label: 'Compact',
-        controlSize: .compact,
+        controlSize: .small,
         variant: .outlined,
         value: 'a',
         onValueChange: (_) {},
@@ -595,7 +583,7 @@ final Map<String, List<Widget> Function()> scenes = {
       ),
       Select(
         ariaLabel: 'Size',
-        controlSize: .compact,
+        controlSize: .small,
         value: '20',
         onValueChange: (_) {},
         children: const [Option(value: '20', child: Text('20 per page'))],
@@ -1149,7 +1137,7 @@ final Map<String, List<Widget> Function()> scenes = {
       const TextField(placeholder: 'Search orders'),
       const TextField(
         label: 'Compact',
-        controlSize: .compact,
+        controlSize: .small,
         defaultValue: 'Small',
       ),
       const TextField(label: 'Tonal', variant: .tonal, defaultValue: 'Soft'),
@@ -1180,7 +1168,7 @@ final Map<String, List<Widget> Function()> scenes = {
     const Slider(label: 'Volume', defaultValue: 40),
     const Slider(
       label: 'Discount',
-      controlSize: .compact,
+      controlSize: .small,
       defaultValue: 50,
       step: 25,
       showStops: true,
@@ -1208,7 +1196,6 @@ final Map<String, List<Widget> Function()> scenes = {
       SlideSwitch(label: 'Auto ship', onText: 'On', offText: 'Off'),
       SlideSwitch(
         label: 'Compact',
-        controlSize: .compact,
         defaultChecked: true,
       ),
       SlideSwitch(label: 'Disabled', disabled: true, defaultChecked: true),
@@ -1251,7 +1238,7 @@ final Map<String, List<Widget> Function()> scenes = {
     row([
       Checkbox(
         label: const Text('Compact'),
-        controlSize: .compact,
+        controlSize: .small,
         checked: true,
         onCheckedChange: (_) {},
       ),
@@ -1321,14 +1308,14 @@ final Map<String, List<Widget> Function()> scenes = {
       ),
       IconButton(
         variant: .text,
-        controlSize: .compact,
+        controlSize: .small,
         ariaLabel: 'Search',
         onClick: _noop,
         icon: const LucideSearch(),
       ),
       IconButton(
         variant: .elevated,
-        controlSize: .compact,
+        controlSize: .small,
         ariaLabel: 'Delete',
         onClick: _noop,
         icon: const LucideTrash2(),

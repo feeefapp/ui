@@ -43,24 +43,34 @@ void main() {
             ),
           ),
         );
-        expect(tester.getSize(find.byType(Button)).height, 44);
+        expect(tester.getSize(find.byType(Button)).height, 36);
         await tester.pumpWidget(
           host(
             Button(
-              controlSize: ControlSize.compact,
+              controlSize: ControlSize.small,
               onClick: () {},
               children: const [Text('Save')],
             ),
           ),
         );
-        expect(tester.getSize(find.byType(Button)).height, 40);
+        expect(tester.getSize(find.byType(Button)).height, 30);
+        await tester.pumpWidget(
+          host(
+            Button(
+              controlSize: ControlSize.large,
+              onClick: () {},
+              children: const [Text('Save')],
+            ),
+          ),
+        );
+        expect(tester.getSize(find.byType(Button)).height, 52);
         await tester.pumpWidget(
           host(
             Button(onClick: () {}, children: const [Text('Save')]),
             config: const ThemeConfig(density: Density.compact),
           ),
         );
-        expect(tester.getSize(find.byType(Button)).height, 34);
+        expect(tester.getSize(find.byType(Button)).height, 30);
         await tester.pumpWidget(
           host(
             Button(
@@ -71,7 +81,7 @@ void main() {
             ),
           ),
         );
-        expect(tester.getSize(find.byType(Button)), const Size(44, 44));
+        expect(tester.getSize(find.byType(Button)), const Size(36, 36));
         debugDefaultTargetPlatformOverride = null;
       },
     );
@@ -83,7 +93,7 @@ void main() {
       await tester.pumpWidget(
         host(
           Button(
-            controlSize: ControlSize.compact,
+            controlSize: ControlSize.small,
             onClick: () {},
             children: const [Text('Save')],
           ),

@@ -268,7 +268,7 @@ class _OrdersListState extends State<OrdersList> {
                       child: Align(
                         alignment: AlignmentDirectional.centerStart,
                         child: Checkbox(
-                          controlSize: .compact,
+                          controlSize: .small,
                           label: Text('${rows.length} orders'),
                           checked: allSelected,
                           indeterminate:

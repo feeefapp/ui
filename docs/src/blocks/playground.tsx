@@ -74,7 +74,6 @@ export function Playground<C extends Record<string, Control>>({
               <IconButton
               variant="text"
                 appearance="toolbar"
-              controlSize="compact"
               aria-label="Reset controls"
               title="Reset controls"
               onClick={() => setValues(initial)}
@@ -93,7 +92,7 @@ export function Playground<C extends Record<string, Control>>({
                   <Select
                     key={key}
                     hint={label}
-                    controlSize="compact"
+                    controlSize="small"
                     value={String(value)}
                     onValueChange={(next) => set(key, next)}
                   >
@@ -110,7 +109,6 @@ export function Playground<C extends Record<string, Control>>({
                     <span aria-hidden="true">{label}</span>
                     <SlideSwitch
                       label={label}
-                      controlSize="compact"
                       checked={Boolean(value)}
                       onCheckedChange={(next) => set(key, next)}
                     />
@@ -121,7 +119,7 @@ export function Playground<C extends Record<string, Control>>({
                   <TextField
                     key={key}
                     hint={label}
-                    controlSize="compact"
+                    controlSize="small"
                     value={String(value)}
                     onValueChange={(next) => set(key, next)}
                   />
@@ -134,7 +132,7 @@ export function Playground<C extends Record<string, Control>>({
                     </span>
                     <Slider
                       label={label}
-                      controlSize="compact"
+                      controlSize="small"
                       min={control.min}
                       max={control.max}
                       step={control.step ?? 1}

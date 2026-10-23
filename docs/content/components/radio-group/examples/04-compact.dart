@@ -13,7 +13,7 @@ class Compact extends StatelessWidget {
       children: [
         RadioGroup(
           label: 'Show orders from',
-          controlSize: .compact,
+          controlSize: .small,
           defaultValue: '7d',
           options: [
             RadioOption(value: 'today', label: Text('Today')),

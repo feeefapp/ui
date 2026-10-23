@@ -36,12 +36,21 @@ export function shapeDistance(px: number, py: number, shape: GlassShape, exponen
   const r = clampRadius(shape)
   const hx = shape.width / 2
   const hy = shape.height / 2
-  const qx = Math.abs(px - (shape.x + hx)) - hx + r
-  const qy = Math.abs(py - (shape.y + hy)) - hy + r
+  return roundedBoxDistance(px, py, shape.x + hx, shape.y + hy, hx, hy, r, exponent)
+}
+
+function roundedBoxDistance(px: number, py: number, cx: number, cy: number, hx: number, hy: number, r: number, exponent: number) {
+  const qx = Math.abs(px - cx) - hx + r
+  const qy = Math.abs(py - cy) - hy + r
+  return cornerDistance(qx, qy, r, exponent)
+}
+
+function cornerDistance(qx: number, qy: number, r: number, exponent: number) {
   const ox = Math.max(qx, 0)
   const oy = Math.max(qy, 0)
   let outside: number
   if (ox === 0 || oy === 0) outside = ox + oy
+  else if (exponent === 2) outside = Math.sqrt(ox * ox + oy * oy)
   else if (exponent === FO_CORNER_EXPONENT) {
     // (a^n + b^n)^(1/n) = max · (1 + (min/max)^n)^(1/n), read from a table: this runs per pixel.
     const high = Math.max(ox, oy)
@@ -106,6 +115,34 @@ export function unionDistance(px: number, py: number, shapes: readonly GlassShap
   return d
 }
 
+/**
+ * Prepare one immutable geometry frame for repeated pixel/normal sampling. Uses the same
+ * distance and blend arithmetic as unionDistance, with member centres, clamped radii and
+ * blend widths resolved once instead of on every sample. Rebuild after changing a shape.
+ */
+export function prepareUnionDistance(shapes: readonly GlassShape[], spacing: number) {
+  const boxes = shapes.map(shape => {
+    const hx = shape.width / 2
+    const hy = shape.height / 2
+    return { cx: shape.x + hx, cy: shape.y + hy, hx, hy, radius: clampRadius(shape), exponent: shape.cornerExponent ?? FO_CORNER_EXPONENT }
+  })
+  const widths = blendWidths(shapes, spacing)
+  return (px: number, py: number) => {
+    let d = Infinity
+    for (let i = 0; i < boxes.length; i++) {
+      const box = boxes[i]
+      const qx = Math.abs(px - box.cx) - box.hx + box.radius
+      const qy = Math.abs(py - box.cy) - box.hy + box.radius
+      // Distance to the unrounded box is a lower bound. A farther member cannot change a
+      // smooth minimum once it lies beyond the current distance plus the blend width.
+      if (Math.max(qx, qy) - box.radius >= d + widths[i] + 1e-8) continue
+      const next = cornerDistance(qx, qy, box.radius, box.exponent)
+      d = d === Infinity ? next : smoothMin(d, next, widths[i])
+    }
+    return d
+  }
+}
+
 /** Gap between two boxes (0 when they touch or overlap). */
 export function rectGap(a: GlassRect, b: GlassRect) {
   const dx = Math.max(a.x - (b.x + b.width), b.x - (a.x + a.width), 0)
@@ -138,6 +175,25 @@ export function boundsOf(rects: readonly GlassRect[]): GlassRect {
   return { x, y, width: right - x, height: bottom - y }
 }
 
+/**
+ * Conservative bounds of the blended surface, including the growth outside member boxes.
+ * A smooth minimum can move the zero contour outwards by k / 4 even when both members fit
+ * inside the same rectangle. Repeating the same monotone blend on the distance lower bound
+ * bounds that growth for any number of members without summing an unnecessarily large pad.
+ */
+export function unionBounds(shapes: readonly GlassShape[], spacing: number): GlassRect {
+  if (!shapes.length) return { x: 0, y: 0, width: 0, height: 0 }
+  const box = boundsOf(shapes)
+  let growth = 0
+  for (const width of blendWidths(shapes, spacing)) growth = -smoothMin(-growth, 0, width)
+  return {
+    x: box.x - growth,
+    y: box.y - growth,
+    width: box.width + growth * 2,
+    height: box.height + growth * 2,
+  }
+}
+
 const round = (value: number) => Math.round(value * 100) / 100
 
 /** Moves every point of an SVG path made of `M`/`L` commands by `dx`, `dy`. */
@@ -164,7 +220,7 @@ export type Point = [number, number]
  */
 export function unionLoops(shapes: readonly GlassShape[], spacing: number, cell = 2): Point[][] {
   if (!shapes.length) return []
-  const box = boundsOf(shapes)
+  const box = unionBounds(shapes, spacing)
   const pad = cell * 2
   const ox = box.x - pad
   const oy = box.y - pad
@@ -277,11 +333,28 @@ export function clusterPath(shapes: readonly GlassShape[], spacing: number, cell
 
 /** Outline of every cluster, one SVG path per cluster. */
 export function glassPaths(shapes: readonly GlassShape[], spacing: number, cell = 2) {
-  return glassClusters(shapes.filter((s) => s.width > 0.5 && s.height > 0.5), spacing).map((cluster) => ({
-    shapes: cluster,
-    bounds: boundsOf(cluster),
-    d: clusterPath(cluster, spacing, cell),
-  }))
+  return glassClusters(shapes.filter((s) => s.width > 0.5 && s.height > 0.5), spacing).map((cluster) => {
+    // Keep single-member CSS border-radius boxes exact. Merged surfaces can protrude beyond
+    // every member: use their actual contour, plus room for its anti-aliased edge, for all
+    // paint buffers. Raw member bounds clipped that fringe during collisions and morphs.
+    if (cluster.length === 1) return { shapes: cluster, bounds: boundsOf(cluster), d: shapePath(cluster[0]) }
+    const loops = unionLoops(cluster, spacing, cell)
+    let left = Infinity
+    let top = Infinity
+    let right = -Infinity
+    let bottom = -Infinity
+    for (const loop of loops) for (const [x, y] of loop) {
+      left = Math.min(left, x)
+      top = Math.min(top, y)
+      right = Math.max(right, x)
+      bottom = Math.max(bottom, y)
+    }
+    const fringe = 1
+    const bounds = loops.length
+      ? { x: left - fringe, y: top - fringe, width: right - left + fringe * 2, height: bottom - top + fringe * 2 }
+      : unionBounds(cluster, spacing)
+    return { shapes: cluster, bounds, d: loops.map(loopPath).join('') }
+  })
 }
 
 /**

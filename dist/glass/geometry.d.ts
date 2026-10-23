@@ -44,12 +44,25 @@ export declare const GLASS_MERGE_GAP = 0.65;
 export declare function mergeWidth(gap: number, spacing: number): number;
 /** Distance to the union of `shapes`, blended by `spacing` (see `mergeWidth`). */
 export declare function unionDistance(px: number, py: number, shapes: readonly GlassShape[], spacing: number): number;
+/**
+ * Prepare one immutable geometry frame for repeated pixel/normal sampling. Uses the same
+ * distance and blend arithmetic as unionDistance, with member centres, clamped radii and
+ * blend widths resolved once instead of on every sample. Rebuild after changing a shape.
+ */
+export declare function prepareUnionDistance(shapes: readonly GlassShape[], spacing: number): (px: number, py: number) => number;
 /** Gap between two boxes (0 when they touch or overlap). */
 export declare function rectGap(a: GlassRect, b: GlassRect): number;
 /** Groups shapes that are close enough to blend (gap below `spacing`), in input order. */
 export declare function glassClusters<T extends GlassShape>(shapes: readonly T[], spacing: number): T[][];
 /** Bounding box of several rects. */
 export declare function boundsOf(rects: readonly GlassRect[]): GlassRect;
+/**
+ * Conservative bounds of the blended surface, including the growth outside member boxes.
+ * A smooth minimum can move the zero contour outwards by k / 4 even when both members fit
+ * inside the same rectangle. Repeating the same monotone blend on the distance lower bound
+ * bounds that growth for any number of members without summing an unnecessarily large pad.
+ */
+export declare function unionBounds(shapes: readonly GlassShape[], spacing: number): GlassRect;
 /** Moves every point of an SVG path made of `M`/`L` commands by `dx`, `dy`. */
 export declare function translatePath(d: string, dx: number, dy: number): string;
 /** The exact outline of one shape, as the kit draws it elsewhere (SVG path, absolute coordinates). */

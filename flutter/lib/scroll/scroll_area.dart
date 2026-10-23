@@ -17,6 +17,7 @@ class ScrollArea extends StatefulWidget {
     this.top,
     this.bottom,
     this.edgeGap = 12,
+    this.sideGap,
     this.contentPadding = 24,
     this.gradient = true,
     this.topFadeHeight,
@@ -38,6 +39,10 @@ class ScrollArea extends StatefulWidget {
 
   /// Space between a float and the area's edges; also added above and below it in the reservation.
   final double edgeGap;
+
+  /// Space between a float and the area's sides, when it differs from [edgeGap] (a scaffold's app
+  /// bar uses [SizeTokens.toolbarInset]).
+  final double? sideGap;
 
   /// Content padding: inline sides, and top/bottom when no float is present.
   final double contentPadding;
@@ -79,6 +84,9 @@ class _ScrollAreaState extends State<ScrollArea> {
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final gap = widget.edgeGap < 0 ? 0.0 : widget.edgeGap;
+    final side = widget.sideGap == null
+        ? gap
+        : (widget.sideGap! < 0 ? 0.0 : widget.sideGap!);
     final padding = widget.contentPadding < 0 ? 0.0 : widget.contentPadding;
     final topReserve = scrollContentReserve(
       widget.top == null ? 0 : _top,
@@ -94,8 +102,8 @@ class _ScrollAreaState extends State<ScrollArea> {
     // Space a host's own floating chrome (a tab bar) takes over this area's bottom edge.
     final extra = ScrollExtraBottom.of(context);
     Widget float(Widget child, bool top) => Positioned(
-      left: gap > safe.left ? gap : safe.left,
-      right: gap > safe.right ? gap : safe.right,
+      left: side > safe.left ? side : safe.left,
+      right: side > safe.right ? side : safe.right,
       top: top ? gap + safe.top : null,
       bottom: top ? null : gap + extra + safe.bottom,
       child: SizeReporter(

@@ -9,12 +9,12 @@ import '../layout/size_reporter.dart';
 import '../physics/motion_value.dart';
 import '../physics/spring.dart';
 import '../primitives/button.dart';
-import '../primitives/popover_surface.dart';
+import '../menu/anchored_panel.dart';
+import '../scaffold.dart' show GlassGroup;
+import '../menu/menu_surface.dart';
 import '../theme.dart';
-import '../theme/css_text.dart';
 import 'layout.dart';
 import 'types.dart';
-import '../glass/container.dart';
 
 /// The width a shrink-wrapping parent (a Dock) offers its actions, before fitting. Without it,
 /// each bar fits its own host. The twin of `ActionsWidthProvider` in the web kit.
@@ -58,7 +58,7 @@ class ActionsBar extends StatefulWidget {
   final String label;
   final ActionsAlign align;
 
-  /// Control height: regular 44px or compact 40px.
+  /// Control height: `regular` (36px, or the host's height in a dock or toolbar) or `small` 30px.
   final ControlSize size;
 
   /// Space between controls, included in the fit.
@@ -224,10 +224,12 @@ class _ActionsBarState extends State<ActionsBar> {
         widget.overflowLabel ?? I18n.of(context).t('lab.common.moreActions');
     final s = theme.sizes;
     final inherited = ActionsWidthProvider.maybeOf(context);
-    final compact = widget.size == ControlSize.compact;
+    final small = widget.size == ControlSize.small;
     final minHeight = theme.coarsePointer(context)
-        ? 44.0
-        : (compact ? s.controlCompact : s.controlHeight);
+        ? s.touchTarget
+        : (small
+              ? s.controlSmall
+              : ControlOverrides.maybeOf(context)?.height ?? s.controlHeight);
     final measured = widget.actions.every((a) => _widths.containsKey(a.id));
 
     return LayoutBuilder(
@@ -478,8 +480,8 @@ Widget _moreButton(ControlSize size, String label, VoidCallback? onClick) =>
     IconButton(
       variant: ButtonVariant.ghost,
       appearance: ButtonAppearance.toolbar,
-      controlSize: size == ControlSize.compact
-          ? ControlSize.compact
+      controlSize: size == ControlSize.small
+          ? ControlSize.small
           : ControlSize.regular,
       ariaLabel: label,
       onClick: onClick ?? () {},
@@ -537,8 +539,8 @@ class _ActionControl extends StatelessWidget {
       return IconButton(
         variant: variant,
         appearance: appearance,
-        controlSize: size == ControlSize.compact
-            ? ControlSize.compact
+        controlSize: size == ControlSize.small
+            ? ControlSize.small
             : ControlSize.regular,
         disabled: blocked,
         loading: loading || a.loading,
@@ -562,11 +564,13 @@ class _ActionControl extends StatelessWidget {
   }
 }
 
-/// A trigger that opens a menu of [actions] on a [PopoverSurface] below it, aligned to its end:
-/// rows with icons, checkable toggles, nested submenus, destructive rows, arrow keys and Escape.
-/// The Flutter stand-in for a Radix `DropdownMenu` styled with the kit's `.lab-actions-menu`
-/// classes, and the same menu an [ActionsBar] opens for its groups and overflow. Commands run like
-/// in the bar: a returned future blocks repeats until it completes.
+/// A trigger that opens a menu of [actions] as a glass bubble that grows out of it and covers it
+/// ([MenuSurface]; in a glass group or toolbar it lines up with the trigger's edge on its side of
+/// the app, elsewhere it is centred on the trigger): rows with icons, checkable toggles, nested submenus,
+/// destructive rows, arrow keys and Escape. The Flutter stand-in for a Radix `DropdownMenu` on
+/// `MenuSurface` with the kit's `.lab-actions-menu` rows, and the same menu an [ActionsBar] opens
+/// for its groups and overflow. Commands run like in the bar: a returned future blocks repeats
+/// until it completes.
 class ActionsMenuAnchor extends StatefulWidget {
   const ActionsMenuAnchor({
     super.key,
@@ -624,11 +628,14 @@ class _ActionsMenuAnchorState extends State<ActionsMenuAnchor> {
     pending: _pending,
     execute: _execute,
     enabled: widget.enabled && widget.actions.isNotEmpty,
+    toolbar: null,
     builder: widget.builder,
   );
 }
 
-/// A trigger that opens a menu of actions below it, aligned to its end.
+/// A trigger that opens a menu of actions: a glass bubble growing out of it and covering it (in a
+/// toolbar lined up with the trigger's edge on its side of the bounds, else centred), or beside
+/// its row for a submenu.
 class _MenuAnchor extends StatefulWidget {
   const _MenuAnchor({
     required this.label,
@@ -639,11 +646,16 @@ class _MenuAnchor extends StatefulWidget {
     required this.builder,
     this.onOpen,
     this.submenu = false,
+    this.toolbar = true,
   });
   final String label;
 
   /// Opens beside the row, toward the inline end (Radix `SubContent`, sideOffset 4).
   final bool submenu;
+
+  /// The trigger sits in a toolbar (the bar), not in content. Null: when it is inside a
+  /// [GlassGroup] (a toolbar group, a dock), like the web kit's check of the trigger's ancestors.
+  final bool? toolbar;
   final List<Action> actions;
   final Set<String> pending;
   final void Function(Action action, [bool? checked]) execute;
@@ -656,79 +668,69 @@ class _MenuAnchor extends StatefulWidget {
 }
 
 class _MenuAnchorState extends State<_MenuAnchor> {
-  final _portal = OverlayPortalController();
-  final _link = LayerLink();
+  bool _open = false;
+  final _anchor = FocusNode(
+    debugLabel: 'Menu trigger',
+    canRequestFocus: false,
+    skipTraversal: true,
+  );
 
-  void _toggle() {
-    if (_portal.isShowing) {
-      _portal.hide();
-      setState(() {});
-      return;
-    }
-    if (widget.onOpen?.call() == false) return;
-    _portal.show();
-    setState(() {});
+  @override
+  void dispose() {
+    _anchor.dispose();
+    super.dispose();
   }
 
+  void _toggle() {
+    if (_open) return _close();
+    if (widget.onOpen?.call() == false) return;
+    setState(() => _open = true);
+  }
+
+  /// Closes the menu and returns focus to its trigger, like Radix.
   void _close() {
-    if (_portal.isShowing) {
-      _portal.hide();
-      setState(() {});
+    if (!_open) return;
+    setState(() => _open = false);
+    for (final node in _anchor.descendants) {
+      if (node.canRequestFocus && !node.skipTraversal) {
+        node.requestFocus();
+        break;
+      }
     }
   }
 
   @override
-  Widget build(BuildContext context) => CompositedTransformTarget(
-    link: _link,
-    child: OverlayPortal(
-      controller: _portal,
-      overlayChildBuilder: (context) => GlassLayer(
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onTap: _close,
-              ),
-            ),
-            CompositedTransformFollower(
-              link: _link,
-              targetAnchor:
-                  (widget.submenu
-                          ? AlignmentDirectional.topEnd
-                          : AlignmentDirectional.bottomEnd)
-                      .resolve(Directionality.of(context)),
-              followerAnchor:
-                  (widget.submenu
-                          ? AlignmentDirectional.topStart
-                          : AlignmentDirectional.topEnd)
-                      .resolve(Directionality.of(context)),
-              offset: widget.submenu
-                  ? Offset(
-                      Directionality.of(context) == TextDirection.rtl ? -4 : 4,
-                      -4,
-                    )
-                  : const Offset(0, 8),
-              child: _ActionsMenu(
-                label: widget.label,
-                actions: widget.actions,
-                pending: widget.pending,
-                execute: (action, [checked]) {
-                  _close();
-                  widget.execute(action, checked);
-                },
-                close: _close,
-              ),
-            ),
-          ],
-        ),
-      ),
+  Widget build(BuildContext context) => AnchoredPanel(
+    open: _open,
+    onDismiss: _close,
+    cover: !widget.submenu,
+    side: widget.submenu ? PanelSide.end : PanelSide.bottom,
+    align: widget.submenu
+        ? PanelAlign.start
+        : ((widget.toolbar ??
+                  context.findAncestorWidgetOfExactType<GlassGroup>() !=
+                      null)
+              ? null
+              : PanelAlign.center),
+    sideOffset: widget.submenu ? 4 : 0,
+    panel: (context) => _ActionsMenu(
+      label: widget.label,
+      actions: widget.actions,
+      pending: widget.pending,
+      execute: (action, [checked]) {
+        _close();
+        widget.execute(action, checked);
+      },
+      close: _close,
+    ),
+    child: Focus(
+      focusNode: _anchor,
       child: widget.builder(widget.enabled ? _toggle : null),
     ),
   );
 }
 
-/// `.lab-actions-menu` on a PopoverSurface: rows of actions, checkable toggles, submenus.
+/// `.lab-actions-menu` on a [MenuSurface]: rows of actions, checkable toggles, submenus.
 class _ActionsMenu extends StatefulWidget {
   const _ActionsMenu({
     required this.label,
@@ -777,78 +779,51 @@ class _ActionsMenuState extends State<_ActionsMenu> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final theme = ThemeProvider.of(context);
-    final s = theme.sizes;
-    final screen = MediaQuery.sizeOf(context).width;
-    final space1 = s.density == Density.thin ? 2.0 : 4.0;
-    return FocusScope(
-      node: _scope,
-      onKeyEvent: (_, event) {
-        if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
-          return KeyEventResult.ignored;
-        }
-        final key = event.logicalKey;
-        if (key == LogicalKeyboardKey.escape) {
-          widget.close();
-        } else if (key == LogicalKeyboardKey.arrowDown) {
-          _move(1);
-        } else if (key == LogicalKeyboardKey.arrowUp) {
-          _move(-1);
-        } else if ((key == LogicalKeyboardKey.enter ||
-                key == LogicalKeyboardKey.space) &&
-            _highlight >= 0) {
-          final a = widget.actions[_highlight];
-          if (a is! GroupAction) widget.execute(a);
-        } else {
-          return KeyEventResult.ignored;
-        }
-        return KeyEventResult.handled;
-      },
-      child: Semantics(
-        container: true,
-        explicitChildNodes: true,
-        label: widget.label,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minWidth: math.min(200, screen - 24),
-            maxWidth: math.min(360, screen - 24),
-          ),
-          child: IntrinsicWidth(
-            child: PopoverSurface(
-              padding: EdgeInsets.all(space1),
-              child: DefaultTextStyle.merge(
-                style: const TextStyle(
-                  fontSize: 14,
-                  height: 20 / 14,
-                  leadingDistribution: TextLeadingDistribution.even,
-                ),
-                child: Column(
-                  // The menu hugs its rows: the popover's layout gives it the screen's height.
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (var i = 0; i < widget.actions.length; i++)
-                      _MenuRow(
-                        action: widget.actions[i],
-                        highlighted: i == _highlight,
-                        loading:
-                            widget.actions[i].loading ||
-                            widget.pending.contains(widget.actions[i].id),
-                        radius: s.radiusGroup - space1 - 1,
-                        onHover: () => setState(() => _highlight = i),
-                        pending: widget.pending,
-                        execute: widget.execute,
-                      ),
-                  ],
-                ),
-              ),
+  Widget build(BuildContext context) => FocusScope(
+    node: _scope,
+    onKeyEvent: (_, event) {
+      if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+        return KeyEventResult.ignored;
+      }
+      final key = event.logicalKey;
+      if (key == LogicalKeyboardKey.escape) {
+        widget.close();
+      } else if (key == LogicalKeyboardKey.arrowDown) {
+        _move(1);
+      } else if (key == LogicalKeyboardKey.arrowUp) {
+        _move(-1);
+      } else if ((key == LogicalKeyboardKey.enter ||
+              key == LogicalKeyboardKey.space) &&
+          _highlight >= 0) {
+        final a = widget.actions[_highlight];
+        if (a is! GroupAction) widget.execute(a);
+      } else {
+        return KeyEventResult.ignored;
+      }
+      return KeyEventResult.handled;
+    },
+    child: MenuSurface(
+      label: widget.label,
+      child: Column(
+        // The menu hugs its rows; it scrolls when it has less room.
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < widget.actions.length; i++)
+            _MenuRow(
+              action: widget.actions[i],
+              highlighted: i == _highlight,
+              loading:
+                  widget.actions[i].loading ||
+                  widget.pending.contains(widget.actions[i].id),
+              onHover: () => setState(() => _highlight = i),
+              pending: widget.pending,
+              execute: widget.execute,
             ),
-          ),
-        ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }
 
 class _MenuRow extends StatelessWidget {
@@ -856,23 +831,18 @@ class _MenuRow extends StatelessWidget {
     required this.action,
     required this.highlighted,
     required this.loading,
-    required this.radius,
     required this.onHover,
     required this.pending,
     required this.execute,
   });
   final Action action;
   final bool highlighted, loading;
-  final double radius;
   final VoidCallback onHover;
   final Set<String> pending;
   final void Function(Action action, [bool? checked]) execute;
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeProvider.of(context);
-    final c = theme.colors;
-    final s = theme.sizes;
     final a = action;
     final disabled =
         a.disabled || loading || (a is GroupAction && a.actions.isEmpty);
@@ -881,76 +851,41 @@ class _MenuRow extends StatelessWidget {
         ? const SizedBox.square(dimension: 17)
         : a is ToggleAction
         ? (a.checked ? const LucideCheck(size: 18) : const SizedBox.shrink())
-        : a.icon;
-    final row = DecoratedBox(
-      decoration: BoxDecoration(
-        color: highlighted ? c.surfaceSoft : const Color(0x00000000),
-        borderRadius: BorderRadius.circular(radius),
-      ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          minHeight: theme.coarsePointer(context) ? 44 : s.controlCompact,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: IconTheme.merge(
-            data: IconThemeData(
-              size: 18,
-              color: destructive ? c.danger : c.ink,
-            ),
-            child: DefaultTextStyle.merge(
-              style: TextStyle(color: destructive ? c.danger : c.ink),
-              child: Row(
-                spacing: 8,
-                children: [
-                  SizedBox.square(dimension: 18, child: Center(child: leading)),
-                  Expanded(
-                    child: CssBaseline(lineHeight: 20, child: Text(a.label)),
-                  ),
-                  if (a is GroupAction)
-                    const Padding(
-                      padding: EdgeInsetsDirectional.only(start: 12),
-                      child: LucideChevronRight(size: 16),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+        : (a.icon ?? const SizedBox.shrink());
+    Widget row(VoidCallback? onTap) => MenuRow(
+      leading: leading,
+      label: Text(a.label),
+      trailing: a is GroupAction
+          ? const Padding(
+              padding: EdgeInsetsDirectional.only(start: 12),
+              child: LucideChevronRight(size: 16),
+            )
+          : null,
+      highlighted: highlighted,
+      destructive: destructive,
+      enabled: !disabled,
+      onHover: onHover,
+      onTap: onTap,
     );
-    final faded = Opacity(opacity: disabled ? 0.5 : 1, child: row);
-    Widget item = faded;
-    if (a is GroupAction) {
-      // The builder must close over the row, not over `item` (which becomes this anchor).
-      item = _MenuAnchor(
-        label: a.label,
-        actions: a.actions,
-        pending: pending,
-        execute: execute,
-        enabled: !disabled,
-        onOpen: a.onOpen,
-        submenu: true,
-        builder: (open) => GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: open,
-          child: faded,
-        ),
-      );
-    } else {
-      item = GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: disabled ? null : () => execute(a),
-        child: item,
-      );
-    }
+    final Widget item = a is GroupAction
+        ? _MenuAnchor(
+            label: a.label,
+            actions: a.actions,
+            pending: pending,
+            execute: execute,
+            enabled: !disabled,
+            onOpen: a.onOpen,
+            submenu: true,
+            builder: row,
+          )
+        : row(() => execute(a));
     return Semantics(
       button: true,
       checked: a is ToggleAction ? a.checked : null,
       enabled: !disabled,
       label: a.label,
       excludeSemantics: true,
-      child: MouseRegion(onEnter: (_) => onHover(), child: item),
+      child: item,
     );
   }
 }

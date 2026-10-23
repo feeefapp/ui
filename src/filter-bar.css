@@ -61,7 +61,7 @@ html[data-lab-theme] .lab-control.lab-filter-row-main {
   display: flex;
   flex: 1;
   min-width: 0;
-  min-height: var(--lab-control-compact);
+  min-height: var(--lab-menu-row-height);
   height: auto;
   padding: 8px;
   gap: 10px;
@@ -116,7 +116,7 @@ html[data-lab-theme] .lab-control.lab-filter-row-main {
 html[data-lab-theme] .lab-control.lab-filter-choice {
   width: 100%;
   justify-content: space-between;
-  min-height: var(--lab-control-compact);
+  min-height: var(--lab-menu-row-height);
   text-align: start;
 }
 .lab-filter-options .lab-control[aria-pressed='true'] {

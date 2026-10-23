@@ -41,7 +41,7 @@ export default function TextureSurface() {
         <strong>Aurora landing page</strong>
         <span style={{ color: 'var(--lab-muted)' }}>Edited 2 hours ago</span>
         <div>
-          <Button variant="tonal" controlSize="compact">
+          <Button variant="tonal" controlSize="small">
             Open project
           </Button>
         </div>

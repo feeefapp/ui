@@ -35,7 +35,6 @@ List<Widget> headerScene() => [
             IconButton(
               variant: ButtonVariant.ghost,
               appearance: ButtonAppearance.toolbar,
-              controlSize: ControlSize.compact,
               ariaLabel: 'Zoom in',
               icon: LucideZoomIn(),
             ),
@@ -44,7 +43,6 @@ List<Widget> headerScene() => [
             Button(
               variant: ButtonVariant.filled,
               appearance: ButtonAppearance.toolbar,
-              controlSize: ControlSize.compact,
               onClick: () {},
               children: const [Text('Share')],
             ),

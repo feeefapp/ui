@@ -8,6 +8,7 @@ import { FieldShell } from './field-shell.js';
 import { Button, IconButton } from './button.js';
 import { RawInput } from './raw-input.js';
 import { PopoverSurface } from './popover-surface.js';
+import { useFloatingBoundary } from '../menu/boundary.js';
 import { TemporalFilterEditor } from '../filters/temporal-editor.js';
 import { TemporalDialog } from '../filters/temporal-dialog.js';
 import { ToolbarGroup } from '../toolbar.js';
@@ -43,6 +44,7 @@ export const TemporalField = React.forwardRef(function TemporalField({ type, val
     const [message, setMessage] = React.useState(null);
     const touched = React.useRef(false), editing = React.useRef(false);
     const [container, setContainer] = React.useState();
+    const boundary = useFloatingBoundary();
     const [direction, setDirection] = React.useState(dir === 'rtl' ? 'rtl' : 'ltr');
     const valueKey = JSON.stringify(value);
     const validate = React.useCallback((next) => {
@@ -83,7 +85,7 @@ export const TemporalField = React.forwardRef(function TemporalField({ type, val
     const begin = () => {
         if (disabled || readOnly)
             return;
-        setContainer(trigger.current?.closest('dialog') || undefined);
+        setContainer(trigger.current?.closest('dialog') || boundary || undefined);
         setDirection(getComputedStyle(trigger.current).direction === 'rtl' ? 'rtl' : 'ltr');
         setDraft(value);
         setDraftError(null);
@@ -146,9 +148,9 @@ export const TemporalField = React.forwardRef(function TemporalField({ type, val
     };
     // Popovers end their footer row with one glass group. A date with nothing to clear has no
     // actions at all: the day itself is the action.
-    const actions = instant && normalizeTemporal(draft) == null ? null : (_jsx(GlassScope, { className: "lab-temporal-actions-row", children: _jsxs(ToolbarGroup, { label: `${title} actions`, className: "lab-temporal-actions", children: [_jsx(Button, { variant: "text", appearance: "toolbar", controlSize: "compact", disabled: normalizeTemporal(draft) == null, onClick: clear, children: "Clear" }), !instant && (_jsx(Button, { variant: "filled", appearance: "toolbar", controlSize: "compact", type: "submit", form: formId, children: "Apply" }))] }) }));
+    const actions = instant && normalizeTemporal(draft) == null ? null : (_jsx(GlassScope, { className: "lab-temporal-actions-row", children: _jsxs(ToolbarGroup, { label: `${title} actions`, className: "lab-temporal-actions", children: [_jsx(Button, { variant: "text", appearance: "toolbar", controlSize: "regular", disabled: normalizeTemporal(draft) == null, onClick: clear, children: "Clear" }), !instant && (_jsx(Button, { variant: "filled", appearance: "toolbar", controlSize: "regular", type: "submit", form: formId, children: "Apply" }))] }) }));
     const popoverEditor = (_jsxs("form", { id: formId, className: "lab-temporal-field-editor", onSubmit: apply, children: [_jsx(TemporalFilterEditor, { config: config, locale: locale, value: draft, resetKey: open, onChange: changeDraft, footer: actions, onPick: pick }), draftError && (_jsx("p", { role: "alert", className: "lab-filter-error", children: draftError }))] }));
-    return (_jsxs(Popover.Root, { open: open && !asDialog, onOpenChange: (next) => (next ? begin() : close()), children: [_jsx(FieldShell, { id: id, hint: hint, label: label, labelStyle: labelStyle, leadingIcon: leadingIcon === undefined ? type.startsWith('time') ? _jsx(Clock, {}) : _jsx(CalendarDays, {}) : leadingIcon, leading: leading, trailing: _jsxs(_Fragment, { children: [trailing, clearable && populated && !disabled && !readOnly && (_jsx(IconButton, { variant: "text", controlSize: "compact", className: "lab-temporal-field-clear", "aria-label": `Clear ${title}`, onClick: () => {
+    return (_jsxs(Popover.Root, { open: open && !asDialog, onOpenChange: (next) => (next ? begin() : close()), children: [_jsx(FieldShell, { id: id, hint: hint, label: label, labelStyle: labelStyle, leadingIcon: leadingIcon === undefined ? type.startsWith('time') ? _jsx(Clock, {}) : _jsx(CalendarDays, {}) : leadingIcon, leading: leading, trailing: _jsxs(_Fragment, { children: [trailing, clearable && populated && !disabled && !readOnly && (_jsx(IconButton, { variant: "text", controlSize: "small", className: "lab-temporal-field-clear", "aria-label": `Clear ${title}`, onClick: () => {
                                 trigger.current?.focus();
                                 commit(null);
                             }, children: _jsx(X, { size: 16 }) })), _jsx(ChevronDown, { size: 18, "aria-hidden": "true" })] }), supportingText: supportingText, error: error ?? message, containerClassName: containerClassName, variant: variant, controlSize: controlSize, dir: dir, disabled: disabled, required: required, populated: populated, alwaysFloat: open, describedBy: ariaDescription, children: ({ id: fieldId, describedBy, invalid }) => {
@@ -173,7 +175,7 @@ export const TemporalField = React.forwardRef(function TemporalField({ type, val
                     touched.current = true;
                     publish(validate(value));
                     trigger.current?.focus();
-                } }), range && rangeNames && (_jsxs(_Fragment, { children: [_jsx(RawInput, { type: "hidden", name: rangeNames.from, disabled: disabled, value: value && typeof value === 'object' ? value.from : '' }), _jsx(RawInput, { type: "hidden", name: rangeNames.to, disabled: disabled, value: value && typeof value === 'object' ? value.to : '' })] })), _jsx(Popover.Portal, { container: container, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(Popover.Content, { className: "lab-temporal-field-popover", "aria-label": title, dir: direction, align: "start", sideOffset: 8, collisionPadding: 12, onCloseAutoFocus: (event) => {
+                } }), range && rangeNames && (_jsxs(_Fragment, { children: [_jsx(RawInput, { type: "hidden", name: rangeNames.from, disabled: disabled, value: value && typeof value === 'object' ? value.from : '' }), _jsx(RawInput, { type: "hidden", name: rangeNames.to, disabled: disabled, value: value && typeof value === 'object' ? value.to : '' })] })), _jsx(Popover.Portal, { container: container, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(Popover.Content, { className: "lab-temporal-field-popover", "aria-label": title, dir: direction, align: "start", sideOffset: 8, collisionPadding: 12, collisionBoundary: container, onCloseAutoFocus: (event) => {
                             event.preventDefault();
                             trigger.current?.focus({ preventScroll: true });
                         }, children: !asDialog && popoverEditor }) }) }), typeof document !== 'undefined' &&

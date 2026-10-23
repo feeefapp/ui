@@ -31,7 +31,7 @@ class IconButtons extends StatelessWidget {
       ),
       IconButton(
         variant: .destructive,
-        controlSize: .compact,
+        controlSize: .small,
         ariaLabel: 'Delete',
         onClick: () {},
         icon: const LucideIcon(LucideIcons.trash2),

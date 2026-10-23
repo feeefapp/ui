@@ -27,6 +27,11 @@ function Overview() {
             [<C>asChild</C>, 'Your router link as the row.'],
           ]}
         />
+        <p>
+          Rows are iOS's inset-grouped rows: 54px tall on a card with 26px corners, with 16px sides and
+          hairlines (44px, 20px and 12px in compact density). Change them app-wide with{' '}
+          <C>ThemeConfig.metrics</C> (<C>listRowHeight</C>, <C>listRadius</C>, <C>listInset</C>).
+        </p>
       </Section>
 
       <Section title="Swipe actions">

@@ -44,7 +44,7 @@ export function DocPageView({ route }: { route: Extract<Route, { kind: 'page' }>
             <div className="docs-page-meta">
               {importLine && <Code code={importLine} lang={flutter ? 'dart' : 'tsx'} title="Import" />}
               {source && (
-                <Button variant="text" controlSize="compact" asChild>
+                <Button variant="text" controlSize="small" asChild>
                   <a href={REPO + source} target="_blank" rel="noreferrer">
                     View source <ExternalLink size={16} />
                   </a>

@@ -5,7 +5,7 @@ export default function Compact() {
     <div className="demo-column">
       <RadioGroup
         label="Show orders from"
-        controlSize="compact"
+        controlSize="small"
         defaultValue="7d"
         options={[
           { value: 'today', label: 'Today' },
@@ -19,6 +19,6 @@ export default function Compact() {
 }
 
 export const meta = {
-  title: 'Compact',
-  description: 'controlSize="compact" for filter panels and side sheets.',
+  title: 'Small',
+  description: 'controlSize="small" for filter panels and side sheets.',
 }

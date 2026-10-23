@@ -11,8 +11,9 @@ class Sizes extends StatelessWidget {
     alignment: WrapAlignment.center,
     crossAxisAlignment: WrapCrossAlignment.center,
     children: [
+      Button(variant: .filled, controlSize: .small, onClick: () {}, children: const [Text('Small')]),
       Button(variant: .filled, onClick: () {}, children: const [Text('Regular')]),
-      Button(variant: .filled, controlSize: .compact, onClick: () {}, children: const [Text('Compact')]),
+      Button(variant: .filled, controlSize: .large, onClick: () {}, children: const [Text('Large')]),
       Button(variant: .text, controlSize: .inline, onClick: () {}, children: const [Text('Inline')]),
     ],
   );

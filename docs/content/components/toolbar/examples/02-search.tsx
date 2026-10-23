@@ -24,7 +24,6 @@ export default function Search() {
             <IconButton
               variant="text"
               appearance="toolbar"
-              controlSize="compact"
               aria-label={grid ? 'Show as list' : 'Show as grid'}
               onClick={() => setGrid(!grid)}
             >
@@ -35,7 +34,7 @@ export default function Search() {
       >
         {/* Children sit beside the closed search button; their glass is absorbed while the field is open. */}
         <ToolbarGroup label="Filters">
-          <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Filters">
+          <IconButton variant="text" appearance="toolbar" aria-label="Filters">
             <SlidersHorizontal />
           </IconButton>
         </ToolbarGroup>

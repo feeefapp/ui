@@ -19,7 +19,7 @@ class Basic extends StatelessWidget {
           IconButton(
             variant: .text,
             appearance: .toolbar,
-            controlSize: .compact,
+            controlSize: .small,
             ariaLabel: 'Zoom out',
             onClick: () {},
             icon: const LucideIcon(LucideIcons.minus),
@@ -27,7 +27,7 @@ class Basic extends StatelessWidget {
           IconButton(
             variant: .text,
             appearance: .toolbar,
-            controlSize: .compact,
+            controlSize: .small,
             ariaLabel: 'Reset zoom',
             onClick: () {},
             icon: const LucideIcon(LucideIcons.rotateCcw),
@@ -35,7 +35,7 @@ class Basic extends StatelessWidget {
           IconButton(
             variant: .text,
             appearance: .toolbar,
-            controlSize: .compact,
+            controlSize: .small,
             ariaLabel: 'Zoom in',
             onClick: () {},
             icon: const LucideIcon(LucideIcons.plus),

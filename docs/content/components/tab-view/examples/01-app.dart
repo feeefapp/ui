@@ -62,7 +62,7 @@ class _StoreAppState extends State<StoreApp> {
                     Button(
                       variant: .text,
                       appearance: .toolbar,
-                      controlSize: .compact,
+                      controlSize: .small,
                       onClick: () => setState(() => _calling = false),
                       children: const [Text('End')],
                     ),

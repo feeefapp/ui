@@ -63,17 +63,7 @@
   }
 }
 
-/* Select menus grow from their trigger. */
-.lab-select-menu {
-  transform-origin: var(--radix-select-content-transform-origin);
-}
-.lab-select-menu[data-state='open'] {
-  animation: lab-menu-in 200ms var(--lab-ease-out) both;
-}
-.lab-select-menu[data-closing] {
-  animation: lab-menu-out 140ms var(--lab-ease-in) both;
-  pointer-events: none;
-}
+/* Select menus grow from their trigger as a glass bubble: menu/menu.css + menu-surface.tsx. */
 @keyframes lab-menu-in {
   from {
     opacity: 0;
@@ -164,8 +154,6 @@
 @media (prefers-reduced-motion: reduce) {
   .lab-dialog[data-state],
   .lab-dialog[data-state]::backdrop,
-  .lab-select-menu[data-state],
-  .lab-select-menu[data-closing],
   .lab-expression-suggestions[data-state],
   .lab-swap > .lab-swap-item {
     animation-duration: 1ms !important;

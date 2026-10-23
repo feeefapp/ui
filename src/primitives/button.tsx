@@ -9,7 +9,11 @@ import './control-variants.css'
 
 /** Material common-button types, rendered with Feeef Lab's visual system. */
 export type ButtonVariant = ControlVariant | 'destructive' | 'primary' | 'secondary' | 'ghost'
-export type ControlSize = 'regular' | 'compact' | 'inline' | 'icon'
+/**
+ * Height. `small` 30px, `regular` 36px, `large` 52px at comfortable density (the iOS control sizes;
+ * ThemeConfig `metrics.controlHeight` changes them), `inline` fits running text, `icon` is square.
+ */
+export type ControlSize = 'small' | 'regular' | 'large' | 'inline' | 'icon'
 export type ButtonAppearance = 'default' | 'toolbar'
 
 export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -21,10 +25,10 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   loading?: boolean
   /** Emphasis. Use filled for primary actions. The primary spelling is deprecated. */
   variant?: ButtonVariant
-  /** Height: `regular` 44px, `compact` 40px, `inline` fits running text; `icon` is square. */
+  /** Height: `small` 30px, `regular` 36px, `large` 52px, `inline` fits running text; `icon` is square. Every size grows to 44px on touch screens. */
   controlSize?: ControlSize
-  /** Square icon geometry; compact retains a 44px minimum on coarse pointers. */
-  iconSize?: 'regular' | 'compact' | 'inline'
+  /** Square icon geometry when `controlSize` is `icon`: `small`, `regular` or `large` (the button heights), or `inline`. */
+  iconSize?: 'small' | 'regular' | 'large' | 'inline'
   /** Toolbar controls share their enclosing material instead of adding another raised surface. */
   appearance?: ButtonAppearance
 }
@@ -127,8 +131,8 @@ Button.displayName = 'Button'
 export type IconButtonProps = Omit<ButtonProps, 'controlSize' | 'iconSize' | 'size'> & {
   /** Required: the icon is the button's only content, so this is its accessible name. */
   'aria-label': string
-  /** Square size: `regular` 44px, `compact` 40px, `inline` for text runs. */
-  'controlSize'?: 'regular' | 'compact' | 'inline'
+  /** Square size: `small` 30px, `regular` 36px, `large` 52px, `inline` for text runs. */
+  'controlSize'?: 'small' | 'regular' | 'large' | 'inline'
 }
 
 /** Icon-only actions reuse the button emphasis, loading and surface engines. */

@@ -25,7 +25,6 @@ class _AppearState extends State<Appear> {
               IconButton(
                 variant: .text,
                 appearance: .toolbar,
-                controlSize: .compact,
                 ariaLabel: 'Back',
                 onClick: () {},
                 icon: const LucideIcon(LucideIcons.arrowLeft),
@@ -57,7 +56,6 @@ class _AppearState extends State<Appear> {
                 IconButton(
                   variant: .text,
                   appearance: .toolbar,
-                  controlSize: .compact,
                   ariaLabel: 'Share',
                   onClick: () {},
                   icon: const LucideIcon(LucideIcons.share2),
@@ -65,7 +63,6 @@ class _AppearState extends State<Appear> {
                 IconButton(
                   variant: .text,
                   appearance: .toolbar,
-                  controlSize: .compact,
                   ariaLabel: 'Memory',
                   onClick: () {},
                   icon: const LucideIcon(LucideIcons.brain),

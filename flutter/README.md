@@ -25,6 +25,7 @@ pixels per docs page: median / worst variant. Almost all of what remains is glyp
 | `primitives/temporal-field`, `filters/*` | `DateField` … `DateTimeRangeField`, `CalendarMonth`, `TemporalFilterEditor`, `TemporalDialog` | date-time-fields 0.47 / 1.07%, temporal-filter-editor 0.62 / 1.25% |
 | `primitives/list` | `ListSection`, `ListRow`, `RowAction` | list 0.52 / 0.79% |
 | `primitives/modal`, `popover-surface`, tooltip | `Modal`, `PopoverSurface`, `Popover`, `Tooltip` | modal 0.17 / 1.97%, popover-surface 0.17 / 0.44% |
+| `menu` | `MenuSurface`, `MenuRow`, `MenuSeparator`, `MenuLabel`, `MenuTokens`, `FloatingBoundary`, `AnchoredPanel` (the Radix Popper twin every popup lays out in) | menu (new) |
 | `glass` | `GlassContainer`, `GlassScope`, `GlassLayer`, `GlassSurface`, `GlassBackdrop`, refraction shader | glass-container 0.34 / 1.30%, glass-group 0.33 / 2.11% |
 | `scaffold` (`GlassGroup`), `toolbar`, `toolbar-search` | `GlassGroup`, `Toolbar`, `ToolbarGroup`, `ToolbarSearch`, `ScaffoldProvider`, `FloatingLayer` | toolbar 0.31 / 0.71% |
 | `filter-bar` | `FilterBar`, `FilterOption` | filter-bar 0.61 / 1.61% |

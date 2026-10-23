@@ -7,6 +7,7 @@ import '../filters/temporal.dart';
 import '../filters/temporal_dialog.dart';
 import '../filters/temporal_editor.dart';
 import '../glass/container.dart';
+import '../menu/anchored_panel.dart';
 import '../i18n/i18n.dart';
 import '../icons/lucide.dart';
 import '../theme.dart';
@@ -107,7 +108,7 @@ class TemporalField extends StatefulWidget {
   final String? error;
   final ControlVariant variant;
 
-  /// Field height: `regular` (44px) or `compact` (40px).
+  /// Field height: `regular` (44px) or `small` (36px).
   final ControlSize controlSize;
 
   /// Blocks opening and dims the field.
@@ -159,8 +160,6 @@ class TemporalField extends StatefulWidget {
 }
 
 class _TemporalFieldState extends State<TemporalField> {
-  final _portal = OverlayPortalController();
-  final _link = LayerLink();
   final _frameKey = GlobalKey();
   late final FocusNode _ownFocus = FocusNode(debugLabel: 'TemporalField');
   final _popoverScope = FocusScopeNode(debugLabel: 'TemporalField popover');
@@ -200,7 +199,6 @@ class _TemporalFieldState extends State<TemporalField> {
     if ((widget.disabled || widget.readOnly) && _open) {
       _editing = false;
       _open = false;
-      if (_portal.isShowing) _portal.hide();
     }
   }
 
@@ -250,7 +248,6 @@ class _TemporalFieldState extends State<TemporalField> {
       _open = true;
     });
     if (!_asDialog) {
-      _portal.show();
       // Focus moves into the popover (Radix focuses its content), so Escape reaches it.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _open) _popoverScope.requestFocus();
@@ -260,7 +257,6 @@ class _TemporalFieldState extends State<TemporalField> {
 
   void _hide() {
     _editing = false;
-    if (_portal.isShowing) _portal.hide();
     final wasOpen = _open;
     _open = false;
     if (wasOpen && !_asDialog) _focus.requestFocus();
@@ -343,7 +339,7 @@ class _TemporalFieldState extends State<TemporalField> {
         children: [
           Button(
             appearance: ButtonAppearance.toolbar,
-            controlSize: ControlSize.compact,
+            controlSize: ControlSize.regular,
             disabled: empty,
             onClick: _clear,
             children: const [Text('Clear')],
@@ -352,7 +348,7 @@ class _TemporalFieldState extends State<TemporalField> {
             Button(
               variant: ButtonVariant.filled,
               appearance: ButtonAppearance.toolbar,
-              controlSize: ControlSize.compact,
+              controlSize: ControlSize.regular,
               onClick: _apply,
               children: const [Text('Apply')],
             ),
@@ -383,7 +379,7 @@ class _TemporalFieldState extends State<TemporalField> {
           ControlOverrides.merge(
             context,
             height: 28,
-            radius: theme.sizes.radiusControlCompact,
+            radius: theme.sizes.radiusControlSmall,
             child: IconButton(
               ariaLabel: 'Clear $_title',
               onClick: () {
@@ -443,24 +439,24 @@ class _TemporalFieldState extends State<TemporalField> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        CompositedTransformTarget(
-          link: _link,
-          child: OverlayPortal(
-            controller: _portal,
-            overlayChildBuilder: _popover,
-            child: Semantics(
-              button: true,
-              enabled: !widget.disabled,
-              readOnly: widget.readOnly,
-              expanded: _open,
-              label:
-                  widget.ariaLabel ??
-                  _floatingHint ??
-                  widget.placeholder ??
-                  _title,
-              value: formatted,
-              child: field,
-            ),
+        AnchoredPanel(
+          open: _open && !_asDialog,
+          onDismiss: _close,
+          align: PanelAlign.start,
+          sideOffset: 8,
+          panel: _popover,
+          child: Semantics(
+            button: true,
+            enabled: !widget.disabled,
+            readOnly: widget.readOnly,
+            expanded: _open,
+            label:
+                widget.ariaLabel ??
+                _floatingHint ??
+                widget.placeholder ??
+                _title,
+            value: formatted,
+            child: field,
           ),
         ),
         TemporalDialog(
@@ -521,35 +517,9 @@ class _TemporalFieldState extends State<TemporalField> {
   );
 
   /// The anchored popover: start-aligned under the trigger (above it when there is more room
-  /// there), 8px away, kept 12px inside the screen, hugging its content.
+  /// there), 8px away, kept 12px inside its bounds ([AnchoredPanel]), hugging its content.
   Widget _popover(BuildContext context) {
-    if (!_open || _asDialog) return const SizedBox.shrink();
-    final screen = MediaQuery.sizeOf(context);
-    final rtl = Directionality.of(context) == TextDirection.rtl;
-    final box = _frameKey.currentContext?.findRenderObject() as RenderBox?;
-    final topLeft = box?.localToGlobal(Offset.zero) ?? Offset.zero;
-    final size = box?.size ?? const Size(300, 44);
     final calendar = temporalInputType(widget.type) != TemporalInput.time;
-    final width = math.max(
-      0.0,
-      math.min(calendar ? 352.0 : 320.0, screen.width - 24),
-    );
-    final below = screen.height - (topLeft.dy + size.height) - 8 - 12;
-    final above = topLeft.dy - 8 - 12;
-    final flip = below < 360 && above > below;
-    // Keep the popover inside the screen's 12px collision padding.
-    double dx = 0;
-    if (rtl) {
-      final left = topLeft.dx + size.width - width;
-      if (left < 12) dx = 12 - left;
-    } else {
-      final right = topLeft.dx + width;
-      if (right > screen.width - 12) {
-        dx = math.max(12 - topLeft.dx, screen.width - 12 - right);
-      }
-    }
-    final start = rtl ? Alignment.bottomRight : Alignment.bottomLeft;
-    final startTop = rtl ? Alignment.topRight : Alignment.topLeft;
     final editor = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -568,62 +538,40 @@ class _TemporalFieldState extends State<TemporalField> {
         if (_draftError != null) TemporalError(child: Text(_draftError!)),
       ],
     );
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onTap: _close,
+    return Shortcuts(
+      shortcuts: const {
+        SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
+      },
+      child: Actions(
+        actions: {
+          DismissIntent: CallbackAction<DismissIntent>(
+            onInvoke: (_) {
+              _close();
+              return null;
+            },
           ),
-        ),
-        CompositedTransformFollower(
-          link: _link,
-          targetAnchor: flip ? startTop : start,
-          followerAnchor: flip ? start : startTop,
-          offset: Offset(dx, flip ? -8 : 8),
-          child: Align(
-            alignment: flip ? start : startTop,
-            child: Shortcuts(
-              shortcuts: const {
-                SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
-              },
-              child: Actions(
-                actions: {
-                  DismissIntent: CallbackAction<DismissIntent>(
-                    onInvoke: (_) {
-                      _close();
-                      return null;
-                    },
-                  ),
-                },
-                child: FocusScope(
-                  node: _popoverScope,
-                  child: Semantics(
-                    scopesRoute: true,
-                    explicitChildNodes: true,
-                    label: _title,
-                    child: SizedBox(
-                      width: width,
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxHeight: math.max(
-                            160,
-                            math.min(640, flip ? above : below),
-                          ),
-                        ),
-                        child: PopoverSurface(
-                          padding: const EdgeInsets.all(12),
-                          child: SingleChildScrollView(child: editor),
-                        ),
-                      ),
-                    ),
+        },
+        child: FocusScope(
+          node: _popoverScope,
+          child: Semantics(
+            scopesRoute: true,
+            explicitChildNodes: true,
+            label: _title,
+            child: LayoutBuilder(
+              builder: (context, constraints) => SizedBox(
+                width: math.min(calendar ? 352.0 : 320.0, constraints.maxWidth),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 640),
+                  child: PopoverSurface(
+                    padding: const EdgeInsets.all(12),
+                    child: SingleChildScrollView(child: editor),
                   ),
                 ),
               ),
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 }

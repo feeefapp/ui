@@ -2,7 +2,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { Check, ChevronDown, ExternalLink } from 'lucide-react'
 import versions from 'virtual:feeef-versions'
 import { Button } from '@feeef.dev/ui/primitives/button'
-import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
+import { MenuSurface } from '@feeef.dev/ui/menu'
 import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 import '@feeef.dev/ui/actions/actions.css'
 import { useDocsSettings, type DocsSettings } from '../settings'
@@ -45,7 +45,6 @@ export function VersionMenu() {
         <Button
           variant="text"
           appearance="toolbar"
-          controlSize="compact"
           className="docs-version-trigger"
           aria-label={`Version ${label(versions.current)}${unreleased ? ', with unreleased changes' : ''}`}
         >
@@ -55,14 +54,9 @@ export function VersionMenu() {
         </Button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <PopoverSurface asChild>
-          <DropdownMenu.Content
-            className="lab-actions-menu docs-version-menu"
-            align="end"
-            sideOffset={8}
-            collisionPadding={12}
-          >
-            <DropdownMenu.Label className="docs-version-heading">These docs</DropdownMenu.Label>
+        <MenuSurface asChild>
+          <DropdownMenu.Content className="lab-actions-menu docs-version-menu" aria-label="Versions">
+            <DropdownMenu.Label className="lab-menu__label">These docs</DropdownMenu.Label>
             <DropdownMenu.Item className={item} disabled>
               <Check size={18} aria-hidden="true" />
               <span className="docs-version-name">
@@ -72,8 +66,8 @@ export function VersionMenu() {
             </DropdownMenu.Item>
             {versions.releases.length > 0 && (
               <>
-                <DropdownMenu.Separator className="docs-version-separator" />
-                <DropdownMenu.Label className="docs-version-heading">Released</DropdownMenu.Label>
+                <DropdownMenu.Separator className="lab-menu__separator" />
+                <DropdownMenu.Label className="lab-menu__label">Released</DropdownMenu.Label>
                 {versions.releases.slice(0, 12).map((release) => (
                   <DropdownMenu.Item key={release.version} className={item} asChild>
                     <a href={REPO + `v${release.version}`} target="_blank" rel="noreferrer">
@@ -88,7 +82,7 @@ export function VersionMenu() {
               </>
             )}
           </DropdownMenu.Content>
-        </PopoverSurface>
+        </MenuSurface>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
   )

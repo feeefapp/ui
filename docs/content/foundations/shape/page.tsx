@@ -7,8 +7,8 @@ import '../_lib/foundations.css'
 
 const ROLES: Record<string, string> = {
   '--lab-radius-small': 'Small pieces: filter chips, calendar days, navigation badges.',
-  '--lab-radius-control-compact': 'Compact buttons, fields and icon buttons.',
-  '--lab-radius-control': 'Regular buttons, fields and selects.',
+  '--lab-radius-control-small': 'Half a small control: small fields, selects and navigation items.',
+  '--lab-radius-control': 'Half a regular control (a capsule): fields and selects. Buttons compute their own half height.',
   '--lab-radius-group': 'Menus, popovers, selects and segmented controls.',
   '--lab-radius-panel': 'Content panels, docks and scroll areas.',
   '--lab-radius-glass': 'Floating glass groups (27px at 720px and below).',

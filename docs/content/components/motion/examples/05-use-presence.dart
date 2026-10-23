@@ -34,13 +34,13 @@ class _UsePresenceHookState extends State<UsePresenceHook> {
               for (final name in _customers)
                 Button(
                   variant: .outlined,
-                  controlSize: .compact,
+                  controlSize: .small,
                   onClick: () => setState(() => _selected = name),
                   children: [Text(name)],
                 ),
               Button(
                 variant: .text,
-                controlSize: .compact,
+                controlSize: .small,
                 disabled: !open,
                 onClick: () => setState(() => _selected = null),
                 children: const [Text('Close')],

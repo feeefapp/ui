@@ -32,7 +32,6 @@ class _OrderDetailState extends State<OrderDetail> {
                       IconButton(
                         variant: .text,
                         appearance: .toolbar,
-                        controlSize: .compact,
                         ariaLabel: 'Back to orders',
                         onClick: () {},
                         icon: Transform.flip(
@@ -62,7 +61,6 @@ class _OrderDetailState extends State<OrderDetail> {
                       IconButton(
                         variant: .text,
                         appearance: .toolbar,
-                        controlSize: .compact,
                         ariaLabel: 'Call Amina Benali',
                         onClick: () {},
                         icon: const LucideIcon(LucideIcons.phone),
@@ -70,7 +68,6 @@ class _OrderDetailState extends State<OrderDetail> {
                       IconButton(
                         variant: .text,
                         appearance: .toolbar,
-                        controlSize: .compact,
                         ariaLabel: 'Print shipping label',
                         onClick: () {},
                         icon: const LucideIcon(LucideIcons.printer),
@@ -79,7 +76,6 @@ class _OrderDetailState extends State<OrderDetail> {
                         IconButton(
                           variant: .text,
                           appearance: .toolbar,
-                          controlSize: .compact,
                           ariaLabel: 'Order details',
                           onClick: () => setState(() => _detailsOpen = true),
                           icon: const LucideIcon(LucideIcons.panelRight),

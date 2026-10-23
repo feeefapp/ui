@@ -19,9 +19,9 @@ export type SliderMark = {
     label?: React.ReactNode;
 };
 export type SliderProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange' | 'defaultValue' | 'children' | 'role' | 'aria-valuenow' | 'aria-valuemin' | 'aria-valuemax' | 'aria-checked'> & {
-    /** Track height: `regular` (44px) or `compact` (40px). */
-    controlSize?: 'regular' | 'compact';
-    /** `thick`: the track is the control surface. `thin`: a 4px rail with a round thumb. */
+    /** Control height: `regular` (36px) or `small` (30px). A switch has one size and ignores it. */
+    controlSize?: 'small' | 'regular';
+    /** `thick`: the track is the control surface. `thin`: the iOS slider, a 6px rail with a 37 × 24 capsule thumb. */
     trackStyle?: 'thick' | 'thin';
     /** Accessible name. Not rendered; show a visible label next to the control yourself. */
     label: string;
@@ -63,9 +63,9 @@ export type SliderProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange' 
  * marks, and render slots for custom track, fill and thumb decoration.
  */
 export declare const Slider: React.ForwardRefExoticComponent<Omit<React.HTMLAttributes<HTMLDivElement>, "children" | "defaultValue" | "role" | "aria-checked" | "aria-valuemax" | "aria-valuemin" | "aria-valuenow" | "onChange"> & {
-    /** Track height: `regular` (44px) or `compact` (40px). */
-    controlSize?: "regular" | "compact";
-    /** `thick`: the track is the control surface. `thin`: a 4px rail with a round thumb. */
+    /** Control height: `regular` (36px) or `small` (30px). A switch has one size and ignores it. */
+    controlSize?: "small" | "regular";
+    /** `thick`: the track is the control surface. `thin`: the iOS slider, a 6px rail with a 37 × 24 capsule thumb. */
     trackStyle?: "thick" | "thin";
     /** Accessible name. Not rendered; show a visible label next to the control yourself. */
     label: string;
@@ -102,7 +102,7 @@ export declare const Slider: React.ForwardRefExoticComponent<Omit<React.HTMLAttr
     /** Id of a form outside the slider that its hidden input belongs to. */
     form?: string;
 } & React.RefAttributes<HTMLDivElement>>;
-export type SlideSwitchProps = Omit<SliderProps, 'value' | 'defaultValue' | 'min' | 'max' | 'step' | 'onValueChange' | 'onValueCommit' | 'getValueText' | 'showStops' | 'marks'> & {
+export type SlideSwitchProps = Omit<SliderProps, 'controlSize' | 'value' | 'defaultValue' | 'min' | 'max' | 'step' | 'onValueChange' | 'onValueCommit' | 'getValueText' | 'showStops' | 'marks'> & {
     /** Disables the switch and marks it busy while a change is saving. */
     loading?: boolean;
     /** The state, for a controlled switch. */
@@ -119,10 +119,11 @@ export type SlideSwitchProps = Omit<SliderProps, 'value' | 'defaultValue' | 'min
     offText?: string;
 };
 /**
- * An on/off switch that can be tapped or dragged. It shares the slider's track, thumb and spring;
- * the state maps to 0 and 1.
+ * An on/off switch that can be tapped or dragged, sized like iOS's (63 × 28 track, 37 × 24 thumb at
+ * comfortable density; ThemeConfig `metrics.switchSize` / `thumbSize`). It shares the slider's
+ * track, thumb and spring; the state maps to 0 and 1.
  */
-export declare const SlideSwitch: React.ForwardRefExoticComponent<Omit<SliderProps, "value" | "defaultValue" | "min" | "max" | "step" | "onValueChange" | "onValueCommit" | "getValueText" | "showStops" | "marks"> & {
+export declare const SlideSwitch: React.ForwardRefExoticComponent<Omit<SliderProps, "value" | "defaultValue" | "controlSize" | "min" | "max" | "step" | "onValueChange" | "onValueCommit" | "getValueText" | "showStops" | "marks"> & {
     /** Disables the switch and marks it busy while a change is saving. */
     loading?: boolean;
     /** The state, for a controlled switch. */
@@ -142,12 +143,10 @@ export declare const SlideSwitch: React.ForwardRefExoticComponent<Omit<SliderPro
  * A non-interactive switch picture for menu items and rows that already carry the checked
  * semantics (for example `menuitemcheckbox`). Same geometry and spring, hidden from assistive technology.
  */
-export declare function SlideSwitchIndicator({ checked, loading, controlSize, }: {
+export declare function SlideSwitchIndicator({ checked, loading, }: {
     /** The state to draw. */
     checked: boolean;
     /** Dims the indicator while a change is saving. */
     loading?: boolean;
-    /** Indicator size: `compact` (default) or `regular`. */
-    controlSize?: 'regular' | 'compact';
 }): React.JSX.Element;
 //# sourceMappingURL=slider.d.ts.map

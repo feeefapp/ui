@@ -5,7 +5,7 @@ import { type GlassShape, type GlassRect } from './geometry.js';
  * bevel bends; the flat middle shows the backdrop straight. The profile is our own fit to
  * measurements of rendered Liquid Glass (ui/research/liquid-glass/FINDINGS.md): at depth `t` from
  * the edge a pixel shows the backdrop from `shift · (1 - t / bezel)^4` deeper inside, so the rim
- * compresses the background. The web map caps the shift to prevent mirrored folds. Pure, so the Flutter twin (a fragment
+ * compresses the background. The default web map caps the shift to prevent mirrored folds; the measured profile restores the native fit. Pure, so the Flutter twin (a fragment
  * shader there) follows the same profile.
  */
 /** Bezel width (px) of large glass: where the bend fades to nothing. */
@@ -41,12 +41,34 @@ export declare function refractionAt(d: number, nx: number, ny: number, bezel?: 
  * Keep it below one so the sampled background cannot reverse direction along an edge.
  */
 export declare function webRefractionShift(side: number, bezel?: number): number;
-export declare function displacementMap(width: number, height: number, clusters: readonly (readonly GlassShape[])[], spacing: number, bezel?: number): {
+export declare function displacementMap(width: number, height: number, clusters: readonly (readonly GlassShape[])[], spacing: number, bezel?: number, profile?: 'gentle' | 'measured'): {
     width: number;
     height: number;
     data: Uint8ClampedArray<ArrayBuffer>;
     scale: number;
 };
+/** Maximum raster work per live map, independent of browser zoom or the host's area. */
+export declare const GLASS_LIVE_MAP_PIXELS = 32768;
+/**
+ * A bounded map for both moving and settled glass. Sampling always uses material coordinates:
+ * lowering raster density changes neither the bezel nor the returned displacement scale in CSS
+ * pixels. The caller stretches this image to the logical width/height. One density policy for
+ * motion and rest avoids a visible change of lens when a gesture finishes.
+ */
+export declare function liveDisplacementMap(width: number, height: number, clusters: readonly (readonly GlassShape[])[], spacing: number, profile?: 'gentle' | 'measured'): {
+    width: number;
+    height: number;
+    data: Uint8ClampedArray<ArrayBuffer>;
+    scale: number;
+};
+/**
+ * Encode an RGBA map without canvas readback or synchronous PNG compression. A top-down 32-bit
+ * BITMAPV4HEADER carries explicit RGB/alpha masks, preserving the map's anti-aliased coverage in
+ * Chromium and Firefox. The byte order is BGRA; the input remains unchanged.
+ */
+export declare function rgbaBmpBytes(width: number, height: number, rgba: Uint8ClampedArray | Uint8Array): Uint8Array<ArrayBuffer>;
+/** Inline transport for engines that synchronously sample the map as a backdrop filter. */
+export declare function rgbaBmpDataUrl(width: number, height: number, rgba: Uint8ClampedArray | Uint8Array): string;
 /**
  * True where SVG filters work as a backdrop filter (Chromium). Elsewhere `backdrop-filter: url()`
  * is ignored or breaks the blur, so the canvas renderer keeps CSS glass.

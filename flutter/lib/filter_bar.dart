@@ -11,6 +11,7 @@ import 'filters/temporal_dialog.dart';
 import 'filters/temporal_editor.dart';
 import 'glass/container.dart';
 import 'icons/lucide.dart';
+import 'menu/anchored_panel.dart';
 import 'primitives/button.dart';
 import 'primitives/modal.dart';
 import 'primitives/popover_surface.dart';
@@ -318,7 +319,6 @@ enum _Panel { none, catalog, natural, value }
 class _FilterBarState extends State<FilterBar> {
   static int _serial = 0;
   final String _id = 'lab-filter-bar-${_serial++}';
-  final _portal = OverlayPortalController();
   final _catalogKey = GlobalKey();
   final _naturalKey = GlobalKey();
   final _catalogTrigger = FocusNode(debugLabel: 'Choose filters');
@@ -333,7 +333,7 @@ class _FilterBarState extends State<FilterBar> {
   List<String> _localPins = [];
   _Panel _panel = _Panel.none;
   String _query = '', _choiceQuery = '';
-  Rect _anchor = Rect.zero;
+  GlobalKey? _valueAnchor;
   FocusNode? _returnFocus;
   String? _editing;
   FilterValue? _draft;
@@ -407,20 +407,12 @@ class _FilterBarState extends State<FilterBar> {
     widget.onValuesChange?.call(cleared);
   }
 
-  Rect _rectOf(GlobalKey key) {
-    final box = key.currentContext?.findRenderObject() as RenderBox?;
-    final overlay = Overlay.maybeOf(context)?.context.findRenderObject();
-    if (box == null || !box.attached || overlay is! RenderBox) return _anchor;
-    return box.localToGlobal(Offset.zero, ancestor: overlay) & box.size;
-  }
-
   void _open(_Panel panel) {
     setState(() {
       _panel = panel;
       if (panel == _Panel.catalog) _query = '';
       if (panel == _Panel.natural) _error = '';
     });
-    _portal.show();
     if (panel == _Panel.natural) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _panel == _Panel.natural) _naturalInput.requestFocus();
@@ -434,7 +426,6 @@ class _FilterBarState extends State<FilterBar> {
       _panel = _Panel.none;
       if (panel == _Panel.value) _editing = null;
     });
-    _portal.hide();
     switch (panel) {
       case _Panel.catalog:
         _catalogTrigger.requestFocus();
@@ -451,7 +442,7 @@ class _FilterBarState extends State<FilterBar> {
       option.type.isRange || option.type == FilterType.custom;
 
   void _edit(FilterOption option, [GlobalKey? target]) {
-    _anchor = _rectOf(target ?? _catalogKey);
+    _valueAnchor = target ?? _catalogKey;
     final chip = _chipKeys[option.id];
     _returnFocus = _pins.contains(option.id) && chip?.currentContext != null
         ? _chipNodes[option.id]
@@ -463,11 +454,6 @@ class _FilterBarState extends State<FilterBar> {
       _editing = option.id;
       _panel = _isDialog(option) ? _Panel.none : _Panel.value;
     });
-    if (_panel == _Panel.value) {
-      _portal.show();
-    } else {
-      _portal.hide();
-    }
   }
 
   void _finishEditing() {
@@ -543,7 +529,7 @@ class _FilterBarState extends State<FilterBar> {
             children: [
               IconButton(
                 appearance: ButtonAppearance.toolbar,
-                controlSize: ControlSize.compact,
+                controlSize: ControlSize.regular,
                 ariaLabel: 'Back from filtered view',
                 onClick: widget.onBack,
                 icon: Transform.flip(
@@ -563,7 +549,7 @@ class _FilterBarState extends State<FilterBar> {
                 expanded: _panel == _Panel.catalog,
                 child: IconButton(
                   appearance: ButtonAppearance.toolbar,
-                  controlSize: ControlSize.compact,
+                  controlSize: ControlSize.regular,
                   focusNode: _catalogTrigger,
                   ariaLabel:
                       'Choose filters${active > 0 ? ' ($active active)' : ''}',
@@ -581,7 +567,7 @@ class _FilterBarState extends State<FilterBar> {
                   expanded: _panel == _Panel.natural,
                   child: IconButton(
                     appearance: ButtonAppearance.toolbar,
-                    controlSize: ControlSize.compact,
+                    controlSize: ControlSize.regular,
                     focusNode: _naturalTrigger,
                     ariaLabel: 'Create filter from natural language',
                     onClick: () => _panel == _Panel.natural
@@ -613,9 +599,19 @@ class _FilterBarState extends State<FilterBar> {
       ],
     );
 
-    return OverlayPortal(
-      controller: _portal,
-      overlayChildBuilder: (context) => GlassLayer(child: _overlay(context)),
+    // Radix Popover: start-aligned 8px from its trigger, flipped and shifted to stay inside its
+    // bounds (AnchoredPanel).
+    return AnchoredPanel(
+      open: _panel != _Panel.none,
+      onDismiss: _close,
+      anchor: switch (_panel) {
+        _Panel.catalog => _catalogKey,
+        _Panel.natural => _naturalKey,
+        _ => _valueAnchor ?? _catalogKey,
+      },
+      align: PanelAlign.start,
+      sideOffset: 8,
+      panel: _overlay,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -757,7 +753,7 @@ class _FilterBarState extends State<FilterBar> {
           key: key,
           child: Button(
             appearance: ButtonAppearance.toolbar,
-            controlSize: ControlSize.compact,
+            controlSize: ControlSize.regular,
             focusNode: node,
             ariaLabel: 'Edit ${option.label} filter',
             onClick: () => _edit(option, key),
@@ -776,7 +772,7 @@ class _FilterBarState extends State<FilterBar> {
         ),
         IconButton(
           appearance: ButtonAppearance.toolbar,
-          controlSize: ControlSize.compact,
+          controlSize: ControlSize.regular,
           ariaLabel: 'Clear ${option.label} value',
           disabled: value == null,
           onClick: () {
@@ -787,7 +783,7 @@ class _FilterBarState extends State<FilterBar> {
         ),
         IconButton(
           appearance: ButtonAppearance.toolbar,
-          controlSize: ControlSize.compact,
+          controlSize: ControlSize.regular,
           focusNode: unpin,
           ariaLabel: 'Unpin ${option.label}',
           onClick: () =>
@@ -802,30 +798,8 @@ class _FilterBarState extends State<FilterBar> {
 
   Widget _overlay(BuildContext context) {
     if (_panel == _Panel.none) return const SizedBox.shrink();
-    final overlay = Overlay.maybeOf(this.context)?.context.findRenderObject();
-    final area = overlay is RenderBox && overlay.hasSize
-        ? overlay.size
-        : MediaQuery.sizeOf(context);
-    final anchor = switch (_panel) {
-      _Panel.catalog => _rectOf(_catalogKey),
-      _Panel.natural => _rectOf(_naturalKey),
-      _ => _anchor,
-    };
-    // `.lab-filter-panel` widths and heights; Radix sideOffset 8, collisionPadding 12.
-    final width = math.max(
-      0.0,
-      math.min(_panel == _Panel.catalog ? 360.0 : 300.0, area.width - 24),
-    );
+    // `.lab-filter-panel` widths and heights, within the room AnchoredPanel gives it.
     final desired = _panel == _Panel.catalog ? 450.0 : 280.0;
-    final below = area.height - anchor.bottom - 8 - 12;
-    final above = anchor.top - 8 - 12;
-    final down = below >= desired || below >= above;
-    final height = math.max(0.0, math.min(desired, down ? below : above));
-    final rtl = Directionality.of(this.context) == TextDirection.rtl;
-    final left = (rtl ? anchor.right - width : anchor.left)
-        .clamp(12.0, math.max(12.0, area.width - 12 - width))
-        .toDouble();
-    final top = down ? anchor.bottom + 8 : anchor.top - 8 - height;
     final label = switch (_panel) {
       _Panel.catalog => 'Available filters',
       _Panel.natural => 'Describe a filter',
@@ -833,59 +807,52 @@ class _FilterBarState extends State<FilterBar> {
         _selected != null ? 'Edit ${_selected!.label} filter' : 'Edit filter',
     };
     final s = ThemeProvider.of(context).sizes;
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onTap: _close,
-          ),
+    return LayoutBuilder(
+      builder: (context, constraints) => SizedBox(
+        width: math.min(
+          _panel == _Panel.catalog ? 360.0 : 300.0,
+          constraints.maxWidth,
         ),
-        Positioned(
-          left: left,
-          top: top,
-          width: width,
-          height: height,
-          // Its own glass container: the popover's bubbles never join the bar's material.
-          child: GlassContainer(
-            child: Focus(
-              canRequestFocus: false,
-              skipTraversal: true,
-              onKeyEvent: (_, event) {
-                if (event is KeyDownEvent &&
-                    event.logicalKey == LogicalKeyboardKey.escape) {
-                  _close();
-                  return KeyEventResult.handled;
-                }
-                return KeyEventResult.ignored;
-              },
-              child: FocusScope(
-                node: _panelScope,
-                autofocus: true,
-                child: Semantics(
-                  container: true,
-                  explicitChildNodes: true,
-                  label: label,
-                  child: PopoverSurface(
-                    child: DefaultTextStyle.merge(
-                      style: const TextStyle(
-                        fontSize: 13,
-                        height: 20 / 13,
-                        leadingDistribution: TextLeadingDistribution.even,
-                      ),
-                      child: switch (_panel) {
-                        _Panel.catalog => _catalog(context, s.radiusGroup),
-                        _Panel.natural => _natural(context, s.radiusGroup),
-                        _ => _valueMenu(context, s.radiusGroup),
-                      },
+        height: math.min(desired, constraints.maxHeight),
+        // Its own glass container: the popover's bubbles never join the bar's material.
+        child: GlassContainer(
+          child: Focus(
+            canRequestFocus: false,
+            skipTraversal: true,
+            onKeyEvent: (_, event) {
+              if (event is KeyDownEvent &&
+                  event.logicalKey == LogicalKeyboardKey.escape) {
+                _close();
+                return KeyEventResult.handled;
+              }
+              return KeyEventResult.ignored;
+            },
+            child: FocusScope(
+              node: _panelScope,
+              autofocus: true,
+              child: Semantics(
+                container: true,
+                explicitChildNodes: true,
+                label: label,
+                child: PopoverSurface(
+                  child: DefaultTextStyle.merge(
+                    style: const TextStyle(
+                      fontSize: 13,
+                      height: 20 / 13,
+                      leadingDistribution: TextLeadingDistribution.even,
                     ),
+                    child: switch (_panel) {
+                      _Panel.catalog => _catalog(context, s.radiusGroup),
+                      _Panel.natural => _natural(context, s.radiusGroup),
+                      _ => _valueMenu(context, s.radiusGroup),
+                    },
                   ),
                 ),
               ),
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 
@@ -916,7 +883,7 @@ class _FilterBarState extends State<FilterBar> {
         content: Text('$active active · ${_pins.length} pinned'),
         children: [
           Button(
-            controlSize: ControlSize.compact,
+            controlSize: ControlSize.regular,
             disabled: active == 0,
             onClick: _clearAll,
             children: const [Text('Clear values')],
@@ -957,10 +924,10 @@ class _FilterBarState extends State<FilterBar> {
     return Row(
       children: [
         Expanded(
-          // `.lab-filter-row-main`: 8px padding, 10px gap, small radius, at least compact height.
+          // `.lab-filter-row-main`: 8px padding, 10px gap, small radius, at least a menu row (`--lab-menu-row-height`).
           child: ControlOverrides.merge(
             context,
-            height: math.max(s.controlCompact, 38),
+            height: math.max(s.menuRowHeight, 38),
             radius: s.radiusSmall,
             child: Button(
               padding: const EdgeInsetsDirectional.symmetric(horizontal: 8),
@@ -1006,7 +973,7 @@ class _FilterBarState extends State<FilterBar> {
           ),
         ),
         IconButton(
-          controlSize: ControlSize.compact,
+          controlSize: ControlSize.regular,
           ariaLabel: '${pinned ? 'Unpin' : 'Pin'} ${option.label}',
           pressed: pinned,
           onClick: () => pinned
@@ -1033,7 +1000,7 @@ class _FilterBarState extends State<FilterBar> {
         children: [
           Button(
             variant: ButtonVariant.filled,
-            controlSize: ControlSize.compact,
+            controlSize: ControlSize.regular,
             loading: _busy,
             disabled: _busy || _text.trim().isEmpty,
             onClick: _submitNatural,
@@ -1172,14 +1139,14 @@ class _FilterBarState extends State<FilterBar> {
         label: 'Filter value actions',
         children: [
           Button(
-            controlSize: ControlSize.compact,
+            controlSize: ControlSize.regular,
             onClick: () => _commit(option, null),
             children: const [Text('Clear value')],
           ),
           if (option.type.isTemporal)
             Button(
               variant: ButtonVariant.filled,
-              controlSize: ControlSize.compact,
+              controlSize: ControlSize.regular,
               onClick: () => _submitDialog(option),
               children: const [Text('Apply')],
             ),

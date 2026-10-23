@@ -37,6 +37,16 @@ export declare const SPRINGS: {
         readonly duration: 0.2;
         readonly bounce: 0;
     };
+    /** A menu growing out of its button (iOS 26 menus: response 0.30, damping fraction 0.73). */
+    readonly menu: {
+        readonly duration: 0.3;
+        readonly bounce: 0.27;
+    };
+    /** A menu flying back into its button (response 0.31, damping fraction 0.67). */
+    readonly menuDismiss: {
+        readonly duration: 0.31;
+        readonly bounce: 0.33;
+    };
 };
 export type SpringName = keyof typeof SPRINGS;
 /** Physical coefficients (mass 1) for a duration/bounce spring, using SwiftUI's mapping. */

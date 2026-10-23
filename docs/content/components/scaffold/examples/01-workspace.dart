@@ -113,7 +113,6 @@ class _WorkspaceState extends State<Workspace> {
                   IconButton(
                     variant: .text,
                     appearance: .toolbar,
-                    controlSize: .compact,
                     ariaLabel: 'Search orders',
                     onClick: () {},
                     icon: const LucideIcon(LucideIcons.search),

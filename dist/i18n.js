@@ -1,12 +1,13 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { PopoverSurface } from './ui.js';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, } from 'react';
 import { IntlMessageFormat } from 'intl-messageformat';
 import { Check, Globe } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Button, Select, Option } from './ui.js';
 import './actions/actions.css';
+import { MenuSurface } from './menu/menu-surface.js';
+import { useFloatingBoundary } from './menu/boundary.js';
 import { LANGUAGES, directionFor } from './i18n-core.js';
 import { UI_MESSAGES } from './messages.js';
 import { useServices } from './services.js';
@@ -117,14 +118,15 @@ export function LanguageSwitcher({ className, iconOnly = false, }) {
     const { locale, setLocale, availableLocales, t, dir } = useI18n();
     const trigger = useRef(null);
     const [portalContainer, setPortalContainer] = useState();
+    const boundary = useFloatingBoundary();
     const visible = LANGUAGES.filter((l) => availableLocales.includes(l.code));
     if (visible.length < 2)
         return null;
     if (iconOnly)
         return (_jsxs(DropdownMenu.Root, { modal: false, dir: dir, onOpenChange: (open) => {
                 if (open)
-                    setPortalContainer(trigger.current?.closest('dialog') || undefined);
-            }, children: [_jsx(DropdownMenu.Trigger, { asChild: true, children: _jsx(Button, { ref: trigger, className: className, variant: "ghost", appearance: "toolbar", controlSize: "icon", "aria-label": t('lab.common.language'), title: visible.find((language) => language.code === locale)?.name, children: _jsx(Globe, { size: 20 }) }) }), _jsx(DropdownMenu.Portal, { container: portalContainer, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(DropdownMenu.Content, { className: "lab-actions-menu", "aria-label": t('lab.common.language'), side: "top", align: "end", sideOffset: 8, collisionPadding: 12, "data-lab-corners": true, children: _jsx(DropdownMenu.RadioGroup, { value: locale, onValueChange: setLocale, children: visible.map((language) => (_jsxs(DropdownMenu.RadioItem, { value: language.code, className: "lab-actions-menu__item", children: [_jsx("span", { className: "lab-actions-menu__leading", children: _jsx(DropdownMenu.ItemIndicator, { children: _jsx(Check, { size: 16 }) }) }), _jsx("span", { lang: language.code, dir: language.dir, children: language.name })] }, language.code))) }) }) }) })] }));
+                    setPortalContainer(trigger.current?.closest('dialog') || boundary || undefined);
+            }, children: [_jsx(DropdownMenu.Trigger, { asChild: true, children: _jsx(Button, { ref: trigger, className: className, variant: "ghost", appearance: "toolbar", controlSize: "icon", "aria-label": t('lab.common.language'), title: visible.find((language) => language.code === locale)?.name, children: _jsx(Globe, { size: 20 }) }) }), _jsx(DropdownMenu.Portal, { container: portalContainer, children: _jsx(MenuSurface, { asChild: true, children: _jsx(DropdownMenu.Content, { className: "lab-actions-menu", "aria-label": t('lab.common.language'), children: _jsx(DropdownMenu.RadioGroup, { value: locale, onValueChange: setLocale, children: visible.map((language) => (_jsxs(DropdownMenu.RadioItem, { value: language.code, className: "lab-actions-menu__item", children: [_jsx("span", { className: "lab-actions-menu__leading", children: _jsx(DropdownMenu.ItemIndicator, { children: _jsx(Check, { size: 16 }) }) }), _jsx("span", { lang: language.code, dir: language.dir, children: language.name })] }, language.code))) }) }) }) })] }));
     return (_jsxs("span", { className: className, style: { display: 'inline-flex', alignItems: 'center', gap: 6 }, children: [_jsx(Globe, { size: 16, "aria-hidden": "true" }), _jsx(Select, { hint: t('lab.common.language'), "aria-label": t('lab.common.language'), value: locale, onValueChange: (next) => setLocale(next), children: visible.map((language) => (_jsx(Option, { value: language.code, children: language.name }, language.code))) })] }));
 }
 //# sourceMappingURL=i18n.js.map

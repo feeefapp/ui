@@ -27,8 +27,10 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
    views drop to a bottom `Dock` on phones, the page title collapses into the bar on scroll.
    Nothing disappears; it moves.
 5. **Comfortable by default, dense on purpose.** Density is one app-wide `theme.density`
-   (`comfortable` merchant apps, `compact` consoles, `thin` very dense tools). Never shrink one screen by
-   hand. Touch keeps 44px targets.
+   (`comfortable` merchant apps, `compact` consoles, `thin` very dense tools). Comfortable is iOS's
+   control sizes (capsule buttons 30 / 36 / 52, 44px toolbar bubbles, 54px list rows); compact steps
+   one size down. Change a single size app-wide with `theme.metrics`, never one screen by hand. Touch
+   keeps 44px targets.
 6. **Color means something.** Primary = main action, selection, focus. Red = destructive/error. Green =
    success. Everything else neutral. Never decorate with color; never rely on color alone. Brand through
    `theme.primary` / `palette`, not by painting components.
@@ -38,7 +40,8 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
    "Submit"). Errors say how to fix it, at the field. Limits are next steps ("Add funds"), not toasts.
 9. **For everyone, in every language.** RTL is not a later mode: logical properties, mirrored
    directional icons (`lab-dir-flip`), check every screen in Arabic. Native elements, real labels,
-   visible focus, focus that returns. Don't lighten text or borders below the tokens.
+   visible keyboard focus (the hugging `--lab-focus-ring-*` ring; fields tint their own edge), focus
+   that returns. Don't lighten text or borders below the tokens.
 10. **Configure, don't override.** Change the look only through `ThemeConfig` and tokens. Lay kit
     components out freely (position, gaps); never repaint them (color, radius, height, shadow). If the
     kit can't do something, extend the kit instead of hand-rolling a one-off. Inside an inset surface
@@ -72,6 +75,7 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
 | Person-defined order | `ListSection onReorder` | up/down buttons on every row |
 | Browsing a few items sideways | `Carousel` | auto-advancing slides |
 | One component, any pane width | `AdaptiveStack`, `ViewThatFits`, `useSizeClass` | window media queries in components |
+| Commands or choices behind a button | `MenuSurface` (glass, grows out of the button) | a popover with a column of buttons |
 | Light, anchored, dismissable extra | `PopoverSurface` | a modal for a color picker |
 | Task actions for the whole view | `Dock` (+ `ActionsBar`) | buttons scattered through content |
 | Problem the user must act on | inline error or in-page notice with the next step | a toast that disappears |
@@ -110,5 +114,7 @@ opacity animate; layout switches once at rest. Gestures never replace a visible 
 - No hand-made bars, spacers, paddings for floats, or repainted kit components.
 - Every field has a `hint`; every error says how to fix it; every icon button has a name.
 - Checked in light, dark, Arabic (RTL), a 360px phone and the app's density.
+- An app that lives in a frame (a preview, an embed) is wrapped in `FloatingBoundary`, so menus and
+  popovers never leave it.
 - Empty, loading and error states each offer a next step.
 - Keyboard: Tab order follows the reading order, focus is visible and returns after dialogs.

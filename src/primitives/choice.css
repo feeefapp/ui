@@ -13,8 +13,8 @@
   font: 400 14px/20px var(--lab-font);
   transition: background 120ms ease;
 }
-.lab-choice[data-control-size='compact'] {
-  min-height: var(--lab-control-compact, 40px);
+.lab-choice[data-control-size='small'] {
+  min-height: var(--lab-control-small);
   gap: 8px;
   padding: 4px 8px;
 }
@@ -48,7 +48,7 @@
     border-color 140ms ease,
     transform 280ms cubic-bezier(0.22, 1.5, 0.36, 1);
 }
-.lab-choice[data-control-size='compact'] .lab-choice-mark {
+.lab-choice[data-control-size='small'] .lab-choice-mark {
   width: 18px;
   height: 18px;
   border-radius: calc(6px * var(--lab-corner-scale, 1));
@@ -90,9 +90,13 @@
 .lab-choice-input:active + .lab-choice-mark {
   transform: scale(0.9);
 }
+/* Keyboard focus hugs the mark and shows the row's hover fill. */
 .lab-choice-input:focus-visible + .lab-choice-mark {
-  outline: 2px solid var(--lab-focus);
-  outline-offset: 3px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
+}
+.lab-choice:has(.lab-choice-input:focus-visible) {
+  background: color-mix(in srgb, var(--lab-ink) 4%, transparent);
 }
 .lab-choice-copy {
   display: grid;
@@ -141,7 +145,7 @@
   display: grid;
 }
 @media (pointer: coarse) {
-  .lab-choice[data-control-size='compact'] {
+  .lab-choice[data-control-size='small'] {
     min-height: var(--lab-control-touch-target, 44px);
   }
 }

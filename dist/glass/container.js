@@ -3,7 +3,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
 import { cn } from '../utils.js';
 import { useReducedMotion } from '../physics/react.js';
-import { GlassContext } from './context.js';
+import { GlassBackdropContext, GlassContext } from './context.js';
 import { GlassScene } from './scene.js';
 import { clampGlassTint } from './material.js';
 import './glass.css';
@@ -42,7 +42,9 @@ export function useGlassOptions() {
  * materialize. Bubbles keep their layout, focus and semantics; only the paint moves here. Without
  * JavaScript, or in forced colors, every bubble paints its own glass as before.
  */
-export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'div', spacing = 8, cornerShape = 'superellipse', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 5, highlightProfile = 'surface', highlightStrength = 1, refractionStrength = 1, tint, backdropSource, className, children, ...props }, ref) {
+export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'div', spacing = 8, cornerShape = 'round', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 1, highlightProfile = 'rim', highlightStrength = 1, refractionStrength = 1, refractionProfile = 'measured', tint, backdropSource, className, children, ...props }, ref) {
+    const inheritedBackdrop = React.useContext(GlassBackdropContext);
+    backdropSource ??= inheritedBackdrop;
     const host = React.useRef(null);
     const backdrop = React.useRef(null);
     const paint = React.useRef(null);
@@ -105,13 +107,14 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
         current.followPointer = light === 'pointer' && liquid;
         current.interactive = interactive && liquid;
         current.adaptive = adaptive;
-        current.preserveHighlights = tint !== undefined;
+        current.preserveHighlights = true;
         current.tint = tint === undefined ? options.tint : clampGlassTint(tint);
         current.blur = options.blur;
-        current.highlightWidth = Number.isFinite(highlightWidth) ? Math.min(20, Math.max(0, highlightWidth)) : 5;
+        current.highlightWidth = Number.isFinite(highlightWidth) ? Math.min(100, Math.max(0, highlightWidth)) : 1;
         current.highlightProfile = highlightProfile;
-        current.highlightStrength = Number.isFinite(highlightStrength) ? Math.min(3, Math.max(0, highlightStrength)) : 1;
-        current.refractionStrength = Number.isFinite(refractionStrength) ? Math.min(3, Math.max(0, refractionStrength)) : 1;
+        current.highlightStrength = Number.isFinite(highlightStrength) ? Math.min(10, Math.max(0, highlightStrength)) : 1;
+        current.refractionProfile = refractionProfile;
+        current.refractionStrength = Number.isFinite(refractionStrength) ? Math.min(10, Math.max(0, refractionStrength)) : 1;
         current.backdropSource = backdropSource;
         current.refraction = options.refraction;
         current.requestMeasure();
@@ -151,16 +154,16 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
             document.documentElement.removeEventListener('pointerleave', leave);
         };
     }, [light, reduced, liquid]);
-    return React.createElement(as, { ...props, 'ref': setHost, 'className': cn('lab-glass-container', className), 'data-glass-container': '', 'data-glass-corners': cornerShape, 'data-glass-local-tint': tint === undefined ? undefined : '', style: { ...props.style, ...(tint === undefined ? {} : { '--lab-glass-tint': clampGlassTint(tint) }) } }, _jsxs("div", { className: "lab-glass-material", "aria-hidden": "true", children: [_jsx("svg", { ref: shadow, className: "lab-glass-shadow" }), _jsx("div", { ref: backdrop, className: "lab-glass-backdrops" }), _jsx("svg", { ref: paint, className: "lab-glass-paint" })] }), _jsx(GlassContext.Provider, { value: registry, children: children }));
+    return React.createElement(as, { ...props, 'ref': setHost, 'className': cn('lab-glass-container', className), 'data-glass-container': '', 'data-glass-corners': cornerShape, 'data-glass-local-tint': '', style: { ...props.style, ...(tint === undefined ? {} : { '--lab-glass-tint': clampGlassTint(tint) }) } }, _jsxs("div", { className: "lab-glass-material", "aria-hidden": "true", children: [_jsx("svg", { ref: shadow, className: "lab-glass-shadow" }), _jsx("div", { ref: backdrop, className: "lab-glass-backdrops" }), _jsx("svg", { ref: paint, className: "lab-glass-paint" })] }), _jsx(GlassContext.Provider, { value: registry, children: children }));
 });
 /**
  * A GlassContainer unless one already encloses it, then a plain element. Kit rows (app bar,
  * toolbar, dock, search) use it so they share one material without ever nesting containers.
  */
-export const GlassScope = React.forwardRef(function GlassScope({ as = 'div', spacing, cornerShape, light, interactive, adaptive, tint, highlightWidth, highlightProfile, highlightStrength, refractionStrength, backdropSource, ...props }, ref) {
+export const GlassScope = React.forwardRef(function GlassScope({ as = 'div', spacing, cornerShape, light, interactive, adaptive, tint, highlightWidth, highlightProfile, highlightStrength, refractionStrength, refractionProfile, backdropSource, ...props }, ref) {
     const outer = React.useContext(GlassContext);
     if (outer)
         return React.createElement(as, { ...props, ref });
-    return _jsx(GlassContainer, { ...props, as: as, spacing: spacing, cornerShape: cornerShape, light: light, interactive: interactive, adaptive: adaptive, tint: tint, highlightWidth: highlightWidth, highlightProfile: highlightProfile, highlightStrength: highlightStrength, refractionStrength: refractionStrength, backdropSource: backdropSource, ref: ref });
+    return _jsx(GlassContainer, { ...props, as: as, spacing: spacing, cornerShape: cornerShape, light: light, interactive: interactive, adaptive: adaptive, tint: tint, highlightWidth: highlightWidth, highlightProfile: highlightProfile, highlightStrength: highlightStrength, refractionStrength: refractionStrength, refractionProfile: refractionProfile, backdropSource: backdropSource, ref: ref });
 });
 //# sourceMappingURL=container.js.map

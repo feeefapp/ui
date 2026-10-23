@@ -18,7 +18,7 @@ export default function WithActionsBar() {
       <Slider label="Host width" min={240} max={640} step={10} value={width} onValueChange={setWidth} />
       <div className="dock-demo-host dock-demo-host-narrow" style={{ maxWidth: width }} data-label={`Host: ${width}px`}>
         <Dock label="Order actions" content={<strong>Order #1048</strong>}>
-          <ActionsBar actions={actions} label="Order actions" size="compact" />
+          <ActionsBar actions={actions} label="Order actions" />
         </Dock>
       </div>
     </div>

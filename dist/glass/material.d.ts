@@ -82,10 +82,10 @@ export declare const GLASS_CLEAR: {
     readonly offset: 0.076;
 };
 /**
- * The tint (ThemeConfig `glassTint`, 0 clear … 1 tinted) an app gets by default: the midpoint,
- * like the Liquid Glass setting's default, a light veil over the bent backdrop.
+ * The tint (ThemeConfig `glassTint`, 0 clear … 1 tinted) a web app gets by default: clear,
+ * matching the shared reference preset. Flutter retains its existing default.
  */
-export declare const GLASS_TINT_DEFAULT = 0.5;
+export declare const GLASS_TINT_DEFAULT = 0;
 /** A tint clamped to 0–1; anything that is not a finite number is the default. */
 export declare function clampGlassTint(tint: unknown): number;
 /**

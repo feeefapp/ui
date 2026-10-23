@@ -56,10 +56,10 @@ export default function InAPopover() {
               contentPadding={12}
               bottom={
                 <Dock label="Date filter actions">
-                  <Button variant="text" controlSize="compact" onClick={() => setDraft(null)}>
+                  <Button variant="text" onClick={() => setDraft(null)}>
                     Clear
                   </Button>
-                  <Button variant="filled" controlSize="compact" onClick={apply}>
+                  <Button variant="filled" onClick={apply}>
                     Apply
                   </Button>
                 </Dock>

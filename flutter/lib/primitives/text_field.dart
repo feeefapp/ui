@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
 import '../theme.dart';
+import '../theme/surfaces.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
 import 'button.dart' show ControlSize;
@@ -66,7 +67,7 @@ class FieldShell extends StatefulWidget {
   final String? error;
   final ControlVariant variant;
 
-  /// Field height: `regular` (44px) or `compact` (40px).
+  /// Field height: `regular` (44px) or `small` (36px, as tall as a regular button).
   final ControlSize controlSize;
   final bool disabled, required, invalid;
 
@@ -118,9 +119,12 @@ class _FieldShellState extends State<FieldShell> {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
     final s = theme.sizes;
-    final dense = s.density != Density.comfortable;
-    final compact = widget.controlSize == ControlSize.compact;
+    final small = widget.controlSize == ControlSize.small;
     final coarse = theme.coarsePointer(context);
+    final touchSmall = small && coarse;
+    // Dense densities and small fields (36px: no room for two lines) float inside labels onto
+    // the border like outlined ones; a small field on touch is 44px and keeps them inside.
+    final dense = s.density != Density.comfortable || (small && !touchSmall);
     final paint = c.variant(widget.variant);
     final filled = widget.variant == ControlVariant.filled;
     final labelInk = filled ? c.onPrimary : c.muted;
@@ -129,12 +133,11 @@ class _FieldShellState extends State<FieldShell> {
     final hasLabel = hint != null;
 
     // text-field.css: sizes per control size, density and label style.
-    final touchCompact = compact && coarse;
-    final height = touchCompact
+    final height = touchSmall
         ? s.touchTarget
-        : compact
-        ? s.controlCompact
-        : s.controlHeight;
+        : small
+        ? s.fieldHeightSmall
+        : s.fieldHeight;
     final font = switch (s.density) {
       Density.comfortable => 16.0,
       Density.compact => 14.0,
@@ -145,20 +148,14 @@ class _FieldShellState extends State<FieldShell> {
     final insideLabel =
         widget.labelStyle == FieldLabelStyle.inside && hasLabel && !dense;
     final centered = ((height - line - 2) / 2).clamp(0.0, double.infinity);
-    final padTop = insideLabel
-        ? (compact && !touchCompact ? 14.0 : 17.0)
-        : centered;
-    final padBottom = insideLabel
-        ? (compact && !touchCompact ? 4.0 : 5.0)
-        : centered;
+    final padTop = insideLabel ? 17.0 : centered;
+    final padBottom = insideLabel ? 5.0 : centered;
     final borderLabel =
         widget.labelStyle == FieldLabelStyle.outlined ||
         (widget.labelStyle == FieldLabelStyle.inside && dense);
     // The resting hint sits where one line of value sits: centred at every size and density.
     final restTop = (height - line) / 2;
-    final floatTop = borderLabel
-        ? -6.0
-        : (compact && !touchCompact ? 3.0 : 4.0);
+    final floatTop = borderLabel ? -6.0 : 4.0;
     final floatFont = borderLabel
         ? (widget.labelStyle == FieldLabelStyle.inside ? 11.0 : 12.0)
         : 10.0;
@@ -189,7 +186,7 @@ class _FieldShellState extends State<FieldShell> {
       notchWidth = painter.width + 8;
       painter.dispose();
     }
-    final radius = compact ? s.radiusControlCompact : s.radiusControl;
+    final radius = small ? s.radiusControlSmall : s.radiusControl;
     final insetStart = (widget.leadingIcon != null || widget.leading != null)
         ? _leadingWidth + 24
         : 12.0;
@@ -213,6 +210,7 @@ class _FieldShellState extends State<FieldShell> {
         edge: edge,
         radius: radius,
         ring: _focused ? (invalid ? c.danger : c.focus) : null,
+        ringWidth: FocusRingStyle.of(context).width,
         raised: widget.variant == ControlVariant.elevated && !_focused,
         highlight: c.controlHighlight,
         depth: theme.brightness == Brightness.dark ? 0.18 : 0.08,
@@ -462,6 +460,7 @@ class _FieldPainter extends CustomPainter {
     required this.edge,
     required this.radius,
     required this.ring,
+    this.ringWidth = 2,
     required this.raised,
     required this.highlight,
     required this.depth,
@@ -470,7 +469,7 @@ class _FieldPainter extends CustomPainter {
   });
   final Color fill, edge, highlight;
   final Color? ring;
-  final double radius, depth;
+  final double radius, depth, ringWidth;
   final bool raised;
 
   /// Where a hint floated onto the border cuts the edge and ring: its inline start and width.
@@ -516,17 +515,16 @@ class _FieldPainter extends CustomPainter {
       );
     }
     if (ring != null) {
-      // box-shadow: 0 0 0 1px — a 1px band just outside the border.
-      final outer = rect.inflate(1);
+      // Focus: no outer ring; the field's own edge thickens inward to the ring width
+      // (`box-shadow: inset 0 0 0 var(--lab-focus-ring-width) var(--lab-focus)`).
       canvas.drawPath(
-        superellipsePath(outer, [for (final r in radii) r + 1], inset: 0.5),
+        superellipsePath(rect, radii, inset: ringWidth / 2),
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
+          ..strokeWidth = ringWidth
           ..color = ring!,
       );
-    }
-    if (edge.a > 0) {
+    } else if (edge.a > 0) {
       canvas.drawPath(
         superellipsePath(rect, radii, inset: 0.5),
         Paint()
@@ -543,6 +541,7 @@ class _FieldPainter extends CustomPainter {
       old.fill != fill ||
       old.edge != edge ||
       old.ring != ring ||
+      old.ringWidth != ringWidth ||
       old.radius != radius ||
       old.raised != raised ||
       old.notch != notch ||

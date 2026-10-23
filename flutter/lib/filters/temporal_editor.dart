@@ -328,7 +328,7 @@ class TemporalPresets extends StatelessWidget {
             appearance: bar
                 ? ButtonAppearance.toolbar
                 : ButtonAppearance.defaultAppearance,
-            controlSize: ControlSize.compact,
+            controlSize: ControlSize.small,
             pressed: editor.presetActive(p),
             onClick: () => editor.choosePreset(p.value),
             children: [Text(p.label)],
@@ -557,7 +557,7 @@ class TemporalBody extends StatelessWidget {
           Semantics(
             expanded: e.manual,
             child: Button(
-              controlSize: ControlSize.compact,
+              controlSize: ControlSize.small,
               onClick: () => e.setManual(!e.manual),
               // `size={16}` loses to the kit's `.lab-control > svg` 18px.
               children: [const LucideKeyboard(), Text(toggleText)],
@@ -669,7 +669,7 @@ class _ManualFieldState extends State<_ManualField> {
   Widget build(BuildContext context) => TextField(
     controller: _controller,
     hint: widget.hint,
-    controlSize: ControlSize.compact,
+    controlSize: ControlSize.small,
     keyboardType: TextInputType.datetime,
     onValueChange: (text) {
       if (!_syncing) widget.onChanged(text);
@@ -738,7 +738,7 @@ class _TimeInput extends StatelessWidget {
                 Expanded(
                   child: NumberField(
                     label: 'Hour',
-                    controlSize: ControlSize.compact,
+                    controlSize: ControlSize.small,
                     min: 0,
                     max: 23,
                     value: h.toDouble(),
@@ -751,7 +751,7 @@ class _TimeInput extends StatelessWidget {
                 Expanded(
                   child: NumberField(
                     label: 'Minute',
-                    controlSize: ControlSize.compact,
+                    controlSize: ControlSize.small,
                     min: 0,
                     max: (60 - minuteStep).toDouble(),
                     step: minuteStep.toDouble(),
@@ -766,7 +766,7 @@ class _TimeInput extends StatelessWidget {
                   Expanded(
                     child: NumberField(
                       label: 'Second',
-                      controlSize: ControlSize.compact,
+                      controlSize: ControlSize.small,
                       min: 0,
                       max: 59,
                       step: step < 1 ? 1 : step.toDouble(),

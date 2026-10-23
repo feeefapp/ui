@@ -112,7 +112,7 @@ export function ToolbarSearch({ label, value, onValueChange, placeholder, childr
     const media = window.matchMedia('(prefers-reduced-motion: reduce)')
     reduced.current = media.matches
     const measure = (initial = false) => {
-      compact.current = (Number.parseFloat(getComputedStyle(material).getPropertyValue('--lab-toolbar-control-size')) || 40) + 6
+      compact.current = (Number.parseFloat(getComputedStyle(material).getPropertyValue('--lab-toolbar-control')) || 38) + 6
       host.style.setProperty('--lab-search-compact-width', `${compact.current}px`)
       wide.current = Math.max(compact.current, host.clientWidth)
       target.current = requested.current ? wide.current : compact.current
@@ -158,12 +158,12 @@ export function ToolbarSearch({ label, value, onValueChange, placeholder, childr
   return <GlassScope className={cn('lab-toolbar-search', className)} role="group" aria-label={label} data-expanded={expanded} data-moving={moving}>
     <div ref={main} className="lab-toolbar-search-main">
       <ToolbarGroup ref={surface} label={label} className="lab-toolbar-search-surface" glassMotion="follow">
-        <IconButton ref={trigger} variant="text" appearance="toolbar" controlSize="compact" aria-label={expanded ? t('lab.search.collapse') : label} aria-expanded={expanded} aria-controls={id} disabled={disabled} onClick={() => change(!expanded)}>
+        <IconButton ref={trigger} variant="text" appearance="toolbar" controlSize="regular" aria-label={expanded ? t('lab.search.collapse') : label} aria-expanded={expanded} aria-controls={id} disabled={disabled} onClick={() => change(!expanded)}>
           <span className="lab-toolbar-search-glyph" data-expanded={expanded}><Search/><ArrowLeft className="lab-dir-flip"/></span>
         </IconButton>
         <div className="lab-toolbar-search-editor" inert={!expanded} aria-hidden={!expanded}>
           {renderInput ? renderInput(input) : <RawInput {...input}/>}
-          <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label={t('lab.search.clear')} disabled={!value || disabled} onClick={() => { if (value) onValueChange(''); field.current?.focus({preventScroll:true}) }}><X/></IconButton>
+          <IconButton variant="text" appearance="toolbar" controlSize="regular" aria-label={t('lab.search.clear')} disabled={!value || disabled} onClick={() => { if (value) onValueChange(''); field.current?.focus({preventScroll:true}) }}><X/></IconButton>
         </div>
       </ToolbarGroup>
       <div className="lab-toolbar-search-controls" inert={expanded || moving} aria-hidden={expanded || moving}>{children}</div>

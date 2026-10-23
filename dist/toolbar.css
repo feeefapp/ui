@@ -2,7 +2,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--lab-toolbar-gap);
   inline-size: 100%;
   min-inline-size: 0;
   container: lab-toolbar / inline-size;
@@ -25,15 +25,16 @@
 .lab-toolbar-group {
   inline-size: fit-content;
   max-inline-size: 100%;
-  /* Follows density (40px comfortable); the pill radius follows the theme's radius scale. */
-  --lab-toolbar-control-size: var(--lab-control-compact);
-  --lab-control-height: var(--lab-toolbar-control-size);
-  --lab-glass-radius: calc((var(--lab-toolbar-control-size) + 6px) / 2 * var(--lab-corner-scale, 1));
+  /* A capsule bubble --lab-toolbar-item tall (44px comfortable, iOS's bar item); its regular
+  controls fill it less the 2px padding and 1px border a side (--lab-toolbar-control). The bubble is
+  the touch target, so its controls don't grow on touch screens; the bubble itself does. */
+  --lab-control-height: var(--lab-toolbar-control);
+  --lab-glass-radius: calc((var(--lab-toolbar-control) + 6px) / 2 * var(--lab-corner-scale, 1));
   display: flex;
   align-items: center;
   gap: 0;
   min-inline-size: 0;
-  min-block-size: calc(var(--lab-toolbar-control-size) + 6px);
+  min-block-size: calc(var(--lab-toolbar-control) + 6px);
   padding: 2px;
   pointer-events: auto;
 }
@@ -41,9 +42,17 @@
   border-radius: calc(var(--lab-glass-radius) - 2px);
 }
 
-@media (pointer: coarse), (max-width: 600px) {
+@media (pointer: coarse) {
   .lab-toolbar-group {
-    --lab-toolbar-control-size: 44px;
+    --lab-toolbar-control: calc(max(var(--lab-toolbar-item), var(--lab-control-touch-target)) - 6px);
+  }
+  html[data-lab-theme] .lab-toolbar-group .lab-control[data-variant] {
+    height: max(var(--lab-control-size), var(--lab-toolbar-control));
+    min-height: max(var(--lab-control-size), var(--lab-toolbar-control));
+    min-width: var(--lab-toolbar-control);
+  }
+  html[data-lab-theme] .lab-toolbar-group .lab-control[data-control-size='icon'] {
+    width: max(var(--lab-control-size), var(--lab-toolbar-control));
   }
 }
 

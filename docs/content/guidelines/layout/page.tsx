@@ -38,7 +38,7 @@ function Rows({ check }: { check?: string[] }) {
               {order.city} · {order.total}
             </small>
           </span>
-          {check && <Checkbox controlSize="compact" aria-label={`Select order ${order.id}`} defaultChecked={check.includes(order.id)} />}
+          {check && <Checkbox controlSize="small" aria-label={`Select order ${order.id}`} defaultChecked={check.includes(order.id)} />}
         </div>
       ))}
     </div>
@@ -46,7 +46,7 @@ function Rows({ check }: { check?: string[] }) {
 }
 
 const toolIcon = (label: string, icon: ReactNode) => (
-  <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label={label}>
+  <IconButton variant="text" appearance="toolbar" aria-label={label}>
     {icon}
   </IconButton>
 )
@@ -128,13 +128,13 @@ function BadPainted() {
       <div className="gl-painted-bar">
         <strong>Orders</strong>
         <div>
-          <IconButton variant="outlined" controlSize="compact" aria-label="Search orders">
+          <IconButton variant="outlined" controlSize="small" aria-label="Search orders">
             <Search />
           </IconButton>
-          <IconButton variant="outlined" controlSize="compact" aria-label="Filter orders">
+          <IconButton variant="outlined" controlSize="small" aria-label="Filter orders">
             <ListFilter />
           </IconButton>
-          <IconButton variant="outlined" controlSize="compact" aria-label="Export orders">
+          <IconButton variant="outlined" controlSize="small" aria-label="Export orders">
             <Download />
           </IconButton>
         </div>
@@ -153,18 +153,18 @@ function BadStacked() {
     <div className="gl-mini" data-stack>
       <div className="gl-painted-bar">
         <strong>Orders</strong>
-        <Button variant="filled" controlSize="compact">
+        <Button variant="filled" controlSize="small">
           <Plus />
           New order
         </Button>
       </div>
       <div className="gl-painted-bar">
-        <TextField hint="Search orders" controlSize="compact" containerClassName="gl-grow" />
+        <TextField hint="Search orders" controlSize="small" containerClassName="gl-grow" />
         <div>
-          <Button variant="outlined" controlSize="compact">
+          <Button variant="outlined" controlSize="small">
             Wilaya
           </Button>
-          <Button variant="outlined" controlSize="compact">
+          <Button variant="outlined" controlSize="small">
             Courier
           </Button>
         </div>
@@ -201,7 +201,7 @@ function GoodFloating() {
         }
         bottom={
           <Dock label="Order actions">
-            <Button variant="filled" controlSize="compact">
+            <Button variant="filled" controlSize="small">
               <Plus />
               New order
             </Button>
@@ -226,10 +226,10 @@ function GoodDock() {
         bottom={
           <Dock label="Selected orders" content={<span className="gl-dock-status">2 selected</span>}>
             <div className="gl-dock-row">
-              <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Clear selection">
+              <IconButton variant="text" appearance="toolbar" aria-label="Clear selection">
                 <X />
               </IconButton>
-              <Button variant="filled" controlSize="compact">
+              <Button variant="filled">
                 Confirm 2 orders
               </Button>
             </div>
@@ -255,13 +255,13 @@ function BadScattered() {
               <small>{order.total}</small>
             </span>
             <span style={{ display: 'flex', gap: 4 }}>
-              <IconButton variant="outlined" controlSize="compact" aria-label={`Call ${order.name}`}>
+              <IconButton variant="outlined" controlSize="small" aria-label={`Call ${order.name}`}>
                 <Phone />
               </IconButton>
-              <Button variant="filled" controlSize="compact">
+              <Button variant="filled" controlSize="small">
                 Confirm
               </Button>
-              <Button variant="destructive" controlSize="compact">
+              <Button variant="destructive" controlSize="small">
                 Cancel
               </Button>
             </span>
@@ -371,7 +371,7 @@ function Overview() {
         <SegmentedControl label="Order views" appearance="plain" value={view} onChange={setView} options={VIEWS} />
       </ToolbarGroup>
       <ToolbarGroup label="Order tools">
-        <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Print label">
+        <IconButton variant="text" appearance="toolbar" controlSize="small" aria-label="Print label">
           <Printer />
         </IconButton>
       </ToolbarGroup>

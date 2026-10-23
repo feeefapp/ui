@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useId, useState, type CSSProperties } from 'react'
 import { Check, Copy } from 'lucide-react'
 import type { HighlighterCore } from 'shiki/core'
 import { IconButton } from '@feeef.dev/ui/primitives/button'
@@ -68,7 +68,6 @@ export function CopyButton({ text, label = 'Copy code' }: { text: string; label?
     <IconButton
       variant="text"
       appearance="toolbar"
-      controlSize="compact"
       aria-label={done ? 'Copied' : label}
       title={done ? 'Copied' : label}
       onClick={() => copyText(text).then(() => setDone(true), () => {})}
@@ -78,11 +77,11 @@ export function CopyButton({ text, label = 'Copy code' }: { text: string; label?
   )
 }
 
-function Source({ code, html }: { code: string; html: string | null }) {
+function Source({ code, html, id }: { code: string; html: string | null; id?: string }) {
   return html ? (
-    <div className="docs-code-body" dir="ltr" dangerouslySetInnerHTML={{ __html: html }} />
+    <div id={id} className="docs-code-body" dir="ltr" dangerouslySetInnerHTML={{ __html: html }} />
   ) : (
-    <div className="docs-code-body" dir="ltr">
+    <div id={id} className="docs-code-body" dir="ltr">
       <pre>
         <code>{code}</code>
       </pre>
@@ -111,15 +110,16 @@ export function Code({
   className?: string
   copy?: boolean
 }) {
+  const sourceId = `code-glass-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const html = useHighlighted(code, lang)
   const rows = code.split('\n').length
   const label = title ?? lang
   if (rows <= 2) {
     return (
       <figure className={cn('docs-code', className)} data-layout="inline" aria-label={label} data-lab-corners>
-        <Source code={code} html={html} />
+        <Source id={sourceId} code={code} html={html} />
         {copy && (
-          <GlassScope className="docs-code-inline-tools">
+          <GlassScope backdropSource={sourceId} className="docs-code-inline-tools">
             <ToolbarGroup label="Code actions">
               <CopyButton text={code} />
             </ToolbarGroup>
@@ -159,7 +159,7 @@ export function Code({
           />
         }
       >
-        <Source code={code} html={html} />
+        <Source id={sourceId} code={code} html={html} />
       </ScrollArea>
     </figure>
   )

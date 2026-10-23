@@ -94,6 +94,12 @@ function Overview() {
           <C>appearance="plain"</C> drops it, for a control that sits on a surface that is already a
           group, such as a toolbar, a dock or a dialog header.
         </p>
+        <p>
+          Its size is iOS's: a 32px capsule track with 28px options 2px from its edge and 2px apart,
+          labels 13px semibold. Change it app-wide with <C>ThemeConfig.metrics.segmentedHeight</C> and{' '}
+          <C>segmentedInset</C>; options stay no farther apart than the inset. Touch screens keep 44px
+          options.
+        </p>
       </Section>
 
       <Section title="Guidelines">

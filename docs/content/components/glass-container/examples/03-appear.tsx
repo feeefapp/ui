@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { ArrowLeft, Brain, Share2 } from 'lucide-react'
 import { GlassContainer } from '@feeef.dev/ui/glass'
 import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
@@ -6,12 +6,14 @@ import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
 import '../glass-container-demo.css'
 
 export default function Appear() {
+  const backdropId = `container-demo-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const [started, setStarted] = useState(false)
   return (
-    <div className="glass-stage">
-      <GlassContainer className="glass-row">
+    <div className="glass-stage" data-lab-backdrop="light">
+      <div id={backdropId} className="glass-stage-source" aria-hidden="true" />
+      <GlassContainer tint={0} backdropSource={backdropId} className="glass-row">
         <ToolbarGroup label="Navigation">
-          <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back">
+          <IconButton variant="text" appearance="toolbar" aria-label="Back">
             <ArrowLeft />
           </IconButton>
         </ToolbarGroup>
@@ -20,10 +22,10 @@ export default function Appear() {
         </ToolbarGroup>
         {started && (
           <ToolbarGroup label="Chat actions" glassId="actions">
-            <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Share">
+            <IconButton variant="text" appearance="toolbar" aria-label="Share">
               <Share2 />
             </IconButton>
-            <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Memory">
+            <IconButton variant="text" appearance="toolbar" aria-label="Memory">
               <Brain />
             </IconButton>
           </ToolbarGroup>

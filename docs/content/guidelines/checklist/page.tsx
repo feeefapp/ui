@@ -207,7 +207,7 @@ function Overview() {
           <span className="gc-summary-count" aria-live="polite">
             {done === TOTAL ? `All ${TOTAL} checks done` : `${done} of ${TOTAL} checked`}
           </span>
-          <Button variant="text" controlSize="compact" disabled={done === 0} onClick={() => update(new Set())}>
+          <Button variant="text" controlSize="small" disabled={done === 0} onClick={() => update(new Set())}>
             Clear checks
           </Button>
         </div>

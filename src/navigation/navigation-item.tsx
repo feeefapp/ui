@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import * as Tooltip from '@radix-ui/react-tooltip'
 import { Button } from '../ui'
+import { useFloatingBoundary } from '../menu/boundary'
 import './navigation-item.css'
 
 /** A navigation entry described as data. */
@@ -38,6 +39,7 @@ export function NavigationItem({
   /** Icon-only rail mode with a tooltip label. */
   compact: boolean
 }) {
+  const boundary = useFloatingBoundary()
   const content = (
     <>
       <span className="lab-navigation-icon" aria-hidden="true">
@@ -75,12 +77,13 @@ export function NavigationItem({
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>{item}</Tooltip.Trigger>
-      <Tooltip.Portal>
+      <Tooltip.Portal container={boundary ?? undefined}>
         <Tooltip.Content
           className="lab-navigation-tooltip"
           side="right"
           sideOffset={8}
           collisionPadding={12}
+          collisionBoundary={boundary ?? undefined}
         >
           {label}
         </Tooltip.Content>

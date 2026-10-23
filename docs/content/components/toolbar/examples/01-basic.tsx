@@ -10,7 +10,7 @@ export default function Basic() {
         label="Products"
         leading={
           <ToolbarGroup label="Navigation">
-            <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back to store">
+            <IconButton variant="text" appearance="toolbar" aria-label="Back to store">
               <ArrowLeft className="lab-dir-flip" />
             </IconButton>
             <span className="toolbar-demo-title">Products</span>
@@ -18,13 +18,13 @@ export default function Basic() {
         }
         trailing={
           <ToolbarGroup label="Product actions">
-            <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Export CSV">
+            <IconButton variant="text" appearance="toolbar" aria-label="Export CSV">
               <Download />
             </IconButton>
-            <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="More actions">
+            <IconButton variant="text" appearance="toolbar" aria-label="More actions">
               <MoreHorizontal />
             </IconButton>
-            <Button variant="filled" appearance="toolbar" controlSize="compact">
+            <Button variant="filled" appearance="toolbar">
               <Plus />
               Add product
             </Button>

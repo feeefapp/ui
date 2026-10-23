@@ -52,7 +52,8 @@ class ThemeData {
       other.config.glass == config.glass &&
       other.config.tint == config.tint &&
       other.config.glassBlur == config.glassBlur &&
-      other.config.glassRefraction == config.glassRefraction;
+      other.config.glassRefraction == config.glassRefraction &&
+      other.config.metrics == config.metrics;
 
   @override
   int get hashCode => Object.hash(
@@ -65,6 +66,7 @@ class ThemeData {
     config.tint,
     config.glassBlur,
     config.glassRefraction,
+    config.metrics,
   );
 }
 

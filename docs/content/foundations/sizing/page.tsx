@@ -1,6 +1,11 @@
+import { useState } from 'react'
 import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
 import { TextField } from '@feeef.dev/ui/primitives/text-field'
-import { Plus } from 'lucide-react'
+import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { SlideSwitch } from '@feeef.dev/ui/primitives/slider'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
+import { GlassScope } from '@feeef.dev/ui/glass'
+import { Plus, Share2 } from 'lucide-react'
 import { definePage } from '../../../src/model'
 import { C, Code } from '../../../src/blocks/code'
 import { Callout, DoDont, Lead, Section, Table } from '../../../src/blocks/prose'
@@ -10,12 +15,32 @@ import { useComputed, useHeight, Tok } from '../_lib/live'
 import '../_lib/foundations.css'
 
 const ROLES: Record<string, string> = {
-  '--lab-control-height': 'Regular buttons, text fields, icon buttons.',
-  '--lab-control-compact': 'Compact controls (controlSize="compact"), compact icon buttons.',
-  '--lab-control-small': 'The smallest control size.',
-  '--lab-field-height': 'Plain inputs and selects without a field shell.',
-  '--lab-row-height': 'Navigation items, list rows, workspace actions.',
-  '--lab-control-padding': 'Inline padding of base controls.',
+  '--lab-control-small': 'Small buttons and icon buttons (controlSize="small").',
+  '--lab-control-height': 'Regular buttons and icon buttons; thick sliders.',
+  '--lab-control-large': 'Large buttons (controlSize="large").',
+  '--lab-control-padding-small': 'Side padding of small text buttons.',
+  '--lab-control-padding': 'Side padding of regular text buttons and segments.',
+  '--lab-control-padding-large': 'Side padding of large text buttons.',
+  '--lab-control-font-small': 'Label size of small buttons.',
+  '--lab-control-font': 'Label size of regular buttons.',
+  '--lab-control-font-large': 'Label size of large buttons.',
+  '--lab-field-height-small': 'Small text fields, selects and number fields.',
+  '--lab-field-height': 'Text fields, selects and number fields.',
+  '--lab-row-height': 'Navigation items, workspace actions.',
+  '--lab-menu-row-height': 'Menu and floating-panel rows.',
+  '--lab-toolbar-item': 'A toolbar bubble (controls inside are 6px less).',
+  '--lab-toolbar-gap': 'Space between toolbar groups.',
+  '--lab-toolbar-inset': 'A floating bar’s inset from its panel’s sides.',
+  '--lab-segmented-height': 'Segmented control track.',
+  '--lab-segmented-inset': 'Segmented control edge to options, and between options.',
+  '--lab-switch-width': 'Switch track width.',
+  '--lab-switch-height': 'Switch track height.',
+  '--lab-thumb-width': 'Switch and thin-slider thumb width.',
+  '--lab-thumb-height': 'Switch and thin-slider thumb height.',
+  '--lab-slider-track': 'Thin slider rail.',
+  '--lab-list-row-height': 'Inset-grouped list rows.',
+  '--lab-list-corner': 'Inset-grouped list card radius (× the radius scale).',
+  '--lab-list-inset': 'List row sides, headers and hairlines.',
   '--lab-control-touch-target': 'Minimum hit size on coarse pointers. Never changes.',
   '--lab-sidebar-width': 'Expanded scaffold sidebar.',
   '--lab-navigation-rail-width': 'Collapsed scaffold navigation rail.',
@@ -56,12 +81,28 @@ function Measured({ label, children }: { label: string; children: React.ReactNod
   )
 }
 
+function ViewPicker() {
+  const [view, setView] = useState<'list' | 'board'>('list')
+  return (
+    <SegmentedControl
+      label="View"
+      value={view}
+      onChange={setView}
+      options={[
+        { value: 'list', label: 'List' },
+        { value: 'board', label: 'Board' },
+      ]}
+    />
+  )
+}
+
 function Overview() {
   return (
     <>
       <Lead>
-        Space and control sizes are tokens too. Density swaps them as a set, so a whole app becomes
-        denser without touching a component.
+        Space and control sizes are tokens too. The default density is iOS 26's standard controls,
+        measured in the simulator; density swaps the sizes as a set, and <C>metrics</C> changes single
+        ones, so a whole app changes without touching a component.
       </Lead>
 
       <Section title="Spacing scale">
@@ -84,18 +125,28 @@ function Overview() {
         />
       </Section>
 
-      <Section title="Control heights">
+      <Section title="Control metrics">
         <p>
-          Buttons and fields share one height scale. <C>controlSize="regular"</C> uses{' '}
-          <C>--lab-control-height</C> (44px), <C>compact</C> uses <C>--lab-control-compact</C> (40px).
-          The numbers below are measured from the rendered controls.
+          Comfortable density matches iOS 26's controls: capsule buttons <C>small</C> 30px,{' '}
+          <C>regular</C> 36px and <C>large</C> 52px (side padding 10 / 12 / 20, labels 15 / 17 / 17
+          regular weight), 44px toolbar bubbles 12px apart, a 32px segmented control with a 28px thumb,
+          a 63 × 28 switch with a 37 × 24 thumb, a 6px slider rail, and 54px list rows on 26px cards.
+          Every shape is a capsule (radius half its height) drawn with the kit's superellipse corners,
+          not a perfect circle. Text fields keep their own design: 44px with room for an inside hint,
+          36px when small so they line up with regular buttons. The numbers below are measured from the
+          rendered controls.
         </p>
         <div className="fd-stage">
+          <Measured label="small">
+            <Button variant="tonal" controlSize="small">
+              Save changes
+            </Button>
+          </Measured>
           <Measured label="regular">
             <Button variant="filled">Save changes</Button>
           </Measured>
-          <Measured label="compact">
-            <Button variant="tonal" controlSize="compact">
+          <Measured label="large">
+            <Button variant="filled" controlSize="large">
               Save changes
             </Button>
           </Measured>
@@ -103,6 +154,21 @@ function Overview() {
             <IconButton variant="outlined" aria-label="Add item">
               <Plus />
             </IconButton>
+          </Measured>
+          <Measured label="toolbar">
+            <GlassScope>
+              <ToolbarGroup label="Share">
+                <IconButton variant="text" appearance="toolbar" aria-label="Share">
+                  <Share2 />
+                </IconButton>
+              </ToolbarGroup>
+            </GlassScope>
+          </Measured>
+          <Measured label="segmented">
+            <ViewPicker />
+          </Measured>
+          <Measured label="switch">
+            <SlideSwitch label="Cash on delivery" defaultChecked />
           </Measured>
           <Measured label="text field">
             <TextField hint="Order number" />
@@ -120,7 +186,9 @@ function Overview() {
       <Section title="Density">
         <p>
           Set density once in the theme config: <C>{"theme={{ density: 'compact' }}"}</C>. It sets{' '}
-          <C>data-lab-density="compact"</C> on <C>{'<html>'}</C>, which redefines these tokens:
+          <C>data-lab-density="compact"</C> on <C>{'<html>'}</C>, which redefines these tokens. Compact is
+          one step down (its large button is a comfortable regular one, its regular a comfortable small),
+          thin two:
         </p>
         <Table
           head={['Token', 'Comfortable', 'Compact', 'Thin', 'Used for']}
@@ -133,7 +201,34 @@ function Overview() {
           ])}
         />
         <p>
-          Compact also sets button text to 13px and field text to 14px; thin goes to 12px and 13px, for very dense tools like inspectors and spreadsheets. In both, inside labels float onto the field border, since there is no room for two lines. Use compact for consoles and admin lists, thin only where density matters more than comfort, and keep <C>comfortable</C> for products people use on phones.
+          Compact also sets field text to 14px; thin goes to 13px, for very dense tools like inspectors and spreadsheets. In both, inside labels float onto the field border, since there is no room for two lines. Use compact for consoles and admin lists, thin only where density matters more than comfort, and keep <C>comfortable</C> for products people use on phones.
+        </p>
+      </Section>
+
+      <Section title="Metrics">
+        <p>
+          To change one size without changing density, set it in <C>ThemeConfig.metrics</C>. It replaces
+          that token at every density, and whatever is built on it follows (capsule radii, the controls
+          inside a toolbar bubble). The provider writes it as an inline variable on <C>{'<html>'}</C>;{' '}
+          <C>themeAttributes</C> does the same for server rendering.
+        </p>
+        <Code
+          code={`<Provider theme={{ metrics: { controlHeight: { regular: 40 }, toolbarItem: 48 } }}>`}
+        />
+        <Code
+          lang="dart"
+          title="Flutter"
+          code={`ThemeProvider(
+  config: const ThemeConfig(
+    metrics: Metrics(controlHeight: MetricScale(regular: 40), toolbarItem: 48),
+  ),
+  child: app,
+)`}
+        />
+        <p>
+          The full list is on <Link to="/get-started/theming">Theming</Link>. In Flutter the same values
+          come from <C>ThemeProvider.of(context).sizes</C> (<C>SizeTokens</C>): <C>controlHeight</C>,{' '}
+          <C>toolbarItem</C>, <C>listRowHeight</C>, ….
         </p>
       </Section>
 
@@ -162,7 +257,7 @@ function Overview() {
             <>Set a component’s height with <C>controlSize</C>, not CSS.</>,
           ]}
           dontItems={[
-            'Hard-code 44px or 40px heights; compact density cannot change them.',
+            'Hard-code 36px or 44px heights; density and metrics cannot change them.',
             'Mix densities in one screen.',
             'Shrink touch targets on phones to fit more in.',
           ]}
@@ -180,7 +275,7 @@ export default definePage({
   id: 'sizing',
   title: 'Sizing and density',
   order: 2,
-  summary: 'The spacing scale, control heights, touch targets and what compact density changes.',
-  keywords: ['spacing', 'space', 'density', 'compact', 'height', 'touch target', '44px', 'padding'],
+  summary: 'The spacing scale, the iOS control metrics, touch targets, density and ThemeConfig metrics.',
+  keywords: ['spacing', 'space', 'density', 'compact', 'height', 'touch target', '44px', 'padding', 'metrics', 'ios', 'control size', 'toolbar', 'switch', 'segmented'],
   Overview,
 })

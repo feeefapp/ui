@@ -16,7 +16,7 @@ export default function WidthProvider() {
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, padding: 8, border: '1px solid var(--lab-line)', borderRadius: 16 }}>
       <strong>Summer sale page</strong>
       <ActionsWidthProvider value={220}>
-        <ActionsBar label="Page actions" actions={actions} size="compact" />
+        <ActionsBar label="Page actions" actions={actions} size="small" />
       </ActionsWidthProvider>
     </div>
   )

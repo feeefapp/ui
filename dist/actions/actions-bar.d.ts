@@ -8,15 +8,15 @@ export interface ActionsBarProps {
     label: string;
     /** Which side the row hugs inside a wider host. */
     align?: 'start' | 'end';
-    /** Control height: regular 44px or compact 40px. */
-    size?: 'regular' | 'compact';
+    /** Control height: `regular` (36px, or the host's control height in a Dock or toolbar) or `small` (30px). */
+    size?: 'small' | 'regular';
     /** Space between controls, in pixels. Included in the fit. */
     gap?: number;
     /** Accessible name of the overflow trigger. Defaults to the localized "More actions". */
     overflowLabel?: string;
     /** Class name for the bar. */
     className?: string;
-    /** Defaults to the nearest dialog, otherwise document.body. */
+    /** Where menus render. Defaults to the nearest dialog, else the nearest `FloatingBoundary`, else document.body. */
     portalContainer?: HTMLElement | null;
     /** Application effects are injected; this primitive never calls business APIs. */
     onActionError?: (error: unknown, action: Action) => void;

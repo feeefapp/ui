@@ -7,8 +7,9 @@ export type PopoverSurfaceProps = React.HTMLAttributes<HTMLDivElement> & {
     seed?: string;
 };
 /**
- * The shared opaque material for menus and popovers: surface, border, group corners and a faint
- * animated pixel grain. Paint only; the owner (usually Radix) keeps positioning and interaction.
+ * The shared opaque material for popovers (pickers, editors, settings panels): surface, border,
+ * group corners and a faint animated pixel grain. Paint only; the owner (usually Radix) keeps
+ * positioning and interaction. Menus (a trigger that opens a list of choices) use `MenuSurface`.
  */
 export declare const PopoverSurface: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLDivElement> & {
     /** Decorate the actual Radix/content host without adding a positioning wrapper. */

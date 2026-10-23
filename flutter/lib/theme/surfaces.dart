@@ -1,8 +1,7 @@
-import 'dart:ui' show Brightness;
-
-import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
+import '../theme.dart';
 
 /// `--lab-glass-shadow`'s colour: 18% black in light themes, 40% in dark.
 Color glassShadowColor(Brightness brightness) => Color.from(
@@ -30,20 +29,17 @@ void paintFloatingSurface(
   // --lab-glass-shadow: 0 8px 24px -14px (spread shrinks the shape; blur 24 → sigma 12).
   final spread = rect.deflate(14);
   if (!spread.isEmpty) {
-    canvas.save();
-    canvas.clipPath(
-      Path.combine(
-        PathOperation.difference,
-        Path()..addRect(rect.inflate(48)),
-        shape,
-      ),
-    );
+    // A box shadow is never drawn under its box: paint it on a layer and clear the shape (a
+    // difference clip leaves an antialiased seam on some backends, Chrome among them, and the
+    // translucent glass fill above would show the shadow through it).
+    canvas.saveLayer(rect.inflate(48), Paint());
     canvas.drawPath(
       superellipsePath(spread, r(radius - 14)).shift(const Offset(0, 8)),
       Paint()
         ..color = shadow
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
     );
+    canvas.drawPath(shape, Paint()..blendMode = BlendMode.clear);
     canvas.restore();
   }
   canvas.drawPath(shape, Paint()..color = fill);
@@ -78,8 +74,105 @@ void paintFloatingSurface(
   );
 }
 
+/// How the keyboard focus ring looks (`--lab-focus-ring-width|offset|color`): a thin line that
+/// hugs the shape [offset] px outside it (negative: inside). Only keyboard focus shows it
+/// (`onShowFocusHighlight`, i.e. `FocusManager.highlightMode == traditional`, like
+/// `:focus-visible`); pointer and touch focus show nothing.
+@immutable
+class FocusRingStyle {
+  const FocusRingStyle({
+    required this.width,
+    required this.offset,
+    required this.color,
+  });
+  final double width, offset;
+  final Color color;
+
+  /// The theme's ring. [inside] draws it inside the edge (rows and panels whose edge is clipped
+  /// or touches a neighbour). High contrast (`MediaQuery.highContrast`, the twin of
+  /// `prefers-contrast: more` / forced colours) draws a strong 3px ring 2px out in the full focus
+  /// colour.
+  factory FocusRingStyle.of(BuildContext context, {bool inside = false}) {
+    final theme = ThemeProvider.of(context);
+    final strong = MediaQuery.maybeHighContrastOf(context) ?? false;
+    final width = strong ? 3.0 : theme.sizes.focusRingWidth;
+    return FocusRingStyle(
+      width: width,
+      offset: inside ? -width : (strong ? 2.0 : theme.sizes.focusRingOffset),
+      color: strong ? theme.colors.focus : theme.colors.focusRing,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is FocusRingStyle &&
+      other.width == width &&
+      other.offset == offset &&
+      other.color == color;
+
+  @override
+  int get hashCode => Object.hash(width, offset, color);
+}
+
+/// Paints [style]'s ring around [rect] whose corners have [radius] (a CSS outline with
+/// `outline-offset`: the ring's inner edge sits [FocusRingStyle.offset] from the shape and its
+/// corners grow or shrink by the same amount).
+void paintFocusRing(
+  Canvas canvas,
+  Rect rect,
+  double radius,
+  FocusRingStyle style,
+) {
+  final grow = style.offset + style.width / 2;
+  final ring = rect.inflate(grow);
+  if (ring.isEmpty) return;
+  final r = (radius + grow).clamp(0.0, ring.shortestSide / 2);
+  canvas.drawPath(
+    superellipsePath(ring, [r, r, r, r]),
+    Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = style.width
+      ..color = style.color,
+  );
+}
+
+/// A widget that paints the keyboard focus ring over [child] while [visible].
+class FocusRing extends StatelessWidget {
+  const FocusRing({
+    super.key,
+    required this.visible,
+    required this.radius,
+    this.inside = false,
+    required this.child,
+  });
+  final bool visible, inside;
+  final double radius;
+  final Widget child;
+
+  // Always the same CustomPaint, so toggling the ring never remounts [child] (and its state).
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+    foregroundPainter: visible
+        ? _FocusRingPainter(FocusRingStyle.of(context, inside: inside), radius)
+        : null,
+    child: child,
+  );
+}
+
+class _FocusRingPainter extends CustomPainter {
+  _FocusRingPainter(this.style, this.radius);
+  final FocusRingStyle style;
+  final double radius;
+  @override
+  void paint(Canvas canvas, Size size) =>
+      paintFocusRing(canvas, Offset.zero & size, radius, style);
+  @override
+  bool shouldRepaint(_FocusRingPainter old) =>
+      old.style != style || old.radius != radius;
+}
+
 /// A control surface in the web kit's variant recipe: the raised shadow (`0 2px 6px`), fill, the
-/// inset top highlight, the 1px edge and an optional 2px focus ring just outside.
+/// inset top highlight, the 1px edge and an optional keyboard focus ring hugging it.
 class ControlSurfacePainter extends CustomPainter {
   ControlSurfacePainter({
     required this.fill,
@@ -89,11 +182,12 @@ class ControlSurfacePainter extends CustomPainter {
     required this.highlight,
     required this.depth,
     required this.focus,
+    this.edgeWidth = 1,
   });
   final Color fill, edge, highlight;
-  final double radius, depth;
+  final double radius, depth, edgeWidth;
   final bool raised;
-  final Color? focus;
+  final FocusRingStyle? focus;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -125,22 +219,14 @@ class ControlSurfacePainter extends CustomPainter {
     }
     if (edge.a > 0) {
       canvas.drawPath(
-        superellipsePath(rect, r, inset: 0.5),
+        superellipsePath(rect, r, inset: edgeWidth / 2),
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
+          ..strokeWidth = edgeWidth
           ..color = edge,
       );
     }
-    if (focus != null) {
-      canvas.drawPath(
-        superellipsePath(rect.inflate(4), [for (final v in r) v + 4], inset: 1),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = focus!,
-      );
-    }
+    if (focus != null) paintFocusRing(canvas, rect, radius, focus!);
   }
 
   @override
@@ -148,5 +234,6 @@ class ControlSurfacePainter extends CustomPainter {
       old.fill != fill ||
       old.edge != edge ||
       old.focus != focus ||
+      old.edgeWidth != edgeWidth ||
       old.radius != radius;
 }

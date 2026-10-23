@@ -14,8 +14,9 @@ export declare function Toolbar({ label, leading, trailing, className, ...props 
     trailing?: ReactNode;
 }): import("react").JSX.Element;
 /**
- * One glass pill for related toolbar controls (`role="group"`). Children should use
- * `appearance="toolbar"` and `controlSize="compact"`; the group sizes them to 40px (44px on touch).
+ * One glass pill for related toolbar controls (`role="group"`). Children use
+ * `appearance="toolbar"` and the default `regular` size, which the group sets to fill its
+ * `--lab-toolbar-item` bubble (44px comfortable, controls 38px; the bubble is at least 44px on touch).
  */
 export declare const ToolbarGroup: import("react").ForwardRefExoticComponent<Omit<Omit<HTMLAttributes<HTMLElement> & {
     as?: "aside" | "div" | "footer" | "header" | "nav" | "section";

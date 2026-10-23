@@ -2,6 +2,7 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { ToolbarSearch } from './toolbar-search.js';
 import { PopoverSurface, Slider } from './ui.js';
+import { useFloatingBoundary } from './menu/boundary.js';
 import { Button } from './ui.js';
 import { ScrollArea, revealScrollChild } from './scroll/index.js';
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, } from 'react';
@@ -38,6 +39,7 @@ export function ModelLadder({ stops, index, defaultIndex = 0, onChange, enabled 
     copy = useLadderCopy(copy);
     const [open, setOpen] = useState(false);
     const [container, setContainer] = useState(null);
+    const boundary = useFloatingBoundary();
     const trigger = useRef(null);
     const popover = useRef(null);
     if (!stops.length)
@@ -52,10 +54,10 @@ export function ModelLadder({ stops, index, defaultIndex = 0, onChange, enabled 
     return (_jsxs(Popover.Root, { open: open, onOpenChange: (next) => {
             // Inside a top-layer <dialog> the popover must portal into it, or it renders underneath.
             if (next)
-                setContainer(trigger.current?.closest('dialog') ?? null);
+                setContainer(trigger.current?.closest('dialog') ?? boundary);
             setOpen(next);
             onOpenChange?.(next);
-        }, children: [_jsx(Popover.Trigger, { asChild: true, disabled: !enabled, children: _jsxs(Button, { ref: trigger, type: "button", variant: "ghost", appearance: "toolbar", controlSize: variant === 'icon' ? 'icon' : 'regular', className: `lab-ladder-trigger lab-ladder-trigger--${variant} ${className ?? ''}`, "data-top": top, "aria-label": `${copy.quality}: ${tier}${tier === name ? '' : `, ${name}`}`, title: `${tier}${tier === name ? '' : ` · ${name}`}`, children: [_jsx("span", { className: "lab-ladder-trigger-icon", "aria-hidden": "true", children: _jsx(Brain, { size: variant === 'icon' ? 18 : 16, strokeWidth: 1.6 }) }), variant === 'chip' && (_jsxs("span", { className: "lab-ladder-trigger-text", children: [_jsx("b", { className: "lab-ladder-swap", children: tier }, tier), _jsx("small", { children: name })] })), variant === 'chip' && _jsx(ChevronDown, { size: 14, "aria-hidden": "true" })] }) }), _jsx(Popover.Portal, { container: container ?? undefined, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(Popover.Content, { ref: popover, className: "lab-ladder-popover", side: side, align: align, sideOffset: 8, collisionPadding: 12, onEscapeKeyDown: (event) => {
+        }, children: [_jsx(Popover.Trigger, { asChild: true, disabled: !enabled, children: _jsxs(Button, { ref: trigger, type: "button", variant: "ghost", appearance: "toolbar", controlSize: variant === 'icon' ? 'icon' : 'regular', className: `lab-ladder-trigger lab-ladder-trigger--${variant} ${className ?? ''}`, "data-top": top, "aria-label": `${copy.quality}: ${tier}${tier === name ? '' : `, ${name}`}`, title: `${tier}${tier === name ? '' : ` · ${name}`}`, children: [_jsx("span", { className: "lab-ladder-trigger-icon", "aria-hidden": "true", children: _jsx(Brain, { size: variant === 'icon' ? 18 : 16, strokeWidth: 1.6 }) }), variant === 'chip' && (_jsxs("span", { className: "lab-ladder-trigger-text", children: [_jsx("b", { className: "lab-ladder-swap", children: tier }, tier), _jsx("small", { children: name })] })), variant === 'chip' && _jsx(ChevronDown, { size: 14, "aria-hidden": "true" })] }) }), _jsx(Popover.Portal, { container: container ?? undefined, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(Popover.Content, { ref: popover, className: "lab-ladder-popover", side: side, align: align, sideOffset: 8, collisionPadding: 12, collisionBoundary: container ?? undefined, onEscapeKeyDown: (event) => {
                             const target = event.target;
                             // Radix handles Escape during document capture. Let the focused
                             // model list return to quality before the popover itself closes.

@@ -14,7 +14,7 @@ class Compact extends StatelessWidget {
       SizedBox(
         width: 160,
         child: TextField(
-          controlSize: .compact,
+          controlSize: .small,
           hint: 'SKU',
           defaultValue: 'TSH-BLK-M',
         ),
@@ -22,7 +22,7 @@ class Compact extends StatelessWidget {
       SizedBox(
         width: 120,
         child: TextField(
-          controlSize: .compact,
+          controlSize: .small,
           hint: 'Quantity',
           keyboardType: TextInputType.number,
           defaultValue: '2',
@@ -31,7 +31,7 @@ class Compact extends StatelessWidget {
       SizedBox(
         width: 160,
         child: TextField(
-          controlSize: .compact,
+          controlSize: .small,
           hint: 'Unit price',
           keyboardType: TextInputType.number,
           defaultValue: '2500',

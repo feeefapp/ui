@@ -20,10 +20,10 @@ function PlaygroundToolbar(v: { search: boolean; back: boolean; trailing: boolea
   const [query, setQuery] = useState('')
   const actions = v.trailing ? (
     <ToolbarGroup label="Actions">
-      <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Export CSV">
+      <IconButton variant="text" appearance="toolbar" aria-label="Export CSV">
         <Download />
       </IconButton>
-      <Button variant="filled" appearance="toolbar" controlSize="compact">
+      <Button variant="filled" appearance="toolbar">
         <Plus />
         Add
       </Button>
@@ -39,7 +39,7 @@ function PlaygroundToolbar(v: { search: boolean; back: boolean; trailing: boolea
           trailing={actions}
         >
           <ToolbarGroup label="Filters">
-            <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Filters">
+            <IconButton variant="text" appearance="toolbar" aria-label="Filters">
               <SlidersHorizontal />
             </IconButton>
           </ToolbarGroup>
@@ -53,7 +53,7 @@ function PlaygroundToolbar(v: { search: boolean; back: boolean; trailing: boolea
         leading={
           <ToolbarGroup label="Navigation">
             {v.back && (
-              <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back">
+              <IconButton variant="text" appearance="toolbar" aria-label="Back">
                 <ArrowLeft className="lab-dir-flip" />
               </IconButton>
             )}
@@ -69,9 +69,9 @@ function PlaygroundToolbar(v: { search: boolean; back: boolean; trailing: boolea
 function playgroundCode(v: { search: boolean; back: boolean; trailing: boolean; title: string }) {
   if (v.search)
     return `<ToolbarSearch\n  label="Search ${v.title.toLowerCase()}"\n  value={query}\n  onValueChange={setQuery}${v.trailing ? '\n  trailing={<ToolbarGroup label="Actions">…</ToolbarGroup>}' : ''}\n>\n  <ToolbarGroup label="Filters">…</ToolbarGroup>\n</ToolbarSearch>`
-  const leading = `  leading={\n    <ToolbarGroup label="Navigation">\n${v.back ? '      <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back">…</IconButton>\n' : ''}      <span>${v.title}</span>\n    </ToolbarGroup>\n  }`
+  const leading = `  leading={\n    <ToolbarGroup label="Navigation">\n${v.back ? '      <IconButton variant="text" appearance="toolbar" aria-label="Back">…</IconButton>\n' : ''}      <span>${v.title}</span>\n    </ToolbarGroup>\n  }`
   const trailing = v.trailing
-    ? `\n  trailing={\n    <ToolbarGroup label="Actions">\n      <Button variant="filled" appearance="toolbar" controlSize="compact">Add</Button>\n    </ToolbarGroup>\n  }`
+    ? `\n  trailing={\n    <ToolbarGroup label="Actions">\n      <Button variant="filled" appearance="toolbar">Add</Button>\n    </ToolbarGroup>\n  }`
     : ''
   return `<Toolbar\n  label="${v.title}"\n${leading}${trailing}\n/>`
 }
@@ -86,7 +86,7 @@ function Overview() {
           head={['Component', 'Role']}
           rows={[
             [<C>Toolbar</C>, 'Unpainted row. leading at the start, trailing at the end; the space between passes clicks through to the content underneath.'],
-            [<C>ToolbarGroup</C>, 'One glass pill around related controls. It sizes children to 40px (44px on touch and narrow screens) and fits their corners to the pill.'],
+            [<C>ToolbarGroup</C>, 'One glass pill around related controls, 44px tall like an iOS bar item (--lab-toolbar-item, at least 44px on touch). It sizes regular children to fill it (38px) and fits their corners to the pill.'],
             [<C>ToolbarSearch</C>, 'A search button that opens into a field inside the same pill, taking the free width of its row.'],
           ]}
         />
@@ -94,15 +94,16 @@ function Overview() {
           A toolbar is chrome that floats over content: the <C>top</C> slot of a <C>ScrollArea</C>, a
           scaffold's app bar, the head of a panel. Only groups are painted, so related controls read as one
           object and unrelated ones stay apart. Controls inside a group use{' '}
-          <C>appearance="toolbar"</C> and <C>controlSize="compact"</C>, which drop their own surface and
-          share the group's glass. A filled button keeps its fill.
+          <C>appearance="toolbar"</C> and the default <C>regular</C> size, which drop their own surface,
+          take the group's height and share its glass. A filled button keeps its fill. Groups sit{' '}
+          <C>--lab-toolbar-gap</C> (12px) apart.
         </p>
         <Code
           code={`<Toolbar
   label="Products"
   leading={
     <ToolbarGroup label="Navigation">
-      <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back">
+      <IconButton variant="text" appearance="toolbar" aria-label="Back">
         <ArrowLeft className="lab-dir-flip" />
       </IconButton>
       <span>Products</span>
@@ -110,7 +111,7 @@ function Overview() {
   }
   trailing={
     <ToolbarGroup label="Product actions">
-      <Button variant="filled" appearance="toolbar" controlSize="compact">Add product</Button>
+      <Button variant="filled" appearance="toolbar">Add product</Button>
     </ToolbarGroup>
   }
 />`}
@@ -123,7 +124,7 @@ function Overview() {
 
       <Section title="Search">
         <p>
-          <C>ToolbarSearch</C> starts as a 40px search button. Opening it moves focus into the field and
+          <C>ToolbarSearch</C> starts as a search button the size of a toolbar bubble (44px). Opening it moves focus into the field and
           springs the pill to the full width of its row (so use it as the row itself, or give it a
           full-width parent, rather than placing it in a content-sized slot); the controls passed as <C>children</C> (filters,
           sort) hide while it is open and come back when it closes. <C>trailing</C> stays visible
@@ -190,11 +191,11 @@ export default definePage({
   ),
   Preview: () => (
     <ToolbarGroup label="Preview">
-      <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back">
+      <IconButton variant="text" appearance="toolbar" aria-label="Back">
         <ArrowLeft />
       </IconButton>
       <span className="toolbar-demo-title">Products</span>
-      <Button variant="filled" appearance="toolbar" controlSize="compact">
+      <Button variant="filled" appearance="toolbar">
         Add
       </Button>
     </ToolbarGroup>

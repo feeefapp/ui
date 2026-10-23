@@ -1,15 +1,11 @@
-import 'dart:math' as math;
-
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-import '../glass/container.dart';
 import '../icons/lucide.dart';
 import '../primitives/button.dart';
-import '../primitives/popover_surface.dart';
+import '../menu/anchored_panel.dart';
+import '../menu/menu_surface.dart';
 import '../primitives/select.dart';
-import '../theme.dart';
-import '../theme/css_text.dart';
 import 'i18n.dart';
 import 'i18n_core.dart';
 
@@ -72,9 +68,8 @@ class _LanguageMenuButton extends StatefulWidget {
 }
 
 class _LanguageMenuButtonState extends State<_LanguageMenuButton> {
-  final _portal = OverlayPortalController();
-  final _link = LayerLink();
   final _trigger = FocusNode(debugLabel: 'Language');
+  bool _open = false;
 
   @override
   void dispose() {
@@ -82,67 +77,43 @@ class _LanguageMenuButtonState extends State<_LanguageMenuButton> {
     super.dispose();
   }
 
-  void _toggle() {
-    setState(() => _portal.isShowing ? _portal.hide() : _portal.show());
-  }
+  void _toggle() => setState(() => _open = !_open);
 
   void _close() {
-    if (!_portal.isShowing) return;
-    setState(_portal.hide);
+    if (!_open) return;
+    setState(() => _open = false);
     _trigger.requestFocus();
   }
 
   @override
   Widget build(BuildContext context) {
     final i18n = widget.i18n;
-    final dir = Directionality.of(context);
-    return CompositedTransformTarget(
-      link: _link,
-      child: OverlayPortal(
-        controller: _portal,
-        overlayChildBuilder: (context) => GlassLayer(
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: _close,
-                ),
-              ),
-              // side="top" align="end" sideOffset={8}
-              CompositedTransformFollower(
-                link: _link,
-                targetAnchor: AlignmentDirectional.topEnd.resolve(dir),
-                followerAnchor: AlignmentDirectional.bottomEnd.resolve(dir),
-                offset: const Offset(0, -8),
-                child: Directionality(
-                  textDirection: dir,
-                  child: _LanguageMenu(
-                    label: i18n.t('lab.common.language'),
-                    languages: widget.languages,
-                    selected: i18n.locale,
-                    choose: (code) {
-                      _close();
-                      i18n.setLocale(code);
-                    },
-                    close: _close,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        child: Semantics(
-          expanded: _portal.isShowing,
-          child: IconButton(
-            variant: ButtonVariant.ghost,
-            appearance: ButtonAppearance.toolbar,
-            controlSize: ControlSize.icon,
-            ariaLabel: i18n.t('lab.common.language'),
-            focusNode: _trigger,
-            onClick: _toggle,
-            icon: const LucideGlobe(size: 20),
-          ),
+    // A toolbar trigger: the menu covers it and lines up with its edge (MenuSurface).
+    return AnchoredPanel(
+      open: _open,
+      onDismiss: _close,
+      cover: true,
+      align: null,
+      panel: (context) => _LanguageMenu(
+        label: i18n.t('lab.common.language'),
+        languages: widget.languages,
+        selected: i18n.locale,
+        choose: (code) {
+          _close();
+          i18n.setLocale(code);
+        },
+        close: _close,
+      ),
+      child: Semantics(
+        expanded: _open,
+        child: IconButton(
+          variant: ButtonVariant.ghost,
+          appearance: ButtonAppearance.toolbar,
+          controlSize: ControlSize.icon,
+          ariaLabel: i18n.t('lab.common.language'),
+          focusNode: _trigger,
+          onClick: _toggle,
+          icon: const LucideGlobe(size: 20),
         ),
       ),
     );
@@ -190,11 +161,6 @@ class _LanguageMenuState extends State<_LanguageMenu> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeProvider.of(context);
-    final c = theme.colors;
-    final s = theme.sizes;
-    final screen = MediaQuery.sizeOf(context).width;
-    final space1 = s.density == Density.thin ? 2.0 : 4.0;
     final n = widget.languages.length;
     return FocusScope(
       node: _scope,
@@ -218,44 +184,18 @@ class _LanguageMenuState extends State<_LanguageMenu> {
         }
         return KeyEventResult.handled;
       },
-      child: Semantics(
-        container: true,
-        explicitChildNodes: true,
-        scopesRoute: false,
+      child: MenuSurface(
         label: widget.label,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minWidth: math.min(200, screen - 24),
-            maxWidth: math.min(360, screen - 24),
-          ),
-          child: IntrinsicWidth(
-            child: PopoverSurface(
-              padding: EdgeInsets.all(space1),
-              child: DefaultTextStyle.merge(
-                style: TextStyle(
-                  fontSize: 14,
-                  height: 20 / 14,
-                  color: c.ink,
-                  leadingDistribution: TextLeadingDistribution.even,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (var i = 0; i < n; i++)
-                      _row(context, i, s.radiusGroup - space1 - 1),
-                  ],
-                ),
-              ),
-            ),
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [for (var i = 0; i < n; i++) _row(i)],
         ),
       ),
     );
   }
 
-  Widget _row(BuildContext context, int i, double radius) {
-    final theme = ThemeProvider.of(context);
+  Widget _row(int i) {
     final language = widget.languages[i];
     final selected = language.code == widget.selected;
     return Semantics(
@@ -263,50 +203,14 @@ class _LanguageMenuState extends State<_LanguageMenu> {
       inMutuallyExclusiveGroup: true,
       button: true,
       onTap: () => widget.choose(language.code),
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _highlight = i),
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => widget.choose(language.code),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: i == _highlight
-                  ? theme.colors.surfaceSoft
-                  : const Color(0x00000000),
-              borderRadius: BorderRadius.circular(radius),
-            ),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: theme.coarsePointer(context)
-                    ? 44
-                    : theme.sizes.controlCompact,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                child: Row(
-                  spacing: 8,
-                  children: [
-                    SizedBox.square(
-                      dimension: 18,
-                      child: selected
-                          ? const LucideCheck(size: 16)
-                          : const SizedBox.shrink(),
-                    ),
-                    Expanded(
-                      child: CssBaseline(
-                        lineHeight: 20,
-                        child: _LanguageName(language),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+      child: MenuRow(
+        leading: selected
+            ? const LucideCheck(size: 16)
+            : const SizedBox.shrink(),
+        label: _LanguageName(language),
+        highlighted: i == _highlight,
+        onHover: () => setState(() => _highlight = i),
+        onTap: () => widget.choose(language.code),
       ),
     );
   }

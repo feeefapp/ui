@@ -194,18 +194,17 @@ export function OrderWorkspace({
             )}
             <ToolbarGroup label="Order tools">
               {state.compact && (
-                <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Call customer">
+                <IconButton variant="text" appearance="toolbar" aria-label="Call customer">
                   <Phone />
                 </IconButton>
               )}
-              <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Print label">
+              <IconButton variant="text" appearance="toolbar" aria-label="Print label">
                 <Printer />
               </IconButton>
               {!inspectorInline && (
                 <IconButton
                   variant="text"
                   appearance="toolbar"
-                  controlSize="compact"
                   aria-label="Order details"
                   aria-haspopup="dialog"
                   onClick={() => setDetailsOpen(true)}

@@ -9,7 +9,7 @@ const controls = {
   max: { type: 'number', min: 60, max: 200, step: 10, default: 100 },
   step: { type: 'number', min: 1, max: 20, default: 5 },
   trackStyle: { type: 'select', options: ['thick', 'thin'], default: 'thick' },
-  controlSize: { type: 'select', options: ['regular', 'compact'], default: 'regular' },
+  controlSize: { type: 'select', options: ['small', 'regular'], default: 'regular' },
   showStops: { type: 'boolean', label: 'Show stops', default: false },
   disabled: { type: 'boolean', default: false },
 } as const
@@ -28,7 +28,7 @@ function Overview() {
               step={v.step}
               defaultValue={Math.round((v.min + v.max) / 2 / v.step) * v.step}
               trackStyle={v.trackStyle as 'thick' | 'thin'}
-              controlSize={v.controlSize as 'regular' | 'compact'}
+              controlSize={v.controlSize as 'small' | 'regular'}
               showStops={v.showStops}
               disabled={v.disabled}
               getValueText={(value) => `${value}%`}
@@ -94,9 +94,11 @@ function Overview() {
           mark under the track: use it for named levels such as “Draft”, “Standard”, “Best”.
         </p>
         <p>
-          <C>trackStyle="thick"</C>, the default, makes the whole track a 44px touch surface with the
-          thumb inside it; <C>thin</C> draws a 4px rail with a small round thumb for settings panels
-          and dense layouts. <C>controlSize="compact"</C> makes the thick track 40px.
+          <C>trackStyle="thick"</C>, the default, makes the whole track a touch surface as tall as a
+          regular control (36px) with the thumb inside it; <C>controlSize="small"</C> makes it 30px.{' '}
+          <C>thin</C> is the iOS slider: a 6px rail with a 37 × 24px capsule thumb, for settings panels
+          and dense layouts. Both follow density and <C>ThemeConfig.metrics</C> (<C>sliderTrack</C>,{' '}
+          <C>thumbSize</C>).
         </p>
       </Section>
 

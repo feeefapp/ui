@@ -5,6 +5,7 @@ import { definePage, examplesFrom } from '../../../src/model'
 import { Playground, jsx } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
 import { C } from '../../../src/blocks/code'
+import { Link } from '../../../src/router'
 
 const VARIANTS = ['elevated', 'outlined', 'filled', 'tonal', 'text'] as const
 const WILAYAS = ['Alger', 'Oran', 'Constantine', 'Blida', 'Sétif', 'Annaba']
@@ -13,7 +14,7 @@ const controls = {
   hint: { type: 'text', default: 'Wilaya' },
   labelStyle: { type: 'select', options: ['outlined', 'inside'], default: 'outlined' },
   variant: { type: 'select', options: VARIANTS, default: 'elevated' },
-  controlSize: { type: 'select', options: ['regular', 'compact'], default: 'regular' },
+  controlSize: { type: 'select', options: ['small', 'regular'], default: 'regular' },
   supportingText: { type: 'text', default: 'Delivery prices depend on the wilaya.' },
   leadingIcon: { type: 'boolean', label: 'Leading icon', default: false },
   error: { type: 'boolean', label: 'Error', default: false },
@@ -38,7 +39,7 @@ function Overview() {
               placeholder="Choose a wilaya"
               labelStyle={v.labelStyle as 'outlined' | 'inside'}
               variant={v.variant as (typeof VARIANTS)[number]}
-              controlSize={v.controlSize as 'regular' | 'compact'}
+              controlSize={v.controlSize as 'small' | 'regular'}
               supportingText={v.supportingText || undefined}
               leadingIcon={v.leadingIcon ? <MapPin size={18} /> : undefined}
               error={v.error ? 'Choose where the order ships.' : undefined}
@@ -87,6 +88,16 @@ function Overview() {
           <C>Select</C> is controlled: pass <C>value</C> (a string, or <C>null</C> for no
           selection) and <C>onValueChange</C>. Each <C>Option</C> uses its text as its value
           unless you give it a <C>value</C>.
+        </p>
+      </Section>
+
+      <Section title="The options menu">
+        <p>
+          The options open in the kit’s <Link to="/components/menu">menu</Link>: a glass bubble that
+          grows out of the field and covers it, centred on it and at least as wide, then flies back
+          into it when you choose. It is at most 320 px tall and scrolls, flips above the field when
+          there is no room below, and stays inside the window or the nearest{' '}
+          <C>FloatingBoundary</C>.
         </p>
       </Section>
 

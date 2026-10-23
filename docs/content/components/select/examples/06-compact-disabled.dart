@@ -19,7 +19,7 @@ class _CompactAndDisabledState extends State<CompactAndDisabled> {
       spacing: 16,
       children: [
         Select(
-          controlSize: .compact,
+          controlSize: .small,
           labelStyle: .inside,
           hint: 'Size',
           value: size,

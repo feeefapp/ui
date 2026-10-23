@@ -18,6 +18,7 @@ import { ToolbarGroup } from './toolbar'
 import { IconButton, Button } from './primitives/button'
 import { TextField } from './primitives/text-field'
 import { PopoverSurface } from './primitives/popover-surface'
+import { useFloatingBoundary } from './menu/boundary'
 import { Modal } from './primitives/modal'
 import { ScrollArea } from './scroll'
 import { Dock } from './dock'
@@ -138,6 +139,7 @@ export function FilterBar({
   const values = controlledValues ?? localValues,
     pins = controlledPins ?? localPins
   const [container, setContainer] = useState<HTMLElement>()
+  const boundary = useFloatingBoundary()
   const [dir, setDir] = useState<'rtl' | 'ltr'>('ltr')
   const [catalog, setCatalog] = useState(false),
     [query, setQuery] = useState('')
@@ -181,7 +183,7 @@ export function FilterBar({
   const pin = (id: string) => setPins([...new Set([...pins, id])])
   const prepare = (open: boolean) => {
     if (open) {
-      setContainer(host.current?.closest('dialog') || undefined)
+      setContainer(host.current?.closest('dialog') || boundary || undefined)
       setDir(host.current && getComputedStyle(host.current).direction === 'rtl' ? 'rtl' : 'ltr')
     }
   }
@@ -229,7 +231,7 @@ export function FilterBar({
           <IconButton
             variant="text"
             appearance="toolbar"
-            controlSize="compact"
+            controlSize="regular"
             aria-label="Back from filtered view"
             onClick={onBack}
           >
@@ -250,7 +252,7 @@ export function FilterBar({
             <IconButton
               variant="text"
               appearance="toolbar"
-              controlSize="compact"
+              controlSize="regular"
               aria-label={`Choose filters${active ? ` (${active} active)` : ''}`}
             >
               <ListFilter />
@@ -264,6 +266,7 @@ export function FilterBar({
                 aria-label="Available filters"
                 sideOffset={8}
                 collisionPadding={12}
+                collisionBoundary={container}
                 align="start"
                 onOpenAutoFocus={(event) => {
                   event.preventDefault()
@@ -292,7 +295,7 @@ export function FilterBar({
                     >
                       <Button
                         variant="text"
-                        controlSize="compact"
+                        controlSize="regular"
                         disabled={!active}
                         onClick={clearAll}
                       >
@@ -349,7 +352,7 @@ export function FilterBar({
                           </Button>
                           <IconButton
                             variant="text"
-                            controlSize="compact"
+                            controlSize="regular"
                             aria-label={`${pins.includes(option.id) ? 'Unpin' : 'Pin'} ${option.label}`}
                             aria-pressed={pins.includes(option.id)}
                             onClick={() =>
@@ -386,7 +389,7 @@ export function FilterBar({
               <IconButton
                 variant="text"
                 appearance="toolbar"
-                controlSize="compact"
+                controlSize="regular"
                 aria-label="Create filter from natural language"
               >
                 <Sparkles />
@@ -400,6 +403,7 @@ export function FilterBar({
                   aria-label="Describe a filter"
                   sideOffset={8}
                   collisionPadding={12}
+                  collisionBoundary={container}
                   align="start"
                   onOpenAutoFocus={(event) => {
                     // Start in the description field, not on the scroll region.
@@ -417,7 +421,7 @@ export function FilterBar({
                           type="submit"
                           form={`${formId}-natural`}
                           variant="filled"
-                          controlSize="compact"
+                          controlSize="regular"
                           loading={busy}
                           disabled={busy || !text.trim()}
                         >
@@ -490,7 +494,7 @@ export function FilterBar({
                 <Button
                   variant="text"
                   appearance="toolbar"
-                  controlSize="compact"
+                  controlSize="regular"
                   aria-label={`Edit ${option.label} filter`}
                   onClick={(event) => edit(option, event.currentTarget)}
                 >
@@ -500,7 +504,7 @@ export function FilterBar({
                 <IconButton
                   variant="text"
                   appearance="toolbar"
-                  controlSize="compact"
+                  controlSize="regular"
                   aria-label={`Clear ${option.label} value`}
                   disabled={read(option) == null}
                   onClick={(event) => {
@@ -515,7 +519,7 @@ export function FilterBar({
                 <IconButton
                   variant="text"
                   appearance="toolbar"
-                  controlSize="compact"
+                  controlSize="regular"
                   aria-label={`Unpin ${option.label}`}
                   onClick={() => setPins(pins.filter((id) => id !== option.id))}
                 >
@@ -542,6 +546,7 @@ export function FilterBar({
               align="start"
               sideOffset={8}
               collisionPadding={12}
+              collisionBoundary={container}
               onOpenAutoFocus={(event) => {
                 if (smallSelected?.type === 'enum') {
                   event.preventDefault()
@@ -568,7 +573,7 @@ export function FilterBar({
                     <Dock label="Filter value actions">
                       <Button
                         variant="text"
-                        controlSize="compact"
+                        controlSize="regular"
                         onClick={() => {
                           change(smallSelected, null)
                           pin(smallSelected.id)
@@ -582,7 +587,7 @@ export function FilterBar({
                           variant="filled"
                           type="submit"
                           form={`${formId}-date`}
-                          controlSize="compact"
+                          controlSize="regular"
                         >
                           Apply
                         </Button>

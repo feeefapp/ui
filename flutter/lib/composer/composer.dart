@@ -9,6 +9,7 @@ import '../glass/member.dart';
 import '../primitives/raw_input.dart';
 import '../scaffold.dart' show GlassSurface;
 import '../theme.dart';
+import '../theme/surfaces.dart';
 import '../theme/tokens.dart' show MotionTokens;
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
@@ -31,7 +32,7 @@ double _space(SizeTokens s, int step) => switch ((step, s.density)) {
 /// Shared Chat/Image card (`.lab-pc-card`): the twin of `ComposerCard` in
 /// `@feeef.dev/ui/composer/composer`. Its glass is painted by a glass container (its own, or the
 /// row it sits in), so it shares light, press and tint; it follows its own animated height.
-/// Focus anywhere inside rings it in the primary colour.
+/// Focus anywhere inside tints its edge in the primary colour.
 class ComposerCard extends StatefulWidget {
   const ComposerCard({
     super.key,
@@ -49,7 +50,7 @@ class ComposerCard extends StatefulWidget {
   /// Content inside the card, above the layout grid.
   final Widget? above;
 
-  /// Forces the focus ring (`data-focused`); null rings the card while focus is inside it.
+  /// Forces the focus edge (`data-focused`); null tints the card while focus is inside it.
   final bool? focused;
 
   /// Dashed primary outline while a compatible file is dragged over the drop target.
@@ -94,7 +95,7 @@ class _ComposerCardState extends State<ComposerCard> {
       foregroundPainter: _CardStatePainter(
         radius: radius,
         border: focused ? mixSrgb(c.primary, 0.55, c.line) : null,
-        ring: focused ? mixSrgb(c.primary, 0.14, transparent) : null,
+        borderWidth: FocusRingStyle.of(context).width,
         dashed: widget.dropActive ? c.primary : null,
       ),
       child: GlassMemberBox(
@@ -114,38 +115,28 @@ class _ComposerCardState extends State<ComposerCard> {
   }
 }
 
-/// Focus border and 4px ring, and the dashed drop outline (2px, 3px outside).
+/// Focus edge (the card's own border, thickened inward like a field's, no outer ring) and the
+/// dashed drop outline (2px, 3px outside).
 class _CardStatePainter extends CustomPainter {
   _CardStatePainter({
     required this.radius,
     required this.border,
-    required this.ring,
+    required this.borderWidth,
     required this.dashed,
   });
-  final double radius;
-  final Color? border, ring, dashed;
+  final double radius, borderWidth;
+  final Color? border, dashed;
 
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
     List<double> r(double v) => [v, v, v, v];
-    if (ring != null) {
-      // box-shadow: 0 0 0 4px: a band just outside the border box.
-      canvas.drawPath(
-        Path.combine(
-          PathOperation.difference,
-          superellipsePath(rect.inflate(4), r(radius + 4)),
-          superellipsePath(rect, r(radius)),
-        ),
-        Paint()..color = ring!,
-      );
-    }
     if (border != null) {
       canvas.drawPath(
-        superellipsePath(rect, r(radius), inset: 0.5),
+        superellipsePath(rect, r(radius), inset: borderWidth / 2),
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
+          ..strokeWidth = borderWidth
           ..color = border!,
       );
     }
@@ -178,7 +169,7 @@ class _CardStatePainter extends CustomPainter {
   bool shouldRepaint(_CardStatePainter old) =>
       old.radius != radius ||
       old.border != border ||
-      old.ring != ring ||
+      old.borderWidth != borderWidth ||
       old.dashed != dashed;
 }
 
@@ -348,8 +339,8 @@ class ComposerInput extends StatelessWidget {
   static ({double minHeight, double padBlock, double padInline}) metrics(
     SizeTokens s,
   ) => (
-    minHeight: s.controlCompact,
-    padBlock: (s.controlCompact - 24) / 2,
+    minHeight: s.toolbarControl,
+    padBlock: (s.toolbarControl - 24) / 2,
     padInline: _space(s, 2),
   );
 

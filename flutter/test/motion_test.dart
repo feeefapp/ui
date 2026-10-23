@@ -22,6 +22,8 @@ void main() {
     'bouncy': Springs.bouncy,
     'release': Springs.release,
     'interactive': Springs.interactive,
+    'menu': Springs.menu,
+    'menuDismiss': Springs.menuDismiss,
   };
 
   test('springs solve exactly like the web kit', () {

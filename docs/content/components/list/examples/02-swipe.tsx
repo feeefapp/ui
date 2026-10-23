@@ -53,7 +53,7 @@ export default function SwipeInbox() {
         </span>
         <Button
           variant="text"
-          controlSize="compact"
+          controlSize="small"
           onClick={() => {
             setOrders(START)
             setConfirmed([])

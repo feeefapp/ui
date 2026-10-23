@@ -9,6 +9,7 @@ import '../theme.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
 import '../theme/light_edge.dart';
+import '../theme/surfaces.dart';
 
 /// One choice of a segmented control.
 class SegmentOption<T> {
@@ -138,7 +139,12 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
     final tabIndex = enabled.any((i) => widget.options[i].value == widget.value)
         ? widget.options.indexWhere((o) => o.value == widget.value)
         : (enabled.isEmpty ? -1 : enabled.first);
-    final optionHeight = theme.coarsePointer(context) ? 44.0 : s.controlCompact;
+    // The thumb: the track less the inset on both sides (32 − 2 × 2 = 28, iOS); 44 on touch.
+    final inset = s.segmentedInset;
+    final optionHeight = theme.coarsePointer(context)
+        ? s.touchTarget
+        : s.segmentedHeight - 2 * inset;
+    final groupRadius = (optionHeight + 2 * inset) / 2 * s.radiusScale;
 
     Widget segment(int i) => _Segment(
       option: widget.options[i],
@@ -148,24 +154,24 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
       tabbable: i == tabIndex,
       height: optionHeight,
       padding: s.controlPadding,
-      radius: s.radiusControlCompact,
-      // 15px, but the dense themes' control size wins in the CSS (higher specificity).
-      fontSize: s.density == Density.comfortable ? 15 : s.controlFont,
+      radius: optionHeight / 2 * s.radiusScale,
+      // 13px semibold, iOS; 12px in the thin density.
+      fontSize: s.density == Density.thin ? 12 : 13,
       onSelect: () => widget.onChange(widget.options[i].value),
       fill: widget.equalWidth,
     );
     final Widget options = widget.equalWidth
         ? Row(
-            // As far apart as the 4px inset (`--lab-segmented-inset`).
-            spacing: 4,
+            // As far apart as the inset (`--lab-segmented-inset`).
+            spacing: inset,
             children: [
               for (var i = 0; i < widget.options.length; i++)
                 Expanded(child: segment(i)),
             ],
           )
         : Wrap(
-            spacing: 4,
-            runSpacing: 4,
+            spacing: inset,
+            runSpacing: inset,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               for (var i = 0; i < widget.options.length; i++) segment(i),
@@ -183,22 +189,19 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
         onKeyEvent: _onKey,
         child: grouped
             ? GlassMemberBox(
-                radius: s.radiusGroup,
+                radius: groupRadius,
                 standalone: (child) => CustomPaint(
                   painter: _GroupPainter(
                     fill: c.glassFill,
                     edge: c.line,
                     highlight: c.glassEdgeLow,
                     light: c.glassEdgeLight,
-                    radius: s.radiusGroup,
+                    radius: groupRadius,
                   ),
                   child: child,
                 ),
-                // 4px padding inside the group's 1px border.
-                child: Padding(
-                  padding: const EdgeInsets.all(5),
-                  child: options,
-                ),
+                // The inset counts the group's 1px border.
+                child: Padding(padding: EdgeInsets.all(inset), child: options),
               )
             : options,
       ),
@@ -234,8 +237,12 @@ class _Segment<T> extends StatefulWidget {
   State<_Segment<T>> createState() => _SegmentState<T>();
 }
 
-/// One option: the web kit's ghost toolbar button with `.lab-segmented-option` geometry
-/// (compact height, `--lab-control-padding` sides, compact radius, 15/20 text; selected = primary).
+/// 13px/18px, 12px/16px (`.lab-segmented-option` line heights).
+double _line(double fontSize) => fontSize <= 12 ? 16 : 18;
+
+/// One option: the web kit's ghost toolbar button with `.lab-segmented-option` geometry (the
+/// segmented thumb height, `--lab-control-padding` sides, a capsule, 13px semibold text;
+/// selected = primary).
 class _SegmentState<T> extends State<_Segment<T>> {
   bool _hovered = false;
   bool _down = false;
@@ -250,7 +257,7 @@ class _SegmentState<T> extends State<_Segment<T>> {
         ? c.primary
         : _down && !widget.disabled
         ? c.controlPressed
-        : _hovered && !widget.disabled
+        : (_hovered || _focusVisible) && !widget.disabled
         ? c.controlHover
         : transparent;
     return Semantics(
@@ -297,17 +304,16 @@ class _SegmentState<T> extends State<_Segment<T>> {
                   tween: ColorTween(end: fill),
                   duration: const Duration(milliseconds: 140),
                   curve: const Cubic(0.2, 0.8, 0.2, 1),
-                  builder: (context, color, child) => DecoratedBox(
-                    decoration: ShapeDecoration(
-                      color: color,
-                      shape: SuperellipseBorder(
-                        radius: widget.radius,
-                        side: _focusVisible
-                            ? BorderSide(color: c.focus, width: 2)
-                            : BorderSide.none,
+                  builder: (context, color, child) => FocusRing(
+                    visible: _focusVisible,
+                    radius: widget.radius,
+                    child: DecoratedBox(
+                      decoration: ShapeDecoration(
+                        color: color,
+                        shape: SuperellipseBorder(radius: widget.radius),
                       ),
+                      child: child,
                     ),
-                    child: child,
                   ),
                   child: SizedBox(
                     height: widget.height,
@@ -317,18 +323,19 @@ class _SegmentState<T> extends State<_Segment<T>> {
                         horizontal: widget.padding + 1,
                       ),
                       child: IconTheme.merge(
-                        data: IconThemeData(size: 18, color: ink),
+                        data: IconThemeData(size: 16, color: ink),
                         child: DefaultTextStyle.merge(
                           style: TextStyle(
                             fontSize: widget.fontSize,
-                            height: 20 / widget.fontSize,
+                            height: _line(widget.fontSize) / widget.fontSize,
                             leadingDistribution: TextLeadingDistribution.even,
+                            fontWeight: FontWeight.w600,
                             color: ink,
                           ),
                           maxLines: 1,
                           softWrap: false,
                           child: CssBaseline(
-                            lineHeight: 20,
+                            lineHeight: _line(widget.fontSize),
                             child: Row(
                               mainAxisSize: widget.fill
                                   ? MainAxisSize.max

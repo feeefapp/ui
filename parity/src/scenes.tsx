@@ -49,8 +49,8 @@ export const SCENES: Record<string, () => ReactNode> = {
   'button-states': () => (
     <>
       <div className="row">
-        <Button variant="filled" controlSize="compact">Compact</Button>
-        <Button variant="elevated" controlSize="compact">Compact</Button>
+        <Button variant="filled" controlSize="small">Compact</Button>
+        <Button variant="elevated" controlSize="small">Compact</Button>
         <Button variant="tonal" aria-pressed>Selected</Button>
         <Button variant="elevated" disabled>Disabled</Button>
       </div>
@@ -82,7 +82,7 @@ export const SCENES: Record<string, () => ReactNode> = {
         onChange={() => {}}
       />
       <div className="row">
-        <Checkbox label="Compact" controlSize="compact" checked onChange={() => {}} />
+        <Checkbox label="Compact" controlSize="small" checked onChange={() => {}} />
         <Checkbox label="Accept terms" error="Accept the terms to continue." onChange={() => {}} />
       </div>
       <RadioGroup
@@ -112,27 +112,27 @@ export const SCENES: Record<string, () => ReactNode> = {
           label="Editor"
           leading={
             <ToolbarGroup label="Format">
-              <IconButton appearance="toolbar" controlSize="compact" aria-label="Undo"><LucideUndo2 /></IconButton>
-              <IconButton appearance="toolbar" controlSize="compact" aria-label="Redo"><LucideRedo2 /></IconButton>
-              <IconButton appearance="toolbar" controlSize="compact" aria-label="Bold"><LucideBold /></IconButton>
-              <IconButton appearance="toolbar" controlSize="compact" aria-label="Italic"><LucideItalic /></IconButton>
-              <IconButton appearance="toolbar" controlSize="compact" aria-label="Underline"><LucideUnderline /></IconButton>
+              <IconButton appearance="toolbar" aria-label="Undo"><LucideUndo2 /></IconButton>
+              <IconButton appearance="toolbar" aria-label="Redo"><LucideRedo2 /></IconButton>
+              <IconButton appearance="toolbar" aria-label="Bold"><LucideBold /></IconButton>
+              <IconButton appearance="toolbar" aria-label="Italic"><LucideItalic /></IconButton>
+              <IconButton appearance="toolbar" aria-label="Underline"><LucideUnderline /></IconButton>
             </ToolbarGroup>
           }
           trailing={
             <ToolbarGroup label="Share">
-              <Button appearance="toolbar" controlSize="compact" variant="filled"><LucideShare size={18} />Share</Button>
+              <Button appearance="toolbar" variant="filled"><LucideShare size={18} />Share</Button>
             </ToolbarGroup>
           }
         />
       </div>
       <GlassContainer spacing={16} style={{ display: 'flex', gap: 10 }}>
         <ToolbarGroup label="Zoom">
-          <IconButton appearance="toolbar" controlSize="compact" aria-label="Undo"><LucideUndo2 /></IconButton>
-          <IconButton appearance="toolbar" controlSize="compact" aria-label="Redo"><LucideRedo2 /></IconButton>
+          <IconButton appearance="toolbar" aria-label="Undo"><LucideUndo2 /></IconButton>
+          <IconButton appearance="toolbar" aria-label="Redo"><LucideRedo2 /></IconButton>
         </ToolbarGroup>
         <ToolbarGroup label="Style">
-          <IconButton appearance="toolbar" controlSize="compact" aria-label="Bold"><LucideBold /></IconButton>
+          <IconButton appearance="toolbar" aria-label="Bold"><LucideBold /></IconButton>
         </ToolbarGroup>
       </GlassContainer>
       <GlassContainer spacing={16} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
@@ -146,7 +146,7 @@ export const SCENES: Record<string, () => ReactNode> = {
           ]}
         />
         <ToolbarGroup label="Add">
-          <IconButton appearance="toolbar" controlSize="compact" aria-label="Bold"><LucideBold /></IconButton>
+          <IconButton appearance="toolbar" aria-label="Bold"><LucideBold /></IconButton>
         </ToolbarGroup>
       </GlassContainer>
     </>
@@ -163,11 +163,11 @@ export const SCENES: Record<string, () => ReactNode> = {
             </>
           }
         >
-          <Button variant="tonal" controlSize="compact">
+          <Button variant="tonal">
             <LucidePrinter size={18} />
             Print
           </Button>
-          <Button variant="filled" controlSize="compact">
+          <Button variant="filled">
             <LucideTruck size={18} />
             Ship
           </Button>
@@ -175,7 +175,7 @@ export const SCENES: Record<string, () => ReactNode> = {
       </div>
       <div style={{ alignSelf: 'stretch' }}>
         <Dock label="Selection" align="start" content={<span>2 selected</span>}>
-          <IconButton controlSize="compact" aria-label="Clear"><LucideX /></IconButton>
+          <IconButton aria-label="Clear"><LucideX /></IconButton>
         </Dock>
       </div>
     </>
@@ -206,13 +206,13 @@ export const SCENES: Record<string, () => ReactNode> = {
         label="Orders"
         top={
           <ToolbarGroup label="Filters">
-            <Button variant="ghost" appearance="toolbar" controlSize="compact">All</Button>
-            <Button variant="ghost" appearance="toolbar" controlSize="compact">Open</Button>
+            <Button variant="ghost" appearance="toolbar">All</Button>
+            <Button variant="ghost" appearance="toolbar">Open</Button>
           </ToolbarGroup>
         }
         bottom={
           <Dock label="Orders" content={<span>24 orders</span>}>
-            <Button variant="filled" controlSize="compact">New order</Button>
+            <Button variant="filled">New order</Button>
           </Dock>
         }
       >
@@ -229,7 +229,7 @@ export const SCENES: Record<string, () => ReactNode> = {
       <NumberField label="Quantity" defaultValue={3} min={1} />
       <NumberField label="Discount" defaultValue={25} min={0} max={100} step={5} unit="%" />
       <NumberField label="Price" defaultValue={2500} step={50} unit="DZD" variant="outlined" />
-      <NumberField label="Weight" defaultValue={1.25} step={0.25} unit="kg" controlSize="compact" steppers={false} />
+      <NumberField label="Weight" defaultValue={1.25} step={0.25} unit="kg" controlSize="small" steppers={false} />
       <NumberField label="Volume" defaultValue={40} min={0} max={100} disabled />
     </div>
   ),
@@ -250,7 +250,7 @@ export const SCENES: Record<string, () => ReactNode> = {
           <ActionsBar label="Order actions" actions={actions} />
         </div>
         <div style={{ width: 300 }}>
-          <ActionsBar label="Order actions" actions={actions} size="compact" align="start" />
+          <ActionsBar label="Order actions" actions={actions} size="small" align="start" />
         </div>
       </>
     )
@@ -288,7 +288,7 @@ export const SCENES: Record<string, () => ReactNode> = {
         <Select label="Status" value={null} required error="Choose an option." onValueChange={() => {}}>
           <Option value="open">Open</Option>
         </Select>
-        <Select label="Compact" controlSize="compact" variant="outlined" value="a" onValueChange={() => {}}>
+        <Select label="Compact" controlSize="small" variant="outlined" value="a" onValueChange={() => {}}>
           <Option value="a">Small</Option>
         </Select>
       </div>
@@ -296,7 +296,7 @@ export const SCENES: Record<string, () => ReactNode> = {
         <Select aria-label="Sort" value="new" onValueChange={() => {}}>
           <Option value="new">Newest first</Option>
         </Select>
-        <Select aria-label="Size" controlSize="compact" value="20" onValueChange={() => {}}>
+        <Select aria-label="Size" controlSize="small" value="20" onValueChange={() => {}}>
           <Option value="20">20 per page</Option>
         </Select>
       </div>
@@ -466,7 +466,7 @@ export const SCENES: Record<string, () => ReactNode> = {
         <TextField label="City" labelStyle="inside" defaultValue="Oran" />
         <TextField label="City" labelStyle="inside" />
         <TextField placeholder="Search orders" />
-        <TextField label="Compact" controlSize="compact" defaultValue="Small" />
+        <TextField label="Compact" controlSize="small" defaultValue="Small" />
         <TextField label="Tonal" variant="tonal" defaultValue="Soft" />
         <TextField label="Elevated" variant="elevated" defaultValue="Raised" />
         <TextField label="Filled" variant="filled" defaultValue="Strong" />
@@ -480,7 +480,7 @@ export const SCENES: Record<string, () => ReactNode> = {
   sliders: () => (
     <>
       <Slider label="Volume" defaultValue={40} />
-      <Slider label="Discount" controlSize="compact" defaultValue={50} step={25} showStops />
+      <Slider label="Discount" controlSize="small" defaultValue={50} step={25} showStops />
       <div style={{ alignSelf: 'stretch' }}>
         <Slider
           label="Rating"
@@ -496,7 +496,7 @@ export const SCENES: Record<string, () => ReactNode> = {
         <SlideSwitch label="SMS" />
         <SlideSwitch label="Auto confirm" defaultChecked onText="On" offText="Off" />
         <SlideSwitch label="Auto ship" onText="On" offText="Off" />
-        <SlideSwitch label="Compact" controlSize="compact" defaultChecked />
+        <SlideSwitch label="Compact" defaultChecked />
         <SlideSwitch label="Disabled" disabled defaultChecked />
         <SlideSwitch label="Thin" trackStyle="thin" defaultChecked />
       </div>
@@ -522,8 +522,8 @@ export const SCENES: Record<string, () => ReactNode> = {
         <IconButton variant="text" aria-label="Search"><LucideSearch /></IconButton>
         <IconButton variant="filled" aria-label="Add"><LucidePlus /></IconButton>
         <IconButton variant="elevated" aria-label="Delete"><LucideTrash2 /></IconButton>
-        <IconButton variant="text" controlSize="compact" aria-label="Search"><LucideSearch /></IconButton>
-        <IconButton variant="elevated" controlSize="compact" aria-label="Delete"><LucideTrash2 /></IconButton>
+        <IconButton variant="text" controlSize="small" aria-label="Search"><LucideSearch /></IconButton>
+        <IconButton variant="elevated" controlSize="small" aria-label="Delete"><LucideTrash2 /></IconButton>
       </div>
       <div className="row" style={{ color: 'var(--lab-ink)' }}>
         <LucideSearch />

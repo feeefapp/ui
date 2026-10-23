@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { readFileSync } from 'node:fs'
 import {
+  METRIC_VARIABLE_NAMES,
   THEME_DEFAULTS,
   darkModePrimary,
+  metricVariables,
   themeAttributes,
   parseHexColor,
   readableTextOn,
@@ -15,7 +18,7 @@ test('defaults render the Lab look', () => {
     'data-lab-glass': THEME_DEFAULTS.glass,
     'data-lab-glass-blur': 'off',
     'data-lab-glass-refraction': 'on',
-    style: { '--lab-radius-scale': '1', '--lab-glass-tint': '0.5' },
+    style: { '--lab-radius-scale': '1', '--lab-glass-tint': '0' },
   })
 })
 
@@ -57,7 +60,7 @@ test('explicitly undefined options fall back to the defaults', () => {
       'data-lab-glass': THEME_DEFAULTS.glass,
       'data-lab-glass-blur': 'off',
       'data-lab-glass-refraction': 'on',
-      style: { '--lab-radius-scale': '1', '--lab-glass-tint': '0.5' },
+      style: { '--lab-radius-scale': '1', '--lab-glass-tint': '0' },
     }
   )
 })
@@ -66,7 +69,7 @@ test('glass tint is clamped to 0–1 and non-numbers fall back to the default', 
   const tint = (glassTint: number) => (themeAttributes({ glassTint }).style as Record<string, string>)['--lab-glass-tint']
   assert.equal(tint(-0.3), '0')
   assert.equal(tint(4), '1')
-  assert.equal(tint(Number.NaN), '0.5')
+  assert.equal(tint(Number.NaN), '0')
   assert.equal(tint(0.25), '0.25')
 })
 
@@ -98,4 +101,43 @@ test('dark mode lifts the primary toward white, which can flip its text color', 
   const blue = parseHexColor('#1d4ed8')!
   assert.deepEqual(darkModePrimary([0, 0, 0]), [77, 77, 77])
   assert.equal(readableTextOn(darkModePrimary(blue)), '#111411')
+})
+
+test('metrics become px variables on <html>, only for valid set values', () => {
+  const style = themeAttributes({
+    metrics: {
+      controlHeight: { small: 28, regular: 40 },
+      controlFont: { large: 18 },
+      fieldHeight: { regular: 48 },
+      toolbarItem: 48,
+      switchSize: { width: 51, height: 31 },
+      thumbSize: { height: 27 },
+      listRadius: 20,
+      focusRingWidth: 3,
+      toolbarGap: Number.NaN,
+      listInset: -4,
+    },
+  }).style as Record<string, string>
+  assert.equal(style['--lab-control-small'], '28px')
+  assert.equal(style['--lab-control-height'], '40px')
+  assert.equal(style['--lab-control-large'], undefined)
+  assert.equal(style['--lab-control-font-large'], '18px')
+  assert.equal(style['--lab-field-height'], '48px')
+  assert.equal(style['--lab-toolbar-item'], '48px')
+  assert.equal(style['--lab-switch-width'], '51px')
+  assert.equal(style['--lab-switch-height'], '31px')
+  assert.equal(style['--lab-thumb-height'], '27px')
+  assert.equal(style['--lab-thumb-width'], undefined)
+  assert.equal(style['--lab-list-corner'], '20px')
+  assert.equal(style['--lab-focus-ring-width'], '3px')
+  assert.equal(style['--lab-toolbar-gap'], undefined, 'not finite')
+  assert.equal(style['--lab-list-inset'], undefined, 'negative')
+})
+
+test('every metric variable is a kit size token declared for the default density', () => {
+  assert.deepEqual(metricVariables(), {})
+  assert.equal(new Set(METRIC_VARIABLE_NAMES).size, METRIC_VARIABLE_NAMES.length)
+  const css = readFileSync(new URL('../src/system.css', import.meta.url), 'utf8')
+  const base = css.slice(css.indexOf('html[data-lab-theme] {'), css.indexOf('@supports not (corner-shape'))
+  for (const name of METRIC_VARIABLE_NAMES) assert.match(base, new RegExp(`${name}:`), name)
 })

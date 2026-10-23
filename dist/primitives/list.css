@@ -1,4 +1,6 @@
-/* Inset-grouped lists: rounded cards of rows with inset hairlines. Heights follow density. */
+/* Inset-grouped lists: rounded cards of rows with inset hairlines. iOS geometry from the metric
+tokens: --lab-list-row-height rows (54px), a --lab-list-radius card (26px) and --lab-list-inset (16px)
+for row sides, headers and hairlines. */
 .lab-list-section {
   display: grid;
   gap: 8px;
@@ -10,7 +12,7 @@
 }
 .lab-list-section > .lab-list-header {
   margin: 0;
-  padding-inline: 16px;
+  padding-inline: var(--lab-list-inset);
   color: var(--lab-muted);
   font-size: 13px;
   font-weight: 500;
@@ -18,7 +20,7 @@
 }
 .lab-list-section > .lab-list-footer {
   margin: 0;
-  padding-inline: 16px;
+  padding-inline: var(--lab-list-inset);
   color: var(--lab-muted);
   font-size: 13px;
   line-height: 19px;
@@ -26,7 +28,7 @@
 .lab-list-card {
   --lab-list-card-bg: color-mix(in srgb, var(--lab-ink) 4%, var(--lab-surface));
   overflow: hidden;
-  border-radius: var(--lab-radius-group);
+  border-radius: var(--lab-list-radius);
   corner-shape: superellipse(1.5);
   background: var(--lab-list-card-bg);
 }
@@ -41,24 +43,24 @@
   /* Above a swipeable row, which is lifted to z-index 1 over its actions. */
   z-index: 2;
   inset-block-start: 0;
-  inset-inline: 16px 0;
+  inset-inline: var(--lab-list-inset) 0;
   height: 1px;
   background: var(--lab-line);
   pointer-events: none;
 }
 .lab-list-item[data-leading] + .lab-list-item::before,
 .lab-list-item + .lab-list-item[data-leading]::before {
-  inset-inline-start: calc(16px + var(--lab-list-leading-size) + 14px);
+  inset-inline-start: calc(var(--lab-list-inset) + var(--lab-list-leading-size) + 14px);
 }
 .lab-list-row {
   display: flex;
   align-items: center;
   gap: 14px;
   width: 100%;
-  min-height: calc(var(--lab-control-height) + 12px);
+  min-height: var(--lab-list-row-height);
   margin: 0;
   padding-block: 8px;
-  padding-inline: 16px 14px;
+  padding-inline: var(--lab-list-inset);
   border: 0;
   background: transparent;
   color: var(--lab-ink);
@@ -88,9 +90,10 @@
   background: color-mix(in srgb, var(--lab-primary) 14%, var(--lab-surface));
 }
 .lab-list-row:focus-visible {
-  outline: 2px solid var(--lab-focus);
-  outline-offset: -2px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: calc(-1 * var(--lab-focus-ring-width));
   border-radius: inherit;
+  background: var(--lab-control-hover);
 }
 .lab-list-row:disabled {
   cursor: default;
@@ -225,8 +228,8 @@
   color: var(--lab-surface);
 }
 .lab-list-action:focus-visible {
-  outline: 2px solid var(--lab-focus);
-  outline-offset: -4px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: calc(-1 * var(--lab-focus-ring-width));
 }
 .lab-list-actions[data-full] > .lab-list-action:first-child {
   flex-grow: 60;
@@ -257,9 +260,9 @@
   height: 20px;
 }
 .lab-list-grip:focus-visible {
-  outline: 2px solid var(--lab-focus);
-  outline-offset: -6px;
-  border-radius: var(--lab-radius-control-compact);
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: calc(-1 * var(--lab-focus-ring-width));
+  border-radius: var(--lab-radius-control-small);
 }
 .lab-list-card[data-reordering] {
   overflow: visible;

@@ -34,7 +34,8 @@ class Toolbar extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        spacing: 12,
+        // --lab-toolbar-gap: 12 between groups, like iOS's fixed toolbar spacer.
+        spacing: ThemeProvider.of(context).sizes.toolbarGap,
         children: [
           Flexible(child: leading),
           ?trailing,
@@ -44,9 +45,9 @@ class Toolbar extends StatelessWidget {
   );
 }
 
-/// One glass pill for related toolbar controls. Children should use `appearance: toolbar` and
-/// `controlSize: compact`; the group sizes them to the compact height (44px on touch) and gives
-/// them its inset corner radius. The twin of `ToolbarGroup` in `@feeef.dev/ui/toolbar`.
+/// One glass pill for related toolbar controls, [SizeTokens.toolbarItem] tall (44, the iOS bar
+/// item; at least 44 on touch). Children should use `appearance: toolbar` and the regular size;
+/// the group sizes them to [SizeTokens.toolbarControl] and gives them its inset corner radius. The twin of `ToolbarGroup` in `@feeef.dev/ui/toolbar`.
 class ToolbarGroup extends StatelessWidget {
   const ToolbarGroup({
     super.key,
@@ -73,11 +74,13 @@ class ToolbarGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final s = theme.sizes;
-    final narrow = (MediaQuery.maybeSizeOf(context)?.width ?? 1000) <= 600;
-    final size = theme.coarsePointer(context) || narrow
-        ? 44.0
-        : s.controlCompact;
-    final radius = (size + 6) / 2 * s.radiusScale;
+    // The bubble is toolbarItem tall (44, the iOS bar item); on touch at least the 44px target,
+    // since the bubble is what a finger hits. Controls fill it inside 2px padding + 1px border.
+    final item = theme.coarsePointer(context) && s.toolbarItem < s.touchTarget
+        ? s.touchTarget
+        : s.toolbarItem;
+    final size = item - 6;
+    final radius = item / 2 * s.radiusScale;
     return Semantics(
       container: true,
       explicitChildNodes: true,
@@ -96,6 +99,7 @@ class ToolbarGroup extends StatelessWidget {
           child: ControlOverrides(
             height: size,
             radius: radius - 2,
+            touchTarget: size,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,

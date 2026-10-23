@@ -110,7 +110,7 @@ export function TemporalDialog({
       bottom={
         <GlassScope className="lab-temporal-dialog-bar" dir={dir}>
           <ToolbarGroup label={`${label} actions`} className="lab-temporal-dialog-actions">
-            <Button variant="text" appearance="toolbar" controlSize="compact" onClick={close}>
+            <Button variant="text" appearance="toolbar" controlSize="regular" onClick={close}>
               Cancel
             </Button>
             <span className="lab-temporal-dialog-spacer" />
@@ -118,7 +118,7 @@ export function TemporalDialog({
               <Button
                 variant="text"
                 appearance="toolbar"
-                controlSize="compact"
+                controlSize="regular"
                 disabled={clearDisabled}
                 onClick={onClear}
               >
@@ -126,7 +126,7 @@ export function TemporalDialog({
               </Button>
             )}
             {showApply && (
-              <Button variant="filled" appearance="toolbar" controlSize="compact" type="submit" form={formId}>
+              <Button variant="filled" appearance="toolbar" controlSize="regular" type="submit" form={formId}>
                 {applyLabel}
               </Button>
             )}

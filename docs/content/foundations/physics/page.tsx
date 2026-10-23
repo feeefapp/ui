@@ -60,7 +60,7 @@ function SpringExplorer() {
           <div className="ph-fields">
             <NumberField
               label="Duration"
-              controlSize="compact"
+              controlSize="small"
               min={0.1}
               max={1.5}
               step={0.05}
@@ -70,7 +70,7 @@ function SpringExplorer() {
             />
             <NumberField
               label="Bounce"
-              controlSize="compact"
+              controlSize="small"
               min={-0.5}
               max={0.9}
               step={0.05}
@@ -91,7 +91,7 @@ function SpringExplorer() {
       <div className="demo-row" style={{ justifyContent: 'flex-start' }}>
         <Button
           variant="tonal"
-          controlSize="compact"
+          controlSize="small"
           onClick={() => void ball.animateTo(ball.getTarget() > 0.5 ? 0 : 1, { spring })}
         >
           Play

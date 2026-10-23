@@ -32,7 +32,7 @@ function SyncNotice() {
         <FloatingLayer slot="notice">
           <GlassGroup role="status" className="glass-demo-notice">
             12 orders synced from Yalidine
-            <Button variant="text" controlSize="compact" onClick={() => setOpen(false)}>
+            <Button variant="text" controlSize="small" onClick={() => setOpen(false)}>
               Dismiss
             </Button>
           </GlassGroup>

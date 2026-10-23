@@ -5,7 +5,7 @@ export default function CompactAndDisabled() {
   const [size, setSize] = useState('M')
   return (
     <div className="demo-column">
-      <Select controlSize="compact" labelStyle="inside" hint="Size" value={size} onValueChange={setSize}>
+      <Select controlSize="small" labelStyle="inside" hint="Size" value={size} onValueChange={setSize}>
         <Option>S</Option>
         <Option>M</Option>
         <Option>L</Option>
@@ -25,6 +25,6 @@ export default function CompactAndDisabled() {
 }
 
 export const meta = {
-  title: 'Compact and disabled',
-  description: 'Compact fits dense rows. A disabled select keeps its label and value readable.',
+  title: 'Small and disabled',
+  description: 'Small fits dense rows. A disabled select keeps its label and value readable.',
 }

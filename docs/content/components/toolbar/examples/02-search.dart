@@ -44,7 +44,6 @@ class _SearchState extends State<Search> {
                 IconButton(
                   variant: .text,
                   appearance: .toolbar,
-                  controlSize: .compact,
                   ariaLabel: _grid ? 'Show as list' : 'Show as grid',
                   onClick: () => setState(() => _grid = !_grid),
                   icon: LucideIcon(
@@ -62,7 +61,6 @@ class _SearchState extends State<Search> {
                   IconButton(
                     variant: .text,
                     appearance: .toolbar,
-                    controlSize: .compact,
                     ariaLabel: 'Filters',
                     onClick: () {},
                     icon: const LucideIcon(LucideIcons.slidersHorizontal),

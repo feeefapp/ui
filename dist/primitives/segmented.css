@@ -1,15 +1,17 @@
-/* Shared mode group: selected choices use an explicit, high-contrast surface. */
+/* Shared mode group: selected choices use an explicit, high-contrast surface. iOS geometry: a
+--lab-segmented-height capsule (32px) with the options --lab-segmented-inset (2px, the border
+included) from its edge, so an option is 28px. Options sit as far from each other as from the edge:
+a gap wider than the inset looks loose. */
 .lab-segmented {
-  /* Options sit as far from each other as from the edge: a gap wider than the inset looks loose. */
-  --lab-segmented-inset: 4px;
+  --lab-segmented-option: calc(var(--lab-segmented-height) - 2 * var(--lab-segmented-inset));
   display: inline-flex;
   align-items: center;
   gap: var(--lab-segmented-inset);
-  padding: var(--lab-segmented-inset);
+  padding: calc(var(--lab-segmented-inset) - 1px);
   max-width: 100%;
   flex-wrap: wrap;
   border: 1px solid var(--lab-line);
-  border-radius: var(--lab-radius-group);
+  border-radius: calc((var(--lab-segmented-option) / 2 + var(--lab-segmented-inset)) * var(--lab-corner-scale, 1));
   corner-shape: superellipse(1.5);
   background: var(--lab-glass-fill);
   box-shadow: var(--lab-glass-light);
@@ -23,11 +25,11 @@
 html[data-lab-theme] .lab-segmented > .lab-segmented-option {
   flex: 0 1 auto;
   min-width: max-content;
-  height: var(--lab-control-compact);
-  min-height: var(--lab-control-compact);
+  height: var(--lab-segmented-option);
+  min-height: var(--lab-segmented-option);
   padding: 0 var(--lab-control-padding);
-  border-radius: var(--lab-radius-control-compact);
-  font: 400 15px/20px var(--lab-font);
+  border-radius: calc(var(--lab-segmented-option) / 2 * var(--lab-corner-scale, 1));
+  font: 600 13px/18px var(--lab-font);
   color: var(--lab-muted);
   --lab-control-selected: color-mix(in srgb, var(--lab-primary) 16%, var(--lab-surface));
   --lab-control-elevation: none;
@@ -44,13 +46,16 @@ html[data-lab-theme] .lab-segmented > .lab-segmented-option[data-state='on'] {
   display: inline-flex;
 }
 .lab-segmented-option svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
+}
+html[data-lab-density='thin'] .lab-segmented > .lab-segmented-option {
+  font-size: 12px;
+  line-height: 16px;
 }
 @media (pointer: coarse) {
-  html[data-lab-theme] .lab-segmented > .lab-segmented-option {
-    min-height: 44px;
-    height: 44px;
+  .lab-segmented {
+    --lab-segmented-option: var(--lab-control-touch-target);
   }
 }
 @media (forced-colors: active) {

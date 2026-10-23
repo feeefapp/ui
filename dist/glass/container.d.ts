@@ -21,7 +21,7 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
      * Keep it below the gap between bubbles at rest so separate bubbles stay apart. Default 8.
      */
     spacing?: number;
-    /** Corner profile of the glass: kit superellipse (default) or circular `round` corners. */
+    /** Corner profile of the glass: circular `round` corners (default) or kit superellipse. */
     cornerShape?: 'superellipse' | 'round';
     /** `pointer` (default) turns the light toward a mouse or pen; `static` keeps it at the top-left. */
     light?: 'pointer' | 'static';
@@ -37,16 +37,18 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
      * colour. Glass taller than 72px never flips. Default true.
      */
     adaptive?: boolean;
-    /** Reflective bevel width in CSS px, 0–20; default 5. Small bubbles cap it to fit. */
+    /** Reflective bevel width in CSS px, 0–100; default 1. Small bubbles cap it to fit. */
     highlightWidth?: number;
-    /** `surface` (default) uses a convex bevel; `rim` uses the thin, symmetric screenshot-fitted highlight. */
+    /** `surface` uses a convex bevel; `rim` (default) uses the thin, symmetric screenshot-fitted highlight. */
     highlightProfile?: 'surface' | 'rim';
     /** Local material tint, 0 clear–1 tinted, preserving bright backdrop detail; omitted inherits ThemeConfig glassTint. */
     tint?: number;
-    /** Surface highlight opacity multiplier, 0–3; default 1. */
+    /** Surface highlight opacity multiplier, 0–10; default 1. */
     highlightStrength?: number;
-    /** Backdrop bend multiplier, 0–3; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
+    /** Backdrop bend multiplier, 0–10; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
     refractionStrength?: number;
+    /** `gentle` avoids edge reversal; `measured` (default) restores the screenshot-fitted mirrored lens band. */
+    refractionProfile?: 'gentle' | 'measured';
     /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
     backdropSource?: string;
 };
@@ -67,7 +69,7 @@ export declare const GlassContainer: React.ForwardRefExoticComponent<React.HTMLA
      * Keep it below the gap between bubbles at rest so separate bubbles stay apart. Default 8.
      */
     spacing?: number;
-    /** Corner profile of the glass: kit superellipse (default) or circular `round` corners. */
+    /** Corner profile of the glass: circular `round` corners (default) or kit superellipse. */
     cornerShape?: "superellipse" | "round";
     /** `pointer` (default) turns the light toward a mouse or pen; `static` keeps it at the top-left. */
     light?: "pointer" | "static";
@@ -83,16 +85,18 @@ export declare const GlassContainer: React.ForwardRefExoticComponent<React.HTMLA
      * colour. Glass taller than 72px never flips. Default true.
      */
     adaptive?: boolean;
-    /** Reflective bevel width in CSS px, 0–20; default 5. Small bubbles cap it to fit. */
+    /** Reflective bevel width in CSS px, 0–100; default 1. Small bubbles cap it to fit. */
     highlightWidth?: number;
-    /** `surface` (default) uses a convex bevel; `rim` uses the thin, symmetric screenshot-fitted highlight. */
+    /** `surface` uses a convex bevel; `rim` (default) uses the thin, symmetric screenshot-fitted highlight. */
     highlightProfile?: "surface" | "rim";
     /** Local material tint, 0 clear–1 tinted, preserving bright backdrop detail; omitted inherits ThemeConfig glassTint. */
     tint?: number;
-    /** Surface highlight opacity multiplier, 0–3; default 1. */
+    /** Surface highlight opacity multiplier, 0–10; default 1. */
     highlightStrength?: number;
-    /** Backdrop bend multiplier, 0–3; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
+    /** Backdrop bend multiplier, 0–10; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
     refractionStrength?: number;
+    /** `gentle` avoids edge reversal; `measured` (default) restores the screenshot-fitted mirrored lens band. */
+    refractionProfile?: "gentle" | "measured";
     /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
     backdropSource?: string;
 } & React.RefAttributes<HTMLElement>>;
@@ -108,7 +112,7 @@ export declare const GlassScope: React.ForwardRefExoticComponent<React.HTMLAttri
      * Keep it below the gap between bubbles at rest so separate bubbles stay apart. Default 8.
      */
     spacing?: number;
-    /** Corner profile of the glass: kit superellipse (default) or circular `round` corners. */
+    /** Corner profile of the glass: circular `round` corners (default) or kit superellipse. */
     cornerShape?: "superellipse" | "round";
     /** `pointer` (default) turns the light toward a mouse or pen; `static` keeps it at the top-left. */
     light?: "pointer" | "static";
@@ -124,16 +128,18 @@ export declare const GlassScope: React.ForwardRefExoticComponent<React.HTMLAttri
      * colour. Glass taller than 72px never flips. Default true.
      */
     adaptive?: boolean;
-    /** Reflective bevel width in CSS px, 0–20; default 5. Small bubbles cap it to fit. */
+    /** Reflective bevel width in CSS px, 0–100; default 1. Small bubbles cap it to fit. */
     highlightWidth?: number;
-    /** `surface` (default) uses a convex bevel; `rim` uses the thin, symmetric screenshot-fitted highlight. */
+    /** `surface` uses a convex bevel; `rim` (default) uses the thin, symmetric screenshot-fitted highlight. */
     highlightProfile?: "surface" | "rim";
     /** Local material tint, 0 clear–1 tinted, preserving bright backdrop detail; omitted inherits ThemeConfig glassTint. */
     tint?: number;
-    /** Surface highlight opacity multiplier, 0–3; default 1. */
+    /** Surface highlight opacity multiplier, 0–10; default 1. */
     highlightStrength?: number;
-    /** Backdrop bend multiplier, 0–3; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
+    /** Backdrop bend multiplier, 0–10; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
     refractionStrength?: number;
+    /** `gentle` avoids edge reversal; `measured` (default) restores the screenshot-fitted mirrored lens band. */
+    refractionProfile?: "gentle" | "measured";
     /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
     backdropSource?: string;
 } & React.RefAttributes<HTMLElement>>;

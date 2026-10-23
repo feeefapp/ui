@@ -1,13 +1,12 @@
 import 'package:flutter/widgets.dart';
 
-import 'button.dart' show ControlSize;
 import 'slider.dart';
 
 /// Compatibility alias of `@feeef.dev/ui/primitives/switch`; new code uses [SlideSwitchIndicator].
 typedef SwitchIndicator = SlideSwitchIndicator;
 
-/// A compact on/off switch: the twin of `Switch` in `@feeef.dev/ui/primitives/switch`, a
-/// [SlideSwitch] with `controlSize: compact`. New code uses SlideSwitch explicitly.
+/// An on/off switch: the twin of `Switch` in `@feeef.dev/ui/primitives/switch`, a [SlideSwitch].
+/// New code uses SlideSwitch explicitly.
 class Switch extends StatelessWidget {
   const Switch({
     super.key,
@@ -38,6 +37,5 @@ class Switch extends StatelessWidget {
     onCheckedChange: onCheckedChange,
     disabled: disabled,
     loading: loading,
-    controlSize: ControlSize.compact,
   );
 }

@@ -169,6 +169,10 @@ Names carry no prefix: components, hooks and constants are `Button`, `useTheme`,
 keys (`lab.*`) keep the `lab` namespace so they never collide with app styles. Never reintroduce a
 prefixed alias.
 
+Liquid glass uses circular corners by default (an exception to the general superellipse rule),
+a 1px reference rim and the measured refraction profile. Keep these defaults shared by
+GlassContainer and GlassScene so GlassScope consumers inherit them. Theme tint/blur and
+member CSS radii remain configurable.
 Liquid glass (`src/glass`): `GlassContainer` paints ONE material for every GlassGroup, ToolbarGroup
 and Dock inside it: a backdrop clipped to the blended outline plus an SVG edge, pointer-following
 rim light and masked shadow. Bubbles keep layout, focus and semantics; the container springs their
@@ -191,8 +195,30 @@ ThemeConfig `glass` (liquid/still/solid), `glassTint` (0 clear … 1 tinted, `--
 `glassBlur` and `glassRefraction` (`data-lab-glass-blur|refraction` on/off) are read live from
 `<html>`; the tint curve is `glassMaterial()` (material.ts / material.dart) and the
 `--lab-glass-*` calc() formulas in system.css + glass.css (tests/glass-tint.test.ts checks the
-anchors); refraction (glass/refraction.ts, pure) only runs on settled glass in Chromium.
+anchors); refraction (glass/refraction.ts, pure) stays active during motion in Chromium and with Firefox live sources. Reuse maps for translation/material changes; never clear optics on spring frames or defer them until rest.
 The glass scene measures in the container's own pixels (`hostFrame`), so scaled ancestors (demo
 frames, receding sheets) stay exact; bubbles moved by a running transform/transition/WAAPI animation
 (on them or an ancestor below the container) are followed every frame; departed glass is removed
 within 900 ms even when frames are paused; dispose clears every painted piece.
+
+Web glass defaults to clear tint (0); Flutter defaults stay independent. ScrollArea supplies
+a disjoint live viewport source through GlassBackdropContext to top/bottom slots, never
+to source descendants. Explicit backdropSource wins. Keep source ancestry guards and
+reduced-transparency/contrast handling when changing Firefox refraction.
+Merged paint bounds include smooth-union growth and an antialias fringe. Keep rim canvases at
+their exact sampling scale through fractional sizes. Firefox clips the live outline independently
+from its predecoded map; bound pending work and release Blob URLs on eviction/disposal. Never
+apply a stale map alpha as a second Firefox silhouette. Undo the last written content press scale
+when measuring layout, and clear it when a member leaves.
+
+Menus and floating panels (`src/menu`, `flutter/lib/menu`): a list of commands or choices behind a
+button is a `MenuSurface` (asChild on the Radix content): one glass bubble that grows out of its
+trigger and flies back into it (`SPRINGS.menu` / `SPRINGS.menuDismiss`, pure geometry in
+`morph-model.ts` and its Dart twin, vectors in `flutter/test/fixtures/menu.json` via
+`flutter/tool/generate_menu_fixture.ts`). It supplies the Radix placement (cover offset, align,
+collision padding and boundary); don't set those on the content. Forms and pickers stay on
+`PopoverSurface`. Every floating panel respects the app's bounds: pass `useFloatingBoundary()` as
+portal container and `collisionBoundary`; apps in a frame wrap themselves in `FloatingBoundary`. In
+Flutter every popup lays out in `AnchoredPanel` (inside the hosting overlay, flip, shift, max
+extent, follows scrolling); never position a popup with `CompositedTransformFollower` or screen
+maths.

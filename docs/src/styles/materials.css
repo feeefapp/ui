@@ -174,15 +174,14 @@ html[data-lab-theme] .docs-search-field.lab-toolbar-group {
 .docs-search-field .lab-raw-editor {
   flex: 1;
   min-width: 0;
-  height: var(--lab-control-compact);
+  height: var(--lab-toolbar-control);
   font-size: 15px;
 }
 .docs-search-field .lab-raw-editor:focus-visible {
   outline: none;
 }
 .docs-search-field:has(.lab-raw-editor:focus-visible) {
-  outline: 2px solid var(--lab-focus);
-  outline-offset: 2px;
+  border-color: var(--lab-focus);
 }
 .docs-search-results {
   display: grid;
@@ -195,7 +194,7 @@ html[data-lab-theme] .docs-search-field.lab-toolbar-group {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: var(--lab-control-height);
+  min-height: var(--lab-menu-row-height);
   padding: 8px 12px;
   border-radius: var(--lab-radius-control);
   corner-shape: superellipse(1.5);

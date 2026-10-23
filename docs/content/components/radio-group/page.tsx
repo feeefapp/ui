@@ -14,7 +14,7 @@ const controls = {
   label: { type: 'text', default: 'Delivery type' },
   description: { type: 'text', default: '' },
   descriptions: { type: 'boolean', label: 'Option descriptions', default: true },
-  controlSize: { type: 'select', options: ['regular', 'compact'], default: 'regular' },
+  controlSize: { type: 'select', options: ['small', 'regular'], default: 'regular' },
   error: { type: 'boolean', label: 'Error', default: false },
   required: { type: 'boolean', default: false },
   disabled: { type: 'boolean', default: false },
@@ -32,7 +32,7 @@ function Overview() {
               description={v.description || undefined}
               options={v.descriptions ? OPTIONS : OPTIONS.map(({ description: _, ...option }) => option)}
               defaultValue="home"
-              controlSize={v.controlSize as 'regular' | 'compact'}
+              controlSize={v.controlSize as 'small' | 'regular'}
               error={v.error ? 'Stop desk is not available in this wilaya.' : undefined}
               required={v.required}
               disabled={v.disabled}
@@ -184,7 +184,7 @@ export default definePage({
   Preview: () => (
     <RadioGroup
       label="Delivery"
-      controlSize="compact"
+      controlSize="small"
       defaultValue="home"
       options={[
         { value: 'home', label: 'Home' },

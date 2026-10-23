@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Pause, Play, SkipBack, SkipForward } from 'lucide-react'
 import { GlassContainer } from '@feeef.dev/ui/glass'
 import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
@@ -7,13 +7,15 @@ import { Slider } from '@feeef.dev/ui/primitives/slider'
 import '../glass-container-demo.css'
 
 export default function Distance() {
+  const backdropId = `container-demo-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const [gap, setGap] = useState(28)
   const [playing, setPlaying] = useState(false)
   return (
-    <div className="glass-stage">
-      <GlassContainer className="glass-row" spacing={20} style={{ gap }}>
+    <div className="glass-stage" data-lab-backdrop="light">
+      <div id={backdropId} className="glass-stage-source" aria-hidden="true" />
+      <GlassContainer tint={0} backdropSource={backdropId} className="glass-row" spacing={20} style={{ gap }}>
         <ToolbarGroup label="Previous">
-          <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Previous take">
+          <IconButton variant="text" appearance="toolbar" aria-label="Previous take">
             <SkipBack />
           </IconButton>
         </ToolbarGroup>
@@ -21,7 +23,6 @@ export default function Distance() {
           <IconButton
             variant="text"
             appearance="toolbar"
-            controlSize="compact"
             aria-label={playing ? 'Pause' : 'Play'}
             onClick={() => setPlaying(!playing)}
           >
@@ -29,7 +30,7 @@ export default function Distance() {
           </IconButton>
         </ToolbarGroup>
         <ToolbarGroup label="Next">
-          <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Next take">
+          <IconButton variant="text" appearance="toolbar" aria-label="Next take">
             <SkipForward />
           </IconButton>
         </ToolbarGroup>

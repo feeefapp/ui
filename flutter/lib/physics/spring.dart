@@ -28,6 +28,12 @@ abstract final class Springs {
 
   /// Following a pointer with a touch of lag, for values that must not jump.
   static const interactive = Spring(duration: 0.2, bounce: 0);
+
+  /// A menu growing out of its button (iOS 26 menus: response 0.30, damping fraction 0.73).
+  static const menu = Spring(duration: 0.3, bounce: 0.27);
+
+  /// A menu flying back into its button (response 0.31, damping fraction 0.67).
+  static const menuDismiss = Spring(duration: 0.31, bounce: 0.33);
 }
 
 /// Physical coefficients (mass 1) for a duration/bounce spring, using SwiftUI's mapping.

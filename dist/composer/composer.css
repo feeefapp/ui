@@ -8,7 +8,7 @@
   --pc-on-primary: var(--lab-on-primary);
   --pc-shell-radius: calc(26px * var(--lab-corner-scale, 1));
   --pc-shell-inset: calc(var(--lab-space-3) / 2);
-  --pc-control-height: var(--lab-control-compact);
+  --pc-control-height: var(--lab-toolbar-control);
   --pc-ease: var(--lab-ease);
   position: relative;
   width: 100%;
@@ -77,8 +77,8 @@
 }
 .lab-pc button:focus-visible,
 .lab-pc-popover button:focus-visible {
-  outline: 2px solid var(--lab-focus, var(--pc-primary));
-  outline-offset: 2px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
 }
 .lab-pc-wand {
   color: var(--pc-ink);
@@ -216,11 +216,12 @@ html[data-lab-theme] .lab-pc-template-chip .lab-control[data-variant] {
   gap: var(--lab-space-1);
   min-width: 0;
 }
+/* Focus inside tints the card's own edge and thickens it inward to the ring width, like a field. */
 .lab-pc-card[data-focused='true'],
 .lab-pc-card:focus-within {
   border-color: color-mix(in srgb, var(--pc-primary) 55%, var(--pc-line));
   box-shadow:
-    0 0 0 4px color-mix(in srgb, var(--pc-primary) 14%, transparent),
+    inset 0 0 0 calc(var(--lab-focus-ring-width) - 1px) color-mix(in srgb, var(--pc-primary) 55%, var(--pc-line)),
     var(--lab-glass-light),
     var(--lab-glass-shadow);
 }
@@ -311,14 +312,14 @@ html[data-lab-theme] .lab-pc .lab-pc-field textarea.lab-textarea {
 @media (prefers-reduced-motion: reduce) { .lab-pc-hint span { animation: none; opacity: 1; } }
 @media (prefers-reduced-transparency: reduce) { .lab-pc-card { background: var(--lab-surface); backdrop-filter: none; -webkit-backdrop-filter: none; } }
 @supports not (backdrop-filter: blur(1px)) { .lab-pc-card { background: var(--lab-surface); } }
-@media (forced-colors: active) { .lab-pc-card { background: Canvas; border-color: CanvasText; box-shadow: none; } .lab-pc-card:focus-within { outline: 2px solid Highlight; } }
+@media (forced-colors: active) { .lab-pc-card { background: Canvas; border-color: CanvasText; box-shadow: none; } .lab-pc-card:focus-within { outline: var(--lab-focus-ring-width) solid Highlight; } }
 
-/* Inside a glass container the card's material is painted by the container; keep its focus ring. */
+/* Inside a glass container the card's material is painted by the container; keep its focus edge. */
 .lab-pc-glass {
   display: grid;
   min-width: 0;
 }
 .lab-glass-container[data-glass-ready] .lab-pc-card[data-glass-member]:is([data-focused='true'], :focus-within) {
   border-color: color-mix(in srgb, var(--pc-primary) 55%, var(--pc-line));
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--pc-primary) 14%, transparent);
+  box-shadow: inset 0 0 0 calc(var(--lab-focus-ring-width) - 1px) color-mix(in srgb, var(--pc-primary) 55%, var(--pc-line));
 }

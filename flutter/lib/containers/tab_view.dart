@@ -14,6 +14,7 @@ import '../physics/motion_value.dart';
 import '../physics/spring.dart';
 import '../scaffold.dart';
 import '../theme.dart';
+import '../theme/surfaces.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
 import '../theme/tokens.dart';
@@ -509,7 +510,7 @@ class _TabButtonState extends State<_TabButton> {
     final ink = selected ? c.ink : c.muted;
     final fill = selected
         ? mixSrgb(c.primary, 0.16, transparent)
-        : _hovered
+        : _hovered || _focusVisible
         ? c.controlHover
         : transparent;
     final radius = 26 * scale;
@@ -603,12 +604,12 @@ class _TabButtonState extends State<_TabButton> {
       ),
       child: box,
     );
-    if (_focusVisible) {
-      box = CustomPaint(
-        foregroundPainter: _FocusRing(color: c.focus, radius: radius),
-        child: box,
-      );
-    }
+    box = FocusRing(
+      visible: _focusVisible,
+      inside: true,
+      radius: radius,
+      child: box,
+    );
     box = AnimatedOpacity(
       opacity: widget.minimized && !selected ? 0 : 1,
       duration: reduced ? Duration.zero : const Duration(milliseconds: 160),
@@ -684,30 +685,6 @@ class _Badge extends StatelessWidget {
       ),
     );
   }
-}
-
-/// `outline: 2px solid var(--lab-focus); outline-offset: -2px`: a 2px ring just inside the edge.
-class _FocusRing extends CustomPainter {
-  _FocusRing({required this.color, required this.radius});
-  final Color color;
-  final double radius;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // The outline follows the border radius shrunk by the offset.
-    final r = math.max(0.0, radius - 2);
-    canvas.drawPath(
-      superellipsePath((Offset.zero & size).deflate(1), [r, r, r, r]),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = color,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_FocusRing old) =>
-      old.color != color || old.radius != radius;
 }
 
 class _Superellipse extends CustomClipper<Path> {

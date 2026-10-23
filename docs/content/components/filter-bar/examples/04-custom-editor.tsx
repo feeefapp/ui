@@ -57,7 +57,7 @@ export default function CustomEditor() {
             onBack={filtered ? () => setValues({}) : undefined}
             trailing={
               <ToolbarGroup label="Order list actions">
-                <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Export CSV">
+                <IconButton variant="text" appearance="toolbar" aria-label="Export CSV">
                   <Download />
                 </IconButton>
               </ToolbarGroup>

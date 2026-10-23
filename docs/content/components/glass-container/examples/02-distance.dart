@@ -27,7 +27,6 @@ class _DistanceState extends State<Distance> {
               IconButton(
                 variant: .text,
                 appearance: .toolbar,
-                controlSize: .compact,
                 ariaLabel: 'Previous take',
                 onClick: () {},
                 icon: const LucideIcon(LucideIcons.skipBack),
@@ -40,7 +39,6 @@ class _DistanceState extends State<Distance> {
               IconButton(
                 variant: .text,
                 appearance: .toolbar,
-                controlSize: .compact,
                 ariaLabel: _playing ? 'Pause' : 'Play',
                 onClick: () => setState(() => _playing = !_playing),
                 icon: LucideIcon(
@@ -55,7 +53,6 @@ class _DistanceState extends State<Distance> {
               IconButton(
                 variant: .text,
                 appearance: .toolbar,
-                controlSize: .compact,
                 ariaLabel: 'Next take',
                 onClick: () {},
                 icon: const LucideIcon(LucideIcons.skipForward),

@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
 import '../theme.dart';
+import '../theme/surfaces.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
 import 'button.dart' show ControlSize;
@@ -79,8 +80,11 @@ class Slider extends StatelessWidget {
   /// Accessible name. Not rendered; show a visible label next to the control yourself.
   final String label;
 
-  /// Track height: `regular` (44px) or `compact` (40px).
+  /// Control height: `regular` (36px) or `small` (30px).
   final ControlSize controlSize;
+
+  /// `thick`: the track is the control surface. `thin`: the iOS slider, a 6px rail with a
+  /// 37 × 24 capsule thumb.
   final TrackStyle trackStyle;
 
   /// The value, for a controlled slider.
@@ -156,7 +160,6 @@ class SlideSwitch extends StatelessWidget {
     this.offText,
     this.loading = false,
     this.disabled = false,
-    this.controlSize = ControlSize.regular,
     this.trackStyle = TrackStyle.thick,
     this.renderThumb,
     this.focusNode,
@@ -186,7 +189,8 @@ class SlideSwitch extends StatelessWidget {
   /// Disables the switch and marks it busy while a change is saving.
   final bool loading;
   final bool disabled;
-  final ControlSize controlSize;
+
+  /// `thick`: the iOS switch (63 × 28 track, 37 × 24 thumb). `thin`: a rail with the same thumb.
   final TrackStyle trackStyle;
   final Widget Function(SliderState state)? renderThumb;
   final FocusNode? focusNode;
@@ -197,7 +201,6 @@ class SlideSwitch extends StatelessWidget {
     switchMode: true,
     disabled: disabled || loading,
     busy: loading,
-    controlSize: controlSize,
     trackStyle: trackStyle,
     min: 0,
     max: 1,
@@ -223,7 +226,6 @@ class SlideSwitchIndicator extends StatelessWidget {
     super.key,
     required this.checked,
     this.loading = false,
-    this.controlSize = ControlSize.compact,
   });
 
   /// The state to draw.
@@ -231,7 +233,6 @@ class SlideSwitchIndicator extends StatelessWidget {
 
   /// Dims the indicator while a change is saving.
   final bool loading;
-  final ControlSize controlSize;
 
   @override
   Widget build(BuildContext context) => ExcludeSemantics(
@@ -241,7 +242,6 @@ class SlideSwitchIndicator extends StatelessWidget {
         switchMode: true,
         indicator: true,
         disabled: loading,
-        controlSize: controlSize,
         min: 0,
         max: 1,
         step: 1,
@@ -359,16 +359,59 @@ class _SliderControlState extends State<_SliderControl>
     return next;
   }
 
-  double get _inset {
-    final size = _size;
-    return _thin ? 8 : size / 2;
-  }
+  double get _inset => _geometry(false).inset;
 
-  double get _size {
+  /// `slider.css` geometry: the thick slider follows the control height, the thin one and the
+  /// switch take the iOS thumb (`--lab-thumb-*`) and the switch its track (`--lab-switch-*`).
+  _Geometry _geometry(bool coarse) {
     final s = ThemeProvider.of(context).sizes;
-    return widget.controlSize == ControlSize.compact
-        ? s.controlCompact
+    if (widget.switchMode) {
+      final h = s.switchHeight;
+      return _Geometry(
+        size: h,
+        height: h,
+        width: s.switchWidth,
+        thumbWidth: s.thumbWidth,
+        thumbHeight: s.thumbHeight,
+        thumbRadius: s.thumbHeight / 2,
+        trackHeight: _thin ? s.sliderTrack : h,
+        inset: _thin
+            ? s.thumbWidth / 2
+            : s.thumbWidth / 2 + (h - s.thumbHeight) / 2,
+        fillCap: _thin ? 0 : h / 2,
+        dot: _thin ? 3 : 6,
+      );
+    }
+    final size = widget.controlSize == ControlSize.small
+        ? s.controlSmall
         : s.controlHeight;
+    final height = widget.controlSize == ControlSize.small && coarse
+        ? s.touchTarget
+        : size;
+    if (_thin) {
+      return _Geometry(
+        size: size,
+        height: height,
+        thumbWidth: s.thumbWidth,
+        thumbHeight: s.thumbHeight,
+        thumbRadius: s.thumbHeight / 2,
+        trackHeight: s.sliderTrack,
+        inset: s.thumbWidth / 2,
+        fillCap: 0,
+        dot: 3,
+      );
+    }
+    return _Geometry(
+      size: size,
+      height: height,
+      thumbWidth: size - 6,
+      thumbHeight: size - 6,
+      thumbRadius: (size - 6) * 0.45,
+      trackHeight: height,
+      inset: size / 2,
+      fillCap: size / 2,
+      dot: 6,
+    );
   }
 
   double _atPointer(Offset local) {
@@ -492,12 +535,8 @@ class _SliderControlState extends State<_SliderControl>
       dragging: _position != null,
       disabled: inert,
     );
-    final size = _size;
-    var height = size;
-    if (widget.controlSize == ControlSize.compact &&
-        theme.coarsePointer(context)) {
-      height = theme.sizes.touchTarget;
-    }
+    final geometry = _geometry(theme.coarsePointer(context));
+    final height = geometry.height;
     final stopCount = ((r.max - r.min) / r.step).ceil() + 1;
     final stops =
         widget.marks ??
@@ -507,20 +546,12 @@ class _SliderControlState extends State<_SliderControl>
                   SliderMark(value: math.min(r.max, r.min + i * r.step)),
               ]
             : const <SliderMark>[]);
-    final geometry = _Geometry(
-      size: size,
-      height: height,
-      thin: _thin,
-      inset: _inset,
-    );
     final dark = theme.brightness == Brightness.dark;
     final checked = current == 1;
     final offFill = mixSrgb(c.ink, 0.18, c.surface);
 
     Widget track = SizedBox(
-      width: widget.switchMode
-          ? (widget.controlSize == ControlSize.compact ? 68 : 76)
-          : null,
+      width: geometry.width,
       height: height,
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -533,7 +564,7 @@ class _SliderControlState extends State<_SliderControl>
               final travel = width - 2 * geometry.inset;
               final fillWidth = geometry.inset + geometry.fillCap + travel * f;
               final thumbStart =
-                  geometry.inset - geometry.thumbSize / 2 + travel * f;
+                  geometry.inset - geometry.thumbWidth / 2 + travel * f;
               final trackTop = (height - geometry.trackHeight) / 2;
               final fillColor = widget.switchMode && !checked
                   ? offFill
@@ -571,7 +602,9 @@ class _SliderControlState extends State<_SliderControl>
                         dot: geometry.dot,
                         stop: mixSrgb(c.ink, 0.28, transparent),
                         stopActive: mixSrgb(c.onPrimary, 0.35, transparent),
-                        focus: _focusVisible ? c.focus : null,
+                        focus: _focusVisible
+                            ? FocusRingStyle.of(context)
+                            : null,
                       ),
                     ),
                   ),
@@ -588,9 +621,9 @@ class _SliderControlState extends State<_SliderControl>
                     ),
                   PositionedDirectional(
                     start: thumbStart,
-                    top: (height - geometry.thumbSize) / 2,
-                    width: geometry.thumbSize,
-                    height: geometry.thumbSize,
+                    top: (height - geometry.thumbHeight) / 2,
+                    width: geometry.thumbWidth,
+                    height: geometry.thumbHeight,
                     child: Transform(
                       alignment: AlignmentDirectional(
                         -1 + 2 * f,
@@ -604,7 +637,7 @@ class _SliderControlState extends State<_SliderControl>
                           1,
                         ),
                       child: _Thumb(
-                        size: geometry.thumbSize,
+                        radius: geometry.thumbRadius,
                         fill: dark ? c.ink : c.surface,
                         ink: dark ? c.surface : c.ink,
                         pressed: _pressed && !inert,
@@ -617,8 +650,8 @@ class _SliderControlState extends State<_SliderControl>
                     Positioned.fill(
                       child: Padding(
                         padding: EdgeInsetsDirectional.only(
-                          start: geometry.thumbSize * (1 - f),
-                          end: geometry.thumbSize * f,
+                          start: geometry.thumbWidth * (1 - f),
+                          end: geometry.thumbWidth * f,
                         ),
                         child: Center(
                           child: _switchText(
@@ -777,32 +810,37 @@ class _SliderControlState extends State<_SliderControl>
     if (text == null || text.isEmpty) return const SizedBox.shrink();
     return DefaultTextStyle.merge(
       style: TextStyle(
-        fontSize: 12,
-        height: 18 / 12,
+        fontSize: 11,
+        height: 14 / 11,
         leadingDistribution: TextLeadingDistribution.even,
         fontWeight: FontWeight.w500,
         color: color,
       ),
       maxLines: 1,
       softWrap: false,
-      child: CssBaseline(lineHeight: 18, child: Text(text)),
+      child: CssBaseline(lineHeight: 14, child: Text(text)),
     );
   }
 }
 
-/// Sizes derived from the control height, like `slider.css`.
+/// Sizes from `slider.css`: [size] is the control height, [height] the box (44 on touch for a
+/// small slider), [width] fixed for switches, [inset] the edge-to-thumb-centre distance.
 class _Geometry {
   _Geometry({
     required this.size,
     required this.height,
-    required this.thin,
+    this.width,
+    required this.thumbWidth,
+    required this.thumbHeight,
+    required this.thumbRadius,
+    required this.trackHeight,
     required this.inset,
-  }) : thumbSize = thin ? 16 : size - 6,
-       trackHeight = thin ? 4 : height,
-       fillCap = thin ? 0 : size / 2,
-       dot = thin ? 3 : 6;
-  final double size, height, inset, thumbSize, trackHeight, fillCap, dot;
-  final bool thin;
+    required this.fillCap,
+    required this.dot,
+  });
+  final double size, height, inset, trackHeight, fillCap, dot;
+  final double thumbWidth, thumbHeight, thumbRadius;
+  final double? width;
 }
 
 class _TrackPainter extends CustomPainter {
@@ -821,7 +859,7 @@ class _TrackPainter extends CustomPainter {
     required this.focus,
   });
   final Color rail, fill, stop, stopActive;
-  final Color? focus;
+  final FocusRingStyle? focus;
   final double trackTop, trackHeight, fillRadius, fillWidth, dot;
   final bool rtl;
   final List<(double, bool)> stops;
@@ -865,16 +903,7 @@ class _TrackPainter extends CustomPainter {
       );
     }
     if (focus != null) {
-      // outline: 2px solid focus, 3px outside the control's rounded box.
-      final ring = (Offset.zero & size).inflate(4);
-      final radius = size.height / 2 + 4;
-      canvas.drawPath(
-        superellipsePath(ring, [radius, radius, radius, radius], inset: 1),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = focus!,
-      );
+      paintFocusRing(canvas, Offset.zero & size, size.height / 2, focus!);
     }
   }
 
@@ -892,17 +921,18 @@ class _ShapeClipper extends CustomClipper<Path> {
   bool shouldReclip(_ShapeClipper old) => old.radius != radius;
 }
 
-/// The thumb: surface (ink in dark), 45% superellipse corners, two soft shadows.
+/// The thumb: surface (ink in dark), superellipse corners (45 % on the thick slider, a capsule
+/// on the switch and the thin slider), two soft shadows.
 class _Thumb extends StatelessWidget {
   const _Thumb({
-    required this.size,
+    required this.radius,
     required this.fill,
     required this.ink,
     required this.pressed,
     required this.thin,
     this.child,
   });
-  final double size;
+  final double radius;
   final Color fill, ink;
   final bool pressed, thin;
   final Widget? child;
@@ -911,7 +941,7 @@ class _Thumb extends StatelessWidget {
   Widget build(BuildContext context) => CustomPaint(
     painter: _ThumbPainter(
       fill: fill,
-      radius: size * 0.45,
+      radius: radius,
       shadows: thin && !pressed
           ? const [(0, 1, 4, 0.18)]
           : pressed

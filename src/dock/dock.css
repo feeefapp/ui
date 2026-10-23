@@ -20,6 +20,9 @@
   min-width: 0;
   padding: var(--lab-dock-inset);
   --lab-glass-radius: var(--lab-radius-panel);
+  /* Regular controls take the toolbar control height: 38 + the 4px inset and 1px border a side is
+  48 at comfortable density, iOS's bottom bar. */
+  --lab-control-height: var(--lab-toolbar-control);
 }
 .lab-dock-host--stretch > .lab-dock {
   width: 100%;
@@ -54,7 +57,7 @@
   flex-wrap: nowrap;
   align-items: center;
   gap: 4px;
-  min-width: var(--lab-control-compact);
+  min-width: var(--lab-toolbar-control);
   max-width: 100%;
 }
 .lab-dock-swap {

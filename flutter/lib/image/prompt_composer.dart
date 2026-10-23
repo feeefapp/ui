@@ -4,16 +4,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../composer/composer.dart';
-import '../glass/container.dart' show GlassLayer;
 import '../i18n/i18n.dart';
 import '../icons/lucide.dart';
-import '../layout/size_reporter.dart';
+import '../brand/geometry.dart' show SuperellipseBorder;
+import '../menu/anchored_panel.dart';
+import '../menu/menu_surface.dart';
 import '../model_ladder.dart' show ModelLadderVariant;
 import '../primitives/button.dart';
 import '../theme.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
-import '../theme/surfaces.dart';
 import '../theme/tokens.dart' show MotionTokens;
 import 'freeform_board.dart' show imageProviderFor;
 import 'prompt_settings_panel.dart';
@@ -749,8 +749,10 @@ class _ReferenceChip extends StatelessWidget {
 
 // Popovers and menus -------------------------------------------------------------------------
 
-/// A Radix-style popover: [content] floats 8px above [trigger] (start or end aligned), stays
-/// 12px inside the screen, closes on Escape or a tap outside, and fades up in.
+/// A Radix-style popover in an [AnchoredPanel]: [content] floats [offset] above [trigger] (start
+/// or end aligned), flips and shifts to stay inside its bounds, closes on Escape or a tap outside.
+/// A [menu] covers its trigger and grows out of it ([MenuSurface] does the motion); other
+/// popovers fade up in.
 class _Anchored extends StatefulWidget {
   const _Anchored({
     required this.open,
@@ -759,6 +761,7 @@ class _Anchored extends StatefulWidget {
     required this.content,
     this.alignEnd = false,
     this.inlineSide = false,
+    this.menu = false,
     this.offset = 8,
     this.label,
     this.group,
@@ -775,6 +778,9 @@ class _Anchored extends StatefulWidget {
 
   /// Opens beside the trigger, toward the inline end (a submenu), instead of above it.
   final bool inlineSide;
+
+  /// The content is a [MenuSurface] that covers the trigger and morphs out of it.
+  final bool menu;
   final double offset;
   final String? label;
 
@@ -787,50 +793,29 @@ class _Anchored extends StatefulWidget {
 
 class _AnchoredState extends State<_Anchored>
     with SingleTickerProviderStateMixin {
-  final _portal = OverlayPortalController();
-  final _link = LayerLink();
-  final _trigger = GlobalKey();
   late final _pop = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 200),
   );
-  Size? _size;
 
   Object get _group => widget.group ?? this;
 
   @override
   void initState() {
     super.initState();
-    if (widget.open) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _show());
-    }
+    if (widget.open) _pop.value = 1;
   }
 
   @override
   void didUpdateWidget(_Anchored old) {
     super.didUpdateWidget(old);
-    if (widget.open != old.open) {
-      // The overlay can't change during build; switch it right after this frame.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        widget.open ? _show() : _hide();
-      });
+    if (widget.open && !old.open) {
+      if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+        _pop.value = 1;
+      } else {
+        _pop.forward(from: 0);
+      }
     }
-  }
-
-  void _show() {
-    if (!mounted || _portal.isShowing) return;
-    _size = null;
-    _portal.show();
-    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
-      _pop.value = 1;
-    } else {
-      _pop.forward(from: 0);
-    }
-  }
-
-  void _hide() {
-    if (_portal.isShowing) _portal.hide();
   }
 
   @override
@@ -840,169 +825,70 @@ class _AnchoredState extends State<_Anchored>
   }
 
   @override
-  Widget build(BuildContext context) => CompositedTransformTarget(
-    link: _link,
-    child: OverlayPortal(
-      controller: _portal,
-      overlayChildBuilder: _overlay,
-      child: TapRegion(
-        groupId: _group,
-        child: KeyedSubtree(key: _trigger, child: widget.trigger),
-      ),
-    ),
+  Widget build(BuildContext context) => AnchoredPanel(
+    open: widget.open,
+    side: widget.inlineSide ? PanelSide.end : PanelSide.top,
+    align: widget.inlineSide || !widget.alignEnd
+        ? PanelAlign.start
+        : PanelAlign.end,
+    sideOffset: widget.offset,
+    cover: widget.menu && !widget.inlineSide,
+    panel: _overlay,
+    child: TapRegion(groupId: _group, child: widget.trigger),
   );
 
   Widget _overlay(BuildContext context) {
-    final screen = MediaQuery.sizeOf(context);
-    final rtl = Directionality.of(context) == TextDirection.rtl;
-    final box = _trigger.currentContext?.findRenderObject() as RenderBox?;
-    final rect = box != null && box.hasSize
-        ? box.localToGlobal(Offset.zero) & box.size
-        : Rect.zero;
-    final size = _size ?? Size.zero;
-    late Offset origin;
-    late double maxHeight;
-    if (widget.inlineSide) {
-      final towardRight = !rtl;
-      var left = towardRight
-          ? rect.right + widget.offset
-          : rect.left - widget.offset - size.width;
-      if (towardRight && left + size.width > screen.width - 12) {
-        left = rect.left - widget.offset - size.width;
-      } else if (!towardRight && left < 12) {
-        left = rect.right + widget.offset;
-      }
-      var top = rect.top - 7;
-      top = math.max(12, math.min(top, screen.height - 12 - size.height));
-      origin = Offset(left, top);
-      maxHeight = screen.height - 24;
-    } else {
-      final end = widget.alignEnd != rtl;
-      var left = end ? rect.right - size.width : rect.left;
-      left = math.max(12, math.min(left, screen.width - 12 - size.width));
-      maxHeight = math.max(120, rect.top - widget.offset - 12);
-      origin = Offset(left, rect.top - widget.offset - size.height);
-    }
     final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    return Positioned(
-      left: origin.dx,
-      top: origin.dy,
-      child: TapRegion(
-        groupId: _group,
-        onTapOutside: (_) => widget.onClose(),
-        child: Focus(
-          onKeyEvent: (_, event) {
-            if (event is KeyDownEvent &&
-                event.logicalKey == LogicalKeyboardKey.escape) {
-              widget.onClose();
-              return KeyEventResult.handled;
-            }
-            return KeyEventResult.ignored;
-          },
-          child: GlassLayer(
-            child: Semantics(
-              container: true,
-              scopesRoute: true,
-              explicitChildNodes: true,
-              label: widget.label,
-              child: AnimatedBuilder(
-                animation: _pop,
-                builder: (context, child) {
-                  final t = reduced
-                      ? 1.0
-                      : MotionTokens.easeOut.transform(_pop.value);
-                  return Opacity(
-                    opacity: _size == null ? 0 : t,
-                    child: Transform(
-                      alignment: widget.inlineSide
-                          ? Alignment.topCenter
-                          : Alignment.bottomCenter,
-                      transform: Matrix4.translationValues(0, 4 * (1 - t), 0)
-                        ..scaleByDouble(0.97 + 0.03 * t, 0.97 + 0.03 * t, 1, 1),
-                      child: child,
-                    ),
-                  );
-                },
-                child: SizeReporter(
-                  onSize: (size) {
-                    if (mounted && size != _size) setState(() => _size = size);
-                  },
-                  child: widget.content(context, maxHeight),
-                ),
-              ),
+    Widget content = LayoutBuilder(
+      builder: (context, constraints) =>
+          widget.content(context, constraints.maxHeight),
+    );
+    if (!widget.menu) {
+      content = AnimatedBuilder(
+        animation: _pop,
+        builder: (context, child) {
+          final t = reduced ? 1.0 : MotionTokens.easeOut.transform(_pop.value);
+          return Opacity(
+            opacity: t,
+            child: Transform(
+              alignment: widget.inlineSide
+                  ? Alignment.topCenter
+                  : Alignment.bottomCenter,
+              transform: Matrix4.translationValues(0, 4 * (1 - t), 0)
+                ..scaleByDouble(0.97 + 0.03 * t, 0.97 + 0.03 * t, 1, 1),
+              child: child,
             ),
-          ),
+          );
+        },
+        child: content,
+      );
+    }
+    return TapRegion(
+      groupId: _group,
+      onTapOutside: (_) => widget.onClose(),
+      child: Focus(
+        onKeyEvent: (_, event) {
+          if (event is KeyDownEvent &&
+              event.logicalKey == LogicalKeyboardKey.escape) {
+            widget.onClose();
+            return KeyEventResult.handled;
+          }
+          return KeyEventResult.ignored;
+        },
+        child: Semantics(
+          container: true,
+          scopesRoute: true,
+          explicitChildNodes: true,
+          label: widget.label,
+          child: content,
         ),
       ),
     );
   }
 }
 
-/// `.lab-pc-menu`: the menu surface (line border, 22px corners, near-opaque surface, glass light
-/// and shadow), 6px padding.
-class _MenuSurface extends StatelessWidget {
-  const _MenuSurface({this.width, required this.child});
-  final double? width;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = ThemeProvider.of(context);
-    final c = theme.colors;
-    return CustomPaint(
-      painter: _MenuPainter(
-        // Solid, like every kit menu (PopoverSurface).
-        fill: c.surface,
-        line: c.line,
-        edgeLight: c.glassEdgeLight,
-        edgeLow: c.glassEdgeLow,
-        shadow: glassShadowColor(theme.brightness),
-      ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          minWidth: width ?? 220,
-          maxWidth: width ?? double.infinity,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(7),
-          child: DefaultTextStyle.merge(
-            style: TextStyle(color: c.ink),
-            child: child,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MenuPainter extends CustomPainter {
-  _MenuPainter({
-    required this.fill,
-    required this.line,
-    required this.edgeLight,
-    required this.edgeLow,
-    required this.shadow,
-  });
-  final Color fill, line, edgeLight, edgeLow, shadow;
-
-  @override
-  void paint(Canvas canvas, Size size) => paintFloatingSurface(
-    canvas,
-    size,
-    22,
-    fill: fill,
-    line: line,
-    edgeLow: edgeLow,
-    shadow: shadow,
-  );
-
-  @override
-  bool shouldRepaint(_MenuPainter old) =>
-      old.fill != fill || old.line != line || old.shadow != shadow;
-}
-
-/// One `.lab-pc-menu-item`: 40px (44 on touch), 13px text, a 15px icon, primary tint when
-/// highlighted (hover or keyboard focus), 40% when disabled.
+/// One `.lab-pc-menu-item`: the menu's row height (44 on touch) and padding, 13px text, a 15px
+/// icon, primary tint when highlighted (hover or keyboard focus), 40% when disabled.
 class _MenuItem extends StatefulWidget {
   const _MenuItem({
     required this.focusNode,
@@ -1013,7 +899,7 @@ class _MenuItem extends StatefulWidget {
     this.submenu = false,
     this.open = false,
     this.onHover,
-    this.padding = const EdgeInsets.symmetric(horizontal: 10),
+    this.padding,
     this.autoHeight = false,
     this.label,
   });
@@ -1023,7 +909,9 @@ class _MenuItem extends StatefulWidget {
   final LucideIconData? icon;
   final bool disabled, submenu, open, autoHeight;
   final VoidCallback? onHover;
-  final EdgeInsets padding;
+
+  /// Null uses the menu's row padding.
+  final EdgeInsets? padding;
   final String? label;
 
   @override
@@ -1037,10 +925,13 @@ class _MenuItemState extends State<_MenuItem> {
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
+    final tokens = MenuTokens.of(context);
     final highlighted =
         !widget.disabled &&
         (_hover || widget.focusNode.hasFocus || widget.open);
-    final height = theme.coarsePointer(context) ? 44.0 : 40.0;
+    final height = theme.coarsePointer(context)
+        ? math.max(44.0, tokens.row)
+        : tokens.row;
     return Semantics(
       button: true,
       enabled: !widget.disabled,
@@ -1075,8 +966,8 @@ class _MenuItemState extends State<_MenuItem> {
                 color: highlighted
                     ? mixSrgb(c.primary, 0.16, transparent)
                     : transparent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13),
+                shape: SuperellipseBorder(
+                  radius: math.max(0, tokens.radiusIn(context) - tokens.inset),
                 ),
               ),
               child: ConstrainedBox(
@@ -1084,7 +975,9 @@ class _MenuItemState extends State<_MenuItem> {
                   minHeight: widget.autoHeight ? 0 : height,
                 ),
                 child: Padding(
-                  padding: widget.padding,
+                  padding:
+                      widget.padding ??
+                      EdgeInsets.symmetric(horizontal: tokens.rowInline),
                   child: DefaultTextStyle.merge(
                     style: const TextStyle(fontSize: 13),
                     child: Row(
@@ -1279,150 +1172,136 @@ class _AddMenuState extends State<_AddMenu> {
       open: _open,
       onClose: () => _setOpen(false),
       group: _group,
+      menu: true,
       trigger: widget.trigger(_open, () => _setOpen(!_open)),
       content: (context, maxHeight) {
         final c = ThemeProvider.of(context).colors;
         final nodes = [_upload, _paste, _recent, _ideas, _edit];
-        Widget separator() => Container(
-          height: 1,
-          margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 6),
-          color: c.line,
-        );
-        final menu = _MenuSurface(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxHeight - 14),
-            // Menus hug their widest item, like `min-width: 220px` on a max-content box.
-            child: IntrinsicWidth(
-              child: SingleChildScrollView(
-                child: _MenuKeys(
-                  nodes: nodes,
-                  onOpenSub: (node) {
-                    if (node == _recent) _openSub(_Sub.recent);
-                    if (node == _ideas && composer.onBrowseTemplates == null) {
-                      _openSub(_Sub.ideas);
-                    }
-                    return node == _recent || node == _ideas;
-                  },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(10, 6, 10, 4),
-                        child: Text(
-                          widget.canReference
-                              ? '$noun · up to ${composer.referenceLimit!.max}'
-                              : t('lab.imgcomposer.modelNoReference'),
-                          style: TextStyle(fontSize: 11, color: c.muted),
-                        ),
-                      ),
-                      _MenuItem(
-                        focusNode: _upload,
-                        icon: LucideIcons.upload,
-                        disabled: blocked || !picking,
-                        onSelect: () => _select(widget.onUpload),
-                        child: const Text('Upload images'),
-                      ),
-                      _MenuItem(
-                        focusNode: _paste,
-                        icon: LucideIcons.clipboardPaste,
-                        disabled: blocked || composer.readClipboard == null,
-                        onSelect: () => _select(widget.onPaste),
-                        child: const Text('Paste from clipboard'),
-                      ),
-                      separator(),
-                      if (composer.recent.isNotEmpty)
-                        _subMenu(
-                          context,
-                          sub: _Sub.recent,
-                          node: _recent,
-                          icon: LucideIcons.history,
-                          label: 'From your images',
-                          disabled: blocked,
-                          width: null,
-                          items: (nodes) => _RecentGrid(
-                            images: composer.recent.take(12).toList(),
-                            nodes: nodes,
-                            onPick: (id) =>
-                                _select(() => composer.onUseRecent(id)),
-                          ),
-                          count: math.min(12, composer.recent.length),
-                        ),
-                      if (composer.onBrowseTemplates != null)
-                        _MenuItem(
-                          focusNode: _ideas,
-                          icon: LucideIcons.layoutTemplate,
-                          onSelect: () => _select(composer.onBrowseTemplates!),
-                          child: Text('$ideasLabel…'),
-                        )
-                      else if (composer.templates.isNotEmpty)
-                        _subMenu(
-                          context,
-                          sub: _Sub.ideas,
-                          node: _ideas,
-                          icon: LucideIcons.sparkle,
-                          label: ideasLabel,
-                          disabled: false,
-                          width: 300,
-                          count: math.min(10, composer.templates.length),
-                          items: (nodes) => Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              for (final (i, template)
-                                  in composer.templates.take(10).indexed)
-                                _MenuItem(
-                                  focusNode: nodes[i],
-                                  autoHeight: true,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 8,
-                                  ),
-                                  label: template.name,
-                                  onSelect: () => _select(
-                                    () => composer.onTemplate(template),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    spacing: 2,
-                                    children: [
-                                      Text(
-                                        template.name,
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      Text(
-                                        template.description?.isNotEmpty == true
-                                            ? template.description!
-                                            : template.prompt,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: c.muted,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      separator(),
-                      _MenuItem(
-                        focusNode: _edit,
-                        icon: LucideIcons.brush,
-                        disabled: !picking,
-                        onSelect: () => _select(widget.onEditPhoto),
-                        child: const Text('Edit a photo…'),
-                      ),
-                    ],
+        Widget separator() => const MenuSeparator();
+        final menu = MenuSurface(
+          child: _MenuKeys(
+            nodes: nodes,
+            onOpenSub: (node) {
+              if (node == _recent) _openSub(_Sub.recent);
+              if (node == _ideas && composer.onBrowseTemplates == null) {
+                _openSub(_Sub.ideas);
+              }
+              return node == _recent || node == _ideas;
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 6, 10, 4),
+                  child: Text(
+                    widget.canReference
+                        ? '$noun · up to ${composer.referenceLimit!.max}'
+                        : t('lab.imgcomposer.modelNoReference'),
+                    style: TextStyle(fontSize: 11, color: c.muted),
                   ),
                 ),
-              ),
+                _MenuItem(
+                  focusNode: _upload,
+                  icon: LucideIcons.upload,
+                  disabled: blocked || !picking,
+                  onSelect: () => _select(widget.onUpload),
+                  child: const Text('Upload images'),
+                ),
+                _MenuItem(
+                  focusNode: _paste,
+                  icon: LucideIcons.clipboardPaste,
+                  disabled: blocked || composer.readClipboard == null,
+                  onSelect: () => _select(widget.onPaste),
+                  child: const Text('Paste from clipboard'),
+                ),
+                separator(),
+                if (composer.recent.isNotEmpty)
+                  _subMenu(
+                    context,
+                    sub: _Sub.recent,
+                    node: _recent,
+                    icon: LucideIcons.history,
+                    label: 'From your images',
+                    disabled: blocked,
+                    width: null,
+                    items: (nodes) => _RecentGrid(
+                      images: composer.recent.take(12).toList(),
+                      nodes: nodes,
+                      onPick: (id) => _select(() => composer.onUseRecent(id)),
+                    ),
+                    count: math.min(12, composer.recent.length),
+                  ),
+                if (composer.onBrowseTemplates != null)
+                  _MenuItem(
+                    focusNode: _ideas,
+                    icon: LucideIcons.layoutTemplate,
+                    onSelect: () => _select(composer.onBrowseTemplates!),
+                    child: Text('$ideasLabel…'),
+                  )
+                else if (composer.templates.isNotEmpty)
+                  _subMenu(
+                    context,
+                    sub: _Sub.ideas,
+                    node: _ideas,
+                    icon: LucideIcons.sparkle,
+                    label: ideasLabel,
+                    disabled: false,
+                    width: 300,
+                    count: math.min(10, composer.templates.length),
+                    items: (nodes) => Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (final (i, template)
+                            in composer.templates.take(10).indexed)
+                          _MenuItem(
+                            focusNode: nodes[i],
+                            autoHeight: true,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 8,
+                            ),
+                            label: template.name,
+                            onSelect: () =>
+                                _select(() => composer.onTemplate(template)),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              spacing: 2,
+                              children: [
+                                Text(
+                                  template.name,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  template.description?.isNotEmpty == true
+                                      ? template.description!
+                                      : template.prompt,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: c.muted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                separator(),
+                _MenuItem(
+                  focusNode: _edit,
+                  icon: LucideIcons.brush,
+                  disabled: !picking,
+                  onSelect: () => _select(widget.onEditPhoto),
+                  child: const Text('Edit a photo…'),
+                ),
+              ],
             ),
           ),
         );
@@ -1448,7 +1327,8 @@ class _AddMenuState extends State<_AddMenu> {
     return _Anchored(
       open: open,
       inlineSide: true,
-      offset: 6,
+      menu: true,
+      offset: 4,
       group: _group,
       onClose: () => _setOpen(false),
       trigger: _MenuItem(
@@ -1471,14 +1351,16 @@ class _AddMenuState extends State<_AddMenu> {
           ],
         ),
       ),
-      content: (context, maxHeight) => _MenuSurface(
-        width: width,
-        child: _MenuKeys(
-          nodes: nodes,
-          onCloseSub: _closeSub,
-          child: items(nodes),
-        ),
-      ),
+      content: (context, maxHeight) {
+        final menu = MenuSurface(
+          child: _MenuKeys(
+            nodes: nodes,
+            onCloseSub: _closeSub,
+            child: items(nodes),
+          ),
+        );
+        return width == null ? menu : SizedBox(width: width, child: menu);
+      },
     );
   }
 }

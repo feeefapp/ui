@@ -12,6 +12,7 @@ function Overview() {
   return (
     <>
       <SplitMerge />
+      <p>These examples use the clear reference material: a 1px curved rim, circular corners and the measured lens. Each example supplies its background separately so Firefox refracts it too. The <a href="/foundations/glass-reflections">Glass reflections controls</a> let you tune these same component parameters.</p>
 
       <Section title="One material for a row of bubbles">
         <p>
@@ -49,12 +50,13 @@ function Overview() {
           head={['Prop', 'On', 'Use']}
           rows={[
             [<C>tint</C>, 'GlassContainer', 'Local clear-to-tinted material, 0–1. Omit to inherit ThemeConfig.'],
-            [<C>highlightProfile</C>, 'GlassContainer', 'surface (default): convex bevel; rim: thin symmetric highlight fitted to native screenshots. Use width 1 and strength 1 for the reference rim.'],
-            [<C>highlightWidth</C>, 'GlassContainer', 'Reflective bevel width in px, 0–20 (default 5).'],
-            [<C>highlightStrength</C>, 'GlassContainer', 'Highlight strength, 0–3 (default 1).'],
+            [<C>highlightProfile</C>, 'GlassContainer', 'surface: convex bevel; rim (default): thin symmetric highlight fitted to native screenshots. Use width 1 and strength 1 for the reference rim.'],
+            [<C>highlightWidth</C>, 'GlassContainer', 'Reflective bevel width in px, 0–100 (default 1).'],
+            [<C>highlightStrength</C>, 'GlassContainer', 'Highlight strength, 0–10 (default 1).'],
             [<C>backdropSource</C>, 'GlassContainer', 'ID of a separate background-only element. Enables live background refraction in Firefox; the source must not contain the glass.'],
-            [<C>refractionStrength</C>, 'GlassContainer', 'Backdrop bend, 0–3 (default 1). Above 1 allows stronger distortion. Theme refraction must be enabled.'],
-            [<C>cornerShape</C>, 'GlassContainer', 'Superellipse by default; round uses circular corners consistently across the outline, highlights and refraction. Supply matching member radii.'],
+            [<C>refractionProfile</C>, 'GlassContainer', 'gentle: monotonic lens; measured (default): native screenshot-fitted mirrored edge band.'],
+            [<C>refractionStrength</C>, 'GlassContainer', 'Backdrop bend, 0–10 (default 1). Above 1 allows stronger distortion. Theme refraction must be enabled.'],
+            [<C>cornerShape</C>, 'GlassContainer', 'Round by default; circular corners are used consistently across the outline, highlights and refraction. Supply member radii in CSS px; superellipse remains opt-in.'],
             [<C>spacing</C>, 'GlassContainer', 'Blend distance in px (default 8). Keep it below the gap between bubbles at rest.'],
             [<C>light</C>, 'GlassContainer', <><C>pointer</C> (default) or <C>static</C>.</>],
             [<C>interactive</C>, 'GlassContainer', 'Press response: swell, stretch and glow (default true).'],
@@ -76,7 +78,7 @@ function Overview() {
           Small glass (up to 72px tall) flips between light and dark to stay legible over what scrolls
           under it, like Apple's bars over photos. The browser can't read pixels, so mark media regions
           with <C>{'data-lab-backdrop="dark"'}</C> or <C>"light"</C>; elsewhere the first solid background
-          colour behind the glass decides. Taller glass keeps the theme's colours. Turn it off with{' '}
+          colour behind the glass decides. Taller glass keeps the theme's colours. Adaptation changes contrast and tint without switching the reflection lighting. Turn it off with{' '}
           <C>{'adaptive={false}'}</C>.
         </p>
       </Section>
@@ -95,14 +97,11 @@ function Overview() {
           Like the Liquid Glass setting on iOS, one number moves the material:{' '}
           <C>ThemeConfig</C> <C>glassTint</C>, from <C>0</C> (clear: no veil, no shadow, a slight
           brightness lift) to <C>1</C> (tinted: the measured regular material, a dense veil, strong
-          saturation and a soft shadow). The default <C>0.5</C> lays a light veil (about 40% of the
-          surface) over the backdrop: controls stay legible and the bending shows. The rim light follows the local curve of the blended outline and stays the same at every tint. Inspect it on plain, grid and colored backgrounds in the <a href="/foundations/glass-reflections">Glass reflections</a> guide.
+          saturation and a soft shadow). The web default is <C>0</C>, matching the clear reference across headers, docks and other glass. Increase tint in Customize when you need a stronger veil. The rim light follows the local curve of the blended outline and stays the same at every tint. Inspect it on plain, grid and colored backgrounds in the <a href="/foundations/glass-reflections">Glass reflections</a> guide.
         </p>
         <p>
           <C>glassRefraction</C> (default on) bends what is behind the glass at its edges, like a lens,
-          with a bounded bezel profile that avoids folded background lines: whenever the glass settles, the kit builds a displacement map of
-          its outline on a canvas and applies it as an SVG backdrop filter (while bubbles move it shows
-          the same glass unbent, so morphs stay smooth). Chromium filters the actual backdrop directly. Firefox can apply the same bend when you pass <C>backdropSource</C>, the ID of a separate background-only element. It captures that layer as a live element image and filters it normally. Keep the source and glass as siblings: capturing an ancestor containing the glass would create a recursive image. Without a source, Firefox keeps CSS glass. Safari keeps CSS glass without the bend. <C>glassBlur</C> (default off) adds the measured
+          with the measured mirrored edge band (choose gentle refraction for a non-reversing lens). A bounded displacement map follows the outline during presses, dragging and merges; rigid moves reuse the same map. The lens stays active throughout the motion. Chromium filters the actual backdrop directly. Firefox applies the same bend to ScrollArea floating headers and docks automatically. Other surfaces can pass <C>backdropSource</C>, the ID of a separate background-only element. It captures that layer as a live element image and filters it normally. Keep the source and glass as siblings: capturing an ancestor containing the glass would create a recursive image. Without a source, Firefox keeps CSS glass. Safari keeps CSS glass without the bend. <C>glassBlur</C> (default off) adds the measured
           backdrop blur, 2.9px on controls growing to 5.2px on panels. Reduced transparency and
           increased contrast turn all of it into an opaque surface; increased contrast also draws an
           outline. Try the Liquid Glass slider in Customize.
@@ -154,14 +153,14 @@ export default definePage({
     import.meta.glob('./examples/*.dart', { eager: true, query: '?raw', import: 'default' })
   ),
   Preview: () => (
-    <GlassContainer className="glass-row" style={{ gap: 4 }} spacing={12}>
+    <GlassContainer tint={0} className="glass-row" style={{ gap: 4 }} spacing={12}>
       <ToolbarGroup label="Share">
-        <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Share">
+        <IconButton variant="text" appearance="toolbar" aria-label="Share">
           <Share2 />
         </IconButton>
       </ToolbarGroup>
       <ToolbarGroup label="Copy">
-        <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Copy">
+        <IconButton variant="text" appearance="toolbar" aria-label="Copy">
           <Copy />
         </IconButton>
       </ToolbarGroup>

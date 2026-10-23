@@ -24,10 +24,10 @@ export default function OrderBoard() {
   return (
     <div className="lt-demo">
       <div className="demo-row" style={{ justifyContent: 'flex-start' }}>
-        <Button variant="tonal" controlSize="compact" onClick={() => setOrders((l) => [...l].sort(() => Math.random() - 0.5))}>
+        <Button variant="tonal" controlSize="small" onClick={() => setOrders((l) => [...l].sort(() => Math.random() - 0.5))}>
           <Shuffle size={16} /> Shuffle
         </Button>
-        <Button variant="text" controlSize="compact" onClick={() => setOrders(START)}>
+        <Button variant="text" controlSize="small" onClick={() => setOrders(START)}>
           Reset
         </Button>
       </div>
@@ -46,7 +46,7 @@ export default function OrderBoard() {
                     </span>
                     <IconButton
                       variant="text"
-                      controlSize="compact"
+                      controlSize="small"
                       aria-label={`Move #${o.id} to ${COLUMNS[(COLUMNS.indexOf(o.column) + 1) % 3]}`}
                       onClick={() => advance(o.id)}
                     >

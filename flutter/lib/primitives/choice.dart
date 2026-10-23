@@ -8,6 +8,7 @@ import '../icons/lucide.dart';
 import '../theme.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
+import '../theme/surfaces.dart';
 import 'button.dart' show ControlSize;
 
 /// A checkbox with a label, description, error and indeterminate state: the twin of `Checkbox` in
@@ -54,7 +55,7 @@ class Checkbox extends StatefulWidget {
   /// Adds a marker after the label.
   final bool required;
 
-  /// `regular` or `compact`.
+  /// `regular` or `small`.
   final ControlSize controlSize;
   final FocusNode? focusNode;
 
@@ -388,7 +389,7 @@ class _ChoiceState extends State<_Choice> {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
     final s = theme.sizes;
-    final compact = widget.controlSize == ControlSize.compact;
+    final compact = widget.controlSize == ControlSize.small;
     final enabled = !widget.disabled && widget.onToggle != null;
     final on = widget.checked || (!widget.radio && widget.indeterminate);
     final invalid = widget.invalid || widget.error != null;
@@ -396,7 +397,7 @@ class _ChoiceState extends State<_Choice> {
     final markRadius = (compact ? 6.0 : 7.0) * s.radiusScale;
     final minHeight = theme.coarsePointer(context)
         ? 44.0
-        : (compact ? s.controlCompact : s.controlHeight);
+        : (compact ? s.controlSmall : s.controlHeight);
     final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final spring = reduced ? Duration.zero : const Duration(milliseconds: 320);
 
@@ -463,21 +464,6 @@ class _ChoiceState extends State<_Choice> {
       ),
     );
 
-    final focusRing = _focusVisible
-        ? DecoratedBox(
-            position: DecorationPosition.foreground,
-            decoration: ShapeDecoration(
-              shape: widget.radio
-                  ? CircleBorder(side: BorderSide(color: c.focus, width: 2))
-                  : SuperellipseBorder(
-                      radius: markRadius + 5,
-                      side: BorderSide(color: c.focus, width: 2),
-                    ),
-            ),
-            child: const SizedBox.shrink(),
-          )
-        : null;
-
     final copy =
         (widget.label != null ||
             widget.description != null ||
@@ -523,7 +509,7 @@ class _ChoiceState extends State<_Choice> {
       constraints: BoxConstraints(minHeight: minHeight, minWidth: 44),
       child: DecoratedBox(
         decoration: ShapeDecoration(
-          color: _hovered && enabled
+          color: (_hovered || _focusVisible) && enabled
               ? mixSrgb(c.ink, 0.04, transparent)
               : transparent,
           shape: SuperellipseBorder(radius: s.radiusControl),
@@ -536,19 +522,11 @@ class _ChoiceState extends State<_Choice> {
             mainAxisSize: MainAxisSize.min,
             spacing: compact ? 8 : 10,
             children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  mark,
-                  if (focusRing != null)
-                    Positioned(
-                      left: -5,
-                      top: -5,
-                      right: -5,
-                      bottom: -5,
-                      child: focusRing,
-                    ),
-                ],
+              // Keyboard focus hugs the mark.
+              FocusRing(
+                visible: _focusVisible,
+                radius: widget.radio ? markSize / 2 : markRadius,
+                child: mark,
               ),
               ?copy,
             ],

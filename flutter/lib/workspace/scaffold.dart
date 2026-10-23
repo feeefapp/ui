@@ -12,6 +12,7 @@ import '../icons/lucide.dart';
 import '../primitives/button.dart';
 import '../scroll/scroll_area.dart';
 import '../theme.dart';
+import '../theme/surfaces.dart';
 import '../theme/color_mix.dart';
 import '../theme/tokens.dart';
 
@@ -279,6 +280,8 @@ class _ScaffoldWidgetState extends State<Scaffold> {
             label: widget.contentLabel,
             controller: widget.contentController,
             contentPadding: compact ? 16 : 24,
+            // The app bar and dock sit --lab-toolbar-inset (16, iOS) from the panel's sides.
+            sideGap: ThemeProvider.of(context).sizes.toolbarInset,
             top: widget.appBar,
             bottom: widget.bottom,
             child: widget.child ?? const SizedBox.shrink(),
@@ -438,7 +441,7 @@ class _SideBoundaryState extends State<_SideBoundary> {
 }
 
 /// `.lab-workspace-main`: 8px margin, 1px line border, panel radius, surface fill, programmatically
-/// focusable with a 2px focus ring 3px inside its edge when focused from the keyboard. Unframed
+/// focusable with the keyboard focus ring just inside its edge. Unframed
 /// (nothing beside or above it) it eases to the window's edges: no margin, border or radius.
 class _MainPanel extends StatefulWidget {
   const _MainPanel({
@@ -489,10 +492,10 @@ class _MainPanelState extends State<_MainPanel> {
         focusNode: widget.focusNode,
         skipTraversal: true,
         onFocusChange: _update,
-        child: CustomPaint(
-          foregroundPainter: _ring
-              ? _FocusRingPainter(color: c.focus, radius: radius)
-              : null,
+        child: FocusRing(
+          visible: _ring,
+          inside: true,
+          radius: radius,
           child: DecoratedBox(
             decoration: ShapeDecoration(
               color: c.surface,
@@ -515,30 +518,6 @@ class _MainPanelState extends State<_MainPanel> {
       ),
     );
   }
-}
-
-class _FocusRingPainter extends CustomPainter {
-  _FocusRingPainter({required this.color, required this.radius});
-  final Color color;
-  final double radius;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // outline: 2px, outline-offset: -3px → a 2px band whose outer edge is 3px inside the box.
-    final rect = (Offset.zero & size).deflate(4);
-    final r = math.max(0.0, radius - 4);
-    canvas.drawPath(
-      superellipsePath(rect, [r, r, r, r]),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = color,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_FocusRingPainter old) =>
-      old.color != color || old.radius != radius;
 }
 
 /// The compact drawer: an Android-style navigation drawer attached to the start edge, full
@@ -845,7 +824,8 @@ class ScaffoldAppBar extends StatelessWidget {
       container: true,
       explicitChildNodes: true,
       child: Row(
-        spacing: 12,
+        // --lab-toolbar-gap between the bar's groups.
+        spacing: ThemeProvider.of(context).sizes.toolbarGap,
         children: [
           ?leading,
           Expanded(

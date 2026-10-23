@@ -60,18 +60,18 @@ html[data-lab-theme] .lab-workspace-toolgroup {
 }
 html[data-lab-theme] .lab-workspace-toolgroup > :is(button, a)[data-variant],
 html[data-lab-theme] .lab-workspace-toolgroup > div > button[data-variant] {
-  height: var(--lab-control-compact);
-  min-height: var(--lab-control-compact);
-  min-width: var(--lab-control-compact);
+  height: var(--lab-toolbar-control);
+  min-height: var(--lab-toolbar-control);
+  min-width: var(--lab-toolbar-control);
   padding: 0 9px;
   border-radius: var(--lab-radius-control);
   --lab-control-elevation: none;
 }
 @media (pointer: coarse) {
   html[data-lab-theme] .lab-workspace-toolgroup :is(button, a)[data-variant] {
-    height: 44px;
-    min-height: 44px;
-    min-width: 44px;
+    height: var(--lab-control-touch-target);
+    min-height: var(--lab-control-touch-target);
+    min-width: var(--lab-control-touch-target);
   }
 }
 @supports not (backdrop-filter: blur(1px)) {

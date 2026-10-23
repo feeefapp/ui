@@ -12,7 +12,7 @@ export default function Variants() {
           key={variant}
           hint={`${variant[0].toUpperCase()}${variant.slice(1)}`}
           variant={variant}
-          controlSize="compact"
+          controlSize="small"
           value={values[variant] ?? null}
           onValueChange={(next) => setValues((old) => ({ ...old, [variant]: next }))}
         />

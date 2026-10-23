@@ -134,8 +134,8 @@ html:has(.lab-sheet-host[data-modal][open]) {
   background: color-mix(in srgb, var(--lab-ink) 22%, transparent);
 }
 .lab-sheet-grabber:focus-visible {
-  outline: 2px solid var(--lab-focus);
-  outline-offset: -2px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: calc(-1 * var(--lab-focus-ring-width));
   border-radius: calc(10px * var(--lab-corner-scale, 1));
 }
 /* The floating chrome is a drag handle too; a finger there never scrolls the content. */

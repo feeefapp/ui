@@ -1,5 +1,5 @@
 import { rubberBand } from '../physics/spring'
-import type { GlassShape } from './geometry'
+import type { GlassRect, GlassShape } from './geometry'
 
 /**
  * Press response for interactive glass, after Apple's `.interactive()`: a pressed bubble swells a
@@ -13,6 +13,18 @@ export const GLASS_PRESS_SCALE = 1.06
 export const GLASS_STRETCH_LIMIT = 12
 /** Fraction of the stretch the bubble's content follows. */
 export const GLASS_CONTENT_FOLLOW = 0.4
+
+/** Recover layout from the content transform we last painted, before measuring it again. */
+export function glassLayoutRect(rect: GlassRect, offset: { x: number; y: number }, contentScale = 1): GlassRect {
+  const width = rect.width / contentScale
+  const height = rect.height / contentScale
+  return {
+    x: rect.x - offset.x + (rect.width - width) / 2,
+    y: rect.y - offset.y + (rect.height - height) / 2,
+    width,
+    height,
+  }
+}
 
 /** Stretch (px) for a drag of `dx`, `dy` from where the press started: quick at first, then resisting. */
 export function glassStretch(dx: number, dy: number, limit = GLASS_STRETCH_LIMIT) {

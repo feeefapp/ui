@@ -78,10 +78,11 @@ html[data-lab-theme] .lab-select[data-surface-variant] {
   box-shadow: var(--lab-variant-shadow);
   border-radius: var(--lab-radius-control);
 }
-html[data-lab-theme] .lab-select[data-surface-variant][data-control-size='compact'] {
-  height: var(--lab-control-compact);
-  min-height: var(--lab-control-compact);
-  border-radius: var(--lab-radius-control-compact);
+html[data-lab-theme] .lab-select[data-surface-variant][data-control-size='small'] {
+  height: var(--lab-control-small);
+  min-height: var(--lab-control-small);
+  padding-inline: var(--lab-control-padding-small);
+  border-radius: var(--lab-radius-control-small);
 }
 html[data-lab-theme] .lab-select[data-surface-variant]:hover:not(:disabled) {
   background: var(--lab-variant-hover);
@@ -94,8 +95,8 @@ html[data-lab-theme] .lab-select[data-surface-variant][aria-invalid='true'] {
 }
 @media (pointer: coarse) {
   html[data-lab-theme] .lab-select[data-surface-variant][data-control-size] {
-    height: var(--lab-control-touch-target);
-    min-height: var(--lab-control-touch-target);
+    height: max(var(--lab-control-height), var(--lab-control-touch-target));
+    min-height: max(var(--lab-control-height), var(--lab-control-touch-target));
   }
 }
 @media (forced-colors: active) {

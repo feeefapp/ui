@@ -15,11 +15,11 @@ export default function UsePresenceHook() {
     <div className="demo-column">
       <div className="demo-row">
         {CUSTOMERS.map((name) => (
-          <Button key={name} variant="outlined" controlSize="compact" onClick={() => setSelected(name)}>
+          <Button key={name} variant="outlined" controlSize="small" onClick={() => setSelected(name)}>
             {name}
           </Button>
         ))}
-        <Button variant="text" controlSize="compact" disabled={!open} onClick={() => setSelected(null)}>
+        <Button variant="text" controlSize="small" disabled={!open} onClick={() => setSelected(null)}>
           Close
         </Button>
       </div>

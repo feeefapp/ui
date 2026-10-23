@@ -51,7 +51,7 @@ function EasingDemo() {
         </div>
       ))}
       <div>
-        <Button variant="tonal" controlSize="compact" onClick={() => setOn((v) => !v)}>
+        <Button variant="tonal" controlSize="small" onClick={() => setOn((v) => !v)}>
           Play
         </Button>
       </div>
@@ -96,7 +96,7 @@ function SpringDemo() {
       <div className="demo-row" style={{ justifyContent: 'flex-start' }}>
         <Button
           variant="tonal"
-          controlSize="compact"
+          controlSize="small"
           onClick={() => {
             target.current = target.current === 0 ? 1 : 0
             force((v) => v + 1)

@@ -13,6 +13,7 @@ import { clampGlassTint, GLASS_TINT_DEFAULT } from './glass/material'
  * - `data-lab-glass`    → how floating glass behaves (glass/glass.css, GlassContainer)
  * - `--lab-glass-tint`  → the glass material between clear and tinted (system.css, glass.css)
  * - `data-lab-glass-blur` / `data-lab-glass-refraction` → backdrop blur and edge bending (`on`/`off`)
+ * - `metrics` → size variables (`--lab-control-height`, `--lab-toolbar-item`, …) that replace the density's
  *
  * Server-rendered hosts also spread `themeAttributes(config)` onto `<html>` so the first
  * paint is already themed; the provider keeps the attributes in sync on the client.
@@ -40,7 +41,7 @@ export interface ThemeConfig {
    * The Liquid Glass slider, `0` clear … `1` tinted: how much of the theme surface veils what is
    * behind the glass. `0` is measured clear glass (no veil, no shadow, a slight brightness lift),
    * `1` the measured regular material (veil 71–87 %, strong saturation, soft shadow); the default
-   * `0.5` is a light veil (~40 %) that keeps controls legible and lets the bending show.
+   * `0` uses the clear reference material consistently across web glass.
    * Clamped to 0–1 (glass/material.ts `glassMaterial` holds the curve).
    */
   glassTint?: number
@@ -48,10 +49,73 @@ export interface ThemeConfig {
   glassBlur?: boolean
   /**
    * Bend the backdrop at the glass edges with the measured refraction profile. Default true.
-   * Chromium only (an SVG displacement map as backdrop filter, built when the glass settles);
-   * other browsers show the same glass without the bend.
+   * Chromium filters the backdrop directly. Firefox uses a disjoint live source, supplied
+   * automatically to ScrollArea floating slots or explicitly via backdropSource.
    */
   glassRefraction?: boolean
+  /**
+   * Control sizes, overriding the density's. Each value set here replaces that size at every
+   * density (density supplies the rest), so an app can keep the iOS defaults and only change, say,
+   * its toolbar height. Lengths are CSS pixels (Flutter logical pixels in the twin).
+   */
+  metrics?: Metrics
+}
+
+/** Small / regular / large values of one size (px). Unset sizes keep the density's. */
+export interface MetricScale {
+  small?: number
+  regular?: number
+  large?: number
+}
+
+/** A width × height pair (px). Unset sides keep the density's. */
+export interface MetricSize {
+  width?: number
+  height?: number
+}
+
+/**
+ * Size overrides for `ThemeConfig.metrics`. Defaults (comfortable density) are the iOS 26 controls
+ * measured in the simulator; compact is one step down, thin two. Every value becomes a CSS variable
+ * on `<html>`.
+ */
+export interface Metrics {
+  /** Button heights, also the square of icon-only buttons: small 30, regular 36, large 52 (`--lab-control-small`, `--lab-control-height`, `--lab-control-large`). */
+  controlHeight?: MetricScale
+  /** A text button's side padding: 10 / 12 / 20 (`--lab-control-padding-small`, `--lab-control-padding`, `--lab-control-padding-large`). */
+  controlPadding?: MetricScale
+  /** A button label's font size: 15 / 17 / 17; the line height is the size × 1.3 rounded (`--lab-control-font*`). */
+  controlFont?: MetricScale
+  /** Text field heights: small 36, regular 44 (`--lab-field-height-small`, `--lab-field-height`; `large` is ignored). */
+  fieldHeight?: MetricScale
+  /** Navigation rows (sidebar items): 44 (`--lab-row-height`). */
+  rowHeight?: number
+  /** A toolbar bubble's outer height: 44; controls inside are 6px less (`--lab-toolbar-item`). */
+  toolbarItem?: number
+  /** Space between toolbar groups: 12 (`--lab-toolbar-gap`). */
+  toolbarGap?: number
+  /** A floating bar's inset from its panel's sides: 16 (`--lab-toolbar-inset`). */
+  toolbarInset?: number
+  /** A segmented control's outer height: 32 (`--lab-segmented-height`). */
+  segmentedHeight?: number
+  /** From a segmented control's outer edge to its options, and between options: 2 (`--lab-segmented-inset`). */
+  segmentedInset?: number
+  /** A switch track: 63 × 28 (`--lab-switch-width`, `--lab-switch-height`). */
+  switchSize?: MetricSize
+  /** The switch thumb and the thin slider's thumb: 37 × 24 (`--lab-thumb-width`, `--lab-thumb-height`). */
+  thumbSize?: MetricSize
+  /** The thin slider's rail: 6 (`--lab-slider-track`). */
+  sliderTrack?: number
+  /** An inset-grouped list row: 54 (`--lab-list-row-height`). */
+  listRowHeight?: number
+  /** An inset-grouped list card's corner radius before the radius scale: 26 (`--lab-list-corner`). */
+  listRadius?: number
+  /** List rows' side padding, headers and separators: 16 (`--lab-list-inset`). */
+  listInset?: number
+  /** The keyboard focus ring's line width: 2 (`--lab-focus-ring-width`). */
+  focusRingWidth?: number
+  /** The keyboard focus ring's distance outside the control: 1 (`--lab-focus-ring-offset`). */
+  focusRingOffset?: number
 }
 
 /** Color palette: `lab` (Feeef green) or `mono` (black and white). */
@@ -64,7 +128,7 @@ export type GlassStyle = 'liquid' | 'still' | 'solid'
 export type GlassSwitch = 'on' | 'off'
 
 /** The config every unset option falls back to. `primary` unset means the palette's own color. */
-export const THEME_DEFAULTS: Required<Omit<ThemeConfig, 'primary'>> = {
+export const THEME_DEFAULTS: Required<Omit<ThemeConfig, 'primary' | 'metrics'>> = {
   palette: 'lab',
   density: 'comfortable',
   radius: 1,
@@ -74,7 +138,10 @@ export const THEME_DEFAULTS: Required<Omit<ThemeConfig, 'primary'>> = {
   glassRefraction: true,
 }
 
-type Resolved = Required<Omit<ThemeConfig, 'primary'>> & { primary: string | null }
+type Resolved = Required<Omit<ThemeConfig, 'primary' | 'metrics'>> & {
+  primary: string | null
+  metrics: Metrics
+}
 
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i
 
@@ -120,7 +187,52 @@ function resolve(config: ThemeConfig = {}): Resolved {
     glassRefraction: config.glassRefraction ?? THEME_DEFAULTS.glassRefraction,
     radius,
     primary: config.primary && parseHexColor(config.primary) ? config.primary.toLowerCase() : null,
+    metrics: config.metrics ?? {},
   }
+}
+
+/** Every metric and the CSS variable it writes. */
+const METRIC_VARIABLES: [read: (m: Metrics) => number | undefined, variable: string][] = [
+  [(m) => m.controlHeight?.small, '--lab-control-small'],
+  [(m) => m.controlHeight?.regular, '--lab-control-height'],
+  [(m) => m.controlHeight?.large, '--lab-control-large'],
+  [(m) => m.controlPadding?.small, '--lab-control-padding-small'],
+  [(m) => m.controlPadding?.regular, '--lab-control-padding'],
+  [(m) => m.controlPadding?.large, '--lab-control-padding-large'],
+  [(m) => m.controlFont?.small, '--lab-control-font-small'],
+  [(m) => m.controlFont?.regular, '--lab-control-font'],
+  [(m) => m.controlFont?.large, '--lab-control-font-large'],
+  [(m) => m.fieldHeight?.small, '--lab-field-height-small'],
+  [(m) => m.fieldHeight?.regular, '--lab-field-height'],
+  [(m) => m.rowHeight, '--lab-row-height'],
+  [(m) => m.toolbarItem, '--lab-toolbar-item'],
+  [(m) => m.toolbarGap, '--lab-toolbar-gap'],
+  [(m) => m.toolbarInset, '--lab-toolbar-inset'],
+  [(m) => m.segmentedHeight, '--lab-segmented-height'],
+  [(m) => m.segmentedInset, '--lab-segmented-inset'],
+  [(m) => m.switchSize?.width, '--lab-switch-width'],
+  [(m) => m.switchSize?.height, '--lab-switch-height'],
+  [(m) => m.thumbSize?.width, '--lab-thumb-width'],
+  [(m) => m.thumbSize?.height, '--lab-thumb-height'],
+  [(m) => m.sliderTrack, '--lab-slider-track'],
+  [(m) => m.listRowHeight, '--lab-list-row-height'],
+  [(m) => m.listRadius, '--lab-list-corner'],
+  [(m) => m.listInset, '--lab-list-inset'],
+  [(m) => m.focusRingWidth, '--lab-focus-ring-width'],
+  [(m) => m.focusRingOffset, '--lab-focus-ring-offset'],
+]
+
+/** The variable names `metrics` can set; `applyThemeConfig` clears the ones a new config drops. */
+export const METRIC_VARIABLE_NAMES: readonly string[] = METRIC_VARIABLES.map(([, name]) => name)
+
+/** `metrics` as CSS variables: finite, non-negative values only, in px. */
+export function metricVariables(metrics: Metrics = {}): Record<string, string> {
+  const vars: Record<string, string> = {}
+  for (const [read, name] of METRIC_VARIABLES) {
+    const value = read(metrics)
+    if (typeof value === 'number' && Number.isFinite(value) && value >= 0) vars[name] = `${value}px`
+  }
+  return vars
 }
 
 /** The CSS variables a config sets on `<html>`. */
@@ -128,6 +240,7 @@ function variables(theme: Resolved): Record<string, string> {
   const vars: Record<string, string> = {
     '--lab-radius-scale': String(theme.radius),
     '--lab-glass-tint': String(theme.glassTint),
+    ...metricVariables(theme.metrics),
   }
   const rgb = theme.primary && parseHexColor(theme.primary)
   if (rgb) {
@@ -142,7 +255,7 @@ function variables(theme: Resolved): Record<string, string> {
  * Attributes for the root `<html>` element (React props), e.g. in a Next.js root layout:
  * `data-lab-palette`, `data-lab-density`, `data-lab-glass`, `data-lab-glass-blur`,
  * `data-lab-glass-refraction`, `data-lab-primary` (when set) and the style variables
- * (`--lab-radius-scale`, `--lab-glass-tint`, the seed colours).
+ * (`--lab-radius-scale`, `--lab-glass-tint`, the seed colours, and one variable per set `metrics` value).
  * Unset options use `THEME_DEFAULTS`; `radius` is clamped to 0–1.5, `glassTint` to 0–1, and an invalid `primary`
  * is ignored. Color mode (`data-lab-theme`) is not included; `ThemeProvider` sets it.
  */
@@ -182,6 +295,6 @@ export function applyThemeConfig(element: HTMLElement, config?: ThemeConfig): vo
   element.setAttribute('data-lab-glass-refraction', theme.glassRefraction ? 'on' : 'off')
   if (theme.primary) element.setAttribute('data-lab-primary', '')
   else element.removeAttribute('data-lab-primary')
-  for (const name of SEED_VARS) element.style.removeProperty(name)
+  for (const name of [...SEED_VARS, ...METRIC_VARIABLE_NAMES]) element.style.removeProperty(name)
   for (const [name, value] of Object.entries(variables(theme))) element.style.setProperty(name, value)
 }

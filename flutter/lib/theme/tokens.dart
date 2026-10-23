@@ -73,6 +73,9 @@ class ColorTokens {
   /// `--lab-glass-shadow-small`: the lighter shadow under control-sized glass.
   Color get glassShadowSmall => black(glassTint * _shadowSmall);
 
+  /// `--lab-focus-ring-color`: the keyboard focus ring, the focus colour at 65 %.
+  Color get focusRing => mixSrgb(focus, 0.65, transparent);
+
   Color get controlSurface => surface;
   Color get controlBorder => mixSrgb(ink, 0.15, surface);
   // Over a backdrop, glass.css redeclares the control mixes and glass fills.
@@ -306,60 +309,130 @@ class VariantPaint {
   final Color fill, hover, pressed, edge, ink;
 }
 
-/// Sizes from `system.css`, multiplied by density and the radius scale where the CSS does.
+/// Sizes from `system.css`: the density's defaults (comfortable = iOS 26 controls measured in
+/// `research/liquid-glass/CONTROLS-MEASURED.md`; compact and thin one step down each), with
+/// [ThemeConfig.metrics] on top, and radii multiplied by the radius scale where the CSS does.
 class SizeTokens {
-  const SizeTokens._(this.density, this.radiusScale);
+  const SizeTokens._(this.density, this.radiusScale, this.metrics);
   factory SizeTokens.of(ThemeConfig config) =>
-      SizeTokens._(config.density, config.radiusScale);
+      SizeTokens._(config.density, config.radiusScale, config.metrics);
 
   final Density density;
   final double radiusScale;
+  final Metrics metrics;
 
-  double get controlHeight => switch (density) {
-    Density.comfortable => 44,
-    Density.compact => 34,
-    Density.thin => 28,
-  };
+  double _pick(double comfortable, double compact, double thin) =>
+      switch (density) {
+        Density.comfortable => comfortable,
+        Density.compact => compact,
+        Density.thin => thin,
+      };
+
+  /// `--lab-control-small`: small buttons.
+  double get controlSmall => metrics.controlHeight?.small ?? _pick(30, 26, 22);
+
+  /// `--lab-control-height`: regular buttons.
+  double get controlHeight =>
+      metrics.controlHeight?.regular ?? _pick(36, 30, 26);
+
+  /// `--lab-control-large`: large buttons.
+  double get controlLarge => metrics.controlHeight?.large ?? _pick(52, 36, 30);
+
+  /// `--lab-control-padding-small`: a small text button's side padding.
+  double get controlPaddingSmall =>
+      metrics.controlPadding?.small ?? _pick(10, 8, 6);
+
+  /// `--lab-control-padding`: a regular text button's side padding.
+  double get controlPadding =>
+      metrics.controlPadding?.regular ?? _pick(12, 10, 8);
+
+  /// `--lab-control-padding-large`: a large text button's side padding.
+  double get controlPaddingLarge =>
+      metrics.controlPadding?.large ?? _pick(20, 12, 10);
+
+  /// `--lab-control-font-small`: a small button's label size.
+  double get controlFontSmall =>
+      metrics.controlFont?.small ?? _pick(15, 13, 12);
+
+  /// `--lab-control-font`: a regular button's label size.
+  double get controlFont => metrics.controlFont?.regular ?? _pick(17, 15, 13);
+
+  /// `--lab-control-font-large`: a large button's label size.
+  double get controlFontLarge =>
+      metrics.controlFont?.large ?? _pick(17, 17, 15);
+
+  /// A control label's whole-pixel line height: `round(size × 1.3)` (17 → 22, 15 → 20).
+  static double controlLine(double fontSize) =>
+      (fontSize * 1.3).roundToDouble();
+
+  /// `--lab-field-height`: text fields, selects and number fields.
+  double get fieldHeight => metrics.fieldHeight?.regular ?? _pick(44, 36, 30);
+
+  /// `--lab-field-height-small`: small fields, as tall as a regular button.
+  double get fieldHeightSmall =>
+      metrics.fieldHeight?.small ?? _pick(36, 30, 26);
 
   /// `--lab-row-height`: navigation rows and list-like controls.
-  /// `--lab-field-height`: text fields and selects.
-  double get fieldHeight => switch (density) {
-    Density.comfortable => 40,
-    Density.compact => 34,
-    Density.thin => 28,
-  };
-  double get rowHeight => switch (density) {
-    Density.comfortable => 44,
-    Density.compact => 32,
-    Density.thin => 26,
-  };
-  double get controlCompact => switch (density) {
-    Density.comfortable => 40,
-    Density.compact => 30,
-    Density.thin => 24,
-  };
-  double get controlPadding => switch (density) {
-    Density.comfortable => 12,
-    Density.compact => 10,
-    Density.thin => 8,
-  };
+  double get rowHeight => metrics.rowHeight ?? _pick(44, 32, 26);
 
-  /// `--lab-space-4`: a regular button's side padding.
-  double get space4 => switch (density) {
-    Density.comfortable => 16,
-    Density.compact => 12,
-    Density.thin => 10,
-  };
+  /// `--lab-menu-row-height`: menu and floating-panel rows.
+  double get menuRowHeight => _pick(40, 30, 24);
 
-  /// A control's label size (`font: 400 14px/20px`, smaller in dense themes).
-  double get controlFont => switch (density) {
-    Density.comfortable => 14,
-    Density.compact => 13,
-    Density.thin => 12,
-  };
+  /// `--lab-toolbar-item`: a toolbar bubble's outer height.
+  double get toolbarItem => metrics.toolbarItem ?? _pick(44, 36, 30);
+
+  /// `--lab-toolbar-control`: a control inside a toolbar bubble (2px padding + 1px border a side).
+  double get toolbarControl => toolbarItem - 6;
+
+  /// `--lab-toolbar-gap`: space between toolbar groups.
+  double get toolbarGap => metrics.toolbarGap ?? _pick(12, 10, 8);
+
+  /// `--lab-toolbar-inset`: a floating bar's inset from its panel's sides.
+  double get toolbarInset => metrics.toolbarInset ?? _pick(16, 12, 10);
+
+  /// `--lab-segmented-height`: a segmented control's outer height.
+  double get segmentedHeight => metrics.segmentedHeight ?? _pick(32, 28, 24);
+
+  /// `--lab-segmented-inset`: outer edge (border included) to the options, and between options.
+  double get segmentedInset => metrics.segmentedInset ?? 2;
+
+  /// `--lab-switch-width` × `--lab-switch-height`: a switch track.
+  double get switchWidth => metrics.switchSize?.width ?? _pick(63, 54, 45);
+  double get switchHeight => metrics.switchSize?.height ?? _pick(28, 24, 20);
+
+  /// `--lab-thumb-width` × `--lab-thumb-height`: the switch thumb and the thin slider's thumb.
+  double get thumbWidth => metrics.thumbSize?.width ?? _pick(37, 31, 25);
+  double get thumbHeight => metrics.thumbSize?.height ?? _pick(24, 20, 16);
+
+  /// `--lab-slider-track`: the thin slider's rail.
+  double get sliderTrack => metrics.sliderTrack ?? _pick(6, 5, 4);
+
+  /// `--lab-list-row-height`: an inset-grouped list row.
+  double get listRowHeight => metrics.listRowHeight ?? _pick(54, 44, 36);
+
+  /// `--lab-list-radius`: an inset-grouped list card's corners.
+  double get listRadius =>
+      (metrics.listRadius ?? _pick(26, 20, 16)) * radiusScale;
+
+  /// `--lab-list-inset`: list rows' side padding, headers and separators.
+  double get listInset => metrics.listInset ?? _pick(16, 12, 10);
+
+  /// `--lab-focus-ring-width`: the keyboard focus ring's line.
+  double get focusRingWidth => metrics.focusRingWidth ?? 2;
+
+  /// `--lab-focus-ring-offset`: the keyboard focus ring's distance outside the shape.
+  double get focusRingOffset => metrics.focusRingOffset ?? 1;
+
+  /// `--lab-space-4`.
+  double get space4 => _pick(16, 12, 10);
+
   double get touchTarget => 44;
-  double get radiusControl => 18 * radiusScale;
-  double get radiusControlCompact => 14 * radiusScale;
+
+  /// `--lab-radius-control`: half a regular control (a capsule).
+  double get radiusControl => controlHeight / 2 * radiusScale;
+
+  /// `--lab-radius-control-small`: half a small control.
+  double get radiusControlSmall => controlSmall / 2 * radiusScale;
   double get radiusGroup => 20 * radiusScale;
   double get radiusPanel => 24 * radiusScale;
   double get radiusGlass => 32 * radiusScale;

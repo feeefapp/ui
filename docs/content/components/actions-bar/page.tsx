@@ -9,7 +9,7 @@ import { Link } from '../../../src/router'
 
 const controls = {
   width: { type: 'number', label: 'Host width (px)', min: 120, max: 720, step: 10, default: 560 },
-  size: { type: 'select', options: ['regular', 'compact'], default: 'regular' },
+  size: { type: 'select', options: ['small', 'regular'], default: 'regular' },
   align: { type: 'select', options: ['end', 'start'], default: 'end' },
   icons: { type: 'boolean', label: 'Icons', default: true },
 } as const
@@ -21,7 +21,7 @@ function PlaygroundBar({
   icons,
 }: {
   width: number
-  size: 'regular' | 'compact'
+  size: 'small' | 'regular'
   align: 'start' | 'end'
   icons: boolean
 }) {
@@ -56,13 +56,13 @@ function Overview() {
         render={(v) => (
           <PlaygroundBar
             width={v.width}
-            size={v.size as 'regular' | 'compact'}
+            size={v.size as 'small' | 'regular'}
             align={v.align as 'start' | 'end'}
             icons={v.icons}
           />
         )}
         code={(v) =>
-          `<div style={{ width: ${v.width} }}>\n  <ActionsBar\n    label="Selected orders"\n    actions={actions}${v.size === 'compact' ? '\n    size="compact"' : ''}${v.align === 'start' ? '\n    align="start"' : ''}\n  />\n</div>`
+          `<div style={{ width: ${v.width} }}>\n  <ActionsBar\n    label="Selected orders"\n    actions={actions}${v.size === 'small' ? '\n    size="small"' : ''}${v.align === 'start' ? '\n    align="start"' : ''}\n  />\n</div>`
         }
       />
 
@@ -132,6 +132,17 @@ const actions: Action[] = [
         </p>
       </Section>
 
+      <Section title="Menus">
+        <p>
+          The overflow button and every group open a <Link to="/components/menu">menu</Link>: one
+          Liquid Glass bubble that grows out of the button and covers it, then flies back into it
+          when it closes. In a bar, the menu lines up with the button’s outer edge, so a menu at the
+          end of the bar grows toward the start and one at the start grows toward the end; it never
+          leaves the window, or the nearest <C>FloatingBoundary</C>. Submenus open beside their row.
+          Nothing behind the menu dims, and reduced motion swaps the morph for a short crossfade.
+        </p>
+      </Section>
+
       <Section title="Async work and errors">
         <p>
           If <C>onAction</C> or <C>onCheckedChange</C> returns a promise, the bar shows a loader on
@@ -181,9 +192,10 @@ const actions: Action[] = [
           The bar is a <C>group</C> named by <C>label</C>. Each control is a native button whose
           accessible name is the action’s label, including icon-only ones, which also get it as a
           tooltip. Toggles expose <C>aria-pressed</C> inline and checkbox semantics in menus; loading
-          items set <C>aria-busy</C>. Menus are Radix dropdown menus with typeahead, submenus and focus
-          return. Inside a <C>{'<dialog>'}</C>, menus portal into the dialog so they stay in its top
-          layer; <C>portalContainer</C> overrides that.
+          items set <C>aria-busy</C>. Menus are Radix dropdown menus on <C>MenuSurface</C>, with
+          typeahead, submenus and focus return. Inside a <C>{'<dialog>'}</C>, menus portal into the
+          dialog so they stay in its top layer, and inside a <C>FloatingBoundary</C> into the boundary;{' '}
+          <C>portalContainer</C> overrides both.
         </p>
         <Keys
           rows={[
@@ -229,7 +241,7 @@ export default definePage({
     <div style={{ width: 220 }}>
       <ActionsBar
         label="Order actions"
-        size="compact"
+        size="small"
         actions={[
           { id: 'print', type: 'action', label: 'Print', onAction: () => {} },
           { id: 'export', type: 'action', label: 'Export', onAction: () => {} },

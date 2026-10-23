@@ -2,6 +2,7 @@
 
 import { ToolbarSearch } from './toolbar-search'
 import { PopoverSurface, Slider } from './ui'
+import { useFloatingBoundary } from './menu/boundary'
 
 import { Button } from './ui'
 import { ScrollArea, revealScrollChild } from './scroll'
@@ -117,6 +118,7 @@ export function ModelLadder({
   copy = useLadderCopy(copy)
   const [open, setOpen] = useState(false)
   const [container, setContainer] = useState<HTMLElement | null>(null)
+  const boundary = useFloatingBoundary()
   const trigger = useRef<HTMLButtonElement>(null)
   const popover = useRef<HTMLDivElement>(null)
   if (!stops.length) return null
@@ -132,7 +134,7 @@ export function ModelLadder({
       open={open}
       onOpenChange={(next) => {
         // Inside a top-layer <dialog> the popover must portal into it, or it renders underneath.
-        if (next) setContainer(trigger.current?.closest('dialog') ?? null)
+        if (next) setContainer(trigger.current?.closest('dialog') ?? boundary)
         setOpen(next)
         onOpenChange?.(next)
       }}
@@ -172,6 +174,7 @@ export function ModelLadder({
             align={align}
             sideOffset={8}
             collisionPadding={12}
+            collisionBoundary={container ?? undefined}
             onEscapeKeyDown={(event) => {
               const target = event.target
               // Radix handles Escape during document capture. Let the focused

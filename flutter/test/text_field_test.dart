@@ -22,9 +22,9 @@ void main() {
       await tester.enterText(find.byType(EditableText), 'Amina');
       expect(values.last, 'Amina');
       await tester.pumpWidget(
-        field(const TextField(label: 'Small', controlSize: .compact)),
+        field(const TextField(label: 'Small', controlSize: .small)),
       );
-      expect(tester.getSize(find.byType(TextField)).height, 40);
+      expect(tester.getSize(find.byType(TextField)).height, 36);
       debugDefaultTargetPlatformOverride = null;
     });
 

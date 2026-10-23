@@ -1,18 +1,15 @@
-import 'dart:math' as math;
-
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-import '../brand/geometry.dart';
 import '../icons/lucide.dart';
 import '../theme.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
 import 'button.dart' show ControlSize;
 import '../theme/surfaces.dart';
-import 'popover_surface.dart';
+import '../menu/anchored_panel.dart';
+import '../menu/menu_surface.dart';
 import 'text_field.dart';
-import '../glass/container.dart';
 
 /// One choice in a [Select] menu. A check marks the selected option.
 class Option {
@@ -97,18 +94,12 @@ class Select extends StatefulWidget {
   State<Select> createState() => _SelectState();
 }
 
-class _SelectState extends State<Select>
-    with SingleTickerProviderStateMixin, FieldFormMember<Select> {
-  final _portal = OverlayPortalController();
-  final _link = LayerLink();
+class _SelectState extends State<Select> with FieldFormMember<Select> {
   final _trigger = GlobalKey();
   late final FocusNode _ownFocus = FocusNode();
   FocusNode get _focus => widget.focusNode ?? _ownFocus;
-  // Fades the menu out over 140ms before it unmounts.
-  late final _fade = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 140),
-  );
+  bool _menuOpen = false;
+  double _triggerWidth = 0;
   int _highlight = -1;
   bool _touched = false;
   bool _hovered = false;
@@ -116,12 +107,10 @@ class _SelectState extends State<Select>
   String? _validationError;
 
   String get _value => widget.value ?? '';
-  bool get _open =>
-      _portal.isShowing && _fade.status != AnimationStatus.reverse;
+  bool get _open => _menuOpen;
 
   @override
   void dispose() {
-    _fade.dispose();
     _ownFocus.dispose();
     super.dispose();
   }
@@ -163,24 +152,25 @@ class _SelectState extends State<Select>
   void focusField() => _focus.requestFocus();
 
   void _openMenu() {
-    if (widget.disabled || _portal.isShowing) return;
+    if (widget.disabled || _menuOpen) return;
     setState(() {
       _highlight = widget.children.indexWhere((o) => o.resolvedValue == _value);
       if (_highlight < 0) {
         _highlight = widget.children.indexWhere((o) => !o.disabled);
       }
     });
-    _portal.show();
-    _fade.value = 1;
+    setState(() {
+      _triggerWidth = _trigger.currentContext?.size?.width ?? 0;
+      _menuOpen = true;
+    });
   }
 
-  Future<void> _closeMenu() async {
-    if (!_portal.isShowing) return;
+  void _closeMenu() {
+    if (!_menuOpen) return;
     _touched = true;
     if (widget.validationMode != ValidationMode.submit) _validate(_value);
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    if (!reduced) await _fade.reverse().orCancel.catchError((_) {});
-    if (mounted && _fade.status != AnimationStatus.forward) _portal.hide();
+    // The menu flies back into the field (MenuSurface) before it unmounts.
+    setState(() => _menuOpen = false);
     _focus.requestFocus();
   }
 
@@ -313,10 +303,10 @@ class _SelectState extends State<Select>
     } else {
       trigger = _pressable(
         _PlainTrigger(
-          compact: widget.controlSize == ControlSize.compact,
+          small: widget.controlSize == ControlSize.small,
           variant: widget.variant,
           hovered: _hovered,
-          open: _portal.isShowing,
+          open: _menuOpen,
           focus: _focusVisible,
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -335,19 +325,19 @@ class _SelectState extends State<Select>
       );
     }
 
-    return CompositedTransformTarget(
-      link: _link,
-      child: OverlayPortal(
-        controller: _portal,
-        overlayChildBuilder: (context) => GlassLayer(child: _menu(context)),
-        child: Semantics(
-          button: true,
-          enabled: !widget.disabled,
-          expanded: _portal.isShowing,
-          label: hint ?? widget.ariaLabel,
-          value: selected.isEmpty ? null : _semanticValue(selected.first),
-          child: KeyedSubtree(key: _trigger, child: trigger),
-        ),
+    // The options grow out of the field as a glass menu that covers it, centred on it.
+    return AnchoredPanel(
+      open: _menuOpen,
+      onDismiss: _closeMenu,
+      cover: true,
+      panel: _menu,
+      child: Semantics(
+        button: true,
+        enabled: !widget.disabled,
+        expanded: _menuOpen,
+        label: hint ?? widget.ariaLabel,
+        value: selected.isEmpty ? null : _semanticValue(selected.first),
+        child: KeyedSubtree(key: _trigger, child: trigger),
       ),
     );
   }
@@ -368,7 +358,7 @@ class _SelectState extends State<Select>
             FocusManager.instance.highlightMode ==
                 FocusHighlightMode.traditional,
       );
-      if (!focused && !_portal.isShowing) {
+      if (!focused && !_menuOpen) {
         _touched = true;
         if (widget.validationMode != ValidationMode.submit) _validate(_value);
       }
@@ -385,7 +375,7 @@ class _SelectState extends State<Select>
             ? null
             : () {
                 _focus.requestFocus();
-                _portal.isShowing ? _closeMenu() : _openMenu();
+                _menuOpen ? _closeMenu() : _openMenu();
               },
         child: child,
       ),
@@ -395,91 +385,41 @@ class _SelectState extends State<Select>
   Widget _menu(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
-    final s = theme.sizes;
-    final box = _trigger.currentContext?.findRenderObject() as RenderBox?;
-    final width = box?.size.width ?? 200;
-    final below = box == null
-        ? 300.0
-        : MediaQuery.sizeOf(context).height -
-              box.localToGlobal(Offset(0, box.size.height)).dy -
-              6 -
-              12;
-    final space1 = s.density == Density.thin ? 2.0 : 4.0;
-    final optionRadius = s.radiusGroup - space1 - 1;
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onTap: _closeMenu,
-          ),
-        ),
-        CompositedTransformFollower(
-          link: _link,
-          targetAnchor: Alignment.bottomLeft,
-          offset: const Offset(0, 6),
-          child: Align(
-            alignment: Alignment.topLeft,
-            child: FadeTransition(
-              opacity: _fade,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minWidth: width,
-                  maxHeight: math.max(80, math.min(320, below)),
-                ),
-                child: IntrinsicWidth(
-                  child: PopoverSurface(
-                    padding: EdgeInsets.all(space1),
-                    child: DefaultTextStyle.merge(
-                      style: const TextStyle(
-                        fontSize: 14,
-                        height: 20 / 14,
-                        leadingDistribution: TextLeadingDistribution.even,
-                      ),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            for (var i = 0; i < widget.children.length; i++)
-                              _OptionRow(
-                                option: widget.children[i],
-                                checked:
-                                    widget.children[i].resolvedValue == _value,
-                                highlighted: i == _highlight,
-                                radius: optionRadius,
-                                height: theme.coarsePointer(context)
-                                    ? s.touchTarget
-                                    : s.controlCompact,
-                                highlight: mixSrgb(c.primary, 0.14, c.surface),
-                                checkedFill: c.controlSelected,
-                                both: mixSrgb(c.primary, 0.28, c.surface),
-                                onHover: () => setState(() => _highlight = i),
-                                onTap: () => _choose(i),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+    return ConstrainedBox(
+      // `.lab-select-menu`: at most 320 tall, at least as wide as the field.
+      constraints: const BoxConstraints(maxHeight: 320),
+      child: MenuSurface(
+        label: widget.hint ?? widget.ariaLabel,
+        minWidth: _triggerWidth,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < widget.children.length; i++)
+              _OptionRow(
+                option: widget.children[i],
+                checked: widget.children[i].resolvedValue == _value,
+                highlighted: i == _highlight,
+                highlight: mixSrgb(c.primary, 0.14, c.surface),
+                checkedFill: c.controlSelected,
+                both: mixSrgb(c.primary, 0.28, c.surface),
+                onHover: () => setState(() => _highlight = i),
+                onTap: () => _choose(i),
               ),
-            ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
 
-/// `.lab-select-option`: 5px 10px, compact height, checked = selected tint and weight 500, check
-/// icon at the end; highlighted = primary 14% (28% when also checked).
+/// `.lab-select-option` in the menu: the menu's row metrics; checked = selected tint and weight
+/// 500, check icon at the end; highlighted = primary 14% (28% when also checked).
 class _OptionRow extends StatelessWidget {
   const _OptionRow({
     required this.option,
     required this.checked,
     required this.highlighted,
-    required this.radius,
-    required this.height,
     required this.highlight,
     required this.checkedFill,
     required this.both,
@@ -488,7 +428,6 @@ class _OptionRow extends StatelessWidget {
   });
   final Option option;
   final bool checked, highlighted;
-  final double radius, height;
   final Color highlight, checkedFill, both;
   final VoidCallback onHover, onTap;
 
@@ -505,66 +444,35 @@ class _OptionRow extends StatelessWidget {
       selected: checked,
       button: true,
       enabled: !option.disabled,
-      child: MouseRegion(
-        onEnter: (_) => onHover(),
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: option.disabled ? null : onTap,
-          child: Opacity(
-            opacity: option.disabled ? 0.5 : 1,
-            child: DecoratedBox(
-              decoration: ShapeDecoration(
-                color: fill,
-                shape: SuperellipseBorder(radius: radius),
-              ),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: height),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  child: Row(
-                    spacing: 12,
-                    children: [
-                      Expanded(
-                        child: DefaultTextStyle.merge(
-                          style: TextStyle(
-                            fontWeight: checked
-                                ? FontWeight.w500
-                                : FontWeight.w400,
-                          ),
-                          child: CssBaseline(
-                            lineHeight: 20,
-                            child: option.child,
-                          ),
-                        ),
-                      ),
-                      if (checked) const LucideCheck(size: 18),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+      child: MenuRow(
+        label: DefaultTextStyle.merge(
+          style: TextStyle(
+            fontWeight: checked ? FontWeight.w500 : FontWeight.w400,
           ),
+          child: option.child,
         ),
+        trailing: checked ? const LucideCheck(size: 18) : null,
+        fill: fill,
+        enabled: !option.disabled,
+        onHover: onHover,
+        onTap: onTap,
       ),
     );
   }
 }
 
 /// The plain trigger (`.lab-select.lab-control`): a control-sized button in the variant's paint,
-/// 13/20 text, 5px 10px padding (0 14px compact), 8px gap, hover and open fills.
+/// 13/20 text, 5px 10px padding (the small padding when small), 8px gap, hover and open fills.
 class _PlainTrigger extends StatelessWidget {
   const _PlainTrigger({
-    required this.compact,
+    required this.small,
     required this.variant,
     required this.hovered,
     required this.open,
     required this.focus,
     required this.child,
   });
-  final bool compact, hovered, open, focus;
+  final bool small, hovered, open, focus;
   final ControlVariant variant;
   final Widget child;
 
@@ -577,25 +485,29 @@ class _PlainTrigger extends StatelessWidget {
     final coarse = theme.coarsePointer(context);
     final height = coarse
         ? s.touchTarget
-        : (compact ? s.controlCompact : s.controlHeight);
-    final radius = compact ? s.radiusControlCompact : s.radiusControl;
+        : (small ? s.controlSmall : s.controlHeight);
+    final radius = small ? s.radiusControlSmall : s.radiusControl;
     final raised =
         variant == ControlVariant.elevated || variant == ControlVariant.filled;
     return CustomPaint(
       painter: ControlSurfacePainter(
-        fill: open ? paint.pressed : (hovered ? paint.hover : paint.fill),
+        fill: open
+            ? paint.pressed
+            : (hovered || focus ? paint.hover : paint.fill),
         edge: paint.edge,
         radius: radius,
         raised: raised,
         highlight: c.controlHighlight,
         depth: theme.brightness == Brightness.dark ? 0.18 : 0.08,
-        focus: focus ? c.focus : null,
+        focus: focus ? FocusRingStyle.of(context) : null,
       ),
       child: SizedBox(
         height: height,
         child: Padding(
           // Border-box: the 1px border adds to the padding.
-          padding: EdgeInsets.symmetric(horizontal: (compact ? 14 : 10) + 1),
+          padding: EdgeInsets.symmetric(
+            horizontal: (small ? s.controlPaddingSmall : 10) + 1,
+          ),
           child: Center(
             widthFactor: 1,
             child: IconTheme.merge(

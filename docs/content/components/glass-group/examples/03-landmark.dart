@@ -31,14 +31,14 @@ class Landmark extends StatelessWidget {
                 IconButton(
                   variant: .text,
                   appearance: .toolbar,
-                  controlSize: .compact,
+                  controlSize: .small,
                   ariaLabel: 'Share store link',
                   onClick: () {},
                   icon: const LucideIcon(LucideIcons.share2),
                 ),
                 Button(
                   variant: .filled,
-                  controlSize: .compact,
+                  controlSize: .small,
                   onClick: () {},
                   children: const [Text('Publish')],
                 ),

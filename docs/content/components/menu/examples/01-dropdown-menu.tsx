@@ -2,7 +2,7 @@ import { useState } from 'react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { ChevronRight, Copy, MoreHorizontal, Printer, Trash2, Truck } from 'lucide-react'
 import { IconButton } from '@feeef.dev/ui/primitives/button'
-import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
+import { MenuSurface } from '@feeef.dev/ui/menu'
 import '@feeef.dev/ui/actions/actions.css'
 
 const item = 'lab-actions-menu__item'
@@ -19,8 +19,8 @@ export default function DropdownMenuExample() {
           </IconButton>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <PopoverSurface asChild>
-            <DropdownMenu.Content className="lab-actions-menu" sideOffset={8} collisionPadding={12} align="end">
+          <MenuSurface asChild>
+            <DropdownMenu.Content className="lab-actions-menu" aria-label="Order actions">
               <DropdownMenu.Item className={item} onSelect={() => setStatus('Tracking number copied.')}>
                 <Copy size={18} aria-hidden="true" />
                 Copy tracking number
@@ -36,8 +36,8 @@ export default function DropdownMenuExample() {
                   <ChevronRight size={16} aria-hidden="true" className="lab-dir-flip" />
                 </DropdownMenu.SubTrigger>
                 <DropdownMenu.Portal>
-                  <PopoverSurface asChild seed="courier-menu">
-                    <DropdownMenu.SubContent className="lab-actions-menu" sideOffset={4} collisionPadding={12}>
+                  <MenuSurface asChild cover={false}>
+                    <DropdownMenu.SubContent className="lab-actions-menu" aria-label="Couriers">
                       {['Yalidine', 'ZR Express', 'Maystro'].map((courier) => (
                         <DropdownMenu.Item
                           key={courier}
@@ -48,7 +48,7 @@ export default function DropdownMenuExample() {
                         </DropdownMenu.Item>
                       ))}
                     </DropdownMenu.SubContent>
-                  </PopoverSurface>
+                  </MenuSurface>
                 </DropdownMenu.Portal>
               </DropdownMenu.Sub>
               <DropdownMenu.Item
@@ -60,7 +60,7 @@ export default function DropdownMenuExample() {
                 Cancel order
               </DropdownMenu.Item>
             </DropdownMenu.Content>
-          </PopoverSurface>
+          </MenuSurface>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
     </div>
@@ -70,5 +70,5 @@ export default function DropdownMenuExample() {
 export const meta = {
   title: 'Dropdown menu',
   description:
-    'Radix DropdownMenu on the surface, with the kit’s menu row classes. Each submenu gets its own surface and seed.',
+    'A Radix DropdownMenu on MenuSurface: the glass bubble grows out of the button and covers it. The submenu opens beside its row.',
 }

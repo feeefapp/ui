@@ -60,7 +60,6 @@ class TopBar extends StatelessWidget {
                 IconButton(
                   variant: .text,
                   appearance: .toolbar,
-                  controlSize: .compact,
                   ariaLabel: 'Back to products',
                   onClick: () {},
                   icon: Transform.flip(

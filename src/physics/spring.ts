@@ -23,6 +23,10 @@ export const SPRINGS = {
   release: { duration: 0.42, bounce: 0.08 },
   /** Following a pointer with a touch of lag, for values that must not jump. */
   interactive: { duration: 0.2, bounce: 0 },
+  /** A menu growing out of its button (iOS 26 menus: response 0.30, damping fraction 0.73). */
+  menu: { duration: 0.3, bounce: 0.27 },
+  /** A menu flying back into its button (response 0.31, damping fraction 0.67). */
+  menuDismiss: { duration: 0.31, bounce: 0.33 },
 } as const satisfies Record<string, Spring>
 
 export type SpringName = keyof typeof SPRINGS

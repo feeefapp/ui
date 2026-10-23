@@ -11,6 +11,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import '../theme.dart';
+import '../theme/surfaces.dart';
 
 /// The element a [Box] stands for: its landmark role.
 enum BoxElement {
@@ -121,15 +122,10 @@ class _LinkState extends State<Link> {
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: widget.onClick,
-          child: DecoratedBox(
-            // :focus-visible ring: 2px of the focus colour.
-            position: DecorationPosition.foreground,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(theme.sizes.radiusSmall / 2),
-              border: _focused
-                  ? Border.all(color: theme.colors.focus, width: 2)
-                  : null,
-            ),
+          // The kit's :focus-visible ring, hugging the link.
+          child: FocusRing(
+            visible: _focused,
+            radius: theme.sizes.radiusSmall / 2,
             child: body,
           ),
         ),

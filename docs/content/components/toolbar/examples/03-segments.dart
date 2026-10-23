@@ -26,7 +26,6 @@ class _SegmentsState extends State<Segments> {
               IconButton(
                 variant: .text,
                 appearance: .toolbar,
-                controlSize: .compact,
                 ariaLabel: 'Undo',
                 onClick: () {},
                 icon: const LucideIcon(LucideIcons.undo2),
@@ -34,7 +33,6 @@ class _SegmentsState extends State<Segments> {
               const IconButton(
                 variant: .text,
                 appearance: .toolbar,
-                controlSize: .compact,
                 ariaLabel: 'Redo',
                 disabled: true,
                 icon: LucideIcon(LucideIcons.redo2),
@@ -49,7 +47,6 @@ class _SegmentsState extends State<Segments> {
                 IconButton(
                   variant: .text,
                   appearance: .toolbar,
-                  controlSize: .compact,
                   ariaLabel: 'Bold',
                   pressed: _bold,
                   onClick: () => setState(() => _bold = !_bold),
@@ -58,7 +55,6 @@ class _SegmentsState extends State<Segments> {
                 IconButton(
                   variant: .text,
                   appearance: .toolbar,
-                  controlSize: .compact,
                   ariaLabel: 'Italic',
                   pressed: _italic,
                   onClick: () => setState(() => _italic = !_italic),
@@ -67,7 +63,6 @@ class _SegmentsState extends State<Segments> {
                 IconButton(
                   variant: .text,
                   appearance: .toolbar,
-                  controlSize: .compact,
                   ariaLabel: 'Insert link',
                   onClick: () {},
                   icon: const LucideIcon(LucideIcons.link2),
@@ -83,7 +78,6 @@ class _SegmentsState extends State<Segments> {
           Button(
             variant: .filled,
             appearance: .toolbar,
-            controlSize: .compact,
             onClick: () {},
             children: const [Text('Save')],
           ),

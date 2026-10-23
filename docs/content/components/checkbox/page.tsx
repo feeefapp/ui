@@ -7,7 +7,7 @@ import { C } from '../../../src/blocks/code'
 const controls = {
   label: { type: 'text', default: 'Send an SMS when the order ships' },
   description: { type: 'text', default: 'Uses one SMS credit per order.' },
-  controlSize: { type: 'select', options: ['regular', 'compact'], default: 'regular' },
+  controlSize: { type: 'select', options: ['small', 'regular'], default: 'regular' },
   indeterminate: { type: 'boolean', default: false },
   error: { type: 'boolean', label: 'Error', default: false },
   required: { type: 'boolean', default: false },
@@ -25,7 +25,7 @@ function Overview() {
               label={v.label || undefined}
               aria-label={v.label ? undefined : 'Send an SMS when the order ships'}
               description={v.description || undefined}
-              controlSize={v.controlSize as 'regular' | 'compact'}
+              controlSize={v.controlSize as 'small' | 'regular'}
               indeterminate={v.indeterminate}
               error={v.error ? 'Add SMS credits to turn this on.' : undefined}
               required={v.required}

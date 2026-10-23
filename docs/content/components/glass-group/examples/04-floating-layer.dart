@@ -68,7 +68,7 @@ class _SyncNoticeState extends State<_SyncNotice> {
                     ),
                     Button(
                       variant: .text,
-                      controlSize: .compact,
+                      controlSize: .small,
                       onClick: () => setState(() => _open = false),
                       children: const [Text('Dismiss')],
                     ),

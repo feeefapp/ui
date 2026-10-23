@@ -65,13 +65,11 @@ class _InAPopoverState extends State<InAPopover> {
                 children: [
                   Button(
                     variant: .text,
-                    controlSize: .compact,
                     onClick: () => update(() => _draft = null),
                     children: const [Text('Clear')],
                   ),
                   Button(
                     variant: .filled,
-                    controlSize: .compact,
                     onClick: () {
                       final failure = validateTemporal(_config, _draft);
                       if (failure != null) {

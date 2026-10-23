@@ -12,7 +12,7 @@ const controls = {
   hint: { type: 'text', default: 'Customer name' },
   labelStyle: { type: 'select', options: ['outlined', 'inside'], default: 'outlined' },
   variant: { type: 'select', options: VARIANTS, default: 'outlined' },
-  controlSize: { type: 'select', options: ['regular', 'compact'], default: 'regular' },
+  controlSize: { type: 'select', options: ['small', 'regular'], default: 'regular' },
   supportingText: { type: 'text', default: 'As it appears on the delivery label.' },
   leadingIcon: { type: 'boolean', label: 'Leading icon', default: false },
   multiline: { type: 'boolean', default: false },
@@ -38,7 +38,7 @@ function Overview() {
             hint: v.hint || undefined,
             labelStyle: v.labelStyle as 'outlined' | 'inside',
             variant: v.variant as (typeof VARIANTS)[number],
-            controlSize: v.controlSize as 'regular' | 'compact',
+            controlSize: v.controlSize as 'small' | 'regular',
             supportingText: v.supportingText || undefined,
             leadingIcon: v.leadingIcon ? <Search size={18} /> : undefined,
             showCounter: v.showCounter,
@@ -127,8 +127,10 @@ function Overview() {
           inline editing. Keep one variant per form.
         </p>
         <p>
-          <C>controlSize</C> is <C>regular</C> (44px) or <C>compact</C> (40px). On touch screens
-          compact fields grow back to a 44px target.
+          <C>controlSize</C> is <C>regular</C> (44px, the toolbar and search height, with room for an
+          inside hint above the value) or <C>small</C> (36px, a regular button's height, so a small field
+          lines up with buttons in a row). A small field floats an inside hint onto its border, since it
+          has no room for two lines. On touch screens small fields grow back to a 44px target.
         </p>
       </Section>
 

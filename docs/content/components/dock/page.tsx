@@ -124,7 +124,7 @@ function Overview() {
   swapKey={selected.length ? 'selected' : 'browsing'}
   content={<strong>{selected.length} selected</strong>}
 >
-  <ActionsBar actions={actions} label="Selection actions" size="compact" />
+  <ActionsBar actions={actions} label="Selection actions" />
 </Dock>`}
         />
       </Section>
@@ -183,7 +183,7 @@ export default definePage({
   ),
   Preview: () => (
     <Dock label="Order actions" content={<strong>#1048</strong>}>
-      <Button variant="filled" controlSize="compact">
+      <Button variant="filled">
         Ship
       </Button>
     </Dock>

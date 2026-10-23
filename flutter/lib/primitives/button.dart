@@ -7,6 +7,7 @@ import '../icons/lucide.dart';
 import '../theme.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
+import '../theme/surfaces.dart';
 
 /// Emphasis. Use filled for primary actions (the twin of `ButtonVariant` in the web kit).
 enum ButtonVariant {
@@ -19,8 +20,9 @@ enum ButtonVariant {
   ghost,
 }
 
-/// Height: `regular` 44px, `compact` 40px, `inline` fits running text; `icon` is square.
-enum ControlSize { regular, compact, inline, icon }
+/// Height: `small` 30px, `regular` 36px, `large` 52px (iOS control sizes, density-scaled),
+/// `inline` fits running text; `icon` is square.
+enum ControlSize { small, regular, large, inline, icon }
 
 /// Toolbar controls share their enclosing material instead of adding another raised surface.
 enum ButtonAppearance { defaultAppearance, toolbar }
@@ -35,9 +37,14 @@ class ControlOverrides extends InheritedWidget {
     this.radius,
     this.pressedFill,
     this.pressedEdge,
+    this.touchTarget,
     required super.child,
   });
   final double? height, radius;
+
+  /// The smallest height on touch screens inside this host (`--lab-control-touch-target`); a
+  /// toolbar bubble sets its own control height, since the bubble is the target. Null: 44.
+  final double? touchTarget;
 
   /// Fill and edge of toggled-on (pressed) controls, such as an actions bar's checked toggle.
   final Color? pressedFill, pressedEdge;
@@ -52,6 +59,7 @@ class ControlOverrides extends InheritedWidget {
     double? radius,
     Color? pressedFill,
     Color? pressedEdge,
+    double? touchTarget,
     required Widget child,
   }) {
     final outer = maybeOf(context);
@@ -60,6 +68,7 @@ class ControlOverrides extends InheritedWidget {
       radius: radius ?? outer?.radius,
       pressedFill: pressedFill ?? outer?.pressedFill,
       pressedEdge: pressedEdge ?? outer?.pressedEdge,
+      touchTarget: touchTarget ?? outer?.touchTarget,
       child: child,
     );
   }
@@ -68,6 +77,7 @@ class ControlOverrides extends InheritedWidget {
   bool updateShouldNotify(ControlOverrides old) =>
       old.height != height ||
       old.radius != radius ||
+      old.touchTarget != touchTarget ||
       old.pressedFill != pressedFill ||
       old.pressedEdge != pressedEdge;
 }
@@ -98,10 +108,11 @@ class Button extends StatefulWidget {
   /// Emphasis. Use filled for primary actions.
   final ButtonVariant variant;
 
-  /// Height: `regular` 44px, `compact` 40px, `inline` fits running text; `icon` is square.
+  /// Height: `small` 30px, `regular` 36px, `large` 52px, `inline` fits running text; `icon` is
+  /// square.
   final ControlSize controlSize;
 
-  /// Square icon geometry when [controlSize] is `icon`: `regular` 44px, `compact` 40px.
+  /// Square icon geometry when [controlSize] is `icon`: `small` 30px, `regular` 36px, `large` 52px.
   final ControlSize iconSize;
 
   /// Toolbar controls share their enclosing material instead of adding another raised surface.
@@ -160,8 +171,9 @@ class _ButtonState extends State<Button> {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
     final s = theme.sizes;
-    final compact = widget.controlSize == ControlSize.compact;
     final icon = widget.controlSize == ControlSize.icon;
+    // The size whose tokens apply: an icon button takes its iconSize.
+    final size = icon ? widget.iconSize : widget.controlSize;
     final coarse = theme.coarsePointer(context);
     final toolbar = widget.appearance == ButtonAppearance.toolbar;
 
@@ -229,24 +241,35 @@ class _ButtonState extends State<Button> {
     final interactive = !widget.disabled && !widget.loading;
     final fill = interactive && _down
         ? paint.pressed
-        : interactive && _hovered
+        // Keyboard focus also shows the hover fill (`:focus-visible`).
+        : interactive && (_hovered || _focusVisible)
         ? paint.hover
         : paint.fill;
 
+    // A host (toolbar group, dock) sets the regular height; small and large keep their tokens.
     final regular = overrides?.height ?? s.controlHeight;
-    double height = switch (widget.controlSize) {
-      ControlSize.compact => s.controlCompact,
-      ControlSize.icon =>
-        widget.iconSize == ControlSize.compact ? s.controlCompact : regular,
+    double height = switch (size) {
+      ControlSize.small => s.controlSmall,
+      ControlSize.large => s.controlLarge,
       _ => regular,
     };
-    if (coarse) height = s.touchTarget;
-    final radius =
-        overrides?.radius ??
-        (compact || (icon && widget.iconSize == ControlSize.compact)
-            ? s.radiusControlCompact
-            : s.radiusControl);
-    final fontSize = compact ? 13.0 : s.controlFont;
+    // Touch keeps 44px targets (CSS `pointer: coarse`), except inside a toolbar bubble, where
+    // the bubble is the target.
+    final touch = overrides?.touchTarget ?? s.touchTarget;
+    if (coarse && height < touch) height = touch;
+    // A capsule: half the control's height, times the radius scale.
+    final radius = overrides?.radius ?? height / 2 * s.radiusScale;
+    final fontSize = switch (size) {
+      ControlSize.small => s.controlFontSmall,
+      ControlSize.large => s.controlFontLarge,
+      _ => s.controlFont,
+    };
+    final lineHeight = SizeTokens.controlLine(fontSize);
+    final padX = switch (size) {
+      ControlSize.small => s.controlPaddingSmall,
+      ControlSize.large => s.controlPaddingLarge,
+      _ => s.controlPadding,
+    };
 
     final content = Row(
       mainAxisSize: MainAxisSize.min,
@@ -266,7 +289,7 @@ class _ButtonState extends State<Button> {
       pressedInset: interactive && _down,
       highlight: c.controlHighlight,
       depth: theme.brightness == Brightness.dark ? 0.18 : 0.08,
-      focus: _focusVisible ? c.focus : null,
+      focus: _focusVisible ? FocusRingStyle.of(context) : null,
       child: SizedBox(
         height: height,
         width: icon
@@ -277,19 +300,21 @@ class _ButtonState extends State<Button> {
           padding: icon
               ? EdgeInsetsDirectional.zero
               : EdgeInsetsDirectional.only(
-                  start:
-                      (widget.padding?.start ?? (compact ? 14 : s.space4)) + 1,
-                  end: (widget.padding?.end ?? (compact ? 14 : s.space4)) + 1,
+                  start: (widget.padding?.start ?? padX) + 1,
+                  end: (widget.padding?.end ?? padX) + 1,
                 ),
           child: Align(
             alignment: widget.alignment ?? Alignment.center,
             widthFactor: widget.alignment != null ? null : 1,
             child: IconTheme.merge(
-              data: IconThemeData(size: icon ? 20 : 18, color: ink),
+              data: IconThemeData(
+                size: size == ControlSize.small ? 18 : (icon ? 20 : 18),
+                color: ink,
+              ),
               child: DefaultTextStyle.merge(
                 style: TextStyle(
                   fontSize: fontSize,
-                  height: 20 / fontSize,
+                  height: lineHeight / fontSize,
                   leadingDistribution: TextLeadingDistribution.even,
                   fontWeight: FontWeight.w400,
                   color: ink,
@@ -299,7 +324,7 @@ class _ButtonState extends State<Button> {
                 // Icons in controls use a 1.75 stroke (`.lab-control[data-variant] svg.lucide`).
                 child: LucideStroke(
                   width: 1.75,
-                  child: CssBaseline(lineHeight: 20, child: content),
+                  child: CssBaseline(lineHeight: lineHeight, child: content),
                 ),
               ),
             ),
@@ -354,7 +379,7 @@ class _ButtonState extends State<Button> {
 
 /// Paints the button surface like the CSS: superellipse fill, 1px inside edge, the raised shadow
 /// (`inset 0 1px 0 highlight, 0 2px 6px depth`, CSS blur → sigma = blur / 2), the pressed inset
-/// shadow and the 2px focus ring 3px outside. Colours ease over 140ms like the CSS transitions.
+/// shadow and the keyboard focus ring hugging it. Colours ease over 140ms like the CSS transitions.
 class _ButtonPaint extends StatelessWidget {
   const _ButtonPaint({
     required this.fill,
@@ -373,7 +398,7 @@ class _ButtonPaint extends StatelessWidget {
   final Color? texture;
   final double radius, depth;
   final bool raised, pressedInset;
-  final Color? focus;
+  final FocusRingStyle? focus;
   final Widget child;
 
   @override
@@ -417,7 +442,7 @@ class _SurfacePainter extends CustomPainter {
   final Color fill, edge, highlight;
   final double radius, depth;
   final bool raised, pressedInset;
-  final Color? focus;
+  final FocusRingStyle? focus;
 
   /// Filled buttons carry the kit's corner pixel texture in their ink colour.
   final Color? texture;
@@ -489,16 +514,7 @@ class _SurfacePainter extends CustomPainter {
           ..color = edge,
       );
     }
-    if (focus != null) {
-      final ring = rect.inflate(4);
-      canvas.drawPath(
-        superellipsePath(ring, [for (final _ in radii) radius + 4], inset: 1),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = focus!,
-      );
-    }
+    if (focus != null) paintFocusRing(canvas, rect, radius, focus!);
   }
 
   @override
@@ -536,7 +552,7 @@ class IconButton extends StatelessWidget {
   final Widget icon;
   final ButtonVariant variant;
 
-  /// Square size: `regular` 44px, `compact` 40px, `inline` for text runs.
+  /// Square size: `small` 30px, `regular` 36px, `large` 52px, `inline` for text runs.
   final ControlSize controlSize;
   final ButtonAppearance appearance;
   final bool loading, disabled;

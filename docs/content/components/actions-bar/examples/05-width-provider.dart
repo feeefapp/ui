@@ -58,7 +58,7 @@ class WidthProvider extends StatelessWidget {
             child: ActionsBar(
               label: 'Page actions',
               actions: _actions,
-              size: .compact,
+              size: .small,
             ),
           ),
         ],

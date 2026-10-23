@@ -144,8 +144,8 @@ html[data-lab-theme] .lab-calendar-heading .lab-calendar-title.lab-control {
   cursor: default;
 }
 .lab-calendar-day:focus-visible {
-  outline: 2px solid var(--lab-focus);
-  outline-offset: 1px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
 }
 
 /* Times: number fields people drag, type or step. */

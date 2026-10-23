@@ -1,6 +1,5 @@
 'use client'
 
-import { PopoverSurface } from '../ui'
 import * as React from 'react'
 import { useI18n } from '../i18n'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
@@ -14,6 +13,8 @@ import { useMeasuredActions } from './use_measured_actions'
 import { useActionsWidth } from './width-context'
 import './actions.css'
 import { useOverflowMotion } from './overflow-motion'
+import { MenuSurface } from '../menu/menu-surface'
+import { useFloatingBoundary } from '../menu/boundary'
 
 export interface ActionsBarProps {
   /** The action tree, in display order. Top-level entries spill into the overflow menu by `priority`. */
@@ -22,15 +23,15 @@ export interface ActionsBarProps {
   label: string
   /** Which side the row hugs inside a wider host. */
   align?: 'start' | 'end'
-  /** Control height: regular 44px or compact 40px. */
-  size?: 'regular' | 'compact'
+  /** Control height: `regular` (36px, or the host's control height in a Dock or toolbar) or `small` (30px). */
+  size?: 'small' | 'regular'
   /** Space between controls, in pixels. Included in the fit. */
   gap?: number
   /** Accessible name of the overflow trigger. Defaults to the localized "More actions". */
   overflowLabel?: string
   /** Class name for the bar. */
   className?: string
-  /** Defaults to the nearest dialog, otherwise document.body. */
+  /** Where menus render. Defaults to the nearest dialog, else the nearest `FloatingBoundary`, else document.body. */
   portalContainer?: HTMLElement | null
   /** Application effects are injected; this primitive never calls business APIs. */
   onActionError?: (error: unknown, action: Action) => void
@@ -73,6 +74,7 @@ export function ActionsBar({
   const [errorLabel, setErrorLabel] = React.useState('')
   const [overflowOpen, setOverflowOpen] = React.useState(false)
   const inheritedWidth = useActionsWidth()
+  const boundary = useFloatingBoundary()
   const revision = React.useMemo(() => ({ actions, size, pending }), [actions, size, pending])
   const { measurements, focusAfterFit } = useMeasuredActions(host, measuringRow, revision)
 
@@ -84,9 +86,11 @@ export function ActionsBar({
   }, [])
   React.useLayoutEffect(() => {
     setContainer(
-      portalContainer === undefined ? (host.current?.closest('dialog') ?? null) : portalContainer
+      portalContainer === undefined
+        ? (host.current?.closest('dialog') ?? boundary)
+        : portalContainer
     )
-  }, [portalContainer])
+  }, [portalContainer, boundary])
 
   const layout = React.useMemo(
     () =>
@@ -181,17 +185,18 @@ export function ActionsBar({
                 variant="ghost"
                 appearance="toolbar"
                 controlSize="icon"
+                iconSize={size}
                 aria-label={resolvedOverflowLabel}
                 title={resolvedOverflowLabel}
               >
                 <MoreHorizontal size={20} aria-hidden="true" />
               </Button>
             </DropdownMenu.Trigger>
-            <MenuSurface menu={menu} label={resolvedOverflowLabel}>
+            <ActionsMenu menu={menu} label={resolvedOverflowLabel}>
               {layout.overflow.map((action) => (
                 <MenuAction key={action.id} action={action} menu={menu} />
               ))}
-            </MenuSurface>
+            </ActionsMenu>
           </DropdownMenu.Root>
         )}
       </div>
@@ -208,6 +213,7 @@ export function ActionsBar({
             variant="ghost"
             appearance="toolbar"
             controlSize="icon"
+            iconSize={size}
             tabIndex={-1}
           >
             <MoreHorizontal size={20} aria-hidden="true" />
@@ -225,7 +231,7 @@ export function ActionsBar({
 
 interface ActionControlProps {
   action: Action
-  size: 'regular' | 'compact'
+  size: 'small' | 'regular'
   loading?: boolean
 }
 
@@ -246,6 +252,7 @@ const ActionControl = React.forwardRef<
           : (action.variant ?? (action.type === 'toggle' && action.checked ? 'elevated' : 'ghost'))
       }
       controlSize={iconOnly ? 'icon' : size}
+      iconSize={size}
       appearance={
         action.appearance ??
         (!action.destructive && (!action.variant || action.variant === 'ghost')
@@ -281,7 +288,7 @@ function GroupControl({
   menu,
 }: {
   action: GroupAction
-  size: 'regular' | 'compact'
+  size: 'small' | 'regular'
   menu: MenuContext
 }) {
   const [open, setOpen] = React.useState(false)
@@ -297,16 +304,16 @@ function GroupControl({
       <DropdownMenu.Trigger asChild>
         <ActionControl action={action} size={size} />
       </DropdownMenu.Trigger>
-      <MenuSurface menu={menu} label={action.label}>
+      <ActionsMenu menu={menu} label={action.label}>
         {action.actions.map((child) => (
           <MenuAction key={child.id} action={child} menu={menu} />
         ))}
-      </MenuSurface>
+      </ActionsMenu>
     </DropdownMenu.Root>
   )
 }
 
-function MenuSurface({
+function ActionsMenu({
   menu,
   label,
   children,
@@ -317,20 +324,16 @@ function MenuSurface({
 }) {
   return (
     <DropdownMenu.Portal container={menu.container}>
-      <PopoverSurface asChild>
+      <MenuSurface asChild>
         <DropdownMenu.Content
           className="lab-actions-menu"
           data-lab-actions-owner={menu.ownerId}
-          data-lab-corners
-          sideOffset={8}
-          collisionBoundary={menu.container ?? undefined}
-          collisionPadding={12}
-          align="end"
+          {...(menu.container ? { collisionBoundary: menu.container } : {})}
           aria-label={label}
         >
           {children}
         </DropdownMenu.Content>
-      </PopoverSurface>
+      </MenuSurface>
     </DropdownMenu.Portal>
   )
 }
@@ -414,21 +417,18 @@ function SubmenuAction({ action, menu }: { action: GroupAction; menu: MenuContex
         />
       </DropdownMenu.SubTrigger>
       <DropdownMenu.Portal container={menu.container}>
-        <PopoverSurface asChild>
+        <MenuSurface asChild cover={false}>
           <DropdownMenu.SubContent
             className="lab-actions-menu"
             data-lab-actions-owner={menu.ownerId}
-            data-lab-corners
-            sideOffset={4}
-            collisionBoundary={menu.container ?? undefined}
-            collisionPadding={12}
+            {...(menu.container ? { collisionBoundary: menu.container } : {})}
             aria-label={action.label}
           >
             {action.actions.map((child) => (
               <MenuAction key={child.id} action={child} menu={menu} />
             ))}
           </DropdownMenu.SubContent>
-        </PopoverSurface>
+        </MenuSurface>
       </DropdownMenu.Portal>
     </DropdownMenu.Sub>
   )

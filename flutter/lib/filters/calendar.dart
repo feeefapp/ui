@@ -8,6 +8,7 @@ import '../i18n/i18n.dart';
 import '../icons/lucide.dart';
 import '../primitives/button.dart';
 import '../theme.dart';
+import '../theme/surfaces.dart';
 import '../theme/color_mix.dart';
 import '../theme/tokens.dart';
 import 'temporal.dart';
@@ -218,7 +219,7 @@ class _CalendarMonthState extends State<CalendarMonth> {
         children: [
           if (widget.navigation != CalendarNavigation.next)
             IconButton(
-              controlSize: ControlSize.compact,
+              controlSize: ControlSize.small,
               ariaLabel: 'Previous month',
               disabled: _picking
                   ? _minMonth != null &&
@@ -233,7 +234,7 @@ class _CalendarMonthState extends State<CalendarMonth> {
             child: Semantics(
               expanded: _picking,
               child: Button(
-                controlSize: ControlSize.compact,
+                controlSize: ControlSize.small,
                 alignment: AlignmentDirectional.center,
                 ariaLabel: _picking
                     ? 'Choose a month in $_pickYear'
@@ -256,7 +257,7 @@ class _CalendarMonthState extends State<CalendarMonth> {
           ),
           if (widget.navigation != CalendarNavigation.previous)
             IconButton(
-              controlSize: ControlSize.compact,
+              controlSize: ControlSize.small,
               ariaLabel: 'Next month',
               disabled: _picking
                   ? _maxMonth != null &&
@@ -290,7 +291,7 @@ class _CalendarMonthState extends State<CalendarMonth> {
                         variant: m == monthIndex && _pickYear == year
                             ? ButtonVariant.tonal
                             : ButtonVariant.text,
-                        controlSize: ControlSize.compact,
+                        controlSize: ControlSize.small,
                         alignment: AlignmentDirectional.center,
                         pressed: m == monthIndex && _pickYear == year,
                         disabled: _outOfBounds(_pickYear, m),
@@ -567,7 +568,9 @@ class _CalendarDayState extends State<_CalendarDay> {
                         ring: widget.today && !selected
                             ? c.controlBorder
                             : null,
-                        focus: _focusVisible ? c.focus : null,
+                        focus: _focusVisible
+                            ? FocusRingStyle.of(context)
+                            : null,
                       ),
                       child: child,
                     ),
@@ -615,7 +618,8 @@ class _DayPainter extends CustomPainter {
   });
   final Color fill;
   final double radius;
-  final Color? ring, focus;
+  final Color? ring;
+  final FocusRingStyle? focus;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -634,18 +638,7 @@ class _DayPainter extends CustomPainter {
           ..color = ring!,
       );
     }
-    if (focus != null) {
-      // outline: 2px, offset 1px: a band from 1px to 3px outside.
-      canvas.drawPath(
-        superellipsePath(rect.inflate(3), [
-          for (final r in radii) r + 3,
-        ], inset: 1),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = focus!,
-      );
-    }
+    if (focus != null) paintFocusRing(canvas, rect, radius, focus!);
   }
 
   @override

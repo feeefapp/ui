@@ -1,5 +1,7 @@
 .lab-text-field {
-  --lab-text-field-height: var(--lab-control-height);
+  /* Fields keep their own design (floating hint, notch) on the metric scale: regular is the toolbar
+  and search height (room for an inside hint above the value), small a regular button's height. */
+  --lab-text-field-height: var(--lab-field-height);
   --lab-text-field-padding-top: 17px;
   --lab-text-field-padding-bottom: 5px;
   /* The resting hint sits where a single line of value sits: centred in the field at every size and
@@ -54,9 +56,10 @@ html[data-lab-theme] .lab-text-field :is(.lab-raw-input, .lab-field-select-contr
 html[data-lab-theme] .lab-text-field textarea.lab-raw-input {
   height: auto;
 }
-/* The field's edge and focus ring, on their own layer so the floated hint can cut a notch in them
-(a mask, like a fieldset legend) instead of covering the border with a patch of colour. It sits
-1px outside the control: the transparent border is the ring, the inset shadow the edge. */
+/* The field's edge, on its own layer so the floated hint can cut a notch in it (a mask, like a
+fieldset legend) instead of covering the border with a patch of colour. It sits 1px outside the
+control behind a transparent border; the inset shadow is the edge. Focus draws no ring outside: the
+edge turns the focus colour and thickens inward to --lab-focus-ring-width. */
 .lab-text-field-outline {
   position: absolute;
   inset: -1px;
@@ -71,8 +74,7 @@ html[data-lab-theme] .lab-text-field textarea.lab-raw-input {
     box-shadow 140ms;
 }
 .lab-text-field-edit:focus-within .lab-text-field-outline {
-  border-color: var(--lab-focus);
-  box-shadow: inset 0 0 0 1px var(--lab-focus);
+  box-shadow: inset 0 0 0 var(--lab-focus-ring-width) var(--lab-focus);
 }
 /* A trailing action focuses independently; its own ring is never suppressed. */
 .lab-text-field-label {
@@ -177,7 +179,7 @@ html[data-lab-theme] .lab-text-field textarea.lab-raw-input {
   box-shadow: inset 0 0 0 1px var(--lab-field-error, var(--lab-danger));
 }
 .lab-text-field[data-invalid='true'] .lab-text-field-edit:focus-within .lab-text-field-outline {
-  border-color: var(--lab-field-error, var(--lab-danger));
+  box-shadow: inset 0 0 0 var(--lab-focus-ring-width) var(--lab-field-error, var(--lab-danger));
 }
 .lab-text-field[data-invalid='true'] :is(.lab-text-field-label, .lab-text-field-details) {
   color: var(--lab-field-error, var(--lab-danger));
@@ -192,12 +194,9 @@ html[data-lab-theme] .lab-text-field textarea.lab-raw-input {
   -webkit-text-fill-color: var(--lab-variant-ink, var(--lab-ink));
   box-shadow: 0 0 0 1000px var(--lab-variant-label-surface, var(--lab-surface)) inset;
 }
-.lab-text-field[data-control-size='compact'] {
-  --lab-text-field-height: var(--lab-control-compact);
-  --lab-text-field-padding-top: 14px;
-  --lab-text-field-padding-bottom: 4px;
-  --lab-text-field-float-top: 3px;
-  --lab-text-field-radius: var(--lab-radius-control-compact);
+.lab-text-field[data-control-size='small'] {
+  --lab-text-field-height: var(--lab-field-height-small);
+  --lab-text-field-radius: var(--lab-radius-control-small);
 }
 /* Outlined (border) labels and label-less fields center the value: the padding follows the field
 height, so every size and density fits (44 → 11px, 40 → 9px, 28 → 4px). */
@@ -257,10 +256,8 @@ html[data-lab-theme] .lab-text-field .lab-field-select-control {
   visibility: hidden;
 }
 @media (pointer: coarse) {
-  .lab-text-field[data-control-size='compact'] {
-    --lab-text-field-height: var(--lab-control-touch-target);
-    --lab-text-field-padding-top: 17px;
-    --lab-text-field-padding-bottom: 5px;
+  .lab-text-field[data-control-size='small'] {
+    --lab-text-field-height: max(var(--lab-field-height-small), var(--lab-control-touch-target));
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -275,8 +272,7 @@ html[data-lab-theme] .lab-text-field .lab-field-select-control {
     color: CanvasText;
   }
   .lab-text-field-edit:focus-within .lab-text-field-outline {
-    border-color: Highlight;
-    box-shadow: inset 0 0 0 1px Highlight;
+    box-shadow: inset 0 0 0 var(--lab-focus-ring-width) Highlight;
   }
   .lab-text-field-outline {
     box-shadow: inset 0 0 0 1px ButtonText;
@@ -285,8 +281,9 @@ html[data-lab-theme] .lab-text-field .lab-field-select-control {
     border-style: dashed;
   }
 }
-/* Dense densities: smaller text, and inside labels float onto the border like outlined ones, since
-a 24–34px field has no room for two lines. */
+/* Dense densities and small fields: inside labels float onto the border like outlined ones, since a
+field under 44px has no room for two lines (a small field on a touch screen is 44px and keeps its
+hint inside). Dense densities also use smaller text. */
 html[data-lab-density='compact'] .lab-text-field {
   --lab-text-field-font: 14px;
 }
@@ -338,4 +335,40 @@ html:is([data-lab-density='compact'], [data-lab-density='thin'])
     linear-gradient(#000 0 0) var(--lab-field-notch-x, 0px) 0 / var(--lab-field-notch-width, 0px) 3px
       no-repeat;
   mask-composite: exclude;
+}
+/* Small fields (36px) outside touch screens: the same border hint as the dense densities. */
+@media not (pointer: coarse) {
+  .lab-text-field[data-label-style='inside'][data-control-size='small'] {
+    --lab-text-field-padding-top: max(0px, calc((var(--lab-text-field-height) - var(--lab-text-field-line) - 2px) / 2));
+    --lab-text-field-padding-bottom: var(--lab-text-field-padding-top);
+  }
+  .lab-text-field[data-label-style='inside'][data-control-size='small'] .lab-text-field-label {
+    inset-inline-start: calc(var(--lab-field-inset-start) - 4px);
+    inset-inline-end: auto;
+    padding-inline: 4px;
+  }
+  .lab-text-field[data-label-style='inside'][data-control-size='small']
+    :is(
+      .lab-text-field-edit:focus-within,
+      .lab-text-field-edit:has(.lab-raw-input:not(:placeholder-shown)),
+      .lab-text-field-edit[data-always-float]
+    )
+    .lab-text-field-label {
+    top: -6px;
+    font-size: 11px;
+    line-height: 12px;
+  }
+  .lab-text-field[data-label-style='inside'][data-control-size='small']
+    :is(
+      .lab-text-field-edit:focus-within,
+      .lab-text-field-edit:has(.lab-raw-input:not(:placeholder-shown)),
+      .lab-text-field-edit[data-always-float]
+    )
+    .lab-text-field-outline {
+    mask:
+      linear-gradient(#000 0 0),
+      linear-gradient(#000 0 0) var(--lab-field-notch-x, 0px) 0 / var(--lab-field-notch-width, 0px) 3px
+        no-repeat;
+    mask-composite: exclude;
+  }
 }

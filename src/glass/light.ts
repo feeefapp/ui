@@ -1,4 +1,4 @@
-import { unionDistance, unionLoops, type GlassRect, type GlassShape } from './geometry'
+import { prepareUnionDistance, unionDistance, unionLoops, type GlassRect, type GlassShape } from './geometry'
 
 /**
  * Where light comes from, as a unit vector pointing from a bubble toward the light (screen
@@ -100,14 +100,34 @@ export function highlightSurface(shapes: readonly GlassShape[], spacing: number,
   const height = Math.max(1, Math.ceil(bounds.height * scale))
   const bezel = Math.max(0, Math.min(highlightWidth, ...shapes.map(s => Math.min(s.width, s.height) / 4)))
   const samples: { index: number; depth: number; nx: number; ny: number; coverage: number }[] = []
-  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
-    const px = bounds.x + (x + 0.5) / scale
-    const py = bounds.y + (y + 0.5) / scale
-    const d = unionDistance(px, py, shapes, spacing)
-    if (d >= 0.25 || d <= -bezel) continue
-    const nx = unionDistance(px + 0.5, py, shapes, spacing) - unionDistance(px - 0.5, py, shapes, spacing)
-    const ny = unionDistance(px, py + 0.5, shapes, spacing) - unionDistance(px, py - 0.5, shapes, spacing)
-    samples.push({ index: (y * width + x) * 4, depth: Math.max(0, -d), nx, ny, coverage: Math.min(1, Math.max(0, 0.5 - d * scale)) })
+  const distance = prepareUnionDistance(shapes, spacing)
+  // Only the bevel contributes pixels. Conservative distance bounds reject entire tiles in
+  // the flat interior/outside, preserving the exact 2× samples at the curved edge and neck.
+  // The supported circular/superellipse norms and their smooth union are 1-Lipschitz; the
+  // small margin also covers interpolation in the superellipse norm lookup table.
+  const tile = 16
+  const canCull = shapes.every(shape => shape.cornerExponent === undefined || shape.cornerExponent >= 2)
+  for (let row = 0; row < height; row += tile) {
+    const bottom = Math.min(height, row + tile)
+    const spans: [number, number][] = []
+    for (let column = 0; column < width; column += tile) {
+      const right = Math.min(width, column + tile)
+      const cx = bounds.x + (column + right) / (2 * scale)
+      const cy = bounds.y + (row + bottom) / (2 * scale)
+      const reach = Math.hypot(right - column - 1, bottom - row - 1) / (2 * scale) * 1.01
+      const centre = distance(cx, cy)
+      if (canCull && (centre - reach >= 0.25 || centre + reach <= -bezel)) continue
+      spans.push([column, right])
+    }
+    for (let y = row; y < bottom; y++) for (const [left, right] of spans) for (let x = left; x < right; x++) {
+      const px = bounds.x + (x + 0.5) / scale
+      const py = bounds.y + (y + 0.5) / scale
+      const d = distance(px, py)
+      if (d >= 0.25 || d <= -bezel) continue
+      const nx = distance(px + 0.5, py) - distance(px - 0.5, py)
+      const ny = distance(px, py + 0.5) - distance(px, py - 0.5)
+      samples.push({ index: (y * width + x) * 4, depth: Math.max(0, -d), nx, ny, coverage: Math.min(1, Math.max(0, 0.5 - d * scale)) })
+    }
   }
   return { width, height, bezel, samples }
 }

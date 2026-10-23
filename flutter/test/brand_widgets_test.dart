@@ -238,7 +238,7 @@ void main() {
       ),
     );
     expect(find.text('0550 00 00 00'), findsOneWidget);
-    expect(tester.getSize(find.byType(Input).first).height, 40);
+    expect(tester.getSize(find.byType(Input).first).height, 44);
     await tester.tap(find.byType(Input).first);
     await tester.enterText(find.byType(EditableText).first, '0661');
     await tester.pump();
@@ -354,7 +354,6 @@ void main() {
                 Button(
                   variant: ButtonVariant.filled,
                   appearance: ButtonAppearance.toolbar,
-                  controlSize: ControlSize.compact,
                   onClick: () {},
                   children: const [Text('Share')],
                 ),

@@ -30,7 +30,7 @@ class _IconsAndAffixesState extends State<IconsAndAffixes> {
               ? null
               : IconButton(
                   variant: .text,
-                  controlSize: .compact,
+                  controlSize: .small,
                   ariaLabel: 'Clear search',
                   onClick: () => setState(() => query = ''),
                   icon: const LucideIcon(LucideIcons.x),

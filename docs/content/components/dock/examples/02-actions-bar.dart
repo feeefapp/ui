@@ -74,7 +74,6 @@ class _WithActionsBarState extends State<WithActionsBar> {
                   ActionsBar(
                     actions: actions,
                     label: 'Order actions',
-                    size: .compact,
                   ),
                 ],
               ),

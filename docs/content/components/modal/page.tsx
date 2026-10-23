@@ -233,10 +233,10 @@ export default definePage({
     >
       <strong>Cancel order #10482?</strong>
       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-        <Button variant="text" controlSize="compact" tabIndex={-1}>
+        <Button variant="text" controlSize="small" tabIndex={-1}>
           Keep
         </Button>
-        <Button variant="destructive" controlSize="compact" tabIndex={-1}>
+        <Button variant="destructive" controlSize="small" tabIndex={-1}>
           Cancel order
         </Button>
       </div>

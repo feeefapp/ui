@@ -4,19 +4,19 @@ export default function Compact() {
   return (
     <div className="demo-row">
       <div style={{ width: 160 }}>
-        <TextField controlSize="compact" hint="SKU" defaultValue="TSH-BLK-M" />
+        <TextField controlSize="small" hint="SKU" defaultValue="TSH-BLK-M" />
       </div>
       <div style={{ width: 120 }}>
-        <TextField controlSize="compact" hint="Quantity" type="number" min={1} defaultValue="2" />
+        <TextField controlSize="small" hint="Quantity" type="number" min={1} defaultValue="2" />
       </div>
       <div style={{ width: 160 }}>
-        <TextField controlSize="compact" hint="Unit price" inputMode="numeric" defaultValue="2500" trailing="DZD" />
+        <TextField controlSize="small" hint="Unit price" inputMode="numeric" defaultValue="2500" trailing="DZD" />
       </div>
     </div>
   )
 }
 
 export const meta = {
-  title: 'Compact',
-  description: 'controlSize="compact" for dense rows such as order lines. Touch screens keep a 44px target.',
+  title: 'Small',
+  description: 'controlSize="small" (36px, a regular button’s height) for dense rows such as order lines. Touch screens keep a 44px target.',
 }

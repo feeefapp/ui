@@ -29,8 +29,8 @@ export type NumberFieldProps = {
     steppers?: boolean;
     /** Field paint recipe, shared with text fields and selects. */
     variant?: ControlVariant;
-    /** `regular` 44px or `compact` 40px. */
-    controlSize?: 'regular' | 'compact';
+    /** Field height: `regular` 44px or `small` 36px, like a TextField beside it. */
+    controlSize?: 'small' | 'regular';
     disabled?: boolean;
     /** Submits the value with forms through a hidden input. */
     name?: string;

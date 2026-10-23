@@ -13,7 +13,7 @@ export default function IconButtons() {
       <IconButton variant="tonal" aria-label="More actions">
         <MoreHorizontal size={20} />
       </IconButton>
-      <IconButton variant="destructive" controlSize="compact" aria-label="Delete">
+      <IconButton variant="destructive" controlSize="small" aria-label="Delete">
         <Trash2 size={18} />
       </IconButton>
     </div>

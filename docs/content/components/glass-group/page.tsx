@@ -25,14 +25,14 @@ function Overview() {
               aria-label="Quantity"
               className="glass-demo-group-content"
             >
-              <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Remove one">
+              <IconButton variant="text" appearance="toolbar" controlSize="small" aria-label="Remove one">
                 <Minus />
               </IconButton>
-              <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Add one">
+              <IconButton variant="text" appearance="toolbar" controlSize="small" aria-label="Add one">
                 <Plus />
               </IconButton>
               {v.primary && (
-                <Button variant="filled" appearance="toolbar" controlSize="compact">
+                <Button variant="filled" appearance="toolbar" controlSize="small">
                   Add to order
                 </Button>
               )}
@@ -43,7 +43,7 @@ function Overview() {
           jsx(
             'GlassGroup',
             { as: v.as, role: v.as === 'div' ? 'group' : undefined, 'aria-label': 'Quantity' },
-            `<IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Remove one">…</IconButton>\n<IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Add one">…</IconButton>${v.primary ? '\n<Button variant="filled" appearance="toolbar" controlSize="compact">Add to order</Button>' : ''}`,
+            `<IconButton variant="text" appearance="toolbar" controlSize="small" aria-label="Remove one">…</IconButton>\n<IconButton variant="text" appearance="toolbar" controlSize="small" aria-label="Add one">…</IconButton>${v.primary ? '\n<Button variant="filled" appearance="toolbar" controlSize="small">Add to order</Button>' : ''}`,
             { as: 'div' }
           )
         }
@@ -188,10 +188,10 @@ export default definePage({
   ),
   Preview: () => (
     <GlassGroup className="glass-demo-group-content">
-      <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Remove one">
+      <IconButton variant="text" appearance="toolbar" controlSize="small" aria-label="Remove one">
         <Minus />
       </IconButton>
-      <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Add one">
+      <IconButton variant="text" appearance="toolbar" controlSize="small" aria-label="Add one">
         <Plus />
       </IconButton>
     </GlassGroup>

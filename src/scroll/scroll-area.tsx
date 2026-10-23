@@ -3,6 +3,7 @@
 import {
   forwardRef,
   useRef,
+  useId,
   useLayoutEffect,
   useState,
   useImperativeHandle,
@@ -10,6 +11,7 @@ import {
   type HTMLAttributes,
   type CSSProperties,
 } from 'react'
+import { GlassBackdropContext } from '../glass/context'
 import { cn } from '../utils'
 import { ScrollGradientOverlay } from './gradient-overlay'
 import { scrollContentReserve } from './metrics'
@@ -26,6 +28,8 @@ export type ScrollAreaProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> &
   label: string
   /** Space in px between a float and the area's edges; also added above and below it in the reservation. */
   edgeGap?: number
+  /** Space in px between a float and the area's sides, when it differs from `edgeGap` (a scaffold's app bar uses `--lab-toolbar-inset`). */
+  sideGap?: number
   /** Content padding in px: inline sides, and top/bottom when no float is present. */
   contentPadding?: number
   /** Paints the dithered edge washes that fade content under the floats. */
@@ -49,6 +53,7 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
     bottom,
     label,
     edgeGap = 12,
+    sideGap,
     contentPadding = 24,
     gradient = true,
     topFadeHeight,
@@ -81,6 +86,9 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
     measure()
     return () => resize.disconnect()
   }, [Boolean(top), Boolean(bottom)])
+  const sourceId = `scroll-glass-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
+  const backdropId = viewportProps?.id ?? sourceId
+
   return (
     <div
       {...props}
@@ -89,6 +97,7 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
         {
           ...style,
           '--lab-scroll-gap': `${Math.max(0, edgeGap)}px`,
+          ...(sideGap === undefined ? {} : { '--lab-scroll-side-gap': `${Math.max(0, sideGap)}px` }),
           '--lab-scroll-padding': `${Math.max(0, contentPadding)}px`,
           '--lab-scroll-top-reserve': `${scrollContentReserve(heights.top, edgeGap, contentPadding)}px`,
           '--lab-scroll-bottom-reserve': `${scrollContentReserve(heights.bottom, edgeGap, contentPadding)}px`,
@@ -97,11 +106,12 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
     >
       {top && (
         <div ref={topRef} className="lab-scroll-float lab-scroll-float--top">
-          {top}
+          <GlassBackdropContext.Provider value={backdropId}>{top}</GlassBackdropContext.Provider>
         </div>
       )}
       <div
         {...viewportProps}
+        id={backdropId}
         ref={viewport}
         className={cn('lab-scroll-viewport', viewportProps?.className)}
         role={viewportProps?.role ?? 'region'}
@@ -119,7 +129,7 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
       )}
       {bottom && (
         <div ref={bottomRef} className="lab-scroll-float lab-scroll-float--bottom">
-          {bottom}
+          <GlassBackdropContext.Provider value={backdropId}>{bottom}</GlassBackdropContext.Provider>
         </div>
       )}
     </div>

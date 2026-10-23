@@ -135,7 +135,7 @@ class _ToolbarSearchState extends State<ToolbarSearch>
   late final Ticker _ticker = createTicker(_tick);
   Duration _last = Duration.zero;
   StepSpringState _spring = (position: 0, velocity: 0);
-  double _target = 0, _compact = 46, _wide = 46;
+  double _target = 0, _compact = 44, _wide = 44;
   bool _measured = false;
 
   @override
@@ -223,12 +223,14 @@ class _ToolbarSearchState extends State<ToolbarSearch>
     return widget.onInputKeyDown?.call(event) ?? KeyEventResult.ignored;
   }
 
-  /// `--lab-toolbar-control-size`: compact, 44px on touch or narrow screens (as ToolbarGroup).
+  /// `--lab-toolbar-control-size`: the toolbar item less its 2px padding and 1px border (the
+  /// bubble is at least 44px on touch, as ToolbarGroup).
   double _controlSize(BuildContext context, ThemeData theme) {
-    final narrow = (MediaQuery.maybeSizeOf(context)?.width ?? 1000) <= 600;
-    return theme.coarsePointer(context) || narrow
-        ? 44.0
-        : theme.sizes.controlCompact;
+    final s = theme.sizes;
+    final item = theme.coarsePointer(context) && s.toolbarItem < s.touchTarget
+        ? s.touchTarget
+        : s.toolbarItem;
+    return item - 6;
   }
 
   /// Follows the host's width like the web ResizeObserver: the first measure jumps, later ones
@@ -307,6 +309,7 @@ class _ToolbarSearchState extends State<ToolbarSearch>
                 child: ControlOverrides(
                   height: size,
                   radius: radius - 2,
+                  touchTarget: size,
                   child: Row(
                     children: [
                       Semantics(
@@ -314,7 +317,7 @@ class _ToolbarSearchState extends State<ToolbarSearch>
                         child: IconButton(
                           variant: ButtonVariant.text,
                           appearance: ButtonAppearance.toolbar,
-                          controlSize: ControlSize.compact,
+                          controlSize: ControlSize.regular,
                           focusNode: _trigger,
                           ariaLabel: _expanded
                               ? t('lab.search.collapse')
@@ -342,7 +345,7 @@ class _ToolbarSearchState extends State<ToolbarSearch>
                             IconButton(
                               variant: ButtonVariant.text,
                               appearance: ButtonAppearance.toolbar,
-                              controlSize: ControlSize.compact,
+                              controlSize: ControlSize.regular,
                               ariaLabel: t('lab.search.clear'),
                               disabled: widget.value.isEmpty || widget.disabled,
                               onClick: () {

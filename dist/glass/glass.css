@@ -26,7 +26,7 @@ ancestors: they would stop the backdrop blur from seeing the page. */
   /* Our fit of rendered Liquid Glass (research/liquid-glass), at the theme's tint: the blur when
   ThemeConfig glassBlur is on (the scene sets --lab-glass-blur per cluster from its size, 0 when
   off), saturation, the clear lift, then the surface veil. Refraction (Chromium) replaces this
-  backdrop-filter with an SVG filter doing the same plus the bend once the glass settles. */
+  backdrop-filter with an SVG filter doing the same plus a continuous bend. */
   background: var(--lab-glass-fill);
   backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate)) var(--lab-glass-lift);
   -webkit-backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate)) var(--lab-glass-lift);
@@ -163,11 +163,6 @@ The material formulas are system.css's (glass/material.ts glassMaterial). */
   --lab-glass-colour-loss-large: 0.328;
   --lab-glass-shadow-alpha: 0.14;
   --lab-glass-shadow-alpha-small: 0.033;
-  --lab-glass-edge-light: rgb(255 255 255 / 13%);
-  --lab-glass-edge-low: rgb(255 255 255 / 14%);
-  --lab-glass-rim-base: 0.139;
-  --lab-glass-rim-peak: 0.246;
-  --lab-glass-glow: rgb(255 255 255 / 18%);
   --lab-control-highlight: rgb(255 255 255 / 20%);
 }
 .lab-glass-container[data-glass-backdrop='light'] {
@@ -182,18 +177,14 @@ The material formulas are system.css's (glass/material.ts glassMaterial). */
   --lab-glass-colour-loss-large: 0.362;
   --lab-glass-shadow-alpha: 0.095;
   --lab-glass-shadow-alpha-small: 0.066;
-  --lab-glass-edge-light: rgb(255 255 255 / 62%);
-  --lab-glass-edge-low: rgb(255 255 255 / 27%);
-  --lab-glass-rim-base: 0.27;
-  --lab-glass-rim-peak: 0.718;
-  --lab-glass-glow: rgb(255 255 255 / 45%);
   --lab-control-highlight: rgb(255 255 255 / 76%);
 }
 .lab-glass-material > .lab-glass-filters {
   width: 0;
   height: 0;
 }
-/* Colours change smoothly when adaptive tint flips the glass. */
+/* Adaptive contrast changes the foreground/veil, never the reflection lighting model.
+   The rim, edge and glow continue inheriting the theme optics. */
 .lab-glass-backdrop {
   transition: background-color 240ms var(--lab-ease);
 }
@@ -242,6 +233,8 @@ The material formulas are system.css's (glass/material.ts glassMaterial). */
 
 /* Firefox samples a separate live paint layer; the shared SVG optics run as a normal filter. */
 .lab-glass-backdrop[data-glass-source] {
+  /* Clip the current outline once, independently from the asynchronously decoded lens map. */
+  overflow: clip;
   background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;

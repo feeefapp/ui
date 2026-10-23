@@ -39,8 +39,8 @@ html[data-lab-theme] .lab-control.lab-ladder-trigger[data-state='open'] {
   border-color: color-mix(in srgb, var(--ladder-primary) 30%, var(--ladder-line));
 }
 .lab-ladder-trigger:focus-visible {
-  outline: 2px solid var(--lab-focus, var(--ladder-primary));
-  outline-offset: 2px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
 }
 .lab-ladder-trigger:disabled {
   opacity: 0.5;
@@ -158,8 +158,8 @@ html[data-lab-theme] .lab-control.lab-ladder-title[data-variant] {
 .lab-ladder-title:focus-visible,
 .lab-ladder-reset:focus-visible,
 .lab-ladder-option:focus-visible {
-  outline: 2px solid var(--lab-focus, var(--ladder-primary));
-  outline-offset: 1px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
 }
 html[data-lab-theme] .lab-control.lab-ladder-title[data-variant] > svg {
   flex: none;
@@ -511,8 +511,8 @@ html[data-lab-theme] .lab-ladder-shape-options > .lab-segmented-option[data-stat
   background: color-mix(in srgb, var(--ladder-primary) 18%, transparent);
 }
 .lab-ladder-shape-options > .lab-segmented-option:focus-visible {
-  outline: 2px solid var(--lab-focus, var(--ladder-primary));
-  outline-offset: 1px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
 }
 .lab-ladder-shape-options i {
   display: block;

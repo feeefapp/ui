@@ -73,7 +73,7 @@ class _TextureSurfaceState extends State<TextureSurface> {
                       ),
                       Button(
                         variant: .tonal,
-                        controlSize: .compact,
+                        controlSize: .small,
                         onClick: () {},
                         children: const [Text('Open project')],
                       ),

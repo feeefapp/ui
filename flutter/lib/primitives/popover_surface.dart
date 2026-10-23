@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
-import '../glass/container.dart';
+import '../menu/anchored_panel.dart';
 import '../brand/pixel_noise.dart';
 import '../brand/pixel_texture.dart';
 import '../theme.dart';
@@ -139,13 +139,11 @@ class _PopoverPainter extends CustomPainter {
       old.grain != grain;
 }
 
-/// Where a [Popover] lines up with its trigger, along the trigger's side (Radix `align`).
-enum PopoverAlign { start, center, end }
-
 /// A trigger that opens a floating [PopoverSurface] below it: the Flutter stand-in for a Radix
 /// `Popover.Root` + `Trigger` + `Content` on a `PopoverSurface asChild`, as the docs examples use
-/// it. It positions the panel [sideOffset] below the trigger (above when there is no room), keeps
-/// it [collisionPadding] inside the screen, moves focus into it, and closes on Escape or a press
+/// it. It sits [sideOffset] below the trigger (above when there is no room) in an
+/// [AnchoredPanel], so it stays [collisionPadding] inside the overlay that hosts it (a
+/// [FloatingBoundary], else the app), moves focus into it, and closes on Escape or a press
 /// outside, returning focus to the trigger.
 class Popover extends StatefulWidget {
   const Popover({
@@ -153,7 +151,7 @@ class Popover extends StatefulWidget {
     required this.trigger,
     required this.content,
     this.label,
-    this.align = PopoverAlign.center,
+    this.align = PanelAlign.center,
     this.sideOffset = 0,
     this.collisionPadding = 0,
     this.seed = 'lab-popover',
@@ -172,12 +170,14 @@ class Popover extends StatefulWidget {
 
   /// Accessible name of the panel (`aria-label` on `Popover.Content`).
   final String? label;
-  final PopoverAlign align;
+
+  /// Where the panel lines up with the trigger (Radix `align`).
+  final PanelAlign align;
 
   /// Gap between the trigger and the panel.
   final double sideOffset;
 
-  /// Minimum distance between the panel and the screen edges.
+  /// Minimum distance between the panel and the edges of its bounds.
   final double collisionPadding;
 
   /// [PopoverSurface.seed].
@@ -186,7 +186,7 @@ class Popover extends StatefulWidget {
   /// [PopoverSurface.padding].
   final EdgeInsetsGeometry padding;
 
-  /// Panel width, at most the screen width minus twice [collisionPadding]. Null shrink-wraps.
+  /// Panel width, at most the bounds' width minus twice [collisionPadding]. Null shrink-wraps.
   final double? width;
   final ValueChanged<bool>? onOpenChange;
 
@@ -195,9 +195,8 @@ class Popover extends StatefulWidget {
 }
 
 class _PopoverState extends State<Popover> {
-  final _portal = OverlayPortalController();
-  final _triggerKey = GlobalKey();
   final _scope = FocusScopeNode(debugLabel: 'Popover');
+  bool _open = false;
   FocusNode? _returnTo;
 
   @override
@@ -206,15 +205,14 @@ class _PopoverState extends State<Popover> {
     super.dispose();
   }
 
-  void _toggle() => _portal.isShowing ? _close() : _open();
+  void _toggle() => _open ? _close() : _show();
 
-  void _open() {
+  void _show() {
     _returnTo = FocusManager.instance.primaryFocus;
-    _portal.show();
-    setState(() {});
+    setState(() => _open = true);
     widget.onOpenChange?.call(true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_portal.isShowing) return;
+      if (!mounted || !_open) return;
       _scope.requestFocus();
       // Like Radix, focus the first focusable element inside the panel.
       _scope.nextFocus();
@@ -222,133 +220,54 @@ class _PopoverState extends State<Popover> {
   }
 
   void _close() {
-    if (!_portal.isShowing) return;
-    _portal.hide();
-    setState(() {});
+    if (!_open) return;
+    setState(() => _open = false);
     widget.onOpenChange?.call(false);
     final back = _returnTo;
     if (back != null && back.canRequestFocus) back.requestFocus();
   }
 
-  Rect? _triggerRect(BuildContext overlay) {
-    final box = _triggerKey.currentContext?.findRenderObject() as RenderBox?;
-    final host = overlay.findRenderObject() as RenderBox?;
-    if (box == null || !box.attached || !box.hasSize) return null;
-    final origin = box.localToGlobal(Offset.zero, ancestor: host);
-    return origin & box.size;
-  }
-
   @override
-  Widget build(BuildContext context) => OverlayPortal(
-    controller: _portal,
-    overlayChildBuilder: (overlay) {
-      final dir = Directionality.of(context);
-      final screen = MediaQuery.sizeOf(overlay);
-      final pad = widget.collisionPadding;
-      final maxWidth = math.max(0.0, screen.width - pad * 2);
-      Widget panel = PopoverSurface(
+  Widget build(BuildContext context) => AnchoredPanel(
+    open: _open,
+    onDismiss: _close,
+    align: widget.align,
+    sideOffset: widget.sideOffset,
+    collisionPadding: widget.collisionPadding,
+    panel: (context) {
+      final surface = PopoverSurface(
         seed: widget.seed,
         padding: widget.padding,
         child: Builder(builder: (context) => widget.content(context, _close)),
       );
-      panel = widget.width == null
-          ? ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: maxWidth),
-              child: IntrinsicWidth(child: panel),
-            )
-          : SizedBox(width: math.min(widget.width!, maxWidth), child: panel);
-      return GlassLayer(
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onTap: _close,
+      final panel = LayoutBuilder(
+        builder: (context, constraints) => widget.width == null
+            ? IntrinsicWidth(child: surface)
+            : SizedBox(
+                width: math.min(widget.width!, constraints.maxWidth),
+                child: surface,
               ),
-            ),
-            Positioned.fill(
-              child: CustomSingleChildLayout(
-                delegate: _PopoverLayout(
-                  target: _triggerRect(overlay) ?? Rect.zero,
-                  align: widget.align,
-                  direction: dir,
-                  sideOffset: widget.sideOffset,
-                  padding: pad,
-                ),
-                child: FocusScope(
-                  node: _scope,
-                  onKeyEvent: (_, event) {
-                    if (event is KeyDownEvent &&
-                        event.logicalKey == LogicalKeyboardKey.escape) {
-                      _close();
-                      return KeyEventResult.handled;
-                    }
-                    return KeyEventResult.ignored;
-                  },
-                  child: Semantics(
-                    container: true,
-                    scopesRoute: true,
-                    namesRoute: widget.label != null,
-                    explicitChildNodes: true,
-                    label: widget.label,
-                    child: panel,
-                  ),
-                ),
-              ),
-            ),
-          ],
+      );
+      return FocusScope(
+        node: _scope,
+        onKeyEvent: (_, event) {
+          if (event is KeyDownEvent &&
+              event.logicalKey == LogicalKeyboardKey.escape) {
+            _close();
+            return KeyEventResult.handled;
+          }
+          return KeyEventResult.ignored;
+        },
+        child: Semantics(
+          container: true,
+          scopesRoute: true,
+          namesRoute: widget.label != null,
+          explicitChildNodes: true,
+          label: widget.label,
+          child: panel,
         ),
       );
     },
-    child: KeyedSubtree(
-      key: _triggerKey,
-      child: widget.trigger(context, _toggle, _portal.isShowing),
-    ),
+    child: widget.trigger(context, _toggle, _open),
   );
-}
-
-class _PopoverLayout extends SingleChildLayoutDelegate {
-  _PopoverLayout({
-    required this.target,
-    required this.align,
-    required this.direction,
-    required this.sideOffset,
-    required this.padding,
-  });
-  final Rect target;
-  final PopoverAlign align;
-  final TextDirection direction;
-  final double sideOffset, padding;
-
-  @override
-  BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
-      BoxConstraints.loose(constraints.biggest)
-          .deflate(EdgeInsets.all(padding));
-
-  @override
-  Offset getPositionForChild(Size size, Size child) {
-    final rtl = direction == TextDirection.rtl;
-    final start = rtl ? target.right - child.width : target.left;
-    final end = rtl ? target.left : target.right - child.width;
-    var x = switch (align) {
-      PopoverAlign.start => start,
-      PopoverAlign.end => end,
-      PopoverAlign.center => target.center.dx - child.width / 2,
-    };
-    x = x.clamp(padding, math.max(padding, size.width - padding - child.width));
-    var y = target.bottom + sideOffset;
-    if (y + child.height > size.height - padding &&
-        target.top - sideOffset - child.height >= padding) {
-      y = target.top - sideOffset - child.height;
-    }
-    return Offset(x, y);
-  }
-
-  @override
-  bool shouldRelayout(_PopoverLayout old) =>
-      old.target != target ||
-      old.align != align ||
-      old.direction != direction ||
-      old.sideOffset != sideOffset ||
-      old.padding != padding;
 }

@@ -48,7 +48,7 @@ function TimeInput({
       <div className="lab-time-input-fields" dir="ltr">
         <NumberField
           label="Hour"
-          controlSize="compact"
+          controlSize="small"
           min={0}
           max={23}
           value={h}
@@ -61,7 +61,7 @@ function TimeInput({
         </span>
         <NumberField
           label="Minute"
-          controlSize="compact"
+          controlSize="small"
           min={0}
           max={60 - minuteStep}
           step={minuteStep}
@@ -77,7 +77,7 @@ function TimeInput({
             </span>
             <NumberField
               label="Second"
-              controlSize="compact"
+              controlSize="small"
               min={0}
               max={59}
               step={Math.max(1, step)}
@@ -234,7 +234,7 @@ export function TemporalPresets({
           key={p.label}
           variant={editor.presetActive(p) ? 'tonal' : 'text'}
           appearance={layout === 'bar' ? 'toolbar' : 'default'}
-          controlSize="compact"
+          controlSize="small"
           aria-pressed={editor.presetActive(p)}
           onClick={() => editor.choosePreset(p.value)}
         >
@@ -355,7 +355,7 @@ export function TemporalBody({ editor, footer }: { editor: TemporalEditorState; 
       <div className="lab-temporal-footer">
         <Button
           variant="text"
-          controlSize="compact"
+          controlSize="small"
           className="lab-temporal-manual-toggle"
           aria-expanded={editor.manual}
           onClick={() => editor.setManual(!editor.manual)}
@@ -379,7 +379,7 @@ export function TemporalBody({ editor, footer }: { editor: TemporalEditorState; 
             <TextField
               key={part}
               type={type}
-              controlSize="compact"
+              controlSize="small"
               hint={part === 'date' ? (hasCalendar ? 'Date' : 'Time') : part === 'from' ? 'Start' : 'End'}
               value={part === 'to' ? to : from}
               min={config.min}

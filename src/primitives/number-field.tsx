@@ -47,8 +47,8 @@ export type NumberFieldProps = {
   steppers?: boolean
   /** Field paint recipe, shared with text fields and selects. */
   variant?: ControlVariant
-  /** `regular` 44px or `compact` 40px. */
-  controlSize?: 'regular' | 'compact'
+  /** Field height: `regular` 44px or `small` 36px, like a TextField beside it. */
+  controlSize?: 'small' | 'regular'
   disabled?: boolean
   /** Submits the value with forms through a hidden input. */
   name?: string
@@ -238,7 +238,7 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(fu
           className="lab-number-field-stepper"
           variant="text"
           appearance="toolbar"
-          controlSize="compact"
+          controlSize="small"
           tabIndex={-1}
           aria-label={`Decrease ${label}`}
           disabled={disabled || (min !== undefined && value <= min)}
@@ -283,7 +283,7 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(fu
           className="lab-number-field-stepper"
           variant="text"
           appearance="toolbar"
-          controlSize="compact"
+          controlSize="small"
           tabIndex={-1}
           aria-label={`Increase ${label}`}
           disabled={disabled || (max !== undefined && value >= max)}

@@ -56,7 +56,7 @@ export default function OrderDetail() {
             label="Order toolbar"
             leading={
               <ToolbarGroup label="Navigation">
-                <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Back to orders">
+                <IconButton variant="text" appearance="toolbar" aria-label="Back to orders">
                   <ArrowLeft className="lab-dir-flip" />
                 </IconButton>
                 <span className="pt-title">Order #1048</span>
@@ -64,17 +64,16 @@ export default function OrderDetail() {
             }
             trailing={
               <ToolbarGroup label="Order tools">
-                <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Call Amina Benali">
+                <IconButton variant="text" appearance="toolbar" aria-label="Call Amina Benali">
                   <Phone />
                 </IconButton>
-                <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Print shipping label">
+                <IconButton variant="text" appearance="toolbar" aria-label="Print shipping label">
                   <Printer />
                 </IconButton>
                 {narrow && (
                   <IconButton
                     variant="text"
                     appearance="toolbar"
-                    controlSize="compact"
                     aria-label="Order details"
                     aria-haspopup="dialog"
                     onClick={() => setDetailsOpen(true)}

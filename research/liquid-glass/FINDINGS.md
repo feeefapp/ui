@@ -254,6 +254,47 @@ The inspection page now distinguishes the earlier broad, art-directed surface be
 a rim fitted to §4: approximately 1pt wide, with symmetric cos² angular lighting and
 light alpha 0.27–0.718 / dark alpha 0.139–0.246. The finite inward cosine falloff is our
 interpolation, not an Apple shader formula. Regular and Clear presets use tint endpoints
-1 and 0; both retain the conservative web refraction scale (not the measured 47pt shift).
+1 and 0; both now opt into the measured 47pt shift / 27pt quartic bezel from §1. The new
+refractionProfile="measured" restores that existing fit on web; the default "gentle"
+profile and Water drop preset retain the conservative cap. Both paths share the same
+map on Chromium and Firefox.
 These are iOS 26.2 screenshot-derived approximations, not official parameters or an
 iOS 27 match. The existing surface mode remains available for wider water-drop bevels.
+
+### Shared web defaults and extended tuning
+
+The reference rim (1px, strength 1), measured refraction profile (strength 1), and
+circular corner profile now default in GlassContainer/GlassScope. Toolbar, Dock,
+Scaffold and navigation bubbles inherit this shared renderer instead of requiring
+per-component overrides. Theme tint, blur, accessibility, and authored member radii
+remain controlled by their existing settings for legibility. The public width range
+is 0–100px and strength/refraction multipliers are 0–10. The docs radius uses CSS px
+(0–120), with a large specimen to expose radii beyond the 36px small-bubble cap.
+Geometry still clamps radii to half the shortest side, and highlights to fit inside
+the surface. These are web tuning ranges, not native Apple limits.
+
+### Consistent web material and Firefox floating chrome
+
+Web now defaults to tint 0 and uses the same white-point preservation for inherited
+and explicit tint. Flutter is intentionally unchanged. ScrollArea provides its viewport
+as a live disjoint Firefox source only to its floating top/bottom slots, including
+Scaffold header, dock and sidebar controls. Source descendants do not inherit that
+source, preventing recursive captures. Explicit demo sources still override inherited
+ones. Firefox cannot capture arbitrary ancestors containing the glass; standalone
+content glass needs a disjoint backdropSource.
+
+### Web motion continuity
+
+Refraction remains mounted during press, drag and shape blending, including adaptive contrast changes. Cluster-local displacement maps exclude translation and material uniforms from their cache key. Live maps have a fixed pixel budget and are transported as uncompressed RGBA BMPs to avoid PNG encoding on animation frames. Reflection lighting inherits the theme rather than changing when the sampled backdrop tone flips; adaptive text and veil remain available. Flutter is unchanged.
+
+Merged bounds now include the smooth union's growth beyond member boxes. The contour grid,
+refraction samples and rim canvas all cover that growth; the rim has an antialias fringe and
+keeps an exact 2× pixel scale at fractional spring dimensions. Measuring pressed content first
+undoes the last scale actually written to the DOM so it cannot be counted twice.
+
+Firefox retains the current decoded lens while decoding its replacement, with one active decode
+and one replaceable pending geometry. Binary BMP Blob URLs avoid base64 string work there;
+retained resources are bounded and revoked on eviction/disposal. The current CSS outline clips
+the lens once, independently of the image's asynchronous lifetime. Prepared distance evaluators
+and conservative tile rejection reduce map work without changing the sampled lens or resolution
+between motion and rest. Chromium retains the alpha silhouette required by its backdrop filter.

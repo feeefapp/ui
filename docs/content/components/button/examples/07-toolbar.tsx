@@ -22,7 +22,7 @@ export default function ToolbarAppearance() {
       }
       trailing={
         <ToolbarGroup label="Document">
-          <Button variant="filled" appearance="toolbar" controlSize="compact">
+          <Button variant="filled" appearance="toolbar">
             Publish
           </Button>
         </ToolbarGroup>

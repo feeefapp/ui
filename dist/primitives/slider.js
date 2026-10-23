@@ -195,8 +195,9 @@ function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', v
                     }, children: mark.label }, index))) })), _jsx("input", { ref: hidden, type: "hidden", name: name, form: form, value: current, disabled: disabled })] }));
 }
 /**
- * An on/off switch that can be tapped or dragged. It shares the slider's track, thumb and spring;
- * the state maps to 0 and 1.
+ * An on/off switch that can be tapped or dragged, sized like iOS's (63 × 28 track, 37 × 24 thumb at
+ * comfortable density; ThemeConfig `metrics.switchSize` / `thumbSize`). It shares the slider's
+ * track, thumb and spring; the state maps to 0 and 1.
  */
 export const SlideSwitch = React.forwardRef(({ checked, loading, defaultChecked = false, onCheckedChange, onCheckedCommit, onText, offText, ...props }, ref) => {
     return (_jsx(SliderControl, { ...props, forwardedRef: ref, switchMode: true, disabled: props.disabled || loading, "aria-busy": loading || undefined, min: 0, max: 1, step: 1, value: checked === undefined ? undefined : Number(checked), defaultValue: Number(defaultChecked), onValueChange: (next) => onCheckedChange?.(next === 1), onValueCommit: (next) => onCheckedCommit?.(next === 1), checkedText: (next) => (next === 1 ? onText : offText) }));
@@ -206,9 +207,9 @@ SlideSwitch.displayName = 'SlideSwitch';
  * A non-interactive switch picture for menu items and rows that already carry the checked
  * semantics (for example `menuitemcheckbox`). Same geometry and spring, hidden from assistive technology.
  */
-export function SlideSwitchIndicator({ checked, loading, controlSize = 'compact', }) {
+export function SlideSwitchIndicator({ checked, loading, }) {
     const host = React.useRef(null);
     useSliderMotion(host, Number(checked), false, false, false, Boolean(loading));
-    return (_jsxs("div", { ref: host, className: "lab-slider lab-slide-switch-indicator", "data-checked": checked, "data-switch": true, "data-control-size": controlSize, "data-disabled": loading || undefined, "aria-hidden": "true", style: { '--lab-slider-fraction': Number(checked) }, children: [_jsx("span", { className: "lab-slider-rail" }), _jsx("span", { className: "lab-slider-fill" }), _jsx("span", { className: "lab-slider-thumb" })] }));
+    return (_jsxs("div", { ref: host, className: "lab-slider lab-slide-switch-indicator", "data-checked": checked, "data-switch": true, "data-disabled": loading || undefined, "aria-hidden": "true", style: { '--lab-slider-fraction': Number(checked) }, children: [_jsx("span", { className: "lab-slider-rail" }), _jsx("span", { className: "lab-slider-fill" }), _jsx("span", { className: "lab-slider-thumb" })] }));
 }
 //# sourceMappingURL=slider.js.map

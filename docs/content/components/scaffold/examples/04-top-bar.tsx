@@ -46,7 +46,6 @@ export default function TopBar() {
                   <IconButton
                     variant="text"
                     appearance="toolbar"
-                    controlSize="compact"
                     aria-label="Back to products"
                   >
                     <ArrowLeft className="lab-dir-flip" />

@@ -10,17 +10,12 @@ import 'package:flutter/widgets.dart';
 import '../brand/geometry.dart';
 import '../theme.dart';
 import '../theme/css_text.dart';
-
-/// `--lab-field-height` (40 / 34 / 28 px).
-double fieldHeight(Density density) => switch (density) {
-  Density.comfortable => 40,
-  Density.compact => 34,
-  Density.thin => 28,
-};
+import '../theme/surfaces.dart';
 
 /// A bare single-line text box (`<input class="lab-input">`): field height, 5px 10px padding, a
-/// 1px line border with superellipse corners, the surface fill, 13px/20px text, a 2px focus ring
-/// 3px outside, half opacity when disabled, a danger border when [invalid].
+/// 1px line border with superellipse corners, the surface fill, 13px/20px text, a focus-coloured
+/// edge that thickens inward when focused (no outer ring), half opacity when disabled, a danger
+/// border when [invalid].
 class Input extends StatelessWidget {
   const Input({
     super.key,
@@ -288,12 +283,15 @@ class _RawFieldState extends State<_RawField> {
       ],
     );
     final box = ConstrainedBox(
-      constraints: BoxConstraints(minHeight: fieldHeight(s.density)),
+      constraints: BoxConstraints(minHeight: s.fieldHeight),
       child: CustomPaint(
         painter: _FieldPainter(
           fill: c.surface,
           edge: c.glassEdgeLow,
           border: border,
+          borderWidth: _focusVisible && !widget.invalid
+              ? FocusRingStyle.of(context).width
+              : 1,
           radius: radius,
         ),
         child: Padding(
@@ -301,7 +299,7 @@ class _RawFieldState extends State<_RawField> {
           child: widget.multiline
               ? field
               : SizedBox(
-                  height: fieldHeight(s.density) - 12,
+                  height: s.fieldHeight - 12,
                   child: Align(
                     alignment: AlignmentDirectional.centerStart,
                     child: field,
@@ -310,11 +308,7 @@ class _RawFieldState extends State<_RawField> {
         ),
       ),
     );
-    // outline: 2px solid focus, offset 3px.
-    final ring = CustomPaint(
-      foregroundPainter: _focusVisible ? _RingPainter(c.focus, radius) : null,
-      child: box,
-    );
+    final ring = box;
     return Semantics(
       textField: true,
       multiline: widget.multiline,
@@ -347,10 +341,11 @@ class _FieldPainter extends CustomPainter {
     required this.fill,
     required this.edge,
     required this.border,
+    this.borderWidth = 1,
     required this.radius,
   });
   final Color fill, edge, border;
-  final double radius;
+  final double radius, borderWidth;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -371,43 +366,21 @@ class _FieldPainter extends CustomPainter {
       Paint()..color = edge,
     );
     canvas.drawPath(
-      superellipsePath(rect, radii, inset: 0.5),
+      superellipsePath(rect, radii, inset: borderWidth / 2),
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1
+        ..strokeWidth = borderWidth
         ..color = border,
     );
   }
 
   @override
   bool shouldRepaint(_FieldPainter old) =>
+      old.borderWidth != borderWidth ||
       old.fill != fill ||
       old.edge != edge ||
       old.border != border ||
       old.radius != radius;
-}
-
-class _RingPainter extends CustomPainter {
-  _RingPainter(this.color, this.radius);
-  final Color color;
-  final double radius;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // A 2px ring whose inner edge is 3px outside the box: centre line 4px out.
-    final rect = (Offset.zero & size).inflate(4);
-    canvas.drawPath(
-      superellipsePath(rect, List.filled(4, radius + 4)),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = color,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_RingPainter old) =>
-      old.color != color || old.radius != radius;
 }
 
 /// Field label text (`<label class="lab-label">`): 13px, medium weight, 20px line height.

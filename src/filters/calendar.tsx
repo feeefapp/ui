@@ -77,7 +77,7 @@ export function CalendarMonth({
         {navigation !== 'next' && (
           <IconButton
             variant="text"
-            controlSize="compact"
+            controlSize="small"
             data-nav="previous"
             aria-label="Previous month"
             disabled={
@@ -90,7 +90,7 @@ export function CalendarMonth({
         )}
         <Button
           variant="text"
-          controlSize="compact"
+          controlSize="small"
           className="lab-calendar-title"
           aria-expanded={picking}
           aria-label={picking ? `Choose a month in ${pickYear}` : `${title}, choose month and year`}
@@ -104,7 +104,7 @@ export function CalendarMonth({
         {navigation !== 'previous' && (
           <IconButton
             variant="text"
-            controlSize="compact"
+            controlSize="small"
             data-nav="next"
             aria-label="Next month"
             disabled={
@@ -123,7 +123,7 @@ export function CalendarMonth({
             <Button
               key={m}
               variant={m === monthIndex && pickYear === year ? 'tonal' : 'text'}
-              controlSize="compact"
+              controlSize="small"
               aria-pressed={m === monthIndex && pickYear === year}
               disabled={outOfBounds(pickYear, m)}
               onClick={() => {

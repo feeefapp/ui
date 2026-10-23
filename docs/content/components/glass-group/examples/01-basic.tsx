@@ -7,13 +7,13 @@ export default function Basic() {
   return (
     <div className="glass-demo-backdrop">
       <GlassGroup role="group" aria-label="Zoom" className="glass-demo-group-content">
-        <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Zoom out">
+        <IconButton variant="text" appearance="toolbar" controlSize="small" aria-label="Zoom out">
           <Minus />
         </IconButton>
-        <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Reset zoom">
+        <IconButton variant="text" appearance="toolbar" controlSize="small" aria-label="Reset zoom">
           <RotateCcw />
         </IconButton>
-        <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Zoom in">
+        <IconButton variant="text" appearance="toolbar" controlSize="small" aria-label="Zoom in">
           <Plus />
         </IconButton>
       </GlassGroup>

@@ -20,7 +20,7 @@ export default function Loader() {
           <span>Export ready.</span>
         )}
       </div>
-      <Button variant="outlined" controlSize="compact" onClick={() => setExporting(!exporting)}>
+      <Button variant="outlined" controlSize="small" onClick={() => setExporting(!exporting)}>
         {exporting ? 'Finish export' : 'Start again'}
       </Button>
     </div>

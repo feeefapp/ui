@@ -9,10 +9,10 @@ export default function Landmark() {
       <GlassGroup as="header" className="glass-demo-header">
         <strong>Store preview</strong>
         <span className="demo-row">
-          <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Share store link">
+          <IconButton variant="text" appearance="toolbar" controlSize="small" aria-label="Share store link">
             <Share2 />
           </IconButton>
-          <Button variant="filled" controlSize="compact">
+          <Button variant="filled" controlSize="small">
             Publish
           </Button>
         </span>

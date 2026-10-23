@@ -12,8 +12,8 @@ type ChoiceDecoration = {
   description?: React.ReactNode
   /** Error message under the label. Marks the control invalid and blocks form submission. */
   error?: string | null
-  /** Control density: `regular` or `compact`. */
-  controlSize?: 'regular' | 'compact'
+  /** Row size: `regular` (as tall as a regular button) or `small`. */
+  controlSize?: 'small' | 'regular'
   /** Class name for the outer `<label>`, for layout. */
   containerClassName?: string
 }
@@ -167,8 +167,8 @@ export type RadioGroupProps = Omit<
   error?: string | null
   /** Help text under the legend. */
   description?: React.ReactNode
-  /** Density of every radio: `regular` or `compact`. */
-  controlSize?: 'regular' | 'compact'
+  /** Size of every radio row: `regular` or `small`. */
+  controlSize?: 'small' | 'regular'
 }
 /**
  * A labelled set of mutually exclusive choices. Native radios own keyboard navigation, form

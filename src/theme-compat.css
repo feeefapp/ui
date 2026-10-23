@@ -75,7 +75,7 @@ html[data-lab-theme]
   background-color: var(--lab-surface-soft);
 }
 html[data-lab-theme] :is(.lab-app, .lab-dialog) :focus-visible {
-  outline-color: var(--lab-focus);
+  outline-color: var(--lab-focus-ring-color);
 }
 html[data-lab-theme] .lab-app .lab-discover-voice {
   background: var(--lab-surface) !important;
@@ -100,11 +100,6 @@ html[data-lab-theme] .lab-scaffold :is(.lab-workspace, .lab-allowance) {
 html[data-lab-theme] .lab-pro-badge {
   background: var(--lab-surface-soft);
   color: var(--lab-muted);
-  border-color: var(--lab-line);
-}
-html[data-lab-theme] .lab-select-menu {
-  background: var(--lab-surface);
-  color: var(--lab-ink);
   border-color: var(--lab-line);
 }
 html[data-lab-theme] .lab-select-option[data-highlighted] {
@@ -148,7 +143,7 @@ html[data-lab-theme] .lab-control.lab-voice-input[data-variant] {
   height: var(--lab-voice-input-size);
   min-height: var(--lab-voice-input-size);
   padding: 0;
-  border-radius: var(--lab-radius-control-compact);
+  border-radius: var(--lab-radius-control-small);
   color: var(--lab-focus);
   background: var(--lab-surface-soft);
 }

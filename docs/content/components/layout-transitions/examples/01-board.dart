@@ -52,7 +52,7 @@ class _OrderBoardState extends State<OrderBoard> {
           children: [
             Button(
               variant: .tonal,
-              controlSize: .compact,
+              controlSize: .small,
               onClick: () => setState(
                 () => _orders = [..._orders]..shuffle(math.Random()),
               ),
@@ -63,7 +63,7 @@ class _OrderBoardState extends State<OrderBoard> {
             ),
             Button(
               variant: .text,
-              controlSize: .compact,
+              controlSize: .small,
               onClick: () => setState(() => _orders = _start),
               children: const [Text('Reset')],
             ),
@@ -164,7 +164,7 @@ class _Card extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colors.surface,
         border: Border.all(color: theme.colors.line),
-        borderRadius: BorderRadius.circular(theme.sizes.radiusControlCompact),
+        borderRadius: BorderRadius.circular(theme.sizes.radiusControlSmall),
       ),
       child: Row(
         spacing: 8,
@@ -188,7 +188,7 @@ class _Card extends StatelessWidget {
           ),
           IconButton(
             variant: .text,
-            controlSize: .compact,
+            controlSize: .small,
             ariaLabel: 'Move #${order.id} to ${_next(order.column)}',
             onClick: onAdvance,
             // `lab-dir-flip`: the arrow points forward in right-to-left text too.

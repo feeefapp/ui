@@ -25,8 +25,8 @@
   outline: none;
 }
 .stack-demo-card:focus-visible .stack-demo-art {
-  outline: 2px solid var(--lab-focus);
-  outline-offset: 2px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
 }
 .stack-demo-card-name {
   margin-top: 4px;

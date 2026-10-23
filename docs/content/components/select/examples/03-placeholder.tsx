@@ -8,7 +8,7 @@ export default function Placeholder() {
       <Select
         aria-label="Sort orders"
         placeholder="Sort by"
-        controlSize="compact"
+        controlSize="small"
         value={sort}
         onValueChange={setSort}
       >

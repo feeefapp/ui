@@ -79,15 +79,21 @@ export const theme: ThemeConfig = { palette: 'mono', density: 'compact', radius:
 | `glassTint` | number `0` clear … `1` tinted, `0.5` default | `--lab-glass-tint`: the Liquid Glass slider. 0 = measured clear glass (no veil, no shadow, brightness lift), 1 = measured regular material (veil 71–87 %), 0.5 = light veil (~40 %). Curve: `glassMaterial()` in `glass/material.ts` |
 | `glassBlur` | `false` (default), `true` | `data-lab-glass-blur`: the measured backdrop blur (2.9px → 5.2px by size); off = no blur |
 | `glassRefraction` | `true` (default), `false` | `data-lab-glass-refraction`: bend the backdrop at glass edges (SVG displacement map built when glass settles; Chromium only, other browsers show the same glass unbent) |
-| `density` | `comfortable` (default), `compact` | `--lab-control-height`, `--lab-control-compact`, `--lab-field-height`, `--lab-control-small`, `--lab-row-height`, `--lab-control-padding`, `--lab-space-3…8`, `--lab-sidebar-width`, `--lab-navigation-rail-width` (coarse pointers keep 44px targets) |
+| `density` | `comfortable` (default, iOS 26 control sizes), `compact` (one step down), `thin` (two) | the metric tokens below, `--lab-space-1…8`, `--lab-sidebar-width`, `--lab-navigation-rail-width` (coarse pointers keep 44px targets) |
+| `metrics` | partial `Metrics` (px) | single sizes at every density, as inline variables: `controlHeight {small, regular, large}` (30/36/52) → `--lab-control-small/-height/-large`, `controlPadding` (10/12/20), `controlFont` (15/17/17), `fieldHeight {small, regular}` (36/44), `rowHeight` (44), `toolbarItem` (44), `toolbarGap` (12), `toolbarInset` (16), `segmentedHeight` (32), `segmentedInset` (2), `switchSize` (63×28), `thumbSize` (37×24), `sliderTrack` (6), `listRowHeight` (54), `listRadius` (26), `listInset` (16), `focusRingWidth` (2), `focusRingOffset` (1). Flutter: `ThemeConfig(metrics: Metrics(...))` → `SizeTokens` |
 | `radius` | number, `1` default, `0` square, max `1.5` | `--lab-radius-scale`, which multiplies every radius token and component radius (circles such as radios stay round) |
 
 Accessibility always wins over the glass options: `prefers-reduced-transparency` and
 `prefers-contrast: more` paint glass as an opaque surface (more contrast adds an ink outline), both
 turn refraction off, and `prefers-reduced-motion` stops the moving light and press response.
 
+Keyboard focus uses three tokens, `--lab-focus-ring-width` (2px), `--lab-focus-ring-offset` (1px)
+and `--lab-focus-ring-color` (the focus color at 65 %): a thin ring hugging the control plus its hover
+fill, only for `:focus-visible`. Fields tint and thicken their own edge instead. Increased contrast
+and forced colors force a 3px ring 2px out in the full color.
+
 How it works: `themeAttributes()` / `applyThemeConfig()` set `data-lab-palette`,
-`data-lab-density` and `--lab-radius-scale` on `<html>`; the kit CSS reads them. To add a
+`data-lab-density`, `--lab-radius-scale` and the `metrics` variables on `<html>`; the kit CSS reads them. To add a
 palette or density, add its token block next to the existing ones (`theme-tokens.css`,
 `system.css`) and extend the union in `theme-config.ts`. Kit CSS must use these tokens, never
 literal colors, control sizes or radii, so every theme reaches it. App CSS should do the same

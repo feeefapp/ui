@@ -12,7 +12,7 @@ const controls = {
   step: { type: 'select', options: ['1', '10', '50', '0.5'], default: '50' },
   steppers: { type: 'boolean', default: true },
   variant: { type: 'select', options: ['elevated', 'outlined', 'tonal', 'filled', 'text'], default: 'elevated' },
-  controlSize: { type: 'select', options: ['regular', 'compact'], default: 'regular' },
+  controlSize: { type: 'select', options: ['small', 'regular'], default: 'regular' },
   disabled: { type: 'boolean', default: false },
 } as const
 
@@ -33,7 +33,7 @@ function Overview() {
               defaultValue={400}
               steppers={v.steppers}
               variant={v.variant as 'elevated'}
-              controlSize={v.controlSize as 'regular' | 'compact'}
+              controlSize={v.controlSize as 'small' | 'regular'}
               disabled={v.disabled}
             />
           </div>

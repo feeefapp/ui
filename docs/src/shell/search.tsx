@@ -122,7 +122,6 @@ export function Search({ onClose }: { onClose: () => void }) {
               <IconButton
                 variant="text"
                 appearance="toolbar"
-                controlSize="compact"
                 aria-label="Clear search"
                 onClick={() => {
                   setQuery('')

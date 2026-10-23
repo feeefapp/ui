@@ -54,8 +54,12 @@ void main() {
     final parts = entry.key.split('-');
     final palette = Palette.values.byName(parts[0]);
     final brightness = parts[1] == 'dark' ? Brightness.dark : Brightness.light;
-    final tokens = ColorTokens.resolve(palette, brightness);
     final css = entry.value as Map<String, dynamic>;
+    // Resolve at the tint the browser used (the web default), not the Dart default.
+    final tint = (css['glassTint'] as num?)?.toDouble();
+    final tokens = tint == null
+        ? ColorTokens.resolve(palette, brightness)
+        : ColorTokens.resolve(palette, brightness, glassTint: tint);
 
     test('${entry.key}: every colour token matches the browser', () {
       final byName = <String, Color>{
@@ -86,6 +90,7 @@ void main() {
         'glass-shadow-small': tokens.glassShadowSmall,
         'glass-glow': tokens.glassGlow,
         'control-highlight': tokens.controlHighlight,
+        'focus-ring-color': tokens.focusRing,
       };
       final expected = css['tokens'] as Map<String, dynamic>;
       expect(byName.keys.toSet(), expected.keys.toSet());
@@ -111,6 +116,64 @@ void main() {
       }
     });
   }
+
+  final sizesFile = File('test/fixtures/css_sizes.json');
+  test(
+    'every size token matches the browser, per density',
+    () {
+      final sizes =
+          jsonDecode(sizesFile.readAsStringSync()) as Map<String, dynamic>;
+      for (final entry in sizes.entries) {
+        final s = SizeTokens.of(
+          ThemeConfig(density: Density.values.byName(entry.key)),
+        );
+        final byName = <String, double>{
+          'control-small': s.controlSmall,
+          'control-height': s.controlHeight,
+          'control-large': s.controlLarge,
+          'control-padding-small': s.controlPaddingSmall,
+          'control-padding': s.controlPadding,
+          'control-padding-large': s.controlPaddingLarge,
+          'control-font-small': s.controlFontSmall,
+          'control-font': s.controlFont,
+          'control-font-large': s.controlFontLarge,
+          'field-height-small': s.fieldHeightSmall,
+          'field-height': s.fieldHeight,
+          'row-height': s.rowHeight,
+          'menu-row-height': s.menuRowHeight,
+          'toolbar-item': s.toolbarItem,
+          'toolbar-control': s.toolbarControl,
+          'toolbar-gap': s.toolbarGap,
+          'toolbar-inset': s.toolbarInset,
+          'segmented-height': s.segmentedHeight,
+          'segmented-inset': s.segmentedInset,
+          'switch-width': s.switchWidth,
+          'switch-height': s.switchHeight,
+          'thumb-width': s.thumbWidth,
+          'thumb-height': s.thumbHeight,
+          'slider-track': s.sliderTrack,
+          'list-row-height': s.listRowHeight,
+          'list-radius': s.listRadius,
+          'list-inset': s.listInset,
+          'focus-ring-width': s.focusRingWidth,
+          'focus-ring-offset': s.focusRingOffset,
+          'radius-control': s.radiusControl,
+          'radius-control-small': s.radiusControlSmall,
+        };
+        final expected = entry.value as Map<String, dynamic>;
+        expect(byName.keys.toSet(), expected.keys.toSet());
+        for (final name in expected.keys) {
+          expect(
+            byName[name],
+            closeTo((expected[name] as num).toDouble(), 0.01),
+            reason: '${entry.key} $name',
+          );
+        }
+      }
+    },
+    // Written by tool/generate_css_tokens.mjs from the built parity app.
+    skip: sizesFile.existsSync() ? false : 'css_sizes.json not generated yet',
+  );
 
   test('glass over a contrasting backdrop takes glass.css neutral tokens', () {
     final base = ColorTokens.resolve(Palette.lab, Brightness.light);

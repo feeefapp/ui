@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Copy, Share2, Trash2 } from 'lucide-react'
 import { GlassContainer } from '@feeef.dev/ui/glass'
 import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
@@ -7,25 +7,27 @@ import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 import '../glass-container-demo.css'
 
 export default function SplitMerge() {
+  const backdropId = `container-demo-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const [split, setSplit] = useState(false)
   const share = (
-    <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Share">
+    <IconButton variant="text" appearance="toolbar" aria-label="Share">
       <Share2 />
     </IconButton>
   )
   const copy = (
-    <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Duplicate">
+    <IconButton variant="text" appearance="toolbar" aria-label="Duplicate">
       <Copy />
     </IconButton>
   )
   const remove = (
-    <IconButton variant="text" appearance="toolbar" controlSize="compact" aria-label="Delete">
+    <IconButton variant="text" appearance="toolbar" aria-label="Delete">
       <Trash2 />
     </IconButton>
   )
   return (
-    <div className="glass-stage">
-      <GlassContainer className="glass-row">
+    <div className="glass-stage" data-lab-backdrop="light">
+      <div id={backdropId} className="glass-stage-source" aria-hidden="true" />
+      <GlassContainer tint={0} backdropSource={backdropId} className="glass-row">
         {split ? (
           <>
             <ToolbarGroup label="Share" glassId="share">{share}{copy}</ToolbarGroup>

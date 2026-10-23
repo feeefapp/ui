@@ -41,8 +41,8 @@
   background: var(--lab-control-selected);
 }
 .docs-page .gc-summary-groups a:focus-visible {
-  outline: 2px solid var(--lab-focus);
-  outline-offset: 2px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
 }
 .docs-page .gc-summary-groups span {
   color: var(--lab-muted);

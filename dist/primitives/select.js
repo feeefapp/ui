@@ -1,6 +1,8 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { PopoverSurface } from './popover-surface.js';
+import { MenuSurface } from '../menu/menu-surface.js';
+import { useFloatingBoundary } from '../menu/boundary.js';
+import { menuCloseDuration } from '../menu/morph-model.js';
 import * as React from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { Check, ChevronDown } from 'lucide-react';
@@ -10,7 +12,8 @@ import { RawInput } from './raw-input.js';
 const EMPTY = '__lab_natural__';
 /**
  * A single-choice dropdown in the same field frame as `TextField`: floating hint, icons,
- * supporting text and validation. The menu opens in a popover; options are `Option`.
+ * supporting text and validation. The options (`Option`) open in a glass menu that grows out of
+ * the field and covers it (`MenuSurface`).
  */
 export function Select({ children, value: suppliedValue, onValueChange, className, variant = 'elevated', controlSize = 'regular', label, hint, dir, placeholder, labelStyle = 'outlined', leadingIcon, leading, trailing, supportingText, error, containerClassName, name, required, requiredMessage = 'Choose an option.', validator, validationMode = 'blur', onValidationChange, onBlur, ...props }) {
     const value = suppliedValue ?? '';
@@ -66,7 +69,8 @@ export function Select({ children, value: suppliedValue, onValueChange, classNam
         return () => observer.disconnect();
     }, [dir]);
     const [container, setContainer] = React.useState();
-    // Radix unmounts Select content immediately, so hold it open while it fades.
+    const boundary = useFloatingBoundary();
+    // Radix unmounts Select content immediately, so hold it open while the menu flies back.
     const [open, setOpen] = React.useState(false), [closing, setClosing] = React.useState(false);
     const closeTimer = React.useRef(0);
     React.useEffect(() => () => clearTimeout(closeTimer.current), []);
@@ -87,7 +91,7 @@ export function Select({ children, value: suppliedValue, onValueChange, classNam
         }, open: open, onOpenChange: (next) => {
             clearTimeout(closeTimer.current);
             if (next) {
-                setContainer(trigger.current?.closest('dialog') || undefined);
+                setContainer(trigger.current?.closest('dialog') || boundary || undefined);
                 setClosing(false);
                 setOpen(true);
                 return;
@@ -99,7 +103,7 @@ export function Select({ children, value: suppliedValue, onValueChange, classNam
             closeTimer.current = window.setTimeout(() => {
                 setOpen(false);
                 setClosing(false);
-            }, window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 140);
+            }, menuCloseDuration(!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) * 1000 + 20);
         }, disabled: props.disabled, children: [decorated ? (_jsx(FieldShell, { id: props.id, label: label, hint: hint, dir: dir, labelStyle: labelStyle, variant: variant, controlSize: controlSize, leadingIcon: leadingIcon, leading: leading, trailing: trailing, supportingText: supportingText, error: message, containerClassName: containerClassName, disabled: props.disabled, required: required, describedBy: props['aria-describedby'], invalid: props['aria-invalid'] === true || props['aria-invalid'] === 'true', populated: Boolean(value), children: ({ id, describedBy, invalid }) => (_jsxs(SelectPrimitive.Trigger, { ref: trigger, id: id, className: cn('lab-field-select-control', className), "aria-label": props['aria-label'], "aria-labelledby": props['aria-labelledby'], "aria-describedby": describedBy, "aria-invalid": invalid || props['aria-invalid'], "aria-required": required || undefined, onBlur: (event) => {
                         if (!open) {
                             touched.current = true;
@@ -118,7 +122,7 @@ export function Select({ children, value: suppliedValue, onValueChange, classNam
                     event.preventDefault();
                     touched.current = true;
                     trigger.current?.focus();
-                } })), _jsx(SelectPrimitive.Portal, { container: container, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(SelectPrimitive.Content, { className: "lab-select-menu", "data-lab-corners": true, "data-closing": closing || undefined, inert: closing || undefined, position: "popper", sideOffset: 6, collisionPadding: 12, collisionBoundary: container, children: _jsx(SelectPrimitive.Viewport, { children: children }) }) }) })] }));
+                } })), _jsx(SelectPrimitive.Portal, { container: container, children: _jsx(MenuSurface, { asChild: true, children: _jsx(SelectPrimitive.Content, { className: "lab-select-menu", "data-closing": closing || undefined, inert: closing || undefined, position: "popper", ...(container ? { collisionBoundary: container } : {}), children: _jsx(SelectPrimitive.Viewport, { children: children }) }) }) })] }));
 }
 /** One choice in a `Select` menu. A check marks the selected option. */
 export function Option({ value, children, }) {

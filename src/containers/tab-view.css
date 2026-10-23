@@ -115,8 +115,11 @@ html[data-lab-theme] .lab-tab-bar.lab-glass-group {
   scale: 0.96;
 }
 .lab-tab:focus-visible {
-  outline: 2px solid var(--lab-focus);
-  outline-offset: -2px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: calc(-1 * var(--lab-focus-ring-width));
+}
+.lab-tab:not([data-selected]):focus-visible {
+  background: var(--lab-control-hover);
 }
 .lab-tab-icon {
   position: relative;

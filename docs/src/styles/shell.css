@@ -289,20 +289,6 @@ html[data-lab-theme] .docs-app-bar-brand.lab-toolbar-group {
   font-size: 11px;
   line-height: 16px;
 }
-.docs-version-menu {
-  min-width: 220px;
-}
-.docs-version-heading {
-  padding: 8px 12px 4px;
-  color: var(--lab-muted);
-  font-size: 12px;
-  line-height: 16px;
-}
-.docs-version-separator {
-  height: 1px;
-  margin: 4px 8px;
-  background: var(--lab-line);
-}
 .docs-version-name {
   display: flex;
   flex: 1;

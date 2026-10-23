@@ -433,7 +433,7 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
             children: [
               IconButton(
                 appearance: ButtonAppearance.toolbar,
-                controlSize: ControlSize.compact,
+                controlSize: ControlSize.regular,
                 ariaLabel: I18n.of(context)
                     .t('lab.composer.closeLabel', {'label': _shown.label}),
                 onClick: widget.open ? widget.close : null,

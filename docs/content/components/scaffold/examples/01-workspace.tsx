@@ -84,7 +84,6 @@ export default function Workspace() {
                 <IconButton
                   variant="text"
                   appearance="toolbar"
-                  controlSize="compact"
                   aria-label="Search orders"
                 >
                   <Search />

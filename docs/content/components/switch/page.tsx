@@ -5,7 +5,6 @@ import { Callout, DoDont, Keys, Section } from '../../../src/blocks/prose'
 import { C } from '../../../src/blocks/code'
 
 const controls = {
-  controlSize: { type: 'select', options: ['regular', 'compact'], default: 'regular' },
   trackStyle: { type: 'select', options: ['thick', 'thin'], default: 'thick' },
   onText: { type: 'text', label: 'On text', default: '' },
   offText: { type: 'text', label: 'Off text', default: '' },
@@ -24,7 +23,6 @@ function Overview() {
             <SlideSwitch
               label="Cash on delivery"
               defaultChecked
-              controlSize={v.controlSize as 'regular' | 'compact'}
               trackStyle={v.trackStyle as 'thick' | 'thin'}
               onText={v.onText || undefined}
               offText={v.offText || undefined}
@@ -40,7 +38,6 @@ function Overview() {
               label: 'Cash on delivery',
               checked: '__CHECKED__',
               onCheckedChange: '__SET__',
-              controlSize: v.controlSize,
               trackStyle: v.trackStyle,
               onText: v.onText || undefined,
               offText: v.offText || undefined,
@@ -48,7 +45,7 @@ function Overview() {
               disabled: v.disabled,
             },
             undefined,
-            { controlSize: 'regular', trackStyle: 'thick' }
+            { trackStyle: 'thick' }
           )
             .replace('checked="__CHECKED__"', 'checked={codEnabled}')
             .replace('onCheckedChange="__SET__"', 'onCheckedChange={setCodEnabled}')
@@ -84,7 +81,10 @@ function Overview() {
 
       <Section title="Size, track and text">
         <p>
-          <C>controlSize</C> and <C>trackStyle</C> work as on the slider. <C>onText</C> and{' '}
+          A switch has one size, iOS's: a 63 × 28px track with a 37 × 24px thumb at comfortable
+          density, one step smaller in compact and thin. Change it app-wide with{' '}
+          <C>ThemeConfig.metrics.switchSize</C> and <C>thumbSize</C>, never per switch.{' '}
+          <C>trackStyle</C> works as on the slider. <C>onText</C> and{' '}
           <C>offText</C> print a short word on the track, such as “On” and “Off”. They are visual
           only; the state is already announced, so keep them to a word or two.
         </p>

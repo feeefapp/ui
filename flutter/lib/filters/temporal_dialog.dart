@@ -182,7 +182,7 @@ class TemporalDialog extends StatelessWidget {
           children: [
             Button(
               appearance: ButtonAppearance.toolbar,
-              controlSize: ControlSize.compact,
+              controlSize: ControlSize.regular,
               onClick: close,
               children: const [Text('Cancel')],
             ),
@@ -190,7 +190,7 @@ class TemporalDialog extends StatelessWidget {
             if (onClear != null)
               Button(
                 appearance: ButtonAppearance.toolbar,
-                controlSize: ControlSize.compact,
+                controlSize: ControlSize.regular,
                 disabled: clearDisabled,
                 onClick: onClear,
                 children: [clearLabel],
@@ -199,7 +199,7 @@ class TemporalDialog extends StatelessWidget {
               Button(
                 variant: ButtonVariant.filled,
                 appearance: ButtonAppearance.toolbar,
-                controlSize: ControlSize.compact,
+                controlSize: ControlSize.regular,
                 onClick: onApply,
                 children: [applyLabel],
               ),

@@ -18,6 +18,7 @@ type SettingsPatch = { locale?: DocsSettings['locale']; code?: DocsSettings['cod
 
 const DEFAULTS: DocsSettings = { locale: 'en', code: 'react', theme: { ...THEME_DEFAULTS } }
 const KEY = 'feeef-ui-docs-settings'
+const GLASS_SETTINGS_VERSION = 1
 
 /** `?platform=flutter|react` opens the docs on that kit (shareable links). */
 function platformFromUrl(): DocsSettings['code'] | null {
@@ -46,7 +47,7 @@ function read(): DocsSettings {
       return {
         locale: saved.locale ?? 'en',
         code: platform ?? (saved.code === 'flutter' ? 'flutter' : 'react'),
-        theme: savedTheme(saved.theme),
+        theme: savedTheme(saved.glassSettingsVersion === GLASS_SETTINGS_VERSION ? saved.theme : { ...saved.theme, glassTint: 0 }),
       }
   } catch {}
   return platform ? { ...DEFAULTS, code: platform } : DEFAULTS
@@ -64,7 +65,7 @@ export function DocsSettingsProvider({ children }: { children: ReactNode }) {
   const dir = directionFor(settings.locale)
   useEffect(() => {
     try {
-      localStorage.setItem(KEY, JSON.stringify(settings))
+      localStorage.setItem(KEY, JSON.stringify({ ...settings, glassSettingsVersion: GLASS_SETTINGS_VERSION }))
     } catch {}
   }, [settings])
   const value = useMemo(

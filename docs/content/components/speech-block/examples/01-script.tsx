@@ -34,7 +34,7 @@ export default function Script() {
               <IconButton
                 variant="ghost"
                 appearance="toolbar"
-                controlSize="compact"
+                controlSize="small"
                 aria-label={`Delete block ${index + 1}`}
                 disabled={blocks.length === 1}
                 onClick={() => setBlocks((old) => old.filter((b) => b.id !== block.id))}

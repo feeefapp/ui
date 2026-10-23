@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { FloatingBoundary } from '@feeef.dev/ui/menu'
 import '../styles/device.css'
 
 const SIZES = {
@@ -10,7 +11,8 @@ const SIZES = {
 /**
  * A pretend screen for container demos. It lays its content out at a real phone, tablet or
  * desktop size (so containers measure true widths) and scales the whole screen down to fit the
- * docs column. Containers inside convert finger movement for the scale themselves.
+ * docs column. Containers inside convert finger movement for the scale themselves. The screen is a
+ * FloatingBoundary: menus, popovers and tooltips opened inside it stay inside it.
  */
 export function Device({
   kind = 'phone',
@@ -41,7 +43,7 @@ export function Device({
   const scale = available ? Math.min(1, available / size.width) : 1
   return (
     <div ref={ref} className="docs-device" data-kind={kind} style={{ height: Math.round(size.height * scale) }}>
-      <div
+      <FloatingBoundary
         ref={setScreen}
         className="docs-device-screen"
         role="group"
@@ -54,7 +56,7 @@ export function Device({
         }}
       >
         {typeof children === 'function' ? children(screen) : children}
-      </div>
+      </FloatingBoundary>
     </div>
   )
 }

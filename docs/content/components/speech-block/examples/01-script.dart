@@ -66,7 +66,7 @@ class _ScriptState extends State<Script> {
                 IconButton(
                   variant: .ghost,
                   appearance: .toolbar,
-                  controlSize: .compact,
+                  controlSize: .small,
                   ariaLabel: 'Delete block ${index + 1}',
                   disabled: _blocks.length == 1,
                   onClick: () => setState(

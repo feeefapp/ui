@@ -35,7 +35,7 @@ function SwitchRow({ label, checked, onChange }: { label: string; checked: boole
   return (
     <div className="docs-customize-switch">
       <span aria-hidden="true">{label}</span>
-      <SlideSwitch label={label} controlSize="compact" checked={checked} onCheckedChange={onChange} />
+      <SlideSwitch label={label} checked={checked} onCheckedChange={onChange} />
     </div>
   )
 }
@@ -52,7 +52,7 @@ function GlassSettings() {
       <span aria-hidden="true">Liquid Glass</span>
       <Slider
         label="Liquid Glass"
-        controlSize="compact"
+        controlSize="small"
         trackStyle="thin"
         min={0}
         max={1}
@@ -90,7 +90,7 @@ function ColorPicker() {
         <IconButton
           key={color.name}
           variant="text"
-          controlSize="compact"
+          controlSize="small"
           className="docs-swatch"
           aria-label={color.name}
           aria-pressed={current === color.value}
@@ -104,7 +104,7 @@ function ColorPicker() {
       ))}
       <IconButton
         variant="text"
-        controlSize="compact"
+        controlSize="small"
         className="docs-swatch"
         aria-label="Custom color"
         aria-pressed={custom}
@@ -222,7 +222,7 @@ export function Customize() {
             <GlassSettings />
             <NumberField
               label="Corner radius"
-              controlSize="compact"
+              controlSize="small"
               min={0}
               max={1.5}
               step={0.05}
@@ -243,7 +243,7 @@ export function Customize() {
                 ]}
               />
             </Row>
-            <Button variant="text" controlSize="compact" onClick={reset}>
+            <Button variant="text" controlSize="small" onClick={reset}>
               Reset to defaults
             </Button>
           </Popover.Content>

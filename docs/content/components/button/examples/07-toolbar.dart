@@ -42,7 +42,6 @@ class ToolbarAppearance extends StatelessWidget {
           Button(
             variant: .filled,
             appearance: .toolbar,
-            controlSize: .compact,
             onClick: () {},
             children: const [Text('Publish')],
           ),

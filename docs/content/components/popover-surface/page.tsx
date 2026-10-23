@@ -18,16 +18,19 @@ function Overview() {
 
       <Section title="When to use">
         <p>
-          <C>PopoverSurface</C> is the material every floating panel in the kit shares: menus,
-          select lists, the date picker, the actions overflow. Use it when you build your own popover
-          or menu, so it looks like the rest of the app: an opaque surface, a hairline border, group
-          corners, a soft shadow and a faint animated pixel grain.
+          <C>PopoverSurface</C> is the material of the kit’s popovers: panels that hold a form or a
+          picker next to their trigger, like the date picker, the filter editors and the image
+          settings. Use it when you build your own popover, so it looks like the rest of the app: an
+          opaque surface, a hairline border, group corners, a soft shadow and a faint animated pixel
+          grain. A list of commands or choices is a menu: use{' '}
+          <Link to="/components/menu">MenuSurface</Link>, the glass bubble that grows out of its
+          button.
         </p>
         <p>
           It is paint only. It does not open, position, trap focus or dismiss. Pair it with a
-          behavior library; the kit uses Radix Popover and Radix DropdownMenu. For a menu of actions
-          that also needs overflow handling, use <Link to="/components/actions-bar">Actions bar</Link>{' '}
-          instead of building one.
+          behavior library; the kit uses Radix Popover. For a menu of actions that also needs
+          overflow handling, use <Link to="/components/actions-bar">Actions bar</Link> instead of
+          building one.
         </p>
       </Section>
 
@@ -64,9 +67,11 @@ import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
           ]}
         />
         <p>
-          The surface sets no width or padding: size the content yourself. Menu rows inside it get
-          corners that follow the surface’s curve when they use the kit’s menu item classes, as in
-          the dropdown example.
+          The surface sets no width or padding: size the content yourself. Radix keeps the popover
+          inside the window, and inside the nearest <C>FloatingBoundary</C> when you pass it as{' '}
+          <C>collisionBoundary</C> (<C>useFloatingBoundary()</C>); the kit’s own popovers do. In
+          Flutter, <C>Popover</C> lays out in an <C>AnchoredPanel</C>: inside the overlay that hosts
+          it, flipped and shifted to fit, following its trigger when the page scrolls.
         </p>
       </Section>
 
@@ -82,6 +87,7 @@ import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
             'Wrap the Radix Content in an extra div; the positioned element would be unpainted.',
             'Add your own background, border or shadow on top of the surface.',
             'Use it as a card on the page; it is meant for floating layers.',
+            <>Use it for a menu of commands; that is <Link to="/components/menu">MenuSurface</Link>.</>,
           ]}
         />
       </Section>
@@ -119,11 +125,11 @@ export default definePage({
   title: 'Popover surface',
   group: 'Containment',
   order: 2,
-  summary: 'The shared material for menus and popovers. Wrap a Radix Popover or DropdownMenu content with asChild.',
+  summary: 'The opaque material for popovers (forms and pickers next to their trigger). Wrap a Radix Popover content with asChild.',
   importLine: "import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'",
   source: 'src/primitives/popover-surface.tsx',
   api: ['PopoverSurface'],
-  keywords: ['popover', 'menu', 'dropdown', 'radix', 'floating', 'surface', 'panel'],
+  keywords: ['popover', 'radix', 'floating', 'surface', 'panel', 'picker'],
   Overview,
   examples: examplesFrom(
     import.meta.glob('./examples/*.tsx', { eager: true }),

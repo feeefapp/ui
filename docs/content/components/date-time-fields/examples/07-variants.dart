@@ -30,7 +30,7 @@ class _VariantsState extends State<Variants> {
           DateField(
             hint: hint,
             variant: variant,
-            controlSize: .compact,
+            controlSize: .small,
             value: _values[hint],
             onValueChange: (next) => setState(() => _values[hint] = next),
           ),

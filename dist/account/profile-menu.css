@@ -162,7 +162,8 @@ html[data-lab-theme]
   text-decoration: none;
 }
 .lab-account-settings-content a:focus-visible {
-  outline: 2px solid var(--lab-focus);
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
 }
 @media (forced-colors: active) {
   .lab-account-avatar,
