@@ -477,11 +477,10 @@ html[data-lab-theme] .lab-control.lab-ladder-option[aria-selected='true'] {
 .lab-ladder-shape-options.lab-segmented {
   width: max-content;
   max-width: none;
-  flex-wrap: nowrap;
 }
 /* Shape tiles: the segmented pill marks the chosen one (it takes the tile's size). Out-specifies the
-kit's `.lab-segmented > .lab-segmented-option.lab-control[data-variant]`. */
-html[data-lab-theme] .lab-ladder-shape-options.lab-segmented > .lab-segmented-option.lab-control[data-variant] {
+kit's `.lab-segmented-track > .lab-segmented-option.lab-control[data-variant]`. */
+html[data-lab-theme] .lab-ladder-shape-options.lab-segmented .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
   flex: none;
   width: 52px;
   min-width: 52px;

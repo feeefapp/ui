@@ -427,6 +427,7 @@ function Overview() {
           head={['Options', 'Applies', 'Is it a view?', 'Use']}
           rows={[
             ['2–5 short', 'Immediately', 'Yes', <C>SegmentedControl</C>],
+            ['Statuses of one list, with counts', 'Immediately', 'Yes', <><C>SegmentedControl</C> with badges (scrolls)</>],
             ['1 (on/off)', 'Immediately', 'No', <C>SlideSwitch</C>],
             ['1 (on/off)', 'With the form', 'No', <C>Checkbox</C>],
             ['2–5, worth comparing', 'With the form', 'No', <C>RadioGroup</C>],

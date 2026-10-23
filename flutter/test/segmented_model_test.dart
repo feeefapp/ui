@@ -58,4 +58,25 @@ void main() {
       });
     });
   }
+
+  test('segmentedAutoScrollSpeed', () {
+    for (final v in fixture['autoScroll'] as List) {
+      expect(
+        segmentedAutoScrollSpeed(n(v[0]), n(v[1]), n(v[2])),
+        closeTo(n(v[3]), 1e-5),
+        reason: 'pointer ${v[0]} in ${v[1]}…${v[2]}',
+      );
+    }
+  });
+
+  test('segmentedRevealOffset', () {
+    for (final v in fixture['reveal'] as List) {
+      expect(
+        segmentedRevealOffset(n(v[0]), n(v[1]), n(v[2]), n(v[3]), n(v[4])),
+        closeTo(n(v[5]), 1e-5),
+        reason:
+            'offset ${v[0]} max ${v[1]} view ${v[2]} option ${v[3]}…${v[4]}',
+      );
+    }
+  });
 }

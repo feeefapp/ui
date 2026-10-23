@@ -2,7 +2,12 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import {
+  SEGMENTED_AUTOSCROLL_SPEED,
+  SEGMENTED_AUTOSCROLL_ZONE,
+  SEGMENTED_FADE,
   SEGMENTED_OVERDRAG,
+  segmentedAutoScrollSpeed,
+  segmentedRevealOffset,
   segmentIndexAt,
   segmentedDragCenter,
   segmentedPillWidth,
@@ -67,6 +72,24 @@ test('a release never lands on a disabled segment', () => {
   assert.equal(segmentedSnapIndex(0, 0, spans.map((s) => ({ ...s, disabled: true }))), -1)
 })
 
+test('a pill dragged near an edge scrolls toward it, faster the closer it gets', () => {
+  assert.equal(segmentedAutoScrollSpeed(160, 0, 320), 0, 'still in the middle')
+  assert.equal(segmentedAutoScrollSpeed(SEGMENTED_AUTOSCROLL_ZONE, 0, 320), 0, 'zone edge')
+  const near = segmentedAutoScrollSpeed(30, 0, 320)
+  const nearer = segmentedAutoScrollSpeed(10, 0, 320)
+  assert.ok(near < 0 && nearer < near, 'toward the start, speeding up')
+  assert.equal(segmentedAutoScrollSpeed(-50, 0, 320), -SEGMENTED_AUTOSCROLL_SPEED, 'capped past the edge')
+  assert.equal(segmentedAutoScrollSpeed(310, 0, 320), -segmentedAutoScrollSpeed(10, 0, 320), 'symmetric')
+  assert.equal(segmentedAutoScrollSpeed(10, 0, 0), 0, 'no viewport')
+})
+
+test('revealing an option scrolls the least, clear of the fades, within the scroll range', () => {
+  assert.equal(segmentedRevealOffset(0, 400, 320, 100, 160), 0, 'already visible')
+  assert.equal(segmentedRevealOffset(0, 400, 320, 300, 380), 380 - (320 - SEGMENTED_FADE), 'to the end')
+  assert.equal(segmentedRevealOffset(200, 400, 320, 150, 200), 150 - SEGMENTED_FADE, 'back to the start')
+  assert.equal(segmentedRevealOffset(100, 400, 320, 2, 60), 0, 'clamped at 0')
+  assert.equal(segmentedRevealOffset(300, 400, 320, 690, 718), 400, 'clamped at max')
+})
 
 test('the shared fixture is current', () => {
   const file = JSON.parse(readFileSync(new URL('../flutter/test/fixtures/segmented.json', import.meta.url), 'utf8'))

@@ -1,8 +1,11 @@
 import { mix, projectMomentum, rubberBandClamp } from '../physics/spring'
+import { scrollRevealDelta } from '../scroll/metrics'
 
 /**
  * Pure geometry of a segmented control's moving pill: where a drag puts it, how wide it is on the
- * way and where a release lands (its lens stretch is `lensStretch`, lens-model.ts). Shared with the
+ * way and where a release lands (its lens stretch is `lensStretch`, lens-model.ts), and how a control
+ * too wide for its space scrolls (edge fades, revealing the selection, auto-scroll while the pill is
+ * dragged near an edge). Shared with the
  * Flutter twin (`segmented_model.dart`, vectors in `flutter/test/fixtures/segmented.json`).
  */
 
@@ -85,4 +88,54 @@ export function segmentedSnapIndex(center: number, velocity: number, spans: read
     }
   })
   return best
+}
+
+/** Length (px) of the fade at an edge of a control that scrolls, and the scroll distance over which
+ * it fades in (`scrollEdgeOpacities`); a revealed option also stops this far from the edge. */
+export const SEGMENTED_FADE = 24
+/** How far (px) a scrolling control's clip reaches above and below it, so a pressed pill can swell
+ * and cast its shadow without being cut. */
+export const SEGMENTED_BLEED = 8
+/** Distance (px) from a visible edge inside which a dragged pill scrolls the control. */
+export const SEGMENTED_AUTOSCROLL_ZONE = 40
+/** Fastest auto-scroll (px/s): the pointer at or past the edge. */
+export const SEGMENTED_AUTOSCROLL_SPEED = 720
+
+/**
+ * Auto-scroll speed (px/s, physical: positive shows more of the right) for a pill dragged with the
+ * pointer at `pointer` in a viewport spanning `viewStart`…`viewEnd`: zero in the middle, easing in
+ * (quadratically) inside `SEGMENTED_AUTOSCROLL_ZONE` of either edge (a third of a narrow viewport)
+ * up to `SEGMENTED_AUTOSCROLL_SPEED` at the edge and beyond.
+ */
+export function segmentedAutoScrollSpeed(pointer: number, viewStart: number, viewEnd: number) {
+  const width = viewEnd - viewStart
+  if (!(width > 0) || !Number.isFinite(pointer)) return 0
+  const zone = Math.min(SEGMENTED_AUTOSCROLL_ZONE, width / 3)
+  const ramp = (distance: number) => {
+    const t = Math.max(0, Math.min(1, (zone - distance) / zone))
+    return t * t * SEGMENTED_AUTOSCROLL_SPEED
+  }
+  const toStart = pointer - viewStart
+  const toEnd = viewEnd - pointer
+  if (toStart < zone && toStart <= toEnd) return -ramp(toStart)
+  if (toEnd < zone) return ramp(toEnd)
+  return 0
+}
+
+/**
+ * The scroll offset (px from the left, physical) that shows the option spanning `start`…`end`
+ * (content px) in a `viewport` px wide view scrolled to `offset` of at most `max`, clear of the edge
+ * fades by `padding`: the least movement, as `revealScrollChild` does with the control's
+ * `scroll-padding`.
+ */
+export function segmentedRevealOffset(
+  offset: number,
+  max: number,
+  viewport: number,
+  start: number,
+  end: number,
+  padding = SEGMENTED_FADE
+) {
+  const delta = scrollRevealDelta(start - offset, end - offset, padding, Math.max(padding, viewport - padding))
+  return Math.max(0, Math.min(Math.max(0, max), offset + delta))
 }

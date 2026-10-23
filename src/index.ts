@@ -54,7 +54,7 @@ export type {
 export type { ButtonProps, ButtonVariant, ControlSize, ButtonAppearance } from './ui'
 
 export { SegmentedControl } from './ui'
-export type { SegmentOption } from './ui'
+export type { SegmentOption, SegmentTone } from './ui'
 
 export { UI_MESSAGES } from './messages'
 export { flattenTranslations, translateLab } from './i18n-core'

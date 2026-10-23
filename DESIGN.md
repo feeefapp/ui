@@ -55,7 +55,7 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
 | The one main action | `Button variant="filled"` | two filled buttons side by side |
 | Icon-only action | `IconButton` with `aria-label` | an unlabeled icon in a `<div>` |
 | Navigate with button looks | `Button asChild` + your router link | `onClick={() => navigate()}` on a button |
-| Switch views or modes (2–5) | `SegmentedControl`, in a glass bubble when it floats, on a plain box in content | tabs drawn from buttons |
+| Switch views or modes (2–5), or filter a list by status (counts as `badge`; many scroll) | `SegmentedControl`, in a glass bubble when it floats, on a plain box in content | tabs drawn from buttons |
 | Pick one of a few, all visible | `RadioGroup` | a select with 3 options |
 | Pick one of many | `Select` | a long radio list |
 | Independent on/off in a form | `Checkbox` | a switch that only applies on Save |

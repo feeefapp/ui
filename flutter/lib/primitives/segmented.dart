@@ -13,6 +13,8 @@ import '../glass/geometry.dart';
 import '../glass/press.dart';
 import '../physics/motion_value.dart';
 import '../physics/spring.dart';
+import '../scroll/metrics.dart' show scrollEdgeOpacities;
+import '../scroll/reveal.dart';
 import '../theme.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
@@ -23,12 +25,17 @@ import 'lens_model.dart';
 import 'segmented_model.dart';
 import 'touch_target.dart';
 
+/// A status colour for an option's icon.
+enum SegmentTone { success, warning, danger }
+
 /// One choice of a segmented control.
 class SegmentOption<T> {
   const SegmentOption({
     required this.value,
     required this.label,
     this.icon,
+    this.tone,
+    this.badge,
     this.disabled = false,
   });
 
@@ -41,15 +48,30 @@ class SegmentOption<T> {
   /// Decorative icon before the label.
   final Widget? icon;
 
+  /// Colours the icon (only the icon) with a status token while the option isn't selected; the
+  /// selected option's icon takes the pill's ink. Never the only cue: keep it in the label too.
+  final SegmentTone? tone;
+
+  /// A short count or tag after the label ("21"), on a small neutral pill in tabular figures. It
+  /// is part of the option's accessible name ("New, 21").
+  final String? badge;
+
   /// Skipped by the keyboard and not clickable.
   final bool disabled;
 }
 
-/// A single choice among two to five short options, shown side by side: the Flutter twin of
+/// A single choice among short options, shown side by side in one row: the Flutter twin of
 /// `SegmentedControl` in `@feeef.dev/ui/primitives/segmented`. A filled pill marks the selection
 /// and slides to the next one; press it and it becomes a glass lens you can drag (or press another
 /// option and drag: the pill comes to you). Radio semantics, one Tab stop, arrow keys move and
-/// select (mirrored in right-to-left), Home and End jump to the ends.
+/// select (mirrored in right-to-left), Home and End jump to the ends. Options can carry a count
+/// ([SegmentOption.badge]).
+///
+/// Options that don't fit scroll sideways inside the control (never wrap or squeeze): its edges
+/// fade where there is more, the selection scrolls into view whenever it changes, and a pill
+/// dragged near an edge scrolls on. On touch a swipe scrolls; a drag that starts on the pill moves
+/// the pill. It needs a bounded width to scroll: in a [Row] (a [ToolbarGroup]'s too) wrap it in
+/// [Flexible].
 ///
 /// It paints no container: put it in glass ([ToolbarGroup]), on a box of your own (a
 /// `DecoratedBox` with `colors.surfaceSoft` and `SuperellipseBorder(radius: sizes.radiusControl)`)
@@ -81,7 +103,8 @@ class SegmentedControl<T> extends StatefulWidget {
   /// Disables every option.
   final bool disabled;
 
-  /// Fills the available width with one row of equal options whose labels end in an ellipsis.
+  /// Fills the available width with one row of equal options whose labels end in an ellipsis (it
+  /// never scrolls).
   final bool equalWidth;
 
   @override
@@ -97,10 +120,16 @@ class _Drag {
     required this.onPill,
     required this.grab,
     required this.index,
-  }) : catching = !onPill;
+    required this.time,
+  }) : catching = !onPill,
+       last = start;
   final int pointer;
   final bool touch;
   final Offset start;
+
+  /// The latest pointer position (global) and its time (ms), for auto-scroll frames between moves.
+  Offset last;
+  double time;
 
   /// Pressed on the pill itself (it lifts at once) rather than on another option.
   final bool onPill;
@@ -123,11 +152,15 @@ class _PillMotion extends ChangeNotifier {
   void changed() => notifyListeners();
 }
 
-class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
+class _SegmentedControlState<T> extends State<SegmentedControl<T>>
+    with SingleTickerProviderStateMixin {
   final _nodes = <int, FocusNode>{};
   final _keys = <int, GlobalKey>{};
   final _trackKey = GlobalKey();
   final _motion = _PillMotion();
+  final _scroll = ScrollController();
+  late final Ticker _autoScroll = createTicker(_autoScrollTick);
+  Duration _autoLast = Duration.zero;
 
   // Pill: centre, width and top; press response: swell, stretch, lens (0 filled … 1 glass), glow.
   final center = MotionValue(0, 0.05);
@@ -142,7 +175,9 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
 
   List<Rect> _boxes = const [];
   List<SegmentSpan> _spans = const [];
-  bool _oneRow = true;
+
+  /// The options are wider than the control: it scrolls.
+  bool _overflow = false;
   bool _placed = false;
   bool _measureQueued = false;
   Offset _glowAt = Offset.zero;
@@ -205,6 +240,8 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
     for (final node in _nodes.values) {
       node.dispose();
     }
+    _autoScroll.dispose();
+    _scroll.dispose();
     _motion.dispose();
     super.dispose();
   }
@@ -222,6 +259,13 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
       final follow = _follow;
       _follow = false;
       final changed = _measure();
+      final overflow =
+          !widget.equalWidth &&
+          _scroll.hasClients &&
+          _scroll.position.hasContentDimensions &&
+          _scroll.position.maxScrollExtent > 0.5;
+      final overflowChanged = overflow != _overflow;
+      if (overflowChanged) setState(() => _overflow = overflow);
       if (_drag?.active ?? false) return;
       if (!_placed) {
         // Not laid out yet: the next layout queues another measure.
@@ -230,6 +274,7 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
         // that matches no option settles instead of measuring every frame.
         if (_selected >= 0 && _selected < _boxes.length) {
           _moveTo(_selected, Springs.snappy);
+          _reveal(_selected, smooth: false);
         } else {
           _placed = true;
         }
@@ -239,6 +284,8 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
       final index = _selected;
       if (index < 0 || index >= _boxes.length) return;
       final box = _boxes[index];
+      // Whatever chose it (a tap, a key, a release, the owner), the selection scrolls into view.
+      if (follow || overflowChanged) _reveal(index, smooth: follow);
       // The pill appears for the first time (the value had no option): jump, don't grow from 0.
       if (width.get() <= 0) _placed = false;
       if (follow) {
@@ -283,9 +330,50 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
           disabled: widget.disabled || widget.options[i].disabled,
         ),
     ];
-    _oneRow = boxes.every((box) => (box.top - boxes.first.top).abs() < 1);
     if (changed) _motion.changed();
     return changed;
+  }
+
+  /// Scrolls the control (never an enclosing scroll view) to show option [index] clear of the
+  /// edge fades.
+  void _reveal(int index, {required bool smooth}) {
+    if (!_scroll.hasClients) return;
+    revealScrollChild(
+      _scroll,
+      _keys[index]?.currentContext,
+      inline: RevealAlignment.nearest,
+      behavior: smooth ? RevealBehavior.smooth : RevealBehavior.instant,
+    );
+  }
+
+  /// While a pill is dragged, a pointer near an edge of a scrolling control scrolls it.
+  void _autoScrollTick(Duration elapsed) {
+    final d = _drag;
+    if (d == null || !d.active || !_overflow || !_scroll.hasClients) {
+      _autoScroll.stop();
+      return;
+    }
+    final dt = ((elapsed - _autoLast).inMicroseconds / 1e6).clamp(0.0, 0.05);
+    _autoLast = elapsed;
+    final position = _scroll.position;
+    final viewport = position.context.notificationContext?.findRenderObject();
+    if (viewport is! RenderBox || !viewport.attached) return;
+    final speed = segmentedAutoScrollSpeed(
+      viewport.globalToLocal(d.last).dx,
+      0,
+      viewport.size.width,
+    );
+    if (speed == 0) return;
+    // Right-to-left scroll offsets grow leftward.
+    final delta =
+        (axisDirectionIsReversed(position.axisDirection) ? -speed : speed) * dt;
+    final target = (position.pixels + delta).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+    if (target == position.pixels) return;
+    position.jumpTo(target);
+    _dragTo(d, auto: true);
   }
 
   /// Springs (or, with reduced motion or before the first placement, jumps) the pill onto [index].
@@ -351,17 +439,21 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
     if (widget.disabled || _drag != null) return;
     _measure();
     final at = _local(event.position);
-    if (!_oneRow || _boxes.isEmpty || at == null) return;
+    if (_boxes.isEmpty || at == null) return;
     final index = segmentIndexAt(at.dx, _spans);
     if (index < 0 || _spans[index].disabled) return;
     final onPill = index == _selected && !center.isAnimating;
+    final touch = event.kind == PointerDeviceKind.touch;
+    // A finger off the pill in a scrolling control scrolls it (a tap still selects).
+    if (_overflow && touch && !onPill) return;
     _drag = _Drag(
       pointer: event.pointer,
-      touch: event.kind == PointerDeviceKind.touch,
+      touch: touch,
       start: event.position,
       onPill: onPill,
       grab: onPill ? at.dx - center.get() : 0,
       index: index,
+      time: event.timeStamp.inMicroseconds / 1000,
     );
     if (onPill) _pressIn(at);
   }
@@ -372,6 +464,9 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
     if (d == null || event.pointer != d.pointer) return false;
     final at = _local(event.position);
     if (at == null) return d.active;
+    d
+      ..last = event.position
+      ..time = event.timeStamp.inMicroseconds / 1000;
     if (!d.active) {
       final delta = event.position - d.start;
       final slop = d.touch ? segmentedSlopTouch : segmentedSlopMouse;
@@ -381,7 +476,20 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
       d.active = true;
       setState(() => _dragging = true);
       if (!d.onPill) _pressIn(at);
+      if (_overflow && !_autoScroll.isActive) {
+        _autoLast = Duration.zero;
+        _autoScroll.start();
+      }
     }
+    _dragTo(d, auto: false);
+    return true;
+  }
+
+  /// Moves a dragged pill to the pointer. [auto]: an auto-scroll frame moved the track under a
+  /// still pointer, so the pill springs after it instead of tracking pointer samples.
+  void _dragTo(_Drag d, {required bool auto}) {
+    final at = _local(d.last);
+    if (at == null) return;
     if (_reduced) {
       // No sliding: the pill sits on the option under the pointer.
       final index = segmentIndexAt(at.dx, _spans);
@@ -390,29 +498,28 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
         center.set(_boxes[index].center.dx);
         width.set(_boxes[index].width);
       }
-      return true;
+      return;
     }
     _glowAt = at;
     final target = segmentedDragCenter(at.dx, d.grab, _spans);
-    final time = event.timeStamp.inMicroseconds / 1000;
-    if (d.catching) {
+    if (d.catching || auto) {
       center.animateTo(target, spring: Springs.interactive);
-      if ((center.get() - target).abs() < 1) d.catching = false;
+      if (d.catching && (center.get() - target).abs() < 1) d.catching = false;
     } else {
-      center.track(target, time);
+      center.track(target, d.time);
     }
     stretch.animateTo(
-      lensStretch(center.velocityAt(time)),
+      lensStretch(center.velocityAt(d.time)),
       spring: Springs.interactive,
     );
     _motion.changed();
-    return true;
   }
 
   void _onEnd(PointerEvent? event, {required bool cancelled}) {
     final d = _drag;
     if (d == null || (event != null && event.pointer != d.pointer)) return;
     _drag = null;
+    if (_autoScroll.isActive) _autoScroll.stop();
     _pressOut();
     if (!d.active) return;
     setState(() => _dragging = false);
@@ -516,26 +623,67 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
         fontSize: s.density == Density.thin ? 12 : 13,
         onSelect: () => widget.onChange(widget.options[i].value),
         fill: widget.equalWidth,
+        radiusScale: s.radiusScale,
         ink: _InkClip(this, i, s.radiusScale),
         inkOpacity: () => solid ? 1 : 1 - lens.get().clamp(0.0, 1.0),
         motion: _motion,
       ),
     );
-    final Widget options = widget.equalWidth
-        ? Row(
-            spacing: inset,
-            children: [
-              for (var i = 0; i < widget.options.length; i++)
-                Expanded(child: segment(i)),
-            ],
-          )
-        : Wrap(
-            spacing: inset,
-            runSpacing: inset,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              for (var i = 0; i < widget.options.length; i++) segment(i),
-            ],
+    // The track: the options and, painted behind them, the pill.
+    final track = _OnLayout(
+      onLayout: _queueMeasure,
+      child: CustomPaint(
+        key: _trackKey,
+        painter: _PillPainter(
+          state: this,
+          primary: c.primary,
+          lensPaint: LensPaint.of(c),
+          radiusScale: s.radiusScale,
+          solid: solid,
+          disabled: widget.disabled,
+        ),
+        child: Row(
+          mainAxisSize: widget.equalWidth ? MainAxisSize.max : MainAxisSize.min,
+          spacing: inset,
+          children: [
+            for (var i = 0; i < widget.options.length; i++)
+              widget.equalWidth ? Expanded(child: segment(i)) : segment(i),
+          ],
+        ),
+      ),
+    );
+    final Widget body = widget.equalWidth
+        ? Padding(padding: EdgeInsets.all(inset), child: track)
+        // One row that scrolls inside the control when it doesn't fit: the clip reaches
+        // segmentedBleed above and below (a pressed pill swells and casts a shadow) and the edges
+        // fade where there is more.
+        : ClipRect(
+            clipper: const _BleedClip(segmentedBleed),
+            clipBehavior: _overflow ? Clip.hardEdge : Clip.none,
+            child: ListenableBuilder(
+              listenable: _scroll,
+              builder: (context, child) => ShaderMask(
+                blendMode: BlendMode.dstIn,
+                shaderCallback: (bounds) => _edgeFade(this, bounds),
+                child: child,
+              ),
+              child: ScrollConfiguration(
+                behavior: ScrollConfiguration.of(context)
+                    .copyWith(scrollbars: false, overscroll: false),
+                child: SingleChildScrollView(
+                  controller: _scroll,
+                  scrollDirection: Axis.horizontal,
+                  clipBehavior: Clip.none,
+                  padding: EdgeInsets.all(inset),
+                  child: ScrollRevealPadding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: segmentedFade,
+                    ),
+                    child: track,
+                  ),
+                ),
+              ),
+            ),
           );
 
     return Semantics(
@@ -566,30 +714,57 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>> {
                   },
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: height),
-              child: Padding(
-                padding: EdgeInsets.all(inset),
-                child: _OnLayout(
-                  onLayout: _queueMeasure,
-                  child: CustomPaint(
-                    key: _trackKey,
-                    painter: _PillPainter(
-                      state: this,
-                      primary: c.primary,
-                      lensPaint: LensPaint.of(c),
-                      radiusScale: s.radiusScale,
-                      solid: solid,
-                      disabled: widget.disabled,
-                    ),
-                    child: options,
-                  ),
-                ),
-              ),
+              child: body,
             ),
           ),
         ),
       ),
     );
   }
+}
+
+/// The mask of a scrolling control: each edge fades in (to [segmentedFade]) as content moves past
+/// it; opaque when it doesn't scroll. The twin of the web kit's `mask-image` on the scroller.
+Shader _edgeFade(_SegmentedControlState<dynamic> state, Rect bounds) {
+  var left = 0.0, right = 0.0;
+  if (state._overflow && state._scroll.hasClients) {
+    final position = state._scroll.position;
+    if (position.hasContentDimensions && position.hasPixels) {
+      final max = position.maxScrollExtent;
+      final offset = axisDirectionIsReversed(position.axisDirection)
+          ? max - position.pixels
+          : position.pixels;
+      final edges = scrollEdgeOpacities(offset, max, segmentedFade);
+      left = edges.top;
+      right = edges.bottom;
+    }
+  }
+  const opaque = Color(0xFF000000);
+  final stop = bounds.width > 0
+      ? (segmentedFade / bounds.width).clamp(0.0, 0.5)
+      : 0.0;
+  return LinearGradient(
+    colors: [
+      opaque.withValues(alpha: 1 - left),
+      opaque,
+      opaque,
+      opaque.withValues(alpha: 1 - right),
+    ],
+    stops: [0, stop, 1 - stop, 1],
+  ).createShader(bounds);
+}
+
+/// Clips a scrolling control at its sides, reaching [bleed] above and below.
+class _BleedClip extends CustomClipper<Rect> {
+  const _BleedClip(this.bleed);
+  final double bleed;
+
+  @override
+  Rect getClip(Size size) =>
+      Rect.fromLTRB(0, -bleed, size.width, size.height + bleed);
+
+  @override
+  bool shouldReclip(_BleedClip old) => old.bleed != bleed;
 }
 
 /// Claims a press that moves sideways past the slop (before taps, scroll views or the glass
@@ -874,6 +1049,7 @@ class _Segment<T> extends StatefulWidget {
     required this.ink,
     required this.inkOpacity,
     required this.motion,
+    required this.radiusScale,
     this.fill = false,
   });
 
@@ -887,7 +1063,7 @@ class _Segment<T> extends StatefulWidget {
   /// Takes the width it is given and centres (and ellipsizes) its content.
   final bool fill;
   final FocusNode focusNode;
-  final double height, padding, radius, fontSize;
+  final double height, padding, radius, fontSize, radiusScale;
 
   /// The smallest hit area on touch screens ([TouchTarget]).
   final double touchTarget;
@@ -911,7 +1087,8 @@ class _SegmentState<T> extends State<_Segment<T>> {
   bool _down = false;
   bool _focusVisible = false;
 
-  Widget _content(Color ink) => IconTheme.merge(
+  /// The option's content in [ink], the icon in its [tone] when it has one.
+  Widget _content(Color ink, {Color? tone}) => IconTheme.merge(
     data: IconThemeData(size: 16, color: ink),
     child: DefaultTextStyle.merge(
       style: TextStyle(
@@ -930,7 +1107,13 @@ class _SegmentState<T> extends State<_Segment<T>> {
           mainAxisAlignment: MainAxisAlignment.center,
           spacing: 6,
           children: [
-            ?widget.option.icon,
+            if (widget.option.icon case final icon?)
+              tone == null
+                  ? icon
+                  : IconTheme.merge(
+                      data: IconThemeData(color: tone),
+                      child: icon,
+                    ),
             if (widget.fill)
               Flexible(
                 child: Text(
@@ -940,6 +1123,8 @@ class _SegmentState<T> extends State<_Segment<T>> {
               )
             else
               Text(widget.option.label),
+            if (widget.option.badge case final badge?)
+              _Badge(text: badge, ink: ink, radiusScale: widget.radiusScale),
           ],
         ),
       ),
@@ -949,6 +1134,13 @@ class _SegmentState<T> extends State<_Segment<T>> {
   @override
   Widget build(BuildContext context) {
     final c = ThemeProvider.of(context).colors;
+    final tone = switch (widget.option.tone) {
+      SegmentTone.success => c.success,
+      SegmentTone.warning => c.warning,
+      SegmentTone.danger => c.danger,
+      null => null,
+    };
+    final badge = widget.option.badge;
     final active = !widget.disabled && !widget.selected && !widget.dragging;
     final fill = widget.fallback
         ? c.primary
@@ -964,7 +1156,9 @@ class _SegmentState<T> extends State<_Segment<T>> {
     return Semantics(
       inMutuallyExclusiveGroup: true,
       checked: widget.selected,
-      label: widget.option.label,
+      label: badge == null
+          ? widget.option.label
+          : '${widget.option.label}, $badge',
       enabled: !widget.disabled,
       excludeSemantics: true,
       // Only the selected option is a Tab stop; arrows reach the others (radio group pattern).
@@ -1019,7 +1213,8 @@ class _SegmentState<T> extends State<_Segment<T>> {
                   ),
                   child: SizedBox(
                     height: widget.height,
-                    // The selected ink, cut to the pill's shape as it passes.
+                    // The selected ink, cut to the pill's shape as it passes (the badge keeps
+                    // its alpha, so it turns into a pill of the selected ink).
                     child: _InkOverlay(
                       ink: widget.ink,
                       color: c.onPrimary,
@@ -1027,7 +1222,7 @@ class _SegmentState<T> extends State<_Segment<T>> {
                       repaint: widget.motion,
                       child: Padding(
                         padding: padding,
-                        child: _content(c.muted),
+                        child: _content(c.muted, tone: tone),
                       ),
                     ),
                   ),
@@ -1039,4 +1234,50 @@ class _SegmentState<T> extends State<_Segment<T>> {
       ),
     );
   }
+}
+
+/// A count after an option's label (`.lab-segmented-badge`): a small neutral pill of the ink
+/// around it (14 %), 18px tall, 11px semibold tabular figures, so it reads on the bare option and,
+/// in the selected ink, on the pill.
+class _Badge extends StatelessWidget {
+  const _Badge({
+    required this.text,
+    required this.ink,
+    required this.radiusScale,
+  });
+  final String text;
+  final Color ink;
+  final double radiusScale;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: ShapeDecoration(
+      color: ink.withValues(alpha: ink.a * 0.14),
+      shape: SuperellipseBorder(radius: 9 * radiusScale),
+    ),
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 18),
+      child: SizedBox(
+        height: 18,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 5),
+          child: Center(
+            widthFactor: 1,
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11,
+                height: 18 / 11,
+                leadingDistribution: TextLeadingDistribution.even,
+                fontWeight: FontWeight.w600,
+                color: ink,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }

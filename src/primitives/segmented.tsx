@@ -3,13 +3,16 @@
 import { useEffect, useLayoutEffect, useRef, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
 import { Button } from './button'
 import { cn } from '../utils'
+import { scrollEdgeOpacities } from '../scroll/metrics'
 import { revealScrollChild } from '../scroll/reveal'
 import { GLASS_GLOW_START, GLASS_PRESS_SCALE, glassGlowRadius, pressedShape } from '../glass/press'
 import { useMotionValue, useReducedMotion } from '../physics/react'
 import { SPRINGS, type Spring } from '../physics/spring'
 import {
+  SEGMENTED_FADE,
   SEGMENTED_SLOP,
   segmentIndexAt,
+  segmentedAutoScrollSpeed,
   segmentedDragCenter,
   segmentedPillWidth,
   segmentedSnapIndex,
@@ -19,6 +22,9 @@ import { lensStretch } from './lens-model'
 import './lens.css'
 import './segmented.css'
 
+/** A status colour for an option's icon. */
+export type SegmentTone = 'success' | 'warning' | 'danger'
+
 /** One choice of a segmented control. */
 export type SegmentOption<T extends string> = {
   /** Value reported to `onChange`. */
@@ -27,6 +33,12 @@ export type SegmentOption<T extends string> = {
   label: string
   /** Decorative icon before the label. */
   icon?: ReactNode
+  /** Colours the icon (only the icon) with a status token while the option isn't selected; the
+   * selected option's icon takes the pill's ink. Never the only cue: keep it in the label too. */
+  tone?: SegmentTone
+  /** A short count or tag after the label ("21"), on a small neutral pill in tabular figures. It is
+   * part of the option's accessible name ("New, 21"). */
+  badge?: string
   /** Skipped by the keyboard and not clickable. */
   disabled?: boolean
 }
@@ -38,6 +50,9 @@ type Drag = {
   touch: boolean
   startX: number
   startY: number
+  /** The latest pointer position (client px), for auto-scroll frames between moves. */
+  clientX: number
+  clientY: number
   /** Pressed on the pill itself (it lifts at once) rather than on another option. */
   onPill: boolean
   /** Pointer x less the pill centre when grabbed. */
@@ -51,10 +66,14 @@ type Drag = {
 }
 
 /**
- * A single choice among two to five short options, shown side by side. A filled pill marks the
+ * A single choice among short options, shown side by side in one row. A filled pill marks the
  * selection and slides to the next one; press it and it becomes a glass lens you can drag (or
  * press another option and drag: the pill comes to you). Radio semantics: one Tab stop, arrow keys
- * move and select.
+ * move and select. Options can carry a count (`badge`).
+ *
+ * Options that don't fit scroll sideways inside the control (never wrap or squeeze): its edges fade
+ * where there is more, the selection scrolls into view whenever it changes, and a pill dragged near
+ * an edge scrolls on. On touch a swipe scrolls; a drag that starts on the pill moves the pill.
  *
  * It paints no container: put it in glass (`ToolbarGroup`), on a box of your own (a surface-token
  * background; the root already has the capsule radius) or leave it bare.
@@ -78,12 +97,15 @@ export function SegmentedControl<const T extends string>({
   label: string
   /** Disables every option. */
   disabled?: boolean
-  /** Fills the available width with one row of equal options whose labels end in an ellipsis. */
+  /** Fills the available width with one row of equal options whose labels end in an ellipsis (it
+   * never scrolls). */
   equalWidth?: boolean
   /** Class name for the group (a background here fills the capsule behind the options). */
   className?: string
 }) {
   const group = useRef<HTMLDivElement>(null)
+  const scrollerRef = useRef<HTMLDivElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
   const pillRef = useRef<HTMLSpanElement>(null)
   const reduced = useReducedMotion()
   // Pill: centre, width and top; press response: swell, stretch, lens (0 filled … 1 glass), glow.
@@ -95,34 +117,73 @@ export function SegmentedControl<const T extends string>({
   const lens = useMotionValue(0, 0.002)
   const glowRadius = useMotionValue(GLASS_GLOW_START, 0.5)
   const glowOpacity = useMotionValue(0, 0.005)
-  const layout = useRef({ boxes: [] as Box[], spans: [] as SegmentSpan[], oneRow: true, corner: 1, placed: false })
+  const layout = useRef({
+    boxes: [] as Box[],
+    spans: [] as SegmentSpan[],
+    corner: 1,
+    placed: false,
+    /** The options are wider than the control: it scrolls. */
+    overflow: false,
+    rtl: false,
+  })
   const glowAt = useRef({ x: 0, y: 0 })
   const drag = useRef<Drag | null>(null)
   const suppressClick = useRef(false)
-  const live = useRef({ value, options, disabled, reduced, onChange })
-  live.current = { value, options, disabled, reduced, onChange }
+  const autoFrame = useRef(0)
+  /** The value last scrolled into view. */
+  const revealed = useRef<T | undefined>(undefined)
+  const live = useRef({ value, options, disabled, reduced, onChange, equalWidth })
+  live.current = { value, options, disabled, reduced, onChange, equalWidth }
 
   const enabled = options.filter((option) => !disabled && !option.disabled)
   const tabValue = enabled.some((option) => option.value === value) ? value : enabled[0]?.value
-  const optionKey = options.map((option) => `${option.value}:${option.label}:${option.disabled ? 1 : 0}`).join('|')
+  const optionKey = options
+    .map((option) => `${option.value}:${option.label}:${option.badge ?? ''}:${option.disabled ? 1 : 0}`)
+    .join('|')
 
   const buttons = () =>
-    group.current ? [...group.current.querySelectorAll<HTMLElement>(':scope > .lab-segmented-option')] : []
+    trackRef.current ? [...trackRef.current.querySelectorAll<HTMLElement>(':scope > .lab-segmented-option')] : []
 
-  /** Client point → the control's own pixels (undoes scaled ancestors, like a pressed bubble). */
+  /** Client point → the track's own pixels (undoes scaled ancestors, like a pressed bubble, and the
+   * scroll: the track moves with it). */
   const local = (clientX: number, clientY: number) => {
-    const el = group.current!
+    const el = trackRef.current!
     const rect = el.getBoundingClientRect()
     const scale = el.offsetWidth ? rect.width / el.offsetWidth : 1
     return { x: (clientX - rect.left) / scale, y: (clientY - rect.top) / scale }
   }
 
+  /** Edge fades of a scrolling control: each edge fades in as content moves past it. */
+  const fade = () => {
+    const scroller = scrollerRef.current
+    if (!scroller) return
+    if (!layout.current.overflow) {
+      scroller.style.removeProperty('--lab-segmented-fade-left')
+      scroller.style.removeProperty('--lab-segmented-fade-right')
+      return
+    }
+    const max = scroller.scrollWidth - scroller.clientWidth
+    // Right-to-left scrollers run from -max (far left) to 0.
+    const left = layout.current.rtl ? max + scroller.scrollLeft : scroller.scrollLeft
+    const edges = scrollEdgeOpacities(left, max, SEGMENTED_FADE)
+    scroller.style.setProperty('--lab-segmented-fade-left', String(edges.top))
+    scroller.style.setProperty('--lab-segmented-fade-right', String(edges.bottom))
+  }
+
+  /** Scrolls the control (never the page) to show option `index` clear of the edge fades. */
+  const reveal = (index: number, behavior: ScrollBehavior) => {
+    if (!layout.current.overflow) return
+    revealScrollChild(scrollerRef.current, buttons()[index], { block: false, behavior })
+  }
+
   const measure = () => {
-    const el = group.current
-    if (!el) return
+    const root = group.current
+    const el = trackRef.current
+    const scroller = scrollerRef.current
+    if (!root || !el || !scroller) return
     const rect = el.getBoundingClientRect()
     const scale = el.offsetWidth ? rect.width / el.offsetWidth : 1
-    const { options, disabled } = live.current
+    const { options, disabled, equalWidth } = live.current
     const boxes = buttons().map((button) => {
       const r = button.getBoundingClientRect()
       return {
@@ -140,8 +201,15 @@ export function SegmentedControl<const T extends string>({
       width: box.w,
       disabled: disabled || !!options[i]?.disabled,
     }))
-    state.oneRow = boxes.every((box) => Math.abs(box.y - boxes[0].y) < 1)
-    state.corner = parseFloat(getComputedStyle(el).getPropertyValue('--lab-corner-scale')) || 1
+    const style = getComputedStyle(root)
+    state.corner = parseFloat(style.getPropertyValue('--lab-corner-scale')) || 1
+    state.rtl = style.direction === 'rtl'
+    const overflow = !equalWidth && scroller.scrollWidth - scroller.clientWidth > 0.5
+    const changed = overflow !== state.overflow
+    state.overflow = overflow
+    root.toggleAttribute('data-overflow', overflow)
+    fade()
+    return changed
   }
 
   const paint = () => {
@@ -220,6 +288,12 @@ export function SegmentedControl<const T extends string>({
   useLayoutEffect(() => {
     measure()
     if (drag.current?.active) return
+    // Whatever chose it (a tap, a key, a release, the owner), a new selection scrolls into view;
+    // new labels or counts leave the scroll where the person put it.
+    if (revealed.current !== value) {
+      revealed.current = value
+      reveal(selected, layout.current.placed ? 'smooth' : 'instant')
+    }
     const box = layout.current.boxes[selected]
     // A released pill already heading here keeps its release spring.
     if (box && center.isAnimating() && Math.abs(center.getTarget() - (box.x + box.w / 2)) < 0.5) return
@@ -231,9 +305,10 @@ export function SegmentedControl<const T extends string>({
     const el = group.current
     if (!el || typeof ResizeObserver === 'undefined') return
     const observer = new ResizeObserver(() => {
-      measure()
+      const overflowChanged = measure()
       if (drag.current?.active) return
       const index = selectedIndex()
+      if (overflowChanged) reveal(index, 'instant')
       if (center.isAnimating()) moveTo(index, SPRINGS.snappy)
       else {
         // At rest: snap to the new geometry without animating a resize.
@@ -245,10 +320,19 @@ export function SegmentedControl<const T extends string>({
       }
     })
     observer.observe(el)
+    if (trackRef.current) observer.observe(trackRef.current)
     for (const button of buttons()) observer.observe(button)
     return () => observer.disconnect()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [optionKey])
+
+  useEffect(() => {
+    const scroller = scrollerRef.current
+    if (!scroller) return
+    scroller.addEventListener('scroll', fade, { passive: true })
+    return () => scroller.removeEventListener('scroll', fade)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const pressIn = (point: { x: number; y: number }) => {
     if (live.current.reduced) return
@@ -279,22 +363,84 @@ export function SegmentedControl<const T extends string>({
   }
 
   const detach = useRef<() => void>(() => {})
-  useEffect(() => () => detach.current(), [])
+  useEffect(
+    () => () => {
+      detach.current()
+      cancelAnimationFrame(autoFrame.current)
+    },
+    []
+  )
+
+  /** Moves a dragged pill to the pointer. `auto`: an auto-scroll frame moved the track under a
+   * still pointer, so the pill springs after it instead of tracking pointer samples. */
+  const follow = (d: Drag, time: number, auto: boolean) => {
+    const point = local(d.clientX, d.clientY)
+    const { spans, boxes } = layout.current
+    if (live.current.reduced) {
+      // No sliding: the pill sits on the option under the pointer.
+      const index = segmentIndexAt(point.x, spans)
+      if (index >= 0 && !spans[index].disabled && index !== d.index) {
+        d.index = index
+        center.set(boxes[index].x + boxes[index].w / 2)
+        width.set(boxes[index].w)
+      }
+      return
+    }
+    glowAt.current = point
+    const target = segmentedDragCenter(point.x, d.grab, spans)
+    if (d.catching || auto) {
+      void center.animateTo(target, { spring: SPRINGS.interactive })
+      if (d.catching && Math.abs(center.get() - target) < 1) d.catching = false
+    } else center.track(target, time)
+    void stretch.animateTo(lensStretch(center.getVelocity(time)), { spring: SPRINGS.interactive })
+    paint()
+  }
+
+  /** While a pill is dragged, a pointer near an edge of a scrolling control scrolls it. */
+  const autoScroll = () => {
+    if (autoFrame.current) return
+    let last = performance.now()
+    const frame = (now: number) => {
+      const d = drag.current
+      const scroller = scrollerRef.current
+      if (!d?.active || !scroller) {
+        autoFrame.current = 0
+        return
+      }
+      autoFrame.current = requestAnimationFrame(frame)
+      const dt = Math.min(0.05, Math.max(0, (now - last) / 1000))
+      last = now
+      if (!layout.current.overflow) return
+      const rect = scroller.getBoundingClientRect()
+      const scale = scroller.offsetWidth ? rect.width / scroller.offsetWidth : 1
+      const speed = segmentedAutoScrollSpeed((d.clientX - rect.left) / scale, 0, scroller.clientWidth)
+      if (!speed) return
+      const before = scroller.scrollLeft
+      scroller.scrollLeft = before + speed * dt
+      if (scroller.scrollLeft !== before) follow(d, now, true)
+    }
+    autoFrame.current = requestAnimationFrame(frame)
+  }
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (live.current.disabled || event.button > 0 || drag.current || !group.current) return
     measure()
-    const { spans, oneRow, boxes } = layout.current
-    if (!oneRow || !boxes.length) return
+    const { spans, boxes, overflow } = layout.current
+    if (!boxes.length) return
     const point = local(event.clientX, event.clientY)
     const index = segmentIndexAt(point.x, spans)
     if (index < 0 || spans[index].disabled) return
     const onPill = index === selectedIndex() && !center.isAnimating()
+    const touch = event.pointerType === 'touch'
+    // A finger off the pill in a scrolling control scrolls it (a tap still selects).
+    if (overflow && touch && !onPill) return
     drag.current = {
       pointer: event.pointerId,
-      touch: event.pointerType === 'touch',
+      touch,
       startX: event.clientX,
       startY: event.clientY,
+      clientX: event.clientX,
+      clientY: event.clientY,
       onPill,
       grab: onPill ? point.x - center.get() : 0,
       active: false,
@@ -321,34 +467,17 @@ export function SegmentedControl<const T extends string>({
     if (!d || event.pointerId !== d.pointer || !group.current) return
     const dx = event.clientX - d.startX
     const dy = event.clientY - d.startY
-    const point = local(event.clientX, event.clientY)
-    const { spans } = layout.current
+    d.clientX = event.clientX
+    d.clientY = event.clientY
     if (!d.active) {
       if (Math.abs(dx) < (d.touch ? SEGMENTED_SLOP.touch : SEGMENTED_SLOP.mouse) || Math.abs(dx) < Math.abs(dy)) return
       d.active = true
       group.current.setAttribute('data-dragging', '')
-      if (!d.onPill) pressIn(point)
+      if (!d.onPill) pressIn(local(event.clientX, event.clientY))
+      autoScroll()
     }
     event.preventDefault()
-    if (live.current.reduced) {
-      // No sliding: the pill sits on the option under the pointer.
-      const index = segmentIndexAt(point.x, spans)
-      if (index >= 0 && !spans[index].disabled && index !== d.index) {
-        d.index = index
-        const box = layout.current.boxes[index]
-        center.set(box.x + box.w / 2)
-        width.set(box.w)
-      }
-      return
-    }
-    glowAt.current = point
-    const target = segmentedDragCenter(point.x, d.grab, spans)
-    if (d.catching) {
-      void center.animateTo(target, { spring: SPRINGS.interactive })
-      if (Math.abs(center.get() - target) < 1) d.catching = false
-    } else center.track(target, event.timeStamp)
-    void stretch.animateTo(lensStretch(center.getVelocity(event.timeStamp)), { spring: SPRINGS.interactive })
-    paint()
+    follow(d, event.timeStamp, false)
   }
 
   const onPointerEnd = (event: globalThis.PointerEvent, cancelled: boolean) => {
@@ -356,6 +485,8 @@ export function SegmentedControl<const T extends string>({
     if (!d || event.pointerId !== d.pointer) return
     detach.current()
     drag.current = null
+    cancelAnimationFrame(autoFrame.current)
+    autoFrame.current = 0
     group.current?.removeAttribute('data-dragging')
     pressOut()
     if (!d.active) return
@@ -395,8 +526,9 @@ export function SegmentedControl<const T extends string>({
     onChange(next.value)
     const position = options.findIndex((option) => option.value === next.value)
     const button = buttons()[position]
+    // The control scrolls the option into view as the selection follows (see above); an enclosing
+    // scroll area shows the control.
     button?.focus({ preventScroll: true })
-    revealScrollChild(group.current, button, { block: false })
     revealScrollChild(group.current?.closest<HTMLElement>('.lab-scroll-viewport'), button, {
       inline: false,
     })
@@ -421,43 +553,50 @@ export function SegmentedControl<const T extends string>({
       }}
       data-lab-corners
     >
-      <span ref={pillRef} className="lab-segmented-pill" aria-hidden="true" data-hidden="">
-        <span className="lab-segmented-fill" />
-        <span className="lab-lens lab-light-edge" />
-        <span className="lab-lens-glow" />
-      </span>
-      {options.map((option) => {
-        const content = (
-          <>
-            {option.icon && (
-              <span className="lab-segmented-icon" aria-hidden="true">
-                {option.icon}
-              </span>
-            )}
-            <span className="lab-segmented-label">{option.label}</span>
-          </>
-        )
-        return (
-          <Button
-            key={option.value}
-            variant="ghost"
-            appearance="toolbar"
-            controlSize="regular"
-            className="lab-segmented-option"
-            role="radio"
-            aria-checked={option.value === value}
-            tabIndex={option.value === tabValue ? 0 : -1}
-            disabled={disabled || option.disabled}
-            onClick={() => onChange(option.value)}
-          >
-            <span className="lab-segmented-content">{content}</span>
-            {/* The selected ink, cut to the pill's shape as it passes. */}
-            <span className="lab-segmented-content lab-segmented-ink" aria-hidden="true">
-              {content}
-            </span>
-          </Button>
-        )
-      })}
+      {/* Scrolls when the options don't fit; the track holds the options and the pill. */}
+      <div ref={scrollerRef} className="lab-segmented-scroller">
+        <div ref={trackRef} className="lab-segmented-track">
+          <span ref={pillRef} className="lab-segmented-pill" aria-hidden="true" data-hidden="">
+            <span className="lab-segmented-fill" />
+            <span className="lab-lens lab-light-edge" />
+            <span className="lab-lens-glow" />
+          </span>
+          {options.map((option) => {
+            const content = (
+              <>
+                {option.icon && (
+                  <span className="lab-segmented-icon" data-tone={option.tone} aria-hidden="true">
+                    {option.icon}
+                  </span>
+                )}
+                <span className="lab-segmented-label">{option.label}</span>
+                {option.badge && <span className="lab-segmented-badge">{option.badge}</span>}
+              </>
+            )
+            return (
+              <Button
+                key={option.value}
+                variant="ghost"
+                appearance="toolbar"
+                controlSize="regular"
+                className="lab-segmented-option"
+                role="radio"
+                aria-checked={option.value === value}
+                aria-label={option.badge ? `${option.label}, ${option.badge}` : undefined}
+                tabIndex={option.value === tabValue ? 0 : -1}
+                disabled={disabled || option.disabled}
+                onClick={() => onChange(option.value)}
+              >
+                <span className="lab-segmented-content">{content}</span>
+                {/* The selected ink, cut to the pill's shape as it passes. */}
+                <span className="lab-segmented-content lab-segmented-ink" aria-hidden="true">
+                  {content}
+                </span>
+              </Button>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }

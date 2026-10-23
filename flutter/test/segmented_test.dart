@@ -64,6 +64,97 @@ Future<void> _drag(
   await gesture.up();
 }
 
+const _statuses = [
+  ('new', 'New', '21'),
+  ('calling', 'Calling', '14'),
+  ('no_answer', 'No answer', '9'),
+  ('postponed', 'Postponed', '6'),
+  ('confirmed', 'Confirmed', '32'),
+  ('packed', 'Packed', '12'),
+  ('shipped', 'Shipped', '48'),
+  ('delivered', 'Delivered', '120'),
+  ('returned', 'Returned', '7'),
+  ('cancelled', 'Cancelled', '3'),
+];
+
+/// Ten order statuses with counts, 360 px wide: far too many to fit, so the control scrolls.
+class _Statuses extends StatefulWidget {
+  const _Statuses({
+    required this.changes,
+    this.initial = 'new',
+    this.direction = TextDirection.ltr,
+    this.inToolbar = false,
+  });
+  final List<String> changes;
+  final String initial;
+  final TextDirection direction;
+  final bool inToolbar;
+
+  @override
+  State<_Statuses> createState() => _StatusesState();
+}
+
+class _StatusesState extends State<_Statuses> {
+  late String value = widget.initial;
+
+  /// The owner changes the value (not the control).
+  void select(String next) => setState(() => value = next);
+
+  @override
+  Widget build(BuildContext context) {
+    final control = SegmentedControl<String>(
+      label: 'Order status',
+      value: value,
+      onChange: (next) {
+        widget.changes.add(next);
+        setState(() => value = next);
+      },
+      options: [
+        for (final (value, label, count) in _statuses)
+          SegmentOption(value: value, label: label, badge: count),
+      ],
+    );
+    return Directionality(
+      textDirection: widget.direction,
+      child: SizedBox(
+        width: 360,
+        child: widget.inToolbar
+            ? GlassScope(
+                child: ToolbarGroup(
+                  label: 'Order status',
+                  children: [Flexible(child: control)],
+                ),
+              )
+            : control,
+      ),
+    );
+  }
+}
+
+/// The control's own horizontal scroll position.
+ScrollPosition _scrollOf(WidgetTester tester) => tester
+    .state<ScrollableState>(
+      find.descendant(
+        of: find.byType(SegmentedControl<String>),
+        matching: find.byType(Scrollable),
+      ),
+    )
+    .position;
+
+/// The visible part of the control (its scroll viewport).
+Rect _viewport(WidgetTester tester) => tester.getRect(
+  find.descendant(
+    of: find.byType(SegmentedControl<String>),
+    matching: find.byType(Scrollable),
+  ),
+);
+
+Rect _option(WidgetTester tester, String label) => tester.getRect(
+  find
+      .ancestor(of: find.text(label), matching: find.byType(DecoratedBox))
+      .first,
+);
+
 void main() {
   testWidgets('equalWidth fills the row with equal options that ellipsize', (
     tester,
@@ -269,4 +360,207 @@ void main() {
       expect(SchedulerBinding.instance.hasScheduledFrame, isFalse);
     },
   );
+
+  group('badges', () {
+    testWidgets('a badge is part of the option\'s accessible name', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(host(_Statuses(changes: [])));
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsLabel('New, 21'), findsOneWidget);
+      expect(find.bySemanticsLabel('Calling, 14'), findsOneWidget);
+      expect(find.text('21'), findsOneWidget, reason: 'drawn once');
+      handle.dispose();
+    });
+  });
+
+  group('many options', () {
+    testWidgets('they scroll in one row at 360 px, with no overflow', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(_Statuses(changes: [])));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(tester.getSize(find.byType(SegmentedControl<String>)).width, 360);
+      expect(_scrollOf(tester).maxScrollExtent, greaterThan(0));
+      final first = _option(tester, 'New');
+      final last = _option(tester, 'Cancelled');
+      expect(last.top, first.top, reason: 'one row, no wrapping');
+      expect(last.height, first.height);
+
+      // In a glass toolbar bubble too.
+      await tester.pumpWidget(host(_Statuses(changes: [], inToolbar: true)));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(_scrollOf(tester).maxScrollExtent, greaterThan(0));
+    });
+
+    testWidgets(
+      'the selection starts in view and is revealed when it changes',
+      (tester) async {
+        final changes = <String>[];
+        await tester.pumpWidget(
+          host(_Statuses(changes: changes, initial: 'delivered')),
+        );
+        await tester.pumpAndSettle();
+        final view = _viewport(tester);
+        final delivered = _option(tester, 'Delivered');
+        expect(
+          delivered.left,
+          greaterThanOrEqualTo(view.left + segmentedFade - 0.5),
+        );
+        expect(
+          delivered.right,
+          lessThanOrEqualTo(view.right - segmentedFade + 0.5),
+        );
+
+        // A programmatic change, back to the start.
+        final state = tester.state<_StatusesState>(find.byType(_Statuses));
+        state.select('new');
+        await tester.pumpAndSettle();
+        expect(_scrollOf(tester).pixels, 0);
+        expect(_option(tester, 'New').left, greaterThanOrEqualTo(view.left));
+      },
+    );
+
+    testWidgets('a reveal scrolls by segmentedRevealOffset', (tester) async {
+      await tester.pumpWidget(host(_Statuses(changes: [])));
+      await tester.pumpAndSettle();
+      final position = _scrollOf(tester);
+      final view = _viewport(tester);
+      final shipped = _option(tester, 'Shipped');
+      final expected = segmentedRevealOffset(
+        position.pixels,
+        position.maxScrollExtent,
+        view.width,
+        shipped.left - view.left + position.pixels,
+        shipped.right - view.left + position.pixels,
+      );
+      final state = tester.state<_StatusesState>(find.byType(_Statuses));
+      state.select('shipped');
+      await tester.pumpAndSettle();
+      expect(position.pixels, closeTo(expected, 0.5));
+    });
+
+    testWidgets('arrow keys move, select and reveal', (tester) async {
+      final changes = <String>[];
+      await tester.pumpWidget(host(_Statuses(changes: changes)));
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      for (var i = 0; i < 7; i++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.pump();
+      }
+      await tester.pumpAndSettle();
+      expect(changes.last, 'delivered');
+      final view = _viewport(tester);
+      final delivered = _option(tester, 'Delivered');
+      expect(_scrollOf(tester).pixels, greaterThan(0));
+      expect(
+        delivered.right,
+        lessThanOrEqualTo(view.right - segmentedFade + 0.5),
+      );
+      await tester.sendKeyEvent(LogicalKeyboardKey.end);
+      await tester.pumpAndSettle();
+      expect(_scrollOf(tester).pixels, _scrollOf(tester).maxScrollExtent);
+      await tester.sendKeyEvent(LogicalKeyboardKey.home);
+      await tester.pumpAndSettle();
+      expect(_scrollOf(tester).pixels, 0);
+    });
+
+    testWidgets('right-to-left: scrolls from the right and reveals', (
+      tester,
+    ) async {
+      final changes = <String>[];
+      await tester.pumpWidget(
+        host(
+          _Statuses(
+            changes: changes,
+            initial: 'cancelled',
+            direction: TextDirection.rtl,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final view = _viewport(tester);
+      final cancelled = _option(tester, 'Cancelled');
+      expect(cancelled.left, greaterThanOrEqualTo(view.left));
+      expect(cancelled.right, lessThanOrEqualTo(view.right));
+    });
+
+    testWidgets(
+      'dragging the pill near an edge scrolls on, and selects on release',
+      (tester) async {
+        final changes = <String>[];
+        await tester.pumpWidget(host(_Statuses(changes: changes)));
+        await tester.pumpAndSettle();
+        final view = _viewport(tester);
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.text('New')),
+          kind: PointerDeviceKind.mouse,
+        );
+        await tester.pump(const Duration(milliseconds: 16));
+        final edge = Offset(view.right - 4, view.center.dy);
+        for (var i = 1; i <= 8; i++) {
+          await gesture.moveTo(
+            Offset.lerp(tester.getCenter(find.text('New')), edge, i / 8)!,
+          );
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+        // Hold near the edge: the control scrolls on its own.
+        final before = _scrollOf(tester).pixels;
+        for (var i = 0; i < 30; i++) {
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+        expect(_scrollOf(tester).pixels, greaterThan(before + 100));
+        expect(changes, isEmpty, reason: 'not while dragging');
+        await gesture.up();
+        await tester.pumpAndSettle();
+        expect(changes, hasLength(1));
+        expect(
+          _statuses.indexWhere((s) => s.$1 == changes.single),
+          greaterThan(3),
+          reason: 'released far along the track',
+        );
+      },
+    );
+
+    testWidgets('a touch swipe off the pill scrolls; on the pill it drags', (
+      tester,
+    ) async {
+      final changes = <String>[];
+      await tester.pumpWidget(host(_Statuses(changes: changes)));
+      await tester.pumpAndSettle();
+      // Swipe left from "Calling": the track scrolls, nothing is chosen.
+      await tester.dragFrom(
+        tester.getCenter(find.text('Calling')),
+        const Offset(-160, 0),
+        kind: PointerDeviceKind.touch,
+      );
+      await tester.pumpAndSettle();
+      expect(_scrollOf(tester).pixels, greaterThan(0));
+      expect(changes, isEmpty);
+
+      _scrollOf(tester).jumpTo(0);
+      await tester.pumpAndSettle();
+      // From the pill ("New"): the pill moves and lands on the next option.
+      final from = tester.getCenter(find.text('New'));
+      final to = tester.getCenter(find.text('Calling'));
+      final gesture = await tester.startGesture(
+        from,
+        kind: PointerDeviceKind.touch,
+      );
+      for (var i = 1; i <= 10; i++) {
+        await gesture.moveTo(Offset.lerp(from, to, i / 10)!);
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await tester.pump(const Duration(milliseconds: 120));
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(changes, ['calling']);
+    });
+  });
 }

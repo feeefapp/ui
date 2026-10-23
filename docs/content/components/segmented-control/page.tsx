@@ -76,12 +76,15 @@ function Overview() {
         <p>
           A segmented control picks one of two to five short, related options that are all visible at
           once: a view (List, Board), a mode (Home delivery, Stop desk), a period (Day, Week, Month).
-          The choice usually takes effect immediately and changes what is shown nearby.
+          The choice usually takes effect immediately and changes what is shown nearby. It also filters
+          a list by status (New 21, Calling 14, …): then there can be many options, each with a count,
+          and the control scrolls.
         </p>
         <Table
           head={['Need', 'Use']}
           rows={[
             ['One of 2–5 short options, applied right away', <C>SegmentedControl</C>],
+            ['A list filtered by status, with counts (8–12 statuses)', <><C>SegmentedControl</C> with <C>badge</C>s (it scrolls)</>],
             ['One of many options, or long labels', <C>Select</C>],
             ['A choice inside a form, submitted with it', <C>RadioGroup</C>],
             ['Switching between whole pages or panels with their own content', 'Tabs'],
@@ -92,12 +95,12 @@ function Overview() {
 
       <Section title="Options">
         <p>
-          <C>options</C> is an array of <C>{'{ value, label, icon?, disabled? }'}</C>.{' '}
+          <C>options</C> is an array of <C>{'{ value, label, icon?, tone?, badge?, disabled? }'}</C>.{' '}
           <C>value</C> is typed from the options, so <C>onChange</C> receives the same string union as{' '}
           <C>value</C>. Icons are decorative and sit before the label; keep the label even when an
-          icon is shown. Options hug their labels and wrap onto a new line when space runs out;{' '}
-          <C>equalWidth</C> fills the width with one row of equal options instead (labels end in an
-          ellipsis).
+          icon is shown. Options sit in one row and hug their labels; when they don’t fit they scroll
+          (see Many options). <C>equalWidth</C> fills the width with one row of equal options instead
+          (labels end in an ellipsis; it never scrolls).
         </p>
         <p>
           The control is as tall as a regular button at every density (36px comfortable, 30px compact,
@@ -106,6 +109,41 @@ function Overview() {
           <C>--lab-segmented-inset</C> (2px) inside it and options are no farther apart than that inset.
           Labels are 13px semibold. Change the inset app-wide with <C>ThemeConfig.metrics.segmentedInset</C>{' '}
           and the height with <C>controlHeight.regular</C>.
+        </p>
+      </Section>
+
+      <Section title="Badges and tones">
+        <p>
+          <C>badge</C> puts a short count or tag after the label (“New 21”): a small neutral pill (18px,
+          11px semibold, tabular figures so counts don’t jitter as they change) in the label’s own ink.
+          On the selected option it takes the pill’s ink instead, so it stays readable on the pill, and
+          it turns over with the label as the pill slides across it. It is part of the option’s
+          accessible name: “New, 21”. Keep badges to numbers or a word; a badge never replaces the
+          label.
+        </p>
+        <p>
+          <C>tone</C> (<C>'success' | 'warning' | 'danger'</C>, Flutter <C>SegmentTone</C>) colours an
+          option’s icon, only the icon, with the status token while it isn’t selected; the selected
+          icon takes the pill’s ink. Use it for statuses that carry meaning (Delivered, Returned,
+          Cancelled), never as decoration and never as the only cue.
+        </p>
+      </Section>
+
+      <Section title="Many options">
+        <p>
+          A segmented control never wraps or squeezes its options. When they don’t fit the space it is
+          given, they scroll sideways inside the control’s own inset, so a glass bubble or box around it
+          stays put. The edges fade where there is more (the fade grows as content moves past the
+          edge), and the selected option scrolls into view whenever the selection changes: a tap, an
+          arrow key, a released drag or a new <C>value</C> from the owner. It stops clear of the fade.
+          The pill moves with its option as the row scrolls.
+        </p>
+        <p>
+          Wheel, trackpad and touch swipes scroll the row. On touch a drag that starts on the pill moves
+          the pill; anywhere else it scrolls (a tap still selects). Drag the pill toward an edge and the
+          row scrolls on by itself, faster the closer you get; release and the pill settles on the
+          nearest option as usual. Arrow keys select and reveal. In Flutter it needs a bounded width:
+          in a <C>Row</C> (a <C>ToolbarGroup</C>’s too) wrap it in <C>Flexible</C>.
         </p>
       </Section>
 
@@ -149,7 +187,7 @@ function Overview() {
           <C>onChange</C> fires once, on the release, never while dragging. A press in the control never
           swells the glass bubble around it. Reduced motion moves the pill instantly with no lens,
           stretch or glow; reduced transparency, more contrast and the <C>solid</C> glass style keep a
-          solid pill. Options that wrap onto several rows still slide but don’t drag.
+          solid pill.
         </p>
       </Section>
 
@@ -163,7 +201,7 @@ function Overview() {
           ]}
           dontItems={[
             'Use it for actions; each option should be a state, not a command.',
-            'Put more than five options in it, or options of very different lengths.',
+            'Put more than five options in it for anything but a status filter, or options of very different lengths.',
             'Use icons without labels.',
             'Rely on it inside a form that needs a native submitted value; use a radio group.',
           ]}
@@ -208,11 +246,12 @@ export default definePage({
   title: 'Segmented control',
   group: 'Actions',
   order: 2,
-  summary: 'A single choice among two to five short options, shown side by side, with radio semantics.',
+  summary:
+    'A single choice among short options, shown side by side, with radio semantics; counts as badges, and it scrolls when there are many.',
   importLine: "import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'",
   source: 'src/primitives/segmented.tsx',
   api: ['SegmentedControl'],
-  keywords: ['toggle group', 'button group', 'tabs', 'radio', 'switcher', 'mode', 'drag', 'liquid glass', 'pill'],
+  keywords: ['toggle group', 'button group', 'tabs', 'radio', 'switcher', 'mode', 'drag', 'liquid glass', 'pill', 'badge', 'count', 'status', 'scroll'],
   Overview,
   examples: examplesFrom(
     import.meta.glob('./examples/*.tsx', { eager: true }),
