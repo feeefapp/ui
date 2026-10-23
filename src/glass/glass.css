@@ -240,6 +240,13 @@ The material formulas are system.css's (glass/material.ts glassMaterial). */
   -webkit-backdrop-filter: none;
 }
 .lab-glass-source { position: absolute; inset: 0; background-repeat: no-repeat; pointer-events: none; }
+/* While its source scrolls, Firefox's element-image lens (re-rendered and filtered on the CPU
+every frame) gives way to the plain CSS material; it fades back once the source is still. */
+.lab-glass-source { transition: opacity 160ms ease-out; }
+.lab-glass-container[data-glass-scrolling] .lab-glass-source { visibility: hidden; opacity: 0; transition: none; }
+.lab-glass-container[data-glass-scrolling] .lab-glass-backdrop[data-glass-source] {
+  backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate)) var(--lab-glass-lift);
+}
 .lab-glass-backdrop[data-glass-source]::after {
   content: ''; position: absolute; inset: 0; background: var(--lab-glass-fill); pointer-events: none;
 }

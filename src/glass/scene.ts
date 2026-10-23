@@ -27,6 +27,10 @@ import { cornerFit } from '../brand/corner-fit'
 export const GLASS_MARGIN = 32
 const SPRING: Spring = SPRINGS.snappy
 const SVG = 'http://www.w3.org/2000/svg'
+/** How long a source must stay still before Firefox's element-image lens comes back. */
+const SCROLL_IDLE_MS = 160
+/** Least time between backdrop samples while scrolling. */
+const SAMPLE_GAP_MS = 120
 
 type Member = { element: HTMLElement; options: GlassMemberOptions }
 
@@ -182,6 +186,11 @@ export class GlassScene {
   private themeObserver: MutationObserver | null = null
   private visibility: IntersectionObserver | null = null
   private sampleTimer: ReturnType<typeof setInterval> | null = null
+  /** False while the container is off screen: scrolls and pointer moves then cost nothing. */
+  private onScreen = true
+  private lastSample = 0
+  private sampleLater: ReturnType<typeof setTimeout> | null = null
+  private scrollIdle: ReturnType<typeof setTimeout> | null = null
 
   constructor(
     private host: HTMLElement,
@@ -213,6 +222,13 @@ export class GlassScene {
     if (typeof IntersectionObserver !== 'undefined') {
       this.visibility = new IntersectionObserver(([entry]) => {
         if (this.sampleTimer) clearInterval(this.sampleTimer)
+        const wasOnScreen = this.onScreen
+        this.onScreen = !!entry?.isIntersecting
+        // Coming back on screen: catch up on what changed behind it while it was away.
+        if (this.onScreen && !wasOnScreen) {
+          this.requestSample()
+          this.scheduleDraw()
+        }
         this.sampleTimer = entry?.isIntersecting
           ? setInterval(() => {
               if (this.adaptive && document.visibilityState === 'visible') this.requestSample()
@@ -225,9 +241,36 @@ export class GlassScene {
 
   /** Any scroll changes what is behind the glass; a scroller inside the container also moves bubbles. */
   private onScroll = (event: Event) => {
-    this.requestSample()
-    if (this.backdropSource) this.scheduleDraw()
+    if (!this.onScreen) return
     if (event.target instanceof Node && event.target !== this.host && this.host.contains(event.target)) this.requestMeasure()
+    this.requestSampleWhileScrolling()
+    // Firefox's lens is a live element image of the source, filtered on the CPU: re-rendering it
+    // on every scroll frame drops frames. While the source scrolls the glass shows the plain CSS
+    // material (glass.css, data-glass-scrolling); the bend fades back when it stops.
+    if (this.pieces.some((piece) => piece.hasAttribute('data-glass-source'))) {
+      this.host.toggleAttribute('data-glass-scrolling', true)
+      if (this.scrollIdle) clearTimeout(this.scrollIdle)
+      this.scrollIdle = setTimeout(() => {
+        this.scrollIdle = null
+        this.host.removeAttribute('data-glass-scrolling')
+        this.scheduleDraw()
+      }, SCROLL_IDLE_MS)
+    }
+  }
+
+  /** Reading the backdrop (elementsFromPoint + styles) at most every SAMPLE_GAP_MS while scrolling, and once after. */
+  private requestSampleWhileScrolling() {
+    const now = performance.now()
+    if (now - this.lastSample >= SAMPLE_GAP_MS) {
+      this.lastSample = now
+      this.requestSample()
+    }
+    if (this.sampleLater) clearTimeout(this.sampleLater)
+    this.sampleLater = setTimeout(() => {
+      this.sampleLater = null
+      this.lastSample = performance.now()
+      this.requestSample()
+    }, SAMPLE_GAP_MS)
   }
 
   /** Re-reads what is behind the glass on the next frame (scroll, theme or layout changed). */
@@ -352,7 +395,8 @@ export class GlassScene {
 
   setPointer(point: { x: number; y: number } | null) {
     this.pointer = point
-    this.scheduleDraw()
+    // Off-screen glass catches up with the light when it comes back (the visibility observer).
+    if (this.onScreen) this.scheduleDraw()
   }
 
   dispose() {
@@ -363,6 +407,8 @@ export class GlassScene {
     this.filterHost?.remove()
     for (const map of this.decodedMaps) map.dispose()
     if (this.sampleTimer) clearInterval(this.sampleTimer)
+    if (this.sampleLater) clearTimeout(this.sampleLater)
+    if (this.scrollIdle) clearTimeout(this.scrollIdle)
     if (this.sampleFrame) cancelAnimationFrame(this.sampleFrame)
     window.removeEventListener('pointermove', this.onPressMove)
     window.removeEventListener('pointerup', this.onPressEnd)
@@ -644,8 +690,11 @@ export class GlassScene {
       { ...box, x: box.x + GLASS_MARGIN, y: box.y + GLASS_MARGIN },
       { x, y, width: Number.parseFloat(piece.style.width) || 0, height: Number.parseFloat(piece.style.height) || 0 }
     )
-    image.style.backgroundSize = `${placement.width}px ${placement.height}px`
-    image.style.backgroundPosition = `${placement.x}px ${placement.y}px`
+    // Only real changes: any write re-renders the live element image.
+    const size = `${placement.width}px ${placement.height}px`
+    const position = `${placement.x}px ${placement.y}px`
+    if (image.style.backgroundSize !== size) image.style.backgroundSize = size
+    if (image.style.backgroundPosition !== position) image.style.backgroundPosition = position
   }
 
   private applyRefraction(key: string) {

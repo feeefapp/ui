@@ -213,7 +213,14 @@ function runMorph(content: HTMLElement, layers: Layers, cover: boolean, placed: 
   // Invisible (but focusable) until Radix has placed it.
   for (const layer of [shadow, bubble, edge, body]) layer.style.opacity = '0'
 
-  const measure = () => {
+  // Geometry is read once and again only after a scroll or resize: reading it every frame right
+  // after the layers' style writes would force a synchronous layout per frame.
+  let measured: { full: MenuBox; from: MenuBox | null } | null = null
+  const invalidate = () => {
+    measured = null
+  }
+  const measure = () => (measured ??= read())
+  const read = () => {
     const rect = content.getBoundingClientRect()
     const scale = content.offsetWidth ? rect.width / content.offsetWidth : 1
     const full: MenuBox = { x: 0, y: 0, width: content.offsetWidth, height: content.offsetHeight }
@@ -237,7 +244,8 @@ function runMorph(content: HTMLElement, layers: Layers, cover: boolean, placed: 
     if (phase === 'pending') {
       const wrapper = content.parentElement
       const positioned = !wrapper?.style.transform.includes('-200%')
-      const { full, from } = measure()
+      // Radix is still placing it: read fresh every frame until the morph starts.
+      const { full, from } = (measured = read())
       const covering =
         !cover ||
         !from ||
@@ -325,6 +333,9 @@ function runMorph(content: HTMLElement, layers: Layers, cover: boolean, placed: 
     pressedInside = false
   }
   const doc = content.ownerDocument
+  const view = doc.defaultView
+  view?.addEventListener('scroll', invalidate, { capture: true, passive: true })
+  view?.addEventListener('resize', invalidate)
   content.addEventListener('pointerdown', onDown, true)
   content.addEventListener('pointerup', onUp, true)
   doc.addEventListener('pointermove', onMove, true)
@@ -337,6 +348,8 @@ function runMorph(content: HTMLElement, layers: Layers, cover: boolean, placed: 
   const finish = () => {
     stopLoop()
     observer.disconnect()
+    view?.removeEventListener('scroll', invalidate, { capture: true })
+    view?.removeEventListener('resize', invalidate)
     content.removeEventListener('pointerdown', onDown, true)
     content.removeEventListener('pointerup', onUp, true)
     doc.removeEventListener('pointermove', onMove, true)
