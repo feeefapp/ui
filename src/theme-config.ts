@@ -118,6 +118,8 @@ export interface Metrics {
   sidebarWidth?: number
   /** The workspace scaffold's navigation rail: 64 / 52 / 44 by density (`--lab-navigation-rail-width`). */
   railWidth?: number
+  /** The workspace shell's one gap: window, top bar, content panel and sidebar items: 8 (`--lab-shell-gap`). */
+  shellGap?: number
 }
 
 /** Color palette: `lab` (Feeef green) or `mono` (black and white). */
@@ -223,6 +225,7 @@ const METRIC_VARIABLES: [read: (m: Metrics) => number | undefined, variable: str
   [(m) => m.focusRingOffset, '--lab-focus-ring-offset'],
   [(m) => m.sidebarWidth, '--lab-sidebar-width'],
   [(m) => m.railWidth, '--lab-navigation-rail-width'],
+  [(m) => m.shellGap, '--lab-shell-gap'],
 ]
 
 /** The variable names `metrics` can set; `applyThemeConfig` clears the ones a new config drops. */

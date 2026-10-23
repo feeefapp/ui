@@ -139,6 +139,7 @@ class Metrics {
     this.focusRingOffset,
     this.sidebarWidth,
     this.railWidth,
+    this.shellGap,
   });
 
   /// Button heights (and the square of icon-only buttons): small 30, regular 36, large 52.
@@ -199,6 +200,9 @@ class Metrics {
   /// The workspace scaffold's navigation rail: 64 / 52 / 44 by density.
   final double? railWidth;
 
+  /// The workspace shell's one gap: window, top bar, content panel and sidebar items: 8.
+  final double? shellGap;
+
   @override
   bool operator ==(Object other) =>
       other is Metrics &&
@@ -220,7 +224,8 @@ class Metrics {
       other.focusRingWidth == focusRingWidth &&
       other.focusRingOffset == focusRingOffset &&
       other.sidebarWidth == sidebarWidth &&
-      other.railWidth == railWidth;
+      other.railWidth == railWidth &&
+      other.shellGap == shellGap;
 
   @override
   int get hashCode => Object.hashAll([
@@ -243,5 +248,6 @@ class Metrics {
     focusRingOffset,
     sidebarWidth,
     railWidth,
+    shellGap,
   ]);
 }

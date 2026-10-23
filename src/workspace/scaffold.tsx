@@ -226,13 +226,17 @@ type ThreeSlots = {
 }
 /** Sidebar body: a scroll area with `leading` floating at the top and `trailing` at the bottom. */
 export function ScaffoldSide({ leading, children, trailing, className }: ThreeSlots) {
+  const aside = React.useRef<HTMLElement>(null)
+  const gap = useShellGap(aside)
   return (
-    <aside className={cn('lab-workspace-side', className)} aria-label="Workspace sidebar">
+    <aside ref={aside} className={cn('lab-workspace-side', className)} aria-label="Workspace sidebar">
+      {/* One shell gap from the window, between the header/footer and the items, and (as the
+          content panel's start margin is 0 beside it) between the items and the panel. */}
       <ScrollArea
         className="lab-workspace-side-main"
         label="Sidebar navigation content"
-        contentPadding={10}
-        edgeGap={10}
+        contentPadding={gap}
+        edgeGap={gap}
         top={leading ? <div className="lab-workspace-side-leading">{leading}</div> : undefined}
         bottom={
           trailing ? <div className="lab-workspace-side-trailing">{trailing}</div> : undefined
@@ -242,6 +246,17 @@ export function ScaffoldSide({ leading, children, trailing, className }: ThreeSl
       </ScrollArea>
     </aside>
   )
+}
+/** `--lab-shell-gap` in px as `element` resolves it (themes can change it through `metrics`). */
+function useShellGap(element: React.RefObject<HTMLElement | null>) {
+  const [gap, setGap] = React.useState(8)
+  React.useLayoutEffect(() => {
+    const node = element.current
+    if (!node) return
+    const value = Number.parseFloat(getComputedStyle(node).getPropertyValue('--lab-shell-gap'))
+    if (Number.isFinite(value) && value >= 0) setGap(value)
+  })
+  return gap
 }
 /** Transparent bar for the content panel's `appBar` slot; put controls in ToolbarGroups. */
 export function ScaffoldAppBar({ leading, children, trailing, className }: ThreeSlots) {

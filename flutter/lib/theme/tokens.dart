@@ -387,6 +387,10 @@ class SizeTokens {
   /// `--lab-toolbar-gap`: space between toolbar groups.
   double get toolbarGap => metrics.toolbarGap ?? _pick(12, 10, 8);
 
+  /// `--lab-shell-gap`: the workspace shell's one gap (window, top bar, content panel and sidebar
+  /// items, and the sidebar's header/footer to its items).
+  double get shellGap => metrics.shellGap ?? 8;
+
   /// `--lab-toolbar-inset`: a floating bar's inset from its panel's sides.
   double get toolbarInset => metrics.toolbarInset ?? _pick(16, 12, 10);
 

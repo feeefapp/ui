@@ -59,8 +59,6 @@
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  gap: 16px;
-  padding: 12px 10px;
   box-sizing: border-box;
   background: transparent;
 }
@@ -78,7 +76,8 @@
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  margin: 8px;
+  /* One shell gap all round; beside a visible sidebar the sidebar's own gap is the one. */
+  margin: var(--lab-shell-gap);
   border: 1px solid var(--lab-line);
   border-radius: var(--lab-radius-panel);
   corner-shape: superellipse(1.5);
@@ -87,6 +86,9 @@
     margin 220ms var(--lab-ease),
     border-color 220ms var(--lab-ease),
     border-radius 220ms var(--lab-ease);
+}
+.lab-workspace-scaffold:not([data-side-mode='hidden']) .lab-workspace-main {
+  margin-inline-start: 0;
 }
 /* Nothing around the content (no top row, sidebar hidden or in the compact drawer): no card. */
 .lab-workspace-scaffold[data-framed='false'] .lab-workspace-main {
@@ -146,8 +148,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
-  padding: 8px 8px 0;
+  gap: var(--lab-shell-gap);
+  padding: var(--lab-shell-gap) var(--lab-shell-gap) 0;
 }
 .lab-workspace-top-bar > :first-child,
 .lab-workspace-top-bar > :last-child {
@@ -254,10 +256,6 @@ html[data-lab-theme] .lab-workspace-drawer[data-state='closed'] {
 
 .lab-workspace-side-main {
   --lab-scroll-surface: var(--lab-ground);
-}
-.lab-workspace-side {
-  padding: 0;
-  gap: 0;
 }
 .lab-workspace-side-leading,
 .lab-workspace-side-trailing {

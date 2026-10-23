@@ -1,3 +1,4 @@
+import 'package:feeef_ui/scroll/scroll_area.dart';
 import 'package:feeef_ui/theme.dart';
 import 'package:feeef_ui/workspace/scaffold.dart';
 import 'package:flutter/services.dart';
@@ -56,13 +57,14 @@ void main() {
     final modes = <ScaffoldSideMode>[];
     await tester.pumpWidget(app(workspace(onSideModeChange: modes.add)));
     await settle(tester);
-    // 304px sidebar, 8px margin, 1px border, 24px content padding.
-    expect(tester.getTopLeft(find.text('Page content')).dx, 304 + 8 + 1 + 24);
+    // 304px sidebar (its own 8px shell gap on the panel side), no panel start margin, 1px
+    // border, 24px content padding.
+    expect(tester.getTopLeft(find.text('Page content')).dx, 304 + 1 + 24);
     expect(find.text('Nav item').hitTestable(), findsOneWidget);
 
     await tester.tap(find.bySemanticsLabel('Minimize workspace sidebar'));
     await settle(tester);
-    expect(tester.getTopLeft(find.text('Page content')).dx, 64 + 8 + 1 + 24);
+    expect(tester.getTopLeft(find.text('Page content')).dx, 64 + 1 + 24);
 
     await tester.tap(find.bySemanticsLabel('Hide workspace sidebar'));
     await settle(tester);
@@ -100,7 +102,7 @@ void main() {
       ),
     );
     await settle(tester);
-    expect(tester.getTopLeft(find.text('Page content')).dx, 248 + 8 + 1 + 24);
+    expect(tester.getTopLeft(find.text('Page content')).dx, 248 + 1 + 24);
   });
 
   testWidgets(
@@ -157,5 +159,34 @@ void main() {
     );
     expect(() => Scaffold.of(outside), throwsFlutterError);
     expect(Scaffold.maybeOf(outside), isNull);
+  });
+
+  testWidgets('one shell gap between window, top bar, panel and sidebar items', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      app(
+        Scaffold(
+          topSide: const ScaffoldTopBar(
+            leading: SizedBox(key: ValueKey('top'), width: 40, height: 40),
+          ),
+          side: const ScaffoldSide(
+            child: SizedBox(key: ValueKey('item'), height: 40),
+          ),
+          child: const SizedBox(key: ValueKey('page'), height: 10),
+        ),
+      ),
+    );
+    await settle(tester);
+    const g = 8.0;
+    final top = tester.getRect(find.byKey(const ValueKey('top')));
+    final item = tester.getRect(find.byKey(const ValueKey('item')));
+    final panel = tester.getRect(find.byType(ScrollArea).last);
+    expect(top.top, g); // window → top bar
+    expect(item.left, g); // window → sidebar items
+    expect(item.top - top.bottom, g); // top bar → sidebar items
+    expect(panel.left - 1 - item.right, g); // sidebar items → panel (1px border)
   });
 }

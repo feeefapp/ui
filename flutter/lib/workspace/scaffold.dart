@@ -70,7 +70,10 @@ typedef ScaffoldViewportBuilder = Widget Function(
 );
 
 /// `--lab-sidebar-width`: [Metrics.sidebarWidth] when set, else by density (304 / 248 / 224 px).
-double scaffoldSidebarWidth(Density density, [Metrics metrics = const Metrics()]) =>
+double scaffoldSidebarWidth(
+  Density density, [
+  Metrics metrics = const Metrics(),
+]) =>
     metrics.sidebarWidth ??
     switch (density) {
       Density.comfortable => 304,
@@ -79,7 +82,10 @@ double scaffoldSidebarWidth(Density density, [Metrics metrics = const Metrics()]
     };
 
 /// `--lab-navigation-rail-width`: [Metrics.railWidth] when set, else by density (64 / 52 / 44 px).
-double scaffoldRailWidth(Density density, [Metrics metrics = const Metrics()]) =>
+double scaffoldRailWidth(
+  Density density, [
+  Metrics metrics = const Metrics(),
+]) =>
     metrics.railWidth ??
     switch (density) {
       Density.comfortable => 64,
@@ -338,6 +344,7 @@ class _ScaffoldWidgetState extends State<Scaffold> {
                           focusNode: _main,
                           // A card only when a top row or a visible sidebar frames it.
                           framed: widget.topSide != null || visibleSide,
+                          besideSide: visibleSide,
                           child: viewport,
                         ),
                       ),
@@ -391,7 +398,10 @@ class _SideBoundaryState extends State<_SideBoundary> {
     final hidden = widget.mode == ScaffoldSideMode.hidden;
     final metrics = ThemeProvider.of(context).config.metrics;
     final target = switch (widget.mode) {
-      ScaffoldSideMode.expanded => scaffoldSidebarWidth(widget.density, metrics),
+      ScaffoldSideMode.expanded => scaffoldSidebarWidth(
+        widget.density,
+        metrics,
+      ),
       ScaffoldSideMode.rail => scaffoldRailWidth(widget.density, metrics),
       ScaffoldSideMode.hidden => 0.0,
     };
@@ -452,10 +462,14 @@ class _MainPanel extends StatefulWidget {
   const _MainPanel({
     required this.focusNode,
     required this.framed,
+    this.besideSide = false,
     required this.child,
   });
   final FocusNode focusNode;
   final bool framed;
+
+  /// A visible sidebar's own shell gap separates it: no start margin.
+  final bool besideSide;
   final Widget child;
 
   @override
@@ -485,14 +499,19 @@ class _MainPanelState extends State<_MainPanel> {
         c,
         theme.sizes.radiusPanel * t,
         c.line.withValues(alpha: c.line.a * t),
-        8 * t,
+        theme.sizes.shellGap * t,
       ),
     );
   }
 
   Widget _panel(ColorTokens c, double radius, Color line, double margin) {
     return Padding(
-      padding: EdgeInsets.all(margin),
+      padding: EdgeInsetsDirectional.fromSTEB(
+        widget.besideSide ? 0 : margin,
+        margin,
+        margin,
+        margin,
+      ),
       child: Focus(
         focusNode: widget.focusNode,
         skipTraversal: true,
@@ -794,8 +813,10 @@ class ScaffoldSide extends StatelessWidget {
       label: label,
       child: ScrollArea(
         label: contentLabel,
-        contentPadding: 10,
-        edgeGap: 10,
+        // One shell gap from the window, between the header/footer and the items, and (the
+        // content panel has no start margin beside it) between the items and the panel.
+        contentPadding: theme.sizes.shellGap,
+        edgeGap: theme.sizes.shellGap,
         surface: theme.colors.ground,
         top: leading == null
             ? null
@@ -861,29 +882,32 @@ class ScaffoldTopBar extends StatelessWidget {
   final Widget? trailing;
 
   @override
-  Widget build(BuildContext context) => GlassScope(
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-      child: Row(
-        spacing: 8,
-        children: [
-          Expanded(
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: leading ?? const SizedBox.shrink(),
+  Widget build(BuildContext context) {
+    final gap = ThemeProvider.of(context).sizes.shellGap;
+    return GlassScope(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(gap, gap, gap, 0),
+        child: Row(
+          spacing: gap,
+          children: [
+            Expanded(
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: leading ?? const SizedBox.shrink(),
+              ),
             ),
-          ),
-          ?child,
-          Expanded(
-            child: Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: trailing ?? const SizedBox.shrink(),
+            ?child,
+            Expanded(
+              child: Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: trailing ?? const SizedBox.shrink(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// What a [ScaffoldToggleButton] does: `cycle` steps expanded → rail → hidden, `restore`

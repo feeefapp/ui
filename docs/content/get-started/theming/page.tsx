@@ -149,6 +149,7 @@ export function Root({ children }: { children: React.ReactNode }) {
             [<C>focusRingOffset</C>, '1', <C>--lab-focus-ring-offset</C>],
             [<C>sidebarWidth</C>, '304', <C>--lab-sidebar-width</C>],
             [<C>railWidth</C>, '64', <C>--lab-navigation-rail-width</C>],
+            [<C>shellGap</C>, '8', <C>--lab-shell-gap</C>],
           ]}
         />
       </Section>

@@ -61,6 +61,9 @@ html[data-lab-theme] {
   --lab-list-corner: 26px;
   --lab-list-inset: 16px;
   --lab-sidebar-width: 304px;
+  /* The workspace shell's one gap: window ↔ top bar ↔ panel ↔ sidebar items, and the sidebar's
+  header and footer ↔ its items. */
+  --lab-shell-gap: 8px;
   --lab-navigation-rail-width: 64px;
   --lab-control-touch-target: 44px;
   /* Press response (lens-model.ts, glass/press.ts): glass controls swell by GLASS_PRESS_SCALE,

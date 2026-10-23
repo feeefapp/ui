@@ -143,8 +143,9 @@ test('every metric variable is a kit size token declared for the default density
 })
 
 test('metrics override the workspace sidebar and rail widths', () => {
-  assert.deepEqual(metricVariables({ sidebarWidth: 250, railWidth: 66 }), {
+  assert.deepEqual(metricVariables({ sidebarWidth: 250, railWidth: 66, shellGap: 6 }), {
     '--lab-sidebar-width': '250px',
     '--lab-navigation-rail-width': '66px',
+    '--lab-shell-gap': '6px',
   })
 })
