@@ -1,5 +1,5 @@
 export { ActionsBar, type ActionsBarProps } from './actions-bar'
 export { ActionsWidthProvider } from './width-context'
-export { computeActionsLayout, type ActionsLayout, type ActionLayoutItem } from './layout'
+export { computeActionsLayout, menuHasLeading, type ActionsLayout, type ActionLayoutItem } from './layout'
 export type { Action, CommandAction, ToggleAction, GroupAction } from './types'
 export { diffVisibleActions, useOverflowMotion } from './overflow-motion'

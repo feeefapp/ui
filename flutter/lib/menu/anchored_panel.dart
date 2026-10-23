@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
@@ -62,7 +64,8 @@ class AnchoredPanelScope extends InheritedWidget {
 
   /// The trigger's render box, for its corner radius.
   RenderBox? get trigger =>
-      (_state.widget.anchor ?? _state._anchor).currentContext?.findRenderObject()
+      (_state.widget.anchor ?? _state._anchor).currentContext
+              ?.findRenderObject()
           as RenderBox?;
 
   /// Keeps the panel mounted after it closes until [exited] is called.
@@ -88,8 +91,10 @@ class AnchoredPanelScope extends InheritedWidget {
 /// primitive (menus, selects, popovers, tooltips), the Flutter side of Radix Popper. It lays out
 /// inside the overlay that hosts it (minus its safe area and [collisionPadding]), not the screen;
 /// opens on [side] ([sideOffset] away, or over the trigger when it [cover]s it), flips to the
-/// other side when there is no room, shifts along both axes to stay inside, caps its extent to the
-/// room it has (the panel scrolls), follows the trigger when it scrolls and mirrors in RTL.
+/// other side when there is no room, shifts along both axes to stay inside, caps its height to the
+/// room it has (the panel scrolls), follows the trigger when it scrolls and mirrors in RTL. A
+/// panel beside its trigger keeps its natural width and drops below the trigger when neither side
+/// fits it ([placeAnchoredPanel]).
 /// [onDismiss] runs on a press outside. Focus and keys belong to the panel's owner.
 class AnchoredPanel extends StatefulWidget {
   const AnchoredPanel({
@@ -496,24 +501,24 @@ class _RenderAnchoredLayout extends RenderShiftedBox {
     final anchor =
         measured ?? Rect.fromLTWH(bounds.center.dx, bounds.top, 0, 0);
     final vertical = _side == PanelSide.top || _side == PanelSide.bottom;
-    final main = panelMaxExtent(
-      bounds,
-      anchor,
-      _side,
-      sideOffset: _sideOffset,
-      cover: _cover,
-      direction: _direction,
-    );
+    final width = math.max(0.0, bounds.width);
+    // Above or below: the room caps its height (it scrolls). Beside: it keeps its natural width
+    // (capped to the bounds) and drops below the trigger when neither side fits it, so a menu is
+    // never squeezed under its minimum width.
     child.layout(
-      vertical
-          ? BoxConstraints(
-              maxWidth: bounds.width.clamp(0, double.infinity),
-              maxHeight: main,
-            )
-          : BoxConstraints(
-              maxWidth: main,
-              maxHeight: bounds.height.clamp(0, double.infinity),
-            ),
+      BoxConstraints(
+        maxWidth: width,
+        maxHeight: vertical
+            ? panelMaxExtent(
+                bounds,
+                anchor,
+                _side,
+                sideOffset: _sideOffset,
+                cover: _cover,
+                direction: _direction,
+              )
+            : math.max(0.0, bounds.height),
+      ),
       parentUsesSize: true,
     );
     final placement = placeAnchoredPanel(

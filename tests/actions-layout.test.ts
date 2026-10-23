@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { computeActionsLayout } from '../src/actions/layout.ts'
+import { computeActionsLayout, menuHasLeading } from '../src/actions/layout.ts'
 
 const actions = [
   { id: 'back', width: 70, priority: 2 },
@@ -146,4 +146,15 @@ test('overflow motion knows which actions enter, leave and stay in the row', () 
   assert.deepEqual(diffVisibleActions(['a', 'b', 'c'], ['a', 'c']), { entering: [], leaving: ['b'], staying: ['a', 'c'] })
   assert.deepEqual(diffVisibleActions(['a'], ['a', 'b']), { entering: ['b'], leaving: [], staying: ['a'] })
   assert.deepEqual(diffVisibleActions([], []), { entering: [], leaving: [], staying: [] })
+})
+
+test('menus reserve the leading slot only when a row has an icon, check or loader', () => {
+  const plain = [
+    { id: 'a', type: 'action' },
+    { id: 'b', type: 'group' },
+  ]
+  assert.equal(menuHasLeading(plain, new Set()), false)
+  assert.equal(menuHasLeading(plain, new Set(['b'])), true)
+  assert.equal(menuHasLeading([...plain, { id: 'c', type: 'action', icon: 'x' }], new Set()), true)
+  assert.equal(menuHasLeading([{ id: 't', type: 'toggle' }], new Set()), true)
 })

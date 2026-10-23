@@ -1,3 +1,5 @@
+import 'types.dart';
+
 /// Which top-level entries fit, and which spill into the overflow menu: the twin of
 /// `computeActionsLayout` in `@feeef.dev/ui/actions`. Both lists keep source order. A host
 /// narrower than the overflow trigger still gets that trigger, so every action stays reachable.
@@ -91,3 +93,14 @@ diffVisibleActions(List<String> previous, List<String> next) {
     ],
   );
 }
+
+/// Whether a menu of [actions] reserves the leading slot on every row: some row has an icon, is a
+/// toggle (its check) or is loading. A menu of plain labels has no empty slot. The twin of
+/// `menuHasLeading` in `@feeef.dev/ui/actions`.
+bool menuHasLeading(List<Action> actions, Set<String> pending) => actions.any(
+  (a) =>
+      a.icon != null ||
+      a is ToggleAction ||
+      a.loading ||
+      pending.contains(a.id),
+);

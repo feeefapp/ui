@@ -566,8 +566,9 @@ class _ActionControl extends StatelessWidget {
 
 /// A trigger that opens a menu of [actions] as a glass bubble that grows out of it and covers it
 /// ([MenuSurface]; in a glass group or toolbar it lines up with the trigger's edge on its side of
-/// the app, elsewhere it is centred on the trigger): rows with icons, checkable toggles, nested submenus,
-/// destructive rows, arrow keys and Escape. The Flutter stand-in for a Radix `DropdownMenu` on
+/// the app, elsewhere it is centred on the trigger), or opens beside it on [side] when [cover] is
+/// false (a sidebar rail item): rows with icons, checkable toggles, nested submenus, destructive
+/// rows, arrow keys and Escape. The Flutter stand-in for a Radix `DropdownMenu` on
 /// `MenuSurface` with the kit's `.lab-actions-menu` rows, and the same menu an [ActionsBar] opens
 /// for its groups and overflow. Commands run like in the bar: a returned future blocks repeats
 /// until it completes.
@@ -578,6 +579,9 @@ class ActionsMenuAnchor extends StatefulWidget {
     required this.actions,
     required this.builder,
     this.enabled = true,
+    this.cover = true,
+    this.side = PanelSide.bottom,
+    this.gap = 4,
     this.onActionError,
   });
 
@@ -588,6 +592,19 @@ class ActionsMenuAnchor extends StatefulWidget {
   /// Builds the trigger; `open` toggles the menu (null when disabled).
   final Widget Function(VoidCallback? open) builder;
   final bool enabled;
+
+  /// The menu covers its trigger and grows out of it (default). False opens it beside the
+  /// trigger on [side], [gap] away, lined up with the trigger's start edge (`MenuSurface`
+  /// `cover={false}` on the web).
+  final bool cover;
+
+  /// Where the menu opens when it doesn't [cover] its trigger: `end` for a sidebar rail item. It
+  /// flips to the other side when there is no room, and drops below the trigger when a side
+  /// panel fits neither side.
+  final PanelSide side;
+
+  /// Distance from the trigger when the menu doesn't [cover] it, in px.
+  final double gap;
   final void Function(Object error, Action action)? onActionError;
 
   @override
@@ -629,13 +646,16 @@ class _ActionsMenuAnchorState extends State<ActionsMenuAnchor> {
     execute: _execute,
     enabled: widget.enabled && widget.actions.isNotEmpty,
     toolbar: null,
+    cover: widget.cover,
+    side: widget.side,
+    gap: widget.gap,
     builder: widget.builder,
   );
 }
 
 /// A trigger that opens a menu of actions: a glass bubble growing out of it and covering it (in a
 /// toolbar lined up with the trigger's edge on its side of the bounds, else centred), or beside
-/// its row for a submenu.
+/// it on [side] (a submenu: beside its row, toward the inline end).
 class _MenuAnchor extends StatefulWidget {
   const _MenuAnchor({
     required this.label,
@@ -645,13 +665,18 @@ class _MenuAnchor extends StatefulWidget {
     required this.enabled,
     required this.builder,
     this.onOpen,
-    this.submenu = false,
+    this.cover = true,
+    this.side = PanelSide.bottom,
+    this.gap = 4,
     this.toolbar = true,
   });
   final String label;
 
-  /// Opens beside the row, toward the inline end (Radix `SubContent`, sideOffset 4).
-  final bool submenu;
+  /// Covers the trigger; false opens beside it on [side], [gap] away, start-aligned (a submenu
+  /// is `side: end`, like Radix `SubContent`).
+  final bool cover;
+  final PanelSide side;
+  final double gap;
 
   /// The trigger sits in a toolbar (the bar), not in content. Null: when it is inside a
   /// [GlassGroup] (a toolbar group, a dock), like the web kit's check of the trigger's ancestors.
@@ -703,16 +728,15 @@ class _MenuAnchorState extends State<_MenuAnchor> {
   Widget build(BuildContext context) => AnchoredPanel(
     open: _open,
     onDismiss: _close,
-    cover: !widget.submenu,
-    side: widget.submenu ? PanelSide.end : PanelSide.bottom,
-    align: widget.submenu
+    cover: widget.cover,
+    side: widget.cover ? PanelSide.bottom : widget.side,
+    align: !widget.cover
         ? PanelAlign.start
         : ((widget.toolbar ??
-                  context.findAncestorWidgetOfExactType<GlassGroup>() !=
-                      null)
+                  context.findAncestorWidgetOfExactType<GlassGroup>() != null)
               ? null
               : PanelAlign.center),
-    sideOffset: widget.submenu ? 4 : 0,
+    sideOffset: widget.cover ? 0 : widget.gap,
     panel: (context) => _ActionsMenu(
       label: widget.label,
       actions: widget.actions,
@@ -779,51 +803,55 @@ class _ActionsMenuState extends State<_ActionsMenu> {
   }
 
   @override
-  Widget build(BuildContext context) => FocusScope(
-    node: _scope,
-    onKeyEvent: (_, event) {
-      if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
-        return KeyEventResult.ignored;
-      }
-      final key = event.logicalKey;
-      if (key == LogicalKeyboardKey.escape) {
-        widget.close();
-      } else if (key == LogicalKeyboardKey.arrowDown) {
-        _move(1);
-      } else if (key == LogicalKeyboardKey.arrowUp) {
-        _move(-1);
-      } else if ((key == LogicalKeyboardKey.enter ||
-              key == LogicalKeyboardKey.space) &&
-          _highlight >= 0) {
-        final a = widget.actions[_highlight];
-        if (a is! GroupAction) widget.execute(a);
-      } else {
-        return KeyEventResult.ignored;
-      }
-      return KeyEventResult.handled;
-    },
-    child: MenuSurface(
-      label: widget.label,
-      child: Column(
-        // The menu hugs its rows; it scrolls when it has less room.
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var i = 0; i < widget.actions.length; i++)
-            _MenuRow(
-              action: widget.actions[i],
-              highlighted: i == _highlight,
-              loading:
-                  widget.actions[i].loading ||
-                  widget.pending.contains(widget.actions[i].id),
-              onHover: () => setState(() => _highlight = i),
-              pending: widget.pending,
-              execute: widget.execute,
-            ),
-        ],
+  Widget build(BuildContext context) {
+    final leading = menuHasLeading(widget.actions, widget.pending);
+    return FocusScope(
+      node: _scope,
+      onKeyEvent: (_, event) {
+        if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+          return KeyEventResult.ignored;
+        }
+        final key = event.logicalKey;
+        if (key == LogicalKeyboardKey.escape) {
+          widget.close();
+        } else if (key == LogicalKeyboardKey.arrowDown) {
+          _move(1);
+        } else if (key == LogicalKeyboardKey.arrowUp) {
+          _move(-1);
+        } else if ((key == LogicalKeyboardKey.enter ||
+                key == LogicalKeyboardKey.space) &&
+            _highlight >= 0) {
+          final a = widget.actions[_highlight];
+          if (a is! GroupAction) widget.execute(a);
+        } else {
+          return KeyEventResult.ignored;
+        }
+        return KeyEventResult.handled;
+      },
+      child: MenuSurface(
+        label: widget.label,
+        child: Column(
+          // The menu hugs its rows; it scrolls when it has less room.
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < widget.actions.length; i++)
+              _MenuRow(
+                action: widget.actions[i],
+                highlighted: i == _highlight,
+                loading:
+                    widget.actions[i].loading ||
+                    widget.pending.contains(widget.actions[i].id),
+                leadingSlot: leading,
+                onHover: () => setState(() => _highlight = i),
+                pending: widget.pending,
+                execute: widget.execute,
+              ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _MenuRow extends StatelessWidget {
@@ -831,12 +859,17 @@ class _MenuRow extends StatelessWidget {
     required this.action,
     required this.highlighted,
     required this.loading,
+    required this.leadingSlot,
     required this.onHover,
     required this.pending,
     required this.execute,
   });
   final Action action;
   final bool highlighted, loading;
+
+  /// Some row of this menu has an icon (or a check, or a loader): every row keeps the slot so the
+  /// labels line up. Without one, no row reserves it.
+  final bool leadingSlot;
   final VoidCallback onHover;
   final Set<String> pending;
   final void Function(Action action, [bool? checked]) execute;
@@ -847,7 +880,9 @@ class _MenuRow extends StatelessWidget {
     final disabled =
         a.disabled || loading || (a is GroupAction && a.actions.isEmpty);
     final destructive = a.destructive || a.variant == ButtonVariant.destructive;
-    final leading = loading
+    final Widget? leading = !leadingSlot
+        ? null
+        : loading
         ? const SizedBox.square(dimension: 17)
         : a is ToggleAction
         ? (a.checked ? const LucideCheck(size: 18) : const SizedBox.shrink())
@@ -856,9 +891,13 @@ class _MenuRow extends StatelessWidget {
       leading: leading,
       label: Text(a.label),
       trailing: a is GroupAction
-          ? const Padding(
-              padding: EdgeInsetsDirectional.only(start: 12),
-              child: LucideChevronRight(size: 16),
+          ? Padding(
+              padding: const EdgeInsetsDirectional.only(start: 12),
+              // Points toward the inline end, where the submenu opens.
+              child: Transform.flip(
+                flipX: Directionality.of(context) == TextDirection.rtl,
+                child: const LucideChevronRight(size: 16),
+              ),
             )
           : null,
       highlighted: highlighted,
@@ -875,7 +914,8 @@ class _MenuRow extends StatelessWidget {
             execute: execute,
             enabled: !disabled,
             onOpen: a.onOpen,
-            submenu: true,
+            cover: false,
+            side: PanelSide.end,
             builder: row,
           )
         : row(() => execute(a));

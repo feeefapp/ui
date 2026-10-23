@@ -10,6 +10,7 @@ import {
   menuRestFrame,
   type MenuBox,
 } from '../src/menu/morph-model.ts'
+import { physicalMenuSide, sidePanelFallback } from '../src/menu/placement.ts'
 
 // The measured toolbar case: a 44px circle at the menu's top-right corner, a 250 × 209 menu.
 const menu: MenuBox = { x: 0, y: 0, width: 250, height: 209 }
@@ -102,4 +103,41 @@ test('toolbar menus line up with the near edge, in-content menus centre', () => 
   assert.equal(menuAlign(true, 370, 0, 400), 'end')
   assert.equal(menuAlign(true, 30, 0, 400, true), 'end')
   assert.equal(menuAlign(true, 370, 0, 400, true), 'start')
+})
+
+test('a submenu that fits neither side drops below its row, never squeezed', () => {
+  // A 390 px window: a 250 px menu at the top-left, its row 22…252, a 250 px submenu.
+  const bounds = { left: 12, top: 12, right: 378, bottom: 832 }
+  const row = { left: 22, top: 60, right: 252, bottom: 102 }
+  const ltr = sidePanelFallback({ trigger: row, bounds, width: 250, gap: 4, side: 'right', rtl: false })
+  assert.ok(ltr)
+  // Radix keeps side right: x = row.right + sideOffset lines it up with the row's start edge.
+  assert.equal(row.right + ltr.sideOffset, row.left)
+  assert.equal(ltr.alignOffset, 42)
+  // RTL: the row at the top-right, side left, lined up with the row's right edge.
+  const rtlRow = { left: 138, top: 60, right: 368, bottom: 102 }
+  const rtl = sidePanelFallback({ trigger: rtlRow, bounds, width: 250, gap: 4, side: 'left', rtl: true })
+  assert.ok(rtl)
+  const right = rtlRow.left - rtl.sideOffset
+  assert.equal(right, rtlRow.right)
+  assert.ok(right - 250 >= bounds.left)
+  // A wide row at the far side: shifted inside the bounds.
+  const wide = sidePanelFallback({
+    trigger: { left: 200, top: 60, right: 370, bottom: 102 },
+    bounds,
+    width: 250,
+    gap: 4,
+    side: 'right',
+    rtl: false,
+  })
+  assert.ok(wide)
+  assert.equal(370 + wide.sideOffset + 250, bounds.right)
+  // Room on one side: no fallback (Radix flips if needed).
+  assert.equal(
+    sidePanelFallback({ trigger: { left: 12, top: 60, right: 100, bottom: 102 }, bounds, width: 250, gap: 4, side: 'right', rtl: false }),
+    null
+  )
+  assert.equal(physicalMenuSide('end', true), 'left')
+  assert.equal(physicalMenuSide('start', false), 'left')
+  assert.equal(physicalMenuSide('top', true), 'top')
 })

@@ -270,6 +270,45 @@ void main() {
       expect(flipped.rect.right, 246);
     });
 
+    test('a side panel that fits neither side drops below, never squeezed', () {
+      // A 250-wide submenu beside a row of a menu that fills most of the bounds.
+      const row = Rect.fromLTWH(22, 60, 230, 42);
+      for (final dir in TextDirection.values) {
+        final rtl = dir == TextDirection.rtl;
+        final anchor = rtl ? const Rect.fromLTWH(68, 60, 230, 42) : row;
+        final p = placeAnchoredPanel(
+          bounds: bounds,
+          anchor: anchor,
+          size: const Size(250, 120),
+          side: PanelSide.end,
+          align: PanelAlign.start,
+          sideOffset: 4,
+          direction: dir,
+        );
+        expect(p.side, PanelSide.bottom);
+        expect(p.rect.width, 250);
+        expect(p.rect.top, anchor.bottom);
+        // Lined up with the row's start edge, shifted inside.
+        if (rtl) {
+          expect(p.rect.right, anchor.right);
+        } else {
+          expect(p.rect.left, anchor.left);
+        }
+        expect(p.rect.left, greaterThanOrEqualTo(bounds.left));
+        expect(p.rect.right, lessThanOrEqualTo(bounds.right));
+      }
+      // When one side fits, it still opens beside (flipped if needed).
+      final beside = placeAnchoredPanel(
+        bounds: bounds,
+        anchor: const Rect.fromLTWH(200, 60, 100, 42),
+        size: const Size(150, 120),
+        side: PanelSide.end,
+        sideOffset: 4,
+      );
+      expect(beside.side, PanelSide.start);
+      expect(beside.rect.right, 196);
+    });
+
     test('room caps the extent; bigger panels keep their start', () {
       expect(
         panelMaxExtent(
@@ -575,5 +614,237 @@ void main() {
     await tester.sendKeyDownEvent(LogicalKeyboardKey.escape);
     await _settle(tester, 4);
     expect(find.byType(MenuSurface), findsNothing);
+  });
+
+  group('narrow windows (390 px)', () {
+    Future<Rect> phone(
+      WidgetTester tester,
+      Alignment alignment,
+      Widget trigger, {
+      TextDirection direction = TextDirection.ltr,
+    }) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        host(
+          SizedBox(
+            width: 390,
+            height: 844,
+            child: FloatingBoundary(
+              child: Align(
+                alignment: alignment,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: trigger,
+                ),
+              ),
+            ),
+          ),
+          direction: direction,
+        ),
+      );
+      return _bounds(tester);
+    }
+
+    Widget menuButton({
+      required List<Action> actions,
+      bool cover = true,
+      PanelSide side = PanelSide.bottom,
+      Size size = const Size(44, 44),
+    }) => ActionsMenuAnchor(
+      label: 'Order actions',
+      actions: actions,
+      cover: cover,
+      side: side,
+      builder: (open) => GestureDetector(
+        key: const Key('trigger'),
+        behavior: HitTestBehavior.opaque,
+        onTap: open,
+        child: SizedBox.fromSize(size: size),
+      ),
+    );
+
+    final nested = <Action>[
+      CommandAction(
+        id: 'print',
+        label: 'Print shipping label',
+        icon: const LucideIcon(LucideIcons.printer),
+        onAction: () {},
+      ),
+      GroupAction(
+        id: 'courier',
+        label: 'Send with',
+        icon: const LucideIcon(LucideIcons.truck),
+        actions: [
+          for (final c in ['Yalidine', 'ZR Express', 'Maystro'])
+            CommandAction(id: c, label: c, onAction: () {}),
+          GroupAction(
+            id: 'more',
+            label: 'More couriers',
+            actions: [
+              for (final c in ['Ecotrack', 'Noest Express'])
+                CommandAction(id: c, label: c, onAction: () {}),
+            ],
+          ),
+        ],
+      ),
+    ];
+
+    for (final direction in TextDirection.values) {
+      for (final MapEntry(key: where, value: alignment) in {
+        'top-left': Alignment.topLeft,
+        'top-right': Alignment.topRight,
+      }.entries) {
+        testWidgets(
+          'submenus keep their width at the $where (${direction.name})',
+          (tester) async {
+            final bounds = await phone(
+              tester,
+              alignment,
+              menuButton(actions: nested),
+              direction: direction,
+            );
+            final minWidth = math.min(250.0, bounds.width - 24);
+            await tester.tap(find.byKey(const Key('trigger')));
+            await _settle(tester);
+            await tester.tap(find.text('Send with'));
+            await _settle(tester);
+            expect(find.byType(MenuSurface), findsNWidgets(2));
+            final sub = find.byType(MenuSurface).last;
+            expect(tester.getSize(sub).width, greaterThanOrEqualTo(minWidth));
+            _expectInside(tester, sub);
+            // One line per label, not one letter per line.
+            expect(
+              tester.getSize(find.text('ZR Express')).height,
+              lessThan(30),
+            );
+
+            await tester.tap(find.text('More couriers'));
+            await _settle(tester);
+            expect(find.byType(MenuSurface), findsNWidgets(3));
+            final third = find.byType(MenuSurface).last;
+            expect(tester.getSize(third).width, greaterThanOrEqualTo(minWidth));
+            _expectInside(tester, third);
+            expect(tester.takeException(), isNull);
+          },
+        );
+      }
+
+      testWidgets('the submenu chevron points to the inline end '
+          '(${direction.name})', (tester) async {
+        await phone(
+          tester,
+          Alignment.center,
+          menuButton(actions: nested),
+          direction: direction,
+        );
+        await tester.tap(find.byKey(const Key('trigger')));
+        await _settle(tester);
+        final flip = tester.widget<Transform>(
+          find
+              .ancestor(
+                of: find.byType(LucideChevronRight),
+                matching: find.byType(Transform),
+              )
+              .first,
+        );
+        expect(
+          flip.transform.storage[0],
+          direction == TextDirection.rtl ? -1 : 1,
+        );
+      });
+
+      testWidgets('cover: false opens beside a rail item on its side '
+          '(${direction.name})', (tester) async {
+        final rtl = direction == TextDirection.rtl;
+        await phone(
+          tester,
+          rtl ? Alignment.centerRight : Alignment.centerLeft,
+          menuButton(
+            actions: _actions(3),
+            cover: false,
+            side: PanelSide.end,
+            size: const Size(66, 66),
+          ),
+          direction: direction,
+        );
+        final trigger = tester.getRect(find.byKey(const Key('trigger')));
+        await tester.tap(find.byKey(const Key('trigger')));
+        await _settle(tester);
+        final menu = tester.getRect(find.byType(MenuSurface));
+        if (rtl) {
+          expect(menu.right, closeTo(trigger.left - 4, 0.5));
+        } else {
+          expect(menu.left, closeTo(trigger.right + 4, 0.5));
+        }
+        // Lined up with the item's top; the item stays visible.
+        expect(menu.top, closeTo(trigger.top, 0.5));
+        expect(
+          tester
+              .widget<AnimatedOpacity>(
+                find.ancestor(
+                  of: find.byKey(const Key('trigger')),
+                  matching: find.byType(AnimatedOpacity),
+                ),
+              )
+              .opacity,
+          1,
+        );
+        _expectInside(tester, find.byType(MenuSurface));
+      });
+    }
+
+    for (final withIcon in [false, true]) {
+      testWidgets(
+        withIcon
+            ? 'one row with an icon: every row keeps the icon slot'
+            : 'no row with an icon: no row reserves the icon slot',
+        (tester) async {
+          await phone(
+            tester,
+            Alignment.center,
+            menuButton(
+              actions: [
+                ..._actions(2),
+                CommandAction(
+                  id: 'print',
+                  label: 'Print',
+                  icon: withIcon ? const LucideIcon(LucideIcons.printer) : null,
+                  onAction: () {},
+                ),
+              ],
+            ),
+          );
+          await tester.tap(find.byKey(const Key('trigger')));
+          await _settle(tester);
+          const tokens = MenuTokens.comfortable;
+          final menu = tester.getRect(find.byType(MenuSurface));
+          final inset =
+              tester.getRect(find.text('Action number 0')).left - menu.left;
+          // The glass inset + row padding, plus the 18 px slot and its 12 px gap with an icon.
+          expect(
+            inset,
+            closeTo(tokens.inset + tokens.rowInline + (withIcon ? 30 : 0), 0.5),
+          );
+        },
+      );
+    }
+
+    test('menuHasLeading', () {
+      expect(menuHasLeading(_actions(2), const {}), isFalse);
+      expect(menuHasLeading(_actions(2), {'a1'}), isTrue);
+      expect(
+        menuHasLeading([
+          ToggleAction(
+            id: 't',
+            label: 'Urgent',
+            checked: false,
+            onCheckedChange: (_) {},
+          ),
+        ], const {}),
+        isTrue,
+      );
+    });
   });
 }

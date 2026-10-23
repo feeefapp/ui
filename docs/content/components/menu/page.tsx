@@ -130,6 +130,41 @@ import { MenuSurface } from '@feeef.dev/ui/menu'
         />
       </Section>
 
+      <Section title="Beside the trigger">
+        <p>
+          A menu that should leave its trigger visible, such as a sidebar rail item’s menu, passes{' '}
+          <C>{'cover={false}'}</C> and a <C>side</C> (<C>start</C>, <C>end</C>, <C>top</C> or{' '}
+          <C>bottom</C>, logical, so <C>end</C> is the left in RTL). It opens <C>gap</C> px away
+          (4 by default), lined up with the trigger’s start edge, and flips to the other side when
+          there is no room. Submenus always open toward the inline end. A menu beside its trigger is
+          never squeezed under its minimum width: when neither side has room for it (a submenu in a
+          390 px window), it drops below its row over the parent menu, like iOS, and shifts to stay
+          inside the app.
+        </p>
+        <Code
+          code={`<MenuSurface asChild cover={false} side="end">
+  <DropdownMenu.Content className="lab-actions-menu" aria-label="Orders">…</DropdownMenu.Content>
+</MenuSurface>
+
+// Flutter
+ActionsMenuAnchor(
+  label: 'Orders',
+  actions: actions,
+  cover: false,
+  side: PanelSide.end,
+  builder: (open) => IconButton(
+    ariaLabel: 'Orders',
+    onClick: open ?? () {},
+    icon: const LucideIcon(LucideIcons.package),
+  ),
+)`}
+        />
+        <p>
+          Rows keep an 18 px icon slot only when some row of that menu has an icon, a check or a
+          loader, so labels line up; a menu of plain labels has no empty slot.
+        </p>
+      </Section>
+
       <Section title="Tokens">
         <Table
           head={['Token', 'Default', 'Compact · thin']}

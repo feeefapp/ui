@@ -82,6 +82,11 @@ double panelMaxExtent(
 /// the side it grows from), flipped to the opposite side when it doesn't fit and that side has more
 /// room, lined up per [align] (logical, so `start` is the trigger's right edge in RTL), then
 /// shifted along both axes to stay inside [bounds]. A panel bigger than [bounds] keeps its start.
+///
+/// A panel beside its trigger (`start`/`end`) that fits neither side is never squeezed: it drops
+/// right below the trigger instead, lined up with the trigger's start edge and shifted inside (a
+/// submenu in a narrow window covers its parent menu under its row, like iOS). The result's side
+/// is then [PanelSide.bottom]. The web twin is `sidePanelFallback` in `@feeef.dev/ui/menu`.
 PanelPlacement placeAnchoredPanel({
   required Rect bounds,
   required Rect anchor,
@@ -101,12 +106,29 @@ PanelPlacement placeAnchoredPanel({
     cover: cover,
     direction: direction,
   );
+  double fit(double v, double min, double extent, double max) =>
+      v.clamp(min, math.max(min, max - extent));
+  final gap = cover ? 0.0 : sideOffset;
+  if (!_vertical(side) &&
+      size.width > room(side) &&
+      size.width > room(_opposite(side))) {
+    final x = rtl ? anchor.right - size.width : anchor.left;
+    final y = cover ? anchor.top : anchor.bottom;
+    return (
+      rect:
+          Offset(
+            fit(x, bounds.left, size.width, bounds.right),
+            fit(y, bounds.top, size.height, bounds.bottom),
+          ) &
+          size,
+      side: PanelSide.bottom,
+    );
+  }
   final extent = _vertical(side) ? size.height : size.width;
   var placed = side;
   if (extent > room(side) && room(_opposite(side)) > room(side)) {
     placed = _opposite(side);
   }
-  final gap = cover ? 0.0 : sideOffset;
   double x, y;
   if (_vertical(placed)) {
     y = placed == PanelSide.bottom
@@ -130,8 +152,6 @@ PanelPlacement placeAnchoredPanel({
       PanelAlign.center => anchor.center.dy - size.height / 2,
     };
   }
-  double fit(double v, double min, double extent, double max) =>
-      v.clamp(min, math.max(min, max - extent));
   x = fit(x, bounds.left, size.width, bounds.right);
   y = fit(y, bounds.top, size.height, bounds.bottom);
   return (rect: Offset(x, y) & size, side: placed);

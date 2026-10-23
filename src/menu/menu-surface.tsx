@@ -17,6 +17,7 @@ import {
   type MenuBox,
   type MenuMorphFrame,
 } from './morph-model'
+import { physicalMenuSide, sidePanelFallback, type MenuSide } from './placement'
 import './menu.css'
 
 /** Minimum distance between a floating panel and the edges of its bounds, in px. */
@@ -27,9 +28,16 @@ export type MenuSurfaceProps = React.HTMLAttributes<HTMLDivElement> & {
   asChild?: boolean
   /**
    * The menu covers the button that opened it and grows out of it (default). False opens it beside
-   * its trigger, `gap` away, for submenus.
+   * its trigger on `side`, `gap` away and lined up with the trigger's start edge: submenus, or a
+   * sidebar rail item's menu.
    */
   cover?: boolean
+  /**
+   * Where the menu opens when `cover` is false (logical: `end` is right in LTR). Radix flips it when
+   * there is no room; a menu beside its trigger that fits neither side drops below the trigger
+   * instead of being squeezed. Submenus always open toward the inline end (Radix `SubContent`).
+   */
+  side?: MenuSide
   /** Distance from the trigger when `cover` is false, in px. */
   gap?: number
 }
@@ -52,14 +60,16 @@ type Layers = {
  * reduced transparency and more contrast paint it solid.
  */
 export const MenuSurface = React.forwardRef<HTMLDivElement, MenuSurfaceProps>(
-  ({ asChild = false, cover = true, gap = 4, className, children, ...props }, ref) => {
+  ({ asChild = false, cover = true, side = 'bottom', gap = 4, className, children, ...props }, ref) => {
     const boundary = useFloatingBoundary()
     const node = React.useRef<HTMLElement | null>(null)
     const layers = React.useRef<Layers>({ shadow: null, bubble: null, body: null, edge: null })
     const placed = React.useRef(false)
     const [placement, setPlacement] = React.useState<{
       offset: number
+      alignOffset: number
       align: 'start' | 'center' | 'end'
+      side: 'top' | 'bottom' | 'left' | 'right'
       boundary: Element | null
     } | null>(null)
 
@@ -77,18 +87,45 @@ export const MenuSurface = React.forwardRef<HTMLDivElement, MenuSurfaceProps>(
       const trigger = findTrigger(node.current)
       const bounds = (boundary ?? trigger?.closest('[data-lab-boundary]') ?? null) as HTMLElement | null
       const rtl = getComputedStyle(node.current).direction === 'rtl'
-      let align: 'start' | 'center' | 'end' = 'center'
-      if (trigger && cover) {
-        const rect = trigger.getBoundingClientRect()
-        const area = bounds?.getBoundingClientRect() ?? { left: 0, right: window.innerWidth }
-        align = menuAlign(isToolbarTrigger(trigger), rect.left + rect.width / 2, area.left, area.right, rtl)
+      const area = bounds?.getBoundingClientRect() ?? {
+        left: 0,
+        top: 0,
+        right: window.innerWidth,
+        bottom: window.innerHeight,
       }
-      setPlacement({
-        offset: cover && trigger ? -trigger.offsetHeight : gap,
-        align,
-        boundary: bounds,
-      })
-    }, [asChild, boundary, cover, gap])
+      let align: 'start' | 'center' | 'end' = cover ? 'center' : 'start'
+      // Radix forces a submenu (opened from a menu row) toward the inline end.
+      const physical = physicalMenuSide(isSubmenuTrigger(trigger) ? 'end' : side, rtl)
+      let offset = cover && trigger ? -trigger.offsetHeight : gap
+      let alignOffset = 0
+      if (trigger) {
+        const rect = trigger.getBoundingClientRect()
+        if (cover) {
+          align = menuAlign(isToolbarTrigger(trigger), rect.left + rect.width / 2, area.left, area.right, rtl)
+        } else if (physical === 'left' || physical === 'right') {
+          const pad = MENU_COLLISION_PADDING
+          const fallback = sidePanelFallback({
+            trigger: rect,
+            bounds: {
+              left: area.left + pad,
+              top: area.top + pad,
+              right: area.right - pad,
+              bottom: area.bottom - pad,
+            },
+            // Its natural width before Radix sizes it (at least the menu's minimum).
+            width: Math.min(node.current.offsetWidth, area.right - area.left - 2 * pad),
+            gap,
+            side: physical,
+            rtl,
+          })
+          if (fallback) {
+            offset = fallback.sideOffset
+            alignOffset = fallback.alignOffset
+          }
+        }
+      }
+      setPlacement({ offset, alignOffset, align, side: physical, boundary: bounds })
+    }, [asChild, boundary, cover, side, gap])
     React.useLayoutEffect(() => {
       placed.current = !!placement
     }, [placement])
@@ -121,7 +158,8 @@ export const MenuSurface = React.forwardRef<HTMLDivElement, MenuSurfaceProps>(
     const child = React.Children.only(children) as React.ReactElement<{ children?: React.ReactNode }>
     const radix = {
       sideOffset: placement?.offset ?? 0,
-      ...(cover ? { align: placement?.align ?? 'center' } : {}),
+      align: placement?.align ?? (cover ? 'center' : 'start'),
+      ...(cover ? {} : { side: placement?.side ?? physicalMenuSide(side, false), alignOffset: placement?.alignOffset ?? 0 }),
       collisionPadding: MENU_COLLISION_PADDING,
       collisionBoundary: placement?.boundary ?? undefined,
     }
@@ -144,6 +182,11 @@ MenuSurface.displayName = 'MenuSurface'
 function findTrigger(content: HTMLElement) {
   if (!content.id) return null
   return content.ownerDocument.querySelector<HTMLElement>(`[aria-controls="${CSS.escape(content.id)}"]`)
+}
+
+/** A Radix submenu trigger: a menu row that opens a menu. */
+function isSubmenuTrigger(trigger: HTMLElement | null) {
+  return trigger?.getAttribute('role') === 'menuitem' && trigger.hasAttribute('aria-haspopup')
 }
 
 function isToolbarTrigger(trigger: HTMLElement) {

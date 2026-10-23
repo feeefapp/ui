@@ -7,7 +7,7 @@ import { Check, ChevronDown, ChevronRight, MoreHorizontal, Square, SquareCheck }
 import { cn } from '../utils'
 import { Button } from '../ui'
 import { PixelLoader } from '../pixel-art'
-import { computeActionsLayout } from './layout'
+import { computeActionsLayout, menuHasLeading } from './layout'
 import type { Action, GroupAction } from './types'
 import { useMeasuredActions } from './use_measured_actions'
 import { useActionsWidth } from './width-context'
@@ -193,9 +193,7 @@ export function ActionsBar({
               </Button>
             </DropdownMenu.Trigger>
             <ActionsMenu menu={menu} label={resolvedOverflowLabel}>
-              {layout.overflow.map((action) => (
-                <MenuAction key={action.id} action={action} menu={menu} />
-              ))}
+              <MenuActions actions={layout.overflow} menu={menu} />
             </ActionsMenu>
           </DropdownMenu.Root>
         )}
@@ -305,9 +303,7 @@ function GroupControl({
         <ActionControl action={action} size={size} />
       </DropdownMenu.Trigger>
       <ActionsMenu menu={menu} label={action.label}>
-        {action.actions.map((child) => (
-          <MenuAction key={child.id} action={child} menu={menu} />
-        ))}
+        <MenuActions actions={action.actions} menu={menu} />
       </ActionsMenu>
     </DropdownMenu.Root>
   )
@@ -338,26 +334,40 @@ function ActionsMenu({
   )
 }
 
-function MenuAction({ action, menu }: { action: Action; menu: MenuContext }) {
+/** One menu's rows. The 18px leading slot is reserved only when some row has an icon, check or loader. */
+function MenuActions({ actions, menu }: { actions: readonly Action[]; menu: MenuContext }) {
+  const leading = menuHasLeading(actions, menu.pending)
+  return (
+    <>
+      {actions.map((action) => (
+        <MenuAction key={action.id} action={action} menu={menu} leading={leading} />
+      ))}
+    </>
+  )
+}
+
+function MenuAction({ action, menu, leading }: { action: Action; menu: MenuContext; leading: boolean }) {
   const loading = action.loading || menu.pending.has(action.id)
   const disabled = action.disabled || loading
   const content = (
     <>
-      <span className="lab-actions-menu__leading" aria-hidden="true">
-        {loading ? (
-          <PixelLoader size={17} decorative />
-        ) : action.type === 'toggle' ? (
-          <DropdownMenu.ItemIndicator>
-            <Check size={18} />
-          </DropdownMenu.ItemIndicator>
-        ) : (
-          action.icon
-        )}
-      </span>
+      {leading && (
+        <span className="lab-actions-menu__leading" aria-hidden="true">
+          {loading ? (
+            <PixelLoader size={17} decorative />
+          ) : action.type === 'toggle' ? (
+            <DropdownMenu.ItemIndicator>
+              <Check size={18} />
+            </DropdownMenu.ItemIndicator>
+          ) : (
+            action.icon
+          )}
+        </span>
+      )}
       <span className="lab-actions-menu__label">{action.label}</span>
     </>
   )
-  if (action.type === 'group') return <SubmenuAction action={action} menu={menu} />
+  if (action.type === 'group') return <SubmenuAction action={action} menu={menu} leading={leading} />
   if (action.type === 'toggle')
     return (
       <DropdownMenu.CheckboxItem
@@ -388,7 +398,15 @@ function MenuAction({ action, menu }: { action: Action; menu: MenuContext }) {
   )
 }
 
-function SubmenuAction({ action, menu }: { action: GroupAction; menu: MenuContext }) {
+function SubmenuAction({
+  action,
+  menu,
+  leading,
+}: {
+  action: GroupAction
+  menu: MenuContext
+  leading: boolean
+}) {
   const [open, setOpen] = React.useState(false)
   return (
     <DropdownMenu.Sub
@@ -406,9 +424,11 @@ function SubmenuAction({ action, menu }: { action: GroupAction; menu: MenuContex
         data-destructive={action.destructive || action.variant === 'destructive' || undefined}
         textValue={action.label}
       >
-        <span className="lab-actions-menu__leading" aria-hidden="true">
-          {action.loading ? <PixelLoader size={17} decorative /> : action.icon}
-        </span>
+        {leading && (
+          <span className="lab-actions-menu__leading" aria-hidden="true">
+            {action.loading ? <PixelLoader size={17} decorative /> : action.icon}
+          </span>
+        )}
         <span className="lab-actions-menu__label">{action.label}</span>
         <ChevronRight
           className="lab-actions-menu__chevron lab-dir-flip"
@@ -424,9 +444,7 @@ function SubmenuAction({ action, menu }: { action: GroupAction; menu: MenuContex
             {...(menu.container ? { collisionBoundary: menu.container } : {})}
             aria-label={action.label}
           >
-            {action.actions.map((child) => (
-              <MenuAction key={child.id} action={child} menu={menu} />
-            ))}
+            <MenuActions actions={action.actions} menu={menu} />
           </DropdownMenu.SubContent>
         </MenuSurface>
       </DropdownMenu.Portal>
