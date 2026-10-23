@@ -25,12 +25,12 @@ export declare function ScaffoldProvider({ children, className, }: {
  * without moving it or changing its semantic element. Remeasures on resize, animation and
  * transition end. Does nothing outside a provider.
  */
-export declare function useFloatingReserve(slot: FloatingSlot, ref: React.RefObject<HTMLElement | null>, { active, edge, gap, measureChildren, }?: {
+export declare function useFloatingReserve(slot: FloatingSlot, ref: React.RefObject<HTMLElement | null>, { active, edge, gap: gapProp, measureChildren, }?: {
     /** Set false to stop reserving space. */
     active?: boolean;
     /** Edge it is measured from. `auto`: header → top, rail → left/top, others → bottom. */
     edge?: FloatingEdge;
-    /** Extra px added to the reservation. */
+    /** Extra px added to the reservation. Default: the shell gap G (`--lab-shell-gap`, 8). */
     gap?: number;
     /** FloatingLayer itself fills the viewport; its actual surface is its child. */
     measureChildren?: boolean;
@@ -49,7 +49,7 @@ export declare function FloatingLayer({ children, slot, active, edge, gap, class
     active?: boolean;
     /** Edge it is measured from. `auto`: header → top, rail → left/top, others → bottom. */
     edge?: FloatingEdge;
-    /** Extra px added to the reservation, between the surface and the content. */
+    /** Extra px added to the reservation, between the surface and the content. Default: the shell gap G (8). */
     gap?: number;
     className?: string;
 }): React.ReactPortal | null;

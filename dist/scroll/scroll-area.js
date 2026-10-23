@@ -4,13 +4,17 @@ import { forwardRef, useRef, useLayoutEffect, useState, useImperativeHandle, } f
 import { cn } from '../utils.js';
 import { ScrollGradientOverlay } from './gradient-overlay.js';
 import { scrollContentReserve } from './metrics.js';
+import { useShellGap } from './shell-gap.js';
 import './scroll.css';
 /**
  * Full-bleed scroll viewport with local floating chrome, measured spacers and edge washes. Fills its
  * parent, which must have a bounded height. The forwarded ref points at the scrolling element.
  */
-export const ScrollArea = forwardRef(function ScrollArea({ children, top, bottom, label, edgeGap = 12, sideGap, contentPadding = 24, gradient = true, topFadeHeight, bottomFadeHeight, viewportProps, className, style, ...props }, ref) {
+export const ScrollArea = forwardRef(function ScrollArea({ children, top, bottom, label, edgeGap: edgeGapProp, sideGap, contentPadding: contentPaddingProp, gradient = true, topFadeHeight, bottomFadeHeight, viewportProps, className, style, ...props }, ref) {
+    const root = useRef(null);
     const viewport = useRef(null);
+    const shellGap = useShellGap(root);
+    const edgeGap = edgeGapProp ?? shellGap, contentPadding = contentPaddingProp ?? shellGap;
     const topRef = useRef(null), bottomRef = useRef(null);
     const [heights, setHeights] = useState({ top: 0, bottom: 0 });
     useImperativeHandle(ref, () => viewport.current, []);
@@ -30,7 +34,7 @@ export const ScrollArea = forwardRef(function ScrollArea({ children, top, bottom
         measure();
         return () => resize.disconnect();
     }, [Boolean(top), Boolean(bottom)]);
-    return (_jsxs("div", { ...props, className: cn('lab-scroll-area', className), style: {
+    return (_jsxs("div", { ...props, ref: root, className: cn('lab-scroll-area', className), style: {
             ...style,
             '--lab-scroll-gap': `${Math.max(0, edgeGap)}px`,
             ...(sideGap === undefined ? {} : { '--lab-scroll-side-gap': `${Math.max(0, sideGap)}px` }),

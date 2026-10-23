@@ -76,6 +76,17 @@ export declare function rgbaBmpDataUrl(width: number, height: number, rgba: Uint
 export declare function supportsRefraction(): boolean;
 /** Firefox can refract an explicitly supplied live element image with a regular SVG filter. */
 export declare function supportsElementRefraction(): boolean;
+/**
+ * What glass can do in this browser, for apps that show or log it (a settings screen, telemetry):
+ * `refraction` = SVG backdrop filters bend the backdrop (Chromium), `elementRefraction` = a
+ * supplied `backdropSource` can be bent (Firefox), `backdropBlur` = `backdrop-filter` blurs.
+ * The kit already uses these checks itself; profiles never need a per-browser variant.
+ */
+export declare function glassCapabilities(): {
+    refraction: boolean;
+    elementRefraction: boolean;
+    backdropBlur: boolean;
+};
 /** Place a live background image in a glass piece, with both boxes in material coordinates. */
 export declare function elementImagePlacement(source: GlassRect, piece: GlassRect): {
     width: number;

@@ -1,23 +1,24 @@
-/* Segmented control: options and one moving pill, no container of its own (the host decides:
-glass, a box or nothing). The control is a regular button tall (--lab-control-height, so a toolbar
-bubble's control height inside one); the pill sits --lab-segmented-inset inside it, and options are
-no farther apart than that inset. The root keeps the capsule radius so a background set on it (a
-box) has the right shape. Motion and the pill's geometry are written by segmented.tsx. */
+/* Segmented control: options and one moving pill in one row, no container of its own (the host
+decides: glass, a box or nothing). The control is a regular button tall (--lab-control-height, so a
+toolbar bubble's control height inside one); the pill sits --lab-segmented-inset inside it, and
+options are no farther apart than that inset. The root keeps the capsule radius so a background set
+on it (a box) has the right shape. Root > scroller (the inset; scrolls when the options don't fit,
+data-overflow) > track (options and pill). Motion, the pill's geometry, data-overflow and the edge
+fades are written by segmented.tsx. */
 .lab-segmented {
   --lab-segmented-size: var(--lab-control-height);
   --lab-segmented-option: calc(var(--lab-segmented-size) - 2 * var(--lab-segmented-inset));
+  /* SEGMENTED_FADE and SEGMENTED_BLEED (segmented-model.ts). */
+  --lab-segmented-fade: 24px;
+  --lab-segmented-bleed: 8px;
   --lab-lens: 0;
   --lab-lens-glow: 0;
   position: relative;
-  isolation: isolate;
   box-sizing: border-box;
   display: inline-flex;
-  align-items: center;
-  gap: var(--lab-segmented-inset);
-  padding: var(--lab-segmented-inset);
-  min-height: var(--lab-segmented-size);
+  min-width: 0;
   max-width: 100%;
-  flex-wrap: wrap;
+  min-height: var(--lab-segmented-size);
   border-radius: calc(var(--lab-segmented-size) / 2 * var(--lab-corner-scale, 1));
   corner-shape: superellipse(1.5);
   /* Horizontal drags move the pill; vertical ones still scroll the page. */
@@ -29,10 +30,59 @@ box) has the right shape. Motion and the pill's geometry are written by segmente
 .lab-segmented[data-equal-width] {
   display: flex;
   width: 100%;
-  flex-wrap: nowrap;
+}
+.lab-segmented-scroller {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: var(--lab-segmented-inset);
+}
+.lab-segmented-track {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--lab-segmented-inset);
+}
+.lab-segmented[data-equal-width] .lab-segmented-track {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+/* Too many options: the scroller scrolls inside the control, its clip reaching
+--lab-segmented-bleed above and below (a pressed pill swells and casts a shadow), its edges fading
+where there is more (--lab-segmented-fade-left/right, 0 … 1). Only the options take the pointer, so
+the bleed never covers what is around the control. On touch a swipe scrolls; the selected option
+keeps horizontal drags for the pill. */
+.lab-segmented[data-overflow] > .lab-segmented-scroller {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  scroll-padding-inline: var(--lab-segmented-fade);
+  margin-block: calc(-1 * var(--lab-segmented-bleed));
+  padding-block: calc(var(--lab-segmented-inset) + var(--lab-segmented-bleed));
+  pointer-events: none;
+  mask-image: linear-gradient(
+    to right,
+    rgb(0 0 0 / calc(1 - var(--lab-segmented-fade-left, 0))),
+    #000 var(--lab-segmented-fade),
+    #000 calc(100% - var(--lab-segmented-fade)),
+    rgb(0 0 0 / calc(1 - var(--lab-segmented-fade-right, 0)))
+  );
+}
+.lab-segmented[data-overflow] > .lab-segmented-scroller::-webkit-scrollbar {
+  display: none;
+}
+.lab-segmented[data-overflow] .lab-segmented-option {
+  pointer-events: auto;
+}
+.lab-segmented[data-overflow] .lab-segmented-option[aria-checked='true'] {
+  touch-action: pan-y;
 }
 /* Out-specifies toolbar and touch sizing of `.lab-control[data-variant]`: the pill sets the size. */
-html[data-lab-theme] .lab-segmented > .lab-segmented-option.lab-control[data-variant] {
+html[data-lab-theme] .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
   z-index: 1;
   flex: 0 1 auto;
   min-width: max-content;
@@ -46,22 +96,22 @@ html[data-lab-theme] .lab-segmented > .lab-segmented-option.lab-control[data-var
   /* Until the pill is placed (server render), only the selected option shows selected ink. */
   --lab-segmented-clip: inset(50%);
 }
-html[data-lab-theme] .lab-segmented[data-equal-width] > .lab-segmented-option.lab-control[data-variant] {
+html[data-lab-theme] .lab-segmented[data-equal-width] .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
   flex: 1 1 0;
   min-width: 0;
 }
-html[data-lab-theme] .lab-segmented > .lab-segmented-option.lab-control[aria-checked='true'] {
+html[data-lab-theme] .lab-segmented-track > .lab-segmented-option.lab-control[aria-checked='true'] {
   --lab-segmented-clip: inset(0);
 }
 /* The pill is the selected option's paint: the option itself stays clear under it. */
-html[data-lab-theme] .lab-segmented > .lab-segmented-option.lab-control[aria-checked='true']:is(:hover, :active, :focus-visible) {
+html[data-lab-theme] .lab-segmented-track > .lab-segmented-option.lab-control[aria-checked='true']:is(:hover, :active, :focus-visible) {
   background: transparent;
   box-shadow: none;
 }
-html[data-lab-theme] .lab-segmented > .lab-segmented-pill[data-hidden] ~ .lab-segmented-option[aria-checked='true'] {
+html[data-lab-theme] .lab-segmented-track > .lab-segmented-pill[data-hidden] ~ .lab-segmented-option[aria-checked='true'] {
   background: var(--lab-primary);
 }
-html[data-lab-theme] .lab-segmented[data-dragging] > .lab-segmented-option.lab-control[data-variant] {
+html[data-lab-theme] .lab-segmented[data-dragging] .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
   background: transparent;
   cursor: grabbing;
 }
@@ -88,6 +138,35 @@ html[data-lab-theme] .lab-segmented[data-dragging] > .lab-segmented-option.lab-c
   display: inline-flex;
   flex: none;
 }
+/* A status tone colours the icon of an option that isn't selected (the selected ink is the pill's). */
+.lab-segmented-icon[data-tone='success'] {
+  color: var(--lab-success);
+}
+.lab-segmented-icon[data-tone='warning'] {
+  color: var(--lab-warning);
+}
+.lab-segmented-icon[data-tone='danger'] {
+  color: var(--lab-danger);
+}
+.lab-segmented-ink > .lab-segmented-icon[data-tone] {
+  color: inherit;
+}
+/* A count after the label: a small neutral pill of the ink around it, so it reads on the bare
+option and, in the selected ink, on the pill (it turns over with the label as the pill passes). */
+.lab-segmented-badge {
+  flex: none;
+  box-sizing: border-box;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: calc(9px * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  font: 600 11px/18px var(--lab-font);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  white-space: nowrap;
+}
 .lab-segmented-label {
   min-width: 0;
   overflow: hidden;
@@ -98,7 +177,7 @@ html[data-lab-theme] .lab-segmented[data-dragging] > .lab-segmented-option.lab-c
   width: 16px;
   height: 16px;
 }
-html[data-lab-density='thin'][data-lab-theme] .lab-segmented > .lab-segmented-option.lab-control[data-variant] {
+html[data-lab-density='thin'][data-lab-theme] .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
   font-size: 12px;
   line-height: 16px;
 }
@@ -142,7 +221,7 @@ html[data-lab-glass='solid'] .lab-segmented-fill,
 html[data-lab-glass='solid'] .lab-segmented-option > .lab-segmented-ink {
   opacity: 1;
 }
-.lab-segmented[aria-disabled='true'] > .lab-segmented-pill {
+.lab-segmented[aria-disabled='true'] .lab-segmented-pill {
   opacity: 0.42;
 }
 

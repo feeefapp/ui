@@ -12,10 +12,14 @@ function runPhase(phase, now) {
             callback(now);
 }
 function loop(now) {
-    frame = callbacks.size || measureCallbacks.size || renderCallbacks.size ? requestAnimationFrame(loop) : 0;
+    // Callbacks subscribed while the phases run request the next frame themselves; one-shot
+    // callbacks that unsubscribed leave nothing behind, so no empty frame follows them.
+    frame = 0;
     runPhase(callbacks, now);
     runPhase(measureCallbacks, now);
     runPhase(renderCallbacks, now);
+    if (!frame && (callbacks.size || measureCallbacks.size || renderCallbacks.size))
+        frame = requestAnimationFrame(loop);
 }
 function subscribeFrame(phase, callback) {
     phase.add(callback);
@@ -37,9 +41,61 @@ export function onMeasureFrame(callback) {
 export function onRenderFrame(callback) {
     return subscribeFrame(renderCallbacks, callback);
 }
-/** True when the reader asked for reduced motion. Safe to call on the server. */
+const REDUCED_QUERY = '(prefers-reduced-motion: reduce)';
+let reducedMedia;
+const osReducedMedia = () => reducedMedia === undefined ? (reducedMedia = typeof window === 'undefined' ? null : (window.matchMedia?.(REDUCED_QUERY) ?? null)) : reducedMedia;
+/**
+ * How much the kit animates right now: the app's ThemeConfig `motion` (`data-lab-motion` on
+ * `<html>`), made stricter by the reader's `prefers-reduced-motion` (`full` becomes `reduced`;
+ * `none` stays `none`). `full` on the server.
+ */
+export function motionOf(root) {
+    if (typeof document === 'undefined')
+        return 'full';
+    const config = (root ?? document.documentElement).getAttribute('data-lab-motion');
+    if (config === 'none')
+        return 'none';
+    return config === 'reduced' || osReducedMedia()?.matches ? 'reduced' : 'full';
+}
+/**
+ * True when motion should be reduced: the reader asked for it, or the app's ThemeConfig `motion`
+ * is `reduced` or `none`. Every reduced-motion path in the kit reads this. Safe on the server.
+ */
 export function prefersReducedMotion() {
-    return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    return motionOf() !== 'full';
+}
+/** Calls `listener` whenever `motionOf()` may have changed (the OS setting or `data-lab-motion`). */
+export function onMotionChange(listener) {
+    if (typeof document === 'undefined')
+        return () => { };
+    const media = osReducedMedia();
+    media?.addEventListener('change', listener);
+    const observer = typeof MutationObserver === 'undefined' ? null : new MutationObserver(listener);
+    observer?.observe(document.documentElement, { attributes: true, attributeFilter: ['data-lab-motion'] });
+    return () => {
+        media?.removeEventListener('change', listener);
+        observer?.disconnect();
+    };
+}
+/**
+ * `prefersReducedMotion()` shaped like a `MediaQueryList`, for code written against
+ * `matchMedia('(prefers-reduced-motion: reduce)')`: `matches` is live and `change` fires on either source.
+ */
+export function reducedMotionQuery() {
+    const subscriptions = new Map();
+    return {
+        get matches() {
+            return prefersReducedMotion();
+        },
+        addEventListener(_type, listener) {
+            if (!subscriptions.has(listener))
+                subscriptions.set(listener, onMotionChange(listener));
+        },
+        removeEventListener(_type, listener) {
+            subscriptions.get(listener)?.();
+            subscriptions.delete(listener);
+        },
+    };
 }
 /**
  * One animatable number with a velocity, driven by springs or by a pointer. Subscribers paint it

@@ -4,6 +4,7 @@ import { GLASS_GLOW_START, glassGlowRadius } from '../glass/press.js';
 import { SPRINGS, springCoefficients } from '../physics/spring.js';
 import { LENS_THUMB_SCALE, lensStretch } from './lens-model.js';
 import { stepSpring } from './spring-core.js';
+import { reducedMotionQuery } from '../physics/motion-value.js';
 const SNAPPY = springCoefficients(SPRINGS.snappy);
 const BOUNCY = springCoefficients(SPRINGS.bouncy);
 const SMOOTH = springCoefficients(SPRINGS.smooth);
@@ -39,21 +40,25 @@ overshoot = false) {
         disabled,
         overshoot,
         reduced: false,
-        rtl: false,
         pointer: null,
     });
     const wake = useRef(() => { });
     useLayoutEffect(() => {
-        const media = matchMedia('(prefers-reduced-motion: reduce)');
+        const media = reducedMotionQuery();
         const state = simulation.current;
         let alive = true;
-        /** The thumb's travel (px) and inset: the edge-to-centre distance at either end. */
+        /**
+         * The thumb's travel (px) and inset (the edge-to-centre distance at either end), the track's
+         * height and direction. Every read of a frame happens here, before paint writes anything.
+         */
         const geometry = () => {
             const el = host.current;
             if (!el)
-                return { travel: 0, inset: 0 };
-            const inset = Number.parseFloat(getComputedStyle(el).getPropertyValue('--lab-slider-inset')) || el.offsetHeight / 2;
-            return { travel: Math.max(0, el.offsetWidth - 2 * inset), inset };
+                return { travel: 0, inset: 0, height: 0, rtl: false };
+            const style = getComputedStyle(el);
+            const height = el.offsetHeight;
+            const inset = Number.parseFloat(style.getPropertyValue('--lab-slider-inset')) || height / 2;
+            return { travel: Math.max(0, el.offsetWidth - 2 * inset), inset, height, rtl: style.direction === 'rtl' };
         };
         const paint = (measured = geometry()) => {
             const el = host.current;
@@ -72,11 +77,11 @@ overshoot = false) {
             const pointer = g.pointer;
             if (pointer) {
                 // The glow sits under the pointer: its offset from the drawn thumb's centre.
-                const { travel, inset } = measured;
+                const { travel, inset, height, rtl } = measured;
                 const center = inset + travel * position + stretch / 2;
-                const dx = (pointer.x - center) * (g.rtl ? -1 : 1);
+                const dx = (pointer.x - center) * (rtl ? -1 : 1);
                 el.style.setProperty('--lab-lens-glow-x', `calc(50% + ${dx}px)`);
-                el.style.setProperty('--lab-lens-glow-y', `calc(50% + ${pointer.y - el.offsetHeight / 2}px)`);
+                el.style.setProperty('--lab-lens-glow-y', `calc(50% + ${pointer.y - height / 2}px)`);
             }
         };
         const spring = (value, to, dt, { stiffness, damping }) => {
@@ -187,7 +192,6 @@ overshoot = false) {
             thin,
             disabled,
             overshoot,
-            rtl: Boolean(host.current && getComputedStyle(host.current).direction === 'rtl'),
         };
         if (!pressed)
             goal.current.pointer = null;

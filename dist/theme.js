@@ -36,15 +36,15 @@ export function ThemeProvider({ children, initialMode = 'system', enableCornerFa
         if (enableCornerFallback)
             return installFoContinuousCorners();
     }, [enableCornerFallback]);
-    const { palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction, metrics } = config ?? {};
+    const { palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction, motion, metrics } = config ?? {};
     // Metrics are an object, often written inline: compare them by value, not identity.
     const metricsKey = JSON.stringify(metrics ?? {});
     layoutEffect(() => {
         applyThemeConfig(document.documentElement, {
-            palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction,
+            palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction, motion,
             metrics: JSON.parse(metricsKey),
         });
-    }, [palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction, metricsKey]);
+    }, [palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction, motion, metricsKey]);
     layoutEffect(() => {
         const root = document.documentElement, previous = root.getAttribute('data-lab-theme'), preference = matchMedia('(prefers-color-scheme: dark)');
         const apply = () => {

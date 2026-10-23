@@ -358,4 +358,132 @@ export function toLocalRect(frame, box) {
     const { x, y } = toLocalPoint(frame, box.left, box.top);
     return { x, y, width: box.width / frame.scaleX, height: box.height / frame.scaleY };
 }
+/** An axis a clip leaves open reaches this far (px) both ways. */
+const OPEN = 1e7;
+/** Which axes an element clips its descendants on, from its computed style, and the box it clips to. */
+export function clipAxes(style) {
+    // `display: contents` has no box; overflow doesn't apply to inline boxes.
+    if (style.display === 'contents' || style.display === 'inline')
+        return { x: false, y: false, box: 'padding' };
+    const paint = /\b(paint|strict|content)\b/.test(style.contain ?? '');
+    const shape = !!style.clipPath && style.clipPath !== 'none';
+    const x = paint || shape || style.overflowX !== 'visible';
+    const y = paint || shape || style.overflowY !== 'visible';
+    return { x, y, box: shape && !paint && style.overflowX === 'visible' && style.overflowY === 'visible' ? 'border' : 'padding' };
+}
+/** A clipping box with the axes it doesn't clip opened up. */
+export function openClip(box, axes) {
+    return {
+        x: axes.x ? box.x : -OPEN,
+        y: axes.y ? box.y : -OPEN,
+        width: axes.x ? box.width : OPEN * 2,
+        height: axes.y ? box.height : OPEN * 2,
+    };
+}
+/**
+ * The part of the container a bubble's glass may paint in: the intersection of its clipping
+ * ancestors' boxes (overflow, clip-path, contain: paint), in the container's pixels. Undefined
+ * when nothing clips it; an empty rect when it is scrolled or clipped out of view.
+ */
+export function memberClip(clips) {
+    if (!clips.length)
+        return undefined;
+    let left = -Infinity;
+    let top = -Infinity;
+    let right = Infinity;
+    let bottom = Infinity;
+    for (const clip of clips) {
+        left = Math.max(left, clip.x);
+        top = Math.max(top, clip.y);
+        right = Math.min(right, clip.x + clip.width);
+        bottom = Math.min(bottom, clip.y + clip.height);
+    }
+    return { x: left, y: top, width: Math.max(0, right - left), height: Math.max(0, bottom - top) };
+}
+/** True when two rects share some area (touching edges don't). */
+export function rectsOverlap(a, b) {
+    return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+}
+/** True when `outer` contains `inner`. */
+export function rectCovers(outer, inner) {
+    return outer.x <= inner.x && outer.y <= inner.y && outer.x + outer.width >= inner.x + inner.width && outer.y + outer.height >= inner.y + inner.height;
+}
+/**
+ * A path of `M`/`L`/`Z` polygons cut to `clip` (Sutherland–Hodgman per loop): the scissored
+ * outline, straight at the clip edge. Winding is kept, so holes still fill correctly.
+ */
+export function scissorPath(d, clip) {
+    const right = clip.x + clip.width;
+    const bottom = clip.y + clip.height;
+    const edges = [
+        [(p) => p[0] >= clip.x, (a, b) => [clip.x, a[1] + ((b[1] - a[1]) * (clip.x - a[0])) / (b[0] - a[0])]],
+        [(p) => p[0] <= right, (a, b) => [right, a[1] + ((b[1] - a[1]) * (right - a[0])) / (b[0] - a[0])]],
+        [(p) => p[1] >= clip.y, (a, b) => [a[0] + ((b[0] - a[0]) * (clip.y - a[1])) / (b[1] - a[1]), clip.y]],
+        [(p) => p[1] <= bottom, (a, b) => [a[0] + ((b[0] - a[0]) * (bottom - a[1])) / (b[1] - a[1]), bottom]],
+    ];
+    const number = '(-?\\d+(?:\\.\\d+)?(?:e[-+]?\\d+)?)';
+    let out = '';
+    for (const loop of d.split('M').slice(1)) {
+        let points = [...loop.matchAll(new RegExp(`${number},${number}`, 'g'))].map((m) => [Number(m[1]), Number(m[2])]);
+        for (const [inside, cross] of edges) {
+            if (points.length < 3)
+                break;
+            const next = [];
+            for (let i = 0; i < points.length; i++) {
+                const a = points[(i + points.length - 1) % points.length];
+                const b = points[i];
+                if (inside(b)) {
+                    if (!inside(a))
+                        next.push(cross(a, b));
+                    next.push(b);
+                }
+                else if (inside(a))
+                    next.push(cross(a, b));
+            }
+            points = next;
+        }
+        if (points.length >= 3)
+            out += loopPath(points.map(([x, y]) => [round(x), round(y)]));
+    }
+    return out;
+}
+/** CSS `clip-path: inset(…)` cutting an element laid out at `box` to `clip`; '' when it doesn't cut. */
+export function clipInset(box, clip) {
+    if (!clip || rectCovers(clip, box))
+        return '';
+    const side = (value, size) => round(Math.min(size, Math.max(0, value)));
+    const top = side(clip.y - box.y, box.height);
+    const left = side(clip.x - box.x, box.width);
+    const bottom = side(box.y + box.height - (clip.y + clip.height), box.height);
+    const right = side(box.x + box.width - (clip.x + clip.width), box.width);
+    return `inset(${top}px ${right}px ${bottom}px ${left}px)`;
+}
+/**
+ * `glassPaths` for bubbles that may sit in clipped views: `clips[i]` is shape i's visible rect
+ * (`memberClip`; undefined = unclipped). Only bubbles sharing a clip blend (glass inside a scroll
+ * view never merges with glass outside it); every cluster keeps its whole outline `d` (rim,
+ * refraction) plus `visible`, the outline cut straight at its clip (backdrop, glow, shadow cut-out),
+ * and a cluster wholly outside its clip draws nothing. A clipped-out bubble stays in its cluster
+ * while it is within `spacing` of the visible part, so the neck toward it is cut, not dropped.
+ */
+export function clippedGlassPaths(shapes, clips, spacing, cell = 2) {
+    const groups = new Map();
+    shapes.forEach((shape, i) => {
+        const clip = clips[i];
+        const reach = { x: shape.x - spacing, y: shape.y - spacing, width: shape.width + spacing * 2, height: shape.height + spacing * 2 };
+        if (clip && !rectsOverlap(clip, reach))
+            return;
+        const key = clip ? [clip.x, clip.y, clip.width, clip.height].map((v) => v.toFixed(2)).join(',') : '';
+        if (!groups.has(key))
+            groups.set(key, { clip, shapes: [] });
+        groups.get(key).shapes.push(shape);
+    });
+    return [...groups.values()].flatMap(({ clip, shapes: members }) => glassPaths(members, spacing, cell).flatMap((path) => {
+        if (!clip)
+            return [{ ...path, visible: path.d }];
+        if (!rectsOverlap(clip, path.bounds))
+            return [];
+        return [{ ...path, clip, visible: rectCovers(clip, path.bounds) ? path.d : scissorPath(path.d, clip) }];
+    }));
+}
 //# sourceMappingURL=geometry.js.map

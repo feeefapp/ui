@@ -1,3 +1,4 @@
+import { type Motion } from '../theme-config.js';
 export type MenuBox = {
     x: number;
     y: number;
@@ -48,7 +49,7 @@ export declare const MENU_MORPH: {
     readonly fadeOut: 0.1;
 };
 /** How long a dismissal takes in seconds, for the host that keeps the menu mounted until it ends. */
-export declare function menuCloseDuration(reducedMotion?: boolean): 0.1 | 0.34;
+export declare function menuCloseDuration(motion?: Motion): number;
 /** Hermite smoothstep of `value` between `from` and `to`. */
 export declare function smoothstep(from: number, to: number, value: number): number;
 /** Moves every edge of `from` toward `to`: x edges by `px`, y edges by `py` (both may overshoot). */
@@ -68,8 +69,11 @@ export declare function menuOpenFrame(t: number, from: MenuBox, fromRadius: numb
  * trigger and springs back), y edges easing out, and the glass fades as it lands.
  */
 export declare function menuCloseFrame(t: number, from: MenuMorphFrame, to: MenuBox, toRadius: number): MenuMorphFrame;
-/** Reduced motion: the menu appears or leaves in place with a short crossfade. */
-export declare function menuFadeFrame(t: number, opening: boolean, box: MenuBox, radius: number): MenuMorphFrame;
+/**
+ * Reduced motion: the menu appears or leaves in place with a short crossfade (`motionFade`: none
+ * under motion `none`, which shows the end state at once).
+ */
+export declare function menuFadeFrame(t: number, opening: boolean, box: MenuBox, radius: number, motion?: Motion): MenuMorphFrame;
 /** The settled, fully open frame. */
 export declare function menuRestFrame(box: MenuBox, radius: number): MenuMorphFrame;
 /** The bubble's outline as an SVG path in the menu's pixels (for CSS `clip-path: path()`). */

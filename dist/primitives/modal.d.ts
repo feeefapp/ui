@@ -33,7 +33,7 @@ export declare function Modal({ open, children, close, label, wide, className, s
     initialFocusRef?: React.RefObject<HTMLElement | null>;
     /** Focus restored after the dialog finishes closing, even if its original trigger unmounted. */
     returnFocusRef?: React.RefObject<HTMLElement | null>;
-    /** Scrollable dialogs only: spacing passed to the inner `ScrollArea`. */
+    /** Scrollable dialogs only: spacing passed to the inner `ScrollArea` (default: floats the shell gap G from the edges, content padding 16). */
     scrollOptions?: Pick<ScrollAreaProps, 'edgeGap' | 'contentPadding'>;
 }): React.JSX.Element | null;
 //# sourceMappingURL=modal.d.ts.map

@@ -5,6 +5,8 @@ import { createPortal, flushSync } from 'react-dom';
 import { cn } from './utils.js';
 import { useGlassMember } from './glass/member.js';
 import './scaffold.css';
+import { prefersReducedMotion } from './physics/motion-value.js';
+import { useShellGap } from './scroll/shell-gap.js';
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
 const ScaffoldContext = React.createContext(null);
 const reserveProperties = [
@@ -120,10 +122,12 @@ export function ScaffoldProvider({ children, className, }) {
  * without moving it or changing its semantic element. Remeasures on resize, animation and
  * transition end. Does nothing outside a provider.
  */
-export function useFloatingReserve(slot, ref, { active = true, edge = 'auto', gap = 12, measureChildren = false, } = {}) {
+export function useFloatingReserve(slot, ref, { active = true, edge = 'auto', gap: gapProp, measureChildren = false, } = {}) {
     const scaffold = React.useContext(ScaffoldContext);
     const id = React.useId();
     const reserve = scaffold?.reserve;
+    const shellGap = useShellGap(ref);
+    const gap = gapProp ?? shellGap;
     useIsomorphicLayoutEffect(() => {
         if (!reserve || !active || !ref.current)
             return;
@@ -199,7 +203,7 @@ export function useFloatingReserve(slot, ref, { active = true, edge = 'auto', ga
  * the provider's viewport-fixed layer, and reserves their measured size under `slot`. The layer
  * fills the viewport and ignores pointer input; position the child yourself.
  */
-export function FloatingLayer({ children, slot, active = true, edge = 'auto', gap = 12, className, }) {
+export function FloatingLayer({ children, slot, active = true, edge = 'auto', gap, className, }) {
     const scaffold = React.useContext(ScaffoldContext);
     const region = React.useRef(null);
     const [ready, setReady] = React.useState(false);
@@ -242,7 +246,7 @@ let navigationSerial = 0;
 export function useNavigation() {
     return React.useCallback((update) => {
         const serial = ++navigationSerial;
-        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const reduced = prefersReducedMotion();
         const doc = document;
         if (reduced || !doc.startViewTransition) {
             update();
@@ -284,7 +288,7 @@ export function ViewTransition({ as = 'div', viewKey, className, children, ...pr
         }
         if (!element ||
             currentTransition ||
-            window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+            prefersReducedMotion() ||
             typeof element.animate !== 'function')
             return;
         const animation = element.animate([

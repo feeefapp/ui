@@ -1,7 +1,6 @@
 /** Stable public facade; implementations remain independently reusable. */
 import './system.css';
 import './primitives/control-variants.css';
-export { Switch, SwitchIndicator } from './primitives/switch.js';
 export { Button, IconButton } from './primitives/button.js';
 export { Input, Textarea, Label, Image } from './primitives/fields.js';
 export { Select, Option } from './primitives/select.js';
@@ -11,7 +10,7 @@ export { Box, Text, Link, Form, List, ListItem, Divider, Style, } from './primit
 export type { ButtonProps, ButtonVariant, ControlSize, ButtonAppearance, } from './primitives/button.js';
 export { SegmentedControl } from './primitives/segmented.js';
 export { Toolbar, ToolbarGroup } from './toolbar.js';
-export type { SegmentOption } from './primitives/segmented.js';
+export type { SegmentOption, SegmentTone } from './primitives/segmented.js';
 export { RawInput } from './primitives/raw-input.js';
 export type { RawInputProps, InputElement, InputValidator } from './primitives/raw-input.js';
 export { TextField } from './primitives/text-field.js';

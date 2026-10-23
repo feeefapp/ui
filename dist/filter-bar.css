@@ -2,7 +2,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 8px;
+  /* Bubbles and pinned chips sit --lab-toolbar-gap (the shell gap G by default) apart. */
+  gap: var(--lab-toolbar-gap);
   width: 100%;
   min-width: 0;
   pointer-events: none;
@@ -18,7 +19,7 @@
 .lab-filter-trailing {
   margin-inline-start: auto;
   display: flex;
-  gap: 8px;
+  gap: var(--lab-toolbar-gap);
 }
 .lab-filter-panel {
   width: min(300px, calc(100vw - 24px));
@@ -99,7 +100,7 @@ html[data-lab-theme] .lab-control.lab-filter-row-main {
 .lab-filter-pins {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--lab-toolbar-gap);
   min-width: 0;
   max-width: 100%;
 }

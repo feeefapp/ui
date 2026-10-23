@@ -61,7 +61,6 @@ export declare const middleIndex: (count: number) => number;
 export declare const heatAt: (position: number, count: number) => number;
 /** USD with enough precision for cents-level AI prices. */
 export declare const formatUsd: (value: number) => string;
-export declare const reducedMotion: () => boolean;
 export declare const FIRE_CELL = 5;
 export declare const FIRE_PALETTE: string[];
 /** Cheap deterministic noise in [0, 1) for one cell and frame. */

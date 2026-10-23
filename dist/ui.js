@@ -1,7 +1,6 @@
 /** Stable public facade; implementations remain independently reusable. */
 import './system.css';
 import './primitives/control-variants.css';
-export { Switch, SwitchIndicator } from './primitives/switch.js';
 export { Button, IconButton } from './primitives/button.js';
 export { Input, Textarea, Label, Image } from './primitives/fields.js';
 export { Select, Option } from './primitives/select.js';

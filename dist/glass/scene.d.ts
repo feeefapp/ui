@@ -26,6 +26,8 @@ export declare class GlassScene {
     private mutations;
     private pointer;
     private cache;
+    /** Scrollers inside the container that scrolled since the last measure: their bubbles follow exactly. */
+    private scrolled;
     private uid;
     private pressed;
     private glow;
@@ -66,22 +68,25 @@ export declare class GlassScene {
     /** One backdrop element per cluster: a lone bubble clips with border-radius, which every
      * browser applies to backdrop-filter; only merging bubbles need a path clip, in their own box. */
     private pieces;
-    private sampleFrame;
-    private themeObserver;
+    /** Cancels a queued backdrop read (and the write that follows it). */
+    private stopSample;
     private visibility;
-    private sampleTimer;
+    private unwatchBackdrop;
     /** False while the container is off screen: scrolls and pointer moves then cost nothing. */
     private onScreen;
     private lastSample;
     private sampleLater;
     constructor(host: HTMLElement, backdrop: HTMLElement, paint: SVGSVGElement, shadow: SVGSVGElement, uid: string);
+    private onBackdropChange;
     /** Any scroll changes what is behind the glass; a scroller inside the container also moves bubbles. */
     private onScroll;
     /** Reading the backdrop (elementsFromPoint + styles) at most every SAMPLE_GAP_MS while scrolling, and once after. */
     private requestSampleWhileScrolling;
     /** Re-reads what is behind the glass on the next frame (scroll, theme or layout changed). */
     requestSample: () => void;
-    private sampleBackdrop;
+    /** The tone behind the glass when it should flip (adaptive tint), else null. Reads only. */
+    private readBackdropTone;
+    private applyBackdropTone;
     private onPressStart;
     private onPressMove;
     private onPressEnd;
@@ -94,6 +99,12 @@ export declare class GlassScene {
     dispose(): void;
     /** Reads every bubble's layout box and moves the glass toward it. */
     measure(): void;
+    /**
+     * The part of the container `element`'s glass may paint in: the boxes of its ancestors below the
+     * container that clip (overflow other than visible, clip-path, contain: paint), intersected. Also
+     * whether one of them scrolled since the last measure.
+     */
+    private clipOf;
     private release;
     private scheduleDraw;
     private readDrawInput;

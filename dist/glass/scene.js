@@ -1,6 +1,6 @@
 import { MotionValue, onMeasureFrame, onRenderFrame } from '../physics/motion-value.js';
 import { SPRINGS } from '../physics/spring.js';
-import { boundsOf, clampRadius, glassPaths, hostFrame, toLocalPoint, toLocalRect, toScreenPoint, translatePath, } from './geometry.js';
+import { boundsOf, clampRadius, clipAxes, clipInset, clippedGlassPaths, hostFrame, memberClip, openClip, toLocalPoint, toLocalRect, toScreenPoint, translatePath, } from './geometry.js';
 import { DEFAULT_GLASS_LIGHT, glassLightToward, surfaceReflection, measuredRimReflection, surfaceShade, highlightSurface } from './light.js';
 import { planGlassTransition, sameRect } from './transitions.js';
 import { adaptiveGlassTone, backdropTone, parseCssColor } from './adaptive.js';
@@ -17,6 +17,54 @@ const SPRING = SPRINGS.snappy;
 const SVG = 'http://www.w3.org/2000/svg';
 /** Least time between backdrop samples while scrolling. */
 const SAMPLE_GAP_MS = 120;
+/**
+ * What sits behind still glass changes only through the page: its DOM (content, classes, backdrop
+ * tones, the theme), images loading, transitions and animations settling, and the window's size.
+ * One page-wide watch hears those and tells every scene, which re-reads its backdrop if it is on
+ * screen (throttled like scrolling). Nothing polls, so a still page does no glass work at all.
+ * Changes made inside glass containers (their own painting) are ignored.
+ */
+const backdropListeners = new Set();
+let backdropObserver = null;
+const BACKDROP_ATTRIBUTES = ['class', 'data-lab-backdrop', 'data-lab-theme', 'hidden', 'open', 'src'];
+const BACKDROP_EVENTS = ['load', 'transitionend', 'animationend'];
+const outsideGlass = (node) => {
+    const element = node instanceof Element ? node : node?.parentElement;
+    return !!element && !element.closest('[data-glass-container]');
+};
+const notifyBackdrop = () => {
+    for (const listener of backdropListeners)
+        listener();
+};
+const onBackdropEvent = (event) => {
+    if (outsideGlass(event.target))
+        notifyBackdrop();
+};
+function watchBackdrop(listener) {
+    if (typeof document === 'undefined' || typeof MutationObserver === 'undefined')
+        return () => { };
+    if (!backdropListeners.size) {
+        backdropObserver = new MutationObserver((records) => {
+            if (records.some((record) => outsideGlass(record.target)))
+                notifyBackdrop();
+        });
+        backdropObserver.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: BACKDROP_ATTRIBUTES });
+        for (const type of BACKDROP_EVENTS)
+            document.addEventListener(type, onBackdropEvent, { capture: true, passive: true });
+        window.addEventListener('resize', notifyBackdrop, { passive: true });
+    }
+    backdropListeners.add(listener);
+    return () => {
+        backdropListeners.delete(listener);
+        if (backdropListeners.size)
+            return;
+        backdropObserver?.disconnect();
+        backdropObserver = null;
+        for (const type of BACKDROP_EVENTS)
+            document.removeEventListener(type, onBackdropEvent, { capture: true });
+        window.removeEventListener('resize', notifyBackdrop);
+    };
+}
 /** One bubble's glass: an animated rect, its corner radius and, while alive, its element. */
 class Shape {
     x;
@@ -31,6 +79,8 @@ class Shape {
     radius = 0;
     cornerExponent;
     layout = null;
+    /** The part of the container this bubble may paint in (its clipping ancestors); undefined when unclipped. */
+    clip;
     /** Translation written to the element so its content rides with the glass. */
     offset = { x: 0, y: 0 };
     /** The scale actually written to the content, which may lag the spring's next value. */
@@ -123,6 +173,8 @@ export class GlassScene {
     mutations = null;
     pointer = null;
     cache = { key: '', paths: [] };
+    /** Scrollers inside the container that scrolled since the last measure: their bubbles follow exactly. */
+    scrolled = new Set();
     uid;
     pressed = null;
     glow = null;
@@ -163,10 +215,10 @@ export class GlassScene {
     /** One backdrop element per cluster: a lone bubble clips with border-radius, which every
      * browser applies to backdrop-filter; only merging bubbles need a path clip, in their own box. */
     pieces = [];
-    sampleFrame = 0;
-    themeObserver = null;
+    /** Cancels a queued backdrop read (and the write that follows it). */
+    stopSample = null;
     visibility = null;
-    sampleTimer = null;
+    unwatchBackdrop = null;
     /** False while the container is off screen: scrolls and pointer moves then cost nothing. */
     onScreen = true;
     lastSample = 0;
@@ -190,16 +242,11 @@ export class GlassScene {
         }
         host.addEventListener('pointerdown', this.onPressStart, { passive: true });
         window.addEventListener('scroll', this.onScroll, { passive: true, capture: true });
-        if (typeof MutationObserver !== 'undefined') {
-            this.themeObserver = new MutationObserver(this.requestSample);
-            this.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-lab-theme'] });
-        }
-        // Content can change behind still glass (a photo loads, a tab switches): re-check twice a
-        // second, only while the glass is on screen and the page visible.
+        // Content can change behind still glass (a photo loads, a tab switches, the theme flips): the
+        // page-wide watch re-reads the backdrop on those changes, only while this glass is on screen.
+        this.unwatchBackdrop = watchBackdrop(this.onBackdropChange);
         if (typeof IntersectionObserver !== 'undefined') {
             this.visibility = new IntersectionObserver(([entry]) => {
-                if (this.sampleTimer)
-                    clearInterval(this.sampleTimer);
                 const wasOnScreen = this.onScreen;
                 this.onScreen = !!entry?.isIntersecting;
                 // Coming back on screen: catch up on what changed behind it while it was away.
@@ -207,25 +254,26 @@ export class GlassScene {
                     this.requestSample();
                     this.scheduleDraw();
                 }
-                this.sampleTimer = entry?.isIntersecting
-                    ? setInterval(() => {
-                        if (this.adaptive && document.visibilityState === 'visible')
-                            this.requestSample();
-                    }, 500)
-                    : null;
             });
             this.visibility.observe(host);
         }
     }
+    onBackdropChange = () => {
+        if (this.onScreen && this.adaptive && !this.disposed)
+            this.requestSampleWhileScrolling();
+    };
     /** Any scroll changes what is behind the glass; a scroller inside the container also moves bubbles. */
     onScroll = (event) => {
         if (!this.onScreen)
             return;
-        if (event.target instanceof Node && event.target !== this.host && this.host.contains(event.target))
+        if (event.target instanceof Element && event.target !== this.host && this.host.contains(event.target)) {
+            this.scrolled.add(event.target);
             this.requestMeasure();
+        }
         this.requestSampleWhileScrolling();
         // A Firefox lens samples a sibling layer: keep its image under the glass when either moves.
-        if (this.backdropSource)
+        // Elsewhere the backdrop filter reads the live page, so a scroll needs no repaint.
+        if (this.backdropSource && supportsElementRefraction())
             this.scheduleDraw();
     };
     /** Reading the backdrop (elementsFromPoint + styles) at most every SAMPLE_GAP_MS while scrolling, and once after. */
@@ -245,14 +293,27 @@ export class GlassScene {
     }
     /** Re-reads what is behind the glass on the next frame (scroll, theme or layout changed). */
     requestSample = () => {
-        if (this.sampleFrame || typeof requestAnimationFrame === 'undefined')
+        if (this.stopSample || this.disposed || typeof requestAnimationFrame === 'undefined')
             return;
-        this.sampleFrame = requestAnimationFrame(() => {
-            this.sampleFrame = 0;
-            this.sampleBackdrop();
+        // Read in the shared measure phase, with every other glass read, and write in the render
+        // phase: the read never forces a style or layout pass after another scene has painted.
+        let stopRender = () => { };
+        const stopMeasure = onMeasureFrame(() => {
+            stopMeasure();
+            const tone = this.readBackdropTone();
+            stopRender = onRenderFrame(() => {
+                stopRender();
+                this.stopSample = null;
+                this.applyBackdropTone(tone);
+            });
         });
+        this.stopSample = () => {
+            stopMeasure();
+            stopRender();
+        };
     };
-    sampleBackdrop() {
+    /** The tone behind the glass when it should flip (adaptive tint), else null. Reads only. */
+    readBackdropTone() {
         const paths = this.cache.paths;
         let tone = null;
         if (this.adaptive && paths.length && typeof document.elementsFromPoint === 'function') {
@@ -271,7 +332,10 @@ export class GlassScene {
             const mode = document.documentElement.getAttribute('data-lab-theme') === 'dark' ? 'dark' : 'light';
             tone = adaptiveGlassTone(tones, mode, Math.max(...paths.map((path) => path.bounds.height)));
         }
-        if ((tone ?? null) === this.host.getAttribute('data-glass-backdrop'))
+        return tone;
+    }
+    applyBackdropTone(tone) {
+        if (this.disposed || (tone ?? null) === this.host.getAttribute('data-glass-backdrop'))
             return;
         if (tone)
             this.host.setAttribute('data-glass-backdrop', tone);
@@ -374,19 +438,18 @@ export class GlassScene {
     dispose() {
         this.host.removeEventListener('pointerdown', this.onPressStart);
         window.removeEventListener('scroll', this.onScroll, { capture: true });
-        this.themeObserver?.disconnect();
+        this.unwatchBackdrop?.();
+        this.unwatchBackdrop = null;
         this.visibility?.disconnect();
         this.filterHost?.remove();
         for (const work of this.refractionWork)
             work.dispose();
         for (const map of this.decodedMaps)
             map.dispose();
-        if (this.sampleTimer)
-            clearInterval(this.sampleTimer);
         if (this.sampleLater)
             clearTimeout(this.sampleLater);
-        if (this.sampleFrame)
-            cancelAnimationFrame(this.sampleFrame);
+        this.stopSample?.();
+        this.stopSample = null;
         window.removeEventListener('pointermove', this.onPressMove);
         window.removeEventListener('pointerup', this.onPressEnd);
         window.removeEventListener('pointercancel', this.onPressEnd);
@@ -421,6 +484,7 @@ export class GlassScene {
         let tracking = false;
         const targets = new Map();
         const unions = new Map();
+        const unionViews = new Map();
         const unionRadius = new Map();
         // Shapes keep the true superellipse radius; without corner-shape the CSS radius is shrunk.
         this.cornerFit = this.cornerShape === 'round' ? 1 : cornerFit();
@@ -443,16 +507,28 @@ export class GlassScene {
             const local = toLocalRect(frame, box);
             const rect = glassLayoutRect(local, offset, shape?.contentScale);
             const radius = radiusOf(element) / this.cornerFit;
+            const view = this.clipOf(element, frame);
             if (options.union) {
                 const key = `union:${options.union}`;
                 unions.set(key, [...(unions.get(key) ?? []), rect]);
+                unionViews.set(key, [...(unionViews.get(key) ?? []), view]);
                 unionRadius.set(key, Math.min(unionRadius.get(key) ?? Infinity, radius));
             }
             else
-                targets.set(id, { rect, radius, member, animated });
+                targets.set(id, { rect, radius, member, animated, ...view });
         }
-        for (const [key, rects] of unions)
-            targets.set(key, { rect: boundsOf(rects), radius: unionRadius.get(key), member: null });
+        this.scrolled.clear();
+        for (const [key, rects] of unions) {
+            const views = unionViews.get(key);
+            const clips = views.map((view) => view.clip);
+            targets.set(key, {
+                rect: boundsOf(rects),
+                radius: unionRadius.get(key),
+                member: null,
+                clip: clips.every((clip) => clip) ? boundsOf(clips) : undefined,
+                scrolled: views.some((view) => view.scrolled),
+            });
+        }
         // Bubbles present when the page appears just appear: no growing in on load, even when they
         // register a little after the container (lazy or conditional content).
         const instant = this.reduceMotion || !this.measured || performance.now() - this.mountedAt < 300;
@@ -464,6 +540,7 @@ export class GlassScene {
             const grow = birth.kind === 'grow' && !instant;
             const shape = new Shape(grow ? birth.from : target.rect, grow || instant ? 1 : 0);
             shape.carry = !grow;
+            shape.clip = target.clip;
             this.shapes.set(birth.id, shape);
             if (!instant && target.member)
                 fadeIn(target.member.element);
@@ -498,9 +575,10 @@ export class GlassScene {
             shape.leaving = false;
             shape.radius = target.radius;
             shape.cornerExponent = this.cornerShape === 'round' ? 2 : undefined;
-            // Bubbles that animate their own size, or that something else is animating right now, are
-            // followed exactly instead of sprung, so the glass never lags behind them.
-            const follow = target.member?.options.motion === 'follow' || !!target.animated;
+            shape.clip = target.clip;
+            // Bubbles that animate their own size, that something else is animating right now, or that a
+            // scroller moved, are followed exactly instead of sprung, so the glass never lags behind them.
+            const follow = target.member?.options.motion === 'follow' || !!target.animated || !!target.scrolled;
             const changed = !shape.layout || !sameRect(shape.layout, target.rect);
             shape.layout = target.rect;
             if (shape.scale.getTarget() !== 1)
@@ -520,6 +598,33 @@ export class GlassScene {
         this.tracking = tracking;
         this.scheduleDraw();
         this.requestSampleWhileScrolling();
+    }
+    /**
+     * The part of the container `element`'s glass may paint in: the boxes of its ancestors below the
+     * container that clip (overflow other than visible, clip-path, contain: paint), intersected. Also
+     * whether one of them scrolled since the last measure.
+     */
+    clipOf(element, frame) {
+        const clips = [];
+        let scrolled = false;
+        if (!this.host.contains(element))
+            return { scrolled };
+        for (let node = element.parentElement; node && node !== this.host; node = node.parentElement) {
+            if (this.scrolled.has(node))
+                scrolled = true;
+            const axes = clipAxes(getComputedStyle(node));
+            if (!axes.x && !axes.y)
+                continue;
+            const box = node.getBoundingClientRect();
+            const sx = node.offsetWidth ? box.width / node.offsetWidth : 1;
+            const sy = node.offsetHeight ? box.height / node.offsetHeight : 1;
+            // Overflow clips at the padding box (inside borders and scrollbars), clip-path at the border box.
+            const edge = axes.box === 'padding'
+                ? { left: box.left + node.clientLeft * sx, top: box.top + node.clientTop * sy, width: node.clientWidth * sx, height: node.clientHeight * sy }
+                : box;
+            clips.push(openClip(toLocalRect(frame, edge), axes));
+        }
+        return { clip: memberClip(clips), scrolled };
     }
     release(shape, id) {
         const member = this.members.get(id);
@@ -591,8 +696,10 @@ export class GlassScene {
         const { frame } = input;
         this.sourceFrame = input.sourceFrame;
         const visuals = [];
+        const clips = [];
         for (const [id, shape] of this.shapes) {
             visuals.push({ ...shape.visual(), id });
+            clips.push(shape.clip && { ...shape.clip, x: shape.clip.x + GLASS_MARGIN, y: shape.clip.y + GLASS_MARGIN });
             const member = this.members.get(id);
             if (!member || shape.leaving || !shape.layout)
                 continue;
@@ -613,9 +720,9 @@ export class GlassScene {
         }
         const m = GLASS_MARGIN;
         const placed = visuals.map((v) => ({ ...v, x: v.x + m, y: v.y + m }));
-        const key = `${this.cornerShape}|${this.spacing}|${placed.map((v) => `${v.x.toFixed(1)},${v.y.toFixed(1)},${v.width.toFixed(1)},${v.height.toFixed(1)},${v.radius.toFixed(1)}`).join(';')}`;
+        const key = `${this.cornerShape}|${this.spacing}|${placed.map((v) => `${v.x.toFixed(1)},${v.y.toFixed(1)},${v.width.toFixed(1)},${v.height.toFixed(1)},${v.radius.toFixed(1)}`).join(';')}|${clips.map((c) => (c ? `${c.x.toFixed(1)},${c.y.toFixed(1)},${c.width.toFixed(1)},${c.height.toFixed(1)}` : '')).join(';')}`;
         if (key !== this.cache.key)
-            this.cache = { key, paths: glassPaths(placed, this.spacing) };
+            this.cache = { key, paths: clippedGlassPaths(placed, clips, this.spacing) };
         const paths = this.cache.paths;
         this.syncBackdrops(paths);
         const lights = paths.map((p) => this.lightFor(p.bounds, frame));
@@ -656,13 +763,14 @@ export class GlassScene {
             if (sourceImage)
                 this.positionElementSource(piece, sourceImage);
             if (path.shapes.length === 1) {
-                // A lone shape clips with CSS: hand back the radius CSS would use (the circle fallback's).
+                // A lone shape clips with CSS: hand back the radius CSS would use (the circle fallback's),
+                // cut straight at the scroller or clip around it.
                 setStyleIfChanged(style, 'borderRadius', `${clampRadius(path.shapes[0]) * this.cornerFit}px`);
-                setStyleIfChanged(style, 'clipPath', '');
+                setStyleIfChanged(style, 'clipPath', clipInset(path.bounds, path.clip));
             }
             else {
                 setStyleIfChanged(style, 'borderRadius', '');
-                setStyleIfChanged(style, 'clipPath', `path("${translatePath(path.d, -x, -y)}")`);
+                setStyleIfChanged(style, 'clipPath', `path("${translatePath(path.visible, -x, -y)}")`);
             }
         });
     }
@@ -954,13 +1062,17 @@ function renderPaint(svg, paths, lights, uid, spacing, highlightWidth, highlight
             const stroke = node('path', { class: 'lab-glass-edge' });
             group.append(stroke);
             svg.append(group);
-            edge = { clip, outline, group, edge: stroke, d: '' };
+            edge = { clip, outline, group, edge: stroke, d: '', visible: '' };
             edges.clusters[i] = edge;
         }
+        // The stroke keeps the whole outline; its clip is cut at the scroller, so the cut edge is bare.
         if (edge.d !== path.d) {
-            edge.outline.setAttribute('d', path.d);
             edge.edge.setAttribute('d', path.d);
             edge.d = path.d;
+        }
+        if (edge.visible !== path.visible) {
+            edge.outline.setAttribute('d', path.visible);
+            edge.visible = path.visible;
         }
         // Merged path bounds already include a fringe. The exact CSS box of a lone shape does
         // not, so give its reflection the same room for antialiasing without resizing the lens.
@@ -1026,6 +1138,7 @@ function renderPaint(svg, paths, lights, uid, spacing, highlightWidth, highlight
         setStyleIfChanged(cached.canvas.style, 'top', `${y}px`);
         setStyleIfChanged(cached.canvas.style, 'width', `${cached.canvas.width / 2}px`);
         setStyleIfChanged(cached.canvas.style, 'height', `${cached.canvas.height / 2}px`);
+        setStyleIfChanged(cached.canvas.style, 'clipPath', clipInset({ x, y, width: cached.canvas.width / 2, height: cached.canvas.height / 2 }, path.clip));
         if (cached.canvas.parentElement !== layer)
             layer.append(cached.canvas);
     });
@@ -1048,7 +1161,7 @@ function renderPaint(svg, paths, lights, uid, spacing, highlightWidth, highlight
         }
         if (effect.group.hasAttribute('display'))
             effect.group.removeAttribute('display');
-        setAttributeIfChanged(effect.outline, 'd', paths.map(path => path.d).join(''));
+        setAttributeIfChanged(effect.outline, 'd', paths.map(path => path.visible).join(''));
         setAttributeIfChanged(effect.group, 'opacity', String(glow.opacity));
         for (const element of [effect.gradient, effect.circle]) {
             setAttributeIfChanged(element, 'cx', String(glow.x));
@@ -1070,7 +1183,7 @@ function renderPaint(svg, paths, lights, uid, spacing, highlightWidth, highlight
 const shadowLayers = new WeakMap();
 function renderShadow(svg, paths, uid) {
     let layer = shadowLayers.get(svg);
-    const key = paths.map(path => `${path.d}|${glassSize(smallestSide(path.shapes))}`).join(';');
+    const key = paths.map(path => `${path.d}|${glassSize(smallestSide(path.shapes))}|${path.clip ? Object.values(path.clip).join(',') : ''}`).join(';');
     if (layer?.key === key && layer.defs.parentNode === svg)
         return;
     if (!paths.length) {
@@ -1089,7 +1202,7 @@ function renderShadow(svg, paths, uid) {
         defs.append(mask, blur);
         const group = node('g', { mask: `url(#${uid}-m)` });
         svg.replaceChildren(defs, group);
-        layer = { key: '', defs, mask, bounds, cutout, blur, group, shapes: [] };
+        layer = { key: '', defs, mask, bounds, cutout, blur, group, shapes: [], scissors: [] };
         shadowLayers.set(svg, layer);
     }
     layer.key = key;
@@ -1099,9 +1212,11 @@ function renderShadow(svg, paths, uid) {
     for (const element of [layer.mask, layer.bounds, layer.blur])
         for (const [name, value] of Object.entries(region))
             element.setAttribute(name, String(value));
-    layer.cutout.setAttribute('d', paths.map(path => path.d).join(''));
+    layer.cutout.setAttribute('d', paths.map(path => path.visible).join(''));
     while (layer.shapes.length > paths.length)
         layer.shapes.pop().remove();
+    while (layer.scissors.length > paths.length)
+        layer.scissors.pop().remove();
     paths.forEach((path, i) => {
         let shape = layer.shapes[i];
         if (!shape) {
@@ -1115,6 +1230,24 @@ function renderShadow(svg, paths, uid) {
         }
         shape.setAttribute('d', path.d);
         shape.setAttribute('data-glass-size', glassSize(smallestSide(path.shapes)));
+        // Glass in a scroller casts its shadow inside it only. The clip is in the shape's own
+        // (translated) space, so it moves back up by the shadow's offset.
+        if (path.clip) {
+            let scissor = layer.scissors[i];
+            if (!scissor) {
+                scissor = node('clipPath', { id: `${uid}-s${i}`, clipPathUnits: 'userSpaceOnUse' });
+                scissor.append(node('rect', {}));
+                layer.defs.append(scissor);
+                layer.scissors[i] = scissor;
+            }
+            const rect = scissor.firstElementChild;
+            const clip = { ...path.clip, y: path.clip.y - GLASS_SHADOW.dy };
+            for (const [name, value] of Object.entries(clip))
+                rect.setAttribute(name, String(value));
+            shape.setAttribute('clip-path', `url(#${uid}-s${i})`);
+        }
+        else
+            shape.removeAttribute('clip-path');
     });
 }
 //# sourceMappingURL=scene.js.map

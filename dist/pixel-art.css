@@ -110,6 +110,13 @@
     opacity: 0.7;
   }
 }
+/* ThemeConfig motion `reduced` / `none` (system.css): the same still art and static loader. */
+html:is([data-lab-motion='reduced'], [data-lab-motion='none']) :is(.lab-pixel-art-animated, .lab-pixel-texture-animated, .lab-pixel-loader-cell) {
+  animation: none !important;
+}
+html:is([data-lab-motion='reduced'], [data-lab-motion='none']) .lab-pixel-loader-cell {
+  opacity: 0.7;
+}
 
 /* Decoration can disappear without removing semantic artwork or loading status. */
 @media (forced-colors: active) {

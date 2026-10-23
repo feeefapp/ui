@@ -1,4 +1,5 @@
 import { SPRINGS, type Spring } from './spring.js';
+import type { Motion } from '../theme-config.js';
 type FrameCallback = (now: number) => void;
 /** Runs `callback` on every animation frame until the returned function is called. One shared loop. */
 export declare function onAnimationFrame(callback: FrameCallback): () => void;
@@ -6,8 +7,28 @@ export declare function onAnimationFrame(callback: FrameCallback): () => void;
 export declare function onMeasureFrame(callback: FrameCallback): () => void;
 /** Paints after all motion updates and layout reads, regardless of subscription order, on the shared clock. */
 export declare function onRenderFrame(callback: FrameCallback): () => void;
-/** True when the reader asked for reduced motion. Safe to call on the server. */
+/**
+ * How much the kit animates right now: the app's ThemeConfig `motion` (`data-lab-motion` on
+ * `<html>`), made stricter by the reader's `prefers-reduced-motion` (`full` becomes `reduced`;
+ * `none` stays `none`). `full` on the server.
+ */
+export declare function motionOf(root?: Element | null): Motion;
+/**
+ * True when motion should be reduced: the reader asked for it, or the app's ThemeConfig `motion`
+ * is `reduced` or `none`. Every reduced-motion path in the kit reads this. Safe on the server.
+ */
 export declare function prefersReducedMotion(): boolean;
+/** Calls `listener` whenever `motionOf()` may have changed (the OS setting or `data-lab-motion`). */
+export declare function onMotionChange(listener: () => void): () => void;
+/**
+ * `prefersReducedMotion()` shaped like a `MediaQueryList`, for code written against
+ * `matchMedia('(prefers-reduced-motion: reduce)')`: `matches` is live and `change` fires on either source.
+ */
+export declare function reducedMotionQuery(): {
+    readonly matches: boolean;
+    addEventListener(type: 'change', listener: () => void): void;
+    removeEventListener(type: 'change', listener: () => void): void;
+};
 export type AnimateOptions = {
     /** A spring, or the name of one of the kit's springs. Default `smooth`. */
     spring?: Spring | keyof typeof SPRINGS;

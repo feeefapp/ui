@@ -9,6 +9,7 @@
  */
 import { SPRINGS, mix, solveSpring, springAtRest } from '../physics/spring.js';
 import { foSuperellipsePath } from '../brand/geometry.js';
+import { motionFade } from '../theme-config.js';
 /** The measured timings (seconds) and shapes. */
 export const MENU_MORPH = {
     /** The trigger pinches (narrower, taller) before the bubble springs out. */
@@ -38,8 +39,8 @@ export const MENU_MORPH = {
     fadeOut: 0.1,
 };
 /** How long a dismissal takes in seconds, for the host that keeps the menu mounted until it ends. */
-export function menuCloseDuration(reducedMotion = false) {
-    return reducedMotion ? MENU_MORPH.fadeOut : MENU_MORPH.closeEnd;
+export function menuCloseDuration(motion = 'full') {
+    return motion === 'full' ? MENU_MORPH.closeEnd : motionFade(motion, MENU_MORPH.fadeOut);
 }
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 /** Hermite smoothstep of `value` between `from` and `to`. */
@@ -123,10 +124,13 @@ export function menuCloseFrame(t, from, to, toRadius) {
         settled,
     };
 }
-/** Reduced motion: the menu appears or leaves in place with a short crossfade. */
-export function menuFadeFrame(t, opening, box, radius) {
-    const duration = opening ? MENU_MORPH.fadeIn : MENU_MORPH.fadeOut;
-    const k = smoothstep(0, duration, Math.max(0, t));
+/**
+ * Reduced motion: the menu appears or leaves in place with a short crossfade (`motionFade`: none
+ * under motion `none`, which shows the end state at once).
+ */
+export function menuFadeFrame(t, opening, box, radius, motion = 'reduced') {
+    const duration = motionFade(motion, opening ? MENU_MORPH.fadeIn : MENU_MORPH.fadeOut);
+    const k = duration === 0 ? 1 : smoothstep(0, duration, Math.max(0, t));
     const opacity = opening ? k : 1 - k;
     return {
         box,

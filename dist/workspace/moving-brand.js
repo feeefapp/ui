@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { FoAnimatedLogo } from '../brand/logo.js';
 import { useScaffold } from './scaffold.js';
 import './moving-brand.css';
+import { reducedMotionQuery } from '../physics/motion-value.js';
 /** One persistent visual follows the real, accessible logo links as navigation changes. */
 export function MovingBrand({ host, }) {
     const state = useScaffold();
@@ -19,7 +20,7 @@ export function MovingBrand({ host, }) {
         let frame = 0;
         let last = 0;
         let followUntil = 0;
-        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const reduced = reducedMotionQuery();
         const target = () => {
             const inSidebar = state.drawerOpen || (!state.compact && state.sideMode === 'expanded');
             return root.querySelector(`[data-tool-brand-anchor="${inSidebar ? 'side' : 'header'}"]`);

@@ -2,7 +2,7 @@
 import { jsx as _jsx, Fragment as _Fragment, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
 import './motion.css';
-const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+import { prefersReducedMotion } from './physics/motion-value.js';
 /**
  * Keeps an element mounted while it animates out. `state` drives `data-state`
  * so CSS owns the motion; the timer is the source of truth for unmounting.
@@ -19,7 +19,7 @@ export function usePresence(open, exitMs = 200) {
         if (!mounted)
             return;
         setState('closed');
-        const timer = window.setTimeout(() => setMounted(false), reducedMotion() ? 0 : exitMs);
+        const timer = window.setTimeout(() => setMounted(false), prefersReducedMotion() ? 0 : exitMs);
         return () => clearTimeout(timer);
     }, [open]);
     return { mounted, state };
@@ -107,7 +107,7 @@ export function Swap({ swapKey, children, className, }) {
         const timer = window.setTimeout(() => {
             timers.current.delete(timer);
             setLeaving((old) => old.filter((item) => item !== last));
-        }, reducedMotion() ? 0 : 220);
+        }, prefersReducedMotion() ? 0 : 220);
         timers.current.add(timer);
     }, [swapKey]);
     // Keep the snapshot fresh for same-key updates without re-rendering.

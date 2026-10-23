@@ -127,7 +127,7 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
                                         }, onCloseAutoFocus: (event) => {
                                             if (editing)
                                                 event.preventDefault();
-                                        }, children: _jsx(ScrollArea, { label: "Filter catalog rows", contentPadding: 8, edgeGap: 8, top: _jsx(ToolbarSearch, { label: "Find a filter", value: query, onValueChange: setQuery, inputRef: search, defaultExpanded: true }), bottom: _jsx(Dock, { label: "Filter catalog actions", content: _jsxs("span", { children: [active, " active \u00B7 ", pins.length, " pinned"] }), children: _jsx(Button, { variant: "text", controlSize: "regular", disabled: !active, onClick: clearAll, children: "Clear values" }) }), children: _jsxs("div", { className: "lab-filter-catalog-list", children: [options
+                                        }, children: _jsx(ScrollArea, { label: "Filter catalog rows", top: _jsx(ToolbarSearch, { label: "Find a filter", value: query, onValueChange: setQuery, inputRef: search, defaultExpanded: true }), bottom: _jsx(Dock, { label: "Filter catalog actions", content: _jsxs("span", { children: [active, " active \u00B7 ", pins.length, " pinned"] }), children: _jsx(Button, { variant: "text", controlSize: "regular", disabled: !active, onClick: clearAll, children: "Clear values" }) }), children: _jsxs("div", { className: "lab-filter-catalog-list", children: [options
                                                         .filter((option) => `${option.label} ${option.description || ''} ${option.keywords?.join(' ') || ''}`
                                                         .toLowerCase()
                                                         .includes(query.toLowerCase()))
@@ -156,7 +156,7 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
                                             // Start in the description field, not on the scroll region.
                                             event.preventDefault();
                                             naturalInput.current?.focus();
-                                        }, children: _jsx(ScrollArea, { label: "Natural filter description", edgeGap: 8, contentPadding: 12, bottom: _jsx(Dock, { label: "Natural filter actions", children: _jsx(Button, { type: "submit", form: `${formId}-natural`, variant: "filled", controlSize: "regular", loading: busy, disabled: busy || !text.trim(), children: "Apply filters" }) }), children: _jsxs("form", { id: `${formId}-natural`, onSubmit: async (event) => {
+                                        }, children: _jsx(ScrollArea, { label: "Natural filter description", contentPadding: 12, bottom: _jsx(Dock, { label: "Natural filter actions", children: _jsx(Button, { type: "submit", form: `${formId}-natural`, variant: "filled", controlSize: "regular", loading: busy, disabled: busy || !text.trim(), children: "Apply filters" }) }), children: _jsxs("form", { id: `${formId}-natural`, onSubmit: async (event) => {
                                                     event.preventDefault();
                                                     if (busy || !text.trim())
                                                         return;
@@ -202,7 +202,7 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
                                 }, onCloseAutoFocus: (event) => {
                                     event.preventDefault();
                                     returnFocus.current?.focus({ preventScroll: true });
-                                }, children: smallSelected && (_jsx(ScrollArea, { label: `${smallSelected.label} options`, edgeGap: 8, contentPadding: 8, top: smallSelected.type === 'enum' ? (_jsx(ToolbarSearch, { label: `Search ${smallSelected.label.toLowerCase()}`, value: choiceQuery, onValueChange: setChoiceQuery, inputRef: enumSearch, defaultExpanded: true })) : undefined, bottom: _jsxs(Dock, { label: "Filter value actions", children: [_jsx(Button, { variant: "text", controlSize: "regular", onClick: () => {
+                                }, children: smallSelected && (_jsx(ScrollArea, { label: `${smallSelected.label} options`, top: smallSelected.type === 'enum' ? (_jsx(ToolbarSearch, { label: `Search ${smallSelected.label.toLowerCase()}`, value: choiceQuery, onValueChange: setChoiceQuery, inputRef: enumSearch, defaultExpanded: true })) : undefined, bottom: _jsxs(Dock, { label: "Filter value actions", children: [_jsx(Button, { variant: "text", controlSize: "regular", onClick: () => {
                                                     change(smallSelected, null);
                                                     pin(smallSelected.id);
                                                     setEditing(null);

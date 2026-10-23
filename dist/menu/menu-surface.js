@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cn } from '../utils.js';
 import { cornerFit } from '../brand/corner-fit.js';
-import { onAnimationFrame, prefersReducedMotion } from '../physics/motion-value.js';
+import { motionOf, onAnimationFrame } from '../physics/motion-value.js';
 import { useFloatingBoundary } from './boundary.js';
 import { MENU_MORPH, menuAlign, menuBubblePath, menuCloseFrame, menuFadeFrame, menuOpenFrame, menuRestFrame, } from './morph-model.js';
 import { physicalMenuSide, sidePanelFallback } from './placement.js';
@@ -130,7 +130,8 @@ function runMorph(content, layers, cover, placed) {
     const { shadow, bubble, body, edge } = layers;
     if (!shadow || !bubble || !body || !edge)
         return;
-    const reduced = prefersReducedMotion();
+    const motion = motionOf();
+    const reduced = motion !== 'full';
     let trigger = findTrigger(content);
     const savedOpacity = trigger?.style.opacity ?? '';
     const savedTransition = trigger?.style.transition ?? '';
@@ -228,7 +229,7 @@ function runMorph(content, layers, cover, placed) {
             if (isClosing())
                 return beginClose(now);
             const frame = reduced || !from
-                ? menuFadeFrame(elapsed, true, full, menuRadius)
+                ? menuFadeFrame(elapsed, true, full, menuRadius, motion)
                 : menuOpenFrame(elapsed, from, triggerRadius, full, menuRadius);
             if (elapsed >= (reduced || !from ? 0 : MENU_MORPH.hideTrigger))
                 hideTrigger(true);
@@ -245,7 +246,7 @@ function runMorph(content, layers, cover, placed) {
         if (phase === 'closing') {
             const target = from ?? full;
             const frame = reduced || !from || !closingFrom
-                ? menuFadeFrame(elapsed, false, shown?.box ?? full, shown?.radius ?? menuRadius)
+                ? menuFadeFrame(elapsed, false, shown?.box ?? full, shown?.radius ?? menuRadius, motion)
                 : menuCloseFrame(elapsed, closingFrom, target, triggerRadius);
             if (reduced || !from || elapsed >= MENU_MORPH.revealTrigger)
                 hideTrigger(false);

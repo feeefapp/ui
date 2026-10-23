@@ -11,6 +11,7 @@ import type { CSSProperties } from 'react';
  * - `data-lab-glass`    → how floating glass behaves (glass/glass.css, GlassContainer)
  * - `--lab-glass-tint`  → the glass material between clear and tinted (system.css, glass.css)
  * - `data-lab-glass-blur` / `data-lab-glass-refraction` → backdrop blur and edge bending (`on`/`off`)
+ * - `data-lab-motion`   → `full` / `reduced` / `none` (system.css; `motionOf()` in physics/motion-value.ts)
  * - `metrics` → size variables (`--lab-control-height`, `--lab-toolbar-item`, …) that replace the density's
  *
  * Server-rendered hosts also spread `themeAttributes(config)` onto `<html>` so the first
@@ -52,6 +53,13 @@ export interface ThemeConfig {
      */
     glassRefraction?: boolean;
     /**
+     * Motion: `full` (default) animates; `reduced` behaves as if the reader asked for reduced motion
+     * (springs jump, transitions become instant or short fades, glass light stays still); `none`
+     * stops every animation and transition, ambient ones included (pixel textures, loaders, glass
+     * sampling). The reader's own reduced-motion setting still applies when it is stricter.
+     */
+    motion?: Motion;
+    /**
      * Control sizes, overriding the density's. Each value set here replaces that size at every
      * density (density supplies the rest), so an app can keep the iOS defaults and only change, say,
      * its toolbar height. Lengths are CSS pixels (Flutter logical pixels in the twin).
@@ -87,9 +95,9 @@ export interface Metrics {
     rowHeight?: number;
     /** A toolbar bubble's outer height: 44; controls inside are 6px less (`--lab-toolbar-item`). */
     toolbarItem?: number;
-    /** Space between toolbar groups: 12 (`--lab-toolbar-gap`). */
+    /** Space between toolbar groups: the shell gap, 8 (`--lab-toolbar-gap`). */
     toolbarGap?: number;
-    /** A floating bar's inset from its panel's sides: 16 (`--lab-toolbar-inset`). */
+    /** A floating bar's inset from its panel's sides: the shell gap, 8 (`--lab-toolbar-inset`). */
     toolbarInset?: number;
     /** From a segmented control's edge to its pill, and between options: 2 (`--lab-segmented-inset`). Its height is `controlHeight.regular`. */
     segmentedInset?: number;
@@ -113,6 +121,8 @@ export interface Metrics {
     sidebarWidth?: number;
     /** The workspace scaffold's navigation rail: 64 / 52 / 44 by density (`--lab-navigation-rail-width`). */
     railWidth?: number;
+    /** The one chrome gap G: window, top bar, content panel, sidebar items, toolbar groups, floating bars and ScrollArea edges: 8 (`--lab-shell-gap`). `toolbarGap` and `toolbarInset` default to it. */
+    shellGap?: number;
 }
 /** Color palette: `lab` (Feeef green) or `mono` (black and white). */
 export type Palette = 'lab' | 'mono';
@@ -120,10 +130,46 @@ export type Palette = 'lab' | 'mono';
 export type Density = 'comfortable' | 'compact' | 'thin';
 /** How floating glass behaves: moving liquid glass, still glass, or opaque surfaces. */
 export type GlassStyle = 'liquid' | 'still' | 'solid';
+/** How much the kit animates: everything, the reduced-motion paths, or nothing at all. */
+export type Motion = 'full' | 'reduced' | 'none';
+/**
+ * How long (seconds) the short crossfade that replaces a movement under reduced motion lasts:
+ * `seconds` under `reduced`, 0 under `none`, which animates nothing at all. Every reduced-motion
+ * crossfade takes its length from here (Flutter: `motionFade()`).
+ */
+export declare function motionFade(motion: Motion, seconds: number): number;
 /** `on` / `off`, as boolean options appear on `<html>`. */
 export type GlassSwitch = 'on' | 'off';
 /** The config every unset option falls back to. `primary` unset means the palette's own color. */
 export declare const THEME_DEFAULTS: Required<Omit<ThemeConfig, 'primary' | 'metrics'>>;
+/**
+ * Ready-made looks, as plain partial configs: spread one and override anything,
+ * `{ ...PROFILES.balanced, palette: 'mono' }`. The kit still checks what the browser supports
+ * (refraction, blur; `glassCapabilities()`), so a profile never needs a per-browser variant.
+ * - `quality`: liquid glass with refraction and blur, full motion.
+ * - `balanced`: still glass without refraction or blur, full motion.
+ * - `performance`: opaque chrome and no motion at all, for slow devices and dense tools.
+ */
+export declare const PROFILES: {
+    quality: {
+        glass: "liquid";
+        glassRefraction: true;
+        glassBlur: true;
+        motion: "full";
+    };
+    balanced: {
+        glass: "still";
+        glassRefraction: false;
+        glassBlur: false;
+        motion: "full";
+    };
+    performance: {
+        glass: "solid";
+        glassRefraction: false;
+        glassBlur: false;
+        motion: "none";
+    };
+};
 /** `#abc` / `#aabbcc` → [r, g, b] in 0–255, or null for anything else. */
 export declare function parseHexColor(color: string): [number, number, number] | null;
 /** Black-ish or white text for a background color, whichever has more contrast (WCAG ratio). */
@@ -137,7 +183,7 @@ export declare function metricVariables(metrics?: Metrics): Record<string, strin
 /**
  * Attributes for the root `<html>` element (React props), e.g. in a Next.js root layout:
  * `data-lab-palette`, `data-lab-density`, `data-lab-glass`, `data-lab-glass-blur`,
- * `data-lab-glass-refraction`, `data-lab-primary` (when set) and the style variables
+ * `data-lab-glass-refraction`, `data-lab-motion`, `data-lab-primary` (when set) and the style variables
  * (`--lab-radius-scale`, `--lab-glass-tint`, the seed colours, and one variable per set `metrics` value).
  * Unset options use `THEME_DEFAULTS`; `radius` is clamped to 0–1.5, `glassTint` to 0–1, and an invalid `primary`
  * is ignored. Color mode (`data-lab-theme`) is not included; `ThemeProvider` sets it.
@@ -148,6 +194,7 @@ export declare function themeAttributes(config?: ThemeConfig): {
     'data-lab-glass': GlassStyle;
     'data-lab-glass-blur': GlassSwitch;
     'data-lab-glass-refraction': GlassSwitch;
+    'data-lab-motion': Motion;
     'data-lab-primary'?: '';
     style: CSSProperties;
 };

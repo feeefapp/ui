@@ -119,4 +119,51 @@ export declare function toLocalRect(frame: HostFrame, box: {
     width: number;
     height: number;
 }): GlassRect;
+/** Which axes an element clips its descendants on, from its computed style, and the box it clips to. */
+export declare function clipAxes(style: {
+    display?: string;
+    overflowX: string;
+    overflowY: string;
+    clipPath?: string;
+    contain?: string;
+}): {
+    x: boolean;
+    y: boolean;
+    box: 'padding' | 'border';
+};
+/** A clipping box with the axes it doesn't clip opened up. */
+export declare function openClip(box: GlassRect, axes: {
+    x: boolean;
+    y: boolean;
+}): GlassRect;
+/**
+ * The part of the container a bubble's glass may paint in: the intersection of its clipping
+ * ancestors' boxes (overflow, clip-path, contain: paint), in the container's pixels. Undefined
+ * when nothing clips it; an empty rect when it is scrolled or clipped out of view.
+ */
+export declare function memberClip(clips: readonly GlassRect[]): GlassRect | undefined;
+/** True when two rects share some area (touching edges don't). */
+export declare function rectsOverlap(a: GlassRect, b: GlassRect): boolean;
+/** True when `outer` contains `inner`. */
+export declare function rectCovers(outer: GlassRect, inner: GlassRect): boolean;
+/**
+ * A path of `M`/`L`/`Z` polygons cut to `clip` (Sutherland–Hodgman per loop): the scissored
+ * outline, straight at the clip edge. Winding is kept, so holes still fill correctly.
+ */
+export declare function scissorPath(d: string, clip: GlassRect): string;
+/** CSS `clip-path: inset(…)` cutting an element laid out at `box` to `clip`; '' when it doesn't cut. */
+export declare function clipInset(box: GlassRect, clip?: GlassRect): string;
+/**
+ * `glassPaths` for bubbles that may sit in clipped views: `clips[i]` is shape i's visible rect
+ * (`memberClip`; undefined = unclipped). Only bubbles sharing a clip blend (glass inside a scroll
+ * view never merges with glass outside it); every cluster keeps its whole outline `d` (rim,
+ * refraction) plus `visible`, the outline cut straight at its clip (backdrop, glow, shadow cut-out),
+ * and a cluster wholly outside its clip draws nothing. A clipped-out bubble stays in its cluster
+ * while it is within `spacing` of the visible part, so the neck toward it is cut, not dropped.
+ */
+export declare function clippedGlassPaths(shapes: readonly GlassShape[], clips: readonly (GlassRect | undefined)[], spacing: number, cell?: number): (ReturnType<typeof glassPaths>[number] & {
+    clip?: GlassRect;
+    visible: string;
+})[];
+export type GlassClusterPath = ReturnType<typeof clippedGlassPaths>[number];
 //# sourceMappingURL=geometry.d.ts.map

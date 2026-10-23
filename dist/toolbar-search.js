@@ -10,6 +10,7 @@ import { useI18n } from './i18n.js';
 import { cn } from './utils.js';
 import { stepSearchMorph, searchMorphVisibility } from './toolbar-search-motion.js';
 import './toolbar-search.css';
+import { reducedMotionQuery } from './physics/motion-value.js';
 /**
  * Search button that springs open into a field inside the same glass pill, taking the free width
  * of its row. Persistent material, stable control geometry and a velocity-preserving spring.
@@ -73,7 +74,7 @@ export function ToolbarSearch({ label, value, onValueChange, placeholder, childr
         const host = main.current, material = surface.current;
         if (!host || !material)
             return;
-        const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const media = reducedMotionQuery();
         reduced.current = media.matches;
         const measure = (initial = false) => {
             compact.current = (Number.parseFloat(getComputedStyle(material).getPropertyValue('--lab-toolbar-control')) || 38) + 6;

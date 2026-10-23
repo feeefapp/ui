@@ -9,6 +9,7 @@ import { Check, ChevronDown } from 'lucide-react';
 import { cn } from '../utils.js';
 import { FieldShell } from './field-shell.js';
 import { RawInput } from './raw-input.js';
+import { motionOf } from '../physics/motion-value.js';
 const EMPTY = '__lab_natural__';
 /**
  * A single-choice dropdown in the same field frame as `TextField`: floating hint, icons,
@@ -103,7 +104,7 @@ export function Select({ children, value: suppliedValue, onValueChange, classNam
             closeTimer.current = window.setTimeout(() => {
                 setOpen(false);
                 setClosing(false);
-            }, menuCloseDuration(!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) * 1000 + 20);
+            }, menuCloseDuration(motionOf()) * 1000 + 20);
         }, disabled: props.disabled, children: [decorated ? (_jsx(FieldShell, { id: props.id, label: label, hint: hint, dir: dir, labelStyle: labelStyle, variant: variant, controlSize: controlSize, leadingIcon: leadingIcon, leading: leading, trailing: trailing, supportingText: supportingText, error: message, containerClassName: containerClassName, disabled: props.disabled, required: required, describedBy: props['aria-describedby'], invalid: props['aria-invalid'] === true || props['aria-invalid'] === 'true', populated: Boolean(value), children: ({ id, describedBy, invalid }) => (_jsxs(SelectPrimitive.Trigger, { ref: trigger, id: id, className: cn('lab-field-select-control', className), "aria-label": props['aria-label'], "aria-labelledby": props['aria-labelledby'], "aria-describedby": describedBy, "aria-invalid": invalid || props['aria-invalid'], "aria-required": required || undefined, onBlur: (event) => {
                         if (!open) {
                             touched.current = true;

@@ -5,7 +5,8 @@ import { createPortal } from 'react-dom';
 import { ScrollArea } from '../scroll/index.js';
 import { useI18n } from '../i18n.js';
 import { attachPan, canChildPan } from '../physics/gesture.js';
-import { MotionValue, prefersReducedMotion } from '../physics/motion-value.js';
+import { MotionValue, motionOf, prefersReducedMotion } from '../physics/motion-value.js';
+import { motionFade } from '../theme-config.js';
 import { SPRINGS, projectMomentum, rubberBand } from '../physics/spring.js';
 import { detentHeights, dragHeight, releaseTarget, sheetDim, sheetRecede, } from './sheet-model.js';
 import { cn } from '../utils.js';
@@ -192,6 +193,7 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
         if (!metrics)
             return;
         const reduced = prefersReducedMotion();
+        const motion = motionOf();
         if (!open) {
             presented.current = false;
             const done = () => {
@@ -204,17 +206,23 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
                 onExited();
             };
             if (presentation === 'dialog') {
-                void shown.animateTo(0, { spring: reduced ? { duration: 0.18, bounce: 0 } : SPRINGS.smooth }).then((a) => a && done());
+                const fade = motionFade(motion, 0.18);
+                void shown.animateTo(0, { spring: reduced ? { duration: fade, bounce: 0 } : SPRINGS.smooth, instant: fade === 0 }).then((a) => a && done());
             }
             else if (reduced) {
+                // The panel fades out, then unmounts once the fade has ended.
+                const fade = motionFade(motion, 0.16);
                 const el = panel.current;
                 if (el)
-                    el.style.transition = 'opacity 160ms';
+                    el.style.transition = fade ? `opacity ${fade * 1000}ms` : '';
                 if (el)
                     el.style.opacity = '0';
                 if (scrim.current)
                     scrim.current.style.opacity = '0';
-                window.setTimeout(done, 170);
+                if (fade)
+                    window.setTimeout(done, fade * 1000 + 10);
+                else
+                    done();
             }
             else {
                 beginMotion();
@@ -235,7 +243,8 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
                 presented.current = true;
                 if (!shown.isAnimating())
                     shown.set(0);
-                void shown.animateTo(1, { spring: reduced ? { duration: 0.2, bounce: 0 } : SPRINGS.smooth });
+                const fade = motionFade(motion, 0.2);
+                void shown.animateTo(1, { spring: reduced ? { duration: fade, bounce: 0 } : SPRINGS.smooth, instant: fade === 0 });
             }
             else
                 paintDialog();

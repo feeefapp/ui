@@ -1,5 +1,6 @@
 'use client';
 import { useLayoutEffect, useRef, useState } from 'react';
+import { prefersReducedMotion, reducedMotionQuery } from '../physics/motion-value.js';
 /** Animate the shell and layout slots; the editable node stays mounted and untransformed. */
 export function useComposerLayout(prompt, contentRevision) {
     const [expanded, setExpanded] = useState(false);
@@ -94,7 +95,7 @@ export function useComposerLayout(prompt, contentRevision) {
                 // A resized parent invalidates the old horizontal coordinates. Replaying
                 // them briefly sends actions outside the new shell on narrow screens.
                 Math.abs(before.width - after.width) > 0.5 ||
-                window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+                prefersReducedMotion() ||
                 !shell.animate)
                 return;
             const timing = { duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)' };
@@ -161,7 +162,7 @@ export function useComposerLayout(prompt, contentRevision) {
             update.current();
         });
         observer.observe(grid);
-        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const reduced = reducedMotionQuery();
         const finish = () => {
             if (reduced.matches)
                 animations.current.forEach((animation) => animation.finish());

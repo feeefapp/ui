@@ -3,25 +3,32 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Button } from './button.js';
 import { cn } from '../utils.js';
+import { scrollEdgeOpacities } from '../scroll/metrics.js';
 import { revealScrollChild } from '../scroll/reveal.js';
 import { GLASS_GLOW_START, GLASS_PRESS_SCALE, glassGlowRadius, pressedShape } from '../glass/press.js';
 import { useMotionValue, useReducedMotion } from '../physics/react.js';
 import { SPRINGS } from '../physics/spring.js';
-import { SEGMENTED_SLOP, segmentIndexAt, segmentedDragCenter, segmentedPillWidth, segmentedSnapIndex, } from './segmented-model.js';
+import { SEGMENTED_FADE, SEGMENTED_SLOP, segmentIndexAt, segmentedAutoScrollSpeed, segmentedDragCenter, segmentedPillWidth, segmentedSnapIndex, } from './segmented-model.js';
 import { lensStretch } from './lens-model.js';
 import './lens.css';
 import './segmented.css';
 /**
- * A single choice among two to five short options, shown side by side. A filled pill marks the
+ * A single choice among short options, shown side by side in one row. A filled pill marks the
  * selection and slides to the next one; press it and it becomes a glass lens you can drag (or
  * press another option and drag: the pill comes to you). Radio semantics: one Tab stop, arrow keys
- * move and select.
+ * move and select. Options can carry a count (`badge`).
+ *
+ * Options that don't fit scroll sideways inside the control (never wrap or squeeze): its edges fade
+ * where there is more, the selection scrolls into view whenever it changes, and a pill dragged near
+ * an edge scrolls on. On touch a swipe scrolls; a drag that starts on the pill moves the pill.
  *
  * It paints no container: put it in glass (`ToolbarGroup`), on a box of your own (a surface-token
  * background; the root already has the capsule radius) or leave it bare.
  */
 export function SegmentedControl({ value, onChange, options, label, disabled = false, equalWidth = false, className, }) {
     const group = useRef(null);
+    const scrollerRef = useRef(null);
+    const trackRef = useRef(null);
     const pillRef = useRef(null);
     const reduced = useReducedMotion();
     // Pill: centre, width and top; press response: swell, stretch, lens (0 filled … 1 glass), glow.
@@ -33,30 +40,69 @@ export function SegmentedControl({ value, onChange, options, label, disabled = f
     const lens = useMotionValue(0, 0.002);
     const glowRadius = useMotionValue(GLASS_GLOW_START, 0.5);
     const glowOpacity = useMotionValue(0, 0.005);
-    const layout = useRef({ boxes: [], spans: [], oneRow: true, corner: 1, placed: false });
+    const layout = useRef({
+        boxes: [],
+        spans: [],
+        corner: 1,
+        placed: false,
+        /** The options are wider than the control: it scrolls. */
+        overflow: false,
+        rtl: false,
+    });
     const glowAt = useRef({ x: 0, y: 0 });
     const drag = useRef(null);
     const suppressClick = useRef(false);
-    const live = useRef({ value, options, disabled, reduced, onChange });
-    live.current = { value, options, disabled, reduced, onChange };
+    const autoFrame = useRef(0);
+    /** The value last scrolled into view. */
+    const revealed = useRef(undefined);
+    const live = useRef({ value, options, disabled, reduced, onChange, equalWidth });
+    live.current = { value, options, disabled, reduced, onChange, equalWidth };
     const enabled = options.filter((option) => !disabled && !option.disabled);
     const tabValue = enabled.some((option) => option.value === value) ? value : enabled[0]?.value;
-    const optionKey = options.map((option) => `${option.value}:${option.label}:${option.disabled ? 1 : 0}`).join('|');
-    const buttons = () => group.current ? [...group.current.querySelectorAll(':scope > .lab-segmented-option')] : [];
-    /** Client point → the control's own pixels (undoes scaled ancestors, like a pressed bubble). */
+    const optionKey = options
+        .map((option) => `${option.value}:${option.label}:${option.badge ?? ''}:${option.disabled ? 1 : 0}`)
+        .join('|');
+    const buttons = () => trackRef.current ? [...trackRef.current.querySelectorAll(':scope > .lab-segmented-option')] : [];
+    /** Client point → the track's own pixels (undoes scaled ancestors, like a pressed bubble, and the
+     * scroll: the track moves with it). */
     const local = (clientX, clientY) => {
-        const el = group.current;
+        const el = trackRef.current;
         const rect = el.getBoundingClientRect();
         const scale = el.offsetWidth ? rect.width / el.offsetWidth : 1;
         return { x: (clientX - rect.left) / scale, y: (clientY - rect.top) / scale };
     };
+    /** Edge fades of a scrolling control: each edge fades in as content moves past it. */
+    const fade = () => {
+        const scroller = scrollerRef.current;
+        if (!scroller)
+            return;
+        if (!layout.current.overflow) {
+            scroller.style.removeProperty('--lab-segmented-fade-left');
+            scroller.style.removeProperty('--lab-segmented-fade-right');
+            return;
+        }
+        const max = scroller.scrollWidth - scroller.clientWidth;
+        // Right-to-left scrollers run from -max (far left) to 0.
+        const left = layout.current.rtl ? max + scroller.scrollLeft : scroller.scrollLeft;
+        const edges = scrollEdgeOpacities(left, max, SEGMENTED_FADE);
+        scroller.style.setProperty('--lab-segmented-fade-left', String(edges.top));
+        scroller.style.setProperty('--lab-segmented-fade-right', String(edges.bottom));
+    };
+    /** Scrolls the control (never the page) to show option `index` clear of the edge fades. */
+    const reveal = (index, behavior) => {
+        if (!layout.current.overflow)
+            return;
+        revealScrollChild(scrollerRef.current, buttons()[index], { block: false, behavior });
+    };
     const measure = () => {
-        const el = group.current;
-        if (!el)
+        const root = group.current;
+        const el = trackRef.current;
+        const scroller = scrollerRef.current;
+        if (!root || !el || !scroller)
             return;
         const rect = el.getBoundingClientRect();
         const scale = el.offsetWidth ? rect.width / el.offsetWidth : 1;
-        const { options, disabled } = live.current;
+        const { options, disabled, equalWidth } = live.current;
         const boxes = buttons().map((button) => {
             const r = button.getBoundingClientRect();
             return {
@@ -74,8 +120,15 @@ export function SegmentedControl({ value, onChange, options, label, disabled = f
             width: box.w,
             disabled: disabled || !!options[i]?.disabled,
         }));
-        state.oneRow = boxes.every((box) => Math.abs(box.y - boxes[0].y) < 1);
-        state.corner = parseFloat(getComputedStyle(el).getPropertyValue('--lab-corner-scale')) || 1;
+        const style = getComputedStyle(root);
+        state.corner = parseFloat(style.getPropertyValue('--lab-corner-scale')) || 1;
+        state.rtl = style.direction === 'rtl';
+        const overflow = !equalWidth && scroller.scrollWidth - scroller.clientWidth > 0.5;
+        const changed = overflow !== state.overflow;
+        state.overflow = overflow;
+        root.toggleAttribute('data-overflow', overflow);
+        fade();
+        return changed;
     };
     const paint = () => {
         const el = group.current;
@@ -146,6 +199,12 @@ export function SegmentedControl({ value, onChange, options, label, disabled = f
         measure();
         if (drag.current?.active)
             return;
+        // Whatever chose it (a tap, a key, a release, the owner), a new selection scrolls into view;
+        // new labels or counts leave the scroll where the person put it.
+        if (revealed.current !== value) {
+            revealed.current = value;
+            reveal(selected, layout.current.placed ? 'smooth' : 'instant');
+        }
         const box = layout.current.boxes[selected];
         // A released pill already heading here keeps its release spring.
         if (box && center.isAnimating() && Math.abs(center.getTarget() - (box.x + box.w / 2)) < 0.5)
@@ -158,10 +217,12 @@ export function SegmentedControl({ value, onChange, options, label, disabled = f
         if (!el || typeof ResizeObserver === 'undefined')
             return;
         const observer = new ResizeObserver(() => {
-            measure();
+            const overflowChanged = measure();
             if (drag.current?.active)
                 return;
             const index = selectedIndex();
+            if (overflowChanged)
+                reveal(index, 'instant');
             if (center.isAnimating())
                 moveTo(index, SPRINGS.snappy);
             else {
@@ -175,11 +236,21 @@ export function SegmentedControl({ value, onChange, options, label, disabled = f
             }
         });
         observer.observe(el);
+        if (trackRef.current)
+            observer.observe(trackRef.current);
         for (const button of buttons())
             observer.observe(button);
         return () => observer.disconnect();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [optionKey]);
+    useEffect(() => {
+        const scroller = scrollerRef.current;
+        if (!scroller)
+            return;
+        scroller.addEventListener('scroll', fade, { passive: true });
+        return () => scroller.removeEventListener('scroll', fade);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
     const pressIn = (point) => {
         if (live.current.reduced)
             return;
@@ -210,24 +281,89 @@ export function SegmentedControl({ value, onChange, options, label, disabled = f
         });
     };
     const detach = useRef(() => { });
-    useEffect(() => () => detach.current(), []);
+    useEffect(() => () => {
+        detach.current();
+        cancelAnimationFrame(autoFrame.current);
+    }, []);
+    /** Moves a dragged pill to the pointer. `auto`: an auto-scroll frame moved the track under a
+     * still pointer, so the pill springs after it instead of tracking pointer samples. */
+    const follow = (d, time, auto) => {
+        const point = local(d.clientX, d.clientY);
+        const { spans, boxes } = layout.current;
+        if (live.current.reduced) {
+            // No sliding: the pill sits on the option under the pointer.
+            const index = segmentIndexAt(point.x, spans);
+            if (index >= 0 && !spans[index].disabled && index !== d.index) {
+                d.index = index;
+                center.set(boxes[index].x + boxes[index].w / 2);
+                width.set(boxes[index].w);
+            }
+            return;
+        }
+        glowAt.current = point;
+        const target = segmentedDragCenter(point.x, d.grab, spans);
+        if (d.catching || auto) {
+            void center.animateTo(target, { spring: SPRINGS.interactive });
+            if (d.catching && Math.abs(center.get() - target) < 1)
+                d.catching = false;
+        }
+        else
+            center.track(target, time);
+        void stretch.animateTo(lensStretch(center.getVelocity(time)), { spring: SPRINGS.interactive });
+        paint();
+    };
+    /** While a pill is dragged, a pointer near an edge of a scrolling control scrolls it. */
+    const autoScroll = () => {
+        if (autoFrame.current)
+            return;
+        let last = performance.now();
+        const frame = (now) => {
+            const d = drag.current;
+            const scroller = scrollerRef.current;
+            if (!d?.active || !scroller) {
+                autoFrame.current = 0;
+                return;
+            }
+            autoFrame.current = requestAnimationFrame(frame);
+            const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
+            last = now;
+            if (!layout.current.overflow)
+                return;
+            const rect = scroller.getBoundingClientRect();
+            const scale = scroller.offsetWidth ? rect.width / scroller.offsetWidth : 1;
+            const speed = segmentedAutoScrollSpeed((d.clientX - rect.left) / scale, 0, scroller.clientWidth);
+            if (!speed)
+                return;
+            const before = scroller.scrollLeft;
+            scroller.scrollLeft = before + speed * dt;
+            if (scroller.scrollLeft !== before)
+                follow(d, now, true);
+        };
+        autoFrame.current = requestAnimationFrame(frame);
+    };
     const onPointerDown = (event) => {
         if (live.current.disabled || event.button > 0 || drag.current || !group.current)
             return;
         measure();
-        const { spans, oneRow, boxes } = layout.current;
-        if (!oneRow || !boxes.length)
+        const { spans, boxes, overflow } = layout.current;
+        if (!boxes.length)
             return;
         const point = local(event.clientX, event.clientY);
         const index = segmentIndexAt(point.x, spans);
         if (index < 0 || spans[index].disabled)
             return;
         const onPill = index === selectedIndex() && !center.isAnimating();
+        const touch = event.pointerType === 'touch';
+        // A finger off the pill in a scrolling control scrolls it (a tap still selects).
+        if (overflow && touch && !onPill)
+            return;
         drag.current = {
             pointer: event.pointerId,
-            touch: event.pointerType === 'touch',
+            touch,
             startX: event.clientX,
             startY: event.clientY,
+            clientX: event.clientX,
+            clientY: event.clientY,
             onPill,
             grab: onPill ? point.x - center.get() : 0,
             active: false,
@@ -255,39 +391,19 @@ export function SegmentedControl({ value, onChange, options, label, disabled = f
             return;
         const dx = event.clientX - d.startX;
         const dy = event.clientY - d.startY;
-        const point = local(event.clientX, event.clientY);
-        const { spans } = layout.current;
+        d.clientX = event.clientX;
+        d.clientY = event.clientY;
         if (!d.active) {
             if (Math.abs(dx) < (d.touch ? SEGMENTED_SLOP.touch : SEGMENTED_SLOP.mouse) || Math.abs(dx) < Math.abs(dy))
                 return;
             d.active = true;
             group.current.setAttribute('data-dragging', '');
             if (!d.onPill)
-                pressIn(point);
+                pressIn(local(event.clientX, event.clientY));
+            autoScroll();
         }
         event.preventDefault();
-        if (live.current.reduced) {
-            // No sliding: the pill sits on the option under the pointer.
-            const index = segmentIndexAt(point.x, spans);
-            if (index >= 0 && !spans[index].disabled && index !== d.index) {
-                d.index = index;
-                const box = layout.current.boxes[index];
-                center.set(box.x + box.w / 2);
-                width.set(box.w);
-            }
-            return;
-        }
-        glowAt.current = point;
-        const target = segmentedDragCenter(point.x, d.grab, spans);
-        if (d.catching) {
-            void center.animateTo(target, { spring: SPRINGS.interactive });
-            if (Math.abs(center.get() - target) < 1)
-                d.catching = false;
-        }
-        else
-            center.track(target, event.timeStamp);
-        void stretch.animateTo(lensStretch(center.getVelocity(event.timeStamp)), { spring: SPRINGS.interactive });
-        paint();
+        follow(d, event.timeStamp, false);
     };
     const onPointerEnd = (event, cancelled) => {
         const d = drag.current;
@@ -295,6 +411,8 @@ export function SegmentedControl({ value, onChange, options, label, disabled = f
             return;
         detach.current();
         drag.current = null;
+        cancelAnimationFrame(autoFrame.current);
+        autoFrame.current = 0;
         group.current?.removeAttribute('data-dragging');
         pressOut();
         if (!d.active)
@@ -331,20 +449,21 @@ export function SegmentedControl({ value, onChange, options, label, disabled = f
         onChange(next.value);
         const position = options.findIndex((option) => option.value === next.value);
         const button = buttons()[position];
+        // The control scrolls the option into view as the selection follows (see above); an enclosing
+        // scroll area shows the control.
         button?.focus({ preventScroll: true });
-        revealScrollChild(group.current, button, { block: false });
         revealScrollChild(group.current?.closest('.lab-scroll-viewport'), button, {
             inline: false,
         });
     };
-    return (_jsxs("div", { ref: group, className: cn('lab-segmented', className), "data-equal-width": equalWidth || undefined, "data-glass-own-press": "", role: "radiogroup", "aria-label": label, "aria-disabled": disabled || undefined, onKeyDown: navigate, onPointerDown: onPointerDown, onClickCapture: (event) => {
+    return (_jsx("div", { ref: group, className: cn('lab-segmented', className), "data-equal-width": equalWidth || undefined, "data-glass-own-press": "", role: "radiogroup", "aria-label": label, "aria-disabled": disabled || undefined, onKeyDown: navigate, onPointerDown: onPointerDown, onClickCapture: (event) => {
             if (!suppressClick.current)
                 return;
             event.preventDefault();
             event.stopPropagation();
-        }, "data-lab-corners": true, children: [_jsxs("span", { ref: pillRef, className: "lab-segmented-pill", "aria-hidden": "true", "data-hidden": "", children: [_jsx("span", { className: "lab-segmented-fill" }), _jsx("span", { className: "lab-lens lab-light-edge" }), _jsx("span", { className: "lab-lens-glow" })] }), options.map((option) => {
-                const content = (_jsxs(_Fragment, { children: [option.icon && (_jsx("span", { className: "lab-segmented-icon", "aria-hidden": "true", children: option.icon })), _jsx("span", { className: "lab-segmented-label", children: option.label })] }));
-                return (_jsxs(Button, { variant: "ghost", appearance: "toolbar", controlSize: "regular", className: "lab-segmented-option", role: "radio", "aria-checked": option.value === value, tabIndex: option.value === tabValue ? 0 : -1, disabled: disabled || option.disabled, onClick: () => onChange(option.value), children: [_jsx("span", { className: "lab-segmented-content", children: content }), _jsx("span", { className: "lab-segmented-content lab-segmented-ink", "aria-hidden": "true", children: content })] }, option.value));
-            })] }));
+        }, "data-lab-corners": true, children: _jsx("div", { ref: scrollerRef, className: "lab-segmented-scroller", children: _jsxs("div", { ref: trackRef, className: "lab-segmented-track", children: [_jsxs("span", { ref: pillRef, className: "lab-segmented-pill", "aria-hidden": "true", "data-hidden": "", children: [_jsx("span", { className: "lab-segmented-fill" }), _jsx("span", { className: "lab-lens lab-light-edge" }), _jsx("span", { className: "lab-lens-glow" })] }), options.map((option) => {
+                        const content = (_jsxs(_Fragment, { children: [option.icon && (_jsx("span", { className: "lab-segmented-icon", "data-tone": option.tone, "aria-hidden": "true", children: option.icon })), _jsx("span", { className: "lab-segmented-label", children: option.label }), option.badge && _jsx("span", { className: "lab-segmented-badge", children: option.badge })] }));
+                        return (_jsxs(Button, { variant: "ghost", appearance: "toolbar", controlSize: "regular", className: "lab-segmented-option", role: "radio", "aria-checked": option.value === value, "aria-label": option.badge ? `${option.label}, ${option.badge}` : undefined, tabIndex: option.value === tabValue ? 0 : -1, disabled: disabled || option.disabled, onClick: () => onChange(option.value), children: [_jsx("span", { className: "lab-segmented-content", children: content }), _jsx("span", { className: "lab-segmented-content lab-segmented-ink", "aria-hidden": "true", children: content })] }, option.value));
+                    })] }) }) }));
 }
 //# sourceMappingURL=segmented.js.map

@@ -10,7 +10,8 @@ import * as Popover from '@radix-ui/react-popover';
 import { ArrowLeft, Brain, Check, ChevronDown, RotateCcw, Zap } from 'lucide-react';
 import { useI18n } from './i18n.js';
 import './model-ladder.css';
-import { clamp, displayName, fireCell, FIRE_CELL as CELL, FIRE_PALETTE as PALETTE, formatUsd, heatAt, reducedMotion, visibleLabel, } from './model-ladder-core.js';
+import { clamp, displayName, fireCell, FIRE_CELL as CELL, FIRE_PALETTE as PALETTE, formatUsd, heatAt, visibleLabel, } from './model-ladder-core.js';
+import { prefersReducedMotion } from './physics/motion-value.js';
 export * from './model-ladder-core.js';
 // ---------------------------------------------------------------------------------- trigger
 /** Localized ladder copy; an explicit `copy` prop still wins (docs fixtures, tests). */
@@ -162,7 +163,7 @@ function PixelFire() {
                     ctx.fillRect(col * CELL, row * CELL, CELL - 1, CELL - 1);
                 }
         };
-        if (reducedMotion()) {
+        if (prefersReducedMotion()) {
             draw(0);
             return;
         }
@@ -251,7 +252,7 @@ function ModelList({ items, tiers, selectedId, copy, onBack, onPick, }) {
             event.preventDefault();
             event.stopPropagation();
             onBack();
-        }, children: _jsx(ScrollArea, { ref: viewport, className: "lab-ladder-list-scroll", label: copy.pickModel, edgeGap: 12, contentPadding: 12, viewportProps: { tabIndex: -1 }, top: _jsxs("div", { className: "lab-ladder-list-tools", children: [_jsxs("div", { className: "lab-ladder-list-head", children: [_jsx(Button, { type: "button", variant: "elevated", controlSize: "icon", "aria-label": copy.back, title: copy.back, onClick: onBack, children: _jsx(ArrowLeft, { size: 20, strokeWidth: 1.75, className: "lab-dir-flip" }) }), _jsx("b", { id: titleId, children: copy.pickModel })] }), count > 6 && (_jsx("div", { className: "lab-ladder-search", children: _jsx(ToolbarSearch, { defaultExpanded: true, label: copy.searchModels, value: query, onValueChange: setQuery, inputRef: input, onInputKeyDown: (event) => {
+        }, children: _jsx(ScrollArea, { ref: viewport, className: "lab-ladder-list-scroll", label: copy.pickModel, contentPadding: 12, viewportProps: { tabIndex: -1 }, top: _jsxs("div", { className: "lab-ladder-list-tools", children: [_jsxs("div", { className: "lab-ladder-list-head", children: [_jsx(Button, { type: "button", variant: "elevated", controlSize: "icon", "aria-label": copy.back, title: copy.back, onClick: onBack, children: _jsx(ArrowLeft, { size: 20, strokeWidth: 1.75, className: "lab-dir-flip" }) }), _jsx("b", { id: titleId, children: copy.pickModel })] }), count > 6 && (_jsx("div", { className: "lab-ladder-search", children: _jsx(ToolbarSearch, { defaultExpanded: true, label: copy.searchModels, value: query, onValueChange: setQuery, inputRef: input, onInputKeyDown: (event) => {
                                 if (!rows.length || !['ArrowDown', 'ArrowUp'].includes(event.key))
                                     return;
                                 event.preventDefault();

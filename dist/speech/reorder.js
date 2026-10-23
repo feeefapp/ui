@@ -3,13 +3,13 @@ import { useEffect, useRef } from 'react';
 import { useI18n } from '../i18n.js';
 import { flushSync } from 'react-dom';
 import { speechDragIndex, speechPreviewOffsets } from './block-order.js';
+import { prefersReducedMotion } from '../physics/motion-value.js';
 const selector = '[data-speech-block]';
 /** Pointer movement stays off React's render path; the owner receives one history edit on drop. */
 export function useSpeechReorder({ root, index, count, onMove, announce, }) {
     const { t } = useI18n();
     const drag = useRef(null);
     const animations = useRef(new Map());
-    const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const measure = () => [...(root.current?.parentElement?.querySelectorAll(selector) ?? [])].map((element) => {
         const rect = element.getBoundingClientRect();
         return { element, top: rect.top, height: rect.height };
@@ -24,7 +24,7 @@ export function useSpeechReorder({ root, index, count, onMove, announce, }) {
     }
     function animate(element, from, to, lifted = false) {
         cancelAnimation(element);
-        if (reducedMotion() || Math.abs(from - to) < 0.5)
+        if (prefersReducedMotion() || Math.abs(from - to) < 0.5)
             return;
         const animation = element.animate([{ translate: `0 ${from}px` }, { translate: `0 ${to}px` }], {
             duration: 220,

@@ -1,4 +1,12 @@
 import { clampGlassTint, GLASS_TINT_DEFAULT } from './glass/material.js';
+/**
+ * How long (seconds) the short crossfade that replaces a movement under reduced motion lasts:
+ * `seconds` under `reduced`, 0 under `none`, which animates nothing at all. Every reduced-motion
+ * crossfade takes its length from here (Flutter: `motionFade()`).
+ */
+export function motionFade(motion, seconds) {
+    return motion === 'none' ? 0 : seconds;
+}
 /** The config every unset option falls back to. `primary` unset means the palette's own color. */
 export const THEME_DEFAULTS = {
     palette: 'lab',
@@ -8,6 +16,20 @@ export const THEME_DEFAULTS = {
     glassTint: GLASS_TINT_DEFAULT,
     glassBlur: false,
     glassRefraction: true,
+    motion: 'full',
+};
+/**
+ * Ready-made looks, as plain partial configs: spread one and override anything,
+ * `{ ...PROFILES.balanced, palette: 'mono' }`. The kit still checks what the browser supports
+ * (refraction, blur; `glassCapabilities()`), so a profile never needs a per-browser variant.
+ * - `quality`: liquid glass with refraction and blur, full motion.
+ * - `balanced`: still glass without refraction or blur, full motion.
+ * - `performance`: opaque chrome and no motion at all, for slow devices and dense tools.
+ */
+export const PROFILES = {
+    quality: { glass: 'liquid', glassRefraction: true, glassBlur: true, motion: 'full' },
+    balanced: { glass: 'still', glassRefraction: false, glassBlur: false, motion: 'full' },
+    performance: { glass: 'solid', glassRefraction: false, glassBlur: false, motion: 'none' },
 };
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 /** `#abc` / `#aabbcc` → [r, g, b] in 0–255, or null for anything else. */
@@ -46,6 +68,7 @@ function resolve(config = {}) {
         glassTint: clampGlassTint(config.glassTint),
         glassBlur: config.glassBlur ?? THEME_DEFAULTS.glassBlur,
         glassRefraction: config.glassRefraction ?? THEME_DEFAULTS.glassRefraction,
+        motion: config.motion === 'reduced' || config.motion === 'none' ? config.motion : 'full',
         radius,
         primary: config.primary && parseHexColor(config.primary) ? config.primary.toLowerCase() : null,
         metrics: config.metrics ?? {},
@@ -81,6 +104,7 @@ const METRIC_VARIABLES = [
     [(m) => m.focusRingOffset, '--lab-focus-ring-offset'],
     [(m) => m.sidebarWidth, '--lab-sidebar-width'],
     [(m) => m.railWidth, '--lab-navigation-rail-width'],
+    [(m) => m.shellGap, '--lab-shell-gap'],
 ];
 /** The variable names `metrics` can set; `applyThemeConfig` clears the ones a new config drops. */
 export const METRIC_VARIABLE_NAMES = METRIC_VARIABLES.map(([, name]) => name);
@@ -112,7 +136,7 @@ function variables(theme) {
 /**
  * Attributes for the root `<html>` element (React props), e.g. in a Next.js root layout:
  * `data-lab-palette`, `data-lab-density`, `data-lab-glass`, `data-lab-glass-blur`,
- * `data-lab-glass-refraction`, `data-lab-primary` (when set) and the style variables
+ * `data-lab-glass-refraction`, `data-lab-motion`, `data-lab-primary` (when set) and the style variables
  * (`--lab-radius-scale`, `--lab-glass-tint`, the seed colours, and one variable per set `metrics` value).
  * Unset options use `THEME_DEFAULTS`; `radius` is clamped to 0–1.5, `glassTint` to 0–1, and an invalid `primary`
  * is ignored. Color mode (`data-lab-theme`) is not included; `ThemeProvider` sets it.
@@ -125,6 +149,7 @@ export function themeAttributes(config) {
         'data-lab-glass': theme.glass,
         'data-lab-glass-blur': theme.glassBlur ? 'on' : 'off',
         'data-lab-glass-refraction': theme.glassRefraction ? 'on' : 'off',
+        'data-lab-motion': theme.motion,
         ...(theme.primary ? { 'data-lab-primary': '' } : {}),
         style: variables(theme),
     };
@@ -141,6 +166,7 @@ export function applyThemeConfig(element, config) {
     element.setAttribute('data-lab-glass', theme.glass);
     element.setAttribute('data-lab-glass-blur', theme.glassBlur ? 'on' : 'off');
     element.setAttribute('data-lab-glass-refraction', theme.glassRefraction ? 'on' : 'off');
+    element.setAttribute('data-lab-motion', theme.motion);
     if (theme.primary)
         element.setAttribute('data-lab-primary', '');
     else

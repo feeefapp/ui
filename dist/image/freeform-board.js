@@ -10,6 +10,7 @@ import { revealCovered } from './freeform-frame.js';
 import { elapsed, stageRatio, takeErrorText } from './board-utils.js';
 import './freeform-board.css';
 import { GlassScope } from '../glass/container.js';
+import { prefersReducedMotion } from '../physics/motion-value.js';
 /** World height of every card; widths follow each image's proportions. */
 const CARD_H = 560;
 const GAP = 72;
@@ -65,7 +66,7 @@ export function FreeformBoard({ embedded = false, takes, selectedId, onSelect, i
         return () => observer.disconnect();
     }, []);
     const glide = useCallback((next, instant = false) => {
-        setAnimate(!instant && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+        setAnimate(!instant && !prefersReducedMotion());
         setView(next);
     }, []);
     const fitCard = useCallback((card, instant = false) => {
