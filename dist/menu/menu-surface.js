@@ -141,9 +141,16 @@ function runMorph(content, layers, cover, placed) {
         body.style.filter = frame.contentBlur > 0.05 ? `blur(${frame.contentBlur.toFixed(2)}px)` : '';
     };
     // Invisible (but focusable) until Radix has placed it.
-    for (const layer of [shadow, bubble, edge])
+    for (const layer of [shadow, bubble, edge, body])
         layer.style.opacity = '0';
-    const measure = () => {
+    // Geometry is read once and again only after a scroll or resize: reading it every frame right
+    // after the layers' style writes would force a synchronous layout per frame.
+    let measured = null;
+    const invalidate = () => {
+        measured = null;
+    };
+    const measure = () => (measured ??= read());
+    const read = () => {
         const rect = content.getBoundingClientRect();
         const scale = content.offsetWidth ? rect.width / content.offsetWidth : 1;
         const full = { x: 0, y: 0, width: content.offsetWidth, height: content.offsetHeight };
@@ -166,7 +173,8 @@ function runMorph(content, layers, cover, placed) {
         if (phase === 'pending') {
             const wrapper = content.parentElement;
             const positioned = !wrapper?.style.transform.includes('-200%');
-            const { full, from } = measure();
+            // Radix is still placing it: read fresh every frame until the morph starts.
+            const { full, from } = (measured = read());
             const covering = !cover ||
                 !from ||
                 (from.y < full.height - 1 && from.y + from.height > 1);
@@ -237,6 +245,32 @@ function runMorph(content, layers, cover, placed) {
         stop?.();
         stop = null;
     };
+    // The menu opens over its own trigger, so the release of the press that opened it lands on a
+    // row; Radix would run that row (press-drag-release). Only a release after a press inside the
+    // menu, or after the pointer travelled to another row, selects.
+    let pressedInside = false;
+    let travel = 0;
+    let last = null;
+    const onDown = () => {
+        pressedInside = true;
+    };
+    const onMove = (event) => {
+        if (last)
+            travel += Math.hypot(event.clientX - last.x, event.clientY - last.y);
+        last = { x: event.clientX, y: event.clientY };
+    };
+    const onUp = (event) => {
+        if (!pressedInside && travel < 8)
+            event.stopPropagation();
+        pressedInside = false;
+    };
+    const doc = content.ownerDocument;
+    const view = doc.defaultView;
+    view?.addEventListener('scroll', invalidate, { capture: true, passive: true });
+    view?.addEventListener('resize', invalidate);
+    content.addEventListener('pointerdown', onDown, true);
+    content.addEventListener('pointerup', onUp, true);
+    doc.addEventListener('pointermove', onMove, true);
     const observer = new MutationObserver(() => {
         if (isClosing())
             beginClose(performance.now());
@@ -245,6 +279,11 @@ function runMorph(content, layers, cover, placed) {
     const finish = () => {
         stopLoop();
         observer.disconnect();
+        view?.removeEventListener('scroll', invalidate, { capture: true });
+        view?.removeEventListener('resize', invalidate);
+        content.removeEventListener('pointerdown', onDown, true);
+        content.removeEventListener('pointerup', onUp, true);
+        doc.removeEventListener('pointermove', onMove, true);
         if (trigger) {
             trigger.style.opacity = savedOpacity;
             trigger.style.transition = savedTransition;

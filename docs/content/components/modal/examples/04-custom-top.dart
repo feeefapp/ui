@@ -43,7 +43,6 @@ class _CustomTopState extends State<CustomTop> {
           children: [
             SegmentedControl<String>(
               label: 'Delivery type',
-              appearance: .plain,
               value: _mode,
               onChange: (value) => setState(() => _mode = value),
               options: const [

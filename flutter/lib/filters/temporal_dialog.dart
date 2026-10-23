@@ -6,7 +6,6 @@ import 'package:flutter/widgets.dart';
 import '../glass/container.dart';
 import '../primitives/button.dart';
 import '../primitives/modal.dart';
-import '../primitives/segmented.dart';
 import '../theme.dart';
 import '../toolbar.dart';
 import 'temporal.dart';
@@ -123,10 +122,7 @@ class TemporalDialog extends StatelessWidget {
                 label: 'Range ends',
                 children: [
                   Expanded(
-                    child: TemporalEdges(
-                      editor: editor,
-                      appearance: SegmentedAppearance.plain,
-                    ),
+                    child: TemporalEdges(editor: editor),
                   ),
                 ],
               ),

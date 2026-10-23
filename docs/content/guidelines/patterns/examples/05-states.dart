@@ -42,16 +42,24 @@ class _StatesState extends State<States> {
     child: Column(
       spacing: 16,
       children: [
-        SegmentedControl<_State>(
-          label: 'Preview state',
-          value: _state,
-          onChange: _show,
-          options: const [
-            SegmentOption(value: _State.loading, label: 'Loading'),
-            SegmentOption(value: _State.empty, label: 'Empty'),
-            SegmentOption(value: _State.error, label: 'Error'),
-            SegmentOption(value: _State.ready, label: 'Loaded'),
-          ],
+        DecoratedBox(
+          decoration: ShapeDecoration(
+            color: ThemeProvider.of(context).colors.surfaceSoft,
+            shape: SuperellipseBorder(
+              radius: ThemeProvider.of(context).sizes.radiusControl,
+            ),
+          ),
+          child: SegmentedControl<_State>(
+            label: 'Preview state',
+            value: _state,
+            onChange: _show,
+            options: const [
+              SegmentOption(value: _State.loading, label: 'Loading'),
+              SegmentOption(value: _State.empty, label: 'Empty'),
+              SegmentOption(value: _State.error, label: 'Error'),
+              SegmentOption(value: _State.ready, label: 'Loaded'),
+            ],
+          ),
         ),
         _Frame(
           height: 340,

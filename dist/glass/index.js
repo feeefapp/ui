@@ -1,6 +1,6 @@
 /** Liquid glass: one material per row of bubbles, with merging, splitting and moving light. */
 export { GlassContainer, GlassScope, useGlassOptions, useGlassStyle } from './container.js';
-export { GlassContext, GlassBackdropContext } from './context.js';
+export { GlassContext } from './context.js';
 export { boundsOf, clampRadius, glassClusters, glassPaths, GLASS_MERGE_BASE, GLASS_MERGE_GAP, mergeWidth, rectGap, shapeDistance, shapePath, smoothMin, unionDistance, unionLoops, } from './geometry.js';
 export { DEFAULT_GLASS_LIGHT, glassLightToward, rimGradient } from './light.js';
 export { planGlassTransition } from './transitions.js';

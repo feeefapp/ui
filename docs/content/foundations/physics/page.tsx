@@ -46,6 +46,7 @@ function SpringExplorer() {
       <div className="ph-controls">
         <SegmentedControl<Preset | 'custom'>
           label="Spring"
+          className="demo-segmented-box"
           value={preset}
           onChange={setPreset}
           options={[

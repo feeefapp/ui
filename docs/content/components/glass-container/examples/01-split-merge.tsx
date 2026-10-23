@@ -1,6 +1,6 @@
 import { useId, useState } from 'react'
 import { Copy, Share2, Trash2 } from 'lucide-react'
-import { GlassContainer } from '@feeef.dev/ui/glass'
+import { GlassContainer, GlassScope } from '@feeef.dev/ui/glass'
 import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
 import { IconButton } from '@feeef.dev/ui/primitives/button'
 import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
@@ -41,15 +41,19 @@ export default function SplitMerge() {
           </ToolbarGroup>
         )}
       </GlassContainer>
-      <SegmentedControl
-        label="Delete action"
-        value={split ? 'apart' : 'together'}
-        onChange={(value) => setSplit(value === 'apart')}
-        options={[
-          { value: 'together', label: 'One bubble' },
-          { value: 'apart', label: 'Delete on its own' },
-        ]}
-      />
+      <GlassScope>
+        <ToolbarGroup label="Delete action">
+          <SegmentedControl
+            label="Delete action"
+            value={split ? 'apart' : 'together'}
+            onChange={(value) => setSplit(value === 'apart')}
+            options={[
+              { value: 'together', label: 'One bubble' },
+              { value: 'apart', label: 'Delete on its own' },
+            ]}
+          />
+        </ToolbarGroup>
+      </GlassScope>
     </div>
   )
 }

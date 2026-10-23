@@ -53,14 +53,21 @@ class _SplitMergeState extends State<SplitMerge> {
                   ],
           ),
         ),
-        SegmentedControl<bool>(
-          label: 'Delete action',
-          value: _split,
-          onChange: (value) => setState(() => _split = value),
-          options: const [
-            SegmentOption(value: false, label: 'One bubble'),
-            SegmentOption(value: true, label: 'Delete on its own'),
-          ],
+        GlassScope(
+          child: ToolbarGroup(
+            label: 'Delete action',
+            children: [
+              SegmentedControl<bool>(
+                label: 'Delete action',
+                value: _split,
+                onChange: (value) => setState(() => _split = value),
+                options: const [
+                  SegmentOption(value: false, label: 'One bubble'),
+                  SegmentOption(value: true, label: 'Delete on its own'),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );

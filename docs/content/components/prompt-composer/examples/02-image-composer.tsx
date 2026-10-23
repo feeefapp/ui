@@ -54,6 +54,7 @@ export default function ImageComposer() {
         settings={
           <SegmentedControl
             label="Shape"
+            className="demo-segmented-box"
             value={shape}
             onChange={setShape}
             options={[

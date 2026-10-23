@@ -1,33 +1,31 @@
 import { useState } from 'react'
 import { LayoutGrid, List, Columns3 } from 'lucide-react'
+import { GlassScope } from '@feeef.dev/ui/glass'
 import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
 import { C } from '../../../src/blocks/code'
 
 type View = 'list' | 'board' | 'grid'
+type Surface = 'glass' | 'box' | 'bare'
 
 const controls = {
-  appearance: { type: 'select', options: ['grouped', 'plain'], default: 'grouped' },
+  surface: { type: 'select', options: ['glass', 'box', 'bare'], default: 'glass' },
   icons: { type: 'boolean', default: true },
   disabled: { type: 'boolean', default: false },
   disableBoard: { type: 'boolean', label: 'Disable “Board”', default: false },
 } as const
 
-function PlaygroundControl(props: {
-  appearance: 'grouped' | 'plain'
-  icons: boolean
-  disabled: boolean
-  disableBoard: boolean
-}) {
+function PlaygroundControl(props: { surface: Surface; icons: boolean; disabled: boolean; disableBoard: boolean }) {
   const [view, setView] = useState<View>('list')
-  return (
+  const control = (
     <SegmentedControl
       label="Orders view"
+      className={props.surface === 'box' ? 'demo-segmented-box' : undefined}
       value={view}
       onChange={setView}
-      appearance={props.appearance}
       disabled={props.disabled}
       options={[
         { value: 'list', label: 'List', icon: props.icons ? <List /> : undefined },
@@ -35,6 +33,13 @@ function PlaygroundControl(props: {
         { value: 'grid', label: 'Grid', icon: props.icons ? <LayoutGrid /> : undefined },
       ]}
     />
+  )
+  return props.surface === 'glass' ? (
+    <GlassScope>
+      <ToolbarGroup label="Orders view">{control}</ToolbarGroup>
+    </GlassScope>
+  ) : (
+    control
   )
 }
 
@@ -45,7 +50,7 @@ function Overview() {
         controls={controls}
         render={(v) => (
           <PlaygroundControl
-            appearance={v.appearance as 'grouped' | 'plain'}
+            surface={v.surface as Surface}
             icons={v.icons}
             disabled={v.disabled}
             disableBoard={v.disableBoard}
@@ -55,12 +60,15 @@ function Overview() {
           const icon = (name: string) => (v.icons ? `, icon: <${name} />` : '')
           const attrs = [
             'label="Orders view"',
+            v.surface === 'box' ? 'className="segmented-box" /* background: var(--lab-surface-soft) */' : '',
             'value={view}',
             'onChange={setView}',
-            v.appearance === 'plain' ? 'appearance="plain"' : '',
             v.disabled ? 'disabled' : '',
           ].filter(Boolean)
-          return `<SegmentedControl\n  ${attrs.join('\n  ')}\n  options={[\n    { value: 'list', label: 'List'${icon('List')} },\n    { value: 'board', label: 'Board'${icon('Columns3')}${v.disableBoard ? ', disabled: true' : ''} },\n    { value: 'grid', label: 'Grid'${icon('LayoutGrid')} },\n  ]}\n/>`
+          const control = `<SegmentedControl\n  ${attrs.join('\n  ')}\n  options={[\n    { value: 'list', label: 'List'${icon('List')} },\n    { value: 'board', label: 'Board'${icon('Columns3')}${v.disableBoard ? ', disabled: true' : ''} },\n    { value: 'grid', label: 'Grid'${icon('LayoutGrid')} },\n  ]}\n/>`
+          return v.surface === 'glass'
+            ? `<GlassScope>\n  <ToolbarGroup label="Orders view">\n    ${control.replace(/\n/g, '\n    ')}\n  </ToolbarGroup>\n</GlassScope>`
+            : control
         }}
       />
 
@@ -87,18 +95,60 @@ function Overview() {
           <C>options</C> is an array of <C>{'{ value, label, icon?, disabled? }'}</C>.{' '}
           <C>value</C> is typed from the options, so <C>onChange</C> receives the same string union as{' '}
           <C>value</C>. Icons are decorative and sit before the label; keep the label even when an
-          icon is shown. Options hug their labels and wrap onto a new line when space runs out.
+          icon is shown. Options hug their labels and wrap onto a new line when space runs out;{' '}
+          <C>equalWidth</C> fills the width with one row of equal options instead (labels end in an
+          ellipsis).
         </p>
         <p>
-          <C>appearance="grouped"</C> (the default) draws the control’s own glass container.{' '}
-          <C>appearance="plain"</C> drops it, for a control that sits on a surface that is already a
-          group, such as a toolbar, a dock or a dialog header.
+          The control is as tall as a regular button at every density (36px comfortable, 30px compact,
+          26px thin; a toolbar bubble’s control height inside one, 44px on touch screens). The pill sits{' '}
+          <C>--lab-segmented-inset</C> (2px) inside it and options are no farther apart than that inset.
+          Labels are 13px semibold. Change the inset app-wide with <C>ThemeConfig.metrics.segmentedInset</C>{' '}
+          and the height with <C>controlHeight.regular</C>.
+        </p>
+      </Section>
+
+      <Section title="Surface: glass, box or bare">
+        <p>
+          The control paints no track, border or glass of its own: only its options and the moving
+          pill (with the inset around them, so the pill sits right on whatever you put behind it). You
+          choose the surface:
+        </p>
+        <Table
+          head={['Where', 'Surface', 'How']}
+          rows={[
+            ['Floating: app bar, toolbar, dock, dialog top bar', 'Glass', <>Inside a <C>ToolbarGroup</C> (in a <C>GlassScope</C> when no bar provides one) or a <C>Dock</C>; Flutter the same</>],
+            ['Content and forms: a card, a settings row, a panel', 'A plain box', <>A surface-token background on the control: <C>className</C> with <C>background: var(--lab-surface-soft)</C> (the root already has the capsule radius). Flutter: a <C>DecoratedBox</C> with <C>colors.surfaceSoft</C> and <C>SuperellipseBorder(radius: sizes.radiusControl)</C></>],
+            ['Already on a group, or light enough on its own', 'Bare', 'Nothing: the selected pill is the only paint'],
+          ]}
+        />
+        <Callout title="Apps must wrap their segmented controls">
+          <p>
+            Since the control lost its built-in track, consumers (Lab, Cloud console, …) must give every
+            segmented control one of these surfaces when they upgrade. The <C>appearance</C> prop is gone
+            (Flutter: <C>appearance</C> and <C>SegmentedAppearance</C>), and so is the{' '}
+            <C>segmentedHeight</C> metric (<C>--lab-segmented-height</C>): the height is the regular
+            button height.
+          </p>
+        </Callout>
+      </Section>
+
+      <Section title="Motion and dragging">
+        <p>
+          Choosing an option slides the filled pill there, changing its width on the way, on the{' '}
+          <C>snappy</C> spring; a new choice mid-flight picks up the pill where it is, at its speed.
+          Press the pill and it lifts into a glass lens: it swells like a pressed glass bubble, shows
+          the same touch glow and stretches along a quick drag. Drag it and it follows the pointer,
+          kept on the track with a slight rubber band at the ends; release it and it settles on the
+          nearest option (a flick carries on to the next) on the <C>release</C> spring, keeping the
+          pointer’s speed. Pressing another option and dragging works too: the pill comes to the
+          pointer. A plain tap still selects.
         </p>
         <p>
-          Its size is iOS's: a 32px capsule track with 28px options 2px from its edge and 2px apart,
-          labels 13px semibold. Change it app-wide with <C>ThemeConfig.metrics.segmentedHeight</C> and{' '}
-          <C>segmentedInset</C>; options stay no farther apart than the inset. Touch screens keep 44px
-          options.
+          <C>onChange</C> fires once, on the release, never while dragging. A press in the control never
+          swells the glass bubble around it. Reduced motion moves the pill instantly with no lens,
+          stretch or glow; reduced transparency, more contrast and the <C>solid</C> glass style keep a
+          solid pill. Options that wrap onto several rows still slide but don’t drag.
         </p>
       </Section>
 
@@ -125,7 +175,8 @@ function Overview() {
           <C>radio</C> with <C>aria-checked</C>. Only the selected option is in the Tab order (or the
           first enabled one when nothing valid is selected). Arrow keys move and select at once, wrap
           at the ends and skip disabled options; in right-to-left layouts Left and Right swap. The
-          selected option has a solid primary fill, so the state never depends on text color alone.
+          selected option sits on a solid primary pill, so the state never depends on text color alone.
+          Dragging is an extra: every choice is also a tap or a key press away.
         </p>
         <Keys
           rows={[
@@ -160,7 +211,7 @@ export default definePage({
   importLine: "import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'",
   source: 'src/primitives/segmented.tsx',
   api: ['SegmentedControl'],
-  keywords: ['toggle group', 'button group', 'tabs', 'radio', 'switcher', 'mode'],
+  keywords: ['toggle group', 'button group', 'tabs', 'radio', 'switcher', 'mode', 'drag', 'liquid glass', 'pill'],
   Overview,
   examples: examplesFrom(
     import.meta.glob('./examples/*.tsx', { eager: true }),
@@ -170,6 +221,7 @@ export default definePage({
   Preview: () => (
     <SegmentedControl
       label="Orders view"
+      className="demo-segmented-box"
       value="list"
       onChange={() => {}}
       options={[

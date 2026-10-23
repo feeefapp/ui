@@ -27,9 +27,6 @@ html[data-lab-theme] .lab-temporal-dialog-edges.lab-toolbar-group {
   flex: 1 1 auto;
   max-width: 100%;
 }
-html[data-lab-theme] .lab-temporal-dialog-edges .lab-temporal-edges {
-  width: 100%;
-}
 html[data-lab-theme] .lab-temporal-dialog-presets.lab-toolbar-group,
 html[data-lab-theme] .lab-temporal-dialog-actions.lab-toolbar-group,
 html[data-lab-theme] .lab-temporal-dialog-title.lab-toolbar-group {

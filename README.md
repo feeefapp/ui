@@ -80,7 +80,7 @@ export const theme: ThemeConfig = { palette: 'mono', density: 'compact', radius:
 | `glassBlur` | `false` (default), `true` | `data-lab-glass-blur`: the measured backdrop blur (2.9px → 5.2px by size); off = no blur |
 | `glassRefraction` | `true` (default), `false` | `data-lab-glass-refraction`: bend the backdrop at glass edges (SVG displacement map built when glass settles; Chromium only, other browsers show the same glass unbent) |
 | `density` | `comfortable` (default, iOS 26 control sizes), `compact` (one step down), `thin` (two) | the metric tokens below, `--lab-space-1…8`, `--lab-sidebar-width`, `--lab-navigation-rail-width` (coarse pointers keep 44px targets) |
-| `metrics` | partial `Metrics` (px) | single sizes at every density, as inline variables: `controlHeight {small, regular, large}` (30/36/52) → `--lab-control-small/-height/-large`, `controlPadding` (10/12/20), `controlFont` (15/17/17), `fieldHeight {small, regular}` (36/44), `rowHeight` (44), `toolbarItem` (44), `toolbarGap` (12), `toolbarInset` (16), `segmentedHeight` (32), `segmentedInset` (2), `switchSize` (63×28), `thumbSize` (37×24), `sliderTrack` (6), `listRowHeight` (54), `listRadius` (26), `listInset` (16), `focusRingWidth` (2), `focusRingOffset` (1). Flutter: `ThemeConfig(metrics: Metrics(...))` → `SizeTokens` |
+| `metrics` | partial `Metrics` (px) | single sizes at every density, as inline variables: `controlHeight {small, regular, large}` (30/36/52) → `--lab-control-small/-height/-large`, `controlPadding` (10/12/20), `controlFont` (15/17/17), `fieldHeight {small, regular}` (36/44), `rowHeight` (44), `toolbarItem` (44), `toolbarGap` (12), `toolbarInset` (16), `segmentedInset` (2; the control is `controlHeight.regular` tall), `switchSize` (63×28), `thumbSize` (37×24), `sliderTrack` (6), `listRowHeight` (54), `listRadius` (26), `listInset` (16), `focusRingWidth` (2), `focusRingOffset` (1). Flutter: `ThemeConfig(metrics: Metrics(...))` → `SizeTokens` |
 | `radius` | number, `1` default, `0` square, max `1.5` | `--lab-radius-scale`, which multiplies every radius token and component radius (circles such as radios stay round) |
 
 Accessibility always wins over the glass options: `prefers-reduced-transparency` and
@@ -133,6 +133,18 @@ Then bump each consumer's `"@feeef.dev/ui": "github:feeefapp/ui#vX.Y.Z"` and rei
 See [AGENTS.md](AGENTS.md). In short: change shared look and behaviour here, never by
 copying or overriding kit files inside an app; keep platform access behind `Services`;
 update the `/ui` reference in the Lab when a public primitive changes.
+
+## Segmented controls bring no surface
+
+`SegmentedControl` (React and Flutter) paints only its options and the moving selection pill,
+which slides, can be dragged and turns into a glass lens under a press. It has no track, border
+or glass of its own: put it in glass where it floats (a `ToolbarGroup`, in a `GlassScope` when
+no bar provides one, or a `Dock`), on a plain box in content and forms (a `className` with
+`background: var(--lab-surface-soft)`; Flutter a `DecoratedBox` with `colors.surfaceSoft` and
+`SuperellipseBorder(radius: sizes.radiusControl)`), or leave it bare. It is as tall as a regular
+button. **Consumers (Lab, Cloud console, …) must wrap their segmented controls when they upgrade:**
+`appearance` (Flutter `appearance` / `SegmentedAppearance`) and the `segmentedHeight` metric
+(`--lab-segmented-height`) are removed.
 
 ## Scaffold brand transitions
 

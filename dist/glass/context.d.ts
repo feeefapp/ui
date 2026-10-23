@@ -16,6 +16,4 @@ export type GlassRegistry = {
 };
 /** The nearest GlassContainer, or null when a bubble paints its own glass. */
 export declare const GlassContext: import("react").Context<GlassRegistry | null>;
-/** Disjoint live paint source inherited by floating glass (not by the source's children). */
-export declare const GlassBackdropContext: import("react").Context<string | undefined>;
 //# sourceMappingURL=context.d.ts.map

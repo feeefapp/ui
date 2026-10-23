@@ -85,6 +85,8 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     expect(scaffoldSidebarWidth(Density.compact), 248);
     expect(scaffoldRailWidth(Density.thin), 44);
+    expect(scaffoldSidebarWidth(Density.compact, const Metrics(sidebarWidth: 250)), 250);
+    expect(scaffoldRailWidth(Density.thin, const Metrics(railWidth: 66)), 66);
     await tester.pumpWidget(
       WidgetsApp(
         color: const Color(0xFF000000),

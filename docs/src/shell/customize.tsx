@@ -164,7 +164,7 @@ export function Customize() {
               <code>i18n</code> props. The demo language also sets the demos’ direction.
             </p>
             <Row label="Code">
-              <PlatformSwitch appearance="grouped" />
+              <PlatformSwitch equalWidth />
             </Row>
             <Row label="Version">
               <VersionMenu />
@@ -172,6 +172,7 @@ export function Customize() {
             <Row label="Mode">
               <SegmentedControl<ThemeMode>
                 label="Mode"
+                equalWidth
                 value={mode}
                 onChange={setMode}
                 options={[
@@ -187,6 +188,7 @@ export function Customize() {
             <Row label="Palette">
               <SegmentedControl<Palette>
                 label="Palette"
+                equalWidth
                 value={settings.theme.palette}
                 onChange={(palette) => update({ theme: { palette } })}
                 options={[
@@ -198,6 +200,7 @@ export function Customize() {
             <Row label="Density">
               <SegmentedControl<Density>
                 label="Density"
+                equalWidth
                 value={settings.theme.density}
                 onChange={(density) => update({ theme: { density } })}
                 options={[
@@ -210,6 +213,7 @@ export function Customize() {
             <Row label="Glass">
               <SegmentedControl<GlassStyle>
                 label="Glass"
+                equalWidth
                 value={settings.theme.glass}
                 onChange={(glass) => update({ theme: { glass } })}
                 options={[
@@ -234,6 +238,7 @@ export function Customize() {
             <Row label="Demo language">
               <SegmentedControl<DocsSettings['locale']>
                 label="Demo language"
+                equalWidth
                 value={settings.locale}
                 onChange={(locale) => update({ locale })}
                 options={[

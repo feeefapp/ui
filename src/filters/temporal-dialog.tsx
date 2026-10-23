@@ -90,7 +90,7 @@ export function TemporalDialog({
           <GlassScope className="lab-temporal-dialog-bar" dir={dir}>
             {editor.range && editor.hasCalendar && (
               <ToolbarGroup label="Range ends" className="lab-temporal-dialog-edges">
-                <TemporalEdges editor={editor} appearance="plain" />
+                <TemporalEdges editor={editor} />
               </ToolbarGroup>
             )}
             {!!editor.presets.length && (

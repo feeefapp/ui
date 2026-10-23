@@ -104,8 +104,20 @@ function sampleDisplacementMap(logicalWidth, logicalHeight, w, h, clusters, spac
         const y0 = Math.max(0, Math.floor(bounds.y / pixelHeight) - 1);
         const x1 = Math.min(w, Math.ceil((bounds.x + bounds.width) / pixelWidth) + 1);
         const y1 = Math.min(h, Math.ceil((bounds.y + bounds.height) / pixelHeight) + 1);
+        if (x1 <= x0 || y1 <= y0)
+            return;
         const band = Math.min(bezel * size, ...shapes.map((s) => Math.min(s.width, s.height) / 2));
         const distance = prepareUnionDistance(shapes, spacing);
+        const stride = x1 - x0 + 2;
+        // At one pixel per CSS pixel, the unchanged +/-1 normal stencil lands on neighbouring
+        // samples. Evaluate each distance once, with a one-pixel halo; fractional/coarse maps
+        // retain direct sampling so this never changes the stencil or displacement bytes.
+        const field = pixelWidth === 1 && pixelHeight === 1 ? new Float64Array(stride * (y1 - y0 + 2)) : null;
+        if (field)
+            for (let y = y0 - 1; y <= y1; y++)
+                for (let x = x0 - 1; x <= x1; x++) {
+                    field[(y - y0 + 1) * stride + x - x0 + 1] = distance(x + 0.5, y + 0.5);
+                }
         // Circular/superellipse SDFs and their smooth minimum are 1-Lipschitz. A tile entirely
         // outside the silhouette or inside the flat centre needs no per-pixel distance/normal
         // work. Keep a small safety margin for interpolation of the superellipse norm table.
@@ -134,14 +146,15 @@ function sampleDisplacementMap(logicalWidth, logicalHeight, w, h, clusters, spac
                     for (let x = column; x < right; x++) {
                         const px = (x + 0.5) * pixelWidth;
                         const py = (y + 0.5) * pixelHeight;
-                        const d = distance(px, py);
+                        const fieldIndex = (y - y0 + 1) * stride + x - x0 + 1;
+                        const d = field ? field[fieldIndex] : distance(px, py);
                         const i = (y * w + x) * 4;
                         // Clusters' boxes can overlap: only ever add coverage.
                         data[i + 3] = Math.max(data[i + 3], Math.round(Math.min(1, Math.max(0, 0.5 - d / coverageWidth)) * 255));
                         if (d >= coverageWidth / 2 || d <= -band)
                             continue;
-                        const gx = distance(px + 1, py) - distance(px - 1, py);
-                        const gy = distance(px, py + 1) - distance(px, py - 1);
+                        const gx = field ? field[fieldIndex + 1] - field[fieldIndex - 1] : distance(px + 1, py) - distance(px - 1, py);
+                        const gy = field ? field[fieldIndex + stride] - field[fieldIndex - stride] : distance(px, py + 1) - distance(px, py - 1);
                         const length = Math.hypot(gx, gy) || 1;
                         const bend = refractionAt(Math.min(d, -1e-3), gx / length, gy / length, band);
                         data[i] = Math.round(128 + bend.x * share * 127);

@@ -69,14 +69,21 @@ class _AdaptiveState extends State<Adaptive> {
                 )
               : glass,
         ),
-        SegmentedControl<_Backdrop>(
-          label: 'Behind the glass',
-          value: _backdrop,
-          onChange: (value) => setState(() => _backdrop = value),
-          options: const [
-            SegmentOption(value: .photo, label: 'Dark photo'),
-            SegmentOption(value: .page, label: 'Page'),
-          ],
+        GlassScope(
+          child: ToolbarGroup(
+            label: 'Behind the glass',
+            children: [
+              SegmentedControl<_Backdrop>(
+                label: 'Behind the glass',
+                value: _backdrop,
+                onChange: (value) => setState(() => _backdrop = value),
+                options: const [
+                  SegmentOption(value: .photo, label: 'Dark photo'),
+                  SegmentOption(value: .page, label: 'Page'),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );

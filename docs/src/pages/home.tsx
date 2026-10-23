@@ -94,6 +94,7 @@ function HeroDemo() {
       <TextField hint="Search orders" leadingIcon={<Search size={18} />} />
       <SegmentedControl
         label="Billing"
+        className="demo-segmented-box"
         value={plan}
         onChange={setPlan}
         options={[

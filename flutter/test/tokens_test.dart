@@ -145,7 +145,6 @@ void main() {
           'toolbar-control': s.toolbarControl,
           'toolbar-gap': s.toolbarGap,
           'toolbar-inset': s.toolbarInset,
-          'segmented-height': s.segmentedHeight,
           'segmented-inset': s.segmentedInset,
           'switch-width': s.switchWidth,
           'switch-height': s.switchHeight,

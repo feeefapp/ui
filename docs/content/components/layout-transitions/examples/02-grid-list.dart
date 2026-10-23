@@ -32,22 +32,32 @@ class _GridOrListState extends State<GridOrList> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 16,
         children: [
-          SegmentedControl<_View>(
-            label: 'View',
-            value: _view,
-            onChange: (view) => setState(() => _view = view),
-            options: const [
-              SegmentOption(
-                value: _View.grid,
-                label: 'Grid',
-                icon: LucideIcon(LucideIcons.layoutGrid, size: 16),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: GlassScope(
+              child: ToolbarGroup(
+                label: 'View',
+                children: [
+                  SegmentedControl<_View>(
+                    label: 'View',
+                    value: _view,
+                    onChange: (view) => setState(() => _view = view),
+                    options: const [
+                      SegmentOption(
+                        value: _View.grid,
+                        label: 'Grid',
+                        icon: LucideIcon(LucideIcons.layoutGrid, size: 16),
+                      ),
+                      SegmentOption(
+                        value: _View.list,
+                        label: 'List',
+                        icon: LucideIcon(LucideIcons.list, size: 16),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              SegmentOption(
-                value: _View.list,
-                label: 'List',
-                icon: LucideIcon(LucideIcons.list, size: 16),
-              ),
-            ],
+            ),
           ),
           LayoutGroup(
             layoutKey: _view,

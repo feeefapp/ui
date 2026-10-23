@@ -10,6 +10,10 @@ export declare const GLASS_PRESS_SCALE = 1.06;
 export declare const GLASS_STRETCH_LIMIT = 12;
 /** Fraction of the stretch the bubble's content follows. */
 export declare const GLASS_CONTENT_FOLLOW = 0.4;
+/** Radius (px) the touch glow starts from; it spreads to `glassGlowRadius` on `SPRINGS.smooth`. */
+export declare const GLASS_GLOW_START = 8;
+/** How far the touch glow under a press spreads over glass `width` px wide. */
+export declare function glassGlowRadius(width: number): number;
 /** Recover layout from the content transform we last painted, before measuring it again. */
 export declare function glassLayoutRect(rect: GlassRect, offset: {
     x: number;

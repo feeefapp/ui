@@ -265,6 +265,11 @@ h3.docs-heading {
 .docs-stage .demo-wide.demo-wide {
   width: min(100%, 560px);
 }
+/* A segmented control on a plain box (its root already has the capsule radius). Dart: a DecoratedBox
+with ShapeDecoration(color: colors.surfaceSoft, shape: SuperellipseBorder(radius: sizes.radiusControl)). */
+.demo-segmented-box {
+  background: var(--lab-surface-soft);
+}
 
 /* ---------- Playground ---------- */
 .docs-playground {

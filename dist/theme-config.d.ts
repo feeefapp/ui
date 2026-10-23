@@ -47,8 +47,8 @@ export interface ThemeConfig {
     glassBlur?: boolean;
     /**
      * Bend the backdrop at the glass edges with the measured refraction profile. Default true.
-     * Chromium filters the backdrop directly. Firefox uses a disjoint live source, supplied
-     * automatically to ScrollArea floating slots or explicitly via backdropSource.
+     * Chromium filters the backdrop directly. Firefox bends only glass given a backdropSource
+     * (a separate, non-scrolling background layer); elsewhere it keeps the CSS material.
      */
     glassRefraction?: boolean;
     /**
@@ -91,9 +91,7 @@ export interface Metrics {
     toolbarGap?: number;
     /** A floating bar's inset from its panel's sides: 16 (`--lab-toolbar-inset`). */
     toolbarInset?: number;
-    /** A segmented control's outer height: 32 (`--lab-segmented-height`). */
-    segmentedHeight?: number;
-    /** From a segmented control's outer edge to its options, and between options: 2 (`--lab-segmented-inset`). */
+    /** From a segmented control's edge to its pill, and between options: 2 (`--lab-segmented-inset`). Its height is `controlHeight.regular`. */
     segmentedInset?: number;
     /** A switch track: 63 × 28 (`--lab-switch-width`, `--lab-switch-height`). */
     switchSize?: MetricSize;
@@ -111,6 +109,10 @@ export interface Metrics {
     focusRingWidth?: number;
     /** The keyboard focus ring's distance outside the control: 1 (`--lab-focus-ring-offset`). */
     focusRingOffset?: number;
+    /** The workspace scaffold's expanded sidebar: 304 / 248 / 224 by density (`--lab-sidebar-width`). */
+    sidebarWidth?: number;
+    /** The workspace scaffold's navigation rail: 64 / 52 / 44 by density (`--lab-navigation-rail-width`). */
+    railWidth?: number;
 }
 /** Color palette: `lab` (Feeef green) or `mono` (black and white). */
 export type Palette = 'lab' | 'mono';

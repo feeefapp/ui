@@ -71,6 +71,7 @@ function ViewSwitchGood() {
   return (
     <SegmentedControl
       label="Orders view"
+      className="demo-segmented-box"
       value={view}
       onChange={setView}
       options={[
@@ -383,7 +384,7 @@ function Overview() {
               'Does it change what the view shows: List or Board, Day or Week?',
               <>
                 <Link to="/components/segmented-control">SegmentedControl</Link>. It is the only view
-                and mode picker in the kit, also inside toolbars (<C>appearance="plain"</C> in a group).
+                and mode picker in the kit, in a glass bubble when it floats and on a plain box in content.
               </>,
             ],
             [

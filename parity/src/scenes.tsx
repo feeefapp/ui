@@ -10,7 +10,7 @@ import { TextField } from '@feeef.dev/ui/primitives/text-field'
 import { LucidePhone, LucideUndo2, LucideRedo2, LucideBold, LucideItalic, LucideUnderline, LucideShare } from 'lucide-react'
 import { GlassGroup } from '@feeef.dev/ui/scaffold'
 import { Toolbar, ToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { GlassContainer } from '@feeef.dev/ui/glass'
+import { GlassContainer, GlassScope } from '@feeef.dev/ui/glass'
 import { Dock } from '@feeef.dev/ui/dock'
 import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
 import { ScrollArea } from '@feeef.dev/ui/scroll'
@@ -136,15 +136,17 @@ export const SCENES: Record<string, () => ReactNode> = {
         </ToolbarGroup>
       </GlassContainer>
       <GlassContainer spacing={16} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-        <SegmentedControl
-          label="View"
-          value="grid"
-          onChange={() => {}}
-          options={[
-            { value: 'list', label: 'List' },
-            { value: 'grid', label: 'Grid' },
-          ]}
-        />
+        <ToolbarGroup label="View">
+          <SegmentedControl
+            label="View"
+            value="grid"
+            onChange={() => {}}
+            options={[
+              { value: 'list', label: 'List' },
+              { value: 'grid', label: 'Grid' },
+            ]}
+          />
+        </ToolbarGroup>
         <ToolbarGroup label="Add">
           <IconButton appearance="toolbar" aria-label="Bold"><LucideBold /></IconButton>
         </ToolbarGroup>
@@ -549,19 +551,25 @@ export const SCENES: Record<string, () => ReactNode> = {
 function Segmented() {
   const [delivery, setDelivery] = useState('home')
   const [range, setRange] = useState('week')
+  // The three surfaces: glass, a plain box, bare.
   return (
     <>
-      <SegmentedControl
-        label="Delivery type"
-        value={delivery}
-        onChange={setDelivery}
-        options={[
-          { value: 'home', label: 'Home delivery' },
-          { value: 'desk', label: 'Stop desk' },
-        ]}
-      />
+      <GlassScope>
+        <ToolbarGroup label="Delivery type">
+          <SegmentedControl
+            label="Delivery type"
+            value={delivery}
+            onChange={setDelivery}
+            options={[
+              { value: 'home', label: 'Home delivery' },
+              { value: 'desk', label: 'Stop desk' },
+            ]}
+          />
+        </ToolbarGroup>
+      </GlassScope>
       <SegmentedControl
         label="Summary period"
+        className="demo-segmented-box"
         value={range}
         onChange={setRange}
         options={[
@@ -572,7 +580,6 @@ function Segmented() {
       />
       <SegmentedControl
         label="View"
-        appearance="plain"
         value="list"
         onChange={() => {}}
         options={[

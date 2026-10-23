@@ -58,11 +58,12 @@ export declare function TemporalPresets({ editor, layout, }: {
     editor: TemporalEditorState;
     layout?: 'list' | 'bar';
 }): import("react").JSX.Element | null;
-/** The start/end switch of a date range; each side shows its chosen day. Nothing for other types. */
-export declare function TemporalEdges({ editor, appearance, }: {
+/**
+ * The start/end switch of a date range; each side shows its chosen day. Nothing for other types.
+ * It paints no surface: the editor sets it on a box, the dialog in its top bar's glass.
+ */
+export declare function TemporalEdges({ editor }: {
     editor: TemporalEditorState;
-    /** `plain` when it sits inside a glass group of its own. */
-    appearance?: 'plain';
 }): import("react").JSX.Element | null;
 /**
  * Calendars, times and typed entry, plus the hidden `date` or `from`/`to` inputs that

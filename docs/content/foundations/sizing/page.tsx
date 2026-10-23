@@ -31,8 +31,7 @@ const ROLES: Record<string, string> = {
   '--lab-toolbar-item': 'A toolbar bubble (controls inside are 6px less).',
   '--lab-toolbar-gap': 'Space between toolbar groups.',
   '--lab-toolbar-inset': 'A floating bar’s inset from its panel’s sides.',
-  '--lab-segmented-height': 'Segmented control track.',
-  '--lab-segmented-inset': 'Segmented control edge to options, and between options.',
+  '--lab-segmented-inset': 'Segmented control edge to its pill, and between options.',
   '--lab-switch-width': 'Switch track width.',
   '--lab-switch-height': 'Switch track height.',
   '--lab-thumb-width': 'Switch and thin-slider thumb width.',
@@ -86,6 +85,7 @@ function ViewPicker() {
   return (
     <SegmentedControl
       label="View"
+      className="demo-segmented-box"
       value={view}
       onChange={setView}
       options={[
@@ -129,7 +129,7 @@ function Overview() {
         <p>
           Comfortable density matches iOS 26's controls: capsule buttons <C>small</C> 30px,{' '}
           <C>regular</C> 36px and <C>large</C> 52px (side padding 10 / 12 / 20, labels 15 / 17 / 17
-          regular weight), 44px toolbar bubbles 12px apart, a 32px segmented control with a 28px thumb,
+          regular weight), 44px toolbar bubbles 12px apart, a segmented control as tall as a regular button (36px, its pill 32px),
           a 63 × 28 switch with a 37 × 24 thumb, a 6px slider rail, and 54px list rows on 26px cards.
           Every shape is a capsule (radius half its height) drawn with the kit's superellipse corners,
           not a perfect circle. Text fields keep their own design: 44px with room for an inside hint,

@@ -239,10 +239,7 @@ html[data-lab-theme] .docs-search-field.lab-toolbar-group {
   font-weight: 500;
 }
 .docs-customize-row .lab-segmented {
-  width: 100%;
-}
-.docs-customize-row .lab-segmented > .lab-segmented-option {
-  flex: 1;
+  background: var(--lab-surface-soft);
 }
 .docs-customize-scale,
 .docs-customize-switch {

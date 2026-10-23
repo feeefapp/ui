@@ -479,12 +479,10 @@ html[data-lab-theme] .lab-control.lab-ladder-option[aria-selected='true'] {
   max-width: none;
   flex-wrap: nowrap;
 }
-html[data-lab-theme] .lab-ladder-shape-options > .lab-segmented-option {
+/* Shape tiles: the segmented pill marks the chosen one (it takes the tile's size). Out-specifies the
+kit's `.lab-segmented > .lab-segmented-option.lab-control[data-variant]`. */
+html[data-lab-theme] .lab-ladder-shape-options.lab-segmented > .lab-segmented-option.lab-control[data-variant] {
   flex: none;
-  display: grid;
-  justify-items: center;
-  align-content: center;
-  gap: 5px;
   width: 52px;
   min-width: 52px;
   height: 58px;
@@ -492,27 +490,14 @@ html[data-lab-theme] .lab-ladder-shape-options > .lab-segmented-option {
   padding: 4px;
   border: 1px solid var(--ladder-line);
   border-radius: calc(15px * var(--lab-corner-scale, 1));
-  background: transparent;
   color: var(--ladder-ink);
   font: inherit;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
-  cursor: pointer;
-  transition:
-    border-color 140ms,
-    background 140ms,
-    transform 140ms var(--ladder-ease);
 }
-html[data-lab-theme] .lab-ladder-shape-options > .lab-segmented-option:hover {
-  border-color: color-mix(in srgb, var(--ladder-primary) 45%, var(--ladder-line));
-}
-html[data-lab-theme] .lab-ladder-shape-options > .lab-segmented-option[data-state='on'] {
-  border-color: var(--ladder-primary);
-  background: color-mix(in srgb, var(--ladder-primary) 18%, transparent);
-}
-.lab-ladder-shape-options > .lab-segmented-option:focus-visible {
-  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
-  outline-offset: var(--lab-focus-ring-offset);
+.lab-ladder-shape-options .lab-segmented-content {
+  flex-direction: column;
+  gap: 5px;
 }
 .lab-ladder-shape-options i {
   display: block;

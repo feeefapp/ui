@@ -12,13 +12,18 @@ export type SegmentOption<T extends string> = {
     disabled?: boolean;
 };
 /**
- * A single choice among two to five short options, shown side by side. Radio semantics: one Tab
- * stop, arrow keys move and select.
+ * A single choice among two to five short options, shown side by side. A filled pill marks the
+ * selection and slides to the next one; press it and it becomes a glass lens you can drag (or
+ * press another option and drag: the pill comes to you). Radio semantics: one Tab stop, arrow keys
+ * move and select.
+ *
+ * It paints no container: put it in glass (`ToolbarGroup`), on a box of your own (a surface-token
+ * background; the root already has the capsule radius) or leave it bare.
  */
-export declare function SegmentedControl<const T extends string>({ value, onChange, options, label, disabled, className, appearance, }: {
+export declare function SegmentedControl<const T extends string>({ value, onChange, options, label, disabled, equalWidth, className, }: {
     /** The selected option's value. */
     value: T;
-    /** Called with the chosen value on click and on every arrow, Home or End key press. */
+    /** Called with the chosen value on a click or tap, when a dragged pill is released on another option, and on every arrow, Home or End key press. */
     onChange(value: NoInfer<T>): void;
     /** Choices, in display order. */
     options: readonly SegmentOption<T>[];
@@ -26,9 +31,9 @@ export declare function SegmentedControl<const T extends string>({ value, onChan
     label: string;
     /** Disables every option. */
     disabled?: boolean;
-    /** Class name for the group. */
+    /** Fills the available width with one row of equal options whose labels end in an ellipsis. */
+    equalWidth?: boolean;
+    /** Class name for the group (a background here fills the capsule behind the options). */
     className?: string;
-    /** `grouped` draws its own glass container; `plain` sits directly on an existing surface. */
-    appearance?: 'grouped' | 'plain';
 }): import("react").JSX.Element;
 //# sourceMappingURL=segmented.d.ts.map

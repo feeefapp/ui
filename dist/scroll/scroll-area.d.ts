@@ -11,6 +11,8 @@ export type ScrollAreaProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> &
     label: string;
     /** Space in px between a float and the area's edges; also added above and below it in the reservation. */
     edgeGap?: number;
+    /** Space in px between a float and the area's sides, when it differs from `edgeGap` (a scaffold's app bar uses `--lab-toolbar-inset`). */
+    sideGap?: number;
     /** Content padding in px: inline sides, and top/bottom when no float is present. */
     contentPadding?: number;
     /** Paints the dithered edge washes that fade content under the floats. */
@@ -37,6 +39,8 @@ export declare const ScrollArea: import("react").ForwardRefExoticComponent<Omit<
     label: string;
     /** Space in px between a float and the area's edges; also added above and below it in the reservation. */
     edgeGap?: number;
+    /** Space in px between a float and the area's sides, when it differs from `edgeGap` (a scaffold's app bar uses `--lab-toolbar-inset`). */
+    sideGap?: number;
     /** Content padding in px: inline sides, and top/bottom when no float is present. */
     contentPadding?: number;
     /** Paints the dithered edge washes that fade content under the floats. */

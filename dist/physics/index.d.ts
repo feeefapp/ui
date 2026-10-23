@@ -2,7 +2,7 @@
 export { SPRINGS, mix, nearestTarget, progressBetween, projectMomentum, rubberBand, rubberBandClamp, solveSpring, springAtRest, springCoefficients, springTiming, } from './spring.js';
 export type { Spring, SpringName, SpringState } from './spring.js';
 export { VelocityTracker } from './velocity.js';
-export { MotionValue, onAnimationFrame, prefersReducedMotion } from './motion-value.js';
+export { MotionValue, onAnimationFrame, onMeasureFrame, onRenderFrame, prefersReducedMotion } from './motion-value.js';
 export type { AnimateOptions } from './motion-value.js';
 export { attachPan, canChildPan } from './gesture.js';
 export type { PanAxis, PanBegin, PanOptions, PanPoint, PointerKind } from './gesture.js';

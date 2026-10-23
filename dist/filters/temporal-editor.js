@@ -115,11 +115,14 @@ export function TemporalPresets({ editor, layout = 'list', }) {
         return null;
     return (_jsx("div", { className: "lab-temporal-presets", "data-layout": layout, role: "group", "aria-label": "Quick choices", children: editor.presets.map((p) => (_jsx(Button, { variant: editor.presetActive(p) ? 'tonal' : 'text', appearance: layout === 'bar' ? 'toolbar' : 'default', controlSize: "small", "aria-pressed": editor.presetActive(p), onClick: () => editor.choosePreset(p.value), children: p.label }, p.label))) }));
 }
-/** The start/end switch of a date range; each side shows its chosen day. Nothing for other types. */
-export function TemporalEdges({ editor, appearance, }) {
+/**
+ * The start/end switch of a date range; each side shows its chosen day. Nothing for other types.
+ * It paints no surface: the editor sets it on a box, the dialog in its top bar's glass.
+ */
+export function TemporalEdges({ editor }) {
     if (!editor.range || !editor.hasCalendar)
         return null;
-    return (_jsx(SegmentedControl, { label: "Which end you are choosing", className: "lab-temporal-edges", appearance: appearance, value: editor.edge, onChange: editor.setEdge, options: [
+    return (_jsx(SegmentedControl, { label: "Which end you are choosing", className: "lab-temporal-edges", equalWidth: true, value: editor.edge, onChange: editor.setEdge, options: [
             { value: 'from', label: `Start · ${editor.endpointText(editor.dayOnly(editor.from))}` },
             { value: 'to', label: `End · ${editor.endpointText(editor.dayOnly(editor.to))}` },
         ] }));

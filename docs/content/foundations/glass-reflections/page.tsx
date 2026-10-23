@@ -49,13 +49,13 @@ function Inspection() {
     </div>
     <p className="reflection-reference-note">{preset ? 'Reference starting point' : 'Custom tuning'} · Native screenshot fit, not official Apple shader values. Reference highlights are approximately 1px wide, with the measured mirrored lens band.</p>
     <div className="reflection-controls">
-      <SegmentedControl label="Inspection background" value={background} onChange={setBackground} options={[
+      <SegmentedControl label="Inspection background" className="demo-segmented-box" value={background} onChange={setBackground} options={[
         { value: 'plain', label: 'Plain' }, { value: 'grid', label: 'Grid' }, { value: 'color', label: 'Color' }, { value: 'landscape', label: 'Landscape' },
       ]} />
-      <SegmentedControl label="Lens profile" value={refractionProfile} onChange={value => setRefractionProfile(value as 'gentle' | 'measured')} options={[
+      <SegmentedControl label="Lens profile" className="demo-segmented-box" value={refractionProfile} onChange={value => setRefractionProfile(value as 'gentle' | 'measured')} options={[
         { value: 'measured', label: 'Reference lens' }, { value: 'gentle', label: 'Gentle lens' },
       ]} />
-      <SegmentedControl label="Reflection light" value={light} onChange={setLight} options={[
+      <SegmentedControl label="Reflection light" className="demo-segmented-box" value={light} onChange={setLight} options={[
         { value: 'static', label: 'Fixed light' }, { value: 'pointer', label: 'Follow pointer' },
       ]} />
     </div>
@@ -112,7 +112,7 @@ function Inspection() {
       </div>
     </div>
     <div className="reflection-controls">
-      <SegmentedControl label="Bubble spacing" value={joined} onChange={setJoined} options={[
+      <SegmentedControl label="Bubble spacing" className="demo-segmented-box" value={joined} onChange={setJoined} options={[
         { value: 'joined', label: 'Joined bubbles' }, { value: 'apart', label: 'Separate bubbles' },
       ]} />
     </div>
@@ -137,7 +137,7 @@ function Overview() {
     </Section>
     <Section title="Surface model reference"><p>The <a href="https://kube.io/blog/liquid-glass-css-svg/">Liquid Glass in the Browser</a> article explains surface profiles, normals and a separate specular layer. This demo applies that surface-profile approach to the kit’s blended bubble geometry. Apple’s <a href="https://developer.apple.com/videos/play/wwdc2025/219/">Meet Liquid Glass</a> explains how lensing, highlights and shadows work together. This web material approximates those layers; it is not Apple’s native renderer.</p></Section>
     <Section title="Implementation and accessibility">
-      <p>The reflection uses the same blended surface as the material, with no extra interactive layer. Highlights paint into persistent canvases without rebuilding image masks. Geometry is cached while the light moves. Firefox samples the separate background paint layer as a live element image and runs the same displacement map through a regular SVG filter. The source must be separate from the glass to avoid a recursive image. Chromium filters the actual backdrop directly. The controls retain keyboard access, and reduced motion keeps the geometry changes immediate.</p>
+      <p>The reflection uses the same blended surface as the material, with no extra interactive layer. Highlights paint into persistent canvases without rebuilding image masks. Geometry is cached while the light moves. Firefox samples the separate background paint layer as a live element image and runs the same displacement map through a regular SVG filter. A shared worker calculates changing lens maps without blocking pointer updates; the previous decoded lens stays visible until its replacement is ready. The source must be separate from the glass to avoid a recursive image. Chromium filters the actual backdrop directly. The controls retain keyboard access, and reduced motion keeps the geometry changes immediate.</p>
     </Section>
   </>
 }

@@ -22,7 +22,7 @@ html[data-lab-theme] {
   --lab-radius-glass: calc(32px * var(--lab-corner-scale, 1));
   --lab-radius-small: calc(12px * var(--lab-corner-scale, 1));
   /* Control metrics. Comfortable density is iOS 26 (research/liquid-glass/CONTROLS-MEASURED.md):
-  capsule buttons 30 / 36 / 52, 44px toolbar bubbles, a 32px segmented control, a 63 × 28 switch,
+  capsule buttons 30 / 36 / 52 (a segmented control is a regular button tall), 44px toolbar bubbles, a 63 × 28 switch,
   54px inset-grouped rows. Compact and thin step down (below). ThemeConfig `metrics` overrides any
   of them as inline variables on <html> (theme-config.ts). Coarse pointers keep
   --lab-control-touch-target. */
@@ -45,7 +45,6 @@ html[data-lab-theme] {
   --lab-toolbar-item: 44px;
   --lab-toolbar-gap: 12px;
   --lab-toolbar-inset: 16px;
-  --lab-segmented-height: 32px;
   --lab-segmented-inset: 2px;
   --lab-switch-width: 63px;
   --lab-switch-height: 28px;
@@ -90,7 +89,7 @@ html[data-lab-theme] {
   panel-sized. glass/material.ts glassMaterial is the same curve: veil = tint · veil₁, colour kept
   1 - tint · colour-loss₁ (colour-loss₁ = 1 - (1 - veil₁) · saturate₁), saturate = colour / (1 - veil),
   shadow = tint · shadow₁, and the clear lift 1.03 · x + 0.076 fades out as tint grows. */
-  --lab-glass-tint: 0;
+  --lab-glass-tint: 0.5;
   --lab-glass-veil: 0.87;
   --lab-glass-veil-large: 0.71;
   --lab-glass-colour-loss: 0.285;
@@ -415,7 +414,6 @@ html[data-lab-density='compact'][data-lab-theme] {
   --lab-toolbar-item: 36px;
   --lab-toolbar-gap: 10px;
   --lab-toolbar-inset: 12px;
-  --lab-segmented-height: 28px;
   --lab-switch-width: 54px;
   --lab-switch-height: 24px;
   --lab-thumb-width: 31px;
@@ -452,7 +450,6 @@ html[data-lab-density='thin'][data-lab-theme] {
   --lab-toolbar-item: 30px;
   --lab-toolbar-gap: 8px;
   --lab-toolbar-inset: 10px;
-  --lab-segmented-height: 24px;
   --lab-switch-width: 45px;
   --lab-switch-height: 20px;
   --lab-thumb-width: 25px;

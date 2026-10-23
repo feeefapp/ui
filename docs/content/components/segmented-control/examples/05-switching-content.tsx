@@ -14,6 +14,7 @@ export default function SwitchingContent() {
     <div className="demo-wide" style={{ display: 'grid', gap: 16, justifyItems: 'start' }}>
       <SegmentedControl
         label="Summary period"
+        className="demo-segmented-box"
         value={range}
         onChange={setRange}
         options={[

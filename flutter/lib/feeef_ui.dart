@@ -74,6 +74,7 @@ export 'primitives/number_field_core.dart';
 export 'primitives/popover_surface.dart';
 export 'primitives/raw_input.dart';
 export 'primitives/segmented.dart';
+export 'primitives/segmented_model.dart';
 export 'primitives/select.dart';
 export 'primitives/slider.dart';
 export 'primitives/slider_core.dart';

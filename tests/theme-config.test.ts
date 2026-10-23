@@ -141,3 +141,10 @@ test('every metric variable is a kit size token declared for the default density
   const base = css.slice(css.indexOf('html[data-lab-theme] {'), css.indexOf('@supports not (corner-shape'))
   for (const name of METRIC_VARIABLE_NAMES) assert.match(base, new RegExp(`${name}:`), name)
 })
+
+test('metrics override the workspace sidebar and rail widths', () => {
+  assert.deepEqual(metricVariables({ sidebarWidth: 250, railWidth: 66 }), {
+    '--lab-sidebar-width': '250px',
+    '--lab-navigation-rail-width': '66px',
+  })
+})

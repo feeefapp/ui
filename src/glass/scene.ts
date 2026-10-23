@@ -1,4 +1,4 @@
-import { MotionValue, onAnimationFrame } from '../physics/motion-value'
+import { MotionValue, onMeasureFrame, onRenderFrame } from '../physics/motion-value'
 import { SPRINGS, type Spring } from '../physics/spring'
 import type { GlassMemberOptions } from './context'
 import {
@@ -17,10 +17,12 @@ import {
 import { DEFAULT_GLASS_LIGHT, glassLightToward, surfaceReflection, measuredRimReflection, surfaceShade, highlightSurface, type GlassLight } from './light'
 import { planGlassTransition, sameRect } from './transitions'
 import { adaptiveGlassTone, backdropTone, parseCssColor, type BackdropSample, type GlassTone } from './adaptive'
-import { liveDisplacementMap, rgbaBmpBytes, rgbaBmpDataUrl, elementImagePlacement, supportsElementRefraction, supportsRefraction } from './refraction'
+import { liveDisplacementMap, rgbaBmpDataUrl, elementImagePlacement, supportsElementRefraction, supportsRefraction } from './refraction'
 import { DecodedRefractionMap } from './decoded-refraction-map'
+import { RefractionWork } from './refraction-work'
+import { obsoleteRimRegions, rimBufferCapacity } from './rim-buffer'
 import { GLASS_SHADOW, glassBlur, glassMaterial, glassSize } from './material'
-import { GLASS_CONTENT_FOLLOW, GLASS_PRESS_SCALE, glassLayoutRect, glassStretch, pressedShape } from './press'
+import { GLASS_CONTENT_FOLLOW, GLASS_GLOW_START, GLASS_PRESS_SCALE, glassGlowRadius, glassLayoutRect, glassStretch, pressedShape } from './press'
 import { cornerFit } from '../brand/corner-fit'
 
 /** How far (px) the material may reach past the container, for overshoot and growing bubbles. */
@@ -137,6 +139,8 @@ export class GlassScene {
   private measured = false
   private measureQueued = false
   private drawHook: (() => void) | null = null
+  private wasMoving = false
+  private drawInput: { frame: HostFrame; sourceFrame: GlassRect | null; paint: ReturnType<typeof readPaintStyle> } | null = null
   private dirty = false
   private resize: ResizeObserver | null = null
   private mutations: MutationObserver | null = null
@@ -169,6 +173,8 @@ export class GlassScene {
   private sourceFrame: GlassRect | null = null
   private refractKey = ''
   private refractionMaps: { key: string; scale: number; href: string }[] = []
+  private refractionWork: RefractionWork[] = []
+  private refractionRequests: string[] = []
   private decodedMaps: DecodedRefractionMap<{ href: string; scale: number }>[] = []
   private decodedScales: number[] = []
   private filters: SVGFilterElement[] = []
@@ -199,7 +205,7 @@ export class GlassScene {
     this.uid = uid.replace(/[^a-zA-Z0-9_-]/g, '')
     backdrop.replaceChildren()
     if (typeof ResizeObserver !== 'undefined') {
-      this.resize = new ResizeObserver(() => this.measure())
+      this.resize = new ResizeObserver(() => this.requestMeasure())
       this.resize.observe(host)
     }
     if (typeof MutationObserver !== 'undefined') {
@@ -302,7 +308,8 @@ export class GlassScene {
   private onPressStart = (event: PointerEvent) => {
     if (!this.interactive || this.reduceMotion || event.button > 0 || this.pressed) return
     const target = event.target as Element | null
-    if (!target || target.closest('input, textarea, select, [contenteditable="true"]')) return
+    // Fields, and controls that answer a press with glass of their own (a segmented control's lens).
+    if (!target || target.closest('input, textarea, select, [contenteditable="true"], [data-glass-own-press]')) return
     const element = target.closest<HTMLElement>('[data-glass-member]')
     const id = element && [...this.members].find(([, member]) => member.element === element)?.[0]
     const shape = id ? this.shapes.get(id) : undefined
@@ -311,9 +318,9 @@ export class GlassScene {
     // Large surfaces (docks, panels) glow but don't swell.
     if (shape.height.get() <= 64) void shape.press.animateTo(GLASS_PRESS_SCALE, { spring: SPRING })
     const point = toLocalPoint(this.frame(), event.clientX, event.clientY)
-    const glow = { x: point.x, y: point.y, radius: new MotionValue(8, 0.5), opacity: new MotionValue(1, 0.005) }
+    const glow = { x: point.x, y: point.y, radius: new MotionValue(GLASS_GLOW_START, 0.5), opacity: new MotionValue(1, 0.005) }
     this.glow = glow
-    void glow.radius.animateTo(Math.max(120, shape.width.get()), { spring: SPRINGS.smooth })
+    void glow.radius.animateTo(glassGlowRadius(shape.width.get()), { spring: SPRINGS.smooth })
     window.addEventListener('pointermove', this.onPressMove, { passive: true })
     window.addEventListener('pointerup', this.onPressEnd, { passive: true })
     window.addEventListener('pointercancel', this.onPressEnd, { passive: true })
@@ -371,13 +378,11 @@ export class GlassScene {
   }
 
   requestMeasure() {
-    if (this.measureQueued) return
+    if (this.disposed || this.measureQueued) return
     this.measureQueued = true
-    // Microtasks run after React's layout effects and before the browser paints.
-    queueMicrotask(() => {
-      this.measureQueued = false
-      this.measure()
-    })
+    // React and ResizeObserver can report several changes before the same refresh. Read the
+    // final layout once, in the shared read phase, after all of those changes have landed.
+    this.scheduleDraw()
   }
 
   setPointer(point: { x: number; y: number } | null) {
@@ -392,6 +397,7 @@ export class GlassScene {
     this.themeObserver?.disconnect()
     this.visibility?.disconnect()
     this.filterHost?.remove()
+    for (const work of this.refractionWork) work.dispose()
     for (const map of this.decodedMaps) map.dispose()
     if (this.sampleTimer) clearInterval(this.sampleTimer)
     if (this.sampleLater) clearTimeout(this.sampleLater)
@@ -509,9 +515,8 @@ export class GlassScene {
     }
     this.measured = true
     this.tracking = tracking
-    this.draw()
     this.scheduleDraw()
-    this.requestSample()
+    this.requestSampleWhileScrolling()
   }
 
   private release(shape: Shape, id: string) {
@@ -525,26 +530,55 @@ export class GlassScene {
   }
 
   private scheduleDraw() {
+    if (this.disposed) return
     this.dirty = true
     if (this.drawHook) return
-    this.drawHook = onAnimationFrame(() => {
+    let paint = false
+    // All springs advance first, then every glass scene reads layout/styles, then they paint.
+    // Measurements from React/ResizeObserver only request a paint; they never paint twice in
+    // one refresh or force the next scene to read layout after this scene has changed it.
+    const stopMeasure = onMeasureFrame(() => {
+      if (this.measureQueued || this.tracking) {
+        this.measureQueued = false
+        this.measure()
+      }
       const glow = this.glow
       const moving =
         [...this.shapes.values()].some((shape) => shape.values().some((v) => v.isAnimating())) ||
         (glow !== null && (glow.radius.isAnimating() || glow.opacity.isAnimating()))
-      // Transforms and transitions don't fire ResizeObserver: re-measure every frame while they run.
-      if (this.tracking) {
-        this.measure()
-        return
-      }
-      if (this.dirty || moving) {
+      paint = this.dirty || moving || this.wasMoving
+      this.wasMoving = moving
+      if (paint) {
         this.dirty = false
+        this.drawInput = this.readDrawInput()
+      }
+    })
+    const stopRender = onRenderFrame(() => {
+      if (paint) {
         this.draw()
-      } else {
+        this.drawInput = null
+        paint = false
+      }
+      if (!this.dirty && !this.wasMoving && !this.tracking) {
         this.drawHook?.()
         this.drawHook = null
       }
     })
+    this.drawHook = () => {
+      stopMeasure()
+      stopRender()
+      this.drawInput = null
+    }
+  }
+
+  private readDrawInput() {
+    const frame = this.frame()
+    const source = supportsElementRefraction() ? this.elementSource() : null
+    return {
+      frame,
+      sourceFrame: source ? toLocalRect(frame, source.getBoundingClientRect()) : null,
+      paint: readPaintStyle(this.paint),
+    }
   }
 
   /** Paints the current frame: element offsets, backdrop clip, edge, light and shadow. */
@@ -552,9 +586,9 @@ export class GlassScene {
     if (this.disposed) return
     // Read source geometry once, before any style writes: Firefox must not flush layout for
     // every cluster while placing its live element image.
-    const frame = this.frame()
-    const source = supportsElementRefraction() ? this.elementSource() : null
-    this.sourceFrame = source ? toLocalRect(frame, source.getBoundingClientRect()) : null
+    const input = this.drawInput ?? this.readDrawInput()
+    const { frame } = input
+    this.sourceFrame = input.sourceFrame
     const visuals: (GlassShape & { id: string })[] = []
     for (const [id, shape] of this.shapes) {
       visuals.push({ ...shape.visual(), id })
@@ -573,7 +607,7 @@ export class GlassScene {
       }
       const press = shape.press.get()
       shape.contentScale = Math.abs(press - 1) < 0.001 ? 1 : press
-      member.element.style.scale = shape.contentScale === 1 ? '' : String(shape.contentScale)
+      setStyleIfChanged(member.element.style, 'scale', shape.contentScale === 1 ? '' : String(shape.contentScale))
     }
     const m = GLASS_MARGIN
     const placed = visuals.map((v) => ({ ...v, x: v.x + m, y: v.y + m }))
@@ -593,11 +627,12 @@ export class GlassScene {
       this.highlightWidth,
       this.highlightStrength,
       this.highlightProfile,
+      input.paint,
       glow ? { x: glow.x + m, y: glow.y + m, radius: glow.radius.get(), opacity: glow.opacity.get() } : null
     )
-    this.shadow.style.display = this.tint > 0 ? '' : 'none'
+    setStyleIfChanged(this.shadow.style, 'display', this.tint > 0 ? '' : 'none')
     if (this.tint > 0) renderShadow(this.shadow, paths, this.uid)
-    this.host.toggleAttribute('data-glass-ready', true)
+    if (!this.host.hasAttribute('data-glass-ready')) this.host.setAttribute('data-glass-ready', '')
     this.updateRefraction(key)
   }
 
@@ -613,25 +648,25 @@ export class GlassScene {
       const { x, y, width, height } = path.bounds
       const piece = this.pieces[i]
       const style = piece.style
-      style.setProperty('corner-shape', this.cornerShape === 'round' ? 'round' : 'superellipse(1.5)')
+      setPropertyIfChanged(style, 'corner-shape', this.cornerShape === 'round' ? 'round' : 'superellipse(1.5)')
       // The material follows the cluster's smallest bubble: control-sized glass is denser.
       const side = smallestSide(path.shapes)
       const size = glassSize(side)
       if (piece.dataset.glassSize !== size) piece.dataset.glassSize = size
-      style.setProperty('--lab-glass-blur', this.blur ? `${glassBlur(side).toFixed(2)}px` : '0px')
-      style.left = `${x}px`
-      style.top = `${y}px`
-      style.width = `${width}px`
-      style.height = `${height}px`
+      setPropertyIfChanged(style, '--lab-glass-blur', this.blur ? `${glassBlur(side).toFixed(2)}px` : '0px')
+      setStyleIfChanged(style, 'left', `${x}px`)
+      setStyleIfChanged(style, 'top', `${y}px`)
+      setStyleIfChanged(style, 'width', `${width}px`)
+      setStyleIfChanged(style, 'height', `${height}px`)
       const sourceImage = piece.querySelector<HTMLElement>('.lab-glass-source')
       if (sourceImage) this.positionElementSource(piece, sourceImage)
       if (path.shapes.length === 1) {
         // A lone shape clips with CSS: hand back the radius CSS would use (the circle fallback's).
-        style.borderRadius = `${clampRadius(path.shapes[0]) * this.cornerFit}px`
-        style.clipPath = ''
+        setStyleIfChanged(style, 'borderRadius', `${clampRadius(path.shapes[0]) * this.cornerFit}px`)
+        setStyleIfChanged(style, 'clipPath', '')
       } else {
-        style.borderRadius = ''
-        style.clipPath = `path("${translatePath(path.d, -x, -y)}")`
+        setStyleIfChanged(style, 'borderRadius', '')
+        setStyleIfChanged(style, 'clipPath', `path("${translatePath(path.d, -x, -y)}")`)
       }
     })
   }
@@ -645,10 +680,17 @@ export class GlassScene {
       document.documentElement.getAttribute('data-lab-glass') !== 'solid' &&
       !window.matchMedia?.('(prefers-reduced-transparency: reduce), (prefers-contrast: more)').matches
     if (!wanted) {
+      for (const work of this.refractionWork) work.dispose()
+      this.refractionWork = []
+      this.refractionRequests = []
       for (const map of this.decodedMaps) map.dispose()
       this.decodedMaps = []
       this.decodedScales = []
       this.refractionMaps = []
+      // Disposed decoders revoke their URLs. Re-enabling starts with fresh filter inputs,
+      // never a retained feImage pointing at a resource that no longer exists.
+      for (const filter of this.filters) filter.remove()
+      this.filters = []
       for (const piece of this.pieces) {
         piece.style.backdropFilter = ''
         piece.style.removeProperty('-webkit-backdrop-filter')
@@ -698,14 +740,9 @@ export class GlassScene {
       // Position is deliberately absent: dragging a rigid bubble only moves its existing lens.
       const geometryKey = `${width.toFixed(1)},${height.toFixed(1)}|${this.spacing}|${this.refractionProfile}|${shifted.map(s => `${s.x.toFixed(1)},${s.y.toFixed(1)},${s.width.toFixed(1)},${s.height.toFixed(1)},${s.radius.toFixed(1)},${s.cornerExponent}`).join(';')}`
       let map = this.refractionMaps[i]
-      if (!map || map.key !== geometryKey) {
+      if (nativeBackdrop && (!map || map.key !== geometryKey)) {
         const pixels = liveDisplacementMap(width, height, [shifted], this.spacing, this.refractionProfile)
-        // Firefox's regular element filter is clipped by the current CSS outline. Keeping the
-        // map opaque avoids applying a second, stale silhouette while the next image decodes.
-        if (!nativeBackdrop) for (let pixel = 3; pixel < pixels.data.length; pixel += 4) pixels.data[pixel] = 255
-        const href = nativeBackdrop
-          ? rgbaBmpDataUrl(pixels.width, pixels.height, pixels.data)
-          : URL.createObjectURL(new Blob([rgbaBmpBytes(pixels.width, pixels.height, pixels.data)], { type: 'image/bmp' }))
+        const href = rgbaBmpDataUrl(pixels.width, pixels.height, pixels.data)
         map = { key: geometryKey, scale: pixels.scale, href }
         this.refractionMaps[i] = map
       }
@@ -735,7 +772,7 @@ export class GlassScene {
         setAttributeIfChanged(element, 'height', String(height))
       }
       const [, soft, bent, tone, lift] = Array.from(filter.children)
-      if (nativeBackdrop) setAttributeIfChanged(filter.firstElementChild!, 'href', map.href)
+      if (nativeBackdrop) setAttributeIfChanged(filter.firstElementChild!, 'href', map!.href)
       else {
         const image = filter.firstElementChild!
         const decoded = this.decodedMaps[i] ??= new DecodedRefractionMap(frame => {
@@ -743,12 +780,23 @@ export class GlassScene {
           setAttributeIfChanged(image, 'href', frame.href)
           setAttributeIfChanged(bent, 'scale', (frame.scale * this.refractionStrength).toFixed(2))
         }, undefined, href => URL.revokeObjectURL(href))
-        decoded.request(map)
+        const work = this.refractionWork[i] ??= new RefractionWork(frame => {
+          // Pixel work runs off-thread; only a ready bitmap enters the bounded decode queue.
+          // The live outline and reflection never wait for it and the previous lens stays put.
+          const href = URL.createObjectURL(new Blob([frame.bytes], { type: 'image/bmp' }))
+          const next = { key: frame.key, href, scale: frame.scale }
+          this.refractionMaps[i] = next
+          decoded.request(next)
+        })
+        if (this.refractionRequests[i] !== geometryKey) {
+          this.refractionRequests[i] = geometryKey
+          work.submit({ key: geometryKey, width, height, shapes: shifted, spacing: this.spacing, profile: this.refractionProfile })
+        } else if (map?.key === geometryKey) decoded.request(map)
       }
       setAttributeIfChanged(soft, 'stdDeviation', blur.toFixed(2))
       // Without blur the bend reads the backdrop itself: no blur stage at all.
       setAttributeIfChanged(bent, 'in', blur > 0 ? 'soft' : 'SourceGraphic')
-      setAttributeIfChanged(bent, 'scale', ((nativeBackdrop ? map.scale : this.decodedScales[i] ?? 0) * this.refractionStrength).toFixed(2))
+      setAttributeIfChanged(bent, 'scale', ((nativeBackdrop ? map!.scale : this.decodedScales[i] ?? 0) * this.refractionStrength).toFixed(2))
       // feColorMatrix saturate takes 0–1 in older engines; above 1 it is the same matrix as CSS.
       setAttributeIfChanged(tone, 'values', material.saturate.toFixed(4))
       for (const channel of Array.from(lift.children)) {
@@ -774,6 +822,8 @@ export class GlassScene {
     })
     // A split/merge may reduce the number of clusters. Retain live entries, discard departed ones.
     while (this.filters.length > this.pieces.length) this.filters.pop()!.remove()
+    while (this.refractionWork.length > this.pieces.length) this.refractionWork.pop()!.dispose()
+    this.refractionRequests.length = this.pieces.length
     while (this.decodedMaps.length > this.pieces.length) this.decodedMaps.pop()!.dispose()
     this.decodedScales.length = this.pieces.length
     this.refractionMaps.length = this.pieces.length
@@ -842,6 +892,27 @@ function setAttributeIfChanged(element: Element, name: string, value: string) {
   if (element.getAttribute(name) !== value) element.setAttribute(name, value)
 }
 
+function setStyleIfChanged(style: CSSStyleDeclaration, name: 'scale' | 'display' | 'left' | 'top' | 'width' | 'height' | 'borderRadius' | 'clipPath', value: string) {
+  if (style[name] !== value) style[name] = value
+}
+
+function setPropertyIfChanged(style: CSSStyleDeclaration, name: string, value: string) {
+  if (style.getPropertyValue(name) !== value) style.setProperty(name, value)
+}
+
+/** Resolve inherited paint tokens in the frame's read phase, before any geometry writes. */
+function readPaintStyle(svg: SVGSVGElement) {
+  const styles = getComputedStyle(svg)
+  const lightColor = parseCssColor(styles.getPropertyValue('--lab-glass-edge-light')) ?? { r: 1, g: 1, b: 1, a: 0.2 }
+  return {
+    lightColor,
+    lightAlpha: Math.min(1, lightColor.a * 2.5 + 0.24),
+    rimBase: Number.parseFloat(styles.getPropertyValue('--lab-glass-rim-base')) || 0.27,
+    rimPeak: Number.parseFloat(styles.getPropertyValue('--lab-glass-rim-peak')) || 0.718,
+    shadowAlpha: Math.min(1, (Number.parseFloat(styles.getPropertyValue('--lab-glass-shadow-alpha')) || 0.1) * (Number.parseFloat(styles.getPropertyValue('--lab-glass-tint')) || 0) * 2),
+  }
+}
+
 // Canvas pixels stay in the document: no PNG encode/decode or SVG image masks on pointer moves.
 type RimSurface = {
   geometry: string
@@ -868,6 +939,7 @@ function renderPaint(
   highlightWidth: number,
   highlightStrength: number,
   highlightProfile: 'surface' | 'rim',
+  paint: ReturnType<typeof readPaintStyle>,
   glow: { x: number; y: number; radius: number; opacity: number } | null
 ) {
   let layer = reflectionLayers.get(svg)
@@ -877,12 +949,7 @@ function renderPaint(
     svg.parentElement?.insertBefore(layer, svg)
     reflectionLayers.set(svg, layer)
   }
-  const styles = getComputedStyle(svg)
-  const lightColor = parseCssColor(styles.getPropertyValue('--lab-glass-edge-light')) ?? { r: 1, g: 1, b: 1, a: 0.2 }
-  const lightAlpha = Math.min(1, lightColor.a * 2.5 + 0.24)
-  const rimBase = Number.parseFloat(styles.getPropertyValue('--lab-glass-rim-base')) || 0.27
-  const rimPeak = Number.parseFloat(styles.getPropertyValue('--lab-glass-rim-peak')) || 0.718
-  const shadowAlpha = Math.min(1, (Number.parseFloat(styles.getPropertyValue('--lab-glass-shadow-alpha')) || 0.1) * (Number.parseFloat(styles.getPropertyValue('--lab-glass-tint')) || 0) * 2)
+  const { lightColor, lightAlpha, rimBase, rimPeak, shadowAlpha } = paint
   let surfaces = rimSurfaces.get(svg)
   if (!surfaces) {
     surfaces = []
@@ -937,8 +1004,17 @@ function renderPaint(
     if (!cached || cached.geometry !== geometry) {
       const surface = highlightSurface(local, spacing, { x: 0, y: 0, width, height }, highlightWidth)
       const canvas = cached?.canvas ?? document.createElement('canvas')
-      if (canvas.width !== surface.width) canvas.width = surface.width
-      if (canvas.height !== surface.height) canvas.height = surface.height
+      const capacityWidth = rimBufferCapacity(surface.width, cached ? canvas.width : 0)
+      const capacityHeight = rimBufferCapacity(surface.height, cached ? canvas.height : 0)
+      const resized = canvas.width !== capacityWidth || canvas.height !== capacityHeight
+      if (canvas.width !== capacityWidth) canvas.width = capacityWidth
+      if (canvas.height !== capacityHeight) canvas.height = capacityHeight
+      // Resizing clears the whole backing. With retained capacity, erase only the old pixels
+      // beyond the new image; putImageData replaces every active pixel, including transparency.
+      if (cached && !resized) {
+        const context = canvas.getContext('2d')
+        for (const rect of obsoleteRimRegions(cached.surface, surface)) context?.clearRect(rect.x, rect.y, rect.width, rect.height)
+      }
       canvas.className = 'lab-glass-rim lab-glass-reflection-canvas'
       cached = { geometry, surface, canvas, image: null, key: '' }
       surfaces[i] = cached
@@ -970,7 +1046,10 @@ function renderPaint(
     // highlightSurface samples at exactly 2×. Preserve that scale when fractional spring
     // dimensions round its bitmap upward; squeezing it back into the unrounded box moved
     // the rim inward by up to half a pixel on each frame.
-    Object.assign(cached.canvas.style, { left: `${x}px`, top: `${y}px`, width: `${cached.surface.width / 2}px`, height: `${cached.surface.height / 2}px` })
+    setStyleIfChanged(cached.canvas.style, 'left', `${x}px`)
+    setStyleIfChanged(cached.canvas.style, 'top', `${y}px`)
+    setStyleIfChanged(cached.canvas.style, 'width', `${cached.canvas.width / 2}px`)
+    setStyleIfChanged(cached.canvas.style, 'height', `${cached.canvas.height / 2}px`)
     if (cached.canvas.parentElement !== layer) layer.append(cached.canvas)
   })
   if (glow && glow.opacity > 0.01 && paths.length) {
@@ -990,17 +1069,17 @@ function renderPaint(
       svg.append(group)
       effect = edges.glow = { clip, outline, gradient, group, circle }
     }
-    effect.group.removeAttribute('display')
-    effect.outline.setAttribute('d', paths.map(path => path.d).join(''))
-    effect.group.setAttribute('opacity', String(glow.opacity))
+    if (effect.group.hasAttribute('display')) effect.group.removeAttribute('display')
+    setAttributeIfChanged(effect.outline, 'd', paths.map(path => path.d).join(''))
+    setAttributeIfChanged(effect.group, 'opacity', String(glow.opacity))
     for (const element of [effect.gradient, effect.circle]) {
-      element.setAttribute('cx', String(glow.x))
-      element.setAttribute('cy', String(glow.y))
-      element.setAttribute('r', String(Math.max(1, glow.radius)))
+      setAttributeIfChanged(element, 'cx', String(glow.x))
+      setAttributeIfChanged(element, 'cy', String(glow.y))
+      setAttributeIfChanged(element, 'r', String(Math.max(1, glow.radius)))
     }
     // New clusters can be appended after the glow; it stays the topmost paint layer.
     if (svg.lastElementChild !== effect.group) svg.append(effect.group)
-  } else edges.glow?.group.setAttribute('display', 'none')
+  } else if (edges.glow) setAttributeIfChanged(edges.glow.group, 'display', 'none')
 }
 
 /**

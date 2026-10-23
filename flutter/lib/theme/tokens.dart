@@ -390,10 +390,7 @@ class SizeTokens {
   /// `--lab-toolbar-inset`: a floating bar's inset from its panel's sides.
   double get toolbarInset => metrics.toolbarInset ?? _pick(16, 12, 10);
 
-  /// `--lab-segmented-height`: a segmented control's outer height.
-  double get segmentedHeight => metrics.segmentedHeight ?? _pick(32, 28, 24);
-
-  /// `--lab-segmented-inset`: outer edge (border included) to the options, and between options.
+  /// `--lab-segmented-inset`: a segmented control's edge to its pill, and between options.
   double get segmentedInset => metrics.segmentedInset ?? 2;
 
   /// `--lab-switch-width` × `--lab-switch-height`: a switch track.

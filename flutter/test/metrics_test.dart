@@ -40,7 +40,6 @@ void main() {
         expect(comfortable.toolbarControl, 38);
         expect(comfortable.toolbarGap, 12);
         expect(comfortable.toolbarInset, 16);
-        expect(comfortable.segmentedHeight, 32);
         expect(comfortable.segmentedInset, 2);
         expect([comfortable.switchWidth, comfortable.switchHeight], [63, 28]);
         expect([comfortable.thumbWidth, comfortable.thumbHeight], [37, 24]);

@@ -3,7 +3,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
 import { cn } from '../utils.js';
 import { useReducedMotion } from '../physics/react.js';
-import { GlassBackdropContext, GlassContext } from './context.js';
+import { GlassContext } from './context.js';
 import { GlassScene } from './scene.js';
 import { clampGlassTint } from './material.js';
 import './glass.css';
@@ -43,8 +43,6 @@ export function useGlassOptions() {
  * JavaScript, or in forced colors, every bubble paints its own glass as before.
  */
 export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'div', spacing = 8, cornerShape = 'round', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 1, highlightProfile = 'rim', highlightStrength = 1, refractionStrength = 1, refractionProfile = 'measured', tint, backdropSource, className, children, ...props }, ref) {
-    const inheritedBackdrop = React.useContext(GlassBackdropContext);
-    backdropSource ??= inheritedBackdrop;
     const host = React.useRef(null);
     const backdrop = React.useRef(null);
     const paint = React.useRef(null);
@@ -133,23 +131,17 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
         const fine = window.matchMedia?.('(hover: hover) and (pointer: fine)');
         if (!fine?.matches)
             return;
-        let frame = 0;
-        let last = null;
         const move = (event) => {
             if (event.pointerType === 'touch')
                 return;
-            last = { x: event.clientX, y: event.clientY };
-            if (!frame)
-                frame = requestAnimationFrame(() => {
-                    frame = 0;
-                    scene.current?.setPointer(last);
-                });
+            // The scene already coalesces pointer updates on the shared paint clock. A second
+            // animation-frame gate here delayed its light by one refresh during a drag.
+            scene.current?.setPointer({ x: event.clientX, y: event.clientY });
         };
         const leave = () => scene.current?.setPointer(null);
         window.addEventListener('pointermove', move, { passive: true });
         document.documentElement.addEventListener('pointerleave', leave);
         return () => {
-            cancelAnimationFrame(frame);
             window.removeEventListener('pointermove', move);
             document.documentElement.removeEventListener('pointerleave', leave);
         };

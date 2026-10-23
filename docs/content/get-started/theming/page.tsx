@@ -138,7 +138,6 @@ export function Root({ children }: { children: React.ReactNode }) {
             [<C>toolbarItem</C>, '44', <C>--lab-toolbar-item</C>],
             [<C>toolbarGap</C>, '12', <C>--lab-toolbar-gap</C>],
             [<C>toolbarInset</C>, '16', <C>--lab-toolbar-inset</C>],
-            [<C>segmentedHeight</C>, '32', <C>--lab-segmented-height</C>],
             [<C>segmentedInset</C>, '2', <C>--lab-segmented-inset</C>],
             [<C>switchSize</C>, '63 × 28', <><C>--lab-switch-width</C>, <C>--lab-switch-height</C></>],
             [<C>thumbSize</C>, '37 × 24', <><C>--lab-thumb-width</C>, <C>--lab-thumb-height</C></>],
@@ -148,6 +147,8 @@ export function Root({ children }: { children: React.ReactNode }) {
             [<C>listInset</C>, '16', <C>--lab-list-inset</C>],
             [<C>focusRingWidth</C>, '2', <C>--lab-focus-ring-width</C>],
             [<C>focusRingOffset</C>, '1', <C>--lab-focus-ring-offset</C>],
+            [<C>sidebarWidth</C>, '304', <C>--lab-sidebar-width</C>],
+            [<C>railWidth</C>, '64', <C>--lab-navigation-rail-width</C>],
           ]}
         />
       </Section>

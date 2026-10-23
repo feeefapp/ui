@@ -107,7 +107,7 @@ export function prepareUnionDistance(shapes, spacing) {
         return { cx: shape.x + hx, cy: shape.y + hy, hx, hy, radius: clampRadius(shape), exponent: shape.cornerExponent ?? FO_CORNER_EXPONENT };
     });
     const widths = blendWidths(shapes, spacing);
-    return (px, py) => {
+    const distance = (px, py) => {
         let d = Infinity;
         for (let i = 0; i < boxes.length; i++) {
             const box = boxes[i];
@@ -122,6 +122,7 @@ export function prepareUnionDistance(shapes, spacing) {
         }
         return d;
     };
+    return distance;
 }
 /** Gap between two boxes (0 when they touch or overlap). */
 export function rectGap(a, b) {
@@ -194,6 +195,7 @@ export function unionLoops(shapes, spacing, cell = 2) {
     if (!shapes.length)
         return [];
     const box = unionBounds(shapes, spacing);
+    const distance = prepareUnionDistance(shapes, spacing);
     const pad = cell * 2;
     const ox = box.x - pad;
     const oy = box.y - pad;
@@ -203,7 +205,7 @@ export function unionLoops(shapes, spacing, cell = 2) {
     const at = (i, j) => field[j * (nx + 1) + i];
     for (let j = 0; j <= ny; j++)
         for (let i = 0; i <= nx; i++) {
-            const value = unionDistance(ox + i * cell, oy + j * cell, shapes, spacing);
+            const value = distance(ox + i * cell, oy + j * cell);
             field[j * (nx + 1) + i] = value === 0 ? 1e-9 : value;
         }
     const points = new Map();
@@ -238,7 +240,7 @@ export function unionLoops(shapes, spacing, cell = 2) {
                 link(edges[0], edges[1]);
             else if (edges.length === 4) {
                 // Saddle: decide by the centre whether the inside corners connect through it.
-                const centre = unionDistance(ox + (i + 0.5) * cell, oy + (j + 0.5) * cell, shapes, spacing) < 0;
+                const centre = distance(ox + (i + 0.5) * cell, oy + (j + 0.5) * cell) < 0;
                 if (tl < 0 === centre) {
                     link(top, right);
                     link(bottom, left);
@@ -287,7 +289,7 @@ export function unionLoops(shapes, spacing, cell = 2) {
         const [bx, by] = unique[(best + 1) % unique.length];
         const sx = (ax + bx) / 2 + ((by - ay) / bestLength) * cell * 0.4;
         const sy = (ay + by) / 2 - ((bx - ax) / bestLength) * cell * 0.4;
-        if (unionDistance(sx, sy, shapes, spacing) > 0)
+        if (distance(sx, sy) > 0)
             unique.reverse();
         loops.push(unique);
     }

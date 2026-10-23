@@ -66,6 +66,7 @@ export default function States() {
     <div className="pt-preview">
       <SegmentedControl<State>
         label="Preview state"
+        className="demo-segmented-box"
         value={state}
         onChange={(next) => {
           setAttempt(0)

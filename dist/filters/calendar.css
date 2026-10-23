@@ -23,16 +23,10 @@
   gap: 4px;
 }
 
-/* Range ends: a segmented switch that also shows each end. */
-html[data-lab-theme] .lab-temporal-edges.lab-segmented {
-  display: flex;
-  flex-wrap: nowrap;
-  width: 100%;
-}
-/* Out-specifies the kit's `.lab-segmented > .lab-segmented-option` so both ends share the width. */
-html[data-lab-theme] .lab-temporal-edges.lab-segmented > .lab-segmented-option {
-  flex: 1 1 0;
-  min-width: 0;
+/* Range ends: a segmented switch that also shows each end, on a recessed box in the editor (the
+dialog floats it in its top bar's glass instead). */
+.lab-temporal-layout > .lab-temporal-edges {
+  background: var(--lab-surface-soft);
 }
 
 /* Months */

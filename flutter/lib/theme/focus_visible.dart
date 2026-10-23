@@ -18,7 +18,9 @@ class FocusVisibility extends StatefulWidget {
 int _users = 0;
 
 bool _onKey(KeyEvent event) {
-  if (event is KeyDownEvent) _set(FocusHighlightStrategy.alwaysTraditional);
+  if (event is KeyDownEvent) {
+    _set(FocusHighlightStrategy.alwaysTraditional);
+  }
   return false;
 }
 

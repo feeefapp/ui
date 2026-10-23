@@ -22,15 +22,24 @@ class _TextureSurfaceState extends State<TextureSurface> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 16,
         children: [
-          SegmentedControl<TextureDensity>(
-            label: 'Texture density',
-            value: _density,
-            onChange: (value) => setState(() => _density = value),
-            options: const [
-              SegmentOption(value: .sparse, label: 'Sparse'),
-              SegmentOption(value: .medium, label: 'Medium'),
-              SegmentOption(value: .dense, label: 'Dense'),
-            ],
+          DecoratedBox(
+            decoration: ShapeDecoration(
+              color: ThemeProvider.of(context).colors.surfaceSoft,
+              shape: SuperellipseBorder(
+                radius: ThemeProvider.of(context).sizes.radiusControl,
+              ),
+            ),
+            child: SegmentedControl<TextureDensity>(
+              equalWidth: true,
+              label: 'Texture density',
+              value: _density,
+              onChange: (value) => setState(() => _density = value),
+              options: const [
+                SegmentOption(value: .sparse, label: 'Sparse'),
+                SegmentOption(value: .medium, label: 'Medium'),
+                SegmentOption(value: .dense, label: 'Dense'),
+              ],
+            ),
           ),
           DecoratedBox(
             decoration: BoxDecoration(

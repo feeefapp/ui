@@ -82,10 +82,10 @@ export declare const GLASS_CLEAR: {
     readonly offset: 0.076;
 };
 /**
- * The tint (ThemeConfig `glassTint`, 0 clear … 1 tinted) a web app gets by default: clear,
- * matching the shared reference preset. Flutter retains its existing default.
+ * The tint (ThemeConfig `glassTint`, 0 clear … 1 tinted) an app gets by default: the midpoint, a
+ * light veil (~40 %), like iOS 27's default slider position. Flutter's `glassTintDefault` matches.
  */
-export declare const GLASS_TINT_DEFAULT = 0;
+export declare const GLASS_TINT_DEFAULT = 0.5;
 /** A tint clamped to 0–1; anything that is not a finite number is the default. */
 export declare function clampGlassTint(tint: unknown): number;
 /**

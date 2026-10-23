@@ -25,6 +25,8 @@ export default function ControlledSide() {
     <div className="scaffold-demo-stack">
       <SegmentedControl
         label="Sidebar mode"
+        className="demo-segmented-box"
+        equalWidth
         value={mode}
         onChange={setMode}
         options={[

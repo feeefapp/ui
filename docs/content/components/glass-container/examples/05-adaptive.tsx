@@ -1,6 +1,6 @@
 import { useId, useState } from 'react'
 import { Heart, Share2, X } from 'lucide-react'
-import { GlassContainer } from '@feeef.dev/ui/glass'
+import { GlassContainer, GlassScope } from '@feeef.dev/ui/glass'
 import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
 import { IconButton } from '@feeef.dev/ui/primitives/button'
 import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
@@ -29,15 +29,19 @@ export default function Adaptive() {
           </ToolbarGroup>
         </GlassContainer>
       </div>
-      <SegmentedControl
-        label="Behind the glass"
-        value={backdrop}
-        onChange={setBackdrop}
-        options={[
-          { value: 'photo', label: 'Dark photo' },
-          { value: 'page', label: 'Page' },
-        ]}
-      />
+      <GlassScope>
+        <ToolbarGroup label="Behind the glass">
+          <SegmentedControl
+            label="Behind the glass"
+            value={backdrop}
+            onChange={setBackdrop}
+            options={[
+              { value: 'photo', label: 'Dark photo' },
+              { value: 'page', label: 'Page' },
+            ]}
+          />
+        </ToolbarGroup>
+      </GlassScope>
     </div>
   )
 }

@@ -114,15 +114,23 @@ class _ImageComposerState extends State<ImageComposer> {
             onChange: (value) => setState(() => _model = value),
           ),
           settingsLabel: _shape,
-          settings: SegmentedControl<String>(
-            label: 'Shape',
-            value: _shape,
-            onChange: (value) => setState(() => _shape = value),
-            options: const [
-              SegmentOption(value: '1:1', label: 'Square'),
-              SegmentOption(value: '4:5', label: 'Portrait'),
-              SegmentOption(value: '16:9', label: 'Wide'),
-            ],
+          settings: DecoratedBox(
+            decoration: ShapeDecoration(
+              color: ThemeProvider.of(context).colors.surfaceSoft,
+              shape: SuperellipseBorder(
+                radius: ThemeProvider.of(context).sizes.radiusControl,
+              ),
+            ),
+            child: SegmentedControl<String>(
+              label: 'Shape',
+              value: _shape,
+              onChange: (value) => setState(() => _shape = value),
+              options: const [
+                SegmentOption(value: '1:1', label: 'Square'),
+                SegmentOption(value: '4:5', label: 'Portrait'),
+                SegmentOption(value: '16:9', label: 'Wide'),
+              ],
+            ),
           ),
           enhancing: null,
           onEnhance: (mode) {

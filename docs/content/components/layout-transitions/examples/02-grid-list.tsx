@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { LayoutGrid, List } from 'lucide-react'
 import { LayoutGroup } from '@feeef.dev/ui/physics'
+import { GlassScope } from '@feeef.dev/ui/glass'
 import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
+import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
 import '../layout-demo.css'
 
 const PRODUCTS = [
@@ -17,15 +19,19 @@ export default function GridOrList() {
   const [view, setView] = useState<'grid' | 'list'>('grid')
   return (
     <div className="lt-demo">
-      <SegmentedControl
-        label="View"
-        value={view}
-        onChange={setView}
-        options={[
-          { value: 'grid', label: 'Grid', icon: <LayoutGrid size={16} /> },
-          { value: 'list', label: 'List', icon: <List size={16} /> },
-        ]}
-      />
+      <GlassScope>
+        <ToolbarGroup label="View">
+          <SegmentedControl
+            label="View"
+            value={view}
+            onChange={setView}
+            options={[
+              { value: 'grid', label: 'Grid', icon: <LayoutGrid size={16} /> },
+              { value: 'list', label: 'List', icon: <List size={16} /> },
+            ]}
+          />
+        </ToolbarGroup>
+      </GlassScope>
       <LayoutGroup layoutKey={view}>
         <ul className="lt-products" data-view={view}>
           {PRODUCTS.map((p) => (

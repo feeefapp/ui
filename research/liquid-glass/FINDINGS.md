@@ -298,3 +298,21 @@ retained resources are bounded and revoked on eviction/disposal. The current CSS
 the lens once, independently of the image's asynchronous lifetime. Prepared distance evaluators
 and conservative tile rejection reduce map work without changing the sampled lens or resolution
 between motion and rest. Chromium retains the alpha silhouette required by its backdrop filter.
+
+Firefox map generation now runs in one shared module worker. Each cluster retains only its newest
+unstarted request; ready intermediate maps still publish during continuous movement. The worker
+uses the same sampling resolution, displacement calculation and BMP bytes as the main-thread
+fallback. Disposing the last cluster terminates the worker. Worker/CSP failures use the same
+calculation asynchronously on the main thread, preserving the last displayed lens.
+
+Glass scenes share ordered motion, measurement and paint phases. ResizeObserver notifications
+and pointer updates coalesce into one paint per refresh, with a final paint at spring settlement.
+Style reads precede paint writes, and unchanged geometry/material attributes are left alone.
+Prepared contour distances, smaller empty-highlight tiles, and exact neighboring-distance reuse
+in full-density maps reduce repeated math without changing the optical settings or sampled pixels.
+
+Rim canvases retain backing capacity in 64-physical-pixel buckets instead of resetting it at
+every fractional spring size. Their CSS extent is always half the backing extent, preserving
+the exact 2× sampling scale. Shrinking clears obsolete pixels and releases capacity above twice
+the active bucket. A representative 160-frame grow/shrink sequence reduces backing dimension
+writes from 130 to 10; this measures allocation resets, not browser frame rate.

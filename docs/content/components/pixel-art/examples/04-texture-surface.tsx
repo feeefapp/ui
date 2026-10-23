@@ -11,6 +11,8 @@ export default function TextureSurface() {
     <div className="demo-column">
       <SegmentedControl
         label="Texture density"
+        className="demo-segmented-box"
+        equalWidth
         value={density}
         onChange={setDensity}
         options={[

@@ -68,7 +68,6 @@ const METRIC_VARIABLES = [
     [(m) => m.toolbarItem, '--lab-toolbar-item'],
     [(m) => m.toolbarGap, '--lab-toolbar-gap'],
     [(m) => m.toolbarInset, '--lab-toolbar-inset'],
-    [(m) => m.segmentedHeight, '--lab-segmented-height'],
     [(m) => m.segmentedInset, '--lab-segmented-inset'],
     [(m) => m.switchSize?.width, '--lab-switch-width'],
     [(m) => m.switchSize?.height, '--lab-switch-height'],
@@ -80,6 +79,8 @@ const METRIC_VARIABLES = [
     [(m) => m.listInset, '--lab-list-inset'],
     [(m) => m.focusRingWidth, '--lab-focus-ring-width'],
     [(m) => m.focusRingOffset, '--lab-focus-ring-offset'],
+    [(m) => m.sidebarWidth, '--lab-sidebar-width'],
+    [(m) => m.railWidth, '--lab-navigation-rail-width'],
 ];
 /** The variable names `metrics` can set; `applyThemeConfig` clears the ones a new config drops. */
 export const METRIC_VARIABLE_NAMES = METRIC_VARIABLES.map(([, name]) => name);

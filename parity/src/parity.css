@@ -92,6 +92,10 @@ html[data-lab-theme] {
 .docs-stage .demo-wide.demo-wide {
   width: min(100%, 560px);
 }
+/* A segmented control on a plain box (docs.css). */
+.demo-segmented-box {
+  background: var(--lab-surface-soft);
+}
 
 /* docs.css helpers the examples use. */
 .docs-muted {

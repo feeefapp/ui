@@ -74,6 +74,10 @@ const fixtures = [
   { width: 200, height: 120, spacing: 16, clusters: [[shape(-12, 2.25, 80.5, 65.5, 19, undefined), shape(73, 20, 85, 40, 11, 3)]] },
   { width: 160, height: 90, spacing: 0, clusters: [[shape(3, 0, 60, 48, 18, 1)], [shape(48, 24, 90, 54, 8)], []] },
   { width: 1800, height: 600, spacing: 4, clusters: [[shape(50.5, 100.25, 7.5, 2.5, 1)]] },
+  // Cached full-density fields have nonzero origins, one-pixel normal halos and clipped
+  // bounds; offscreen members must not allocate a negative-sized field.
+  { width: 112, height: 88, spacing: 24, clusters: [[shape(19.25, 11.125, 46.5, 52.75, 18), shape(58.5, 9.75, 42.25, 58.125, 21)]] },
+  { width: 90, height: 60, spacing: 12, clusters: [[shape(-19.25, -7.5, 56, 46)], [shape(75.5, 39.25, 50, 40)], [shape(150, 100, 40, 30)], [shape(-70, -60, 20, 20)]] },
 ]
 
 test('prepared distances preserve dense shape/blend arithmetic at sample and normal coordinates', () => {

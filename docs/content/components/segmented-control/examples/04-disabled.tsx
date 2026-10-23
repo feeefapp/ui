@@ -32,5 +32,5 @@ export default function Disabled() {
 export const meta = {
   title: 'Disabled options',
   description:
-    'A disabled option is skipped by arrow keys. disabled on the control turns off every option.',
+    'A disabled option is skipped by arrow keys and drags; disabled on the control turns off every option. Bare: no surface at all.',
 }

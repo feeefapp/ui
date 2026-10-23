@@ -153,6 +153,25 @@ class GlassMemberRegistry {
   }
 }
 
+/// Marks [child] as answering a press with glass of its own (a segmented control's lens): a press
+/// that starts on it doesn't swell, stretch or glow the bubble around it. The twin of the web kit's
+/// `data-glass-own-press`.
+class GlassOwnPress extends StatelessWidget {
+  const GlassOwnPress({super.key, required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final registry = GlassMember.of(context);
+    if (registry == null) return child;
+    // Pointer listeners run before the container's global route, so the claim lands first.
+    return Listener(
+      onPointerDown: (event) => registry._scene._ownPress.add(event.pointer),
+      child: child,
+    );
+  }
+}
+
 /// Starts a new glass layer: bubbles below it never join a container above it. Overlays (dialogs,
 /// sheets, menus, tooltips) wrap their content in one, because an overlay inherits from the widget
 /// that opened it but paints in the browser's top layer, apart from that widget's glass.
@@ -612,7 +631,7 @@ class _Shape {
 
 class _Glow {
   _Glow(this.at)
-    : radius = MotionValue(8, 0.5),
+    : radius = MotionValue(glassGlowStart, 0.5),
       opacity = MotionValue(1, 0.005);
   Offset at;
   final MotionValue radius, opacity;
@@ -647,6 +666,9 @@ class _GlassScene extends ChangeNotifier {
   _Glow? glow;
   final _timers = <Timer>{};
   ({String id, int pointer, Offset start})? _pressed;
+
+  /// Pointers that went down on a [GlassOwnPress].
+  final _ownPress = <int>{};
 
   ValueNotifier<(Offset, double)> _contentFor(String id) =>
       _contents.putIfAbsent(id, () => ValueNotifier((Offset.zero, 1)));
@@ -888,6 +910,7 @@ class _GlassScene extends ChangeNotifier {
   }
 
   void pressStart(PointerDownEvent event, RenderBox host) {
+    if (_ownPress.contains(event.pointer)) return;
     if (!interactive || reduceMotion || _pressed != null) return;
     if (event.kind == PointerDeviceKind.mouse &&
         event.buttons != kPrimaryButton) {
@@ -907,7 +930,7 @@ class _GlassScene extends ChangeNotifier {
     g.radius.subscribe((_) => _changed());
     g.opacity.subscribe((_) => _changed());
     g.radius.animateTo(
-      math.max(120, shape.width.get()),
+      glassGlowRadius(shape.width.get()),
       spring: Springs.smooth,
     );
     _changed();
@@ -927,6 +950,7 @@ class _GlassScene extends ChangeNotifier {
   }
 
   void pressEnd(PointerEvent event) {
+    _ownPress.remove(event.pointer);
     final pressed = _pressed;
     if (pressed == null || event.pointer != pressed.pointer) return;
     _pressed = null;

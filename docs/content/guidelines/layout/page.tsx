@@ -348,7 +348,7 @@ function Overview() {
           rows={[
             ['Start', 'Navigation and identity', 'Sidebar toggle, logo or store name, back button', 'Only when the sidebar can’t show them (rail, hidden, drawer) or on a sub-page'],
             ['Start, after it', 'Title', 'The page or record name, short', 'When the large title in the content has scrolled away, or there is none'],
-            ['End', 'Page views', <>One <C>SegmentedControl appearance="plain"</C></>, 'Two to five views of the same thing; drops to the dock on phones'],
+            ['End', 'Page views', <>One <C>SegmentedControl</C></>, 'Two to five views of the same thing; drops to the dock on phones'],
             ['End, last', 'Tools', 'Icon buttons that act on the whole page: search, print, details, more', 'Always; overflow into a menu when full'],
           ]}
         />
@@ -368,7 +368,7 @@ function Overview() {
   trailing={
     <>
       <ToolbarGroup label="Page views">
-        <SegmentedControl label="Order views" appearance="plain" value={view} onChange={setView} options={VIEWS} />
+        <SegmentedControl label="Order views" value={view} onChange={setView} options={VIEWS} />
       </ToolbarGroup>
       <ToolbarGroup label="Order tools">
         <IconButton variant="text" appearance="toolbar" controlSize="small" aria-label="Print label">

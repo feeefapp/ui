@@ -1,28 +1,39 @@
-/* Shared mode group: selected choices use an explicit, high-contrast surface. iOS geometry: a
---lab-segmented-height capsule (32px) with the options --lab-segmented-inset (2px, the border
-included) from its edge, so an option is 28px. Options sit as far from each other as from the edge:
-a gap wider than the inset looks loose. */
+/* Segmented control: options and one moving pill, no container of its own (the host decides:
+glass, a box or nothing). The control is a regular button tall (--lab-control-height, so a toolbar
+bubble's control height inside one); the pill sits --lab-segmented-inset inside it, and options are
+no farther apart than that inset. The root keeps the capsule radius so a background set on it (a
+box) has the right shape. Motion and the pill's geometry are written by segmented.tsx. */
 .lab-segmented {
-  --lab-segmented-option: calc(var(--lab-segmented-height) - 2 * var(--lab-segmented-inset));
+  --lab-segmented-size: var(--lab-control-height);
+  --lab-segmented-option: calc(var(--lab-segmented-size) - 2 * var(--lab-segmented-inset));
+  --lab-segmented-lens: 0;
+  --lab-segmented-glow: 0;
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   gap: var(--lab-segmented-inset);
-  padding: calc(var(--lab-segmented-inset) - 1px);
+  padding: var(--lab-segmented-inset);
+  min-height: var(--lab-segmented-size);
   max-width: 100%;
   flex-wrap: wrap;
-  border: 1px solid var(--lab-line);
-  border-radius: calc((var(--lab-segmented-option) / 2 + var(--lab-segmented-inset)) * var(--lab-corner-scale, 1));
+  border-radius: calc(var(--lab-segmented-size) / 2 * var(--lab-corner-scale, 1));
   corner-shape: superellipse(1.5);
-  background: var(--lab-glass-fill);
-  box-shadow: var(--lab-glass-light);
+  /* Horizontal drags move the pill; vertical ones still scroll the page. */
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
-.lab-segmented[data-appearance='plain'] {
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  padding: 0;
+.lab-segmented[data-equal-width] {
+  display: flex;
+  width: 100%;
+  flex-wrap: nowrap;
 }
-html[data-lab-theme] .lab-segmented > .lab-segmented-option {
+/* Out-specifies toolbar and touch sizing of `.lab-control[data-variant]`: the pill sets the size. */
+html[data-lab-theme] .lab-segmented > .lab-segmented-option.lab-control[data-variant] {
+  z-index: 1;
   flex: 0 1 auto;
   min-width: max-content;
   height: var(--lab-segmented-option);
@@ -31,39 +42,158 @@ html[data-lab-theme] .lab-segmented > .lab-segmented-option {
   border-radius: calc(var(--lab-segmented-option) / 2 * var(--lab-corner-scale, 1));
   font: 600 13px/18px var(--lab-font);
   color: var(--lab-muted);
-  --lab-control-selected: color-mix(in srgb, var(--lab-primary) 16%, var(--lab-surface));
   --lab-control-elevation: none;
+  /* Until the pill is placed (server render), only the selected option shows selected ink. */
+  --lab-segmented-clip: inset(50%);
 }
-html[data-lab-theme] .lab-segmented > .lab-segmented-option[data-state='on'] {
-  color: var(--lab-on-primary);
-  background: var(--lab-primary);
-  --lab-control-selected: var(--lab-primary);
-  --lab-control-edge: transparent;
-  --lab-control-elevation: none;
+html[data-lab-theme] .lab-segmented[data-equal-width] > .lab-segmented-option.lab-control[data-variant] {
+  flex: 1 1 0;
+  min-width: 0;
+}
+html[data-lab-theme] .lab-segmented > .lab-segmented-option.lab-control[aria-checked='true'] {
+  --lab-segmented-clip: inset(0);
+}
+/* The pill is the selected option's paint: the option itself stays clear under it. */
+html[data-lab-theme] .lab-segmented > .lab-segmented-option.lab-control[aria-checked='true']:is(:hover, :active, :focus-visible) {
+  background: transparent;
   box-shadow: none;
 }
-.lab-segmented-option > span {
+html[data-lab-theme] .lab-segmented > .lab-segmented-pill[data-hidden] ~ .lab-segmented-option[aria-checked='true'] {
+  background: var(--lab-primary);
+}
+html[data-lab-theme] .lab-segmented[data-dragging] > .lab-segmented-option.lab-control[data-variant] {
+  background: transparent;
+  cursor: grabbing;
+}
+.lab-segmented-content {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+/* The selected ink: a copy of the content laid over it, cut to the pill (--lab-segmented-clip). */
+.lab-segmented-option > .lab-segmented-ink {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  padding: inherit;
+  color: var(--lab-on-primary);
+  clip-path: var(--lab-segmented-clip);
+  opacity: calc(1 - var(--lab-segmented-lens));
+  pointer-events: none;
+}
+.lab-segmented-icon {
+  display: inline-flex;
+  flex: none;
+}
+.lab-segmented-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .lab-segmented-option svg {
   width: 16px;
   height: 16px;
 }
-html[data-lab-density='thin'] .lab-segmented > .lab-segmented-option {
+html[data-lab-density='thin'][data-lab-theme] .lab-segmented > .lab-segmented-option.lab-control[data-variant] {
   font-size: 12px;
   line-height: 16px;
 }
+
+/* The pill: filled at rest; pressed or dragged it becomes a glass lens (fill → glass), swells with
+--lab-segmented-press and shows the touch glow, like a pressed GlassContainer bubble. */
+.lab-segmented-pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: calc(var(--lab-segmented-option) / 2 * var(--lab-corner-scale, 1) * var(--lab-segmented-press, 1));
+  corner-shape: superellipse(1.5);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--lab-glass-shadow-small) calc(var(--lab-segmented-lens) * 100%), transparent);
+  will-change: transform;
+}
+.lab-segmented-pill[data-hidden] {
+  visibility: hidden;
+}
+.lab-segmented-pill > span {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border-radius: inherit;
+  corner-shape: inherit;
+}
+.lab-segmented-fill {
+  background: var(--lab-primary);
+  opacity: calc(1 - var(--lab-segmented-lens));
+}
+.lab-segmented-pill > .lab-segmented-lens {
+  border: 1px solid var(--lab-line);
+  background: var(--lab-glass-fill);
+  box-shadow: var(--lab-glass-light);
+  opacity: var(--lab-segmented-lens);
+}
+.lab-segmented-glow {
+  background: radial-gradient(
+    circle var(--lab-segmented-glow-r, 8px) at var(--lab-segmented-glow-x, 50%) var(--lab-segmented-glow-y, 50%),
+    var(--lab-glass-glow),
+    transparent
+  );
+  opacity: calc(var(--lab-segmented-glow) * var(--lab-segmented-lens));
+}
+/* Solid pill: no lens when transparency is unwanted, contrast is raised or glass is solid. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .lab-segmented-fill,
+  .lab-segmented-option > .lab-segmented-ink {
+    opacity: 1;
+  }
+  .lab-segmented-pill > .lab-segmented-lens,
+  .lab-segmented-glow {
+    display: none;
+  }
+}
+html[data-lab-glass='solid'] .lab-segmented-fill,
+html[data-lab-glass='solid'] .lab-segmented-option > .lab-segmented-ink {
+  opacity: 1;
+}
+html[data-lab-glass='solid'] .lab-segmented-pill > .lab-segmented-lens,
+html[data-lab-glass='solid'] .lab-segmented-glow {
+  display: none;
+}
+.lab-segmented[aria-disabled='true'] > .lab-segmented-pill {
+  opacity: 0.42;
+}
+
+/* Touch keeps 44px targets, except inside a host whose bubble is the target. */
 @media (pointer: coarse) {
   .lab-segmented {
-    --lab-segmented-option: var(--lab-control-touch-target);
+    --lab-segmented-size: max(var(--lab-control-height), var(--lab-control-touch-target));
+  }
+  .lab-toolbar-group .lab-segmented,
+  .lab-dock .lab-segmented {
+    --lab-segmented-size: var(--lab-control-height);
   }
 }
 @media (forced-colors: active) {
-  .lab-segmented {
-    background: Canvas;
+  .lab-segmented-pill {
+    forced-color-adjust: none;
     box-shadow: none;
   }
-  html[data-lab-theme] .lab-segmented > .lab-segmented-option[data-state='on'] {
-    outline: 1px solid Highlight;
+  .lab-segmented-fill {
+    background: Highlight;
+    opacity: 1;
+  }
+  .lab-segmented-pill > .lab-segmented-lens,
+  .lab-segmented-glow {
+    display: none;
+  }
+  .lab-segmented-option > .lab-segmented-ink {
+    forced-color-adjust: none;
+    color: HighlightText;
+    opacity: 1;
   }
 }

@@ -22,6 +22,7 @@ function withWidthToggle(ex: DocExample): DocExample {
       <div className="pt-preview">
         <SegmentedControl<'desktop' | 'phone'>
           label="Preview width"
+          className="demo-segmented-box"
           value={width}
           onChange={setWidth}
           options={[

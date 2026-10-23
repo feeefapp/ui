@@ -14,7 +14,7 @@ export {
 } from './spring'
 export type { Spring, SpringName, SpringState } from './spring'
 export { VelocityTracker } from './velocity'
-export { MotionValue, onAnimationFrame, prefersReducedMotion } from './motion-value'
+export { MotionValue, onAnimationFrame, onMeasureFrame, onRenderFrame, prefersReducedMotion } from './motion-value'
 export type { AnimateOptions } from './motion-value'
 export { attachPan, canChildPan } from './gesture'
 export type { PanAxis, PanBegin, PanOptions, PanPoint, PointerKind } from './gesture'

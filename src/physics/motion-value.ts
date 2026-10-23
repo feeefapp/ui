@@ -3,18 +3,38 @@ import { VelocityTracker } from './velocity'
 
 type FrameCallback = (now: number) => void
 const callbacks = new Set<FrameCallback>()
+const measureCallbacks = new Set<FrameCallback>()
+const renderCallbacks = new Set<FrameCallback>()
 let frame = 0
+function runPhase(phase: Set<FrameCallback>, now: number) {
+  // A callback canceled by an earlier callback must not run from the snapshot. New callbacks
+  // in this phase start next frame; callbacks added to a later phase can run this frame.
+  for (const callback of [...phase]) if (phase.has(callback)) callback(now)
+}
 function loop(now: number) {
-  frame = callbacks.size ? requestAnimationFrame(loop) : 0
-  for (const callback of [...callbacks]) callback(now)
+  frame = callbacks.size || measureCallbacks.size || renderCallbacks.size ? requestAnimationFrame(loop) : 0
+  runPhase(callbacks, now)
+  runPhase(measureCallbacks, now)
+  runPhase(renderCallbacks, now)
+}
+function subscribeFrame(phase: Set<FrameCallback>, callback: FrameCallback) {
+  phase.add(callback)
+  if (!frame && typeof requestAnimationFrame !== 'undefined') frame = requestAnimationFrame(loop)
+  return () => {
+    phase.delete(callback)
+  }
 }
 /** Runs `callback` on every animation frame until the returned function is called. One shared loop. */
 export function onAnimationFrame(callback: FrameCallback) {
-  callbacks.add(callback)
-  if (!frame && typeof requestAnimationFrame !== 'undefined') frame = requestAnimationFrame(loop)
-  return () => {
-    callbacks.delete(callback)
-  }
+  return subscribeFrame(callbacks, callback)
+}
+/** Reads layout after all motion updates and before any subscribed render writes, on the shared clock. */
+export function onMeasureFrame(callback: FrameCallback) {
+  return subscribeFrame(measureCallbacks, callback)
+}
+/** Paints after all motion updates and layout reads, regardless of subscription order, on the shared clock. */
+export function onRenderFrame(callback: FrameCallback) {
+  return subscribeFrame(renderCallbacks, callback)
 }
 
 /** True when the reader asked for reduced motion. Safe to call on the server. */

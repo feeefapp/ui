@@ -191,22 +191,16 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
     if (light !== 'pointer' || reduced || !liquid) return
     const fine = window.matchMedia?.('(hover: hover) and (pointer: fine)')
     if (!fine?.matches) return
-    let frame = 0
-    let last: { x: number; y: number } | null = null
     const move = (event: PointerEvent) => {
       if (event.pointerType === 'touch') return
-      last = { x: event.clientX, y: event.clientY }
-      if (!frame)
-        frame = requestAnimationFrame(() => {
-          frame = 0
-          scene.current?.setPointer(last)
-        })
+      // The scene already coalesces pointer updates on the shared paint clock. A second
+      // animation-frame gate here delayed its light by one refresh during a drag.
+      scene.current?.setPointer({ x: event.clientX, y: event.clientY })
     }
     const leave = () => scene.current?.setPointer(null)
     window.addEventListener('pointermove', move, { passive: true })
     document.documentElement.addEventListener('pointerleave', leave)
     return () => {
-      cancelAnimationFrame(frame)
       window.removeEventListener('pointermove', move)
       document.documentElement.removeEventListener('pointerleave', leave)
     }

@@ -19,6 +19,8 @@ export declare class GlassScene {
     private measured;
     private measureQueued;
     private drawHook;
+    private wasMoving;
+    private drawInput;
     private dirty;
     private resize;
     private mutations;
@@ -51,6 +53,8 @@ export declare class GlassScene {
     private sourceFrame;
     private refractKey;
     private refractionMaps;
+    private refractionWork;
+    private refractionRequests;
     private decodedMaps;
     private decodedScales;
     private filters;
@@ -66,9 +70,15 @@ export declare class GlassScene {
     private themeObserver;
     private visibility;
     private sampleTimer;
+    /** False while the container is off screen: scrolls and pointer moves then cost nothing. */
+    private onScreen;
+    private lastSample;
+    private sampleLater;
     constructor(host: HTMLElement, backdrop: HTMLElement, paint: SVGSVGElement, shadow: SVGSVGElement, uid: string);
     /** Any scroll changes what is behind the glass; a scroller inside the container also moves bubbles. */
     private onScroll;
+    /** Reading the backdrop (elementsFromPoint + styles) at most every SAMPLE_GAP_MS while scrolling, and once after. */
+    private requestSampleWhileScrolling;
     /** Re-reads what is behind the glass on the next frame (scroll, theme or layout changed). */
     requestSample: () => void;
     private sampleBackdrop;
@@ -86,6 +96,7 @@ export declare class GlassScene {
     measure(): void;
     private release;
     private scheduleDraw;
+    private readDrawInput;
     /** Paints the current frame: element offsets, backdrop clip, edge, light and shadow. */
     draw(): void;
     private syncBackdrops;

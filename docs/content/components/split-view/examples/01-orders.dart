@@ -38,14 +38,22 @@ class _OrdersSplitState extends State<OrdersSplit> {
     return Column(
       spacing: 16,
       children: [
-        SegmentedControl<_Screen>(
-          label: 'Screen',
-          value: _screen,
-          onChange: (screen) => setState(() => _screen = screen),
-          options: const [
-            SegmentOption(value: .tablet, label: 'Tablet'),
-            SegmentOption(value: .phone, label: 'Phone'),
-          ],
+        DecoratedBox(
+          decoration: ShapeDecoration(
+            color: ThemeProvider.of(context).colors.surfaceSoft,
+            shape: SuperellipseBorder(
+              radius: ThemeProvider.of(context).sizes.radiusControl,
+            ),
+          ),
+          child: SegmentedControl<_Screen>(
+            label: 'Screen',
+            value: _screen,
+            onChange: (screen) => setState(() => _screen = screen),
+            options: const [
+              SegmentOption(value: .tablet, label: 'Tablet'),
+              SegmentOption(value: .phone, label: 'Phone'),
+            ],
+          ),
         ),
         _Device(
           kind: _screen,

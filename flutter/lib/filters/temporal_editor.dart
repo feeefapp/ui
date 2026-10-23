@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 
 import '../i18n/i18n.dart';
 import '../icons/lucide.dart';
+import '../brand/geometry.dart';
 import '../primitives/button.dart';
 import '../primitives/number_field.dart';
 import '../primitives/segmented.dart';
@@ -370,19 +371,13 @@ class TemporalPresets extends StatelessWidget {
 }
 
 /// The start/end switch of a date range; each side shows its chosen day. Nothing for other
-/// types. The twin of `TemporalEdges`.
+/// types. The twin of `TemporalEdges`. It paints no surface: the editor sets it on a box, the
+/// dialog in its top bar's glass.
 class TemporalEdges extends StatelessWidget {
-  const TemporalEdges({
-    super.key,
-    required this.editor,
-    this.appearance = SegmentedAppearance.grouped,
-  });
+  const TemporalEdges({super.key, required this.editor});
 
   /// The editor state.
   final TemporalEditorState editor;
-
-  /// `plain` when it sits inside a glass group of its own.
-  final SegmentedAppearance appearance;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -391,7 +386,6 @@ class TemporalEdges extends StatelessWidget {
       if (!editor.range || !editor.hasCalendar) return const SizedBox.shrink();
       return SegmentedControl<TemporalEdge>(
         label: 'Which end you are choosing',
-        appearance: appearance,
         // `.lab-temporal-edges`: both ends share the width.
         equalWidth: true,
         value: editor.edge,
@@ -843,7 +837,8 @@ class TemporalFilterEditor extends StatelessWidget {
       spacing: 12,
       children: [
         if (editor.presets.isNotEmpty) TemporalPresets(editor: editor),
-        if (editor.range && editor.hasCalendar) TemporalEdges(editor: editor),
+        if (editor.range && editor.hasCalendar)
+          _EdgesBox(child: TemporalEdges(editor: editor)),
         TemporalBody(editor: editor, footer: footer, onSubmit: onSubmit),
       ],
     ),
@@ -950,4 +945,28 @@ class _RenderFooterRow extends RenderBox
   @override
   void paint(PaintingContext context, Offset offset) =>
       defaultPaint(context, offset);
+}
+
+/// `.lab-temporal-layout > .lab-temporal-edges`: the range-ends switch on a recessed box, the
+/// segmented control's capsule.
+class _EdgesBox extends StatelessWidget {
+  const _EdgesBox({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ThemeProvider.of(context);
+    final s = theme.sizes;
+    final height =
+        theme.coarsePointer(context) && s.controlHeight < s.touchTarget
+        ? s.touchTarget
+        : s.controlHeight;
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: theme.colors.surfaceSoft,
+        shape: SuperellipseBorder(radius: height / 2 * s.radiusScale),
+      ),
+      child: child,
+    );
+  }
 }

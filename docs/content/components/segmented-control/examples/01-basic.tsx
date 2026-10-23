@@ -7,6 +7,7 @@ export default function Basic() {
     <div className="demo-column" style={{ justifyItems: 'center' }}>
       <SegmentedControl
         label="Delivery type"
+        className="demo-segmented-box"
         value={delivery}
         onChange={setDelivery}
         options={[
@@ -21,5 +22,6 @@ export default function Basic() {
 
 export const meta = {
   title: 'Basic',
-  description: 'Two to five short options. value and onChange share one typed union.',
+  description:
+    'Two to five short options, here on a plain box (a surface-token background). value and onChange share one typed union.',
 }

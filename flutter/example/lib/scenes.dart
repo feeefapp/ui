@@ -203,13 +203,18 @@ final Map<String, List<Widget> Function()> scenes = {
         mainAxisSize: MainAxisSize.min,
         spacing: 4,
         children: [
-          SegmentedControl<String>(
+          ToolbarGroup(
             label: 'View',
-            value: 'grid',
-            onChange: (_) {},
-            options: const [
-              SegmentOption(value: 'list', label: 'List'),
-              SegmentOption(value: 'grid', label: 'Grid'),
+            children: [
+              SegmentedControl<String>(
+                label: 'View',
+                value: 'grid',
+                onChange: (_) {},
+                options: const [
+                  SegmentOption(value: 'list', label: 'List'),
+                  SegmentOption(value: 'grid', label: 'Grid'),
+                ],
+              ),
             ],
           ),
           ToolbarGroup(
@@ -1392,33 +1397,48 @@ class _SegmentedState extends State<_Segmented> {
   String delivery = 'home';
   String range = 'week';
 
+  // The three surfaces: glass, a plain box, bare.
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     spacing: 24,
     children: [
-      SegmentedControl<String>(
-        label: 'Delivery type',
-        value: delivery,
-        onChange: (v) => setState(() => delivery = v),
-        options: const [
-          SegmentOption(value: 'home', label: 'Home delivery'),
-          SegmentOption(value: 'desk', label: 'Stop desk'),
-        ],
+      GlassScope(
+        child: ToolbarGroup(
+          label: 'Delivery type',
+          children: [
+            SegmentedControl<String>(
+              label: 'Delivery type',
+              value: delivery,
+              onChange: (v) => setState(() => delivery = v),
+              options: const [
+                SegmentOption(value: 'home', label: 'Home delivery'),
+                SegmentOption(value: 'desk', label: 'Stop desk'),
+              ],
+            ),
+          ],
+        ),
       ),
-      SegmentedControl<String>(
-        label: 'Summary period',
-        value: range,
-        onChange: (v) => setState(() => range = v),
-        options: const [
-          SegmentOption(value: 'today', label: 'Today'),
-          SegmentOption(value: 'week', label: 'This week'),
-          SegmentOption(value: 'month', label: 'This month', disabled: true),
-        ],
+      DecoratedBox(
+        decoration: ShapeDecoration(
+          color: ThemeProvider.of(context).colors.surfaceSoft,
+          shape: SuperellipseBorder(
+            radius: ThemeProvider.of(context).sizes.radiusControl,
+          ),
+        ),
+        child: SegmentedControl<String>(
+          label: 'Summary period',
+          value: range,
+          onChange: (v) => setState(() => range = v),
+          options: const [
+            SegmentOption(value: 'today', label: 'Today'),
+            SegmentOption(value: 'week', label: 'This week'),
+            SegmentOption(value: 'month', label: 'This month', disabled: true),
+          ],
+        ),
       ),
       SegmentedControl<String>(
         label: 'View',
-        appearance: .plain,
         value: 'list',
         onChange: (_) {},
         options: const [

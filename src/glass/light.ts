@@ -105,7 +105,7 @@ export function highlightSurface(shapes: readonly GlassShape[], spacing: number,
   // the flat interior/outside, preserving the exact 2× samples at the curved edge and neck.
   // The supported circular/superellipse norms and their smooth union are 1-Lipschitz; the
   // small margin also covers interpolation in the superellipse norm lookup table.
-  const tile = 16
+  const tile = 8
   const canCull = shapes.every(shape => shape.cornerExponent === undefined || shape.cornerExponent >= 2)
   for (let row = 0; row < height; row += tile) {
     const bottom = Math.min(height, row + tile)

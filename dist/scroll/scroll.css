@@ -36,8 +36,8 @@
 }
 .lab-scroll-float {
   position: absolute;
-  inset-inline: max(var(--lab-scroll-gap), env(safe-area-inset-left, 0px))
-    max(var(--lab-scroll-gap), env(safe-area-inset-right, 0px));
+  inset-inline: max(var(--lab-scroll-side-gap, var(--lab-scroll-gap)), env(safe-area-inset-left, 0px))
+    max(var(--lab-scroll-side-gap, var(--lab-scroll-gap)), env(safe-area-inset-right, 0px));
   z-index: 2;
   pointer-events: none;
   display: flex;

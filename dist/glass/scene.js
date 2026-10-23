@@ -1,18 +1,22 @@
-import { MotionValue, onAnimationFrame } from '../physics/motion-value.js';
+import { MotionValue, onMeasureFrame, onRenderFrame } from '../physics/motion-value.js';
 import { SPRINGS } from '../physics/spring.js';
 import { boundsOf, clampRadius, glassPaths, hostFrame, toLocalPoint, toLocalRect, toScreenPoint, translatePath, } from './geometry.js';
 import { DEFAULT_GLASS_LIGHT, glassLightToward, surfaceReflection, measuredRimReflection, surfaceShade, highlightSurface } from './light.js';
 import { planGlassTransition, sameRect } from './transitions.js';
 import { adaptiveGlassTone, backdropTone, parseCssColor } from './adaptive.js';
-import { liveDisplacementMap, rgbaBmpBytes, rgbaBmpDataUrl, elementImagePlacement, supportsElementRefraction, supportsRefraction } from './refraction.js';
+import { liveDisplacementMap, rgbaBmpDataUrl, elementImagePlacement, supportsElementRefraction, supportsRefraction } from './refraction.js';
 import { DecodedRefractionMap } from './decoded-refraction-map.js';
+import { RefractionWork } from './refraction-work.js';
+import { obsoleteRimRegions, rimBufferCapacity } from './rim-buffer.js';
 import { GLASS_SHADOW, glassBlur, glassMaterial, glassSize } from './material.js';
-import { GLASS_CONTENT_FOLLOW, GLASS_PRESS_SCALE, glassLayoutRect, glassStretch, pressedShape } from './press.js';
+import { GLASS_CONTENT_FOLLOW, GLASS_GLOW_START, GLASS_PRESS_SCALE, glassGlowRadius, glassLayoutRect, glassStretch, pressedShape } from './press.js';
 import { cornerFit } from '../brand/corner-fit.js';
 /** How far (px) the material may reach past the container, for overshoot and growing bubbles. */
 export const GLASS_MARGIN = 32;
 const SPRING = SPRINGS.snappy;
 const SVG = 'http://www.w3.org/2000/svg';
+/** Least time between backdrop samples while scrolling. */
+const SAMPLE_GAP_MS = 120;
 /** One bubble's glass: an animated rect, its corner radius and, while alive, its element. */
 class Shape {
     x;
@@ -112,6 +116,8 @@ export class GlassScene {
     measured = false;
     measureQueued = false;
     drawHook = null;
+    wasMoving = false;
+    drawInput = null;
     dirty = false;
     resize = null;
     mutations = null;
@@ -144,6 +150,8 @@ export class GlassScene {
     sourceFrame = null;
     refractKey = '';
     refractionMaps = [];
+    refractionWork = [];
+    refractionRequests = [];
     decodedMaps = [];
     decodedScales = [];
     filters = [];
@@ -159,6 +167,10 @@ export class GlassScene {
     themeObserver = null;
     visibility = null;
     sampleTimer = null;
+    /** False while the container is off screen: scrolls and pointer moves then cost nothing. */
+    onScreen = true;
+    lastSample = 0;
+    sampleLater = null;
     constructor(host, backdrop, paint, shadow, uid) {
         this.host = host;
         this.backdrop = backdrop;
@@ -167,7 +179,7 @@ export class GlassScene {
         this.uid = uid.replace(/[^a-zA-Z0-9_-]/g, '');
         backdrop.replaceChildren();
         if (typeof ResizeObserver !== 'undefined') {
-            this.resize = new ResizeObserver(() => this.measure());
+            this.resize = new ResizeObserver(() => this.requestMeasure());
             this.resize.observe(host);
         }
         if (typeof MutationObserver !== 'undefined') {
@@ -188,6 +200,13 @@ export class GlassScene {
             this.visibility = new IntersectionObserver(([entry]) => {
                 if (this.sampleTimer)
                     clearInterval(this.sampleTimer);
+                const wasOnScreen = this.onScreen;
+                this.onScreen = !!entry?.isIntersecting;
+                // Coming back on screen: catch up on what changed behind it while it was away.
+                if (this.onScreen && !wasOnScreen) {
+                    this.requestSample();
+                    this.scheduleDraw();
+                }
                 this.sampleTimer = entry?.isIntersecting
                     ? setInterval(() => {
                         if (this.adaptive && document.visibilityState === 'visible')
@@ -200,12 +219,30 @@ export class GlassScene {
     }
     /** Any scroll changes what is behind the glass; a scroller inside the container also moves bubbles. */
     onScroll = (event) => {
-        this.requestSample();
-        if (this.backdropSource)
-            this.scheduleDraw();
+        if (!this.onScreen)
+            return;
         if (event.target instanceof Node && event.target !== this.host && this.host.contains(event.target))
             this.requestMeasure();
+        this.requestSampleWhileScrolling();
+        // A Firefox lens samples a sibling layer: keep its image under the glass when either moves.
+        if (this.backdropSource)
+            this.scheduleDraw();
     };
+    /** Reading the backdrop (elementsFromPoint + styles) at most every SAMPLE_GAP_MS while scrolling, and once after. */
+    requestSampleWhileScrolling() {
+        const now = performance.now();
+        if (now - this.lastSample >= SAMPLE_GAP_MS) {
+            this.lastSample = now;
+            this.requestSample();
+        }
+        if (this.sampleLater)
+            clearTimeout(this.sampleLater);
+        this.sampleLater = setTimeout(() => {
+            this.sampleLater = null;
+            this.lastSample = performance.now();
+            this.requestSample();
+        }, SAMPLE_GAP_MS);
+    }
     /** Re-reads what is behind the glass on the next frame (scroll, theme or layout changed). */
     requestSample = () => {
         if (this.sampleFrame || typeof requestAnimationFrame === 'undefined')
@@ -247,7 +284,8 @@ export class GlassScene {
         if (!this.interactive || this.reduceMotion || event.button > 0 || this.pressed)
             return;
         const target = event.target;
-        if (!target || target.closest('input, textarea, select, [contenteditable="true"]'))
+        // Fields, and controls that answer a press with glass of their own (a segmented control's lens).
+        if (!target || target.closest('input, textarea, select, [contenteditable="true"], [data-glass-own-press]'))
             return;
         const element = target.closest('[data-glass-member]');
         const id = element && [...this.members].find(([, member]) => member.element === element)?.[0];
@@ -259,9 +297,9 @@ export class GlassScene {
         if (shape.height.get() <= 64)
             void shape.press.animateTo(GLASS_PRESS_SCALE, { spring: SPRING });
         const point = toLocalPoint(this.frame(), event.clientX, event.clientY);
-        const glow = { x: point.x, y: point.y, radius: new MotionValue(8, 0.5), opacity: new MotionValue(1, 0.005) };
+        const glow = { x: point.x, y: point.y, radius: new MotionValue(GLASS_GLOW_START, 0.5), opacity: new MotionValue(1, 0.005) };
         this.glow = glow;
-        void glow.radius.animateTo(Math.max(120, shape.width.get()), { spring: SPRINGS.smooth });
+        void glow.radius.animateTo(glassGlowRadius(shape.width.get()), { spring: SPRINGS.smooth });
         window.addEventListener('pointermove', this.onPressMove, { passive: true });
         window.addEventListener('pointerup', this.onPressEnd, { passive: true });
         window.addEventListener('pointercancel', this.onPressEnd, { passive: true });
@@ -320,18 +358,18 @@ export class GlassScene {
         };
     }
     requestMeasure() {
-        if (this.measureQueued)
+        if (this.disposed || this.measureQueued)
             return;
         this.measureQueued = true;
-        // Microtasks run after React's layout effects and before the browser paints.
-        queueMicrotask(() => {
-            this.measureQueued = false;
-            this.measure();
-        });
+        // React and ResizeObserver can report several changes before the same refresh. Read the
+        // final layout once, in the shared read phase, after all of those changes have landed.
+        this.scheduleDraw();
     }
     setPointer(point) {
         this.pointer = point;
-        this.scheduleDraw();
+        // Off-screen glass catches up with the light when it comes back (the visibility observer).
+        if (this.onScreen)
+            this.scheduleDraw();
     }
     dispose() {
         this.host.removeEventListener('pointerdown', this.onPressStart);
@@ -339,10 +377,14 @@ export class GlassScene {
         this.themeObserver?.disconnect();
         this.visibility?.disconnect();
         this.filterHost?.remove();
+        for (const work of this.refractionWork)
+            work.dispose();
         for (const map of this.decodedMaps)
             map.dispose();
         if (this.sampleTimer)
             clearInterval(this.sampleTimer);
+        if (this.sampleLater)
+            clearTimeout(this.sampleLater);
         if (this.sampleFrame)
             cancelAnimationFrame(this.sampleFrame);
         window.removeEventListener('pointermove', this.onPressMove);
@@ -476,9 +518,8 @@ export class GlassScene {
         }
         this.measured = true;
         this.tracking = tracking;
-        this.draw();
         this.scheduleDraw();
-        this.requestSample();
+        this.requestSampleWhileScrolling();
     }
     release(shape, id) {
         const member = this.members.get(id);
@@ -490,27 +531,55 @@ export class GlassScene {
         shape.contentScale = 1;
     }
     scheduleDraw() {
+        if (this.disposed)
+            return;
         this.dirty = true;
         if (this.drawHook)
             return;
-        this.drawHook = onAnimationFrame(() => {
+        let paint = false;
+        // All springs advance first, then every glass scene reads layout/styles, then they paint.
+        // Measurements from React/ResizeObserver only request a paint; they never paint twice in
+        // one refresh or force the next scene to read layout after this scene has changed it.
+        const stopMeasure = onMeasureFrame(() => {
+            if (this.measureQueued || this.tracking) {
+                this.measureQueued = false;
+                this.measure();
+            }
             const glow = this.glow;
             const moving = [...this.shapes.values()].some((shape) => shape.values().some((v) => v.isAnimating())) ||
                 (glow !== null && (glow.radius.isAnimating() || glow.opacity.isAnimating()));
-            // Transforms and transitions don't fire ResizeObserver: re-measure every frame while they run.
-            if (this.tracking) {
-                this.measure();
-                return;
-            }
-            if (this.dirty || moving) {
+            paint = this.dirty || moving || this.wasMoving;
+            this.wasMoving = moving;
+            if (paint) {
                 this.dirty = false;
-                this.draw();
+                this.drawInput = this.readDrawInput();
             }
-            else {
+        });
+        const stopRender = onRenderFrame(() => {
+            if (paint) {
+                this.draw();
+                this.drawInput = null;
+                paint = false;
+            }
+            if (!this.dirty && !this.wasMoving && !this.tracking) {
                 this.drawHook?.();
                 this.drawHook = null;
             }
         });
+        this.drawHook = () => {
+            stopMeasure();
+            stopRender();
+            this.drawInput = null;
+        };
+    }
+    readDrawInput() {
+        const frame = this.frame();
+        const source = supportsElementRefraction() ? this.elementSource() : null;
+        return {
+            frame,
+            sourceFrame: source ? toLocalRect(frame, source.getBoundingClientRect()) : null,
+            paint: readPaintStyle(this.paint),
+        };
     }
     /** Paints the current frame: element offsets, backdrop clip, edge, light and shadow. */
     draw() {
@@ -518,9 +587,9 @@ export class GlassScene {
             return;
         // Read source geometry once, before any style writes: Firefox must not flush layout for
         // every cluster while placing its live element image.
-        const frame = this.frame();
-        const source = supportsElementRefraction() ? this.elementSource() : null;
-        this.sourceFrame = source ? toLocalRect(frame, source.getBoundingClientRect()) : null;
+        const input = this.drawInput ?? this.readDrawInput();
+        const { frame } = input;
+        this.sourceFrame = input.sourceFrame;
         const visuals = [];
         for (const [id, shape] of this.shapes) {
             visuals.push({ ...shape.visual(), id });
@@ -540,7 +609,7 @@ export class GlassScene {
             }
             const press = shape.press.get();
             shape.contentScale = Math.abs(press - 1) < 0.001 ? 1 : press;
-            member.element.style.scale = shape.contentScale === 1 ? '' : String(shape.contentScale);
+            setStyleIfChanged(member.element.style, 'scale', shape.contentScale === 1 ? '' : String(shape.contentScale));
         }
         const m = GLASS_MARGIN;
         const placed = visuals.map((v) => ({ ...v, x: v.x + m, y: v.y + m }));
@@ -551,11 +620,12 @@ export class GlassScene {
         this.syncBackdrops(paths);
         const lights = paths.map((p) => this.lightFor(p.bounds, frame));
         const glow = this.glow;
-        renderPaint(this.paint, paths, lights, this.uid, this.spacing, this.highlightWidth, this.highlightStrength, this.highlightProfile, glow ? { x: glow.x + m, y: glow.y + m, radius: glow.radius.get(), opacity: glow.opacity.get() } : null);
-        this.shadow.style.display = this.tint > 0 ? '' : 'none';
+        renderPaint(this.paint, paths, lights, this.uid, this.spacing, this.highlightWidth, this.highlightStrength, this.highlightProfile, input.paint, glow ? { x: glow.x + m, y: glow.y + m, radius: glow.radius.get(), opacity: glow.opacity.get() } : null);
+        setStyleIfChanged(this.shadow.style, 'display', this.tint > 0 ? '' : 'none');
         if (this.tint > 0)
             renderShadow(this.shadow, paths, this.uid);
-        this.host.toggleAttribute('data-glass-ready', true);
+        if (!this.host.hasAttribute('data-glass-ready'))
+            this.host.setAttribute('data-glass-ready', '');
         this.updateRefraction(key);
     }
     syncBackdrops(paths) {
@@ -571,28 +641,28 @@ export class GlassScene {
             const { x, y, width, height } = path.bounds;
             const piece = this.pieces[i];
             const style = piece.style;
-            style.setProperty('corner-shape', this.cornerShape === 'round' ? 'round' : 'superellipse(1.5)');
+            setPropertyIfChanged(style, 'corner-shape', this.cornerShape === 'round' ? 'round' : 'superellipse(1.5)');
             // The material follows the cluster's smallest bubble: control-sized glass is denser.
             const side = smallestSide(path.shapes);
             const size = glassSize(side);
             if (piece.dataset.glassSize !== size)
                 piece.dataset.glassSize = size;
-            style.setProperty('--lab-glass-blur', this.blur ? `${glassBlur(side).toFixed(2)}px` : '0px');
-            style.left = `${x}px`;
-            style.top = `${y}px`;
-            style.width = `${width}px`;
-            style.height = `${height}px`;
+            setPropertyIfChanged(style, '--lab-glass-blur', this.blur ? `${glassBlur(side).toFixed(2)}px` : '0px');
+            setStyleIfChanged(style, 'left', `${x}px`);
+            setStyleIfChanged(style, 'top', `${y}px`);
+            setStyleIfChanged(style, 'width', `${width}px`);
+            setStyleIfChanged(style, 'height', `${height}px`);
             const sourceImage = piece.querySelector('.lab-glass-source');
             if (sourceImage)
                 this.positionElementSource(piece, sourceImage);
             if (path.shapes.length === 1) {
                 // A lone shape clips with CSS: hand back the radius CSS would use (the circle fallback's).
-                style.borderRadius = `${clampRadius(path.shapes[0]) * this.cornerFit}px`;
-                style.clipPath = '';
+                setStyleIfChanged(style, 'borderRadius', `${clampRadius(path.shapes[0]) * this.cornerFit}px`);
+                setStyleIfChanged(style, 'clipPath', '');
             }
             else {
-                style.borderRadius = '';
-                style.clipPath = `path("${translatePath(path.d, -x, -y)}")`;
+                setStyleIfChanged(style, 'borderRadius', '');
+                setStyleIfChanged(style, 'clipPath', `path("${translatePath(path.d, -x, -y)}")`);
             }
         });
     }
@@ -604,11 +674,20 @@ export class GlassScene {
             document.documentElement.getAttribute('data-lab-glass') !== 'solid' &&
             !window.matchMedia?.('(prefers-reduced-transparency: reduce), (prefers-contrast: more)').matches;
         if (!wanted) {
+            for (const work of this.refractionWork)
+                work.dispose();
+            this.refractionWork = [];
+            this.refractionRequests = [];
             for (const map of this.decodedMaps)
                 map.dispose();
             this.decodedMaps = [];
             this.decodedScales = [];
             this.refractionMaps = [];
+            // Disposed decoders revoke their URLs. Re-enabling starts with fresh filter inputs,
+            // never a retained feImage pointing at a resource that no longer exists.
+            for (const filter of this.filters)
+                filter.remove();
+            this.filters = [];
             for (const piece of this.pieces) {
                 piece.style.backdropFilter = '';
                 piece.style.removeProperty('-webkit-backdrop-filter');
@@ -624,7 +703,7 @@ export class GlassScene {
     /** Sampling a separate paint layer avoids Firefox's recursive element-image prohibition. */
     elementSource() {
         const source = this.backdropSource ? document.getElementById(this.backdropSource) : null;
-        return source && !source.contains(this.host) && !this.host.contains(source) ? source : null;
+        return source && !source.contains(this.host) && !this.host.contains(source) && !isScroller(source) ? source : null;
     }
     positionElementSource(piece, image) {
         const box = this.sourceFrame;
@@ -633,8 +712,13 @@ export class GlassScene {
         const x = Number.parseFloat(piece.style.left) || 0;
         const y = Number.parseFloat(piece.style.top) || 0;
         const placement = elementImagePlacement({ ...box, x: box.x + GLASS_MARGIN, y: box.y + GLASS_MARGIN }, { x, y, width: Number.parseFloat(piece.style.width) || 0, height: Number.parseFloat(piece.style.height) || 0 });
-        image.style.backgroundSize = `${placement.width}px ${placement.height}px`;
-        image.style.backgroundPosition = `${placement.x}px ${placement.y}px`;
+        // Only real changes: any write re-renders the live element image.
+        const size = `${placement.width}px ${placement.height}px`;
+        const position = `${placement.x}px ${placement.y}px`;
+        if (image.style.backgroundSize !== size)
+            image.style.backgroundSize = size;
+        if (image.style.backgroundPosition !== position)
+            image.style.backgroundPosition = position;
     }
     applyRefraction(key) {
         const nativeBackdrop = supportsRefraction();
@@ -652,16 +736,9 @@ export class GlassScene {
             // Position is deliberately absent: dragging a rigid bubble only moves its existing lens.
             const geometryKey = `${width.toFixed(1)},${height.toFixed(1)}|${this.spacing}|${this.refractionProfile}|${shifted.map(s => `${s.x.toFixed(1)},${s.y.toFixed(1)},${s.width.toFixed(1)},${s.height.toFixed(1)},${s.radius.toFixed(1)},${s.cornerExponent}`).join(';')}`;
             let map = this.refractionMaps[i];
-            if (!map || map.key !== geometryKey) {
+            if (nativeBackdrop && (!map || map.key !== geometryKey)) {
                 const pixels = liveDisplacementMap(width, height, [shifted], this.spacing, this.refractionProfile);
-                // Firefox's regular element filter is clipped by the current CSS outline. Keeping the
-                // map opaque avoids applying a second, stale silhouette while the next image decodes.
-                if (!nativeBackdrop)
-                    for (let pixel = 3; pixel < pixels.data.length; pixel += 4)
-                        pixels.data[pixel] = 255;
-                const href = nativeBackdrop
-                    ? rgbaBmpDataUrl(pixels.width, pixels.height, pixels.data)
-                    : URL.createObjectURL(new Blob([rgbaBmpBytes(pixels.width, pixels.height, pixels.data)], { type: 'image/bmp' }));
+                const href = rgbaBmpDataUrl(pixels.width, pixels.height, pixels.data);
                 map = { key: geometryKey, scale: pixels.scale, href };
                 this.refractionMaps[i] = map;
             }
@@ -694,7 +771,20 @@ export class GlassScene {
                     setAttributeIfChanged(image, 'href', frame.href);
                     setAttributeIfChanged(bent, 'scale', (frame.scale * this.refractionStrength).toFixed(2));
                 }, undefined, href => URL.revokeObjectURL(href));
-                decoded.request(map);
+                const work = this.refractionWork[i] ??= new RefractionWork(frame => {
+                    // Pixel work runs off-thread; only a ready bitmap enters the bounded decode queue.
+                    // The live outline and reflection never wait for it and the previous lens stays put.
+                    const href = URL.createObjectURL(new Blob([frame.bytes], { type: 'image/bmp' }));
+                    const next = { key: frame.key, href, scale: frame.scale };
+                    this.refractionMaps[i] = next;
+                    decoded.request(next);
+                });
+                if (this.refractionRequests[i] !== geometryKey) {
+                    this.refractionRequests[i] = geometryKey;
+                    work.submit({ key: geometryKey, width, height, shapes: shifted, spacing: this.spacing, profile: this.refractionProfile });
+                }
+                else if (map?.key === geometryKey)
+                    decoded.request(map);
             }
             setAttributeIfChanged(soft, 'stdDeviation', blur.toFixed(2));
             // Without blur the bend reads the backdrop itself: no blur stage at all.
@@ -734,6 +824,9 @@ export class GlassScene {
         // A split/merge may reduce the number of clusters. Retain live entries, discard departed ones.
         while (this.filters.length > this.pieces.length)
             this.filters.pop().remove();
+        while (this.refractionWork.length > this.pieces.length)
+            this.refractionWork.pop().dispose();
+        this.refractionRequests.length = this.pieces.length;
         while (this.decodedMaps.length > this.pieces.length)
             this.decodedMaps.pop().dispose();
         this.decodedScales.length = this.pieces.length;
@@ -778,15 +871,51 @@ const node = (tag, attrs) => {
         el.setAttribute(name, String(value));
     return el;
 };
+/**
+ * A scroller can't be a Firefox lens source: Firefox scrolls it on the compositor while the element
+ * image of it is repainted on the main thread, so the bent copy trails the real content and every
+ * scroll frame repaints the whole viewport through a CPU filter. Glass floating over a scroller
+ * (ScrollArea app bars and docks) keeps the CSS material there; Chromium bends the real backdrop.
+ */
+const scrollers = new WeakMap();
+function isScroller(element) {
+    let scroller = scrollers.get(element);
+    if (scroller === undefined) {
+        const style = getComputedStyle(element);
+        scroller = /(auto|scroll)/.test(style.overflowY + style.overflowX);
+        scrollers.set(element, scroller);
+    }
+    return scroller;
+}
 function setAttributeIfChanged(element, name, value) {
     if (element.getAttribute(name) !== value)
         element.setAttribute(name, value);
+}
+function setStyleIfChanged(style, name, value) {
+    if (style[name] !== value)
+        style[name] = value;
+}
+function setPropertyIfChanged(style, name, value) {
+    if (style.getPropertyValue(name) !== value)
+        style.setProperty(name, value);
+}
+/** Resolve inherited paint tokens in the frame's read phase, before any geometry writes. */
+function readPaintStyle(svg) {
+    const styles = getComputedStyle(svg);
+    const lightColor = parseCssColor(styles.getPropertyValue('--lab-glass-edge-light')) ?? { r: 1, g: 1, b: 1, a: 0.2 };
+    return {
+        lightColor,
+        lightAlpha: Math.min(1, lightColor.a * 2.5 + 0.24),
+        rimBase: Number.parseFloat(styles.getPropertyValue('--lab-glass-rim-base')) || 0.27,
+        rimPeak: Number.parseFloat(styles.getPropertyValue('--lab-glass-rim-peak')) || 0.718,
+        shadowAlpha: Math.min(1, (Number.parseFloat(styles.getPropertyValue('--lab-glass-shadow-alpha')) || 0.1) * (Number.parseFloat(styles.getPropertyValue('--lab-glass-tint')) || 0) * 2),
+    };
 }
 const rimSurfaces = new WeakMap();
 const edgeLayers = new WeakMap();
 const reflectionLayers = new WeakMap();
 /** Edge and light, one clipped group per cluster so each bubble is lit on its own. */
-function renderPaint(svg, paths, lights, uid, spacing, highlightWidth, highlightStrength, highlightProfile, glow) {
+function renderPaint(svg, paths, lights, uid, spacing, highlightWidth, highlightStrength, highlightProfile, paint, glow) {
     let layer = reflectionLayers.get(svg);
     if (!layer) {
         layer = document.createElement('div');
@@ -794,12 +923,7 @@ function renderPaint(svg, paths, lights, uid, spacing, highlightWidth, highlight
         svg.parentElement?.insertBefore(layer, svg);
         reflectionLayers.set(svg, layer);
     }
-    const styles = getComputedStyle(svg);
-    const lightColor = parseCssColor(styles.getPropertyValue('--lab-glass-edge-light')) ?? { r: 1, g: 1, b: 1, a: 0.2 };
-    const lightAlpha = Math.min(1, lightColor.a * 2.5 + 0.24);
-    const rimBase = Number.parseFloat(styles.getPropertyValue('--lab-glass-rim-base')) || 0.27;
-    const rimPeak = Number.parseFloat(styles.getPropertyValue('--lab-glass-rim-peak')) || 0.718;
-    const shadowAlpha = Math.min(1, (Number.parseFloat(styles.getPropertyValue('--lab-glass-shadow-alpha')) || 0.1) * (Number.parseFloat(styles.getPropertyValue('--lab-glass-tint')) || 0) * 2);
+    const { lightColor, lightAlpha, rimBase, rimPeak, shadowAlpha } = paint;
     let surfaces = rimSurfaces.get(svg);
     if (!surfaces) {
         surfaces = [];
@@ -853,10 +977,20 @@ function renderPaint(svg, paths, lights, uid, spacing, highlightWidth, highlight
         if (!cached || cached.geometry !== geometry) {
             const surface = highlightSurface(local, spacing, { x: 0, y: 0, width, height }, highlightWidth);
             const canvas = cached?.canvas ?? document.createElement('canvas');
-            if (canvas.width !== surface.width)
-                canvas.width = surface.width;
-            if (canvas.height !== surface.height)
-                canvas.height = surface.height;
+            const capacityWidth = rimBufferCapacity(surface.width, cached ? canvas.width : 0);
+            const capacityHeight = rimBufferCapacity(surface.height, cached ? canvas.height : 0);
+            const resized = canvas.width !== capacityWidth || canvas.height !== capacityHeight;
+            if (canvas.width !== capacityWidth)
+                canvas.width = capacityWidth;
+            if (canvas.height !== capacityHeight)
+                canvas.height = capacityHeight;
+            // Resizing clears the whole backing. With retained capacity, erase only the old pixels
+            // beyond the new image; putImageData replaces every active pixel, including transparency.
+            if (cached && !resized) {
+                const context = canvas.getContext('2d');
+                for (const rect of obsoleteRimRegions(cached.surface, surface))
+                    context?.clearRect(rect.x, rect.y, rect.width, rect.height);
+            }
             canvas.className = 'lab-glass-rim lab-glass-reflection-canvas';
             cached = { geometry, surface, canvas, image: null, key: '' };
             surfaces[i] = cached;
@@ -888,7 +1022,10 @@ function renderPaint(svg, paths, lights, uid, spacing, highlightWidth, highlight
         // highlightSurface samples at exactly 2×. Preserve that scale when fractional spring
         // dimensions round its bitmap upward; squeezing it back into the unrounded box moved
         // the rim inward by up to half a pixel on each frame.
-        Object.assign(cached.canvas.style, { left: `${x}px`, top: `${y}px`, width: `${cached.surface.width / 2}px`, height: `${cached.surface.height / 2}px` });
+        setStyleIfChanged(cached.canvas.style, 'left', `${x}px`);
+        setStyleIfChanged(cached.canvas.style, 'top', `${y}px`);
+        setStyleIfChanged(cached.canvas.style, 'width', `${cached.canvas.width / 2}px`);
+        setStyleIfChanged(cached.canvas.style, 'height', `${cached.canvas.height / 2}px`);
         if (cached.canvas.parentElement !== layer)
             layer.append(cached.canvas);
     });
@@ -909,20 +1046,21 @@ function renderPaint(svg, paths, lights, uid, spacing, highlightWidth, highlight
             svg.append(group);
             effect = edges.glow = { clip, outline, gradient, group, circle };
         }
-        effect.group.removeAttribute('display');
-        effect.outline.setAttribute('d', paths.map(path => path.d).join(''));
-        effect.group.setAttribute('opacity', String(glow.opacity));
+        if (effect.group.hasAttribute('display'))
+            effect.group.removeAttribute('display');
+        setAttributeIfChanged(effect.outline, 'd', paths.map(path => path.d).join(''));
+        setAttributeIfChanged(effect.group, 'opacity', String(glow.opacity));
         for (const element of [effect.gradient, effect.circle]) {
-            element.setAttribute('cx', String(glow.x));
-            element.setAttribute('cy', String(glow.y));
-            element.setAttribute('r', String(Math.max(1, glow.radius)));
+            setAttributeIfChanged(element, 'cx', String(glow.x));
+            setAttributeIfChanged(element, 'cy', String(glow.y));
+            setAttributeIfChanged(element, 'r', String(Math.max(1, glow.radius)));
         }
         // New clusters can be appended after the glow; it stays the topmost paint layer.
         if (svg.lastElementChild !== effect.group)
             svg.append(effect.group);
     }
-    else
-        edges.glow?.group.setAttribute('display', 'none');
+    else if (edges.glow)
+        setAttributeIfChanged(edges.glow.group, 'display', 'none');
 }
 /**
  * A wide, soft shadow outside the glass only (masked), like CSS box-shadow: `GLASS_SHADOW.dy` down,

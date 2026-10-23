@@ -96,9 +96,7 @@ export interface Metrics {
   toolbarGap?: number
   /** A floating bar's inset from its panel's sides: 16 (`--lab-toolbar-inset`). */
   toolbarInset?: number
-  /** A segmented control's outer height: 32 (`--lab-segmented-height`). */
-  segmentedHeight?: number
-  /** From a segmented control's outer edge to its options, and between options: 2 (`--lab-segmented-inset`). */
+  /** From a segmented control's edge to its pill, and between options: 2 (`--lab-segmented-inset`). Its height is `controlHeight.regular`. */
   segmentedInset?: number
   /** A switch track: 63 × 28 (`--lab-switch-width`, `--lab-switch-height`). */
   switchSize?: MetricSize
@@ -116,6 +114,10 @@ export interface Metrics {
   focusRingWidth?: number
   /** The keyboard focus ring's distance outside the control: 1 (`--lab-focus-ring-offset`). */
   focusRingOffset?: number
+  /** The workspace scaffold's expanded sidebar: 304 / 248 / 224 by density (`--lab-sidebar-width`). */
+  sidebarWidth?: number
+  /** The workspace scaffold's navigation rail: 64 / 52 / 44 by density (`--lab-navigation-rail-width`). */
+  railWidth?: number
 }
 
 /** Color palette: `lab` (Feeef green) or `mono` (black and white). */
@@ -208,7 +210,6 @@ const METRIC_VARIABLES: [read: (m: Metrics) => number | undefined, variable: str
   [(m) => m.toolbarItem, '--lab-toolbar-item'],
   [(m) => m.toolbarGap, '--lab-toolbar-gap'],
   [(m) => m.toolbarInset, '--lab-toolbar-inset'],
-  [(m) => m.segmentedHeight, '--lab-segmented-height'],
   [(m) => m.segmentedInset, '--lab-segmented-inset'],
   [(m) => m.switchSize?.width, '--lab-switch-width'],
   [(m) => m.switchSize?.height, '--lab-switch-height'],
@@ -220,6 +221,8 @@ const METRIC_VARIABLES: [read: (m: Metrics) => number | undefined, variable: str
   [(m) => m.listInset, '--lab-list-inset'],
   [(m) => m.focusRingWidth, '--lab-focus-ring-width'],
   [(m) => m.focusRingOffset, '--lab-focus-ring-offset'],
+  [(m) => m.sidebarWidth, '--lab-sidebar-width'],
+  [(m) => m.railWidth, '--lab-navigation-rail-width'],
 ]
 
 /** The variable names `metrics` can set; `applyThemeConfig` clears the ones a new config drops. */

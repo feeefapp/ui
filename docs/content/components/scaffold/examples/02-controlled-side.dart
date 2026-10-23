@@ -24,15 +24,24 @@ class _ControlledSideState extends State<ControlledSide> {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     spacing: 12,
     children: [
-      SegmentedControl<ScaffoldSideMode>(
-        label: 'Sidebar mode',
-        value: _mode,
-        onChange: (mode) => setState(() => _mode = mode),
-        options: const [
-          SegmentOption(value: .expanded, label: 'Expanded'),
-          SegmentOption(value: .rail, label: 'Rail'),
-          SegmentOption(value: .hidden, label: 'Hidden'),
-        ],
+      DecoratedBox(
+        decoration: ShapeDecoration(
+          color: ThemeProvider.of(context).colors.surfaceSoft,
+          shape: SuperellipseBorder(
+            radius: ThemeProvider.of(context).sizes.radiusControl,
+          ),
+        ),
+        child: SegmentedControl<ScaffoldSideMode>(
+          equalWidth: true,
+          label: 'Sidebar mode',
+          value: _mode,
+          onChange: (mode) => setState(() => _mode = mode),
+          options: const [
+            SegmentOption(value: .expanded, label: 'Expanded'),
+            SegmentOption(value: .rail, label: 'Rail'),
+            SegmentOption(value: .hidden, label: 'Hidden'),
+          ],
+        ),
       ),
       _Frame(
         child: Scaffold(

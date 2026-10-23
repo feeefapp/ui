@@ -128,7 +128,6 @@ class Metrics {
     this.toolbarItem,
     this.toolbarGap,
     this.toolbarInset,
-    this.segmentedHeight,
     this.segmentedInset,
     this.switchSize,
     this.thumbSize,
@@ -138,6 +137,8 @@ class Metrics {
     this.listInset,
     this.focusRingWidth,
     this.focusRingOffset,
+    this.sidebarWidth,
+    this.railWidth,
   });
 
   /// Button heights (and the square of icon-only buttons): small 30, regular 36, large 52.
@@ -164,10 +165,8 @@ class Metrics {
   /// A floating bar's inset from its panel's sides: 16.
   final double? toolbarInset;
 
-  /// A segmented control's outer height: 32.
-  final double? segmentedHeight;
-
-  /// From a segmented control's outer edge to its options, and between options: 2.
+  /// From a segmented control's edge to its pill, and between options: 2. Its height is
+  /// [controlHeight]'s regular.
   final double? segmentedInset;
 
   /// A switch track: 63 × 28.
@@ -194,6 +193,12 @@ class Metrics {
   /// The keyboard focus ring's distance outside the control: 1.
   final double? focusRingOffset;
 
+  /// The workspace scaffold's expanded sidebar: 304 / 248 / 224 by density.
+  final double? sidebarWidth;
+
+  /// The workspace scaffold's navigation rail: 64 / 52 / 44 by density.
+  final double? railWidth;
+
   @override
   bool operator ==(Object other) =>
       other is Metrics &&
@@ -205,7 +210,6 @@ class Metrics {
       other.toolbarItem == toolbarItem &&
       other.toolbarGap == toolbarGap &&
       other.toolbarInset == toolbarInset &&
-      other.segmentedHeight == segmentedHeight &&
       other.segmentedInset == segmentedInset &&
       other.switchSize == switchSize &&
       other.thumbSize == thumbSize &&
@@ -214,7 +218,9 @@ class Metrics {
       other.listRadius == listRadius &&
       other.listInset == listInset &&
       other.focusRingWidth == focusRingWidth &&
-      other.focusRingOffset == focusRingOffset;
+      other.focusRingOffset == focusRingOffset &&
+      other.sidebarWidth == sidebarWidth &&
+      other.railWidth == railWidth;
 
   @override
   int get hashCode => Object.hashAll([
@@ -226,7 +232,6 @@ class Metrics {
     toolbarItem,
     toolbarGap,
     toolbarInset,
-    segmentedHeight,
     segmentedInset,
     switchSize,
     thumbSize,
@@ -236,5 +241,7 @@ class Metrics {
     listInset,
     focusRingWidth,
     focusRingOffset,
+    sidebarWidth,
+    railWidth,
   ]);
 }

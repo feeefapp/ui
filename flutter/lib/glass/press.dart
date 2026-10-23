@@ -13,6 +13,12 @@ const double glassStretchLimit = 12;
 /// Fraction of the stretch the bubble's content follows.
 const double glassContentFollow = 0.4;
 
+/// Radius (px) the touch glow starts from; it spreads to [glassGlowRadius] on [Springs.smooth].
+const double glassGlowStart = 8;
+
+/// How far the touch glow under a press spreads over glass [width] px wide.
+double glassGlowRadius(double width) => width > 120 ? width : 120;
+
 /// Stretch (px) for a drag of [dx], [dy] from where the press started.
 ({double x, double y}) glassStretch(
   double dx,

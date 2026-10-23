@@ -245,21 +245,17 @@ export function TemporalPresets({
   )
 }
 
-/** The start/end switch of a date range; each side shows its chosen day. Nothing for other types. */
-export function TemporalEdges({
-  editor,
-  appearance,
-}: {
-  editor: TemporalEditorState
-  /** `plain` when it sits inside a glass group of its own. */
-  appearance?: 'plain'
-}) {
+/**
+ * The start/end switch of a date range; each side shows its chosen day. Nothing for other types.
+ * It paints no surface: the editor sets it on a box, the dialog in its top bar's glass.
+ */
+export function TemporalEdges({ editor }: { editor: TemporalEditorState }) {
   if (!editor.range || !editor.hasCalendar) return null
   return (
     <SegmentedControl<'from' | 'to'>
       label="Which end you are choosing"
       className="lab-temporal-edges"
-      appearance={appearance}
+      equalWidth
       value={editor.edge}
       onChange={editor.setEdge}
       options={[

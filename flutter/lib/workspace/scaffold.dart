@@ -69,19 +69,23 @@ typedef ScaffoldViewportBuilder = Widget Function(
   Widget? bottom,
 );
 
-/// `--lab-sidebar-width` for a density (304 / 248 / 224 px).
-double scaffoldSidebarWidth(Density density) => switch (density) {
-  Density.comfortable => 304,
-  Density.compact => 248,
-  Density.thin => 224,
-};
+/// `--lab-sidebar-width`: [Metrics.sidebarWidth] when set, else by density (304 / 248 / 224 px).
+double scaffoldSidebarWidth(Density density, [Metrics metrics = const Metrics()]) =>
+    metrics.sidebarWidth ??
+    switch (density) {
+      Density.comfortable => 304,
+      Density.compact => 248,
+      Density.thin => 224,
+    };
 
-/// `--lab-navigation-rail-width` for a density (64 / 52 / 44 px).
-double scaffoldRailWidth(Density density) => switch (density) {
-  Density.comfortable => 64,
-  Density.compact => 52,
-  Density.thin => 44,
-};
+/// `--lab-navigation-rail-width`: [Metrics.railWidth] when set, else by density (64 / 52 / 44 px).
+double scaffoldRailWidth(Density density, [Metrics metrics = const Metrics()]) =>
+    metrics.railWidth ??
+    switch (density) {
+      Density.comfortable => 64,
+      Density.compact => 52,
+      Density.thin => 44,
+    };
 
 /// Workspace layout: optional top row, a sidebar (expanded, rail or hidden) and one rounded
 /// content panel with floating app bar and bottom slots. Fills its parent's height. Below the
@@ -385,9 +389,10 @@ class _SideBoundaryState extends State<_SideBoundary> {
   Widget build(BuildContext context) {
     final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final hidden = widget.mode == ScaffoldSideMode.hidden;
+    final metrics = ThemeProvider.of(context).config.metrics;
     final target = switch (widget.mode) {
-      ScaffoldSideMode.expanded => scaffoldSidebarWidth(widget.density),
-      ScaffoldSideMode.rail => scaffoldRailWidth(widget.density),
+      ScaffoldSideMode.expanded => scaffoldSidebarWidth(widget.density, metrics),
+      ScaffoldSideMode.rail => scaffoldRailWidth(widget.density, metrics),
       ScaffoldSideMode.hidden => 0.0,
     };
     if (!hidden) _lastVisible = target;

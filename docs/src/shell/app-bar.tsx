@@ -40,7 +40,6 @@ function PageTabs({ route }: { route: Route }) {
   return (
     <SegmentedControl<ComponentTab>
       label={`${route.page.title} documentation`}
-      appearance="plain"
       value={route.tab}
       options={tabs}
       onChange={(tab) => navigate(tab === 'overview' ? href : `${href}/${tab}`)}

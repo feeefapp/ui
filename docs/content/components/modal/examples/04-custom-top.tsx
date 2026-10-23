@@ -27,7 +27,6 @@ export default function CustomTop() {
           <ToolbarGroup label="Delivery type">
             <SegmentedControl
               label="Delivery type"
-              appearance="plain"
               value={mode}
               onChange={setMode}
               options={[

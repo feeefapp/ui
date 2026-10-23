@@ -20,21 +20,28 @@ class _SwitchingContentState extends State<SwitchingContent> {
   @override
   Widget build(BuildContext context) {
     final stats = _stats[_range]!;
+    final theme = ThemeProvider.of(context);
     return SizedBox(
       width: 560,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: 16,
         children: [
-          SegmentedControl<String>(
-            label: 'Summary period',
-            value: _range,
-            onChange: (value) => setState(() => _range = value),
-            options: const [
-              SegmentOption(value: 'today', label: 'Today'),
-              SegmentOption(value: 'week', label: 'This week'),
-              SegmentOption(value: 'month', label: 'This month'),
-            ],
+          DecoratedBox(
+            decoration: ShapeDecoration(
+              color: theme.colors.surfaceSoft,
+              shape: SuperellipseBorder(radius: theme.sizes.radiusControl),
+            ),
+            child: SegmentedControl<String>(
+              label: 'Summary period',
+              value: _range,
+              onChange: (value) => setState(() => _range = value),
+              options: const [
+                SegmentOption(value: 'today', label: 'Today'),
+                SegmentOption(value: 'week', label: 'This week'),
+                SegmentOption(value: 'month', label: 'This month'),
+              ],
+            ),
           ),
           Semantics(
             liveRegion: true,

@@ -14,12 +14,12 @@ const item = 'lab-actions-menu__item'
  * Which kit the docs speak: React or its Flutter twin. It switches every example's code, the
  * import line, the source links and the API tables at once (and is remembered).
  */
-export function PlatformSwitch({ appearance = 'plain' }: { appearance?: 'plain' | 'grouped' }) {
+export function PlatformSwitch({ equalWidth = false }: { equalWidth?: boolean }) {
   const { settings, update } = useDocsSettings()
   return (
     <SegmentedControl<DocsSettings['code']>
       label="Docs platform"
-      appearance={appearance}
+      equalWidth={equalWidth}
       value={settings.code}
       onChange={(code) => update({ code })}
       options={[

@@ -131,7 +131,6 @@ export function OrderWorkspace({
   const views = (
     <SegmentedControl<View>
       label="Order views"
-      appearance="plain"
       value={view}
       onChange={setView}
       options={[

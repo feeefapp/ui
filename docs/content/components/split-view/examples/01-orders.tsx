@@ -27,6 +27,7 @@ export default function OrdersSplit() {
     <div style={{ display: 'grid', gap: 16, width: '100%', justifyItems: 'center' }}>
       <SegmentedControl
         label="Screen"
+        className="demo-segmented-box"
         value={screen}
         onChange={setScreen}
         options={[

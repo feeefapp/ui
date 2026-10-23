@@ -29,7 +29,7 @@ const SIZES = [
   'control-font-small', 'control-font', 'control-font-large',
   'field-height-small', 'field-height', 'row-height', 'menu-row-height',
   'toolbar-item', 'toolbar-control', 'toolbar-gap', 'toolbar-inset',
-  'segmented-height', 'segmented-inset', 'switch-width', 'switch-height',
+  'segmented-inset', 'switch-width', 'switch-height',
   'thumb-width', 'thumb-height', 'slider-track',
   'list-row-height', 'list-radius', 'list-inset',
   'focus-ring-width', 'focus-ring-offset', 'radius-control', 'radius-control-small',

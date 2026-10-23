@@ -35,7 +35,6 @@ export function Example({ example, headingLevel = 2 }: { example: DocExample; he
               {example.dart && (
                 <SegmentedControl<'react' | 'flutter'>
                   label="Example code"
-                  appearance="plain"
                   value={flutter ? 'flutter' : 'react'}
                   onChange={(code) => {
                     update({ code })

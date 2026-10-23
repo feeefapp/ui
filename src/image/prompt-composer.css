@@ -179,10 +179,10 @@
   text-transform: uppercase;
   color: var(--pc-muted);
 }
+/* Output choices sit on a recessed box; options keep the segmented inset as their gap. */
 .lab-pc-options.lab-segmented {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  background: var(--lab-surface-soft);
 }
 
 @keyframes lab-pc-word {

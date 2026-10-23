@@ -2,6 +2,10 @@ import { SPRINGS, type Spring } from './spring.js';
 type FrameCallback = (now: number) => void;
 /** Runs `callback` on every animation frame until the returned function is called. One shared loop. */
 export declare function onAnimationFrame(callback: FrameCallback): () => void;
+/** Reads layout after all motion updates and before any subscribed render writes, on the shared clock. */
+export declare function onMeasureFrame(callback: FrameCallback): () => void;
+/** Paints after all motion updates and layout reads, regardless of subscription order, on the shared clock. */
+export declare function onRenderFrame(callback: FrameCallback): () => void;
 /** True when the reader asked for reduced motion. Safe to call on the server. */
 export declare function prefersReducedMotion(): boolean;
 export type AnimateOptions = {
