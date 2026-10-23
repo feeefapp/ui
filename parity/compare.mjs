@@ -67,7 +67,8 @@ const react = await serve(process.env.PARITY_REACT ?? join(here, 'dist'))
 const flutter = await serve(process.env.PARITY_FLUTTER ?? join(here, '../flutter/example/build/web'))
 const out = process.env.PARITY_OUT ?? join(here, 'out')
 await mkdir(out, { recursive: true })
-const browser = await puppeteer.launch({ executablePath: chrome, headless: true, args: ['--force-device-scale-factor=2', '--font-render-hinting=none', '--hide-scrollbars'] })
+// A long launch timeout: on a loaded machine (parallel Flutter builds) Chrome can take over 30s.
+const browser = await puppeteer.launch({ executablePath: chrome, headless: true, timeout: 180_000, protocolTimeout: 600_000, args: ['--force-device-scale-factor=2', '--font-render-hinting=none', '--hide-scrollbars'] })
 const page = await browser.newPage()
 // PARITY_VH: taller viewports for stages that render a phone or tablet frame.
 await page.setViewport({ width: 800, height: Number(process.env.PARITY_VH ?? 700), deviceScaleFactor: 2 })

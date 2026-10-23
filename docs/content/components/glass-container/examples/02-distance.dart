@@ -85,8 +85,8 @@ Widget _glassRow(List<Widget> children, {double gap = 12}) => Wrap(
   children: children,
 );
 
-/// `.glass-stage`: two soft colour discs over diagonal stripes, so the glass has something to
-/// show through. Children stack with 16px gaps, centred.
+/// `.glass-stage`: a landscape (sky, a dark ridge, sand and a sun), so the glass has something
+/// to show through. Children stack with 16px gaps, centred.
 class _GlassStage extends StatelessWidget {
   const _GlassStage({required this.children});
   final List<Widget> children;
@@ -141,48 +141,68 @@ class _BackdropPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // The painted box is the border box (the CSS background runs under the 1px border).
     final box = (Offset.zero & size).inflate(1);
-    // repeating-linear-gradient(45deg, surface 0 14px, surface-soft 14px 28px).
-    const d = 0.7071067811865476;
-    final length = box.width * d + box.height * d;
-    final start = box.center - Offset(d, -d) * (length / 2);
-    canvas.drawRect(
-      box,
-      Paint()
-        ..shader = ui.Gradient.linear(
-          start,
-          start + const Offset(d, -d) * 28,
-          [stripe, stripe, stripeSoft, stripeSoft],
-          [0, 0.5, 0.5, 1],
-          TileMode.repeated,
-        ),
-    );
-    // radial-gradient(circle at x y, color 0 a%, transparent b%): percentages of the distance to
-    // the farthest corner.
-    void disc(double fx, double fy, Color color, double solid, double edge) {
-      final center = Offset(
-        box.left + box.width * fx,
-        box.top + box.height * fy,
-      );
-      final far = [
-        box.topLeft,
-        box.topRight,
-        box.bottomLeft,
-        box.bottomRight,
-      ].map((p) => (p - center).distance).reduce(math.max);
+    // `.glass-stage-source`, bottom layer first: the sky-to-sand landscape.
+    void linear(double degrees, List<Color> colors, List<double> stops) {
+      // CSS angles: 0deg points up, clockwise; the line spans the box's projection on it.
+      final a = degrees * math.pi / 180;
+      final dir = Offset(math.sin(a), -math.cos(a));
+      final half =
+          (box.width * math.sin(a).abs() + box.height * math.cos(a).abs()) / 2;
       canvas.drawRect(
         box,
         Paint()
-          ..shader = ui.Gradient.radial(
-            center,
-            far * edge,
-            [color, color, color.withValues(alpha: 0)],
-            [0, solid / edge, 1],
+          ..shader = ui.Gradient.linear(
+            box.center - dir * half,
+            box.center + dir * half,
+            colors,
+            stops,
           ),
       );
     }
 
-    disc(0.8, 0.7, accent.withValues(alpha: 0.55), 0.2, 0.21);
-    disc(0.18, 0.3, primary.withValues(alpha: 0.5), 0.16, 0.17);
+    linear(
+      180,
+      const [
+        Color(0xFF7DBAD2),
+        Color(0xFFD8E4D9),
+        Color(0xFF81B1B0),
+        Color(0xFFD6BC91),
+        Color(0xFFAE8B61),
+      ],
+      const [0, 0.48, 0.68, 0.69, 1],
+    );
+    linear(
+      165,
+      const [
+        Color(0x00183F46),
+        Color(0xFF183F46),
+        Color(0xFF31595B),
+        Color(0x0031595B),
+      ],
+      const [0.38, 0.384, 0.56, 0.564],
+    );
+    // radial-gradient(ellipse at 78% 18%, #fff6d4 0%, transparent 26%): a farthest-corner
+    // ellipse, √2 × the farthest side on each axis.
+    final sun = Offset(
+      box.left + box.width * 0.78,
+      box.top + box.height * 0.18,
+    );
+    final rx = math.sqrt2 * box.width * 0.78;
+    final ry = math.sqrt2 * box.height * 0.82;
+    canvas.save();
+    canvas.translate(sun.dx, sun.dy);
+    canvas.scale(1, ry / rx);
+    canvas.drawRect(
+      Rect.fromCenter(center: Offset.zero, width: rx * 4, height: rx * 4),
+      Paint()
+        ..shader = ui.Gradient.radial(
+          Offset.zero,
+          rx,
+          const [Color(0xFFFFF6D4), Color(0x00FFF6D4)],
+          const [0, 0.26],
+        ),
+    );
+    canvas.restore();
   }
 
   @override
