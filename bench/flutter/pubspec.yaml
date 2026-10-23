@@ -1,0 +1,17 @@
+name: feeef_ui_bench
+description: "Frame-timing bench for the feeef_ui Flutter kit (bench/flutter.sh)."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  feeef_ui:
+    path: ../../flutter
+
+
+flutter:
+  uses-material-design: false

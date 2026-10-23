@@ -1,0 +1,1210 @@
+{
+  "label": "baseline",
+  "date": "2026-10-23T13:51:17.556Z",
+  "machine": {
+    "cpus": 8,
+    "model": "Apple M1 Pro",
+    "loadavg": [
+      51.4,
+      27.8,
+      24.5
+    ],
+    "platform": "darwin 25.4.0"
+  },
+  "viewport": {
+    "width": 1280,
+    "height": 800,
+    "deviceScaleFactor": 2
+  },
+  "reps": 3,
+  "note": "Docs build with unminified app code. Frame metrics are medians over reps. over16 = frames > 19.2 ms (missed a 60 Hz vsync, with jitter margin).",
+  "browsers": {
+    "chrome": {
+      "version": "Chrome/155.0.8059.82",
+      "pages": {
+        "components/glass-container/examples": {
+          "idle": {
+            "rafCallbacks": 221,
+            "rafSites": [
+              [
+                "animate (index-CMkY3tOd.js:30908:14)",
+                179
+              ],
+              [
+                "GlassScene.requestSample (index-CMkY3tOd.js:34672:24) < index-CMkY3tOd.js:34572:77",
+                42
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 45,
+              "mainFrames": 181,
+              "rafFired": 223,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 268.52
+            },
+            "cdp": {
+              "script": 193.1,
+              "layout": 0,
+              "style": 0,
+              "task": 277.1,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 18709832
+            },
+            "heap": 26578788
+          },
+          "scroll": {
+            "frames": 200,
+            "fps": 57.1,
+            "p50": 16.7,
+            "p95": 33.2,
+            "max": 50,
+            "over16": 10,
+            "over33": 3,
+            "longTasks": 0,
+            "cdp": {
+              "script": 502.8,
+              "layout": 9.7,
+              "style": 165.5,
+              "task": 957.1,
+              "layouts": 70,
+              "styles": 191,
+              "heap": 34687976
+            },
+            "heap": 47051265
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 203.6,
+              "layout": 0,
+              "style": 8.3,
+              "task": 296.9,
+              "layouts": 0,
+              "styles": 40,
+              "heap": 37645896
+            },
+            "heap": 49945779
+          },
+          "drag": {
+            "frames": 121,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 323.6,
+              "layout": 11.1,
+              "style": 75,
+              "task": 634.1,
+              "layouts": 120,
+              "styles": 144,
+              "heap": 40450936
+            },
+            "heap": 56214319
+          },
+          "split": {
+            "frames": 144,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 561.4,
+              "layout": 13.3,
+              "style": 70.6,
+              "task": 908.9,
+              "layouts": 126,
+              "styles": 148,
+              "heap": 36086312
+            },
+            "heap": 50201340
+          },
+          "repsOk": 3
+        },
+        "components/actions-bar/examples": {
+          "idle": {
+            "rafCallbacks": 215,
+            "rafSites": [
+              [
+                "animate (index-CMkY3tOd.js:30908:14)",
+                180
+              ],
+              [
+                "GlassScene.requestSample (index-CMkY3tOd.js:34672:24) < index-CMkY3tOd.js:34572:77",
+                36
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 45,
+              "mainFrames": 181,
+              "rafFired": 217,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 246.9
+            },
+            "cdp": {
+              "script": 186.3,
+              "layout": 0,
+              "style": 0,
+              "task": 259.7,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 19485732
+            },
+            "heap": 27210700
+          },
+          "scroll": {
+            "frames": 185,
+            "fps": 57.8,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 33.4,
+            "over16": 7,
+            "over33": 1,
+            "longTasks": 0,
+            "cdp": {
+              "script": 432.3,
+              "layout": 13.9,
+              "style": 22.1,
+              "task": 701.6,
+              "layouts": 72,
+              "styles": 95,
+              "heap": 27548344
+            },
+            "heap": 38306979
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 213.5,
+              "layout": 0,
+              "style": 10.5,
+              "task": 320,
+              "layouts": 0,
+              "styles": 40,
+              "heap": 37031420
+            },
+            "heap": 47726649
+          },
+          "menu": {
+            "frames": 133,
+            "fps": 42.9,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 616.7,
+            "over16": 4,
+            "over33": 2,
+            "longTasks": 0,
+            "cdp": {
+              "script": 405,
+              "layout": 11.2,
+              "style": 65.8,
+              "task": 703.6,
+              "layouts": 114,
+              "styles": 175,
+              "heap": 36740204
+            },
+            "heap": 50837789
+          },
+          "repsOk": 3
+        },
+        "components/segmented-control/examples": {
+          "idle": {
+            "rafCallbacks": 210,
+            "rafSites": [
+              [
+                "animate (index-CMkY3tOd.js:30908:14)",
+                177
+              ],
+              [
+                "GlassScene.requestSample (index-CMkY3tOd.js:34672:24) < index-CMkY3tOd.js:34572:77",
+                30
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 46,
+              "mainFrames": 182,
+              "rafFired": 212,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 332.19
+            },
+            "cdp": {
+              "script": 254.3,
+              "layout": 0,
+              "style": 0,
+              "task": 359.7,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 22783904
+            },
+            "heap": 37021491
+          },
+          "scroll": {
+            "frames": 200,
+            "fps": 55.2,
+            "p50": 16.7,
+            "p95": 33.3,
+            "max": 33.4,
+            "over16": 18,
+            "over33": 2,
+            "longTasks": 0,
+            "cdp": {
+              "script": 600.8,
+              "layout": 15.3,
+              "style": 44.1,
+              "task": 952,
+              "layouts": 71,
+              "styles": 142,
+              "heap": 30557848
+            },
+            "heap": 44351898
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 216,
+              "layout": 0,
+              "style": 9.7,
+              "task": 325,
+              "layouts": 0,
+              "styles": 30,
+              "heap": 38070836
+            },
+            "heap": 51801477
+          },
+          "drag": {
+            "frames": 127,
+            "fps": 59.5,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 33.3,
+            "over16": 1,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 345.2,
+              "layout": 16.8,
+              "style": 151.5,
+              "task": 868.2,
+              "layouts": 128,
+              "styles": 146,
+              "heap": 41473704
+            },
+            "heap": 55220143
+          },
+          "repsOk": 3
+        },
+        "components/toolbar/examples": {
+          "idle": {
+            "rafCallbacks": 215,
+            "rafSites": [
+              [
+                "animate (index-CMkY3tOd.js:30908:14)",
+                179
+              ],
+              [
+                "GlassScene.requestSample (index-CMkY3tOd.js:34672:24) < index-CMkY3tOd.js:34572:77",
+                36
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 45,
+              "mainFrames": 181,
+              "rafFired": 217,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 239.21
+            },
+            "cdp": {
+              "script": 188.1,
+              "layout": 0,
+              "style": 0,
+              "task": 257.1,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 20424316
+            },
+            "heap": 31798890
+          },
+          "scroll": {
+            "frames": 197,
+            "fps": 57.9,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 33.4,
+            "over16": 7,
+            "over33": 1,
+            "longTasks": 0,
+            "cdp": {
+              "script": 484.4,
+              "layout": 14.3,
+              "style": 28.7,
+              "task": 737.1,
+              "layouts": 68,
+              "styles": 120,
+              "heap": 28576352
+            },
+            "heap": 39703767
+          },
+          "pointer": {
+            "frames": 120,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 196.4,
+              "layout": 0,
+              "style": 8.1,
+              "task": 282.6,
+              "layouts": 0,
+              "styles": 40,
+              "heap": 33117672
+            },
+            "heap": 43714998
+          },
+          "repsOk": 3
+        },
+        "components/switch/examples": {
+          "idle": {
+            "rafCallbacks": 209,
+            "rafSites": [
+              [
+                "animate (index-CMkY3tOd.js:30908:14)",
+                179
+              ],
+              [
+                "GlassScene.requestSample (index-CMkY3tOd.js:34672:24) < index-CMkY3tOd.js:34572:77",
+                30
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 45,
+              "mainFrames": 180,
+              "rafFired": 210,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 225.31
+            },
+            "cdp": {
+              "script": 175.9,
+              "layout": 0,
+              "style": 0,
+              "task": 237.5,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 19455016
+            },
+            "heap": 26129519
+          },
+          "scroll": {
+            "frames": 179,
+            "fps": 59,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 33.3,
+            "over16": 3,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 372.2,
+              "layout": 10.2,
+              "style": 18.3,
+              "task": 573.3,
+              "layouts": 69,
+              "styles": 95,
+              "heap": 30203880
+            },
+            "heap": 39722078
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 191.4,
+              "layout": 0,
+              "style": 8.8,
+              "task": 273.6,
+              "layouts": 0,
+              "styles": 40,
+              "heap": 34479632
+            },
+            "heap": 43923141
+          },
+          "drag": {
+            "frames": 123,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 260.9,
+              "layout": 14.8,
+              "style": 69.6,
+              "task": 565.5,
+              "layouts": 123,
+              "styles": 170,
+              "heap": 34127840
+            },
+            "heap": 43576668
+          },
+          "repsOk": 3
+        },
+        "foundations/glass-reflections": {
+          "idle": {
+            "rafCallbacks": 204,
+            "rafSites": [
+              [
+                "animate (index-CMkY3tOd.js:30908:14)",
+                180
+              ],
+              [
+                "GlassScene.requestSample (index-CMkY3tOd.js:34672:24) < index-CMkY3tOd.js:34572:77",
+                24
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 46,
+              "mainFrames": 184,
+              "rafFired": 208,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 298.11
+            },
+            "cdp": {
+              "script": 234.4,
+              "layout": 0,
+              "style": 0,
+              "task": 320.8,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 13991396
+            },
+            "heap": 38172997
+          },
+          "scroll": {
+            "frames": 198,
+            "fps": 58,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 50,
+            "over16": 5,
+            "over33": 2,
+            "longTasks": 1,
+            "cdp": {
+              "script": 480.8,
+              "layout": 44.6,
+              "style": 66.7,
+              "task": 831.1,
+              "layouts": 65,
+              "styles": 129,
+              "heap": 22758856
+            },
+            "heap": 38285403
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 251.4,
+              "layout": 1.6,
+              "style": 14.5,
+              "task": 367.7,
+              "layouts": 14,
+              "styles": 48,
+              "heap": 24366932
+            },
+            "heap": 43360356
+          },
+          "repsOk": 3
+        },
+        "guidelines/patterns": {
+          "idle": {
+            "rafCallbacks": 198,
+            "rafSites": [
+              [
+                "animate (index-CMkY3tOd.js:30908:14)",
+                180
+              ],
+              [
+                "GlassScene.requestSample (index-CMkY3tOd.js:34672:24) < index-CMkY3tOd.js:34572:77",
+                18
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 46,
+              "mainFrames": 185,
+              "rafFired": 203,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 301.72
+            },
+            "cdp": {
+              "script": 207.8,
+              "layout": 0,
+              "style": 0,
+              "task": 337.2,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 27916816
+            },
+            "heap": 48708666
+          },
+          "scroll": {
+            "frames": 173,
+            "fps": 57.7,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 66.6,
+            "over16": 4,
+            "over33": 3,
+            "longTasks": 0,
+            "cdp": {
+              "script": 316.6,
+              "layout": 7.4,
+              "style": 13.8,
+              "task": 512.5,
+              "layouts": 31,
+              "styles": 48,
+              "heap": 36383132
+            },
+            "heap": 56530549
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 225.9,
+              "layout": 0,
+              "style": 27,
+              "task": 380.4,
+              "layouts": 0,
+              "styles": 75,
+              "heap": 36584712
+            },
+            "heap": 57671318
+          },
+          "drag": {
+            "frames": 254,
+            "fps": 58,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 150,
+            "over16": 2,
+            "over33": 1,
+            "longTasks": 0,
+            "cdp": {
+              "script": 642.4,
+              "layout": 31.2,
+              "style": 182.1,
+              "task": 1668.2,
+              "layouts": 230,
+              "styles": 298,
+              "heap": 38642792
+            },
+            "heap": 61153226
+          },
+          "repsOk": 3
+        },
+        "get-started/introduction": {
+          "idle": {
+            "rafCallbacks": 216,
+            "rafSites": [
+              [
+                "animate (index-CMkY3tOd.js:30908:14)",
+                179
+              ],
+              [
+                "GlassScene.requestSample (index-CMkY3tOd.js:34672:24) < index-CMkY3tOd.js:34572:77",
+                36
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 45,
+              "mainFrames": 181,
+              "rafFired": 217,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 229.71
+            },
+            "cdp": {
+              "script": 191.1,
+              "layout": 0,
+              "style": 0,
+              "task": 264.2,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 17928196
+            },
+            "heap": 23698220
+          },
+          "scroll": {
+            "frames": 155,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 151.9,
+              "layout": 0.1,
+              "style": 0.1,
+              "task": 209.6,
+              "layouts": 1,
+              "styles": 1,
+              "heap": 15443628
+            },
+            "heap": 21216338
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 186.7,
+              "layout": 0,
+              "style": 10.6,
+              "task": 271.2,
+              "layouts": 0,
+              "styles": 40,
+              "heap": 22511424
+            },
+            "heap": 28270234
+          },
+          "repsOk": 3
+        }
+      },
+      "backdropFilter": {
+        "cssSupports": true,
+        "painted": true
+      }
+    },
+    "firefox": {
+      "version": "firefox/158.0.1",
+      "pages": {
+        "components/glass-container/examples": {
+          "idle": {
+            "rafCallbacks": 196,
+            "rafSites": [
+              [
+                "animate@index-CMkY3tOd.js:30908:14 < animate@index-CMkY3tOd.js:30908:14 < animate@index-CMkY3tOd.js:30908:14",
+                180
+              ],
+              [
+                "requestSample@index-CMkY3tOd.js:34672:24 < GlassScene/this.visibility</this.sampleTimer<@index-CMkY3tOd.js:34572:77 < setInterval handler*GlassScene/this.visibility<@index-CMkY3tOd.js:34571:52",
+                42
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": null,
+            "cdp": null,
+            "heap": null
+          },
+          "scroll": {
+            "frames": 86,
+            "fps": 39.8,
+            "p50": 16.68,
+            "p95": 50,
+            "max": 66.66,
+            "over16": 33,
+            "over33": 12,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "pointer": {
+            "frames": 100,
+            "fps": 50,
+            "p50": 16.66,
+            "p95": 33.34,
+            "max": 50,
+            "over16": 18,
+            "over33": 4,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "drag": {
+            "frames": 71,
+            "fps": 35.4,
+            "p50": 16.68,
+            "p95": 50,
+            "max": 83.32,
+            "over16": 34,
+            "over33": 12,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "split": {
+            "frames": 104,
+            "fps": 42.7,
+            "p50": 16.68,
+            "p95": 50.18,
+            "max": 100,
+            "over16": 21,
+            "over33": 12,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "repsOk": 3
+        },
+        "components/actions-bar/examples": {
+          "idle": {
+            "rafCallbacks": 207,
+            "rafSites": [
+              [
+                "animate@index-CMkY3tOd.js:30908:14 < animate@index-CMkY3tOd.js:30908:14 < animate@index-CMkY3tOd.js:30908:14",
+                155
+              ],
+              [
+                "requestSample@index-CMkY3tOd.js:34672:24 < GlassScene/this.visibility</this.sampleTimer<@index-CMkY3tOd.js:34572:77 < setInterval handler*GlassScene/this.visibility<@index-CMkY3tOd.js:34571:52",
+                36
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": null,
+            "cdp": null,
+            "heap": null
+          },
+          "scroll": {
+            "frames": 98,
+            "fps": 49.8,
+            "p50": 16.66,
+            "p95": 50,
+            "max": 50,
+            "over16": 16,
+            "over33": 5,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "pointer": {
+            "frames": 115,
+            "fps": 57.5,
+            "p50": 16.66,
+            "p95": 17.4,
+            "max": 33.74,
+            "over16": 5,
+            "over33": 1,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "menu": {
+            "frames": 137,
+            "fps": 48.1,
+            "p50": 16.66,
+            "p95": 50,
+            "max": 50.32,
+            "over16": 24,
+            "over33": 8,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "repsOk": 3
+        },
+        "components/segmented-control/examples": {
+          "idle": {
+            "rafCallbacks": 208,
+            "rafSites": [
+              [
+                "animate@index-CMkY3tOd.js:30908:14 < animate@index-CMkY3tOd.js:30908:14 < animate@index-CMkY3tOd.js:30908:14",
+                176
+              ],
+              [
+                "requestSample@index-CMkY3tOd.js:34672:24 < GlassScene/this.visibility</this.sampleTimer<@index-CMkY3tOd.js:34572:77 < setInterval handler*GlassScene/this.visibility<@index-CMkY3tOd.js:34571:52",
+                30
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": null,
+            "cdp": null,
+            "heap": null
+          },
+          "scroll": {
+            "frames": 92,
+            "fps": 40,
+            "p50": 16.68,
+            "p95": 66.68,
+            "max": 83.32,
+            "over16": 25,
+            "over33": 10,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "pointer": {
+            "frames": 112,
+            "fps": 56.5,
+            "p50": 16.66,
+            "p95": 33.32,
+            "max": 33.82,
+            "over16": 7,
+            "over33": 1,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "drag": {
+            "frames": 83,
+            "fps": 53.5,
+            "p50": 16.66,
+            "p95": 33.34,
+            "max": 50,
+            "over16": 8,
+            "over33": 2,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "repsOk": 3
+        },
+        "components/toolbar/examples": {
+          "idle": {
+            "rafCallbacks": 212,
+            "rafSites": [
+              [
+                "animate@index-CMkY3tOd.js:30908:14 < animate@index-CMkY3tOd.js:30908:14 < animate@index-CMkY3tOd.js:30908:14",
+                179
+              ],
+              [
+                "requestSample@index-CMkY3tOd.js:34672:24 < GlassScene/this.visibility</this.sampleTimer<@index-CMkY3tOd.js:34572:77 < setInterval handler*GlassScene/this.visibility<@index-CMkY3tOd.js:34571:52",
+                30
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": null,
+            "cdp": null,
+            "heap": null
+          },
+          "scroll": {
+            "frames": 83,
+            "fps": 32,
+            "p50": 16.68,
+            "p95": 66.66,
+            "max": 204.8,
+            "over16": 32,
+            "over33": 19,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "pointer": {
+            "frames": 78,
+            "fps": 39.3,
+            "p50": 16.68,
+            "p95": 50.12,
+            "max": 67.18,
+            "over16": 29,
+            "over33": 9,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "repsOk": 3
+        },
+        "components/switch/examples": {
+          "idle": {
+            "rafCallbacks": 205,
+            "rafSites": [
+              [
+                "animate@index-CMkY3tOd.js:30908:14 < animate@index-CMkY3tOd.js:30908:14 < animate@index-CMkY3tOd.js:30908:14",
+                173
+              ],
+              [
+                "requestSample@index-CMkY3tOd.js:34672:24 < GlassScene/this.visibility</this.sampleTimer<@index-CMkY3tOd.js:34572:77 < setInterval handler*GlassScene/this.visibility<@index-CMkY3tOd.js:34571:52",
+                30
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": null,
+            "cdp": null,
+            "heap": null
+          },
+          "scroll": {
+            "frames": 92,
+            "fps": 29.6,
+            "p50": 16.68,
+            "p95": 66.68,
+            "max": 216.72,
+            "over16": 37,
+            "over33": 24,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "pointer": {
+            "frames": 98,
+            "fps": 47.9,
+            "p50": 16.66,
+            "p95": 33.38,
+            "max": 66.68,
+            "over16": 6,
+            "over33": 4,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "drag": {
+            "frames": 87,
+            "fps": 40.2,
+            "p50": 16.68,
+            "p95": 66.66,
+            "max": 66.68,
+            "over16": 24,
+            "over33": 12,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "repsOk": 3
+        },
+        "foundations/glass-reflections": {
+          "idle": {
+            "rafCallbacks": 203,
+            "rafSites": [
+              [
+                "animate@index-CMkY3tOd.js:30908:14 < animate@index-CMkY3tOd.js:30908:14 < animate@index-CMkY3tOd.js:30908:14",
+                180
+              ],
+              [
+                "requestSample@index-CMkY3tOd.js:34672:24 < GlassScene/this.visibility</this.sampleTimer<@index-CMkY3tOd.js:34572:77 < setInterval handler*GlassScene/this.visibility<@index-CMkY3tOd.js:34571:52",
+                24
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": null,
+            "cdp": null,
+            "heap": null
+          },
+          "scroll": {
+            "frames": 103,
+            "fps": 48.8,
+            "p50": 16.66,
+            "p95": 33.34,
+            "max": 66.68,
+            "over16": 20,
+            "over33": 5,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "pointer": {
+            "frames": 106,
+            "fps": 52.9,
+            "p50": 16.66,
+            "p95": 33.34,
+            "max": 66.68,
+            "over16": 10,
+            "over33": 4,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "repsOk": 3
+        },
+        "guidelines/patterns": {
+          "idle": {
+            "rafCallbacks": 197,
+            "rafSites": [
+              [
+                "animate@index-CMkY3tOd.js:30908:14 < animate@index-CMkY3tOd.js:30908:14 < animate@index-CMkY3tOd.js:30908:14",
+                179
+              ],
+              [
+                "requestSample@index-CMkY3tOd.js:34672:24 < GlassScene/this.visibility</this.sampleTimer<@index-CMkY3tOd.js:34572:77 < setInterval handler*GlassScene/this.visibility<@index-CMkY3tOd.js:34571:52",
+                18
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": null,
+            "cdp": null,
+            "heap": null
+          },
+          "scroll": {
+            "frames": 83,
+            "fps": 31.9,
+            "p50": 32.82,
+            "p95": 66.66,
+            "max": 100,
+            "over16": 41,
+            "over33": 22,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "pointer": {
+            "frames": 72,
+            "fps": 36.3,
+            "p50": 33.04,
+            "p95": 50,
+            "max": 83.32,
+            "over16": 36,
+            "over33": 12,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "drag": {
+            "frames": 155,
+            "fps": 29.8,
+            "p50": 33.16,
+            "p95": 83.32,
+            "max": 145.48,
+            "over16": 75,
+            "over33": 44,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "repsOk": 3
+        },
+        "get-started/introduction": {
+          "idle": {
+            "rafCallbacks": 213,
+            "rafSites": [
+              [
+                "animate@index-CMkY3tOd.js:30908:14 < animate@index-CMkY3tOd.js:30908:14 < animate@index-CMkY3tOd.js:30908:14",
+                177
+              ],
+              [
+                "requestSample@index-CMkY3tOd.js:34672:24 < GlassScene/this.visibility</this.sampleTimer<@index-CMkY3tOd.js:34572:77 < setInterval handler*GlassScene/this.visibility<@index-CMkY3tOd.js:34571:52",
+                36
+              ]
+            ],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": null,
+            "cdp": null,
+            "heap": null
+          },
+          "scroll": {
+            "frames": 105,
+            "fps": 53.8,
+            "p50": 16.66,
+            "p95": 33.32,
+            "max": 49.82,
+            "over16": 11,
+            "over33": 1,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "pointer": {
+            "frames": 118,
+            "fps": 59,
+            "p50": 16.66,
+            "p95": 17.08,
+            "max": 33.34,
+            "over16": 2,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "repsOk": 3
+        }
+      },
+      "backdropFilter": {
+        "cssSupports": true,
+        "painted": false
+      },
+      "warning": "Backdrop filters are not painted in this automation mode: Firefox numbers measure main-thread work only, not glass compositing."
+    }
+  }
+}
