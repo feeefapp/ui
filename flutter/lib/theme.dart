@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import 'theme/focus_visible.dart';
 import 'theme/tokens.dart';
 import 'theme_config.dart';
 
@@ -71,7 +72,9 @@ class ThemeData {
 }
 
 /// Owns the colour mode and the app theme config, like the web kit's `ThemeProvider`. Put it above
-/// the app; read it with [ThemeProvider.of]. [brightness] defaults to the platform's.
+/// the app; read it with [ThemeProvider.of]. [brightness] defaults to the platform's. While mounted,
+/// focus highlights follow the web's `:focus-visible` (shown after a key press, hidden after any
+/// pointer press; [FocusVisibility]).
 class ThemeProvider extends StatelessWidget {
   const ThemeProvider({
     super.key,
@@ -108,12 +111,14 @@ class ThemeProvider extends StatelessWidget {
     final data = ThemeData(config: config, brightness: mode, colors: colors);
     return _ThemeScope(
       data: data,
-      child: DefaultTextStyle.merge(
-        style: TextStyle(
-          color: data.colors.ink,
-          fontFamilyFallback: const [kitFontFamily],
+      child: FocusVisibility(
+        child: DefaultTextStyle.merge(
+          style: TextStyle(
+            color: data.colors.ink,
+            fontFamilyFallback: const [kitFontFamily],
+          ),
+          child: child,
         ),
-        child: child,
       ),
     );
   }
