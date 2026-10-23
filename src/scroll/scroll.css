@@ -15,7 +15,9 @@
 .lab-scroll-viewport {
   position: absolute;
   inset: 0;
-  overflow: auto;
+  /* Vertical only, like the Flutter twin: content that is wider brings its own scroller, and
+  glass shadows and rims reaching past the edge never make the page scroll sideways. */
+  overflow: hidden auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
   /* Focus and find-in-page scroll targets clear the floating chrome (and a host's tab bar). */
