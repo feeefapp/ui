@@ -195,8 +195,11 @@ class _GlassContainerState extends State<GlassContainer> {
     final host = _scene.host();
     if (host == null || !host.attached) return;
     if (event is PointerHoverEvent || event is PointerMoveEvent) {
-      if (event.kind == PointerDeviceKind.mouse ||
-          event.kind == PointerDeviceKind.stylus) {
+      // The light only turns for glass on screen: off-screen glass would repaint for nothing
+      // on every mouse move (the web skips it the same way).
+      if ((event.kind == PointerDeviceKind.mouse ||
+              event.kind == PointerDeviceKind.stylus) &&
+          _onScreen(host)) {
         _scene.setPointer(host.globalToLocal(event.position));
       }
     }
@@ -207,6 +210,14 @@ class _GlassContainerState extends State<GlassContainer> {
     } else if (event is PointerUpEvent || event is PointerCancelEvent) {
       _scene.pressEnd(event);
     }
+  }
+
+  bool _onScreen(RenderBox host) {
+    if (!host.hasSize) return false;
+    final view = View.maybeOf(context);
+    if (view == null) return true;
+    final screen = Offset.zero & (view.physicalSize / view.devicePixelRatio);
+    return screen.overlaps(host.localToGlobal(Offset.zero) & host.size);
   }
 
   /// The container's height after the last layout, for the adaptive-tint size rule.
@@ -858,6 +869,11 @@ class _GlassScene extends ChangeNotifier {
 
   void setPointer(Offset? point) {
     if (!followPointer || reduceMotion) return;
+    final last = _pointer;
+    // Sub-pixel moves don't turn the light visibly.
+    if (last != null && point != null && (point - last).distanceSquared < 1) {
+      return;
+    }
     _pointer = point;
     if (!_painting) notifyListeners();
   }

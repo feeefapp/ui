@@ -69,9 +69,31 @@ class _ScrollAreaState extends State<ScrollArea> {
   double _top = 0, _bottom = 0;
 
   @override
+  void initState() {
+    super.initState();
+    FocusManager.instance.addListener(_onFocus);
+  }
+
+  @override
   void dispose() {
+    FocusManager.instance.removeListener(_onFocus);
     _own.dispose();
     super.dispose();
+  }
+
+  /// Keyboard focus moving to something under a float scrolls it clear, like the web
+  /// viewport's `scroll-padding`. Flutter's own traversal only brings it to the viewport edge,
+  /// so this runs after that, in the next frame. Pointer focus never scrolls.
+  void _onFocus() {
+    final manager = FocusManager.instance;
+    if (manager.highlightMode != FocusHighlightMode.traditional) return;
+    final target = manager.primaryFocus?.context;
+    if (target == null || !_controller.hasClients) return;
+    if (Scrollable.maybeOf(target)?.position != _controller.position) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !target.mounted) return;
+      revealScrollChild(_controller, target);
+    });
   }
 
   void _measured(bool top, Size size) {

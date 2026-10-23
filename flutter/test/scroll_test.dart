@@ -30,6 +30,58 @@ void main() {
     }
   });
 
+  testWidgets('keyboard focus scrolls a row clear of the floats', (
+    tester,
+  ) async {
+    FocusManager.instance.highlightStrategy =
+        FocusHighlightStrategy.alwaysTraditional;
+    addTearDown(
+      () => FocusManager.instance.highlightStrategy =
+          FocusHighlightStrategy.automatic,
+    );
+    final nodes = [for (var i = 0; i < 30; i++) FocusNode()];
+    addTearDown(() {
+      for (final node in nodes) {
+        node.dispose();
+      }
+    });
+    await tester.pumpWidget(
+      host(
+        SizedBox(
+          width: 400,
+          height: 300,
+          child: ScrollArea(
+            label: 'Orders',
+            top: const SizedBox(width: 200, height: 46),
+            bottom: const SizedBox(width: 200, height: 50),
+            child: Column(
+              children: [
+                for (var i = 0; i < 30; i++)
+                  Focus(
+                    focusNode: nodes[i],
+                    child: SizedBox(height: 40, child: Text('Row $i')),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    final area = tester.getRect(find.byType(ScrollArea));
+    nodes[12].requestFocus();
+    await tester.pumpAndSettle();
+    final row = tester.getRect(find.text('Row 12'));
+    // Below the bottom float's reservation: 50 + 12 + 12 from the bottom edge.
+    expect(row.bottom, lessThanOrEqualTo(area.bottom - 74 + 0.5));
+    nodes[2].requestFocus();
+    await tester.pumpAndSettle();
+    expect(
+      tester.getRect(find.text('Row 2')).top,
+      greaterThanOrEqualTo(area.top + 70 - 0.5),
+    );
+  });
+
   testWidgets('floats are measured and reserved as content padding', (
     tester,
   ) async {
