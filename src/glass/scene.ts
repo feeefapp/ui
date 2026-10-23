@@ -27,8 +27,6 @@ import { cornerFit } from '../brand/corner-fit'
 export const GLASS_MARGIN = 32
 const SPRING: Spring = SPRINGS.snappy
 const SVG = 'http://www.w3.org/2000/svg'
-/** How long a source must stay still before Firefox's element-image lens comes back. */
-const SCROLL_IDLE_MS = 160
 /** Least time between backdrop samples while scrolling. */
 const SAMPLE_GAP_MS = 120
 
@@ -190,7 +188,6 @@ export class GlassScene {
   private onScreen = true
   private lastSample = 0
   private sampleLater: ReturnType<typeof setTimeout> | null = null
-  private scrollIdle: ReturnType<typeof setTimeout> | null = null
 
   constructor(
     private host: HTMLElement,
@@ -244,18 +241,8 @@ export class GlassScene {
     if (!this.onScreen) return
     if (event.target instanceof Node && event.target !== this.host && this.host.contains(event.target)) this.requestMeasure()
     this.requestSampleWhileScrolling()
-    // Firefox's lens is a live element image of the source, filtered on the CPU: re-rendering it
-    // on every scroll frame drops frames. While the source scrolls the glass shows the plain CSS
-    // material (glass.css, data-glass-scrolling); the bend fades back when it stops.
-    if (this.pieces.some((piece) => piece.hasAttribute('data-glass-source'))) {
-      this.host.toggleAttribute('data-glass-scrolling', true)
-      if (this.scrollIdle) clearTimeout(this.scrollIdle)
-      this.scrollIdle = setTimeout(() => {
-        this.scrollIdle = null
-        this.host.removeAttribute('data-glass-scrolling')
-        this.scheduleDraw()
-      }, SCROLL_IDLE_MS)
-    }
+    // A Firefox lens samples a sibling layer: keep its image under the glass when either moves.
+    if (this.backdropSource) this.scheduleDraw()
   }
 
   /** Reading the backdrop (elementsFromPoint + styles) at most every SAMPLE_GAP_MS while scrolling, and once after. */
@@ -408,7 +395,6 @@ export class GlassScene {
     for (const map of this.decodedMaps) map.dispose()
     if (this.sampleTimer) clearInterval(this.sampleTimer)
     if (this.sampleLater) clearTimeout(this.sampleLater)
-    if (this.scrollIdle) clearTimeout(this.scrollIdle)
     if (this.sampleFrame) cancelAnimationFrame(this.sampleFrame)
     window.removeEventListener('pointermove', this.onPressMove)
     window.removeEventListener('pointerup', this.onPressEnd)
@@ -678,7 +664,7 @@ export class GlassScene {
   /** Sampling a separate paint layer avoids Firefox's recursive element-image prohibition. */
   private elementSource() {
     const source = this.backdropSource ? document.getElementById(this.backdropSource) : null
-    return source && !source.contains(this.host) && !this.host.contains(source) ? source : null
+    return source && !source.contains(this.host) && !this.host.contains(source) && !isScroller(source) ? source : null
   }
 
   private positionElementSource(piece: HTMLElement, image: HTMLElement) {
@@ -833,6 +819,23 @@ const node = <K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string
   const el = document.createElementNS(SVG, tag)
   for (const [name, value] of Object.entries(attrs)) el.setAttribute(name, String(value))
   return el
+}
+
+/**
+ * A scroller can't be a Firefox lens source: Firefox scrolls it on the compositor while the element
+ * image of it is repainted on the main thread, so the bent copy trails the real content and every
+ * scroll frame repaints the whole viewport through a CPU filter. Glass floating over a scroller
+ * (ScrollArea app bars and docks) keeps the CSS material there; Chromium bends the real backdrop.
+ */
+const scrollers = new WeakMap<Element, boolean>()
+function isScroller(element: Element) {
+  let scroller = scrollers.get(element)
+  if (scroller === undefined) {
+    const style = getComputedStyle(element)
+    scroller = /(auto|scroll)/.test(style.overflowY + style.overflowX)
+    scrollers.set(element, scroller)
+  }
+  return scroller
 }
 
 function setAttributeIfChanged(element: Element, name: string, value: string) {

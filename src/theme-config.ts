@@ -49,8 +49,8 @@ export interface ThemeConfig {
   glassBlur?: boolean
   /**
    * Bend the backdrop at the glass edges with the measured refraction profile. Default true.
-   * Chromium filters the backdrop directly. Firefox uses a disjoint live source, supplied
-   * automatically to ScrollArea floating slots or explicitly via backdropSource.
+   * Chromium filters the backdrop directly. Firefox bends only glass given a backdropSource
+   * (a separate, non-scrolling background layer); elsewhere it keeps the CSS material.
    */
   glassRefraction?: boolean
   /**

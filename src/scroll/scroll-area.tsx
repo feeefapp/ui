@@ -3,7 +3,6 @@
 import {
   forwardRef,
   useRef,
-  useId,
   useLayoutEffect,
   useState,
   useImperativeHandle,
@@ -11,7 +10,6 @@ import {
   type HTMLAttributes,
   type CSSProperties,
 } from 'react'
-import { GlassBackdropContext } from '../glass/context'
 import { cn } from '../utils'
 import { ScrollGradientOverlay } from './gradient-overlay'
 import { scrollContentReserve } from './metrics'
@@ -86,8 +84,6 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
     measure()
     return () => resize.disconnect()
   }, [Boolean(top), Boolean(bottom)])
-  const sourceId = `scroll-glass-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
-  const backdropId = viewportProps?.id ?? sourceId
 
   return (
     <div
@@ -106,12 +102,11 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
     >
       {top && (
         <div ref={topRef} className="lab-scroll-float lab-scroll-float--top">
-          <GlassBackdropContext.Provider value={backdropId}>{top}</GlassBackdropContext.Provider>
+          {top}
         </div>
       )}
       <div
         {...viewportProps}
-        id={backdropId}
         ref={viewport}
         className={cn('lab-scroll-viewport', viewportProps?.className)}
         role={viewportProps?.role ?? 'region'}
@@ -129,7 +124,7 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
       )}
       {bottom && (
         <div ref={bottomRef} className="lab-scroll-float lab-scroll-float--bottom">
-          <GlassBackdropContext.Provider value={backdropId}>{bottom}</GlassBackdropContext.Provider>
+          {bottom}
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 /** Liquid glass: one material per row of bubbles, with merging, splitting and moving light. */
 export { GlassContainer, GlassScope, useGlassOptions, useGlassStyle } from './container'
 export type { GlassContainerProps } from './container'
-export { GlassContext, GlassBackdropContext } from './context'
+export { GlassContext } from './context'
 export type { GlassMemberOptions, GlassMotion, GlassRegistry } from './context'
 export {
   boundsOf,

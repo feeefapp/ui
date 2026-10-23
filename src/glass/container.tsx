@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { cn } from '../utils'
 import { useReducedMotion } from '../physics/react'
-import { GlassBackdropContext, GlassContext, type GlassRegistry } from './context'
+import { GlassContext, type GlassRegistry } from './context'
 import { GlassScene } from './scene'
 import { clampGlassTint } from './material'
 import type { GlassStyle } from '../theme-config'
@@ -101,8 +101,6 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
   { as = 'div', spacing = 8, cornerShape = 'round', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 1, highlightProfile = 'rim', highlightStrength = 1, refractionStrength = 1, refractionProfile = 'measured', tint, backdropSource, className, children, ...props },
   ref
 ) {
-  const inheritedBackdrop = React.useContext(GlassBackdropContext)
-  backdropSource ??= inheritedBackdrop
   const host = React.useRef<HTMLElement | null>(null)
   const backdrop = React.useRef<HTMLDivElement>(null)
   const paint = React.useRef<SVGSVGElement>(null)
