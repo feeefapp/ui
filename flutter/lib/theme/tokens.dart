@@ -384,15 +384,15 @@ class SizeTokens {
   /// `--lab-toolbar-control`: a control inside a toolbar bubble (2px padding + 1px border a side).
   double get toolbarControl => toolbarItem - 6;
 
-  /// `--lab-toolbar-gap`: space between toolbar groups.
-  double get toolbarGap => metrics.toolbarGap ?? _pick(12, 10, 8);
+  /// `--lab-toolbar-gap`: space between toolbar groups. Defaults to [shellGap].
+  double get toolbarGap => metrics.toolbarGap ?? shellGap;
 
   /// `--lab-shell-gap`: the workspace shell's one gap (window, top bar, content panel and sidebar
   /// items, and the sidebar's header/footer to its items).
   double get shellGap => metrics.shellGap ?? 8;
 
-  /// `--lab-toolbar-inset`: a floating bar's inset from its panel's sides.
-  double get toolbarInset => metrics.toolbarInset ?? _pick(16, 12, 10);
+  /// `--lab-toolbar-inset`: a floating bar's inset from its panel's sides. Defaults to [shellGap].
+  double get toolbarInset => metrics.toolbarInset ?? shellGap;
 
   /// `--lab-segmented-inset`: a segmented control's edge to its pill, and between options.
   double get segmentedInset => metrics.segmentedInset ?? 2;

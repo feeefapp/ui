@@ -5,7 +5,7 @@ import '../icons/lucide.dart';
 import '../theme.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
-import 'button.dart' show ControlSize;
+import 'button.dart' show ControlOverrides, ControlSize;
 import '../theme/surfaces.dart';
 import '../menu/anchored_panel.dart';
 import '../menu/menu_surface.dart';
@@ -483,10 +483,16 @@ class _PlainTrigger extends StatelessWidget {
     final s = theme.sizes;
     final paint = c.variant(variant);
     final coarse = theme.coarsePointer(context);
-    final height = coarse
-        ? s.touchTarget
-        : (small ? s.controlSmall : s.controlHeight);
-    final radius = small ? s.radiusControlSmall : s.radiusControl;
+    // A host (toolbar bubble, dock) sets the regular height and the inset radius, like a
+    // button's; touch growth stops at the host's target (in a bubble: the bubble's control).
+    final overrides = ControlOverrides.maybeOf(context);
+    final base = small
+        ? s.controlSmall
+        : (overrides?.height ?? s.controlHeight);
+    final touch = overrides?.touchTarget ?? s.touchTarget;
+    final height = coarse && touch > base ? touch : base;
+    final radius =
+        overrides?.radius ?? (small ? s.radiusControlSmall : s.radiusControl);
     final raised =
         variant == ControlVariant.elevated || variant == ControlVariant.filled;
     return CustomPaint(

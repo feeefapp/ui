@@ -3,6 +3,7 @@
 import type { FormEventHandler, ReactNode, RefObject } from 'react'
 import { Button } from '../primitives/button'
 import { Modal } from '../primitives/modal'
+import { useShellGap } from '../scroll/shell-gap'
 import { ToolbarGroup } from '../toolbar'
 import { cn } from '../utils'
 import {
@@ -68,6 +69,7 @@ export function TemporalDialog({
 }) {
   const editor = useTemporalEditor({ ...options, resetKey: open })
   const bar = !!editor.presets.length || (editor.range && editor.hasCalendar)
+  const gap = useShellGap()
   return (
     <Modal
       open={open}
@@ -78,8 +80,9 @@ export function TemporalDialog({
       fitContent
       headerless
       showClose={false}
-      // Content starts where the buttons inside the bars start (bar inset + the group's 2px padding).
-      scrollOptions={{ edgeGap: 12, contentPadding: 14 }}
+      // Bars float the shell gap G from the edges; content starts where the buttons inside them
+      // start (G + the group's 2px padding).
+      scrollOptions={{ edgeGap: gap, contentPadding: gap + 2 }}
       className={cn(
         'lab-temporal-dialog',
         editor.range && editor.hasCalendar && 'lab-temporal-dialog--pair',

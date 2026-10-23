@@ -1,4 +1,4 @@
-import { MotionValue, onMeasureFrame, onRenderFrame } from '../physics/motion-value'
+import { MotionValue, motionOf, onMeasureFrame, onRenderFrame } from '../physics/motion-value'
 import { SPRINGS, type Spring } from '../physics/spring'
 import type { GlassMemberOptions } from './context'
 import {
@@ -243,7 +243,8 @@ export class GlassScene {
         }
         this.sampleTimer = entry?.isIntersecting
           ? setInterval(() => {
-              if (this.adaptive && document.visibilityState === 'visible') this.requestSample()
+              // Motion `none`: no ambient work; the glass re-samples on scrolls and theme changes only.
+              if (this.adaptive && document.visibilityState === 'visible' && motionOf() !== 'none') this.requestSample()
             }, 500)
           : null
       })

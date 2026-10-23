@@ -20,6 +20,7 @@ import { elapsed, stageRatio, takeErrorText } from './board-utils'
 import type { ImageTake } from './types'
 import './freeform-board.css'
 import { GlassScope } from '../glass/container'
+import { prefersReducedMotion } from '../physics/motion-value'
 
 export type Insets = { top: number; right: number; bottom: number; left: number }
 type View = { x: number; y: number; scale: number }
@@ -139,7 +140,7 @@ export function FreeformBoard({
   }, [])
 
   const glide = useCallback((next: View, instant = false) => {
-    setAnimate(!instant && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
+    setAnimate(!instant && !prefersReducedMotion())
     setView(next)
   }, [])
   const fitCard = useCallback(

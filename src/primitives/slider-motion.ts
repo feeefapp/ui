@@ -5,6 +5,7 @@ import { GLASS_GLOW_START, glassGlowRadius } from '../glass/press'
 import { SPRINGS, springCoefficients } from '../physics/spring'
 import { LENS_THUMB_SCALE, lensStretch } from './lens-model'
 import { stepSpring, type StepSpringState } from './spring-core'
+import { reducedMotionQuery } from '../physics/motion-value'
 
 const SNAPPY = springCoefficients(SPRINGS.snappy)
 const BOUNCY = springCoefficients(SPRINGS.bouncy)
@@ -57,7 +58,7 @@ export function useSliderMotion(
   })
   const wake = useRef<() => void>(() => {})
   useLayoutEffect(() => {
-    const media = matchMedia('(prefers-reduced-motion: reduce)')
+    const media = reducedMotionQuery()
     const state = simulation.current
     let alive = true
     /** The thumb's travel (px) and inset: the edge-to-centre distance at either end. */

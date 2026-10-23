@@ -9,6 +9,9 @@ final benchPage = ValueNotifier<String?>(null);
 /// The plain-text baseline page: kit theme and text, no glass, no animation.
 const baselinePage = 'baseline/text';
 
+/// `bench/flutter.sh --theme quality|balanced|performance` runs under that `ThemeProfiles` config.
+const benchTheme = String.fromEnvironment('BENCH_THEME');
+
 void main() => runApp(const BenchApp());
 
 /// Same wrapping as the parity gallery (flutter/example/lib/main.dart) with its defaults, but the
@@ -23,13 +26,18 @@ class BenchApp extends StatelessWidget {
       locale: 'en',
       child: ThemeProvider(
         brightness: Brightness.light,
-        config: ThemeConfig(
-          palette: Palette.lab,
-          density: Density.comfortable,
-          glassTint: glassTintDefault,
-          glassBlur: false,
-          glassRefraction: true,
-        ),
+        config: switch (benchTheme) {
+          'quality' => ThemeProfiles.quality,
+          'balanced' => ThemeProfiles.balanced,
+          'performance' => ThemeProfiles.performance,
+          _ => ThemeConfig(
+            palette: Palette.lab,
+            density: Density.comfortable,
+            glassTint: glassTintDefault,
+            glassBlur: false,
+            glassRefraction: true,
+          ),
+        },
         child: Overlay(
           initialEntries: [
             OverlayEntry(

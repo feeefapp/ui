@@ -1,5 +1,6 @@
 import { SPRINGS, solveSpring, springAtRest, type Spring, type SpringState } from './spring'
 import { VelocityTracker } from './velocity'
+import type { Motion } from '../theme-config'
 
 type FrameCallback = (now: number) => void
 const callbacks = new Set<FrameCallback>()
@@ -37,9 +38,66 @@ export function onRenderFrame(callback: FrameCallback) {
   return subscribeFrame(renderCallbacks, callback)
 }
 
-/** True when the reader asked for reduced motion. Safe to call on the server. */
+const REDUCED_QUERY = '(prefers-reduced-motion: reduce)'
+let reducedMedia: MediaQueryList | null | undefined
+const osReducedMedia = () =>
+  reducedMedia === undefined ? (reducedMedia = typeof window === 'undefined' ? null : (window.matchMedia?.(REDUCED_QUERY) ?? null)) : reducedMedia
+
+/**
+ * How much the kit animates right now: the app's ThemeConfig `motion` (`data-lab-motion` on
+ * `<html>`), made stricter by the reader's `prefers-reduced-motion` (`full` becomes `reduced`;
+ * `none` stays `none`). `full` on the server.
+ */
+export function motionOf(root?: Element | null): Motion {
+  if (typeof document === 'undefined') return 'full'
+  const config = (root ?? document.documentElement).getAttribute('data-lab-motion')
+  if (config === 'none') return 'none'
+  return config === 'reduced' || osReducedMedia()?.matches ? 'reduced' : 'full'
+}
+
+/**
+ * True when motion should be reduced: the reader asked for it, or the app's ThemeConfig `motion`
+ * is `reduced` or `none`. Every reduced-motion path in the kit reads this. Safe on the server.
+ */
 export function prefersReducedMotion() {
-  return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  return motionOf() !== 'full'
+}
+
+/** Calls `listener` whenever `motionOf()` may have changed (the OS setting or `data-lab-motion`). */
+export function onMotionChange(listener: () => void): () => void {
+  if (typeof document === 'undefined') return () => {}
+  const media = osReducedMedia()
+  media?.addEventListener('change', listener)
+  const observer = typeof MutationObserver === 'undefined' ? null : new MutationObserver(listener)
+  observer?.observe(document.documentElement, { attributes: true, attributeFilter: ['data-lab-motion'] })
+  return () => {
+    media?.removeEventListener('change', listener)
+    observer?.disconnect()
+  }
+}
+
+/**
+ * `prefersReducedMotion()` shaped like a `MediaQueryList`, for code written against
+ * `matchMedia('(prefers-reduced-motion: reduce)')`: `matches` is live and `change` fires on either source.
+ */
+export function reducedMotionQuery(): {
+  readonly matches: boolean
+  addEventListener(type: 'change', listener: () => void): void
+  removeEventListener(type: 'change', listener: () => void): void
+} {
+  const subscriptions = new Map<() => void, () => void>()
+  return {
+    get matches() {
+      return prefersReducedMotion()
+    },
+    addEventListener(_type, listener) {
+      if (!subscriptions.has(listener)) subscriptions.set(listener, onMotionChange(listener))
+    },
+    removeEventListener(_type, listener) {
+      subscriptions.get(listener)?.()
+      subscriptions.delete(listener)
+    },
+  }
 }
 
 export type AnimateOptions = {

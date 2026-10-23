@@ -30,6 +30,7 @@ export {
   GLASS_REFRACTION,
   GLASS_SIZE_EXPONENT,
   displacementMap,
+  glassCapabilities,
   refractionAt,
   refractionScale,
   supportsRefraction,

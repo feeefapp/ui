@@ -10,6 +10,7 @@ import { useI18n } from './i18n'
 import { cn } from './utils'
 import { stepSearchMorph, searchMorphVisibility } from './toolbar-search-motion'
 import './toolbar-search.css'
+import { reducedMotionQuery } from './physics/motion-value'
 
 export type ToolbarSearchInputProps = {
   ref: Ref<InputElement>
@@ -109,7 +110,7 @@ export function ToolbarSearch({ label, value, onValueChange, placeholder, childr
   useLayoutEffect(() => {
     const host = main.current, material = surface.current
     if (!host || !material) return
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const media = reducedMotionQuery()
     reduced.current = media.matches
     const measure = (initial = false) => {
       compact.current = (Number.parseFloat(getComputedStyle(material).getPropertyValue('--lab-toolbar-control')) || 38) + 6

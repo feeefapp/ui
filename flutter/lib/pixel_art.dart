@@ -182,7 +182,7 @@ class _PixelArtworkState extends State<PixelArtwork>
   );
 
   void _sync() {
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     if (widget.animated && !reduced) {
       if (!_breath.isAnimating) _breath.repeat();
     } else {
@@ -325,7 +325,7 @@ class _PixelTextureState extends State<PixelTexture>
   );
 
   void _sync() {
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     if (widget.animated && !reduced) {
       if (!_pulse.isAnimating) _pulse.repeat();
     } else {

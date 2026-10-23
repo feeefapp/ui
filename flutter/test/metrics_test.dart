@@ -38,8 +38,9 @@ void main() {
         );
         expect(comfortable.toolbarItem, 44);
         expect(comfortable.toolbarControl, 38);
-        expect(comfortable.toolbarGap, 12);
-        expect(comfortable.toolbarInset, 16);
+        // Both default to the shell gap G.
+        expect(comfortable.toolbarGap, 8);
+        expect(comfortable.toolbarInset, 8);
         expect(comfortable.segmentedInset, 2);
         expect([comfortable.switchWidth, comfortable.switchHeight], [63, 28]);
         expect([comfortable.thumbWidth, comfortable.thumbHeight], [37, 24]);
@@ -100,6 +101,23 @@ void main() {
       final s = SizeTokens.of(const ThemeConfig(metrics: metrics));
       expect(s.controlSmall, 30);
       expect(s.switchHeight, 28);
+    });
+
+    test('toolbar gap and inset follow the shell gap unless set', () {
+      final g = SizeTokens.of(
+        const ThemeConfig(metrics: Metrics(shellGap: 12)),
+      );
+      expect([g.shellGap, g.toolbarGap, g.toolbarInset], [12, 12, 12]);
+      for (final density in Density.values) {
+        final s = SizeTokens.of(ThemeConfig(density: density));
+        expect([s.toolbarGap, s.toolbarInset], [s.shellGap, s.shellGap]);
+      }
+      final own = SizeTokens.of(
+        const ThemeConfig(
+          metrics: Metrics(shellGap: 12, toolbarGap: 6, toolbarInset: 20),
+        ),
+      );
+      expect([own.toolbarGap, own.toolbarInset], [6, 20]);
     });
 
     test('metrics take part in theme equality and copyWith', () {

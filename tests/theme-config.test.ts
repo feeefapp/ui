@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import { readFileSync } from 'node:fs'
 import {
   METRIC_VARIABLE_NAMES,
+  PROFILES,
   THEME_DEFAULTS,
   darkModePrimary,
   metricVariables,
@@ -18,6 +19,7 @@ test('defaults render the Lab look', () => {
     'data-lab-glass': THEME_DEFAULTS.glass,
     'data-lab-glass-blur': 'off',
     'data-lab-glass-refraction': 'on',
+    'data-lab-motion': 'full',
     style: { '--lab-radius-scale': '1', '--lab-glass-tint': '0.5' },
   })
 })
@@ -31,6 +33,7 @@ test('config maps to root attributes and the radius variable', () => {
       'data-lab-glass': 'solid',
       'data-lab-glass-blur': 'on',
       'data-lab-glass-refraction': 'off',
+      'data-lab-motion': 'full',
       style: { '--lab-radius-scale': '0.4', '--lab-glass-tint': '0.8' },
     }
   )
@@ -53,6 +56,7 @@ test('explicitly undefined options fall back to the defaults', () => {
       glassTint: undefined,
       glassBlur: undefined,
       glassRefraction: undefined,
+      motion: undefined,
     }),
     {
       'data-lab-palette': THEME_DEFAULTS.palette,
@@ -60,6 +64,7 @@ test('explicitly undefined options fall back to the defaults', () => {
       'data-lab-glass': THEME_DEFAULTS.glass,
       'data-lab-glass-blur': 'off',
       'data-lab-glass-refraction': 'on',
+      'data-lab-motion': 'full',
       style: { '--lab-radius-scale': '1', '--lab-glass-tint': '0.5' },
     }
   )
@@ -148,4 +153,23 @@ test('metrics override the workspace sidebar and rail widths', () => {
     '--lab-navigation-rail-width': '66px',
     '--lab-shell-gap': '6px',
   })
+})
+
+test('motion maps to data-lab-motion; unknown values fall back to full', () => {
+  assert.equal(themeAttributes({ motion: 'reduced' })['data-lab-motion'], 'reduced')
+  assert.equal(themeAttributes({ motion: 'none' })['data-lab-motion'], 'none')
+  assert.equal(themeAttributes({ motion: 'fast' as never })['data-lab-motion'], 'full')
+  assert.equal(THEME_DEFAULTS.motion, 'full')
+})
+
+test('profiles are plain partial configs that spread and override', () => {
+  assert.deepEqual(Object.keys(PROFILES), ['quality', 'balanced', 'performance'])
+  assert.deepEqual(PROFILES.quality, { glass: 'liquid', glassRefraction: true, glassBlur: true, motion: 'full' })
+  assert.deepEqual(PROFILES.balanced, { glass: 'still', glassRefraction: false, glassBlur: false, motion: 'full' })
+  assert.deepEqual(PROFILES.performance, { glass: 'solid', glassRefraction: false, glassBlur: false, motion: 'none' })
+  const attributes = themeAttributes({ ...PROFILES.performance, palette: 'mono', motion: 'reduced' })
+  assert.equal(attributes['data-lab-palette'], 'mono')
+  assert.equal(attributes['data-lab-glass'], 'solid')
+  assert.equal(attributes['data-lab-glass-refraction'], 'off')
+  assert.equal(attributes['data-lab-motion'], 'reduced')
 })

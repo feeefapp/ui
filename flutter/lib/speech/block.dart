@@ -302,7 +302,7 @@ class _BlockSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     final duration = reduced
         ? Duration.zero
         : const Duration(milliseconds: 180);

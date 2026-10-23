@@ -11,8 +11,8 @@ import './scroll-demo.css'
 
 const controls = {
   rows: { type: 'number', label: 'Rows', min: 1, max: 30, default: 14 },
-  edgeGap: { type: 'number', label: 'Edge gap', min: 0, max: 32, default: 12 },
-  contentPadding: { type: 'number', label: 'Content padding', min: 0, max: 48, default: 24 },
+  edgeGap: { type: 'number', label: 'Edge gap', min: 0, max: 32, default: 8 },
+  contentPadding: { type: 'number', label: 'Content padding', min: 0, max: 48, default: 8 },
   top: { type: 'boolean', label: 'Top float', default: true },
   bottom: { type: 'boolean', label: 'Bottom float', default: true },
   gradient: { type: 'boolean', label: 'Edge washes', default: true },
@@ -98,7 +98,7 @@ function Overview() {
               bottom: v.bottom ? '__BOTTOM__' : undefined,
             },
             '<OrderList />',
-            { edgeGap: 12, contentPadding: 24, gradient: true }
+            { edgeGap: 8, contentPadding: 8, gradient: true }
           )
             .replace('top="__TOP__"', 'top={<Toolbar label="Order tools" leading={…} />}')
             .replace('bottom="__BOTTOM__"', 'bottom={<Dock label="Order actions">…</Dock>}')
@@ -116,7 +116,9 @@ function Overview() {
         <ol>
           <li>
             <strong>Top float</strong> (<C>top</C>): a toolbar, search or filter bar, placed{' '}
-            <C>edgeGap</C> from the top and both sides.
+            <C>edgeGap</C> from the top and both sides. <C>edgeGap</C> and <C>contentPadding</C>{' '}
+            default to the shell gap G (<C>--lab-shell-gap</C>, 8px), so they follow{' '}
+            <C>metrics.shellGap</C>; cards inside bring their own 16px padding.
           </li>
           <li>
             <strong>Viewport</strong>: the element that scrolls. Its content gets inline padding of{' '}

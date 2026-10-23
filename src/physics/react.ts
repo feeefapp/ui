@@ -2,20 +2,17 @@
 
 import { useEffect, useLayoutEffect, useRef, useSyncExternalStore, type RefObject } from 'react'
 import { attachPan, type PanOptions } from './gesture'
-import { MotionValue, prefersReducedMotion } from './motion-value'
+import { MotionValue, motionOf, onMotionChange, prefersReducedMotion } from './motion-value'
+import type { Motion } from '../theme-config'
 
-const REDUCED = '(prefers-reduced-motion: reduce)'
-/** Live `prefers-reduced-motion`; false on the server. */
+/** Live `motionOf()`: ThemeConfig `motion` made stricter by the reader's setting; `full` on the server. */
+export function useMotion(): Motion {
+  return useSyncExternalStore(onMotionChange, () => motionOf(), () => 'full')
+}
+
+/** Live `prefersReducedMotion()` (the reader's setting, or ThemeConfig `motion` reduced/none); false on the server. */
 export function useReducedMotion() {
-  return useSyncExternalStore(
-    (notify) => {
-      const media = window.matchMedia?.(REDUCED)
-      media?.addEventListener('change', notify)
-      return () => media?.removeEventListener('change', notify)
-    },
-    prefersReducedMotion,
-    () => false
-  )
+  return useSyncExternalStore(onMotionChange, prefersReducedMotion, () => false)
 }
 
 /** A motion value that lives as long as the component. `restDelta` is in the value's units. */

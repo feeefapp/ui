@@ -59,7 +59,7 @@ export function Modal({
   initialFocusRef?: React.RefObject<HTMLElement | null>
   /** Focus restored after the dialog finishes closing, even if its original trigger unmounted. */
   returnFocusRef?: React.RefObject<HTMLElement | null>
-  /** Scrollable dialogs only: spacing passed to the inner `ScrollArea`. */
+  /** Scrollable dialogs only: spacing passed to the inner `ScrollArea` (default: floats the shell gap G from the edges, content padding 16). */
   scrollOptions?: Pick<ScrollAreaProps, 'edgeGap' | 'contentPadding'>
 }) {
   const { mounted, state } = usePresence(open, 200)
@@ -214,7 +214,9 @@ function Dialog({
     >
       {scrollable ? (
         <ScrollArea
-          {...scrollOptions}
+          // Floats sit the shell gap G from the dialog's edges; its content is inside a card: 16.
+          edgeGap={scrollOptions?.edgeGap}
+          contentPadding={scrollOptions?.contentPadding ?? 16}
           label={label}
           top={
             headerless ? (

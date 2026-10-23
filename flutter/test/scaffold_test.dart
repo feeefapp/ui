@@ -1,4 +1,8 @@
+import 'package:feeef_ui/icons/lucide.dart';
+import 'package:feeef_ui/primitives/button.dart';
+import 'package:feeef_ui/primitives/select.dart';
 import 'package:feeef_ui/scroll/scroll_area.dart';
+import 'package:feeef_ui/toolbar.dart';
 import 'package:feeef_ui/theme.dart';
 import 'package:feeef_ui/workspace/scaffold.dart';
 import 'package:flutter/services.dart';
@@ -48,6 +52,82 @@ Future<void> settle(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+    'a back button bubble and Select bubbles in the app bar are 44 tall and top-aligned',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 800));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        app(
+          Scaffold(
+            appBar: ScaffoldAppBar(
+              leading: ToolbarGroup(
+                label: 'Navigation',
+                children: [
+                  IconButton(
+                    ariaLabel: 'Back',
+                    appearance: ButtonAppearance.toolbar,
+                    onClick: () {},
+                    icon: const LucideArrowLeft(),
+                  ),
+                ],
+              ),
+              trailing: ToolbarGroup(
+                label: 'Filter',
+                children: [
+                  // A field-like Select (floating hint) fills the bubble like a button.
+                  SizedBox(
+                    width: 200,
+                    child: Select(
+                      hint: 'Wilaya',
+                      value: 'alger',
+                      onValueChange: (_) {},
+                      children: const [
+                        Option(value: 'alger', child: Text('Alger')),
+                        Option(value: 'oran', child: Text('Oran')),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              child: ToolbarGroup(
+                label: 'View',
+                children: [
+                  Select(
+                    ariaLabel: 'Sort',
+                    controlSize: ControlSize.small,
+                    variant: ControlVariant.text,
+                    value: 'new',
+                    onValueChange: (_) {},
+                    children: const [
+                      Option(value: 'new', child: Text('Newest')),
+                      Option(value: 'old', child: Text('Oldest')),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            child: const Text('Page content'),
+          ),
+        ),
+      );
+      await settle(tester);
+      final bubbles = tester
+          .widgetList<ToolbarGroup>(find.byType(ToolbarGroup))
+          .map((group) => tester.getRect(find.byWidget(group)))
+          .toList();
+      expect(bubbles, hasLength(3));
+      for (final bubble in bubbles) {
+        expect(bubble.height, 44, reason: '$bubble');
+        expect(bubble.top, bubbles.first.top, reason: '$bubble');
+      }
+    },
+    variant: TargetPlatformVariant({
+      TargetPlatform.macOS,
+      TargetPlatform.android,
+    }),
+  );
+
   testWidgets('the sidebar cycles expanded → rail → hidden → expanded', (
     tester,
   ) async {
@@ -58,18 +138,18 @@ void main() {
     await tester.pumpWidget(app(workspace(onSideModeChange: modes.add)));
     await settle(tester);
     // 304px sidebar (its own 8px shell gap on the panel side), no panel start margin, 1px
-    // border, 24px content padding.
-    expect(tester.getTopLeft(find.text('Page content')).dx, 304 + 1 + 24);
+    // border, the shell gap G (8) of content padding.
+    expect(tester.getTopLeft(find.text('Page content')).dx, 304 + 1 + 8);
     expect(find.text('Nav item').hitTestable(), findsOneWidget);
 
     await tester.tap(find.bySemanticsLabel('Minimize workspace sidebar'));
     await settle(tester);
-    expect(tester.getTopLeft(find.text('Page content')).dx, 64 + 1 + 24);
+    expect(tester.getTopLeft(find.text('Page content')).dx, 64 + 1 + 8);
 
     await tester.tap(find.bySemanticsLabel('Hide workspace sidebar'));
     await settle(tester);
-    // Nothing frames the content any more: no card margin (1px border + 24px padding).
-    expect(tester.getTopLeft(find.text('Page content')).dx, 1 + 24);
+    // Nothing frames the content any more: no card margin (1px border + the shell gap G of padding).
+    expect(tester.getTopLeft(find.text('Page content')).dx, 1 + 8);
     expect(find.text('Nav item').hitTestable(), findsNothing, reason: 'inert');
 
     await tester.tap(find.bySemanticsLabel('Expand workspace sidebar'));
@@ -87,7 +167,10 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     expect(scaffoldSidebarWidth(Density.compact), 248);
     expect(scaffoldRailWidth(Density.thin), 44);
-    expect(scaffoldSidebarWidth(Density.compact, const Metrics(sidebarWidth: 250)), 250);
+    expect(
+      scaffoldSidebarWidth(Density.compact, const Metrics(sidebarWidth: 250)),
+      250,
+    );
     expect(scaffoldRailWidth(Density.thin, const Metrics(railWidth: 66)), 66);
     await tester.pumpWidget(
       WidgetsApp(
@@ -102,7 +185,7 @@ void main() {
       ),
     );
     await settle(tester);
-    expect(tester.getTopLeft(find.text('Page content')).dx, 248 + 1 + 24);
+    expect(tester.getTopLeft(find.text('Page content')).dx, 248 + 1 + 8);
   });
 
   testWidgets(
@@ -115,7 +198,7 @@ void main() {
       await settle(tester);
       expect(find.text('Nav item'), findsNothing);
       // Compact: the sidebar is a drawer, so the content fills the window edge to edge.
-      expect(tester.getTopLeft(find.text('Page content')).dx, 1 + 16);
+      expect(tester.getTopLeft(find.text('Page content')).dx, 1 + 8);
 
       await tester.tap(find.bySemanticsLabel('Open workspace navigation'));
       await settle(tester);
@@ -161,32 +244,36 @@ void main() {
     expect(Scaffold.maybeOf(outside), isNull);
   });
 
-  testWidgets('one shell gap between window, top bar, panel and sidebar items', (
-    tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(1200, 800));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(
-      app(
-        Scaffold(
-          topSide: const ScaffoldTopBar(
-            leading: SizedBox(key: ValueKey('top'), width: 40, height: 40),
+  testWidgets(
+    'one shell gap between window, top bar, panel and sidebar items',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 800));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        app(
+          Scaffold(
+            topSide: const ScaffoldTopBar(
+              leading: SizedBox(key: ValueKey('top'), width: 40, height: 40),
+            ),
+            side: const ScaffoldSide(
+              child: SizedBox(key: ValueKey('item'), height: 40),
+            ),
+            child: const SizedBox(key: ValueKey('page'), height: 10),
           ),
-          side: const ScaffoldSide(
-            child: SizedBox(key: ValueKey('item'), height: 40),
-          ),
-          child: const SizedBox(key: ValueKey('page'), height: 10),
         ),
-      ),
-    );
-    await settle(tester);
-    const g = 8.0;
-    final top = tester.getRect(find.byKey(const ValueKey('top')));
-    final item = tester.getRect(find.byKey(const ValueKey('item')));
-    final panel = tester.getRect(find.byType(ScrollArea).last);
-    expect(top.top, g); // window → top bar
-    expect(item.left, g); // window → sidebar items
-    expect(item.top - top.bottom, g); // top bar → sidebar items
-    expect(panel.left - 1 - item.right, g); // sidebar items → panel (1px border)
-  });
+      );
+      await settle(tester);
+      const g = 8.0;
+      final top = tester.getRect(find.byKey(const ValueKey('top')));
+      final item = tester.getRect(find.byKey(const ValueKey('item')));
+      final panel = tester.getRect(find.byType(ScrollArea).last);
+      expect(top.top, g); // window → top bar
+      expect(item.left, g); // window → sidebar items
+      expect(item.top - top.bottom, g); // top bar → sidebar items
+      expect(
+        panel.left - 1 - item.right,
+        g,
+      ); // sidebar items → panel (1px border)
+    },
+  );
 }

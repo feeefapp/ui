@@ -35,7 +35,8 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
    success. Everything else neutral. Never decorate with color; never rely on color alone. Brand through
    `theme.primary` / `palette`, not by painting components.
 7. **Motion explains change.** Springs for direct manipulation, short fades for presence
-   (`Presence`). Never animate data being read or block input. Respect reduced motion.
+   (`Presence`). Never animate data being read or block input. Respect reduced motion and the app's ThemeConfig
+   `motion` (`full`/`reduced`/`none`): read `prefersReducedMotion()` / `reducedMotionOf(context)`.
 8. **Speak like a helpful colleague.** Sentence case. Buttons name the outcome ("Confirm order", not
    "Submit"). Errors say how to fix it, at the field. Limits are next steps ("Add funds"), not toasts.
 9. **For everyone, in every language.** RTL is not a later mode: logical properties, mirrored
@@ -82,6 +83,12 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
 
 ## Layout recipe
 
+One spacing rhythm: the shell gap **G** (`--lab-shell-gap`, 8px, `metrics.shellGap`) between every
+chrome neighbour: window ↔ top bar ↔ panel ↔ sidebar items, toolbar groups (`--lab-toolbar-gap`), a
+floating bar and its panel's sides (`--lab-toolbar-inset`), a `ScrollArea`'s floats and content and
+its edges. Inside cards (list sections, dialog bodies) it's 16. Change G once in the theme; set
+`toolbarGap`/`toolbarInset` only to break one away from it.
+
 ```
 Provider (theme once)
 └─ Scaffold
@@ -112,6 +119,7 @@ opacity animate; layout switches once at rest. Gestures never replace a visible 
 
 - One filled action; destructive actions confirm; nothing important only on hover.
 - No hand-made bars, spacers, paddings for floats, or repainted kit components.
+- Chrome gaps come from G (`--lab-shell-gap`), never a literal 12/16/24.
 - Every field has a `hint`; every error says how to fix it; every icon button has a name.
 - Checked in light, dark, Arabic (RTL), a 360px phone and the app's density.
 - An app that lives in a frame (a preview, an embed) is wrapped in `FloatingBoundary`, so menus and

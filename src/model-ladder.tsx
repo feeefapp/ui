@@ -29,12 +29,12 @@ import {
   FIRE_PALETTE as PALETTE,
   formatUsd,
   heatAt,
-  reducedMotion,
   visibleLabel,
   type AspectReadout,
   type LadderCopy,
   type LadderStop,
 } from './model-ladder-core'
+import { prefersReducedMotion } from './physics/motion-value'
 
 export * from './model-ladder-core'
 
@@ -465,7 +465,7 @@ function PixelFire() {
           ctx.fillRect(col * CELL, row * CELL, CELL - 1, CELL - 1)
         }
     }
-    if (reducedMotion()) {
+    if (prefersReducedMotion()) {
       draw(0)
       return
     }
@@ -579,7 +579,6 @@ function ModelList({
         ref={viewport}
         className="lab-ladder-list-scroll"
         label={copy.pickModel}
-        edgeGap={12}
         contentPadding={12}
         viewportProps={{ tabIndex: -1 }}
         top={

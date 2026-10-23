@@ -31,6 +31,11 @@ Never clip interactive hosts or fork geometry.
 Update the /ui live examples and this contract when a public primitive changes.
 Run npm run check here and the consuming apps' lint/tests. Preserve browser zoom and reduced-motion,
 reduced-transparency, forced-colors and opaque material fallbacks.
+Reduced motion is one resolved flag: ThemeConfig `motion` (`data-lab-motion`) made stricter by the OS.
+JS reads `prefersReducedMotion()` / `motionOf()` / `useReducedMotion()` / `reducedMotionQuery()`
+(physics/motion-value.ts), Flutter `reducedMotionOf(context)` / `motionOf(context)`; never call
+`matchMedia('(prefers-reduced-motion…)')` or `MediaQuery.disableAnimations` directly. Under `none`
+ambient loops (tickers, rAF, polling) must not run.
 
 Architecture: use Provider as the composition root. Keep primitives in focused
 modules behind ui.tsx. Use typed props/callbacks for independent widgets, local

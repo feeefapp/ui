@@ -55,7 +55,8 @@
 }
 
 .lab-floating-layer--notice > * {
-  bottom: calc(var(--lab-floating-bottom, 0px) + 12px);
+  /* The shell gap G above the other bottom chrome. */
+  bottom: calc(var(--lab-floating-bottom, 0px) + var(--lab-shell-gap));
 }
 
 /* One material layer per floating group; controls share it. */

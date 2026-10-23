@@ -29,8 +29,9 @@ const ROLES: Record<string, string> = {
   '--lab-row-height': 'Navigation items, workspace actions.',
   '--lab-menu-row-height': 'Menu and floating-panel rows.',
   '--lab-toolbar-item': 'A toolbar bubble (controls inside are 6px less).',
-  '--lab-toolbar-gap': 'Space between toolbar groups.',
-  '--lab-toolbar-inset': 'A floating bar’s inset from its panel’s sides.',
+  '--lab-shell-gap': 'G, the one chrome gap: window, top bar, panel, sidebar items, scroll-area floats and content.',
+  '--lab-toolbar-gap': 'Space between toolbar groups (G unless set).',
+  '--lab-toolbar-inset': 'A floating bar’s inset from its panel’s sides (G unless set).',
   '--lab-segmented-inset': 'Segmented control edge to its pill, and between options.',
   '--lab-switch-width': 'Switch track width.',
   '--lab-switch-height': 'Switch track height.',
@@ -125,11 +126,29 @@ function Overview() {
         />
       </Section>
 
+      <Section title="Chrome spacing">
+        <p>
+          One gap separates chrome neighbours: the shell gap <strong>G</strong> (<C>--lab-shell-gap</C>,
+          8px at every density, <C>metrics.shellGap</C>). It sits between the window and the top bar,
+          the top bar and the panel, the sidebar and its items, between toolbar groups
+          (<C>--lab-toolbar-gap</C>), between a floating bar and its panel's sides
+          (<C>--lab-toolbar-inset</C>), and between a <C>ScrollArea</C>'s floats and content and its
+          edges (<C>edgeGap</C>, <C>contentPadding</C>). Change <C>shellGap</C> and all of them move;
+          set <C>toolbarGap</C> or <C>toolbarInset</C> only to break one away from it.
+        </p>
+        <p>
+          Inside a card the rhythm is 16: cards, list sections (<C>--lab-list-inset</C>) and dialog
+          bodies bring their own inner padding, so page content can sit G from the panel and still
+          read comfortably. Inset surfaces (segmented controls, docks, a group of buttons) keep their
+          own small inset, and the gap between their controls never exceeds it.
+        </p>
+      </Section>
+
       <Section title="Control metrics">
         <p>
           Comfortable density matches iOS 26's controls: capsule buttons <C>small</C> 30px,{' '}
           <C>regular</C> 36px and <C>large</C> 52px (side padding 10 / 12 / 20, labels 15 / 17 / 17
-          regular weight), 44px toolbar bubbles 12px apart, a segmented control as tall as a regular button (36px, its pill 32px),
+          regular weight), 44px toolbar bubbles 8px (the shell gap) apart, a segmented control as tall as a regular button (36px, its pill 32px),
           a 63 × 28 switch with a 37 × 24 thumb, a 6px slider rail, and 54px list rows on 26px cards.
           Every shape is a capsule (radius half its height) drawn with the kit's superellipse corners,
           not a perfect circle. Text fields keep their own design: 44px with room for an inside hint,
@@ -182,7 +201,8 @@ function Overview() {
             centred on them: a <C>::before</C> that changes no layout (Flutter: <C>TouchTarget</C>). Where
             two reaches overlap the later control wins; a press on a control itself is always its own.
             Inside a toolbar bubble the bubble is the target. Fields, selects and menu rows still grow
-            to 44px. Never shrink a hit area below it.
+            to 44px, except inside a toolbar bubble, where they take the bubble's control height like
+            buttons do. Never shrink a hit area below it.
           </p>
         </Callout>
       </Section>

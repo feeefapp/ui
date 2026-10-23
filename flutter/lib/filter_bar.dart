@@ -518,8 +518,10 @@ class _FilterBarState extends State<FilterBar> {
     // The temporal dialog stays mounted after its first use so its exit can run.
     if (dialog != null && dialog.type.isTemporal) _temporalDialog = dialog;
 
+    // Bubbles and pinned chips sit --lab-toolbar-gap (the shell gap G by default) apart.
+    final gap = ThemeProvider.of(context).sizes.toolbarGap;
     final bar = _BarWrap(
-      gap: 8,
+      gap: gap,
       pushLastToEnd: widget.trailing != null,
       children: [
         if (widget.onBack != null)
@@ -585,15 +587,15 @@ class _FilterBarState extends State<FilterBar> {
             explicitChildNodes: true,
             label: 'Pinned filters',
             child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: gap,
+              runSpacing: gap,
               children: [for (final option in pinned) _chip(context, option)],
             ),
           ),
         if (widget.trailing != null)
           Row(
             mainAxisSize: MainAxisSize.min,
-            spacing: 8,
+            spacing: gap,
             children: [widget.trailing!],
           ),
       ],
@@ -869,8 +871,6 @@ class _FilterBarState extends State<FilterBar> {
     final rows = widget.options.where(_matches).toList();
     return ScrollArea(
       label: 'Filter catalog rows',
-      contentPadding: 8,
-      edgeGap: 8,
       radius: radius,
       top: ToolbarSearch(
         label: 'Find a filter',
@@ -992,7 +992,6 @@ class _FilterBarState extends State<FilterBar> {
         .join(', ');
     return ScrollArea(
       label: 'Natural filter description',
-      edgeGap: 8,
       contentPadding: 12,
       radius: radius,
       bottom: Dock(
@@ -1124,8 +1123,6 @@ class _FilterBarState extends State<FilterBar> {
     }
     return ScrollArea(
       label: '${option.label} options',
-      edgeGap: 8,
-      contentPadding: 8,
       radius: radius,
       top: option.type == FilterType.enumeration
           ? ToolbarSearch(

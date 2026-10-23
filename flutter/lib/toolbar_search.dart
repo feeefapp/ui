@@ -153,7 +153,7 @@ class _ToolbarSearchState extends State<ToolbarSearch>
     super.dispose();
   }
 
-  bool get _reduced => MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+  bool get _reduced => reducedMotionOf(context);
 
   void _focusFieldSoon() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -424,7 +424,7 @@ class _SearchGlyph extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     final fade = reduced ? Duration.zero : const Duration(milliseconds: 160);
     final turn = reduced ? Duration.zero : const Duration(milliseconds: 300);
     Widget layer(Widget icon, bool shown, double hiddenTurns) =>

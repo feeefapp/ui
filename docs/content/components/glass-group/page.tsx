@@ -103,7 +103,7 @@ function Overview() {
         />
         <p>
           Each reservation is the distance from the window edge to the far side of the surface, plus{' '}
-          <C>gap</C> (12px by default). The provider also writes the largest reservation per edge as{' '}
+          <C>gap</C> (the shell gap G, 8px, by default). The provider also writes the largest reservation per edge as{' '}
           <C>--lab-floating-top|bottom|left|right</C>, and the on-screen keyboard's height as{' '}
           <C>--lab-viewport-bottom</C>. Notices sit above whatever else floats at the bottom. Use the values
           as padding so content never ends under a floating surface:

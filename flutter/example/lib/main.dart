@@ -36,6 +36,7 @@ class Gallery extends StatelessWidget {
             glassTint: double.tryParse(query['glassTint'] ?? '') ?? glassTintDefault,
             glassBlur: query['glassBlur'] == 'true',
             glassRefraction: query['glassRefraction'] != 'false',
+            motion: Motion.values.byName(query['motion'] ?? 'full'),
           ),
           // An overlay for dialogs and popovers, like the browser's top layer.
           child: Overlay(

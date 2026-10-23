@@ -55,6 +55,7 @@ class ThemeData {
       other.config.tint == config.tint &&
       other.config.glassBlur == config.glassBlur &&
       other.config.glassRefraction == config.glassRefraction &&
+      other.config.motion == config.motion &&
       other.config.metrics == config.metrics;
 
   @override
@@ -68,6 +69,7 @@ class ThemeData {
     config.tint,
     config.glassBlur,
     config.glassRefraction,
+    config.motion,
     config.metrics,
   );
 }
@@ -147,3 +149,24 @@ GlassStyle glassStyleOf(BuildContext context) => glassHighContrastOf(context)
 /// True when the platform asks for more contrast: glass turns opaque with an ink outline.
 bool glassHighContrastOf(BuildContext context) =>
     MediaQuery.maybeHighContrastOf(context) ?? false;
+
+/// How much the kit animates here: the app's [ThemeConfig.motion] made stricter by the platform's
+/// `MediaQuery.disableAnimations` (`full` becomes `reduced`; `none` stays `none`). The twin of the
+/// web kit's `motionOf()`. Without a [ThemeProvider] above, only the platform setting counts.
+Motion motionOf(BuildContext context) {
+  final config =
+      context
+          .dependOnInheritedWidgetOfExactType<_ThemeScope>()
+          ?.data
+          .config
+          .motion ??
+      Motion.full;
+  if (config == Motion.none) return Motion.none;
+  final platform = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+  return config == Motion.reduced || platform ? Motion.reduced : Motion.full;
+}
+
+/// True when motion should be reduced: the platform disables animations, or [ThemeConfig.motion]
+/// is `reduced` or `none`. Every reduced-motion path in the kit reads this (web:
+/// `prefersReducedMotion()`).
+bool reducedMotionOf(BuildContext context) => motionOf(context) != Motion.full;

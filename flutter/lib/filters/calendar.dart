@@ -511,7 +511,7 @@ class _CalendarDayState extends State<_CalendarDay> {
         : interactive && _hovered
         ? c.controlHover
         : transparent;
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     final radius = 20 * theme.sizes.radiusScale;
     return LayoutBuilder(
       builder: (context, constraints) {

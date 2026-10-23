@@ -1,4 +1,5 @@
 import { scrollRevealDelta } from './metrics'
+import { prefersReducedMotion } from '../physics/motion-value'
 
 type Alignment = 'nearest' | 'center' | false
 
@@ -31,6 +32,6 @@ export function revealScrollChild(
   viewport.scrollBy({
     top: dy,
     left: dx,
-    behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : behavior,
+    behavior: prefersReducedMotion() ? 'instant' : behavior,
   })
 }

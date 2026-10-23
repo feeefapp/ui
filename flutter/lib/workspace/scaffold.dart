@@ -289,8 +289,8 @@ class _ScaffoldWidgetState extends State<Scaffold> {
         : ScrollArea(
             label: widget.contentLabel,
             controller: widget.contentController,
-            contentPadding: compact ? 16 : 24,
-            // The app bar and dock sit --lab-toolbar-inset (16, iOS) from the panel's sides.
+            // Content and floats sit the shell gap G from the panel; the app bar and dock sit
+            // --lab-toolbar-inset (G by default) from its sides.
             sideGap: ThemeProvider.of(context).sizes.toolbarInset,
             top: widget.appBar,
             bottom: widget.bottom,
@@ -394,7 +394,7 @@ class _SideBoundaryState extends State<_SideBoundary> {
 
   @override
   Widget build(BuildContext context) {
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     final hidden = widget.mode == ScaffoldSideMode.hidden;
     final metrics = ThemeProvider.of(context).config.metrics;
     final target = switch (widget.mode) {
@@ -490,7 +490,7 @@ class _MainPanelState extends State<_MainPanel> {
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     return TweenAnimationBuilder<double>(
       tween: Tween(end: widget.framed ? 1 : 0),
       duration: reduced ? Duration.zero : MotionTokens.durationNormal,
@@ -576,7 +576,7 @@ class _WorkspaceDrawerState extends State<_WorkspaceDrawer>
   FocusNode? _previous;
   bool _mounted = false;
 
-  bool get _reduced => MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+  bool get _reduced => reducedMotionOf(context);
 
   @override
   void initState() {
@@ -813,10 +813,9 @@ class ScaffoldSide extends StatelessWidget {
       label: label,
       child: ScrollArea(
         label: contentLabel,
-        // One shell gap from the window, between the header/footer and the items, and (the
-        // content panel has no start margin beside it) between the items and the panel.
-        contentPadding: theme.sizes.shellGap,
-        edgeGap: theme.sizes.shellGap,
+        // The ScrollArea's default shell gap G: from the window, between the header/footer and
+        // the items, and (the content panel has no start margin beside it) between the items and
+        // the panel.
         surface: theme.colors.ground,
         top: leading == null
             ? null
@@ -883,12 +882,13 @@ class ScaffoldTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final gap = ThemeProvider.of(context).sizes.shellGap;
+    final sizes = ThemeProvider.of(context).sizes;
+    final gap = sizes.shellGap;
     return GlassScope(
       child: Padding(
         padding: EdgeInsets.fromLTRB(gap, gap, gap, 0),
         child: Row(
-          spacing: gap,
+          spacing: sizes.toolbarGap,
           children: [
             Expanded(
               child: Align(

@@ -49,8 +49,9 @@ html[data-lab-theme] {
   /* Menu and floating-panel rows. */
   --lab-menu-row-height: 40px;
   --lab-toolbar-item: 44px;
-  --lab-toolbar-gap: 12px;
-  --lab-toolbar-inset: 16px;
+  /* Chrome gaps follow the shell gap G (one rhythm between chrome neighbours; 16 inside cards). */
+  --lab-toolbar-gap: var(--lab-shell-gap);
+  --lab-toolbar-inset: var(--lab-shell-gap);
   --lab-segmented-inset: 2px;
   --lab-switch-width: 63px;
   --lab-switch-height: 28px;
@@ -431,8 +432,6 @@ html[data-lab-density='compact'][data-lab-theme] {
   --lab-row-height: 32px;
   --lab-menu-row-height: 30px;
   --lab-toolbar-item: 36px;
-  --lab-toolbar-gap: 10px;
-  --lab-toolbar-inset: 12px;
   --lab-switch-width: 54px;
   --lab-switch-height: 24px;
   --lab-thumb-width: 31px;
@@ -467,8 +466,6 @@ html[data-lab-density='thin'][data-lab-theme] {
   --lab-row-height: 26px;
   --lab-menu-row-height: 24px;
   --lab-toolbar-item: 30px;
-  --lab-toolbar-gap: 8px;
-  --lab-toolbar-inset: 10px;
   --lab-switch-width: 45px;
   --lab-switch-height: 20px;
   --lab-thumb-width: 25px;
@@ -591,6 +588,44 @@ answers with glass of its own (a segmented control). Still and solid glass don't
     --lab-duration-fast: 0ms;
     --lab-duration-normal: 0ms;
   }
+}
+/* ThemeConfig `motion` (`data-lab-motion`). `reduced` matches the reduced-motion setting: no press
+response, instant transitions, animations cut to one frame (exits still end, so presence unmounts);
+the JS paths read the same flag through motionOf(). `none` stops every kit animation and
+transition, ambient ones included; loaders keep their static busy state. Only kit elements
+(`lab-*` classes) are touched: app styles keep their own motion. */
+html[data-lab-theme]:is([data-lab-motion='reduced'], [data-lab-motion='none']) {
+  --lab-duration-fast: 0ms;
+  --lab-duration-normal: 0ms;
+  --lab-menu-exit: 120ms;
+}
+html[data-lab-theme]:is([data-lab-motion='reduced'], [data-lab-motion='none']) .lab-control[data-press]:active {
+  scale: none !important;
+}
+html[data-lab-theme]:is([data-lab-motion='reduced'], [data-lab-motion='none']) .lab-control[data-press='glass']::after {
+  content: none;
+}
+html[data-lab-motion='reduced'] :where([class*='lab-']),
+html[data-lab-motion='reduced'] :where([class*='lab-'])::before,
+html[data-lab-motion='reduced'] :where([class*='lab-'])::after {
+  transition-duration: 0ms !important;
+  transition-delay: 0ms !important;
+  animation-duration: 1ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+}
+html[data-lab-motion='none'] :where([class*='lab-']),
+html[data-lab-motion='none'] :where([class*='lab-'])::before,
+html[data-lab-motion='none'] :where([class*='lab-'])::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+html[data-lab-motion='none']::view-transition-group(*),
+html[data-lab-motion='none']::view-transition-old(*),
+html[data-lab-motion='none']::view-transition-new(*) {
+  animation: none !important;
 }
 /* Increased contrast and forced colours keep a strong focus ring (3px, 2px out, full colour). The
 person's setting outranks an app's `metrics`, hence !important over the inline variables. */
@@ -867,7 +902,7 @@ html[data-lab-theme] .lab-dialog--scrollable {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--lab-toolbar-gap);
   padding-inline-start: 0;
 }
 /* Default text needs opaque backing while content moves behind it. Custom top

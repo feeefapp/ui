@@ -155,7 +155,7 @@ class _ActionsBarState extends State<ActionsBar> {
         for (final id in visible) id: ?rectOf(_keyFor(id)),
       };
       final more = rectOf(_moreKey) ?? _lastMore;
-      final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+      final reduced = reducedMotionOf(context);
       final previous = _lastVisible;
       if (previous.isNotEmpty && !reduced) {
         final diff = diffVisibleActions(previous, visible);

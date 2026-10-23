@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart';
 
 import 'motion_value.dart';
 import 'spring.dart';
+import '../theme.dart';
 
 /// Shared-element layout transitions (FLIP on springs): whenever the group rebuilds, every
 /// [LayoutGroupItem] inside it that moved animates from where it was to where it now is, even
@@ -113,7 +114,7 @@ class LayoutGroupItem extends SingleChildRenderObjectWidget {
     group: context
         .dependOnInheritedWidgetOfExactType<_LayoutGroupScope>()
         ?.group,
-    reduceMotion: MediaQuery.maybeDisableAnimationsOf(context) ?? false,
+    reduceMotion: reducedMotionOf(context),
   );
 
   @override
@@ -126,7 +127,7 @@ class LayoutGroupItem extends SingleChildRenderObjectWidget {
     ..group = context
         .dependOnInheritedWidgetOfExactType<_LayoutGroupScope>()
         ?.group
-    ..reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    ..reduceMotion = reducedMotionOf(context);
 }
 
 class _Track {

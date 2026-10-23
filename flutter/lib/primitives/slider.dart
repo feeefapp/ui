@@ -560,7 +560,7 @@ class _SliderControlState extends State<_SliderControl>
     final fraction = widget.switchMode && _position != null && !inert
         ? _position!
         : sliderFraction(displayPosition, r.min, r.max);
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     _motion.retarget(
       target: fraction,
       tracking: _tracking,

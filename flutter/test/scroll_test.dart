@@ -72,13 +72,13 @@ void main() {
     nodes[12].requestFocus();
     await tester.pumpAndSettle();
     final row = tester.getRect(find.text('Row 12'));
-    // Below the bottom float's reservation: 50 + 12 + 12 from the bottom edge.
-    expect(row.bottom, lessThanOrEqualTo(area.bottom - 74 + 0.5));
+    // Below the bottom float's reservation: 50 + G + G (the shell gap, 8) from the bottom edge.
+    expect(row.bottom, lessThanOrEqualTo(area.bottom - 66 + 0.5));
     nodes[2].requestFocus();
     await tester.pumpAndSettle();
     expect(
       tester.getRect(find.text('Row 2')).top,
-      greaterThanOrEqualTo(area.top + 70 - 0.5),
+      greaterThanOrEqualTo(area.top + 62 - 0.5),
     );
   });
 
@@ -106,14 +106,39 @@ void main() {
     );
     await tester.pump();
     final area = tester.getRect(find.byType(ScrollArea));
-    // 46px float + 12px gap above and below.
-    expect(tester.getTopLeft(find.text('Row 0')).dy - area.top, 70);
+    // 46px float + the shell gap G (8) above and below.
+    expect(tester.getTopLeft(find.text('Row 0')).dy - area.top, 62);
     await tester.drag(find.byType(ScrollArea), const Offset(0, -5000));
     await tester.pumpAndSettle();
     // At the end, the last row clears the 50px dock and its gaps.
     expect(
       area.bottom - tester.getBottomLeft(find.text('Row 29')).dy,
-      closeTo(74, 0.5),
+      closeTo(66, 0.5),
     );
   });
+
+  testWidgets(
+    'edge gap and content padding default to the theme\'s shell gap',
+    (tester) async {
+      await tester.pumpWidget(
+        host(
+          const SizedBox(
+            width: 400,
+            height: 300,
+            child: ScrollArea(
+              label: 'Orders',
+              top: SizedBox(width: 200, height: 46),
+              child: Text('Row 0'),
+            ),
+          ),
+          config: const ThemeConfig(metrics: Metrics(shellGap: 12)),
+        ),
+      );
+      await tester.pump();
+      final area = tester.getRect(find.byType(ScrollArea));
+      final row = tester.getTopLeft(find.text('Row 0'));
+      expect(row.dy - area.top, 46 + 12 * 2);
+      expect(row.dx - area.left, 12);
+    },
+  );
 }

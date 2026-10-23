@@ -121,8 +121,8 @@ void main() {
     await tester.pump();
     final area = tester.getRect(find.byType(ScrollArea));
     final row = tester.getRect(find.byKey(keys[8]));
-    // Bottom reservation: float 50 + 2 × 12 edge gap.
-    expect(row.bottom, closeTo(area.bottom - 74, 0.01));
+    // Bottom reservation: float 50 + 2 × the shell gap G (8).
+    expect(row.bottom, closeTo(area.bottom - 66, 0.01));
     final before = controller.offset;
     revealScrollChild(controller, keys[8].currentContext);
     expect(controller.offset, before);
@@ -153,8 +153,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    // 40 tall, 12 above the bottom, plus the 12 gap.
-    expect(ScaffoldProvider.reserveOf(page, FloatingSlot.notice), 64);
+    // 40 tall, the shell gap (8) above the bottom, plus the same gap.
+    expect(ScaffoldProvider.reserveOf(page, FloatingSlot.notice), 56);
   });
 
   testWidgets('Small glass over a dark backdrop takes the dark theme', (

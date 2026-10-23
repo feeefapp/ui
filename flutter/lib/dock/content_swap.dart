@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../theme/tokens.dart';
+import '../theme.dart';
 
 /// Cross-fades dock content when [swapKey] changes: the old content fades out (100ms, drifting
 /// 3px down) and stops taking input, then the new content fades in (160ms, from 3px above).
@@ -37,7 +38,7 @@ class _DockContentSwapState extends State<DockContentSwap>
       return;
     }
     if (widget.swapKey == _shownKey) return;
-    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+    if (reducedMotionOf(context)) {
       _shownKey = widget.swapKey;
       _shown = widget.child;
       _phase = _Phase.idle;

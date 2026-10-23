@@ -325,14 +325,14 @@ class _ScaffoldScope extends InheritedWidget {
 /// and reserves its measured size under [slot] in the nearest [ScaffoldProvider]: the twin of
 /// `FloatingLayer` in `@feeef.dev/ui/scaffold`. The layer fills the window and only [child]
 /// takes input; position the child yourself (a `Positioned` or an `Align`). A `notice` is placed
-/// for you like the web kit's `.lab-floating-layer--notice > *`: centred, 12px above the other
-/// bottom chrome, at most the window width minus 24px.
+/// for you like the web kit's `.lab-floating-layer--notice > *`: centred, the shell gap G above
+/// the other bottom chrome, at most the window width minus 24px.
 class FloatingLayer extends StatefulWidget {
   const FloatingLayer({
     super.key,
     required this.slot,
     this.active = true,
-    this.gap = 12,
+    this.gap,
     required this.child,
   });
 
@@ -342,8 +342,9 @@ class FloatingLayer extends StatefulWidget {
   /// Set false to keep it shown but stop reserving space.
   final bool active;
 
-  /// Extra px added to the reservation, between the surface and the content.
-  final double gap;
+  /// Extra px added to the reservation, between the surface and the content. Default: the shell
+  /// gap G ([SizeTokens.shellGap], 8).
+  final double? gap;
 
   /// The floating surface. Its box (not the layer's) is measured.
   final Widget child;
@@ -386,6 +387,7 @@ class _FloatingLayerState extends State<FloatingLayer> {
   }
 
   void _measure(BuildContext overlay) {
+    final gap = widget.gap ?? ThemeProvider.of(context).sizes.shellGap;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _provider == null) return;
       final box = _surface.currentContext?.findRenderObject() as RenderBox?;
@@ -412,7 +414,7 @@ class _FloatingLayerState extends State<FloatingLayer> {
       _provider!._reserve(
         this,
         widget.slot,
-        math.max(0, (size + widget.gap).ceilToDouble()),
+        math.max(0, (size + gap).ceilToDouble()),
       );
     });
   }
@@ -428,7 +430,9 @@ class _FloatingLayerState extends State<FloatingLayer> {
         surface = Positioned(
           left: 0,
           right: 0,
-          bottom: ScaffoldProvider.floatingBottomOf(context) + 12,
+          bottom:
+              ScaffoldProvider.floatingBottomOf(context) +
+              ThemeProvider.of(context).sizes.shellGap,
           child: Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: math.max(0, width - 24)),

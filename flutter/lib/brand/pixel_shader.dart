@@ -96,7 +96,7 @@ class _PixelShaderState extends State<PixelShader>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final still = reducedMotionOf(context);
     if (still) {
       _ticker.stop();
     } else if (!_ticker.isActive) {

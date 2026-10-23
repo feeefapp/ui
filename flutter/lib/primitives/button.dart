@@ -207,7 +207,7 @@ class _ButtonState extends State<Button> {
   /// a small grow for painted buttons in content, nothing inside a glass bubble (the bubble
   /// answers), with reduced motion or while it can't be pressed.
   _Press _pressFor(BuildContext context, bool interactive) {
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     if (!interactive || reduced || GlassMember.of(context) != null) {
       return _Press.none;
     }

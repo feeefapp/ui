@@ -10,12 +10,12 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import 'theme/tokens.dart';
+import 'theme.dart';
 
 /// Whether presence content is shown (`open`) or animating out (`closed`).
 enum PresenceState { open, closed }
 
-bool _reduced(BuildContext context) =>
-    MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+bool _reduced(BuildContext context) => reducedMotionOf(context);
 
 /// Keeps content mounted while it animates out: the twin of the `usePresence` hook. [builder]
 /// gets whether the content is mounted and its state; `state` is the source of truth for the

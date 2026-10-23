@@ -99,7 +99,9 @@ body {
   gap: 40px;
   max-width: calc(var(--docs-content) + var(--docs-toc) + 40px);
   margin: 0 auto;
-  padding: 16px clamp(0px, 2vw, 24px) 64px;
+  /* Reading text: the scaffold's content padding is the shell gap G (8px); prose wants at least
+  16px from the panel edge, so the page adds the rest itself. */
+  padding: 16px clamp(8px, 2vw, 24px) 64px;
 }
 .docs-toc {
   position: sticky;
@@ -133,7 +135,8 @@ body {
 }
 @media (max-width: 640px) {
   .docs-layout {
-    padding: 8px 0 48px;
+    /* + the scaffold's G (8px) = 16px from the panel edge. */
+    padding: 8px 8px 48px;
   }
 }
 

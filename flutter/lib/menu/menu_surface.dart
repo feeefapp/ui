@@ -194,7 +194,7 @@ class _MenuSurfaceState extends State<MenuSurface>
   void didChangeDependencies() {
     super.didChangeDependencies();
     final scope = AnchoredPanelScope.maybeOf(context);
-    _morph.reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    _morph.reduced = reducedMotionOf(context);
     final theme = ThemeProvider.of(context);
     _morph.toRadius = MenuTokens.of(context).radiusIn(context);
     _morph.fromRadius = theme.sizes.radiusControl;
@@ -501,8 +501,10 @@ class _ShadowPainter extends CustomPainter {
     // difference clip is not reliable on every backend; the glass above would show it).
     canvas.saveLayer(frame.box.inflate(80), Paint());
     canvas.drawPath(
-      superellipsePath(spread, List.filled(4, math.max(0, frame.radius - 12)))
-          .shift(const Offset(0, 14)),
+      superellipsePath(
+        spread,
+        List.filled(4, math.max(0, frame.radius - 12)),
+      ).shift(const Offset(0, 14)),
       Paint()
         ..color = color.withValues(alpha: color.a * frame.materialOpacity)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20),

@@ -43,7 +43,7 @@ class _PopoverSurfaceState extends State<PopoverSurface>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final still = reducedMotionOf(context);
     if (still) {
       _breath.stop();
       _breath.value = 0;

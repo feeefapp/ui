@@ -398,7 +398,7 @@ class _ChoiceState extends State<_Choice> {
     final markRadius = (compact ? 6.0 : 7.0) * s.radiusScale;
     // Touch keeps the look and reaches out to 44px instead (TouchTarget).
     final minHeight = compact ? s.controlSmall : s.controlHeight;
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     final spring = reduced ? Duration.zero : const Duration(milliseconds: 320);
 
     final Color markFill;

@@ -175,7 +175,7 @@ class Sheet extends StatefulWidget {
   /// On phones, let a [SheetBackdrop] behind recede as a large sheet rises. Default true.
   final bool recede;
 
-  /// Inline content padding in px (the [ScrollArea] default, 24, when null).
+  /// Inline content padding in px (the [ScrollArea] default, the shell gap G, when null).
   final double? contentPadding;
 
   @override
@@ -244,6 +244,7 @@ class _SheetState extends State<Sheet> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _backdrop = context.getInheritedWidgetOfExactType<_BackdropScope>()?.recede;
+    _shellGap = ThemeProvider.of(context).sizes.shellGap;
   }
 
   @override
@@ -272,7 +273,7 @@ class _SheetState extends State<Sheet> {
     super.dispose();
   }
 
-  bool get _reduced => MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+  bool get _reduced => reducedMotionOf(context);
 
   void _enter() {
     _exitGeneration++;
@@ -304,7 +305,10 @@ class _SheetState extends State<Sheet> {
       ? SheetRegular.dialog
       : SheetRegular.sheet;
 
-  double get _padding => widget.contentPadding ?? 24;
+  /// The shell gap G: the [ScrollArea]'s default edge gap and content padding.
+  double _shellGap = 8;
+
+  double get _padding => widget.contentPadding ?? _shellGap;
 
   SheetMetrics? get _metrics {
     final host = _host;
@@ -313,11 +317,15 @@ class _SheetState extends State<Sheet> {
     // The grabber row, the scroll content's padding (float reservations + safe area) and the body.
     final natural =
         (_showGrabber ? 20 : 0) +
-        scrollContentReserve(widget.top == null ? 0 : _topFloat, 12, _padding) +
+        scrollContentReserve(
+          widget.top == null ? 0 : _topFloat,
+          _shellGap,
+          _padding,
+        ) +
         safe.top +
         scrollContentReserve(
           widget.bottom == null ? 0 : _bottomFloat,
-          12,
+          _shellGap,
           _padding,
         ) +
         safe.bottom +

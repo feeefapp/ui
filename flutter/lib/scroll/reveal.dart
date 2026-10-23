@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'metrics.dart';
+import '../theme.dart';
 
 /// How [revealScrollChild] aligns the child on an axis: the least movement (`nearest`), centred,
 /// or not at all (the web kit's `false`).
@@ -109,7 +110,7 @@ Future<void> revealScrollChild(
     position.maxScrollExtent,
   );
   if (target == position.pixels) return;
-  final reduced = MediaQuery.maybeDisableAnimationsOf(child) ?? false;
+  final reduced = reducedMotionOf(child);
   if (behavior == RevealBehavior.instant || reduced) {
     position.jumpTo(target);
   } else {

@@ -322,6 +322,7 @@ Future<void> main() async {
   final view = WidgetsBinding.instance.platformDispatcher.views.first;
   final report = {
     'label': const String.fromEnvironment('BENCH_LABEL', defaultValue: 'run'),
+    'theme': benchTheme.isEmpty ? 'default' : benchTheme,
     'date': DateTime.now().toUtc().toIso8601String(),
     'device': '${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
     'window': '${(view.physicalSize / view.devicePixelRatio).width.round()}×${(view.physicalSize / view.devicePixelRatio).height.round()} @${view.devicePixelRatio}x',

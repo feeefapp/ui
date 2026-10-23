@@ -19,7 +19,8 @@ into `bench/.build/docs`, serves it with an SPA fallback, and drives it with pup
 holds medians.
 
 Options: `--reps N`, `--browsers chrome,firefox`, `--pages components/toolbar/examples,…`,
-`--scenarios idle,scroll,…`, `--no-build` (reuse the last build), `--headful`, `--out DIR`.
+`--scenarios idle,scroll,…`, `--theme quality|balanced|performance` (opens pages with the docs'
+`?profile=`, i.e. that `PROFILES` entry), `--no-build` (reuse the last build), `--headful`, `--out DIR`.
 Env: `CHROME`, `FIREFOX`, `PUPPETEER_CORE`.
 
 Pages: the Examples view of glass-container, actions-bar, segmented-control, toolbar and switch,
@@ -61,4 +62,5 @@ should be 0 idle frames). A page that renders frames while idle is re-measured o
 It is not an integration test on purpose: `flutter_test`'s live binding renders about 48 fps forever
 whenever a scroll view is on screen, which hides the idle numbers.
 
-Options: `--reps N`, `--pages`, `--scenarios`, `--out DIR`.
+Options: `--reps N`, `--pages`, `--scenarios`, `--theme quality|balanced|performance` (a `ThemeProfiles`
+config), `--out DIR`.

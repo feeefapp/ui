@@ -4,6 +4,7 @@
  *
  *   node bench/web.mjs [--label baseline] [--reps 3] [--browsers chrome,firefox]
  *                      [--pages components/glass-container,…] [--no-build] [--headful]
+ *                      [--theme quality|balanced|performance]  (docs `?profile=`; default: kit defaults)
  *
  * Builds the docs once (production React, unminified app code so rAF stacks stay readable) into
  * bench/.build/docs, serves it statically with an SPA fallback, and runs every scenario on every
@@ -58,6 +59,7 @@ const DEFAULT_PAGES = [
   'get-started/introduction',
 ]
 const PAGES = opt('pages', DEFAULT_PAGES.join(',')).split(',')
+const THEME = opt('theme', '')
 const SCENARIOS = opt('scenarios', 'idle,scroll,pointer,menu,drag,split').split(',')
 const OUT = opt('out', join(here, 'out', `${new Date().toISOString().slice(0, 10)}-${LABEL}`))
 const BUILD = join(here, '.build/docs')
@@ -358,7 +360,7 @@ async function runOnce(browser, name, path) {
   const page = await browser.newPage()
   await page.setViewport(VIEW)
   await page.evaluateOnNewDocument(INSTRUMENT)
-  await page.goto(`${ORIGIN}/${path}`, { waitUntil: 'load', timeout: 180_000 })
+  await page.goto(`${ORIGIN}/${path}${THEME ? `?profile=${THEME}` : ''}`, { waitUntil: 'load', timeout: 180_000 })
   await page.waitForSelector('.docs-content', { timeout: 120_000 })
   await page.evaluate(() => document.fonts.ready)
   await sleep(2000) // entry animations, lazy highlighter, fonts
@@ -427,6 +429,7 @@ function mergeReps(reps) {
 await mkdir(OUT, { recursive: true })
 const report = {
   label: LABEL,
+  theme: THEME || 'default',
   date: new Date().toISOString(),
   machine: { cpus: os.cpus().length, model: os.cpus()[0]?.model, loadavg: os.loadavg().map((x) => round(x, 1)), platform: `${os.platform()} ${os.release()}` },
   viewport: VIEW,

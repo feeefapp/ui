@@ -6,6 +6,8 @@ import { cn } from './utils'
 import type { GlassMotion } from './glass/context'
 import { useGlassMember } from './glass/member'
 import './scaffold.css'
+import { prefersReducedMotion } from './physics/motion-value'
+import { useShellGap } from './scroll/shell-gap'
 
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect
 
@@ -172,14 +174,14 @@ export function useFloatingReserve(
   {
     active = true,
     edge = 'auto',
-    gap = 12,
+    gap: gapProp,
     measureChildren = false,
   }: {
     /** Set false to stop reserving space. */
     active?: boolean
     /** Edge it is measured from. `auto`: header → top, rail → left/top, others → bottom. */
     edge?: FloatingEdge
-    /** Extra px added to the reservation. */
+    /** Extra px added to the reservation. Default: the shell gap G (`--lab-shell-gap`, 8). */
     gap?: number
     /** FloatingLayer itself fills the viewport; its actual surface is its child. */
     measureChildren?: boolean
@@ -188,6 +190,8 @@ export function useFloatingReserve(
   const scaffold = React.useContext(ScaffoldContext)
   const id = React.useId()
   const reserve = scaffold?.reserve
+  const shellGap = useShellGap(ref)
+  const gap = gapProp ?? shellGap
   useIsomorphicLayoutEffect(() => {
     if (!reserve || !active || !ref.current) return
     const region = ref.current
@@ -269,7 +273,7 @@ export function FloatingLayer({
   slot,
   active = true,
   edge = 'auto',
-  gap = 12,
+  gap,
   className,
 }: {
   /** The floating surface. Its box (not the layer's) is measured. */
@@ -280,7 +284,7 @@ export function FloatingLayer({
   active?: boolean
   /** Edge it is measured from. `auto`: header → top, rail → left/top, others → bottom. */
   edge?: FloatingEdge
-  /** Extra px added to the reservation, between the surface and the content. */
+  /** Extra px added to the reservation, between the surface and the content. Default: the shell gap G (8). */
   gap?: number
   className?: string
 }) {
@@ -364,7 +368,7 @@ let navigationSerial = 0
 export function useNavigation() {
   return React.useCallback((update: () => void) => {
     const serial = ++navigationSerial
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const reduced = prefersReducedMotion()
     const doc = document as Document & {
       startViewTransition?: (callback: () => void) => NativeViewTransition
     }
@@ -417,7 +421,7 @@ export function ViewTransition({
     if (
       !element ||
       currentTransition ||
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+      prefersReducedMotion() ||
       typeof element.animate !== 'function'
     )
       return

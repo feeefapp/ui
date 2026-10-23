@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { cn } from '../utils'
+import { prefersReducedMotion } from '../physics/motion-value'
 
 /**
  * Cross-fades interactive dock content when `swapKey` changes: the old content fades out and turns
@@ -33,7 +34,7 @@ export function DockContentSwap({
     }
     let enter = 0,
       settle = 0
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const reduced = prefersReducedMotion()
     // A focused outgoing action must not leave focus on an inert or detached node.
     const active = document.activeElement
     const owner =

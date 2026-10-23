@@ -2,10 +2,11 @@
 # Flutter frame-timing bench: the docs' Dart examples in a small self-driving profile-mode macOS app
 # (bench/flutter/lib/bench_main.dart).
 #   bench/flutter.sh [--label baseline] [--reps 3] [--pages a,b] [--scenarios idle,scroll,…] [--out DIR]
+#                    [--theme quality|balanced|performance]  (a ThemeProfiles config; default: kit defaults)
 # Writes <out>/flutter.json and refreshes <out>/summary.md. Default out: bench/out/<date>-<label>.
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
-label=run; reps=3; out=""; scenarios="idle,scroll,pointer,menu,drag,split"
+label=run; reps=3; out=""; theme=""; scenarios="idle,scroll,pointer,menu,drag,split"
 pages="components/glass-container,components/actions-bar,components/segmented-control,components/toolbar,components/switch,guidelines/patterns"
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -14,6 +15,7 @@ while [ $# -gt 0 ]; do
     --out) out="$2"; shift 2;;
     --pages) pages="$2"; shift 2;;
     --scenarios) scenarios="$2"; shift 2;;
+    --theme) theme="$2"; shift 2;;
     *) echo "unknown option $1" >&2; exit 2;;
   esac
 done
@@ -38,7 +40,7 @@ flutter pub get >/dev/null
 rm -f "$out/flutter.json"
 flutter run --profile -d macos -t lib/bench_main.dart \
   --dart-define=BENCH_REPS="$reps" --dart-define=BENCH_LABEL="$label" \
-  --dart-define=BENCH_SCENARIOS="$scenarios" --dart-define=BENCH_OUT="$out/flutter.json" </dev/null \
+  --dart-define=BENCH_SCENARIOS="$scenarios" --dart-define=BENCH_THEME="$theme" --dart-define=BENCH_OUT="$out/flutter.json" </dev/null \
   | grep --line-buffered -E '\[flutter bench\]|rror|Exception' || true
 [ -f "$out/flutter.json" ] || { echo "flutter bench produced no report" >&2; exit 1; }
 node "$here/summarize.mjs" "$out"

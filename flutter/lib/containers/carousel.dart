@@ -207,7 +207,7 @@ class _CarouselState extends State<Carousel> {
     super.dispose();
   }
 
-  bool get _reduced => MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+  bool get _reduced => reducedMotionOf(context);
 
   /// Resting scroll offset of every slide (scroll snap clamps them to the scroll range).
   List<double> _offsets(double max) => [
@@ -657,7 +657,7 @@ class _DotState extends State<_Dot> {
   @override
   Widget build(BuildContext context) {
     final c = ThemeProvider.of(context).colors;
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     return Semantics(
       button: true,
       selected: widget.current,

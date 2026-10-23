@@ -16,9 +16,9 @@ class ScrollArea extends StatefulWidget {
     required this.label,
     this.top,
     this.bottom,
-    this.edgeGap = 12,
+    this.edgeGap,
     this.sideGap,
-    this.contentPadding = 24,
+    this.contentPadding,
     this.gradient = true,
     this.topFadeHeight,
     this.bottomFadeHeight,
@@ -38,14 +38,16 @@ class ScrollArea extends StatefulWidget {
   final Widget? bottom;
 
   /// Space between a float and the area's edges; also added above and below it in the reservation.
-  final double edgeGap;
+  /// Default: the shell gap G ([SizeTokens.shellGap], 8).
+  final double? edgeGap;
 
   /// Space between a float and the area's sides, when it differs from [edgeGap] (a scaffold's app
   /// bar uses [SizeTokens.toolbarInset]).
   final double? sideGap;
 
-  /// Content padding: inline sides, and top/bottom when no float is present.
-  final double contentPadding;
+  /// Content padding: inline sides, and top/bottom when no float is present. Default: the shell
+  /// gap G ([SizeTokens.shellGap], 8); cards bring their own inner padding.
+  final double? contentPadding;
 
   /// Paints the dithered edge washes that fade content under the floats.
   final bool gradient;
@@ -105,11 +107,14 @@ class _ScrollAreaState extends State<ScrollArea> {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
-    final gap = widget.edgeGap < 0 ? 0.0 : widget.edgeGap;
+    final shellGap = theme.sizes.shellGap;
+    final edgeGap = widget.edgeGap ?? shellGap;
+    final gap = edgeGap < 0 ? 0.0 : edgeGap;
     final side = widget.sideGap == null
         ? gap
         : (widget.sideGap! < 0 ? 0.0 : widget.sideGap!);
-    final padding = widget.contentPadding < 0 ? 0.0 : widget.contentPadding;
+    final contentPadding = widget.contentPadding ?? shellGap;
+    final padding = contentPadding < 0 ? 0.0 : contentPadding;
     final topReserve = scrollContentReserve(
       widget.top == null ? 0 : _top,
       gap,

@@ -101,8 +101,6 @@ export const formatUsd = (value: number) =>
       : value < 0.1
         ? `$${value.toFixed(3)}`
         : `$${value.toFixed(2)}`
-export const reducedMotion = () =>
-  typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 export const FIRE_CELL = 5
 export const FIRE_PALETTE = ['#3b0a04', '#a32008', '#ff4d0a', '#ff9a1f', '#ffd54a', '#fff6c4']

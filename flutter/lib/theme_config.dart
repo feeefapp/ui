@@ -11,6 +11,9 @@ enum Density { comfortable, compact, thin }
 /// How floating glass behaves: moving liquid glass, still glass, or opaque surfaces.
 enum GlassStyle { liquid, still, solid }
 
+/// How much the kit animates: everything, the reduced-motion paths, or nothing at all.
+enum Motion { full, reduced, none }
+
 /// The look of an app. Unset options fall back to [ThemeConfig.defaults].
 class ThemeConfig {
   const ThemeConfig({
@@ -21,6 +24,7 @@ class ThemeConfig {
     this.glassTint = 0.5,
     this.glassBlur = false,
     this.glassRefraction = true,
+    this.motion = Motion.full,
     this.metrics = const Metrics(),
   });
 
@@ -51,6 +55,12 @@ class ThemeConfig {
   /// (a fragment shader as backdrop filter); Skia and Flutter web show the same glass unbent.
   final bool glassRefraction;
 
+  /// Motion: `full` (default) animates; `reduced` behaves as if the platform asked to disable
+  /// animations (springs jump, transitions become instant or short fades, glass light stays
+  /// still); `none` also stops every ambient loop (pixel textures, shaders, loaders). The
+  /// platform's own setting still applies when it is stricter ([motionOf]).
+  final Motion motion;
+
   /// Control, toolbar, list and focus sizes that replace the density's (`Metrics`). Each set value
   /// applies to every density; unset ones keep the density's own.
   final Metrics metrics;
@@ -72,6 +82,7 @@ class ThemeConfig {
     double? glassTint,
     bool? glassBlur,
     bool? glassRefraction,
+    Motion? motion,
     Metrics? metrics,
   }) => ThemeConfig(
     palette: palette ?? this.palette,
@@ -81,7 +92,37 @@ class ThemeConfig {
     glassTint: glassTint ?? this.glassTint,
     glassBlur: glassBlur ?? this.glassBlur,
     glassRefraction: glassRefraction ?? this.glassRefraction,
+    motion: motion ?? this.motion,
     metrics: metrics ?? this.metrics,
+  );
+}
+
+/// Ready-made looks, the twin of the web kit's `PROFILES`. Each is a plain [ThemeConfig]; change
+/// anything with `copyWith`: `ThemeProfiles.balanced.copyWith(palette: Palette.mono)`. The kit still
+/// checks what the device supports (refraction needs Impeller; [glassCapabilities]).
+abstract final class ThemeProfiles {
+  /// Liquid glass with refraction and blur, full motion.
+  static const quality = ThemeConfig(
+    glass: GlassStyle.liquid,
+    glassRefraction: true,
+    glassBlur: true,
+    motion: Motion.full,
+  );
+
+  /// Still glass without refraction or blur, full motion.
+  static const balanced = ThemeConfig(
+    glass: GlassStyle.still,
+    glassRefraction: false,
+    glassBlur: false,
+    motion: Motion.full,
+  );
+
+  /// Opaque chrome and no motion at all, for slow devices and dense tools.
+  static const performance = ThemeConfig(
+    glass: GlassStyle.solid,
+    glassRefraction: false,
+    glassBlur: false,
+    motion: Motion.none,
   );
 }
 
@@ -160,10 +201,10 @@ class Metrics {
   /// A toolbar bubble's outer height: 44. Controls inside are 6 less.
   final double? toolbarItem;
 
-  /// Space between toolbar groups: 12.
+  /// Space between toolbar groups: defaults to [shellGap] (8).
   final double? toolbarGap;
 
-  /// A floating bar's inset from its panel's sides: 16.
+  /// A floating bar's inset from its panel's sides: defaults to [shellGap] (8).
   final double? toolbarInset;
 
   /// From a segmented control's edge to its pill, and between options: 2. Its height is
@@ -200,7 +241,8 @@ class Metrics {
   /// The workspace scaffold's navigation rail: 64 / 52 / 44 by density.
   final double? railWidth;
 
-  /// The workspace shell's one gap: window, top bar, content panel and sidebar items: 8.
+  /// The one chrome gap G: window, top bar, content panel, sidebar items, toolbar groups, floating
+  /// bars and ScrollArea edges: 8. [toolbarGap] and [toolbarInset] default to it.
   final double? shellGap;
 
   @override

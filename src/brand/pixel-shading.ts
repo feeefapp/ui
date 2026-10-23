@@ -1,6 +1,7 @@
 'use client'
 
 import {installFoPixelFallback} from './pixel-fallback';
+import { reducedMotionQuery } from '../physics/motion-value'
 /** PixelBlast shader adapted from the user-supplied React Bits source.
  * Native WebGL keeps this decorative layer within the react-live code budget.
  * Transparent, green tinted, capped resolution; no postprocessing dependency. */
@@ -175,7 +176,7 @@ export function installFoPixelShading(canvas: HTMLCanvasElement, options: {densi
   gl.uniform1f(uniform('uRippleSpeed'),.24); gl.uniform1f(uniform('uRippleThickness'),.065);
   gl.uniform1f(uniform('uRippleIntensity'),.65); gl.uniform1f(uniform('uEdgeFade'),.16);
   const clicks=new Float32Array(20).fill(-1), times=new Float32Array(10);
-  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+  const reduced=reducedMotionQuery();
   const fine=window.matchMedia('(hover: hover) and (pointer: fine)');
   const globalLayer=canvas.classList.contains('fo-pixel-shading');
   let fallbackCleanup:(()=>void)|undefined;

@@ -7,6 +7,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 import '../theme/tokens.dart' show MotionTokens;
+import '../theme.dart';
 
 /// Whether the composer leaves its one-line layout, the measurement in the web kit's
 /// `useComposerLayout`: the field gets the row's width minus every slot and gap and its own
@@ -134,7 +135,7 @@ class ComposerLayout extends MultiChildRenderObjectWidget {
         textDirection: Directionality.of(context),
         textScaler:
             MediaQuery.maybeTextScalerOf(context) ?? TextScaler.noScaling,
-        reducedMotion: MediaQuery.maybeDisableAnimationsOf(context) ?? false,
+        reducedMotion: reducedMotionOf(context),
         onExpandedChange: onExpandedChange,
       );
 
@@ -150,7 +151,7 @@ class ComposerLayout extends MultiChildRenderObjectWidget {
     ..gap = gap
     ..textDirection = Directionality.of(context)
     ..textScaler = MediaQuery.maybeTextScalerOf(context) ?? TextScaler.noScaling
-    ..reducedMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false
+    ..reducedMotion = reducedMotionOf(context)
     ..onExpandedChange = onExpandedChange;
 }
 

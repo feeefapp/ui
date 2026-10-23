@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../i18n/i18n.dart';
+import '../theme.dart';
 
 /// A nine-pixel loading wave: the twin of `PixelLoader` in `@feeef.dev/ui/pixel-art`. Squares in
 /// the current text colour light up in a diagonal wave (1.2s, each square delayed by its column
@@ -40,7 +41,7 @@ class _PixelLoaderState extends State<PixelLoader>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final still = reducedMotionOf(context);
     if (still) {
       _clock.stop();
     } else if (!_clock.isAnimating) {
@@ -60,7 +61,7 @@ class _PixelLoaderState extends State<PixelLoader>
         widget.color ??
         IconTheme.of(context).color ??
         DefaultTextStyle.of(context).style.color!;
-    final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final still = reducedMotionOf(context);
     final loader = SizedBox.square(
       dimension: widget.size,
       child: AnimatedBuilder(

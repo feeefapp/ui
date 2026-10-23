@@ -2,11 +2,9 @@
 
 import * as React from 'react'
 import './motion.css'
+import { prefersReducedMotion } from './physics/motion-value'
 
 export type PresenceState = 'open' | 'closed'
-
-const reducedMotion = () =>
-  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 /**
  * Keeps an element mounted while it animates out. `state` drives `data-state`
@@ -23,7 +21,7 @@ export function usePresence(open: boolean, exitMs = 200) {
     }
     if (!mounted) return
     setState('closed')
-    const timer = window.setTimeout(() => setMounted(false), reducedMotion() ? 0 : exitMs)
+    const timer = window.setTimeout(() => setMounted(false), prefersReducedMotion() ? 0 : exitMs)
     return () => clearTimeout(timer)
   }, [open])
   return { mounted, state }
@@ -171,7 +169,7 @@ export function Swap({
         timers.current.delete(timer)
         setLeaving((old) => old.filter((item) => item !== last))
       },
-      reducedMotion() ? 0 : 220
+      prefersReducedMotion() ? 0 : 220
     )
     timers.current.add(timer)
   }, [swapKey])

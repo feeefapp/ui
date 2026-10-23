@@ -387,7 +387,7 @@ class _FoAnimatedLogoPlayerState extends State<FoAnimatedLogoPlayer>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     if (widget.time != null || _ended || _ticker.isActive) return;
     if (reduced) {
       _time = foAnimatedLogoDuration;

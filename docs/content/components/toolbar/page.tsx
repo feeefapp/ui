@@ -96,7 +96,8 @@ function Overview() {
           object and unrelated ones stay apart. Controls inside a group use{' '}
           <C>appearance="toolbar"</C> and the default <C>regular</C> size, which drop their own surface,
           take the group's height and share its glass. A filled button keeps its fill. Groups sit{' '}
-          <C>--lab-toolbar-gap</C> (12px) apart.
+          <C>--lab-toolbar-gap</C> apart: the shell gap G (8px) unless <C>metrics.toolbarGap</C>{' '}
+          sets it. Selects and fields in a group take its control height, like buttons.
         </p>
         <Code
           code={`<Toolbar

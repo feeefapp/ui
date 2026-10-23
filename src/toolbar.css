@@ -19,7 +19,7 @@
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 8px;
+  gap: var(--lab-toolbar-gap);
   min-inline-size: 0;
 }
 .lab-toolbar-group {
@@ -53,6 +53,28 @@
   }
   html[data-lab-theme] .lab-toolbar-group .lab-control[data-control-size='icon'] {
     width: max(var(--lab-control-size), var(--lab-toolbar-control));
+  }
+}
+
+/* Field-like controls (Select, TextField) take the bubble's control height like buttons do: a
+regular one fills it, a small one keeps its size, and touch growth stops at the bubble (the bubble
+is the target), so a bubble holding a field is as tall as one holding a button. */
+html[data-lab-theme] .lab-toolbar-group .lab-select[data-surface-variant][data-control-size] {
+  border-radius: calc(var(--lab-glass-radius) - 2px);
+}
+html[data-lab-theme] .lab-toolbar-group .lab-text-field {
+  --lab-text-field-height: var(--lab-toolbar-control);
+}
+html[data-lab-theme] .lab-toolbar-group .lab-text-field[data-control-size='small'] {
+  --lab-text-field-height: min(var(--lab-field-height-small), var(--lab-toolbar-control));
+}
+@media (pointer: coarse) {
+  html[data-lab-theme] .lab-toolbar-group .lab-select[data-surface-variant][data-control-size] {
+    height: var(--lab-toolbar-control);
+    min-height: var(--lab-toolbar-control);
+  }
+  html[data-lab-theme] .lab-toolbar-group .lab-text-field[data-control-size='small'] {
+    --lab-text-field-height: var(--lab-toolbar-control);
   }
 }
 

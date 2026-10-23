@@ -278,8 +278,6 @@ export function FilterBar({
               >
                 <ScrollArea
                   label="Filter catalog rows"
-                  contentPadding={8}
-                  edgeGap={8}
                   top={
                     <ToolbarSearch label="Find a filter" value={query} onValueChange={setQuery} inputRef={search} defaultExpanded/>
 
@@ -413,7 +411,6 @@ export function FilterBar({
                 >
                   <ScrollArea
                     label="Natural filter description"
-                    edgeGap={8}
                     contentPadding={12}
                     bottom={
                       <Dock label="Natural filter actions">
@@ -561,8 +558,6 @@ export function FilterBar({
               {smallSelected && (
                 <ScrollArea
                   label={`${smallSelected.label} options`}
-                  edgeGap={8}
-                  contentPadding={8}
                   top={
                     smallSelected.type === 'enum' ? (
                       <ToolbarSearch label={`Search ${smallSelected.label.toLowerCase()}`} value={choiceQuery} onValueChange={setChoiceQuery} inputRef={enumSearch} defaultExpanded/>

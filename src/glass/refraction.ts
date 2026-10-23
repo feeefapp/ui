@@ -244,6 +244,20 @@ export function supportsElementRefraction() {
   return typeof CSS !== 'undefined' && CSS.supports('background-image', '-moz-element(#glass-source)')
 }
 
+/**
+ * What glass can do in this browser, for apps that show or log it (a settings screen, telemetry):
+ * `refraction` = SVG backdrop filters bend the backdrop (Chromium), `elementRefraction` = a
+ * supplied `backdropSource` can be bent (Firefox), `backdropBlur` = `backdrop-filter` blurs.
+ * The kit already uses these checks itself; profiles never need a per-browser variant.
+ */
+export function glassCapabilities(): { refraction: boolean; elementRefraction: boolean; backdropBlur: boolean } {
+  const supports = (property: string, value: string) => typeof CSS !== 'undefined' && CSS.supports(property, value)
+  return {
+    refraction: supportsRefraction(),
+    elementRefraction: supportsElementRefraction(),
+    backdropBlur: supports('backdrop-filter', 'blur(1px)') || supports('-webkit-backdrop-filter', 'blur(1px)'),
+  }
+}
 
 /** Place a live background image in a glass piece, with both boxes in material coordinates. */
 export function elementImagePlacement(source: GlassRect, piece: GlassRect) {

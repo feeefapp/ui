@@ -83,7 +83,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Hello body'), findsOneWidget);
     expect(find.text('Row Hello'), findsOneWidget, reason: 'list stays');
-    expect(tester.getTopLeft(find.text('Hello body')).dx, 360 + 24);
+    expect(tester.getTopLeft(find.text('Hello body')).dx, 360 + 8);
   });
 
   testWidgets('the divider drags, steps with the keyboard and clamps', (

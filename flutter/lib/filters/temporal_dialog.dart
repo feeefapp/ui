@@ -114,17 +114,13 @@ class TemporalDialog extends StatelessWidget {
       final Widget top;
       if (edges || presets) {
         top = _DialogBar(
-          gap: 8,
+          gap: ThemeProvider.of(context).sizes.toolbarGap,
           bases: [if (edges) null, if (presets) 240],
           children: [
             if (edges)
               ToolbarGroup(
                 label: 'Range ends',
-                children: [
-                  Expanded(
-                    child: TemporalEdges(editor: editor),
-                  ),
-                ],
+                children: [Expanded(child: TemporalEdges(editor: editor))],
               ),
             if (presets)
               ToolbarGroup(
@@ -203,6 +199,7 @@ class TemporalDialog extends StatelessWidget {
         ),
       );
       final colors = ThemeProvider.of(context).colors;
+      final shellGap = ThemeProvider.of(context).sizes.shellGap;
       return Modal(
         open: open,
         label: label,
@@ -216,9 +213,12 @@ class TemporalDialog extends StatelessWidget {
         width: MediaQuery.sizeOf(context).width < 600
             ? MediaQuery.sizeOf(context).width - 16
             : (edges ? 680 : 400),
-        // Content starts where the buttons inside the bars start (bar inset + the group's 2px
-        // padding).
-        scrollOptions: const ScrollOptions(edgeGap: 12, contentPadding: 14),
+        // Bars float the shell gap G from the edges; content starts where the buttons inside
+        // them start (G + the group's 2px padding).
+        scrollOptions: ScrollOptions(
+          edgeGap: shellGap,
+          contentPadding: shellGap + 2,
+        ),
         top: directed(GlassScope(child: top)),
         bottom: directed(GlassScope(child: bottom)),
         child: directed(

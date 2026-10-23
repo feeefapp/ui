@@ -184,8 +184,9 @@ void main() {
     double? reserved;
     await tester.pumpWidget(app(extra: (v) => reserved = v));
     await tester.pumpAndSettle();
-    // The bar's measured height + 12: 4 + 1 padding/border around a 52px tab, twice.
-    expect(reserved, 62 + 12);
+    // The bar's measured height + the toolbar inset (G, 8): 4 + 1 padding/border around a 52px
+    // tab, twice.
+    expect(reserved, 62 + 8);
     final width = tester.getSize(button('orders')).width;
     await tester.drag(find.text('Home row 2'), const Offset(0, -300));
     await tester.pumpAndSettle();
@@ -194,7 +195,7 @@ void main() {
     expect(tester.getSize(button('home')).width, 52);
     expect(find.text('Home'), findsNothing);
     // The reserve keeps the full bar's height.
-    expect(reserved, 74);
+    expect(reserved, 70);
     await tester.drag(find.text('Home row 6'), const Offset(0, 60));
     await tester.pumpAndSettle();
     expect(tester.getSize(button('orders')).width, width);
@@ -265,9 +266,9 @@ void main() {
             .first,
       );
       expect(player.left, greaterThan(home.right));
-      // Chrome = 390 − 2 × 12; the bar is 52 + two 2px gaps (hidden tabs keep their flex gap,
-      // as in CSS) + 2 × 5, then the 8px gap.
-      expect(player.width, 366 - 66 - 8);
+      // Chrome = 390 − 2 × 8 (the toolbar inset, G); the bar is 52 + two 2px gaps (hidden tabs
+      // keep their flex gap, as in CSS) + 2 × 5, then the 8px toolbar gap.
+      expect(player.width, 374 - 66 - 8);
       expect(player.height, 62);
       expect(tester.takeException(), isNull);
     },

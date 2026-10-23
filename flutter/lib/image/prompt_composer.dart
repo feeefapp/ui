@@ -681,7 +681,7 @@ class _ReferenceChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = ThemeProvider.of(context).colors;
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     final chip = DecoratedBox(
       decoration: ShapeDecoration(
         color: mixSrgb(c.surface, 0.86, transparent),
@@ -810,7 +810,7 @@ class _AnchoredState extends State<_Anchored>
   void didUpdateWidget(_Anchored old) {
     super.didUpdateWidget(old);
     if (widget.open && !old.open) {
-      if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+      if (reducedMotionOf(context)) {
         _pop.value = 1;
       } else {
         _pop.forward(from: 0);
@@ -838,7 +838,7 @@ class _AnchoredState extends State<_Anchored>
   );
 
   Widget _overlay(BuildContext context) {
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     Widget content = LayoutBuilder(
       builder: (context, constraints) =>
           widget.content(context, constraints.maxHeight),

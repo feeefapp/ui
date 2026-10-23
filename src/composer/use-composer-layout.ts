@@ -1,6 +1,7 @@
 'use client'
 
 import { useLayoutEffect, useRef, useState } from 'react'
+import { prefersReducedMotion, reducedMotionQuery } from '../physics/motion-value'
 
 type Box = { x: number; y: number; width: number }
 type Snapshot = {
@@ -112,7 +113,7 @@ export function useComposerLayout(prompt: string, contentRevision?: unknown) {
         // A resized parent invalidates the old horizontal coordinates. Replaying
         // them briefly sends actions outside the new shell on narrow screens.
         Math.abs(before.width - after.width) > 0.5 ||
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+        prefersReducedMotion() ||
         !shell.animate
       )
         return
@@ -181,7 +182,7 @@ export function useComposerLayout(prompt: string, contentRevision?: unknown) {
       update.current()
     })
     observer.observe(grid)
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const reduced = reducedMotionQuery()
     const finish = () => {
       if (reduced.matches) animations.current.forEach((animation) => animation.finish())
     }

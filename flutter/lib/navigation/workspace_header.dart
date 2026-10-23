@@ -187,7 +187,8 @@ class WorkspaceHeader extends StatelessWidget {
         ? null
         : Row(
             mainAxisSize: MainAxisSize.min,
-            spacing: 8,
+            // `.lab-toolbar-trailing`: --lab-toolbar-gap between the groups.
+            spacing: theme.sizes.toolbarGap,
             children: [
               if (tools != null)
                 ToolbarGroup(

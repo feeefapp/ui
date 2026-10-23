@@ -13,6 +13,7 @@ import 'package:flutter/widgets.dart';
 
 import '../i18n/i18n.dart';
 import 'block_order.dart';
+import '../theme.dart';
 
 /// Pointer travel (px) before a press on the handle becomes a drag.
 const speechActivationDistance = 6.0;
@@ -123,7 +124,7 @@ class _GroupState extends State<SpeechReorderGroup>
     if (mounted) setState(() {});
   }
 
-  bool get _reduced => MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+  bool get _reduced => reducedMotionOf(context);
 
   RenderBox? get _box => context.findRenderObject() as RenderBox?;
 

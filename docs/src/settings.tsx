@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { ThemeConfig } from '@feeef.dev/ui/theme-config'
-import { THEME_DEFAULTS } from '@feeef.dev/ui/theme-config'
+import { PROFILES, THEME_DEFAULTS } from '@feeef.dev/ui/theme-config'
 import { directionFor } from '@feeef.dev/ui/i18n-core'
 
 /**
@@ -35,11 +35,19 @@ function savedTheme(saved: unknown): DocsSettings['theme'] {
   for (const key of Object.keys(DEFAULTS.theme) as (keyof typeof DEFAULTS.theme)[])
     if (typeof value[key] === typeof DEFAULTS.theme[key]) (theme as Record<string, unknown>)[key] = value[key]
   if (!['liquid', 'still', 'solid'].includes(theme.glass)) theme.glass = DEFAULTS.theme.glass
+  if (!['full', 'reduced', 'none'].includes(theme.motion)) theme.motion = DEFAULTS.theme.motion
   if (typeof value.primary === 'string') theme.primary = value.primary
   return theme
 }
 
-function read(): DocsSettings {
+/** `?profile=quality|balanced|performance` applies that profile on top of the saved theme (bench, shareable links). */
+function profileFromUrl(): ThemeConfig {
+  if (typeof location === 'undefined') return {}
+  const value = new URLSearchParams(location.search).get('profile')
+  return value && Object.hasOwn(PROFILES, value) ? PROFILES[value as keyof typeof PROFILES] : {}
+}
+
+function readSaved(): DocsSettings {
   const platform = platformFromUrl()
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) ?? 'null')
@@ -51,6 +59,11 @@ function read(): DocsSettings {
       }
   } catch {}
   return platform ? { ...DEFAULTS, code: platform } : DEFAULTS
+}
+
+function read(): DocsSettings {
+  const settings = readSaved()
+  return { ...settings, theme: { ...settings.theme, ...profileFromUrl() } }
 }
 
 const Context = createContext<{

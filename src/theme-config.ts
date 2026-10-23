@@ -13,6 +13,7 @@ import { clampGlassTint, GLASS_TINT_DEFAULT } from './glass/material'
  * - `data-lab-glass`    → how floating glass behaves (glass/glass.css, GlassContainer)
  * - `--lab-glass-tint`  → the glass material between clear and tinted (system.css, glass.css)
  * - `data-lab-glass-blur` / `data-lab-glass-refraction` → backdrop blur and edge bending (`on`/`off`)
+ * - `data-lab-motion`   → `full` / `reduced` / `none` (system.css; `motionOf()` in physics/motion-value.ts)
  * - `metrics` → size variables (`--lab-control-height`, `--lab-toolbar-item`, …) that replace the density's
  *
  * Server-rendered hosts also spread `themeAttributes(config)` onto `<html>` so the first
@@ -54,6 +55,13 @@ export interface ThemeConfig {
    */
   glassRefraction?: boolean
   /**
+   * Motion: `full` (default) animates; `reduced` behaves as if the reader asked for reduced motion
+   * (springs jump, transitions become instant or short fades, glass light stays still); `none`
+   * stops every animation and transition, ambient ones included (pixel textures, loaders, glass
+   * sampling). The reader's own reduced-motion setting still applies when it is stricter.
+   */
+  motion?: Motion
+  /**
    * Control sizes, overriding the density's. Each value set here replaces that size at every
    * density (density supplies the rest), so an app can keep the iOS defaults and only change, say,
    * its toolbar height. Lengths are CSS pixels (Flutter logical pixels in the twin).
@@ -92,9 +100,9 @@ export interface Metrics {
   rowHeight?: number
   /** A toolbar bubble's outer height: 44; controls inside are 6px less (`--lab-toolbar-item`). */
   toolbarItem?: number
-  /** Space between toolbar groups: 12 (`--lab-toolbar-gap`). */
+  /** Space between toolbar groups: the shell gap, 8 (`--lab-toolbar-gap`). */
   toolbarGap?: number
-  /** A floating bar's inset from its panel's sides: 16 (`--lab-toolbar-inset`). */
+  /** A floating bar's inset from its panel's sides: the shell gap, 8 (`--lab-toolbar-inset`). */
   toolbarInset?: number
   /** From a segmented control's edge to its pill, and between options: 2 (`--lab-segmented-inset`). Its height is `controlHeight.regular`. */
   segmentedInset?: number
@@ -118,7 +126,7 @@ export interface Metrics {
   sidebarWidth?: number
   /** The workspace scaffold's navigation rail: 64 / 52 / 44 by density (`--lab-navigation-rail-width`). */
   railWidth?: number
-  /** The workspace shell's one gap: window, top bar, content panel and sidebar items: 8 (`--lab-shell-gap`). */
+  /** The one chrome gap G: window, top bar, content panel, sidebar items, toolbar groups, floating bars and ScrollArea edges: 8 (`--lab-shell-gap`). `toolbarGap` and `toolbarInset` default to it. */
   shellGap?: number
 }
 
@@ -128,6 +136,8 @@ export type Palette = 'lab' | 'mono'
 export type Density = 'comfortable' | 'compact' | 'thin'
 /** How floating glass behaves: moving liquid glass, still glass, or opaque surfaces. */
 export type GlassStyle = 'liquid' | 'still' | 'solid'
+/** How much the kit animates: everything, the reduced-motion paths, or nothing at all. */
+export type Motion = 'full' | 'reduced' | 'none'
 /** `on` / `off`, as boolean options appear on `<html>`. */
 export type GlassSwitch = 'on' | 'off'
 
@@ -140,7 +150,22 @@ export const THEME_DEFAULTS: Required<Omit<ThemeConfig, 'primary' | 'metrics'>> 
   glassTint: GLASS_TINT_DEFAULT,
   glassBlur: false,
   glassRefraction: true,
+  motion: 'full',
 }
+
+/**
+ * Ready-made looks, as plain partial configs: spread one and override anything,
+ * `{ ...PROFILES.balanced, palette: 'mono' }`. The kit still checks what the browser supports
+ * (refraction, blur; `glassCapabilities()`), so a profile never needs a per-browser variant.
+ * - `quality`: liquid glass with refraction and blur, full motion.
+ * - `balanced`: still glass without refraction or blur, full motion.
+ * - `performance`: opaque chrome and no motion at all, for slow devices and dense tools.
+ */
+export const PROFILES = {
+  quality: { glass: 'liquid', glassRefraction: true, glassBlur: true, motion: 'full' },
+  balanced: { glass: 'still', glassRefraction: false, glassBlur: false, motion: 'full' },
+  performance: { glass: 'solid', glassRefraction: false, glassBlur: false, motion: 'none' },
+} satisfies Record<string, ThemeConfig>
 
 type Resolved = Required<Omit<ThemeConfig, 'primary' | 'metrics'>> & {
   primary: string | null
@@ -189,6 +214,7 @@ function resolve(config: ThemeConfig = {}): Resolved {
     glassTint: clampGlassTint(config.glassTint),
     glassBlur: config.glassBlur ?? THEME_DEFAULTS.glassBlur,
     glassRefraction: config.glassRefraction ?? THEME_DEFAULTS.glassRefraction,
+    motion: config.motion === 'reduced' || config.motion === 'none' ? config.motion : 'full',
     radius,
     primary: config.primary && parseHexColor(config.primary) ? config.primary.toLowerCase() : null,
     metrics: config.metrics ?? {},
@@ -260,7 +286,7 @@ function variables(theme: Resolved): Record<string, string> {
 /**
  * Attributes for the root `<html>` element (React props), e.g. in a Next.js root layout:
  * `data-lab-palette`, `data-lab-density`, `data-lab-glass`, `data-lab-glass-blur`,
- * `data-lab-glass-refraction`, `data-lab-primary` (when set) and the style variables
+ * `data-lab-glass-refraction`, `data-lab-motion`, `data-lab-primary` (when set) and the style variables
  * (`--lab-radius-scale`, `--lab-glass-tint`, the seed colours, and one variable per set `metrics` value).
  * Unset options use `THEME_DEFAULTS`; `radius` is clamped to 0–1.5, `glassTint` to 0–1, and an invalid `primary`
  * is ignored. Color mode (`data-lab-theme`) is not included; `ThemeProvider` sets it.
@@ -271,6 +297,7 @@ export function themeAttributes(config?: ThemeConfig): {
   'data-lab-glass': GlassStyle
   'data-lab-glass-blur': GlassSwitch
   'data-lab-glass-refraction': GlassSwitch
+  'data-lab-motion': Motion
   'data-lab-primary'?: ''
   style: CSSProperties
 } {
@@ -281,6 +308,7 @@ export function themeAttributes(config?: ThemeConfig): {
     'data-lab-glass': theme.glass,
     'data-lab-glass-blur': theme.glassBlur ? 'on' : 'off',
     'data-lab-glass-refraction': theme.glassRefraction ? 'on' : 'off',
+    'data-lab-motion': theme.motion,
     ...(theme.primary ? { 'data-lab-primary': '' as const } : {}),
     style: variables(theme) as CSSProperties,
   }
@@ -299,6 +327,7 @@ export function applyThemeConfig(element: HTMLElement, config?: ThemeConfig): vo
   element.setAttribute('data-lab-glass', theme.glass)
   element.setAttribute('data-lab-glass-blur', theme.glassBlur ? 'on' : 'off')
   element.setAttribute('data-lab-glass-refraction', theme.glassRefraction ? 'on' : 'off')
+  element.setAttribute('data-lab-motion', theme.motion)
   if (theme.primary) element.setAttribute('data-lab-primary', '')
   else element.removeAttribute('data-lab-primary')
   for (const name of [...SEED_VARS, ...METRIC_VARIABLE_NAMES]) element.style.removeProperty(name)

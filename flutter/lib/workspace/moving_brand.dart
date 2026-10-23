@@ -100,7 +100,7 @@ class _MovingBrandState extends State<MovingBrand>
     super.didChangeDependencies();
     final scaffold = Scaffold.maybeOf(context);
     final screen = MediaQuery.maybeSizeOf(context);
-    _reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    _reduced = reducedMotionOf(context);
     final drawerOpened =
         scaffold?.drawerOpen == true && _scaffold?.drawerOpen != true;
     if (scaffold != _scaffold || screen != _screen) {

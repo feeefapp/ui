@@ -70,7 +70,7 @@ class _DockState extends State<Dock> {
     final label = widget.label;
     final theme = ThemeProvider.of(context);
     final narrow = (MediaQuery.maybeSizeOf(context)?.width ?? 1000) <= 420;
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         // 4px padding inside the 1px border on each side.

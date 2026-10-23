@@ -138,7 +138,6 @@ export function Code({
     >
       <ScrollArea
         label={`${label} code`}
-        edgeGap={8}
         contentPadding={16}
         topFadeHeight={64}
         top={

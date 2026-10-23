@@ -107,7 +107,7 @@
   flex: 1;
   min-height: 0;
   padding: 0;
-  /* The app bar and dock sit --lab-toolbar-inset (16px, iOS) from the panel's sides. */
+  /* The app bar and dock sit --lab-toolbar-inset (the shell gap G by default) from the panel's sides. */
   --lab-scroll-side-gap: var(--lab-toolbar-inset);
 }
 .lab-workspace-app-bar {
@@ -123,7 +123,7 @@
 .lab-workspace-app-trailing {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--lab-toolbar-gap);
   flex: none;
 }
 .lab-workspace-app-leading:empty,
@@ -148,7 +148,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: var(--lab-shell-gap);
+  gap: var(--lab-toolbar-gap);
   padding: var(--lab-shell-gap) var(--lab-shell-gap) 0;
 }
 .lab-workspace-top-bar > :first-child,

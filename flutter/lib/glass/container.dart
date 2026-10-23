@@ -287,7 +287,7 @@ class _GlassContainerState extends State<GlassContainer> {
 
   Widget _build(BuildContext context) {
     final theme = ThemeProvider.of(context);
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     final style = glassStyleOf(context);
     final liquid = style == GlassStyle.liquid;
     _scene

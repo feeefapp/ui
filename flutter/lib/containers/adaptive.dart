@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import '../physics/motion_value.dart';
 import '../physics/spring.dart';
 import 'adaptive_model.dart';
+import '../theme.dart';
 
 /// `compact` below the breakpoint, `regular` from it: the element's own width, not the window's.
 /// The twin of `SizeClass` / `useSizeClass` in `@feeef.dev/ui/containers/adaptive`; read it below a
@@ -116,7 +117,7 @@ class AdaptiveStack extends MultiChildRenderObjectWidget {
         justify: justify,
         onAxisChange: onAxisChange,
         textDirection: Directionality.maybeOf(context) ?? TextDirection.ltr,
-        reduceMotion: MediaQuery.maybeDisableAnimationsOf(context) ?? false,
+        reduceMotion: reducedMotionOf(context),
       );
 
   @override
@@ -130,7 +131,7 @@ class AdaptiveStack extends MultiChildRenderObjectWidget {
     ..justify = justify
     ..onAxisChange = onAxisChange
     ..textDirection = Directionality.maybeOf(context) ?? TextDirection.ltr
-    ..reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    ..reduceMotion = reducedMotionOf(context);
 }
 
 /// Parent data of an [AdaptiveStack] child: its layout offset plus the FLIP translation it is
@@ -505,7 +506,7 @@ class ViewThatFits extends MultiChildRenderObjectWidget {
   RenderViewThatFits createRenderObject(BuildContext context) =>
       RenderViewThatFits(
         textDirection: Directionality.maybeOf(context) ?? TextDirection.ltr,
-        reduceMotion: MediaQuery.maybeDisableAnimationsOf(context) ?? false,
+        reduceMotion: reducedMotionOf(context),
       );
 
   @override
@@ -514,7 +515,7 @@ class ViewThatFits extends MultiChildRenderObjectWidget {
     RenderViewThatFits renderObject,
   ) => renderObject
     ..textDirection = Directionality.maybeOf(context) ?? TextDirection.ltr
-    ..reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    ..reduceMotion = reducedMotionOf(context);
 }
 
 /// Parent data of a [ViewThatFits] option.

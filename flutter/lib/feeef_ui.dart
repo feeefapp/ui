@@ -37,6 +37,7 @@ export 'glass/container.dart';
 export 'glass/geometry.dart' show GlassShape, GlassPath, glassPaths, mergeWidth;
 export 'glass/material.dart';
 export 'glass/refraction.dart';
+export 'glass/refraction_filter.dart' show glassCapabilities;
 export 'glass/member.dart';
 export 'i18n/i18n.dart';
 export 'i18n/i18n_core.dart';

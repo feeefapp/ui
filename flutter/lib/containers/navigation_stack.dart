@@ -358,7 +358,7 @@ class _NavigationStackState extends State<NavigationStack>
         : _Style.slide;
   }
 
-  bool get _reduced => MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+  bool get _reduced => reducedMotionOf(context);
   bool get _rtl => Directionality.of(context) == TextDirection.rtl;
 
   @override
@@ -1296,7 +1296,7 @@ class NavigationPage extends StatefulWidget {
   /// When pushed, grow out of the [ZoomSource] with this id on the page below.
   final String? zoomSource;
 
-  /// Inline content padding in px (default 24).
+  /// Inline content padding in px (default: the shell gap G).
   final double? contentPadding;
 
   /// Accessible name of the scrolling content. Defaults to the title.
@@ -1521,7 +1521,7 @@ class _NavigationPageState extends State<NavigationPage> {
       child: ScrollArea(
         label: widget.contentLabel ?? widget.title,
         controller: _controller,
-        contentPadding: widget.contentPadding ?? 24,
+        contentPadding: widget.contentPadding,
         top: header == null
             ? null
             : SizedBox(key: _bar, width: double.infinity, child: header),
@@ -1547,7 +1547,7 @@ class _BarTitle extends StatelessWidget {
   /// `.lab-nav-bar-title`: fades and drops 6px while hidden, over the normal duration.
   @override
   Widget build(BuildContext context) {
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     return IgnorePointer(
       ignoring: !shown,
       child: TweenAnimationBuilder<double>(

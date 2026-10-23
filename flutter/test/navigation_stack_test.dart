@@ -80,19 +80,19 @@ void main() {
   ) async {
     final path = NavigationPath<String>();
     await tester.pumpWidget(app(stack(path)));
-    expect(left(tester, 'root body'), 24);
+    expect(left(tester, 'root body'), 8);
 
     path.push('Order 1');
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 16));
     await tester.pump(const Duration(milliseconds: 80));
     final mid = left(tester, 'Order 1 body');
-    expect(mid, greaterThan(24));
+    expect(mid, greaterThan(8));
     expect(mid, lessThan(800));
-    expect(left(tester, 'root body'), lessThan(24), reason: 'parallax');
+    expect(left(tester, 'root body'), lessThan(8), reason: 'parallax');
 
     await tester.pumpAndSettle();
-    expect(left(tester, 'Order 1 body'), 24);
+    expect(left(tester, 'Order 1 body'), 8);
     expect(find.text('root body'), findsNothing, reason: 'below is hidden');
     expect(find.text('root body', skipOffstage: false), findsOneWidget);
 
@@ -100,10 +100,10 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 16));
     await tester.pump(const Duration(milliseconds: 80));
-    expect(left(tester, 'Order 1 body'), greaterThan(24), reason: 'leaving');
+    expect(left(tester, 'Order 1 body'), greaterThan(8), reason: 'leaving');
     await tester.pumpAndSettle();
     expect(find.text('Order 1 body', skipOffstage: false), findsNothing);
-    expect(left(tester, 'root body'), 24);
+    expect(left(tester, 'root body'), 8);
   });
 
   testWidgets('the back button is named for the previous page and goes back', (
@@ -174,7 +174,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(backs, 0);
-    expect(left(tester, 'Order 1 body'), 24);
+    expect(left(tester, 'Order 1 body'), 8);
 
     // Toward the leading edge does nothing.
     await tester.fling(find.text('Order 1 body'), const Offset(-300, 0), 2000);
@@ -186,7 +186,7 @@ void main() {
     expect(backs, 1);
     expect(path.path, isEmpty);
     expect(find.text('Order 1 body', skipOffstage: false), findsNothing);
-    expect(left(tester, 'root body'), 24);
+    expect(left(tester, 'root body'), 8);
   });
 
   testWidgets('the page follows the finger with the page below in parallax', (
@@ -201,10 +201,10 @@ void main() {
     await gesture.moveBy(const Offset(30, 0));
     await gesture.moveBy(const Offset(200, 0));
     await tester.pump();
-    expect(left(tester, 'Order 1 body'), closeTo(24 + 200, 1));
+    expect(left(tester, 'Order 1 body'), closeTo(8 + 200, 1));
     // The page below shows, shifted back by 30% of the uncovered remainder.
     expect(find.text('root body'), findsOneWidget);
-    expect(left(tester, 'root body'), closeTo(24 - 0.3 * (600 / 800) * 800, 1));
+    expect(left(tester, 'root body'), closeTo(8 - 0.3 * (600 / 800) * 800, 1));
     await gesture.up();
     await tester.pumpAndSettle();
   });
@@ -262,7 +262,7 @@ void main() {
     );
     expect(transform.transform.storage[0], lessThan(1), reason: 'x scale');
     await tester.pumpAndSettle();
-    expect(left(tester, 'Photo body'), 24);
+    expect(left(tester, 'Photo body'), 8);
 
     await tester.fling(find.text('Photo body'), const Offset(0, 300), 2000);
     await tester.pumpAndSettle();

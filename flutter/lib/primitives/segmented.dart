@@ -187,7 +187,7 @@ class _SegmentedControlState<T> extends State<SegmentedControl<T>>
   FocusNode _node(int index) => _nodes.putIfAbsent(index, FocusNode.new);
   GlobalKey _key(int index) => _keys.putIfAbsent(index, GlobalKey.new);
 
-  bool get _reduced => MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+  bool get _reduced => reducedMotionOf(context);
   int get _selected =>
       widget.options.indexWhere((option) => option.value == widget.value);
 

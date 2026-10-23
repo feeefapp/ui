@@ -9,6 +9,7 @@ import { Check, ChevronDown } from 'lucide-react'
 import { cn } from '../utils'
 import { FieldShell, type FieldDecorationProps } from './field-shell'
 import { RawInput, type InputValidator } from './raw-input'
+import { prefersReducedMotion } from '../physics/motion-value'
 
 export type SelectProps = FieldDecorationProps & {
   /** The `Option` items of the menu. */
@@ -187,7 +188,7 @@ export function Select({
             setOpen(false)
             setClosing(false)
           },
-          menuCloseDuration(!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) * 1000 + 20
+          menuCloseDuration(prefersReducedMotion()) * 1000 + 20
         )
       }}
       disabled={props.disabled}

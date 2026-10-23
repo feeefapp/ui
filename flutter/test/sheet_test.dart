@@ -155,8 +155,8 @@ void main() {
     h.show(true);
     await tester.pumpAndSettle();
     expect(find.text('Row 0'), findsOneWidget);
-    // Large = 800 - (10 + 0 safe area); the content starts below the 24px padding.
-    expect(_sheetTop(tester), closeTo(10 + 24, 0.5));
+    // Large = 800 - (10 + 0 safe area); the content starts below the shell gap G (8) of padding.
+    expect(_sheetTop(tester), closeTo(10 + 8, 0.5));
     expect(find.bySemanticsLabel('Filters'), findsWidgets);
     // A full-height modal sheet makes the page behind recede fully: down 10px, scaled to 94%.
     final page = tester.widget<Transform>(
@@ -196,8 +196,8 @@ void main() {
       h.app(detents: const [SheetDetent.medium, SheetDetent.large]),
     );
     await tester.pumpAndSettle();
-    // Medium = 400px: grabber row (20) + padding (24) above the first row.
-    expect(_sheetTop(tester), closeTo(400 + 20 + 24, 0.5));
+    // Medium = 400px: grabber row (20) + padding (G, 8) above the first row.
+    expect(_sheetTop(tester), closeTo(400 + 20 + 8, 0.5));
 
     // A slow drag up past the middle lands on large.
     await tester.timedDrag(
@@ -207,7 +207,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(h.changes, [SheetDetent.large]);
-    expect(_sheetTop(tester), closeTo(10 + 20 + 24, 0.5));
+    expect(_sheetTop(tester), closeTo(10 + 20 + 8, 0.5));
 
     // A small slow drag down settles back on large.
     await tester.timedDrag(
@@ -217,7 +217,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(h.changes, [SheetDetent.large]);
-    expect(_sheetTop(tester), closeTo(54, 0.5));
+    expect(_sheetTop(tester), closeTo(38, 0.5));
 
     // A slow drag down to near the middle lands on medium.
     await tester.timedDrag(
@@ -227,7 +227,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(h.changes, [SheetDetent.large, SheetDetent.medium]);
-    expect(_sheetTop(tester), closeTo(444, 0.5));
+    expect(_sheetTop(tester), closeTo(428, 0.5));
 
     // A flick down from medium dismisses.
     await tester.fling(find.text('Row 1'), const Offset(0, 300), 2000);
@@ -263,7 +263,7 @@ void main() {
     await tester.tap(grabber);
     await tester.pumpAndSettle();
     expect(h.changes, [SheetDetent.large]);
-    expect(_sheetTop(tester), closeTo(54, 0.5));
+    expect(_sheetTop(tester), closeTo(38, 0.5));
     // Cycling wraps around to the lowest detent.
     await tester.tap(grabber);
     await tester.pumpAndSettle();
@@ -282,7 +282,7 @@ void main() {
     for (var i = 0; i < 4; i++) {
       await tester.pump();
     }
-    expect(_sheetTop(tester), closeTo(34, 0.5));
+    expect(_sheetTop(tester), closeTo(18, 0.5));
     expect(tester.hasRunningAnimations, isFalse);
 
     h.show(false);
@@ -319,10 +319,10 @@ void main() {
     );
     await tester.pumpAndSettle();
     final body = tester.getRect(find.text('Body'));
-    // 560 wide, centered: content starts at (1200 - 560) / 2 + 24.
-    expect(body.left, closeTo(320 + 24, 0.5));
-    // Natural height 24 + 200 + 24 = 248, centered vertically.
-    expect(body.top, closeTo((900 - 248) / 2 + 24, 0.5));
+    // 560 wide, centered: content starts at (1200 - 560) / 2 + G (8).
+    expect(body.left, closeTo(320 + 8, 0.5));
+    // Natural height 8 + 200 + 8 = 216, centered vertically.
+    expect(body.top, closeTo((900 - 216) / 2 + 8, 0.5));
     await tester.tapAt(const Offset(10, 10));
     await tester.pump();
     expect(open, isFalse);

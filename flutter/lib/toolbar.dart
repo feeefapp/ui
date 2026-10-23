@@ -34,7 +34,7 @@ class Toolbar extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        // --lab-toolbar-gap: 12 between groups, like iOS's fixed toolbar spacer.
+        // --lab-toolbar-gap (the shell gap G by default) between groups.
         spacing: ThemeProvider.of(context).sizes.toolbarGap,
         children: [
           Flexible(child: leading),

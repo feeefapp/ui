@@ -1,3 +1,4 @@
+import { reducedMotionQuery } from '../physics/motion-value'
 /** Ordered 8×8 dithering, inspired by the Wave reference; transparent CPU paint avoids GPU driver artifacts. */
 export function installFoPixelFallback(
   original: HTMLCanvasElement,
@@ -21,7 +22,7 @@ export function installFoPixelFallback(
     28, 52, 20, 62, 30, 54, 22, 3, 35, 11, 43, 1, 33, 9, 41, 51, 19, 59, 27, 49, 17, 57, 25, 15, 47,
     7, 39, 13, 45, 5, 37, 63, 31, 55, 23, 61, 29, 53, 21,
   ]
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)')
+  const reduced = reducedMotionQuery()
   let frame = 0,
     last = 0,
     time = 1.7,

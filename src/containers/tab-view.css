@@ -22,7 +22,7 @@
   min-width: 0;
   min-height: 0;
   border-radius: inherit;
-  --lab-scroll-extra-bottom: calc(var(--lab-tab-chrome) + 12px);
+  --lab-scroll-extra-bottom: calc(var(--lab-tab-chrome) + var(--lab-toolbar-inset));
 }
 .lab-tab-panel > * {
   flex: 1 1 0%;
@@ -35,12 +35,14 @@
 .lab-tab-chrome {
   position: absolute;
   z-index: 20;
-  inset-inline: 12px;
-  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  /* A floating bar: --lab-toolbar-inset (the shell gap G by default) from the panel, the accessory
+  --lab-toolbar-gap from the bar. */
+  inset-inline: var(--lab-toolbar-inset);
+  bottom: calc(var(--lab-toolbar-inset) + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--lab-toolbar-gap);
   pointer-events: none;
 }
 .lab-tab-chrome > :not(.lab-glass-material) {

@@ -15,7 +15,8 @@ import '../toolbar.dart';
 import 'button.dart';
 
 /// Spacing a scrollable [Modal] passes to its inner [ScrollArea]: the web kit's `scrollOptions`
-/// (`Pick<ScrollAreaProps, 'edgeGap' | 'contentPadding'>`). A null field keeps the area's default.
+/// (`Pick<ScrollAreaProps, 'edgeGap' | 'contentPadding'>`). A null field keeps the dialog's default:
+/// floats the shell gap G from the edges, content padding 16.
 @immutable
 class ScrollOptions {
   const ScrollOptions({this.edgeGap, this.contentPadding});
@@ -137,7 +138,7 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
     if (!widget.open && old.open) _hide();
   }
 
-  bool get _reduced => MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+  bool get _reduced => reducedMotionOf(context);
 
   void _show() {
     _previous = FocusManager.instance.primaryFocus;
@@ -219,8 +220,9 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
     final maxHeight = fit ? screen.height - 32 : screen.height * 0.9;
     Widget body;
     if (shown.scrollable) {
-      final gap = shown.scrollOptions?.edgeGap ?? 12;
-      final padding = shown.scrollOptions?.contentPadding ?? 24;
+      // Floats sit the shell gap G from the dialog's edges; its content is inside a card: 16.
+      final gap = shown.scrollOptions?.edgeGap ?? s.shellGap;
+      final padding = shown.scrollOptions?.contentPadding ?? 16;
       final top = shown.headerless ? shown.top : _header(context);
       Widget measure(Widget? child, ValueChanged<double> onHeight) =>
           child == null || !fit
@@ -392,7 +394,8 @@ class _ModalState extends State<Modal> with SingleTickerProviderStateMixin {
   /// The default floating header of a scrollable dialog: title group, close group.
   Widget _header(BuildContext context) => GlassScope(
     child: Row(
-      spacing: 12,
+      // --lab-toolbar-gap (the shell gap G by default) between the groups.
+      spacing: ThemeProvider.of(context).sizes.toolbarGap,
       children: [
         Expanded(
           child: Align(

@@ -13,6 +13,7 @@ import {
 import { cn } from '../utils'
 import { ScrollGradientOverlay } from './gradient-overlay'
 import { scrollContentReserve } from './metrics'
+import { useShellGap } from './shell-gap'
 import './scroll.css'
 
 export type ScrollAreaProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
@@ -24,11 +25,11 @@ export type ScrollAreaProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> &
   bottom?: ReactNode
   /** Accessible name of the scroll region. */
   label: string
-  /** Space in px between a float and the area's edges; also added above and below it in the reservation. */
+  /** Space in px between a float and the area's edges; also added above and below it in the reservation. Default: the shell gap G (`--lab-shell-gap`, 8). */
   edgeGap?: number
   /** Space in px between a float and the area's sides, when it differs from `edgeGap` (a scaffold's app bar uses `--lab-toolbar-inset`). */
   sideGap?: number
-  /** Content padding in px: inline sides, and top/bottom when no float is present. */
+  /** Content padding in px: inline sides, and top/bottom when no float is present. Default: the shell gap G (`--lab-shell-gap`, 8); cards bring their own inner padding. */
   contentPadding?: number
   /** Paints the dithered edge washes that fade content under the floats. */
   gradient?: boolean
@@ -50,9 +51,9 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
     top,
     bottom,
     label,
-    edgeGap = 12,
+    edgeGap: edgeGapProp,
     sideGap,
-    contentPadding = 24,
+    contentPadding: contentPaddingProp,
     gradient = true,
     topFadeHeight,
     bottomFadeHeight,
@@ -63,7 +64,11 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
   },
   ref
 ) {
+  const root = useRef<HTMLDivElement>(null)
   const viewport = useRef<HTMLDivElement>(null)
+  const shellGap = useShellGap(root)
+  const edgeGap = edgeGapProp ?? shellGap,
+    contentPadding = contentPaddingProp ?? shellGap
   const topRef = useRef<HTMLDivElement>(null),
     bottomRef = useRef<HTMLDivElement>(null)
   const [heights, setHeights] = useState({ top: 0, bottom: 0 })
@@ -88,6 +93,7 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
   return (
     <div
       {...props}
+      ref={root}
       className={cn('lab-scroll-area', className)}
       style={
         {

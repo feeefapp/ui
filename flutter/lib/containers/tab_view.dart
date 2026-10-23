@@ -126,7 +126,7 @@ class _TabViewState extends State<TabView> {
     super.didUpdateWidget(old);
     if (old.value != widget.value) {
       _visited.add(widget.value);
-      final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+      final reduced = reducedMotionOf(context);
       if (reduced) {
         _fade.set(1);
       } else {
@@ -208,7 +208,7 @@ class _TabViewState extends State<TabView> {
     }
     final position = _scrollableIn(tab.id)?.position;
     if (position == null) return;
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     if (reduced) {
       position.jumpTo(0);
     } else {
@@ -251,12 +251,13 @@ class _TabViewState extends State<TabView> {
     final c = theme.colors;
     final scale = theme.sizes.radiusScale;
     final safe = MediaQuery.maybePaddingOf(context) ?? EdgeInsets.zero;
+    final inset = theme.sizes.toolbarInset;
     return LayoutBuilder(
       builder: (context, constraints) {
         // Wide (container ≥ 600px): icon and label in one row.
         final wide = constraints.maxWidth >= 600;
         final tabHeight = wide ? 44.0 : 52.0;
-        final chromeWidth = math.max(0.0, constraints.maxWidth - 24);
+        final chromeWidth = math.max(0.0, constraints.maxWidth - inset * 2);
         final panels = [
           for (final tab in widget.tabs)
             if (_visited.contains(tab.id)) _panel(tab),
@@ -342,7 +343,7 @@ class _TabViewState extends State<TabView> {
             textDirection: _minimized
                 ? (rtl ? TextDirection.ltr : TextDirection.rtl)
                 : null,
-            spacing: 8,
+            spacing: ThemeProvider.of(context).sizes.toolbarGap,
             children: [
               if (accessory != null)
                 Flexible(
@@ -362,10 +363,11 @@ class _TabViewState extends State<TabView> {
               fit: StackFit.expand,
               children: [
                 ...panels,
+                // A floating bar: --lab-toolbar-inset (the shell gap G by default) from the panel.
                 Positioned(
-                  left: 12,
-                  right: 12,
-                  bottom: 12 + safe.bottom,
+                  left: inset,
+                  right: inset,
+                  bottom: inset + safe.bottom,
                   child: SizeReporter(
                     onSize: (size) {
                       // Measured only while full: shrinking the reserve would clamp scroll
@@ -397,7 +399,10 @@ class _TabViewState extends State<TabView> {
     final key = _panelKeys.putIfAbsent(tab.id, GlobalKey.new);
     Widget content = NotificationListener<ScrollUpdateNotification>(
       onNotification: (n) => _onScroll(tab.id, n),
-      child: ScrollExtraBottom(value: _chrome + 12, child: tab.content),
+      child: ScrollExtraBottom(
+        value: _chrome + ThemeProvider.of(context).sizes.toolbarInset,
+        child: tab.content,
+      ),
     );
     // The wrapper stays the same for every panel so switching never remounts content.
     content = ValueListenableBuilder<double>(
@@ -481,9 +486,7 @@ class _TabButtonState extends State<_TabButton> {
     super.didUpdateWidget(old);
     final t = _target;
     // Width and padding ride the snappy spring (`springTiming(SPRINGS.snappy)` in CSS).
-    final instant =
-        (MediaQuery.maybeDisableAnimationsOf(context) ?? false) ||
-        old.wide != widget.wide;
+    final instant = reducedMotionOf(context) || old.wide != widget.wide;
     _min.animateTo(t.min, spring: Springs.snappy, instant: instant);
     _max.animateTo(t.max, spring: Springs.snappy, instant: instant);
     _pad.animateTo(t.pad, spring: Springs.snappy, instant: instant);
@@ -505,7 +508,7 @@ class _TabButtonState extends State<_TabButton> {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
     final scale = theme.sizes.radiusScale;
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     final selected = widget.selected;
     final ink = selected ? c.ink : c.muted;
     final fill = selected

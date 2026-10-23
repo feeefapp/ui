@@ -28,8 +28,7 @@ import 'toolbar_search.dart';
 
 export 'model_ladder_core.dart';
 
-bool _reduced(BuildContext context) =>
-    MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+bool _reduced(BuildContext context) => reducedMotionOf(context);
 
 /// Localized ladder copy (`useLadderCopy`); an explicit [copy] still wins (fixtures, tests).
 LadderCopy ladderCopyOf(BuildContext context, [LadderCopy? copy]) {
@@ -1430,7 +1429,6 @@ class _ModelListState extends State<_ModelList> {
         removeRight: true,
         child: ScrollArea(
           label: copy.pickModel,
-          edgeGap: 12,
           contentPadding: 12,
           surface: c.surface,
           radius: s.radiusGroup,

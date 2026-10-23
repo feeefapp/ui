@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui show BoxHeightStyle, ClipOp;
 
 import 'package:flutter/services.dart';
@@ -8,7 +9,7 @@ import '../theme.dart';
 import '../theme/surfaces.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
-import 'button.dart' show ControlSize;
+import 'button.dart' show ControlOverrides, ControlSize;
 
 /// Where the floated hint rests: on the border (`outlined`) or inside the field above the value.
 enum FieldLabelStyle { inside, outlined }
@@ -132,12 +133,20 @@ class _FieldShellState extends State<FieldShell> {
     final hint = widget.hint ?? widget.label;
     final hasLabel = hint != null;
 
-    // text-field.css: sizes per control size, density and label style.
-    final height = touchSmall
-        ? s.touchTarget
-        : small
+    // text-field.css: sizes per control size, density and label style. Inside a toolbar bubble
+    // (a host with its own touch target) a field takes the bubble's control height like a
+    // button: regular fills it, small keeps its size, touch growth stops at the bubble.
+    final overrides = ControlOverrides.maybeOf(context);
+    final host = overrides?.touchTarget != null ? overrides?.height : null;
+    final touch = overrides?.touchTarget ?? s.touchTarget;
+    final smallHeight = host == null
         ? s.fieldHeightSmall
-        : s.fieldHeight;
+        : math.min(s.fieldHeightSmall, host);
+    final height = touchSmall
+        ? math.max(smallHeight, touch)
+        : small
+        ? smallHeight
+        : host ?? s.fieldHeight;
     final font = switch (s.density) {
       Density.comfortable => 16.0,
       Density.compact => 14.0,
@@ -393,7 +402,7 @@ class _FloatingLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     final base = DefaultTextStyle.of(context).style;
     final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 1;
     TextStyle style(double size) => TextStyle(

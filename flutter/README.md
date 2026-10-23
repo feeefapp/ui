@@ -48,7 +48,11 @@ The tint curve is `glassMaterial()` in `glass/material.dart` (same vectors as th
 `test/fixtures/glass.json`). Refraction needs Impeller; Flutter web and Skia show the same glass
 without the bend. `MediaQuery.highContrast` makes glass solid with an ink outline
 (`glassStyleOf(context)`), `disableAnimations` stops the moving light and press response; Flutter
-has no reduce-transparency flag, so apps that read one pass `glass: GlassStyle.solid`. Glass is
+has no reduce-transparency flag, so apps that read one pass `glass: GlassStyle.solid`.
+`ThemeConfig(motion: full|reduced|none)` joins `disableAnimations`: kit widgets read
+`reducedMotionOf(context)` / `motionOf(context)`, never the MediaQuery flag directly; `none` also
+stops ambient tickers. Profiles: `ThemeProfiles.quality|balanced|performance` (change with `copyWith`);
+`glassCapabilities()` reports Impeller refraction and blur. Glass is
 fitted to iOS 26 Liquid Glass measured from the outside: `../research/liquid-glass/FINDINGS.md`.
 
 ## Use

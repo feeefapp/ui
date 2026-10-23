@@ -211,7 +211,7 @@ class _ComposerHintState extends State<ComposerHint>
   }
 
   void _play() {
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     final last = math.min(_parts.length - 1, 40);
     _clock.duration = Duration(milliseconds: 420 + 28 * math.max(0, last));
     if (reduced) {

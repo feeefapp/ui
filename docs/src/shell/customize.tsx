@@ -7,7 +7,7 @@ import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
 import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 import { SlideSwitch, Slider } from '@feeef.dev/ui/primitives/slider'
 import { useTheme, type ThemeMode } from '@feeef.dev/ui/theme'
-import { THEME_DEFAULTS, type Density, type GlassStyle, type Palette } from '@feeef.dev/ui/theme-config'
+import { PROFILES, THEME_DEFAULTS, type Density, type GlassStyle, type Motion, type Palette } from '@feeef.dev/ui/theme-config'
 import { useDocsSettings, type DocsSettings } from '../settings'
 import { PlatformSwitch, VersionMenu } from './platform'
 
@@ -75,6 +75,38 @@ function GlassSettings() {
         onChange={(glassRefraction) => update({ theme: { glassRefraction } })}
       />
     </div>
+  )
+}
+
+type ProfileName = keyof typeof PROFILES | 'custom'
+const PROFILE_KEYS = ['glass', 'glassRefraction', 'glassBlur', 'motion'] as const
+
+/** The profile the current settings match, or `custom` once any of its fields is changed by hand. */
+function currentProfile(theme: DocsSettings['theme']): ProfileName {
+  for (const name of Object.keys(PROFILES) as (keyof typeof PROFILES)[])
+    if (PROFILE_KEYS.every((key) => theme[key] === PROFILES[name][key])) return name
+  return 'custom'
+}
+
+/** Profile presets (`PROFILES`): picking one sets its fields; Custom returns them to the kit defaults. */
+function ProfilePicker() {
+  const { settings, update } = useDocsSettings()
+  return (
+    <SegmentedControl<ProfileName>
+      label="Profile"
+      equalWidth
+      value={currentProfile(settings.theme)}
+      onChange={(name) => {
+        const source = name === 'custom' ? THEME_DEFAULTS : PROFILES[name]
+        update({ theme: Object.fromEntries(PROFILE_KEYS.map((key) => [key, source[key]])) })
+      }}
+      options={[
+        { value: 'quality', label: 'Quality' },
+        { value: 'balanced', label: 'Balanced' },
+        { value: 'performance', label: 'Performance' },
+        { value: 'custom', label: 'Custom' },
+      ]}
+    />
   )
 }
 
@@ -210,6 +242,9 @@ export function Customize() {
                 ]}
               />
             </Row>
+            <Row label="Profile">
+              <ProfilePicker />
+            </Row>
             <Row label="Glass">
               <SegmentedControl<GlassStyle>
                 label="Glass"
@@ -224,6 +259,19 @@ export function Customize() {
               />
             </Row>
             <GlassSettings />
+            <Row label="Motion">
+              <SegmentedControl<Motion>
+                label="Motion"
+                equalWidth
+                value={settings.theme.motion}
+                onChange={(motion) => update({ theme: { motion } })}
+                options={[
+                  { value: 'full', label: 'Full' },
+                  { value: 'reduced', label: 'Reduced' },
+                  { value: 'none', label: 'None' },
+                ]}
+              />
+            </Row>
             <NumberField
               label="Corner radius"
               controlSize="small"

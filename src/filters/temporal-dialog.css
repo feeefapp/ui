@@ -15,7 +15,7 @@ html[data-lab-theme] .lab-dialog.lab-temporal-dialog--pair {
 .lab-temporal-dialog-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--lab-toolbar-gap);
   width: 100%;
   min-width: 0;
   pointer-events: none;

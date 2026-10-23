@@ -86,13 +86,49 @@ export function Root({ children }: { children: React.ReactNode }) {
               <><C>true</C> (default) or <C>false</C></>,
               <>Bends the backdrop at the glass edges, built when the glass settles. Chromium only; Firefox and Safari (and reduced transparency or increased contrast) show the same glass without the bend.</>,
             ],
+            [
+              <C>motion</C>,
+              <><C>full</C> (default), <C>reduced</C> or <C>none</C></>,
+              <>How much the kit animates. <C>reduced</C> is the reduced-motion behaviour (springs jump, transitions become instant or short fades, no moving glass light or press response); <C>none</C> also stops ambient motion (pixel textures, shaders, loaders, glass sampling). The reader's reduced-motion setting still applies when stricter. Sets <C>data-lab-motion</C>; code reads it with <C>motionOf()</C> / <C>prefersReducedMotion()</C>.</>,
+            ],
           ]}
         />
         <p>
           Unset options fall back to <C>THEME_DEFAULTS</C>:{' '}
-          <C>{"{ palette: 'lab', density: 'comfortable', radius: 1, glass: 'liquid', glassTint: 0.5, glassBlur: false, glassRefraction: true }"}</C>. Try every combination live in
+          <C>{"{ palette: 'lab', density: 'comfortable', radius: 1, glass: 'liquid', glassTint: 0.5, glassBlur: false, glassRefraction: true, motion: 'full' }"}</C>. Try every combination live in
           Customize, in the top bar.
         </p>
+      </Section>
+
+      <Section title="Profiles">
+        <p>
+          Three ready-made looks, as plain partial configs. Spread one and override anything; the kit
+          still checks what the browser or device supports, so one profile works everywhere. No
+          profile (the default) is <C>THEME_DEFAULTS</C>.
+        </p>
+        <Table
+          head={['Profile', 'glass', 'glassRefraction', 'glassBlur', 'motion']}
+          rows={[
+            [<C>quality</C>, <C>liquid</C>, <C>true</C>, <C>true</C>, <C>full</C>],
+            [<C>balanced</C>, <C>still</C>, <C>false</C>, <C>false</C>, <C>full</C>],
+            [<C>performance</C>, <C>solid</C>, <C>false</C>, <C>false</C>, <C>none</C>],
+          ]}
+        />
+        <Code
+          code={`import { PROFILES, type ThemeConfig } from '@feeef.dev/ui/theme-config'
+import { glassCapabilities } from '@feeef.dev/ui/glass'
+
+export const theme: ThemeConfig = { ...PROFILES.balanced, palette: 'mono' }
+
+console.log(glassCapabilities()) // { refraction, elementRefraction, backdropBlur } in this browser`}
+        />
+        <Code
+          lang="dart"
+          title="Flutter"
+          code={`final theme = ThemeProfiles.balanced.copyWith(palette: .mono);
+
+print(glassCapabilities()); // (backdropBlur: true, refraction: <Impeller shader filters>)`}
+        />
       </Section>
 
       <Section title="Metrics">
@@ -136,8 +172,8 @@ export function Root({ children }: { children: React.ReactNode }) {
             [<C>fieldHeight</C>, 'small 36 · regular 44', <><C>--lab-field-height-small</C>, <C>--lab-field-height</C></>],
             [<C>rowHeight</C>, '44', <C>--lab-row-height</C>],
             [<C>toolbarItem</C>, '44', <C>--lab-toolbar-item</C>],
-            [<C>toolbarGap</C>, '12', <C>--lab-toolbar-gap</C>],
-            [<C>toolbarInset</C>, '16', <C>--lab-toolbar-inset</C>],
+            [<C>toolbarGap</C>, 'shellGap (8)', <C>--lab-toolbar-gap</C>],
+            [<C>toolbarInset</C>, 'shellGap (8)', <C>--lab-toolbar-inset</C>],
             [<C>segmentedInset</C>, '2', <C>--lab-segmented-inset</C>],
             [<C>switchSize</C>, '63 × 28', <><C>--lab-switch-width</C>, <C>--lab-switch-height</C></>],
             [<C>thumbSize</C>, '37 × 24', <><C>--lab-thumb-width</C>, <C>--lab-thumb-height</C></>],
@@ -149,7 +185,7 @@ export function Root({ children }: { children: React.ReactNode }) {
             [<C>focusRingOffset</C>, '1', <C>--lab-focus-ring-offset</C>],
             [<C>sidebarWidth</C>, '304', <C>--lab-sidebar-width</C>],
             [<C>railWidth</C>, '64', <C>--lab-navigation-rail-width</C>],
-            [<C>shellGap</C>, '8', <C>--lab-shell-gap</C>],
+            [<C>shellGap</C>, '8: every chrome gap (G), see Sizing', <C>--lab-shell-gap</C>],
           ]}
         />
       </Section>

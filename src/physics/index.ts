@@ -14,10 +14,19 @@ export {
 } from './spring'
 export type { Spring, SpringName, SpringState } from './spring'
 export { VelocityTracker } from './velocity'
-export { MotionValue, onAnimationFrame, onMeasureFrame, onRenderFrame, prefersReducedMotion } from './motion-value'
+export {
+  MotionValue,
+  motionOf,
+  onAnimationFrame,
+  onMeasureFrame,
+  onMotionChange,
+  onRenderFrame,
+  prefersReducedMotion,
+  reducedMotionQuery,
+} from './motion-value'
 export type { AnimateOptions } from './motion-value'
 export { attachPan, canChildPan } from './gesture'
 export type { PanAxis, PanBegin, PanOptions, PanPoint, PointerKind } from './gesture'
-export { useMotionPaint, useMotionValue, usePan, useReducedMotion } from './react'
+export { useMotion, useMotionPaint, useMotionValue, usePan, useReducedMotion } from './react'
 export { LayoutGroup, animateLayoutFrom, snapshotLayout } from './layout-group'
 export type { LayoutGroupProps } from './layout-group'

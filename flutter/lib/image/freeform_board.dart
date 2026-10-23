@@ -252,7 +252,7 @@ class _FreeformBoardState extends State<FreeformBoard>
     super.dispose();
   }
 
-  bool get _reduced => MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+  bool get _reduced => reducedMotionOf(context);
 
   void _glideTo(FrameView next) {
     if (_reduced || _view == null) {
@@ -877,7 +877,7 @@ class _CardViewState extends State<_CardView> with TickerProviderStateMixin {
   }
 
   void _sync() {
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     if (_busy && !reduced) {
       if (!_sheen.isAnimating) _sheen.repeat();
     } else {
@@ -932,7 +932,7 @@ class _CardViewState extends State<_CardView> with TickerProviderStateMixin {
     final c = theme.colors;
     final t = I18n.of(context).t;
     final take = widget.take;
-    final reduced = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final reduced = reducedMotionOf(context);
     const radius = 22.0;
     Widget? content;
     if (take.status == TakeStatus.completed) {

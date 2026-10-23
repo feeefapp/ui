@@ -8,6 +8,13 @@ import 'package:flutter/widgets.dart';
 import 'geometry.dart';
 import 'refraction.dart';
 
+/// What glass can do on this device, for apps that show or log it (the twin of the web kit's
+/// `glassCapabilities()`): `refraction` = Impeller runs the refraction shader as a backdrop filter,
+/// `backdropBlur` = backdrop blur works (every Flutter renderer). The kit already uses these checks
+/// itself; profiles never need a per-device variant.
+({bool refraction, bool backdropBlur}) glassCapabilities() =>
+    (refraction: GlassRefraction.supported, backdropBlur: true);
+
 /// The refracting backdrop on Impeller: the blur sized to the cluster when it is on, the measured
 /// refraction (`shaders/glass_refraction.frag`, the twin of the web kit's displacement map), then
 /// the material's colour (saturation and lift). Where shader filters are unsupported (Skia,

@@ -8,8 +8,11 @@ export { ServicesProvider, useServices } from './services'
 export type { Preferences, Services } from './services'
 export { ThemeProvider, ThemeSwitch, useTheme } from './theme'
 export type { ThemeMode } from './theme'
-export { THEME_DEFAULTS, applyThemeConfig, themeAttributes } from './theme-config'
-export type { Density, MetricScale, MetricSize, Metrics, Palette, ThemeConfig } from './theme-config'
+export { PROFILES, THEME_DEFAULTS, applyThemeConfig, themeAttributes } from './theme-config'
+export type { Density, MetricScale, MetricSize, Metrics, Motion, Palette, ThemeConfig } from './theme-config'
+export { glassCapabilities } from './glass/refraction'
+export { motionOf, prefersReducedMotion } from './physics/motion-value'
+export { useMotion, useReducedMotion } from './physics/react'
 export {
   Button,
   Input,
@@ -38,7 +41,7 @@ export {
 export { FloatingBoundary, MenuSurface, useFloatingBoundary } from './menu'
 export type { FloatingBoundaryProps, MenuSurfaceProps } from './menu'
 
-export { ScrollArea, ScrollGradientOverlay } from './scroll'
+export { ScrollArea, ScrollGradientOverlay, useShellGap } from './scroll'
 export type { ScrollAreaProps, ScrollGradientOverlayProps } from './scroll'
 export { Dock } from './dock'
 export type { DockProps } from './dock'

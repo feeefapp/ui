@@ -408,6 +408,12 @@ function Overview() {
             are wrong on the first font change, the first translation and the first phone with a safe area.
           </li>
           <li>One scroll area per region. Don’t nest a scrolling list inside a scrolling page for the same task.</li>
+          <li>
+            One spacing rhythm: the shell gap <strong>G</strong> (<C>--lab-shell-gap</C>, 8px) between
+            every chrome neighbour (window, top bar, panel, sidebar items, toolbar groups, a floating bar
+            and its panel’s sides, floats and content and the panel edge), 16px inside cards. Change it
+            once with <C>metrics.shellGap</C>; never pick a gap per screen.
+          </li>
         </ul>
         <Code
           code={`// Do: the scroll area measures the floats and reserves their room.
@@ -503,6 +509,7 @@ function Overview() {
             'One bubble per purpose, in reading order: navigation, title … views, tools.',
             'Task actions and the one primary action in the bottom dock.',
             'Let ScrollArea reserve room for every float.',
+            'One shell gap G between chrome neighbours, 16 inside cards.',
             'Move things to their smaller home as the screen narrows; check every screen at 390px and in Arabic.',
           ]}
           dontItems={[
