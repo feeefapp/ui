@@ -3,9 +3,9 @@
 import * as React from 'react'
 import { cn } from '../utils'
 import { useReducedMotion } from '../physics/react'
-import { GlassContext, type GlassRegistry } from './context'
+import { GlassContext, GlassBarContext, type GlassRegistry } from './context'
 import { GlassScene } from './scene'
-import { clampGlassTint } from './material'
+import { clampGlassTint, GLASS_BAR_TINT } from './material'
 import type { GlassStyle } from '../theme-config'
 import './glass.css'
 
@@ -110,6 +110,9 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
   const uid = React.useId()
   const reduced = useReducedMotion()
   const style = useGlassStyle()
+  // Inside a GlassBar the theme tint is raised and the backdrop blurred (an explicit `tint` wins).
+  const bar = React.useContext(GlassBarContext)
+  tint ??= bar?.tint
   const options = useGlassOptions()
   const liquid = style === 'liquid'
 
@@ -168,7 +171,7 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
     current.adaptive = adaptive
     current.preserveHighlights = true
     current.tint = tint === undefined ? options.tint : clampGlassTint(tint)
-    current.blur = options.blur
+    current.blur = options.blur || bar !== null
     current.highlightWidth = Number.isFinite(highlightWidth) ? Math.min(100, Math.max(0, highlightWidth)) : 1
     current.highlightProfile = highlightProfile
     current.highlightStrength = Number.isFinite(highlightStrength) ? Math.min(10, Math.max(0, highlightStrength)) : 1
@@ -230,3 +233,23 @@ export const GlassScope = React.forwardRef<HTMLElement, GlassContainerProps>(fun
   if (outer) return React.createElement(as, { ...props, ref })
   return <GlassContainer {...props} as={as} spacing={spacing} cornerShape={cornerShape} light={light} interactive={interactive} adaptive={adaptive} tint={tint} highlightWidth={highlightWidth} highlightProfile={highlightProfile} highlightStrength={highlightStrength} refractionStrength={refractionStrength} refractionProfile={refractionProfile} backdropSource={backdropSource} ref={ref} />
 })
+
+/**
+ * Glass bars floating over scrolling content (a ScrollArea's app bar and dock, a TabView's tab
+ * bar): their labels sit on moving content, so every glass inside is at least `GLASS_BAR_TINT`
+ * tinted and blurred with the measured blur, whatever the theme's `glassTint` and `glassBlur`
+ * (glass elsewhere keeps them), as iOS bars are. Wraps its children in a layout-neutral element.
+ */
+export function GlassBar({ children, className }: { children: React.ReactNode; className?: string }) {
+  const { tint } = useGlassOptions()
+  const raised = Math.max(tint, GLASS_BAR_TINT)
+  const bar = React.useMemo(() => ({ tint: raised }), [raised])
+  return (
+    <GlassBarContext.Provider value={bar}>
+      <div className={cn('lab-glass-bar', className)} style={{ '--lab-glass-tint': raised } as React.CSSProperties}>
+        {children}
+      </div>
+    </GlassBarContext.Provider>
+  )
+}
+

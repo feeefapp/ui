@@ -255,3 +255,8 @@ html[data-lab-glass='solid'] .lab-glass-backdrop[data-glass-source]::after { bac
 
 /* Circular glass must share its profile with the native member and the optical renderer. */
 .lab-glass-container[data-glass-corners='round'] [data-glass-member] { corner-shape: round; }
+
+/* GlassBar: layout-neutral; only carries the raised --lab-glass-tint to its glass. */
+.lab-glass-bar {
+  display: contents;
+}

@@ -4,6 +4,7 @@ import { test } from 'node:test'
 import {
   GLASS_CLEAR,
   GLASS_SATURATE,
+  GLASS_BAR_TINT,
   GLASS_TINT_DEFAULT,
   GLASS_VEIL,
   clampGlassTint,
@@ -116,4 +117,10 @@ test('the CSS tokens carry the same anchors and lift as material.ts', () => {
   const top = liftFilter(GLASS_CLEAR.gain, GLASS_CLEAR.offset).brightness
   assert.ok(system.includes(`brightness(calc(${top.toFixed(3)} - ${(top - 1).toFixed(3)} * var(--lab-glass-tint)))`))
   assert.ok(system.includes(`--lab-glass-tint: ${GLASS_TINT_DEFAULT};`))
+})
+
+test('glass bars over scrolling content are at least 0.85 tinted on both kits', () => {
+  assert.equal(GLASS_BAR_TINT, 0.85)
+  const dart = readFileSync('flutter/lib/glass/material.dart', 'utf8')
+  assert.match(dart, /const double glassBarTint = 0\.85;/)
 })

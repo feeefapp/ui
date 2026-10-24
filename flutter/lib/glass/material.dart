@@ -83,6 +83,11 @@ const double glassClearOffset = 0.076;
 /// The default tint: the midpoint between clear and tinted, a light veil over the bent backdrop.
 const double glassTintDefault = 0.5;
 
+/// The least tint of glass bars floating over scrolling content (a ScrollArea's app bar and
+/// dock, a TabView's tab bar): their labels sit on moving content, so the glass stays this
+/// veiled even when the theme's tint is clearer ([GlassBar]). The web's `GLASS_BAR_TINT`.
+const double glassBarTint = 0.85;
+
 /// A tint clamped to 0–1; anything not finite is the default.
 double clampGlassTint(double tint) =>
     tint.isFinite ? tint.clamp(0.0, 1.0) : glassTintDefault;

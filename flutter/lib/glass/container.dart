@@ -1195,3 +1195,27 @@ class _GlassScene extends ChangeNotifier {
     super.dispose();
   }
 }
+
+/// Glass bars floating over scrolling content (a ScrollArea's app bar and dock, a TabView's tab
+/// bar): their labels sit on moving content, so every glass below is at least [glassBarTint]
+/// tinted and blurred with the measured blur, whatever the theme's `glassTint` and `glassBlur`
+/// (glass elsewhere keeps them), as iOS bars are. The twin of `GlassBar` in `@feeef.dev/ui/glass`.
+class GlassBar extends StatelessWidget {
+  const GlassBar({super.key, required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ThemeProvider.of(context);
+    final config = theme.config;
+    if (config.tint >= glassBarTint && config.glassBlur) return child;
+    return ThemeProvider(
+      config: config.copyWith(
+        glassTint: math.max(config.tint, glassBarTint),
+        glassBlur: true,
+      ),
+      brightness: theme.brightness,
+      child: child,
+    );
+  }
+}

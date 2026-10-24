@@ -312,27 +312,29 @@ class _TabViewState extends State<TabView> {
         // springs keep running): a column (accessory above the bar), or a row in reversed reading
         // order where the current tab leads and the accessory fills the rest.
         final rtl = Directionality.of(context) == TextDirection.rtl;
-        final chrome = GlassScope(
-          child: Flex(
-            direction: _minimized ? Axis.horizontal : Axis.vertical,
-            mainAxisSize: _minimized ? MainAxisSize.max : MainAxisSize.min,
-            // Reversed, "end" is the reading start: a lone bar still leads.
-            mainAxisAlignment: _minimized
-                ? MainAxisAlignment.end
-                : MainAxisAlignment.start,
-            textDirection: _minimized
-                ? (rtl ? TextDirection.ltr : TextDirection.rtl)
-                : null,
-            spacing: ThemeProvider.of(context).sizes.toolbarGap,
-            children: [
-              if (accessory != null)
-                Flexible(
-                  flex: _minimized ? 1 : 0,
-                  fit: FlexFit.tight,
-                  child: accessory,
-                ),
-              bar,
-            ],
+        final chrome = GlassBar(
+          child: GlassScope(
+            child: Flex(
+              direction: _minimized ? Axis.horizontal : Axis.vertical,
+              mainAxisSize: _minimized ? MainAxisSize.max : MainAxisSize.min,
+              // Reversed, "end" is the reading start: a lone bar still leads.
+              mainAxisAlignment: _minimized
+                  ? MainAxisAlignment.end
+                  : MainAxisAlignment.start,
+              textDirection: _minimized
+                  ? (rtl ? TextDirection.ltr : TextDirection.rtl)
+                  : null,
+              spacing: ThemeProvider.of(context).sizes.toolbarGap,
+              children: [
+                if (accessory != null)
+                  Flexible(
+                    flex: _minimized ? 1 : 0,
+                    fit: FlexFit.tight,
+                    child: accessory,
+                  ),
+                bar,
+              ],
+            ),
           ),
         );
 

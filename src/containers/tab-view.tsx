@@ -6,7 +6,7 @@ import { MotionValue, prefersReducedMotion } from '../physics/motion-value'
 import { SelectionTrack, type SelectionSource } from '../primitives/selection-track'
 import { cn } from '../utils'
 import './tab-view.css'
-import { GlassScope } from '../glass/container'
+import { GlassBar, GlassScope } from '../glass/container'
 
 export type Tab = {
   /** Stable id; also the value of `value`. */
@@ -179,39 +179,41 @@ export function TabView({
           </div>
         ) : null
       )}
-      <GlassScope ref={chrome} className="lab-tab-chrome" data-minimized={minimized || undefined}>
-        {accessory && (
-          <GlassGroup className="lab-tab-accessory" data-lab-tab-piece="" glassId="accessory">
-            {accessory}
+      <GlassBar>
+        <GlassScope ref={chrome} className="lab-tab-chrome" data-minimized={minimized || undefined}>
+          {accessory && (
+            <GlassGroup className="lab-tab-accessory" data-lab-tab-piece="" glassId="accessory">
+              {accessory}
+            </GlassGroup>
+          )}
+          <GlassGroup
+            glassId="tabs"
+            className="lab-tab-bar"
+            data-lab-tab-piece=""
+            onClick={() => minimized && setMinimizedMorph(false)}
+          >
+            <SelectionTrack
+              semantics="tab"
+              layout="stacked"
+              pill="tinted"
+              className="lab-tab-track"
+              label={label}
+              value={value}
+              onSelect={select}
+              draggable={!minimized}
+              collapsed={minimized}
+              options={tabs.map((tab) => ({
+                value: tab.id,
+                label: tab.label,
+                icon: tab.icon,
+                badge: tab.badge,
+                id: `${id}-tab-${tab.id}`,
+                controls: `${id}-panel-${tab.id}`,
+              }))}
+            />
           </GlassGroup>
-        )}
-        <GlassGroup
-          glassId="tabs"
-          className="lab-tab-bar"
-          data-lab-tab-piece=""
-          onClick={() => minimized && setMinimizedMorph(false)}
-        >
-          <SelectionTrack
-            semantics="tab"
-            layout="stacked"
-            pill="tinted"
-            className="lab-tab-track"
-            label={label}
-            value={value}
-            onSelect={select}
-            draggable={!minimized}
-            collapsed={minimized}
-            options={tabs.map((tab) => ({
-              value: tab.id,
-              label: tab.label,
-              icon: tab.icon,
-              badge: tab.badge,
-              id: `${id}-tab-${tab.id}`,
-              controls: `${id}-panel-${tab.id}`,
-            }))}
-          />
-        </GlassGroup>
-      </GlassScope>
+        </GlassScope>
+      </GlassBar>
     </div>
   )
 }

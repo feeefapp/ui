@@ -81,6 +81,13 @@ export const GLASS_CLEAR = { gain: 1.03, offset: 0.076 } as const
  */
 export const GLASS_TINT_DEFAULT = 0.5
 
+/**
+ * The least tint of glass bars floating over scrolling content (a ScrollArea's app bar and dock,
+ * a TabView's tab bar): their labels sit on moving content, so the glass stays this veiled even
+ * when the theme's tint is clearer (GlassBar). Flutter's `glassBarTint` matches.
+ */
+export const GLASS_BAR_TINT = 0.85
+
 /** A tint clamped to 0–1; anything that is not a finite number is the default. */
 export function clampGlassTint(tint: unknown) {
   return typeof tint === 'number' && Number.isFinite(tint) ? Math.min(1, Math.max(0, tint)) : GLASS_TINT_DEFAULT

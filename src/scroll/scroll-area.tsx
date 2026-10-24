@@ -11,6 +11,7 @@ import {
   type CSSProperties,
 } from 'react'
 import { cn } from '../utils'
+import { GlassBar } from '../glass/container'
 import { ScrollGradientOverlay } from './gradient-overlay'
 import { scrollContentReserve } from './metrics'
 import { useShellGap } from './shell-gap'
@@ -108,7 +109,7 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
     >
       {top && (
         <div ref={topRef} className="lab-scroll-float lab-scroll-float--top">
-          {top}
+          <GlassBar>{top}</GlassBar>
         </div>
       )}
       <div
@@ -130,7 +131,7 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
       )}
       {bottom && (
         <div ref={bottomRef} className="lab-scroll-float lab-scroll-float--bottom">
-          {bottom}
+          <GlassBar>{bottom}</GlassBar>
         </div>
       )}
     </div>

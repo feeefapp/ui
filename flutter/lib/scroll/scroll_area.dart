@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../glass/container.dart' show GlassBar;
 import '../layout/size_reporter.dart';
 import '../theme.dart';
 import 'gradient_overlay.dart';
@@ -190,8 +191,9 @@ class _ScrollAreaState extends State<ScrollArea> {
             color: widget.surface ?? theme.colors.surface,
             radius: widget.radius ?? theme.sizes.radiusPanel,
           ),
-        if (widget.top != null) float(widget.top!, true),
-        if (widget.bottom != null) float(widget.bottom!, false),
+        if (widget.top != null) float(GlassBar(child: widget.top!), true),
+        if (widget.bottom != null)
+          float(GlassBar(child: widget.bottom!), false),
       ],
     );
   }

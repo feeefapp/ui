@@ -221,4 +221,36 @@ void main() {
     },
     variant: TargetPlatformVariant.only(TargetPlatform.macOS),
   );
+
+  testWidgets('GlassBar raises the tint to the bar floor and turns blur on', (
+    tester,
+  ) async {
+    double? inside;
+    bool? blur;
+    Widget probe() => Builder(
+      builder: (context) {
+        inside = ThemeProvider.of(context).colors.glassTint;
+        blur = ThemeProvider.of(context).config.glassBlur;
+        return const SizedBox();
+      },
+    );
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: ThemeProvider(child: GlassBar(child: probe())),
+      ),
+    );
+    expect(inside, glassBarTint);
+    expect(blur, isTrue);
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: ThemeProvider(
+          config: const ThemeConfig(glassTint: 1),
+          child: GlassBar(child: probe()),
+        ),
+      ),
+    );
+    expect(inside, 1);
+  });
 }
