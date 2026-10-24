@@ -633,7 +633,7 @@ final Map<String, List<Widget> Function()> scenes = {
           tabs: [
             Tab(
               id: 'orders',
-              label: const Text('Orders'),
+              label: 'Orders',
               icon: const LucidePackage(),
               content: const Padding(
                 padding: EdgeInsets.all(24),
@@ -655,13 +655,13 @@ final Map<String, List<Widget> Function()> scenes = {
             ),
             const Tab(
               id: 'customers',
-              label: Text('Customers'),
+              label: 'Customers',
               icon: LucideUsers(),
               content: Text('Customers'),
             ),
             const Tab(
               id: 'settings',
-              label: Text('Settings'),
+              label: 'Settings',
               icon: LucideSettings(),
               content: Text('Settings'),
             ),
@@ -967,9 +967,8 @@ final Map<String, List<Widget> Function()> scenes = {
   'sheet': () => [
     Builder(
       builder: (context) => Sheet(
-        open: true,
-        onOpenChange: (_) {},
         label: 'Order #1042',
+        showClose: false,
         detents: const [SheetDetent.medium],
         regular: SheetRegular.sheet,
         child: DefaultTextStyle.merge(
@@ -1011,65 +1010,39 @@ final Map<String, List<Widget> Function()> scenes = {
     ),
   ],
   'modal': () => [
+    Alert(
+      title: 'Delete order #1042?',
+      message: const Text("The customer won't be notified. You can't undo this."),
+      actions: const [
+        AlertAction(label: 'Cancel', role: AlertActionRole.cancel),
+        AlertAction(label: 'Delete', role: AlertActionRole.destructive),
+      ],
+    ),
+  ],
+  'pane': () => [
     Builder(
-      builder: (context) => Modal(
-        label: 'Delete order',
-        close: _noop,
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: DefaultTextStyle.merge(
-            style: const TextStyle(
+      builder: (context) => Pane(
+        label: 'Order #1042',
+        title: const Text('Order #1042'),
+        dock: PresentationDock(
+          children: [
+            Button(onClick: _noop, children: const [Text('Cancel')]),
+            Button(
+              variant: .filled,
+              onClick: _noop,
+              children: const [Text('Confirm order')],
+            ),
+          ],
+        ),
+        child: CssBaseline(
+          lineHeight: 22,
+          child: Text(
+            '3 items · 4,500 DZD · Oran',
+            style: TextStyle(
               fontSize: 15,
               height: 22 / 15,
               leadingDistribution: TextLeadingDistribution.even,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 8),
-                  child: CssBaseline(
-                    lineHeight: 28,
-                    child: Text(
-                      'Delete order #1042?',
-                      style: TextStyle(
-                        fontSize: 20,
-                        height: 28 / 20,
-                        leadingDistribution: TextLeadingDistribution.even,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  child: CssBaseline(
-                    lineHeight: 22,
-                    child: Text(
-                      "The customer won't be notified. You can't undo this.",
-                      style: TextStyle(
-                        color: ThemeProvider.of(context).colors.muted,
-                      ),
-                    ),
-                  ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  spacing: 12,
-                  children: [
-                    Button(
-                      variant: .text,
-                      onClick: _noop,
-                      children: const [Text('Cancel')],
-                    ),
-                    Button(
-                      variant: .destructive,
-                      onClick: _noop,
-                      children: const [Text('Delete')],
-                    ),
-                  ],
-                ),
-              ],
+              color: ThemeProvider.of(context).colors.muted,
             ),
           ),
         ),

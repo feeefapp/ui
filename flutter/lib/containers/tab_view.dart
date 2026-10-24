@@ -1,22 +1,19 @@
 import 'dart:math' as math;
 import 'dart:ui' show SemanticsRole;
 
-import 'package:flutter/rendering.dart' show OverflowBoxFit;
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../scroll/scroll_area.dart';
 
-import '../brand/geometry.dart';
 import '../glass/container.dart';
 import '../layout/size_reporter.dart';
 import '../physics/motion_value.dart';
 import '../physics/spring.dart';
+import '../primitives/segmented.dart' show SegmentOption;
+import '../primitives/segmented_model.dart' show SelectionSemantics;
+import '../primitives/selection_track.dart';
 import '../scaffold.dart';
 import '../theme.dart';
-import '../theme/surfaces.dart';
-import '../theme/color_mix.dart';
-import '../theme/css_text.dart';
 import '../theme/tokens.dart';
 
 /// One top-level destination of a [TabView].
@@ -33,14 +30,15 @@ class Tab {
   /// Stable id; also the value of `value`.
   final String id;
 
-  /// Short label in sentence case (one word is best), usually a Text.
-  final Widget label;
+  /// Short label in sentence case (one word is best).
+  final String label;
 
   /// Icon shown above (phones) or before (wide) the label.
   final Widget icon;
 
-  /// A count or dot on the icon, e.g. unconfirmed orders.
-  final Widget? badge;
+  /// A short count on the icon's corner for something that needs action, e.g. unconfirmed orders
+  /// ("8"). It is part of the tab's accessible name ("Orders, 8").
+  final String? badge;
 
   /// The tab's content, usually a NavigationStack. It stays mounted while other tabs show.
   final Widget content;
@@ -59,8 +57,12 @@ enum TabMinimize {
 /// App-level tabs, like iOS: each tab keeps its own content (and stack) alive, a floating glass
 /// tab bar switches between them, and while the person scrolls down it shrinks to the selected
 /// tab so content gets the screen. Picking the current tab again returns it to the top. The twin
-/// of `TabView` in `@feeef.dev/ui/containers/tab-view`. The bar's height (+12px) is reserved in
-/// every panel through [ScrollExtraBottom].
+/// of `TabView` in `@feeef.dev/ui/containers/tab-view`. The bar's height (+ the toolbar inset) is
+/// reserved in every panel through [ScrollExtraBottom].
+///
+/// The bar is a segmented control with tab semantics (the shared selection track): press the
+/// selected tab and it becomes a glass lens you can drag across the tabs; the tab under it on
+/// release is chosen. Tabs can carry a count ([Tab.badge]).
 class TabView extends StatefulWidget {
   const TabView({
     super.key,
@@ -79,7 +81,8 @@ class TabView extends StatefulWidget {
   /// Selected tab id (controlled).
   final String value;
 
-  /// Called when the person picks another tab.
+  /// Called when the person picks another tab: a tap, a drag of the selection released on it, or
+  /// an arrow, Home or End key (tabs activate as the keyboard reaches them).
   final ValueChanged<String> onChange;
 
   /// Called when the person picks the tab that is already selected: pop its stack to the root,
@@ -108,7 +111,6 @@ class _TabViewState extends State<TabView> {
   double _chrome = 64;
   final _last = Expando<double>('tab scroll top');
   final _panelKeys = <String, GlobalKey>{};
-  final _nodes = <String, FocusNode>{};
 
   /// A switched-to panel fades in quickly; it never slides (tabs are siblings, not depth).
   final _fade = MotionValue(1, 0.004);
@@ -141,14 +143,8 @@ class _TabViewState extends State<TabView> {
     _unsubscribe?.call();
     _fade.stop();
     _opacity.dispose();
-    for (final node in _nodes.values) {
-      node.dispose();
-    }
     super.dispose();
   }
-
-  FocusNode _node(String id) =>
-      _nodes.putIfAbsent(id, () => FocusNode(debugLabel: 'Tab $id'));
 
   void _setMinimized(bool next) {
     if (next != _minimized) setState(() => _minimized = next);
@@ -195,18 +191,13 @@ class _TabViewState extends State<TabView> {
     return found;
   }
 
-  void _pick(Tab tab) {
-    _setMinimized(false);
-    if (tab.id != widget.value) {
-      widget.onChange(tab.id);
-      return;
-    }
+  void _reselect(String id) {
     final reselect = widget.onReselect;
     if (reselect != null) {
-      reselect(tab.id);
+      reselect(id);
       return;
     }
-    final position = _scrollableIn(tab.id)?.position;
+    final position = _scrollableIn(id)?.position;
     if (position == null) return;
     final reduced = reducedMotionOf(context);
     if (reduced) {
@@ -220,29 +211,23 @@ class _TabViewState extends State<TabView> {
     }
   }
 
-  KeyEventResult _onKey(FocusNode _, KeyEvent event) {
-    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
-      return KeyEventResult.ignored;
+  void _select(String id, SelectionSource source) {
+    // Keys activate the tab they reach and leave the bar as it is.
+    if (source == SelectionSource.key) {
+      widget.onChange(id);
+      return;
     }
-    final tabs = widget.tabs;
-    if (tabs.isEmpty) return KeyEventResult.ignored;
-    final index = tabs.indexWhere((t) => t.id == widget.value);
-    final rtl = Directionality.of(context) == TextDirection.rtl;
-    final key = event.logicalKey;
-    var next = -1;
-    if (key == LogicalKeyboardKey.arrowRight ||
-        key == LogicalKeyboardKey.arrowLeft) {
-      final delta = (key == LogicalKeyboardKey.arrowRight) != rtl ? 1 : -1;
-      next = (index + delta + tabs.length) % tabs.length;
-    } else if (key == LogicalKeyboardKey.home) {
-      next = 0;
-    } else if (key == LogicalKeyboardKey.end) {
-      next = tabs.length - 1;
+    // A tap on the small bar only brings it back.
+    if (_minimized && source == SelectionSource.press) {
+      _setMinimized(false);
+      return;
     }
-    if (next < 0) return KeyEventResult.ignored;
-    widget.onChange(tabs[next].id);
-    _node(tabs[next].id).requestFocus();
-    return KeyEventResult.handled;
+    _setMinimized(false);
+    if (id == widget.value) {
+      _reselect(id);
+    } else {
+      widget.onChange(id);
+    }
   }
 
   @override
@@ -263,43 +248,38 @@ class _TabViewState extends State<TabView> {
             if (_visited.contains(tab.id)) _panel(tab),
         ];
 
-        final bar = Focus(
-          canRequestFocus: false,
-          skipTraversal: true,
-          onKeyEvent: _onKey,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            excludeFromSemantics: true,
-            onTap: _minimized ? () => _setMinimized(false) : null,
+        // The tabs: a selection track (`.lab-tab-track`) with tab semantics, stacked options and
+        // a tinted pill, 4px inset, tabs 2px apart, 68–120px wide (wide: a row, up to 180px).
+        // Minimized it folds to the selected tab. Never wider than the chrome, so it scrolls
+        // when the tabs don't fit.
+        final bar = GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          excludeFromSemantics: true,
+          onTap: _minimized ? () => _setMinimized(false) : null,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: chromeWidth),
             child: GlassGroup(
               glassId: 'tabs',
               radius: 30 * scale,
-              padding: const EdgeInsets.all(4),
-              child: Semantics(
-                container: true,
-                role: SemanticsRole.tabBar,
+              child: SelectionTrack<String>(
+                semantics: SelectionSemantics.tab,
+                layout: SelectionLayout.stacked,
+                pill: SelectionPill.tinted,
+                sizes: wide ? _wideTabs : _tabs,
                 label: widget.label,
-                explicitChildNodes: true,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  spacing: 2,
-                  children: [
-                    for (final tab in widget.tabs)
-                      Flexible(
-                        child: _TabButton(
-                          key: ValueKey(tab.id),
-                          tab: tab,
-                          selected: tab.id == widget.value,
-                          minimized: _minimized,
-                          wide: wide,
-                          height: tabHeight,
-                          focusNode: _node(tab.id),
-                          onTap: () =>
-                              _minimized ? _setMinimized(false) : _pick(tab),
-                        ),
-                      ),
-                  ],
-                ),
+                value: widget.value,
+                onSelect: _select,
+                draggable: !_minimized,
+                collapsed: _minimized,
+                options: [
+                  for (final tab in widget.tabs)
+                    SegmentOption(
+                      value: tab.id,
+                      label: tab.label,
+                      icon: tab.icon,
+                      badge: tab.badge,
+                    ),
+                ],
               ),
             ),
           ),
@@ -431,271 +411,28 @@ class _TabViewState extends State<TabView> {
   }
 }
 
-/// One tab: icon (with badge) and label; springs its width when the bar minimizes.
-class _TabButton extends StatefulWidget {
-  const _TabButton({
-    super.key,
-    required this.tab,
-    required this.selected,
-    required this.minimized,
-    required this.wide,
-    required this.height,
-    required this.focusNode,
-    required this.onTap,
-  });
-  final Tab tab;
-  final bool selected, minimized, wide;
-  final double height;
-  final FocusNode focusNode;
-  final VoidCallback onTap;
+/// `.lab-tab-track`: 52px tabs, 68–120px wide, 10px sides, 11px / 13px labels under the icon.
+const _tabs = SelectionTrackSizes(
+  height: 52,
+  inset: 4,
+  gap: 2,
+  padding: 10,
+  minWidth: 68,
+  maxWidth: 120,
+  fontSize: 11,
+  lineHeight: 13,
+);
 
-  @override
-  State<_TabButton> createState() => _TabButtonState();
-}
-
-class _TabButtonState extends State<_TabButton> {
-  bool _hovered = false, _down = false, _focusVisible = false;
-  late final MotionValue _min, _max, _pad;
-  final _unsubscribe = <void Function()>[];
-
-  ({double min, double max, double pad}) get _target {
-    if (widget.minimized) {
-      return widget.selected
-          ? (min: 52, max: 52, pad: 0)
-          : (min: 0, max: 0, pad: 0);
-    }
-    return widget.wide
-        ? (min: 68, max: 180, pad: 16)
-        : (min: 68, max: 120, pad: 10);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    final t = _target;
-    _min = MotionValue(t.min, 0.1);
-    _max = MotionValue(t.max, 0.1);
-    _pad = MotionValue(t.pad, 0.1);
-    for (final v in [_min, _max, _pad]) {
-      _unsubscribe.add(v.subscribe((_) => setState(() {})));
-    }
-  }
-
-  @override
-  void didUpdateWidget(_TabButton old) {
-    super.didUpdateWidget(old);
-    final t = _target;
-    // Width and padding ride the snappy spring (`springTiming(SPRINGS.snappy)` in CSS).
-    final instant = reducedMotionOf(context) || old.wide != widget.wide;
-    _min.animateTo(t.min, spring: Springs.snappy, instant: instant);
-    _max.animateTo(t.max, spring: Springs.snappy, instant: instant);
-    _pad.animateTo(t.pad, spring: Springs.snappy, instant: instant);
-  }
-
-  @override
-  void dispose() {
-    for (final u in _unsubscribe) {
-      u();
-    }
-    for (final v in [_min, _max, _pad]) {
-      v.stop();
-    }
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = ThemeProvider.of(context);
-    final c = theme.colors;
-    final scale = theme.sizes.radiusScale;
-    final reduced = reducedMotionOf(context);
-    final selected = widget.selected;
-    final ink = selected ? c.ink : c.muted;
-    final fill = selected
-        ? mixSrgb(c.primary, 0.16, transparent)
-        : _hovered || _focusVisible
-        ? c.controlHover
-        : transparent;
-    final radius = 26 * scale;
-    final pad = math.max(0.0, _pad.get());
-    final maxWidth = math.max(0.0, _max.get());
-    final minWidth = math.min(maxWidth, math.max(0.0, _min.get()));
-    final labelSize = widget.wide ? 14.0 : 11.0;
-    // `.lab-tab-label`: 11px / 13px, wide 14px / 17px.
-    final lineHeight = widget.wide ? 17.0 : 13.0;
-
-    final icon = SizedBox.square(
-      dimension: 24,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.center,
-        children: [
-          IconTheme.merge(
-            data: IconThemeData(size: 22, color: ink),
-            child: widget.tab.icon,
-          ),
-          if (widget.tab.badge != null)
-            PositionedDirectional(
-              top: -5,
-              start: 14,
-              child: _Badge(child: widget.tab.badge!),
-            ),
-        ],
-      ),
-    );
-    final label = DefaultTextStyle.merge(
-      style: TextStyle(
-        fontSize: labelSize,
-        fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-        height: lineHeight / labelSize,
-        leadingDistribution: TextLeadingDistribution.even,
-        color: ink,
-      ),
-      maxLines: 1,
-      softWrap: false,
-      overflow: TextOverflow.ellipsis,
-      child: CssBaseline(lineHeight: lineHeight, child: widget.tab.label),
-    );
-    final children = [
-      icon,
-      if (!widget.minimized) widget.wide ? Flexible(child: label) : label,
-    ];
-    final content = Padding(
-      padding: EdgeInsets.symmetric(horizontal: pad),
-      child: widget.wide
-          ? Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              spacing: 8,
-              children: children,
-            )
-          : Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              spacing: 2,
-              children: children,
-            ),
-    );
-
-    Widget box = SizedBox(
-      height: widget.height,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minWidth: minWidth, maxWidth: maxWidth),
-        child: ClipPath(
-          clipper: _Superellipse(radius),
-          child: OverflowBox(
-            fit: OverflowBoxFit.deferToChild,
-            minWidth: 0,
-            // Never narrower than the icon: a collapsing tab clips around its centered icon.
-            maxWidth: math.max(maxWidth, 24 + pad * 2),
-            child: content,
-          ),
-        ),
-      ),
-    );
-    box = TweenAnimationBuilder<Color?>(
-      tween: ColorTween(end: fill),
-      duration: reduced ? Duration.zero : MotionTokens.durationFast,
-      curve: MotionTokens.ease,
-      builder: (context, color, child) => DecoratedBox(
-        decoration: ShapeDecoration(
-          color: color,
-          shape: SuperellipseBorder(radius: radius),
-        ),
-        position: DecorationPosition.background,
-        child: child,
-      ),
-      child: box,
-    );
-    box = FocusRing(
-      visible: _focusVisible,
-      inside: true,
-      radius: radius,
-      child: box,
-    );
-    box = AnimatedOpacity(
-      opacity: widget.minimized && !selected ? 0 : 1,
-      duration: reduced ? Duration.zero : const Duration(milliseconds: 160),
-      curve: Curves.ease,
-      child: Transform.scale(scale: _down ? 0.96 : 1, child: box),
-    );
-
-    return MergeSemantics(
-      child: Semantics(
-        role: SemanticsRole.tab,
-        selected: selected,
-        button: true,
-        onTap: widget.onTap,
-        // Only the selected tab is a Tab stop; arrows reach the others.
-        child: ExcludeFocusTraversal(
-          excluding: !selected,
-          child: FocusableActionDetector(
-            focusNode: widget.focusNode,
-            mouseCursor: SystemMouseCursors.click,
-            onShowHoverHighlight: (v) => setState(() => _hovered = v),
-            onShowFocusHighlight: (v) => setState(() => _focusVisible = v),
-            actions: {
-              ActivateIntent: CallbackAction<ActivateIntent>(
-                onInvoke: (_) => widget.onTap(),
-              ),
-            },
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTapDown: (_) => setState(() => _down = true),
-              onTapUp: (_) => setState(() => _down = false),
-              onTapCancel: () => setState(() => _down = false),
-              onTap: widget.onTap,
-              child: box,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// `.lab-tab-badge`: a danger pill on the icon.
-class _Badge extends StatelessWidget {
-  const _Badge({required this.child});
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = ThemeProvider.of(context).colors;
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 18),
-      child: Container(
-        height: 18,
-        padding: const EdgeInsets.symmetric(horizontal: 5),
-        decoration: ShapeDecoration(
-          color: c.danger,
-          shape: const SuperellipseBorder(radius: 9),
-        ),
-        alignment: Alignment.center,
-        child: DefaultTextStyle.merge(
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            height: 18 / 11,
-            leadingDistribution: TextLeadingDistribution.even,
-            color: c.surface,
-          ),
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          softWrap: false,
-          child: CssBaseline(lineHeight: 18, child: child),
-        ),
-      ),
-    );
-  }
-}
-
-class _Superellipse extends CustomClipper<Path> {
-  _Superellipse(this.radius);
-  final double radius;
-  @override
-  Path getClip(Size size) =>
-      superellipsePath(Offset.zero & size, [radius, radius, radius, radius]);
-  @override
-  bool shouldReclip(_Superellipse old) => old.radius != radius;
-}
+/// Wide (`@container lab-tab-view (min-width: 600px)`): 44px tabs up to 180px, 16px sides, 14px /
+/// 17px labels beside the icon.
+const _wideTabs = SelectionTrackSizes(
+  height: 44,
+  inset: 4,
+  gap: 2,
+  padding: 16,
+  minWidth: 68,
+  maxWidth: 180,
+  fontSize: 14,
+  lineHeight: 17,
+  direction: Axis.horizontal,
+);

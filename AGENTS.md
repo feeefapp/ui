@@ -154,6 +154,10 @@ feature cards, generated forms and docs. Native or Input choice inputs are
 lint errors outside primitives. Owner CSS may arrange controls, never replace or
 resize shared marks/input hit areas. Segmented view/mode pickers remain shared
 SegmentedControl; do not fork their radio semantics into feature buttons.
+SegmentedControl and TabView's tab bar are one engine, the internal selection track
+(`primitives/selection-track.tsx`, Flutter `selection_track.dart`): pill, lens, drag, overflow,
+keyboard and badges live there, parameterised by semantics (radio | tab), layout and sizes. Extend
+it for a new selection control; never fork its selection code.
 
 Every slider/toggle uses Slider/SlideSwitch, including docs and specialized
 features. Menu indicators use noninteractive SlideSwitchIndicator while the

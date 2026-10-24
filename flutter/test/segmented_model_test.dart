@@ -13,6 +13,22 @@ void main() {
   ) as Map<String, dynamic>;
   double n(Object? v) => (v! as num).toDouble();
 
+  test('selectionKeyTarget', () {
+    for (final v in fixture['keys'] as List) {
+      expect(
+        selectionKeyTarget(
+          v[2] as String,
+          v[3] as int,
+          v[4] as int,
+          v[1] as bool,
+          SelectionSemantics.values.byName(v[0] as String),
+        ),
+        v[5],
+        reason: '$v',
+      );
+    }
+  });
+
   for (final track in fixture['tracks'] as List) {
     final t = track as Map<String, dynamic>;
     final spans = [

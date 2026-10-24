@@ -7,6 +7,7 @@ import { definePage, examplesFrom } from '../../../src/model'
 import { Playground } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
 import { C } from '../../../src/blocks/code'
+import { Link } from '../../../src/router'
 
 type View = 'list' | 'board' | 'grid'
 type Surface = 'glass' | 'box' | 'bare'
@@ -188,6 +189,10 @@ function Overview() {
           swells the glass bubble around it. Reduced motion moves the pill instantly with no lens,
           stretch or glow; reduced transparency, more contrast and the <C>solid</C> glass style keep a
           solid pill.
+        </p>
+        <p>
+          The <Link to="/components/tab-view">tab view</Link>’s tab bar shares this base (the same
+          pill, lens, drag and keyboard), with tab semantics and icons stacked over labels.
         </p>
       </Section>
 

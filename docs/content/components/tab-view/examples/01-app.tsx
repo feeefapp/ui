@@ -82,7 +82,7 @@ export default function StoreApp() {
             )
           }
           tabs={[
-            { id: 'orders', label: 'Orders', icon: <ShoppingBag />, badge: 8, content: <OrdersTab /> },
+            { id: 'orders', label: 'Orders', icon: <ShoppingBag />, badge: '8', content: <OrdersTab /> },
             { id: 'inbox', label: 'Inbox', icon: <MessageSquare />, content: <SimpleTab title="Inbox" rows={['Amina Benali', 'Yacine Haddad', 'Sara Meziane']} /> },
             { id: 'products', label: 'Products', icon: <Package />, content: <SimpleTab title="Products" rows={['Linen kaftan', 'Silk scarf', 'Brass lamp']} /> },
             { id: 'settings', label: 'Settings', icon: <Settings />, content: <SimpleTab title="Settings" rows={['Store', 'Couriers', 'Payments', 'Team']} /> },

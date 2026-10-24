@@ -73,132 +73,46 @@ html[data-lab-theme] .lab-tab-accessory.lab-glass-group {
 html[data-lab-theme] .lab-tab-bar.lab-glass-group {
   display: flex;
   flex: none;
-  gap: 2px;
   max-width: 100%;
-  padding: 4px;
+  padding: 0;
   border-radius: calc(30px * var(--lab-corner-scale, 1));
 }
-.lab-tab {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
+
+/* The bar's tabs: a selection track (segmented.css) with tab semantics, stacked options and a tinted
+pill. The track owns the 4px inset (so a scrolling bar fades at the glass edge); tabs sit 2px apart,
+52px tall, 68–120px wide, 11px labels. Minimized it folds to the selected tab (data-collapsed). */
+.lab-tab-track {
+  --lab-segmented-inset: 4px;
+  --lab-segmented-gap: 2px;
+  --lab-segmented-option: 52px;
+  --lab-segmented-size: calc(var(--lab-segmented-option) + 2 * var(--lab-segmented-inset));
+}
+html[data-lab-theme] .lab-tab-track .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
+  flex: none;
   min-width: 68px;
   max-width: 120px;
-  height: 52px;
-  margin: 0;
   padding: 0 10px;
-  overflow: hidden;
-  border: 0;
-  border-radius: calc(26px * var(--lab-corner-scale, 1));
-  background: transparent;
-  color: var(--lab-muted);
-  font: inherit;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition-property: max-width, min-width, padding, opacity, background-color, color;
-  transition-duration: var(--lab-tab-duration), var(--lab-tab-duration), var(--lab-tab-duration), 160ms,
-    var(--lab-duration-fast), var(--lab-duration-fast);
-  transition-timing-function: var(--lab-tab-ease), var(--lab-tab-ease), var(--lab-tab-ease), ease,
-    var(--lab-ease), var(--lab-ease);
+  font: 600 11px/13px var(--lab-font);
 }
-.lab-tab[data-selected] {
-  background: color-mix(in srgb, var(--lab-primary) 16%, transparent);
-  color: var(--lab-ink);
-}
-@media (hover: hover) {
-  .lab-tab:not([data-selected]):hover {
-    background: var(--lab-control-hover);
-  }
-}
-.lab-tab:active {
-  scale: 0.96;
-}
-.lab-tab:focus-visible {
-  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
-  outline-offset: calc(-1 * var(--lab-focus-ring-width));
-}
-.lab-tab:not([data-selected]):focus-visible {
-  background: var(--lab-control-hover);
-}
-.lab-tab-icon {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-}
-.lab-tab-icon > svg {
-  width: 22px;
-  height: 22px;
-}
-.lab-tab-badge {
-  position: absolute;
-  top: -5px;
-  inset-inline-start: 14px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: calc(9px * var(--lab-corner-scale, 1));
-  background: var(--lab-danger);
-  color: var(--lab-surface);
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 18px;
-  text-align: center;
-}
-.lab-tab-label {
-  overflow: hidden;
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 13px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.lab-tab[data-selected] .lab-tab-label {
-  font-weight: 600;
-}
-
-/* Wide: icon and label in one row. */
+/* Wide: icon and label in one row, 44px tall, 14px labels. */
 @container lab-tab-view (min-width: 600px) {
-  .lab-tab {
-    flex-direction: row;
-    gap: 8px;
-    height: 44px;
+  .lab-tab-track {
+    --lab-segmented-option: 44px;
+  }
+  html[data-lab-theme] .lab-tab-track .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
     max-width: 180px;
     padding: 0 16px;
-  }
-  .lab-tab-label {
     font-size: 14px;
     line-height: 17px;
   }
-}
-
-/* Minimized: only the selected tab, as a round icon button. */
-.lab-tab-chrome[data-minimized] .lab-tab:not([data-selected]) {
-  min-width: 0;
-  max-width: 0;
-  padding: 0;
-  opacity: 0;
-}
-.lab-tab-chrome[data-minimized] .lab-tab[data-selected] {
-  min-width: 52px;
-  max-width: 52px;
-  padding: 0;
-}
-.lab-tab-chrome[data-minimized] .lab-tab-label {
-  display: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lab-tab {
-    transition-duration: 0ms;
+  .lab-tab-track[data-layout='stacked'] .lab-segmented-content {
+    flex-direction: row;
+    gap: 8px;
   }
 }
+
 @media (forced-colors: active) {
-  .lab-tab[data-selected] {
+  .lab-tab-track .lab-segmented-option[data-selected] {
     outline: 2px solid Highlight;
   }
 }

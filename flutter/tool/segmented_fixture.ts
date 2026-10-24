@@ -6,7 +6,9 @@ import {
   segmentedAutoScrollSpeed,
   segmentedRevealOffset,
   segmentedSnapIndex,
+  selectionKeyTarget,
   type SegmentSpan,
+  type SelectionSemantics,
 } from '../../src/primitives/segmented-model'
 
 const round = (value: number) => Math.round(value * 1e6) / 1e6
@@ -38,6 +40,26 @@ const TRACKS: { name: string; spans: SegmentSpan[] }[] = [
       { start: 168, width: 74 },
       { start: 56, width: 110 },
       { start: 2, width: 52 },
+    ],
+  },
+  {
+    // A tab bar: tabs 68–120px wide, 2px apart inside a 4px inset.
+    name: 'tabs',
+    spans: [
+      { start: 4, width: 68 },
+      { start: 74, width: 68 },
+      { start: 144, width: 82 },
+      { start: 228, width: 68 },
+    ],
+  },
+  {
+    // The same tab bar right to left.
+    name: 'tabs-rtl',
+    spans: [
+      { start: 228, width: 68 },
+      { start: 144, width: 82 },
+      { start: 74, width: 68 },
+      { start: 4, width: 68 },
     ],
   },
   {
@@ -77,8 +99,21 @@ const REVEALS = [
   [300, 400, 320, 350, 380],
 ]
 
+// Keyboard roving: every key for each semantics and direction, from each position (-1: none).
+const KEYS = ['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp', 'Home', 'End', 'Enter', 'a']
+const SEMANTICS: SelectionSemantics[] = ['radio', 'tab']
+
 export function segmentedFixture() {
   return {
+    keys: SEMANTICS.flatMap((semantics) =>
+      [false, true].flatMap((rtl) =>
+        KEYS.flatMap((key) =>
+          [0, 4].flatMap((count) =>
+            [-1, 0, 1, 3].map((current) => [semantics, rtl, key, current, count, selectionKeyTarget(key, current, count, rtl, semantics)])
+          )
+        )
+      )
+    ),
     autoScroll: VIEWS.flatMap(([a, b]) => AUTO_POINTERS.map((x) => [x, a, b, round(segmentedAutoScrollSpeed(x, a, b))])),
     reveal: REVEALS.map((r) => [...r, round(segmentedRevealOffset(r[0], r[1], r[2], r[3], r[4]))]),
     tracks: TRACKS.map(({ name, spans }) => ({

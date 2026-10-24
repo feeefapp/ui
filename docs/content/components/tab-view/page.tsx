@@ -34,12 +34,27 @@ function Overview() {
   value={tab}
   onChange={setTab}
   tabs={[
-    { id: 'orders', label: 'Orders', icon: <ShoppingBag />, badge: 8, content: <OrdersStack /> },
+    { id: 'orders', label: 'Orders', icon: <ShoppingBag />, badge: '8', content: <OrdersStack /> },
     { id: 'inbox', label: 'Inbox', icon: <MessageSquare />, content: <InboxStack /> },
     { id: 'settings', label: 'Settings', icon: <Settings />, content: <SettingsStack /> },
   ]}
 />`}
         />
+      </Section>
+
+      <Section title="Badges and dragging">
+        <p>
+          The tab bar is a <Link to="/components/segmented-control">segmented control</Link> with tab
+          semantics: the same pill, glass lens and physics. A tap opens a tab. Press the selected tab
+          and it lifts into a glass lens; drag it across the bar (or press another tab and drag, and
+          the lens comes to you) and the tab under it when you let go opens, never one on the way.
+          A quick flick carries on to the next tab. Right to left, the bar and the drag mirror.
+        </p>
+        <p>
+          <C>badge</C> puts a short count on a tab’s icon, for something that needs action, like
+          orders to confirm. It is read with the tab’s name (“Orders, 5”). Pass <C>undefined</C> when
+          there is nothing to count; a badge that always says something stops being read.
+        </p>
       </Section>
 
       <Section title="The bar steps aside">
@@ -48,7 +63,7 @@ function Overview() {
           rows={[
             ['At rest, or scrolling up', 'Full: every tab with icon and label.'],
             ['Scrolling down through content', 'Shrinks to the selected tab’s icon so content gets the screen; the accessory moves beside it.'],
-            ['Tap on the small bar, or back at the top', 'Springs back to full.'],
+            ['Tap on the small bar, or back at the top', 'Springs back to full. The small bar can’t be dragged.'],
           ]}
         />
         <p>
@@ -64,8 +79,13 @@ function Overview() {
 
       <Section title="Accessibility">
         <ul>
-          <li>The bar is a tab list; arrow keys, <kbd>Home</kbd> and <kbd>End</kbd> move between tabs.</li>
-          <li>Badges are read with the tab’s name.</li>
+          <li>
+            The bar is a tab list with one Tab stop. <kbd>←</kbd> and <kbd>→</kbd> (mirrored right to
+            left), <kbd>Home</kbd> and <kbd>End</kbd> move to a tab and open it; <kbd>Enter</kbd> or{' '}
+            <kbd>Space</kbd> on the open tab returns it to the top. <kbd>↑</kbd> and <kbd>↓</kbd> are
+            left to the page.
+          </li>
+          <li>Badges are read with the tab’s name. Dragging is never the only way: every tab is a tap or a key away.</li>
           <li>Hidden tabs are inert; reduced motion switches instantly and shrinks without movement.</li>
         </ul>
       </Section>
@@ -83,7 +103,7 @@ export default definePage({
   importLine: "import { TabView } from '@feeef.dev/ui/containers'",
   source: 'src/containers/tab-view.tsx',
   api: ['TabView'],
-  keywords: ['tabs', 'tab bar', 'bottom navigation', 'ios', 'minimize', 'accessory'],
+  keywords: ['tabs', 'tab bar', 'bottom navigation', 'ios', 'minimize', 'accessory', 'badge', 'drag', 'lens'],
   Overview,
   examples: examplesFrom(
     import.meta.glob('./examples/*.tsx', { eager: true }),

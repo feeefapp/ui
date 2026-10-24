@@ -1,8 +1,9 @@
-import 'dart:ui' show SemanticsRole, Tristate;
+import 'dart:ui' show CheckedState, SemanticsRole, Tristate;
 
 import 'package:feeef_ui/containers/tab_view.dart';
 import 'package:feeef_ui/icons/lucide.dart';
 import 'package:feeef_ui/scroll/scroll_area.dart';
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -53,6 +54,7 @@ Widget app({
   String? initial,
   ValueChanged<String>? onReselect,
   ValueChanged<double>? extra,
+  List<String>? changes,
   Widget? accessory,
   double width = 390,
   TextDirection direction = TextDirection.ltr,
@@ -65,26 +67,29 @@ Widget app({
       child: StatefulBuilder(
         builder: (context, setState) => TabView(
           value: value,
-          onChange: (id) => setState(() => value = id),
+          onChange: (id) {
+            changes?.add(id);
+            setState(() => value = id);
+          },
           onReselect: onReselect,
           accessory: accessory,
           tabs: [
             Tab(
               id: 'home',
-              label: const Text('Home'),
+              label: 'Home',
               icon: const LucideIcon(LucideIcons.house),
               content: Feed(name: 'Home', extra: extra ?? (_) {}),
             ),
             Tab(
               id: 'orders',
-              label: const Text('Orders'),
+              label: 'Orders',
               icon: const LucideIcon(LucideIcons.package),
-              badge: const Text('3'),
+              badge: '3',
               content: const Counter(name: 'orders'),
             ),
             const Tab(
               id: 'more',
-              label: Text('More'),
+              label: 'More',
               icon: LucideIcon(LucideIcons.ellipsis),
               content: Counter(name: 'more'),
             ),
@@ -100,10 +105,35 @@ Finder tab(String label) => find
     .ancestor(of: find.text(label), matching: find.byType(GestureDetector))
     .first;
 
-/// The tab button itself (panels share the tab's key).
+/// The tab itself: the bar's option for [id] (its label hides while the bar is minimized).
 Finder button(String id) => find.byWidgetPredicate(
-  (w) => w.key == ValueKey(id) && w.runtimeType.toString() == '_TabButton',
+  (w) =>
+      w.runtimeType.toString().startsWith('_Segment<') &&
+      (w as dynamic).option.value == id,
 );
+
+/// Presses at [from], moves to [to] in [steps] frames, holds still and lets go (a mouse drag).
+Future<void> drag(
+  WidgetTester tester,
+  Offset from,
+  Offset to, {
+  int steps = 12,
+  void Function()? midway,
+}) async {
+  final gesture = await tester.startGesture(
+    from,
+    kind: PointerDeviceKind.mouse,
+  );
+  await tester.pump(const Duration(milliseconds: 16));
+  for (var i = 1; i <= steps; i++) {
+    await gesture.moveTo(Offset.lerp(from, to, i / steps)!);
+    await tester.pump(const Duration(milliseconds: 16));
+  }
+  // Hold still before letting go, so the release carries no flick.
+  await tester.pump(const Duration(milliseconds: 120));
+  midway?.call();
+  await gesture.up();
+}
 
 void main() {
   setUp(Counter.built.clear);
@@ -273,4 +303,128 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  group('the bar is a selection track', () {
+    testWidgets('dragging the selected tab selects the tab it is released on', (
+      tester,
+    ) async {
+      final changes = <String>[];
+      await tester.pumpWidget(app(changes: changes));
+      await tester.pumpAndSettle();
+      await drag(
+        tester,
+        tester.getCenter(button('home')),
+        tester.getCenter(button('more')),
+        midway: () => expect(changes, isEmpty, reason: 'only on release'),
+      );
+      await tester.pumpAndSettle();
+      expect(changes, ['more']);
+      expect(find.text('more 0'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('right to left, dragging left selects the tab it lands on', (
+      tester,
+    ) async {
+      final changes = <String>[];
+      await tester.pumpWidget(
+        app(changes: changes, direction: TextDirection.rtl),
+      );
+      await tester.pumpAndSettle();
+      final home = tester.getCenter(button('home'));
+      final orders = tester.getCenter(button('orders'));
+      expect(home.dx, greaterThan(orders.dx), reason: 'first tab on the right');
+      await drag(tester, home, orders);
+      await tester.pumpAndSettle();
+      expect(changes, ['orders']);
+    });
+
+    testWidgets('a drag released where it started changes nothing', (
+      tester,
+    ) async {
+      final changes = <String>[];
+      await tester.pumpWidget(app(changes: changes));
+      await tester.pumpAndSettle();
+      final home = tester.getCenter(button('home'));
+      await drag(tester, home, home + const Offset(12, 0));
+      await tester.pumpAndSettle();
+      expect(changes, isEmpty);
+    });
+
+    testWidgets('a badge is part of the tab\'s name; the bar is a tab list', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      final orders = tester.getSemantics(button('orders'));
+      expect(orders.role, SemanticsRole.tab);
+      expect(orders.getSemanticsData().label, 'Orders, 3');
+      final home = tester.getSemantics(button('home'));
+      expect(home.getSemanticsData().label, 'Home');
+      expect(home.flagsCollection.isSelected, Tristate.isTrue);
+      // Tabs are selected, never checked (that is a radio group's state).
+      expect(orders.flagsCollection.isChecked, CheckedState.none);
+      final bar = tester.getSemantics(
+        find.byWidgetPredicate(
+          (w) => w is Semantics && w.properties.role == SemanticsRole.tabBar,
+        ),
+      );
+      expect(bar.getSemanticsData().label, 'Tabs');
+      // The badge is drawn on the icon, the count visible once.
+      expect(find.text('3'), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('a tab list roves with Left and Right only', (tester) async {
+      final changes = <String>[];
+      await tester.pumpWidget(app(changes: changes));
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      // Up and Down belong to the page, not a horizontal tab list.
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+      await tester.pumpAndSettle();
+      expect(changes, isEmpty);
+      // Tabs activate as the keyboard reaches them, and focus follows.
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+      expect(changes, ['orders']);
+      expect(
+        Focus.of(tester.element(find.text('Orders'))).hasPrimaryFocus,
+        isTrue,
+      );
+      // Enter on the selected tab reselects it (scrolls it to the top), not another change.
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(changes, ['orders']);
+    });
+
+    testWidgets(
+      'minimized, the bar shows the selected tab and cannot be dragged',
+      (tester) async {
+        final changes = <String>[];
+        await tester.pumpWidget(app(changes: changes, initial: 'home'));
+        await tester.pumpAndSettle();
+        await tester.drag(find.text('Home row 2'), const Offset(0, -300));
+        await tester.pumpAndSettle();
+        expect(tester.getSize(button('home')).width, 52);
+        // A drag across the small bar picks up nothing and selects nothing.
+        final home = tester.getCenter(button('home'));
+        await drag(tester, home, home + const Offset(120, 0));
+        await tester.pumpAndSettle();
+        expect(changes, isEmpty);
+        // Keys still pick tabs while it is small; the new tab is the one it shows.
+        await tester.drag(find.text('Home row 6'), const Offset(0, -300));
+        await tester.pumpAndSettle();
+        expect(find.text('Home'), findsNothing, reason: 'minimized again');
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.pump();
+        await tester.sendKeyEvent(LogicalKeyboardKey.end);
+        await tester.pumpAndSettle();
+        expect(changes, ['more']);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  });
 }

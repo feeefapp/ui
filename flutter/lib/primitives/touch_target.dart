@@ -164,6 +164,8 @@ class _RenderTouchTargetResolver extends RenderProxyBox {
     for (final target in registry.targets) {
       if (!target.attached || !target.hasSize) continue;
       final size = target.size;
+      // A control folded to nothing (a minimized tab bar's hidden tabs) can't be reached.
+      if (size.width < 1 || size.height < 1) continue;
       final dx = touchOutset(size.width, target.extent);
       final dy = touchOutset(size.height, target.extent);
       if (dx == 0 && dy == 0) continue;

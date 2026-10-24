@@ -73,14 +73,14 @@ class _StoreAppState extends State<StoreApp> {
         tabs: const [
           Tab(
             id: 'orders',
-            label: Text('Orders'),
+            label: 'Orders',
             icon: LucideIcon(LucideIcons.shoppingBag),
-            badge: Text('8'),
+            badge: '8',
             content: _OrdersTab(),
           ),
           Tab(
             id: 'inbox',
-            label: Text('Inbox'),
+            label: 'Inbox',
             icon: LucideIcon(LucideIcons.messageSquare),
             content: _SimpleTab(
               title: 'Inbox',
@@ -89,7 +89,7 @@ class _StoreAppState extends State<StoreApp> {
           ),
           Tab(
             id: 'products',
-            label: Text('Products'),
+            label: 'Products',
             icon: LucideIcon(LucideIcons.package),
             content: _SimpleTab(
               title: 'Products',
@@ -98,7 +98,7 @@ class _StoreAppState extends State<StoreApp> {
           ),
           Tab(
             id: 'settings',
-            label: Text('Settings'),
+            label: 'Settings',
             icon: LucideIcon(LucideIcons.settings),
             content: _SimpleTab(
               title: 'Settings',

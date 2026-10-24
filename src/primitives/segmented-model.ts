@@ -139,3 +139,42 @@ export function segmentedRevealOffset(
   const delta = scrollRevealDelta(start - offset, end - offset, padding, Math.max(padding, viewport - padding))
   return Math.max(0, Math.min(Math.max(0, max), offset + delta))
 }
+
+/** What a selection track is to assistive technology: a segmented control's radio group, or a tab
+ * bar's tab list. */
+export type SelectionSemantics = 'radio' | 'tab'
+
+/**
+ * Where a key moves the selection among `count` enabled options from `current` (-1: none), as an
+ * index into those enabled options: the next or previous one, wrapping (Left and Right mirror in
+ * right-to-left), the first (Home) or the last (End). A radio group also answers Up and Down; a tab
+ * list, being horizontal, only Left and Right. null: the key isn't handled. Both activate the
+ * option they reach (a tab bar's tabs activate automatically, like a radio group).
+ */
+export function selectionKeyTarget(
+  key: string,
+  current: number,
+  count: number,
+  rtl: boolean,
+  semantics: SelectionSemantics
+): number | null {
+  if (count <= 0) return null
+  if (key === 'Home') return 0
+  if (key === 'End') return count - 1
+  const delta =
+    key === 'ArrowRight'
+      ? rtl
+        ? -1
+        : 1
+      : key === 'ArrowLeft'
+        ? rtl
+          ? 1
+          : -1
+        : semantics === 'radio' && key === 'ArrowDown'
+          ? 1
+          : semantics === 'radio' && key === 'ArrowUp'
+            ? -1
+            : 0
+  if (!delta) return null
+  return (Math.max(0, current) + delta + count) % count
+}

@@ -12,6 +12,7 @@ import {
   segmentedDragCenter,
   segmentedPillWidth,
   segmentedSnapIndex,
+  selectionKeyTarget,
   type SegmentSpan,
 } from '../src/primitives/segmented-model.ts'
 import { segmentedFixture } from '../flutter/tool/segmented_fixture.ts'
@@ -89,6 +90,63 @@ test('revealing an option scrolls the least, clear of the fades, within the scro
   assert.equal(segmentedRevealOffset(200, 400, 320, 150, 200), 150 - SEGMENTED_FADE, 'back to the start')
   assert.equal(segmentedRevealOffset(100, 400, 320, 2, 60), 0, 'clamped at 0')
   assert.equal(segmentedRevealOffset(300, 400, 320, 690, 718), 400, 'clamped at max')
+})
+
+// A tab bar (TabView): tabs 68–120px wide, 2px apart inside a 4px inset; right to left the same
+// tabs run from the right edge.
+const tabs: SegmentSpan[] = [
+  { start: 4, width: 68 },
+  { start: 74, width: 68 },
+  { start: 144, width: 82 },
+  { start: 228, width: 68 },
+]
+const tabsRtl = [...tabs].reverse()
+
+test('a tab-bar drag selects the tab it is released on, left to right', () => {
+  // Grabbed on the first tab and carried to the third: a slow release lands on it…
+  const dropped = segmentedDragCenter(center(tabs[2]) + 6, 0, tabs)
+  assert.equal(segmentedSnapIndex(dropped, 0, tabs), 2)
+  // …a careful drop just past the middle of the first two picks the nearer one…
+  assert.equal(segmentedSnapIndex((center(tabs[0]) + center(tabs[1])) / 2 + 2, 0, tabs), 1)
+  // …and a flick from the second carries on to the next.
+  assert.equal(segmentedSnapIndex(center(tabs[1]) + 10, 1500, tabs), 2)
+  // The lens takes each tab's width on the way.
+  assert.equal(segmentedPillWidth(center(tabs[2]), tabs), 82)
+})
+
+test('a tab-bar drag selects the tab it is released on, right to left', () => {
+  // Option order runs right to left: the first tab is on the right, dragging left reaches the third.
+  const first = center(tabsRtl[0])
+  assert.equal(first, center(tabs[3]))
+  const dropped = segmentedDragCenter(center(tabsRtl[2]) - 6, 0, tabsRtl)
+  assert.equal(segmentedSnapIndex(dropped, 0, tabsRtl), 2)
+  assert.equal(segmentedSnapIndex(center(tabsRtl[1]) - 10, -1500, tabsRtl), 2, 'a leftward flick carries on')
+  // Past the leftmost tab it rubber-bands, never past the overdrag.
+  const far = segmentedDragCenter(-500, 0, tabsRtl)
+  assert.ok(far < center(tabsRtl[3]) && far > center(tabsRtl[3]) - SEGMENTED_OVERDRAG)
+  assert.equal(segmentedSnapIndex(far, 0, tabsRtl), 3)
+})
+
+test('a tab list roves with Left and Right only; a radio group also with Up and Down', () => {
+  // Left to right: Right is next, Left previous, both wrap; Home and End jump.
+  assert.equal(selectionKeyTarget('ArrowRight', 0, 4, false, 'tab'), 1)
+  assert.equal(selectionKeyTarget('ArrowRight', 3, 4, false, 'tab'), 0, 'wraps')
+  assert.equal(selectionKeyTarget('ArrowLeft', 0, 4, false, 'tab'), 3, 'wraps back')
+  assert.equal(selectionKeyTarget('Home', 2, 4, false, 'tab'), 0)
+  assert.equal(selectionKeyTarget('End', 0, 4, false, 'tab'), 3)
+  // A horizontal tab list leaves Up and Down to the page; a radio group takes them.
+  assert.equal(selectionKeyTarget('ArrowDown', 0, 4, false, 'tab'), null)
+  assert.equal(selectionKeyTarget('ArrowUp', 0, 4, false, 'tab'), null)
+  assert.equal(selectionKeyTarget('ArrowDown', 0, 4, false, 'radio'), 1)
+  assert.equal(selectionKeyTarget('ArrowUp', 0, 4, false, 'radio'), 3)
+  // Right to left mirrors Left and Right (not Up and Down).
+  assert.equal(selectionKeyTarget('ArrowLeft', 0, 4, true, 'tab'), 1)
+  assert.equal(selectionKeyTarget('ArrowRight', 0, 4, true, 'tab'), 3)
+  assert.equal(selectionKeyTarget('ArrowDown', 0, 4, true, 'radio'), 1)
+  // Nothing selected starts from the first; other keys and empty groups are not handled.
+  assert.equal(selectionKeyTarget('ArrowRight', -1, 4, false, 'tab'), 1)
+  assert.equal(selectionKeyTarget('Enter', 0, 4, false, 'tab'), null)
+  assert.equal(selectionKeyTarget('Home', -1, 0, false, 'radio'), null)
 })
 
 test('the shared fixture is current', () => {

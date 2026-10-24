@@ -31,7 +31,7 @@ pixels per docs page: median / worst variant. Almost all of what remains is glyp
 | `filter-bar` | `FilterBar`, `FilterOption` | filter-bar 0.59 / 1.48% |
 | `dock`, `actions` | `Dock`, `DockContentSwap`, `ActionsBar`, `ActionsMenuAnchor` | dock 0.85 / 1.84%, actions-bar 0.55 / 1.54% |
 | `scroll` | `ScrollArea`, `ScrollGradientOverlay`, `revealScrollChild` | scroll-area 1.06 / 2.62% |
-| `containers` | `NavigationStack`, `Sheet`, `SplitView`, `TabView`, `Carousel`, `AdaptiveStack`, `ViewThatFits` | navigation-stack 0.30 / 0.49%, sheet 0.24 / 0.48%, split-view 0.62 / 0.68%, tab-view 0.54 / 0.88%, carousel 0.18 / 0.42%, adaptive-layouts 0.29 / 0.70% |
+| `containers` | `NavigationStack`, `Sheet`, `SplitView`, `TabView`, `Carousel`, `AdaptiveStack`, `ViewThatFits` | navigation-stack 0.30 / 0.49%, sheet 0.24 / 0.48%, split-view 0.62 / 0.68%, tab-view 0.49 / 0.74%, carousel 0.18 / 0.42%, adaptive-layouts 0.29 / 0.70% |
 | `workspace`, `navigation` | `Scaffold`, `ScaffoldSide`, `ScaffoldAppBar`, `ScaffoldTopBar`, `WorkspaceHeader`, `NavigationItem`, `MovingBrand` | scaffold 0.61 / 2.44%, navigation-item 0.38 / 0.60% |
 | `motion`, `physics` | `Presence`, `Swap`, `AutoHeight`, `StableText`, `LayoutGroup`, `Springs`, `MotionValue`, `VelocityTracker` | motion 0.14 / 0.44%, layout-transitions 0.43 / 0.68% |
 | `model-ladder`, `speech` | `ModelLadder`, `ModelLadderCard`, `SpeechBlock`, `SpeechReorderGroup` | model-ladder 0.31 / 0.49%, speech-block 0.80 / 0.94% |

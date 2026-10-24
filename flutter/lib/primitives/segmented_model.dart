@@ -165,3 +165,34 @@ double segmentedRevealOffset(
   );
   return (offset + delta).clamp(0.0, math.max(0.0, max));
 }
+
+/// What a selection track is to assistive technology: a segmented control's radio group, or a tab
+/// bar's tab list.
+enum SelectionSemantics { radio, tab }
+
+/// Where a key moves the selection among [count] enabled options from [current] (-1: none), as an
+/// index into those enabled options: the next or previous one, wrapping (`ArrowLeft` and
+/// `ArrowRight` mirror in right-to-left), the first (`Home`) or the last (`End`). A radio group
+/// also answers `ArrowUp` and `ArrowDown`; a tab list, being horizontal, only Left and Right. null:
+/// the key isn't handled. Keys are the web's `KeyboardEvent.key` names.
+int? selectionKeyTarget(
+  String key,
+  int current,
+  int count,
+  bool rtl,
+  SelectionSemantics semantics,
+) {
+  if (count <= 0) return null;
+  if (key == 'Home') return 0;
+  if (key == 'End') return count - 1;
+  final radio = semantics == SelectionSemantics.radio;
+  final delta = switch (key) {
+    'ArrowRight' => rtl ? -1 : 1,
+    'ArrowLeft' => rtl ? 1 : -1,
+    'ArrowDown' when radio => 1,
+    'ArrowUp' when radio => -1,
+    _ => 0,
+  };
+  if (delta == 0) return null;
+  return (math.max(0, current) + delta + count) % count;
+}

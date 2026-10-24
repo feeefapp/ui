@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { GlassGroup } from '../scaffold'
 import { MotionValue, prefersReducedMotion } from '../physics/motion-value'
-import { SPRINGS, springTiming } from '../physics/spring'
+import { SelectionTrack, type SelectionSource } from '../primitives/selection-track'
 import { cn } from '../utils'
 import './tab-view.css'
 import { GlassScope } from '../glass/container'
@@ -15,8 +15,9 @@ export type Tab = {
   label: string
   /** Icon shown above (phones) or before (wide) the label. */
   icon: React.ReactNode
-  /** A count or dot on the icon, e.g. unconfirmed orders. */
-  badge?: React.ReactNode
+  /** A short count on the icon's corner for something that needs action, e.g. unconfirmed orders
+   * ("8"). It is part of the tab's accessible name ("Orders, 8"). */
+  badge?: string
   /** The tab's content, usually a NavigationStack. It stays mounted while other tabs show. */
   content: React.ReactNode
 }
@@ -26,7 +27,8 @@ export type TabViewProps = {
   tabs: readonly Tab[]
   /** Selected tab id (controlled). */
   value: string
-  /** Called when the person picks another tab. */
+  /** Called when the person picks another tab: a tap, a drag of the selection released on it, or an
+   * arrow, Home or End key (tabs activate as the keyboard reaches them). */
   onChange: (id: string) => void
   /**
    * Called when the person picks the tab that is already selected: pop its stack to the root,
@@ -45,12 +47,14 @@ export type TabViewProps = {
   className?: string
 }
 
-const SNAPPY = springTiming(SPRINGS.snappy)
-
 /**
  * App-level tabs, like iOS: each tab keeps its own content (and stack) alive, a floating glass
  * tab bar switches between them, and while the person scrolls down it shrinks to the selected
  * tab so content gets the screen. Picking the current tab again returns it to the top.
+ *
+ * The bar is a segmented control with tab semantics (the shared selection track): press the
+ * selected tab and it becomes a glass lens you can drag across the tabs; the tab under it on
+ * release is chosen. Tabs can carry a count (`badge`).
  */
 export function TabView({
   tabs,
@@ -64,7 +68,6 @@ export function TabView({
 }: TabViewProps) {
   const id = React.useId()
   const root = React.useRef<HTMLDivElement>(null)
-  const bar = React.useRef<HTMLDivElement>(null)
   const chrome = React.useRef<HTMLDivElement>(null)
   const panels = React.useRef(new Map<string, HTMLElement>())
   const [minimized, setMinimized] = React.useState(false)
@@ -134,39 +137,28 @@ export function TabView({
     return unsubscribe
   }, [value])
 
-  const pick = (tab: Tab) => {
-    if (tab.id === value) {
-      setMinimizedMorph(false)
-      if (onReselect) onReselect(tab.id)
-      else
-        panels.current
-          .get(tab.id)
-          ?.querySelector('.lab-scroll-viewport')
-          ?.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
-      return
-    }
-    setMinimizedMorph(false)
-    onChange(tab.id)
+  const reselect = (tabId: string) => {
+    if (onReselect) onReselect(tabId)
+    else
+      panels.current
+        .get(tabId)
+        ?.querySelector('.lab-scroll-viewport')
+        ?.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
   }
-  const onKeyDown = (event: React.KeyboardEvent) => {
-    const index = tabs.findIndex((t) => t.id === value)
-    const rtl = getComputedStyle(event.currentTarget).direction === 'rtl'
-    const keys: Record<string, number> = { ArrowRight: rtl ? -1 : 1, ArrowLeft: rtl ? 1 : -1 }
-    let next = -1
-    if (event.key in keys) next = (index + keys[event.key] + tabs.length) % tabs.length
-    else if (event.key === 'Home') next = 0
-    else if (event.key === 'End') next = tabs.length - 1
-    if (next < 0) return
-    event.preventDefault()
-    onChange(tabs[next].id)
-    bar.current?.querySelectorAll<HTMLElement>('[role="tab"]')[next]?.focus()
+  const select = (next: string, source: SelectionSource) => {
+    // Keys activate the tab they reach and leave the bar as it is.
+    if (source === 'key') return onChange(next)
+    // A press on the small bar only brings it back.
+    if (minimized && source === 'press') return setMinimizedMorph(false)
+    setMinimizedMorph(false)
+    if (next === value) reselect(next)
+    else onChange(next)
   }
 
   return (
     <div
       ref={root}
       className={cn('lab-tab-view', className)}
-      style={{ '--lab-tab-ease': SNAPPY.easing, '--lab-tab-duration': `${SNAPPY.duration}ms` } as React.CSSProperties}
     >
       {tabs.map((tab) =>
         visited.has(tab.id) ? (
@@ -194,50 +186,30 @@ export function TabView({
           </GlassGroup>
         )}
         <GlassGroup
-          ref={bar as React.Ref<HTMLElement>}
           glassId="tabs"
           className="lab-tab-bar"
-          role="tablist"
-          aria-label={label}
           data-lab-tab-piece=""
-          onKeyDown={onKeyDown}
           onClick={() => minimized && setMinimizedMorph(false)}
         >
-          {tabs.map((tab) => {
-            const selected = tab.id === value
-            return (
-              <button
-                key={tab.id}
-                id={`${id}-tab-${tab.id}`}
-                type="button"
-                role="tab"
-                className="lab-tab"
-                aria-selected={selected}
-                aria-controls={`${id}-panel-${tab.id}`}
-                tabIndex={selected ? 0 : -1}
-                data-selected={selected || undefined}
-                onClick={(event) => {
-                  if (minimized) {
-                    event.stopPropagation()
-                    setMinimizedMorph(false)
-                    return
-                  }
-                  pick(tab)
-                }}
-              >
-                <span className="lab-tab-icon" aria-hidden="true">
-                  {tab.icon}
-                  {tab.badge !== undefined && tab.badge !== null && tab.badge !== false && (
-                    <span className="lab-tab-badge">{tab.badge}</span>
-                  )}
-                </span>
-                <span className="lab-tab-label">{tab.label}</span>
-                {(typeof tab.badge === 'string' || typeof tab.badge === 'number') && (
-                  <span className="lab-sr-only">, {tab.badge}</span>
-                )}
-              </button>
-            )
-          })}
+          <SelectionTrack
+            semantics="tab"
+            layout="stacked"
+            pill="tinted"
+            className="lab-tab-track"
+            label={label}
+            value={value}
+            onSelect={select}
+            draggable={!minimized}
+            collapsed={minimized}
+            options={tabs.map((tab) => ({
+              value: tab.id,
+              label: tab.label,
+              icon: tab.icon,
+              badge: tab.badge,
+              id: `${id}-tab-${tab.id}`,
+              controls: `${id}-panel-${tab.id}`,
+            }))}
+          />
         </GlassGroup>
       </GlassScope>
     </div>
