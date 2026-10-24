@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { Sheet } from '@feeef.dev/ui/containers'
 import { Button } from '@feeef.dev/ui/primitives/button'
 import { TextField } from '@feeef.dev/ui/primitives/text-field'
-import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { Dock } from '@feeef.dev/ui/dock'
+import { PresentationDock } from '@feeef.dev/ui/presentation'
 
 export default function AdaptiveSheet() {
   const [open, setOpen] = useState(false)
@@ -17,20 +16,16 @@ export default function AdaptiveSheet() {
         onOpenChange={setOpen}
         label="Delivery address"
         detents={['fit']}
-        top={
-          <ToolbarGroup label="Sheet title">
-            <strong className="demo-sheet-title">Delivery address</strong>
-          </ToolbarGroup>
-        }
-        bottom={
-          <Dock label="Address actions">
+        title="Delivery address"
+        dock={
+          <PresentationDock>
             <Button variant="text" onClick={() => setOpen(false)}>
               Cancel
             </Button>
             <Button variant="filled" onClick={() => setOpen(false)}>
               Save address
             </Button>
-          </Dock>
+          </PresentationDock>
         }
       >
         <div style={{ display: 'grid', gap: 16, paddingBlock: 4 }}>

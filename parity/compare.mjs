@@ -52,7 +52,7 @@ function docsScenes(prefix) {
   return ids.filter((id) => id.startsWith(prefix)).map((id) => `docs:${id}`)
 }
 const ARGS = process.argv.slice(2).flatMap((a) => (a === 'docs' || a.startsWith('docs:') && a.split('/').length < 3 ? docsScenes(a.slice(5)) : [a]))
-const SCENES = ARGS.length ? ARGS : ['buttons', 'button-states', 'segmented', 'icons', 'choices', 'sliders', 'fields', 'glass', 'dock', 'popover', 'scroll', 'numbers', 'actions', 'list', 'select', 'carousel', 'tabs', 'stack', 'split', 'scaffold', 'sheet', 'modal', 'text', 'corners']
+const SCENES = ARGS.length ? ARGS : ['buttons', 'button-states', 'segmented', 'icons', 'choices', 'sliders', 'fields', 'glass', 'dock', 'popover', 'scroll', 'numbers', 'actions', 'list', 'select', 'carousel', 'tabs', 'stack', 'split', 'scaffold', 'sheet', 'modal', 'pane', 'text', 'corners']
 const VARIANTS = [
   { theme: 'light', palette: 'lab', density: 'comfortable' },
   { theme: 'dark', palette: 'lab', density: 'comfortable' },
@@ -75,7 +75,7 @@ await page.setViewport({ width: 800, height: Number(process.env.PARITY_VH ?? 700
 await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
 
 // Scenes that draw in the top layer (dialogs) are compared over the whole viewport.
-const VIEWPORT_SCENES = new Set(['modal', 'sheet'])
+const VIEWPORT_SCENES = new Set(['modal', 'pane', 'sheet'])
 const cases = []
 for (const scene of SCENES)
   for (const v of VARIANTS) {

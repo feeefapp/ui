@@ -144,12 +144,11 @@ html[data-lab-theme='dark'] .docs-code .shiki span {
 }
 
 /* ---------- Search: back bubble + field bubble floating over a scrolling result list ---------- */
-html[data-lab-theme] .lab-dialog.docs-search {
-  width: 640px;
+html[data-lab-theme] .lab-modal.docs-search {
+  inline-size: min(640px, calc(100% - 32px));
+  max-block-size: 70dvh;
+  align-self: start;
   margin-block-start: min(12dvh, 96px);
-}
-html[data-lab-theme] .lab-dialog.docs-search.lab-dialog--fit-content {
-  height: min(var(--lab-modal-content-height, 240px), 70dvh);
 }
 .docs-search-bar {
   display: flex;

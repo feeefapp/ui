@@ -25,8 +25,15 @@ export default function ContactSheet() {
               {last}
             </p>
           </div>
-          <Sheet open={open} onOpenChange={setOpen} label="Contact Amina Benali" container={screen} detents={['fit']}>
-            <ListSection header="Amina Benali">
+          <Sheet
+            open={open}
+            onOpenChange={setOpen}
+            label="Contact Amina Benali"
+            title="Amina Benali"
+            container={screen}
+            detents={['fit']}
+          >
+            <ListSection>
               <ListRow leading={<Phone />} title="Call" subtitle="0555 12 34 56" onClick={() => act('Calling…')} />
               <ListRow leading={<MessageSquare />} title="Send SMS" onClick={() => act('SMS sent.')} />
               <ListRow leading={<Copy />} title="Copy number" onClick={() => act('Number copied.')} />

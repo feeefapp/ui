@@ -65,10 +65,10 @@ class _ContactSheetState extends State<ContactSheet> {
               open: _open,
               onOpenChange: (open) => setState(() => _open = open),
               label: 'Contact Amina Benali',
+              title: const Text('Amina Benali'),
               container: true,
               detents: const [.fit],
               child: ListSection(
-                header: const Text('Amina Benali'),
                 children: [
                   ListRow(
                     leading: const LucideIcon(LucideIcons.phone),

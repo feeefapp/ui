@@ -13,7 +13,7 @@ import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
 import { Dock } from '@feeef.dev/ui/dock'
 import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
 import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
-import { Modal } from '@feeef.dev/ui/primitives/modal'
+import { Pane } from '@feeef.dev/ui/presentation'
 import { Presence } from '@feeef.dev/ui/motion'
 import { Marker } from './frame'
 import './layout.css'
@@ -333,9 +333,9 @@ export function OrderWorkspace({
           )}
         </div>
       </Scaffold>
-      <Modal open={detailsOpen && !inspectorInline} close={() => setDetailsOpen(false)} label="Order details" scrollable>
+      <Pane open={detailsOpen && !inspectorInline} onOpenChange={setDetailsOpen} label="Order details" title="Details">
         <Inspector markers={false} />
-      </Modal>
+      </Pane>
     </>
   )
 }

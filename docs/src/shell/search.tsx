@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { ArrowLeft, Braces, CornerDownLeft, FileText, Search as SearchIcon, X } from 'lucide-react'
-import { Modal } from '@feeef.dev/ui/primitives/modal'
+import { Modal } from '@feeef.dev/ui/presentation'
 import { IconButton } from '@feeef.dev/ui/primitives/button'
 import { RawInput } from '@feeef.dev/ui/primitives/raw-input'
 import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
@@ -82,16 +82,14 @@ export function Search({ onClose }: { onClose: () => void }) {
   }, [active, hits])
   return (
     <Modal
+      open
+      onOpenChange={onClose}
       label="Search the docs"
-      close={onClose}
       className="docs-search"
       initialFocusRef={input}
-      scrollable
-      headerless
-      showClose={false}
-      fitContent
-      scrollOptions={{ edgeGap: 10, contentPadding: 10 }}
-      top={
+      edgeGap={10}
+      contentPadding={10}
+      header={
         <GlassScope className="docs-search-bar">
           <ToolbarGroup label="Navigation">
             <IconButton variant="text" appearance="toolbar" aria-label="Close search" onClick={onClose}>

@@ -24,7 +24,8 @@ pixels per docs page: median / worst variant. Almost all of what remains is glyp
 | `primitives/select` | `Select`, `Option` | select 0.38 / 1.20% |
 | `primitives/temporal-field`, `filters/*` | `DateField` … `DateTimeRangeField`, `CalendarMonth`, `TemporalFilterEditor`, `TemporalDialog` | date-time-fields 0.43 / 0.93%, temporal-filter-editor 0.40 / 1.28% |
 | `primitives/list` | `ListSection`, `ListRow`, `RowAction` | list 0.39 / 0.67% |
-| `primitives/modal`, `popover-surface`, tooltip | `Modal`, `PopoverSurface`, `Popover`, `Tooltip` | modal 0.18 / 2.57%, popover-surface 0.23 / 0.44% |
+| `presentation` | `Alert`, `Modal`, `Pane`, `PresentationHeader`, `PresentationBody`, `PresentationDock`, `showAlert`, `showModal`, `showPane`, `showSheet` (a `PopupRoute`, so they work in a plain `WidgetsApp`) | modal 0.13–0.50%, pane 0.13–0.43%, sheet 0.06–0.49% (docs examples and open scenes) |
+| `popover-surface`, tooltip | `PopoverSurface`, `Popover`, `Tooltip` | popover-surface 0.23 / 0.44% |
 | `menu` | `MenuSurface`, `MenuRow`, `MenuSeparator`, `MenuLabel`, `MenuTokens`, `FloatingBoundary`, `AnchoredPanel` (the Radix Popper twin every popup lays out in) | menu (new) |
 | `glass` | `GlassContainer`, `GlassScope`, `GlassLayer`, `GlassSurface`, `GlassBackdrop`, refraction shader | glass-container 1.82 / 4.77% (Chrome bends the backdrop; Flutter web can't), glass-group 0.30 / 2.09% |
 | `scaffold` (`GlassGroup`), `toolbar`, `toolbar-search` | `GlassGroup`, `Toolbar`, `ToolbarGroup`, `ToolbarSearch`, `ScaffoldProvider`, `FloatingLayer` | toolbar 0.32 / 0.77% |

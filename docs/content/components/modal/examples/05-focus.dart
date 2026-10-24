@@ -35,14 +35,12 @@ class _FocusState extends State<Focus> {
       ),
       Modal(
         open: _open,
-        close: _close,
+        onOpenChange: (open) => setState(() => _open = open),
         label: 'Correct the phone number',
-        scrollable: true,
-        fitContent: true,
+        title: const Text('Correct the phone number'),
         initialFocus: _phoneField,
         returnFocus: _row,
-        bottom: Dock(
-          label: 'Phone actions',
+        dock: PresentationDock(
           children: [
             Button(
               variant: .filled,

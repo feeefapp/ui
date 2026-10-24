@@ -31,21 +31,8 @@ class _AdaptiveSheetState extends State<AdaptiveSheet> {
           onOpenChange: (open) => setState(() => _open = open),
           label: 'Delivery address',
           detents: const [.fit],
-          top: const ToolbarGroup(
-            label: 'Sheet title',
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  'Delivery address',
-                  softWrap: false,
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ],
-          ),
-          bottom: Dock(
-            label: 'Address actions',
+          title: const Text('Delivery address'),
+          dock: PresentationDock(
             children: [
               Button(
                 variant: .text,

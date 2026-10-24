@@ -4,7 +4,7 @@ import './primitives/control-variants.css'
 export { Button, IconButton } from './primitives/button'
 export { Input, Textarea, Label, Image } from './primitives/fields'
 export { Select, Option } from './primitives/select'
-export { Modal } from './primitives/modal'
+export { Alert, Modal, Pane } from './presentation'
 export { ProBadge } from './primitives/badge'
 export {
   Box,

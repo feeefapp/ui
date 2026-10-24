@@ -3,8 +3,7 @@ import { ArrowRight, Pencil } from 'lucide-react'
 import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
 import { TextField } from '@feeef.dev/ui/primitives/text-field'
 import { Option, Select } from '@feeef.dev/ui/primitives/select'
-import { Modal } from '@feeef.dev/ui/primitives/modal'
-import { Dock } from '@feeef.dev/ui/dock'
+import { Modal, PresentationDock } from '@feeef.dev/ui/presentation'
 import '../patterns.css'
 
 const phoneError = (phone: string) =>
@@ -89,12 +88,11 @@ function AddressRow() {
       </Button>
       <Modal
         open={open}
-        close={close}
+        onOpenChange={(next) => (next ? setOpen(true) : close())}
         label="Change delivery address"
-        scrollable
-        fitContent
-        bottom={
-          <Dock label="Address actions">
+        title="Change delivery address"
+        dock={
+          <PresentationDock label="Address actions">
             <div className="pt-dock-row">
               <Button variant="text" onClick={close}>
                 Cancel
@@ -109,7 +107,7 @@ function AddressRow() {
                 Save address
               </Button>
             </div>
-          </Dock>
+          </PresentationDock>
         }
       >
         <div style={{ display: 'grid', gap: 16 }}>

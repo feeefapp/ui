@@ -166,29 +166,61 @@
   background: transparent;
 }
 /* Android-style navigation drawer: attached to the logical start edge, full height. */
-html[data-lab-theme] .lab-dialog.lab-workspace-drawer {
-  inset: 0;
-  inset-inline-end: auto;
-  margin: 0;
-  width: min(320px, calc(100vw - 56px));
-  max-width: none;
-  height: 100dvh;
-  max-height: none;
+html[data-lab-theme] .lab-workspace-drawer {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 1;
   box-sizing: border-box;
+  width: min(320px, calc(100% - 56px));
+  height: 100%;
   overflow: hidden;
-  border-radius: 0 20px 20px 0;
+  border: 1px solid var(--lab-line);
+  border-inline-start: 0;
+  border-start-end-radius: calc(20px * var(--lab-corner-scale, 1));
+  border-end-end-radius: calc(20px * var(--lab-corner-scale, 1));
+  color: var(--lab-ink);
   background: color-mix(in srgb, var(--lab-primary) 3%, var(--lab-surface));
   --lab-drawer-offset: -100%;
 }
 html[data-lab-theme] .lab-workspace-drawer:dir(rtl) {
-  border-radius: calc(20px * var(--lab-corner-scale, 1)) 0 0 calc(20px * var(--lab-corner-scale, 1));
   --lab-drawer-offset: 100%;
+}
+.lab-workspace-drawer-close {
+  position: absolute;
+  top: 12px;
+  inset-inline-end: 12px;
+  z-index: 3;
 }
 html[data-lab-theme] .lab-workspace-drawer[data-state='open'] {
   animation: lab-workspace-drawer-in 240ms var(--lab-ease-out) both;
 }
 html[data-lab-theme] .lab-workspace-drawer[data-state='closed'] {
   animation: lab-workspace-drawer-out 180ms var(--lab-ease-in) both;
+  pointer-events: none;
+}
+.lab-workspace-drawer-scrim[data-state='open'] {
+  opacity: 1;
+  animation: lab-workspace-scrim-in 240ms var(--lab-ease-out) both;
+}
+.lab-workspace-drawer-scrim[data-state='closed'] {
+  animation: lab-workspace-scrim-out 180ms var(--lab-ease-in) both;
+}
+@keyframes lab-workspace-scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes lab-workspace-scrim-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+html:is([data-lab-motion='reduced'], [data-lab-motion='none']) :is(.lab-workspace-drawer, .lab-workspace-drawer-scrim)[data-state] {
+  animation: none;
 }
 @keyframes lab-workspace-drawer-in {
   from {
@@ -244,7 +276,7 @@ html[data-lab-theme] .lab-workspace-drawer[data-state='closed'] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html[data-lab-theme] .lab-workspace-drawer[data-state] {
+  html[data-lab-theme] :is(.lab-workspace-drawer, .lab-workspace-drawer-scrim)[data-state] {
     animation: none;
   }
 }

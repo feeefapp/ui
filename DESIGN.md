@@ -23,7 +23,7 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
    surface stays flat (a calendar heading is a plain row); bubbles on one surface share height and
    line up with its content. Example: `TemporalDialog` (top bar · calendars · action bar).
 4. **Navigation, work, details: in that order.** Sidebar → content → inspector. As the screen shrinks:
-   inspector → dialog/sheet, sidebar → rail → hidden → drawer, the logo rises into the app bar, page
+   inspector → pane → sheet, sidebar → rail → hidden → drawer, the logo rises into the app bar, page
    views drop to a bottom `Dock` on phones, the page title collapses into the bar on scroll.
    Nothing disappears; it moves.
 5. **Comfortable by default, dense on purpose.** Density is one app-wide `theme.density`
@@ -66,8 +66,10 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
 | Numbers people tweak | `NumberField` (drag, type `1250*3`) | a plain text input for a price |
 | Bounded continuous value | `Slider` | a number field for 0–100% when feel matters |
 | Dates and times | `DateField`, `DateRangeField`… | free text dates |
-| A decision that blocks the task | `Modal` | a popover for "Delete order?" |
-| A short task about the page (filters, contact, quick edit) | `Sheet` (detents on phones, dialog when wide) | a new page that loses the person's place |
+| A decision that blocks the task ("Delete order?") | `Alert` (title, message, 2–3 actions; cancel + destructive) | a popover, or a Modal with hand-made buttons |
+| A short form that blocks the task (edit an address) | `Modal` (floating title + close, actions in a `PresentationDock`) | a full-width painted header and footer |
+| Details of the thing the page is about, with the page still in view | `Pane` (beside the page; a bottom sheet below 720 automatically) | a modal that hides the page |
+| A short task about the page on a phone (filters, contact, quick edit) | `Sheet` (detents, `fit` for short forms; dialog when wide) | a new page that loses the person's place |
 | Going deeper and coming back | `NavigationStack` + `NavigationPage` | swapping content with no back or swipe |
 | Many items from one list | `SplitView` (stack on phones) | a modal per item |
 | Rows that open, choose or show values | `ListSection` + `ListRow` | hand-made `<div>` rows |
@@ -107,7 +109,14 @@ Scaffold renderViewport
    ├─ list:   NavigationPage → ListSection → ListRow selected…
    └─ detail: NavigationPage (bar: back · title · actions, bottom: Dock) → deeper pages push
 Sheet over any of it                (filters, contact, quick edits; recedes the scaffold)
+Pane beside it                      (an inspector; becomes the Sheet on phones)
 ```
+
+Presentation surfaces share three parts (`@feeef.dev/ui/presentation`): `PresentationHeader`
+(title bubble, trailing bubbles, close bubble, all glass), `PresentationBody` (a ScrollArea that
+hugs its content up to the room it has, or fills it) and `PresentationDock` (the actions). Alert,
+Modal, Pane and Sheet are built from them; Flutter shows them from events with `showAlert`,
+`showModal`, `showPane` and `showSheet`, which complete with the value passed to `Navigator.pop`.
 
 ## Physics
 

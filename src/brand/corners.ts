@@ -2,7 +2,7 @@ import { cornerFit } from './corner-fit'
 import { FO_CORNER_EXPONENT, foSuperellipsePath, type FoCornerRadii } from './geometry'
 
 const selector =
-  '[data-lab-corners], :is([class^="lab-"], [class*=" lab-"]), .lab-app :is(button, a, input, textarea, select), .lab-dialog :is(button, a, input, textarea, select)'
+  '[data-lab-corners], :is([class^="lab-"], [class*=" lab-"]), .lab-app :is(button, a, input, textarea, select), .lab-presentation :is(button, a, input, textarea, select)'
 const ownedProperties = [
   'background-color',
   'background-image',
@@ -155,9 +155,9 @@ export function installFoContinuousCorners(root?: Document | HTMLElement) {
       set(host, entry, 'border-image-width', '0')
       set(host, entry, 'border-image-outset', '0')
       set(host, entry, 'border-image-repeat', 'stretch')
-      // Firefox otherwise clips scrolling dialog contents with a circular curve
+      // Firefox otherwise clips scrolling dialog and pane contents with a circular curve
       // inside the superellipse paint, leaving a crescent around nested panels.
-      if (host.matches('dialog, .lab-upgrade-art')) set(host, entry, 'border-radius', '0')
+      if (host.matches('.lab-modal, .lab-pane, .lab-upgrade-art')) set(host, entry, 'border-radius', '0')
     } else {
       // Preserve CSS gradients/images on a separate masked paint layer. No
       // pseudo-element slots are consumed and no content is wrapped or moved.

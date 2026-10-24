@@ -7,7 +7,7 @@ import { SlideSwitch } from '@feeef.dev/ui/primitives/slider'
 import { TextField } from '@feeef.dev/ui/primitives/text-field'
 import { NumberField } from '@feeef.dev/ui/primitives/number-field'
 import { DateRangeField } from '@feeef.dev/ui/primitives/temporal-field'
-import { Modal } from '@feeef.dev/ui/primitives/modal'
+import { Modal } from '@feeef.dev/ui/presentation'
 import { Dock } from '@feeef.dev/ui/dock'
 import { ActionsBar, type Action } from '@feeef.dev/ui/actions'
 import { AutoHeight } from '@feeef.dev/ui/motion'
@@ -204,7 +204,7 @@ function DetailModal() {
           Show address
         </Button>
       </div>
-      <Modal open={open} close={() => setOpen(false)} label="Delivery address" scrollable fitContent>
+      <Modal open={open} onOpenChange={setOpen} label="Delivery address" title="Delivery address">
         <p className="gl-modal-body">Cité 500 logements, bloc C, Bab Ezzouar, 16 · Alger</p>
       </Modal>
     </div>
@@ -546,9 +546,16 @@ function Overview() {
             [
               'Must the person decide or finish something before going on?',
               <>
-                <Link to="/components/modal">Modal</Link>: confirming a cancellation, editing an
-                address, choosing a courier. Use <C>scrollable</C> with the actions in a bottom dock. Never a
-                modal from a modal.
+                A decision is an <Link to="/components/modal">Alert</Link>: confirming a cancellation,
+                discarding changes. A short form is a <Link to="/components/modal">Modal</Link> with its
+                actions in a dock: editing an address, choosing a courier. Never a dialog from a dialog.
+              </>,
+            ],
+            [
+              'Does the person need the page in view while working: the details of the order or customer the page is about?',
+              <>
+                A <Link to="/components/pane">Pane</Link>: an inspector that slides in beside the page on
+                wide screens and becomes a bottom sheet on phones.
               </>,
             ],
             [
@@ -600,7 +607,9 @@ function Overview() {
         <Table
           head={['Need', 'Use', 'Behavior']}
           rows={[
-            ['A decision or a short task that blocks the rest', <C>Modal</C>, 'Page is inert; Escape or Cancel closes; focus returns.'],
+            ['A decision that blocks the rest', <C>Alert</C>, 'Two or three choices on glass; Escape runs Cancel; focus returns.'],
+            ['A short form that blocks the rest', <C>Modal</C>, 'Page is inert; the actions float in a dock; focus returns.'],
+            ['Details of the thing the page is about', <C>Pane</C>, 'Beside the page when wide, a sheet on phones.'],
             ['A short task about the page, mostly on phones', <C>Sheet</C>, 'Detents, drag and flick; a dialog on wide screens.'],
             ['Going deeper and coming back', <C>NavigationStack</C>, 'Push and pop, swipe back, pages stay mounted.'],
             ['Many items from one list', <C>SplitView</C>, 'Side by side when wide, a stack on phones.'],
@@ -608,7 +617,7 @@ function Overview() {
             ['Browsing a few items sideways', <C>Carousel</C>, 'Snap paging, a peek of the next item, never auto-advancing.'],
             ['A glance or a quick control on one element', <>Popover on <C>PopoverSurface</C></>, 'Anchored, light, dismissed by clicking away.'],
             ['A few more lines about the same thing', <>Inline, in <C>AutoHeight</C></>, 'Stays in context; nothing covers the page.'],
-            ['Properties of the selected item', 'Inspector (dialog on phones)', 'List and details visible together.'],
+            ['Properties of the selected item', <>Inspector column, or a <C>Pane</C></>, 'List and details visible together; a sheet on phones.'],
             ['Long or shareable content', 'New page', 'Own URL, back button, bookmarks.'],
           ]}
         />
@@ -641,7 +650,7 @@ function Overview() {
             [
               'Is the next step irreversible or costly?',
               <>
-                A <C>Modal</C> that names the object and the consequence, with a <C>destructive</C> button
+                An <C>Alert</C> that names the object and the consequence, with a <C>destructive</C> action
                 that repeats the verb.
               </>,
             ],
@@ -665,7 +674,7 @@ function Overview() {
             ['A field value is wrong', <>Field <C>error</C></>, 'Under the field, announced politely'],
             ['A limit or missing setup blocks the task', 'Notice with the next step as a button', 'Next to the task, until it is resolved'],
             ['A request failed', 'Notice with “Try again”, keeping the person’s work', 'Where the result would have appeared'],
-            ['An irreversible step', <><C>Modal</C> confirmation</>, 'Over the page'],
+            ['An irreversible step', <><C>Alert</C> confirmation</>, 'Over the page'],
             ['An action is running', <><C>loading</C> on its control</>, 'On the button, switch or action'],
             ['A list is reloading', 'Keep the current rows; mark the control that changed', 'In place; nothing jumps'],
             ['Something finished', 'The changed result, or a short status', 'Where the change happened'],

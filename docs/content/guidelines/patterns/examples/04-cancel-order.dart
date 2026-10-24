@@ -20,18 +20,19 @@ class _CancelOrderState extends State<CancelOrder> {
     _error = null;
   });
 
-  void _cancel() {
+  /// Returning false keeps the alert open to show the reason's error.
+  bool? _cancel() {
     if (_reason == null) {
       setState(
         () => _error = 'Choose why the order is cancelled; it shows in your failure reports.',
       );
-      return;
+      return false;
     }
     setState(
       () => _status =
           'Order #1048 was cancelled (${_reason!.toLowerCase()}). 2 items went back to stock.',
     );
-    _close();
+    return null;
   }
 
   @override
@@ -54,68 +55,35 @@ class _CancelOrderState extends State<CancelOrder> {
             ),
           ],
         ),
-        Modal(
+        Alert(
           open: _open,
-          close: _close,
-          label: 'Cancel order #1048?',
-          showClose: false,
-          // `.pt-dialog`: 24px padding, 16px gaps.
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 16,
-              children: [
-                Semantics(
-                  header: true,
-                  child: const Text(
-                    'Cancel order #1048?',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 18 * -0.035,
-                      height: 20 / 18,
-                      leadingDistribution: TextLeadingDistribution.even,
-                    ),
-                  ),
-                ),
-                const Text(
-                  'Amina Benali won’t be called again, the 2 reserved items go back to stock and the order moves to Failed. You can’t undo this.',
-                ),
-                Select(
-                  hint: 'Reason',
-                  value: _reason,
-                  error: _error,
-                  onValueChange: (value) => setState(() {
-                    _reason = value;
-                    _error = null;
-                  }),
-                  children: const [
-                    Option(child: Text('Customer refused')),
-                    Option(child: Text('Duplicate order')),
-                    Option(child: Text('Fake order')),
-                    Option(child: Text('Out of stock')),
-                  ],
-                ),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  alignment: WrapAlignment.end,
-                  children: [
-                    Button(
-                      variant: .text,
-                      onClick: _close,
-                      children: const [Text('Keep order')],
-                    ),
-                    Button(
-                      variant: .destructive,
-                      onClick: _cancel,
-                      children: const [Text('Cancel order')],
-                    ),
-                  ],
-                ),
-              ],
+          onOpenChange: (open) => open ? setState(() => _open = true) : _close(),
+          title: 'Cancel order #1048?',
+          message: const Text(
+            'Amina Benali won’t be called again, the 2 reserved items go back to stock and the order moves to Failed. You can’t undo this.',
+          ),
+          actions: [
+            const AlertAction(label: 'Keep order', role: .cancel),
+            AlertAction(
+              label: 'Cancel order',
+              role: .destructive,
+              onAction: _cancel,
             ),
+          ],
+          child: Select(
+            hint: 'Reason',
+            value: _reason,
+            error: _error,
+            onValueChange: (value) => setState(() {
+              _reason = value;
+              _error = null;
+            }),
+            children: const [
+              Option(child: Text('Customer refused')),
+              Option(child: Text('Duplicate order')),
+              Option(child: Text('Fake order')),
+              Option(child: Text('Out of stock')),
+            ],
           ),
         ),
       ],

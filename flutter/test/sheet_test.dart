@@ -57,6 +57,8 @@ class _Harness {
                       open: open,
                       onOpenChange: (value) => setState(() => open = value),
                       label: 'Filters',
+                      // No header: the geometry below is the body's alone.
+                      showClose: false,
                       detents: detents,
                       onDetentChange: changes.add,
                       child: Column(
@@ -330,6 +332,7 @@ void main() {
                   open: open,
                   onOpenChange: (v) => setState(() => open = v),
                   label: 'Details',
+                  showClose: false,
                   child: const SizedBox(height: 200, child: Text('Body')),
                 ),
               ),

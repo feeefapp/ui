@@ -29,13 +29,11 @@ class _WideState extends State<Wide> {
       ),
       Modal(
         open: _open,
-        close: _close,
+        onOpenChange: (open) => setState(() => _open = open),
         label: 'Merge duplicate customers',
-        scrollable: true,
-        fitContent: true,
+        title: const Text('Merge duplicate customers'),
         wide: true,
-        bottom: Dock(
-          label: 'Merge actions',
+        dock: PresentationDock(
           children: [
             Button(
               variant: .text,

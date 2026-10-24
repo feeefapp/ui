@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@feeef.dev/ui/primitives/button'
-import { Modal } from '@feeef.dev/ui/primitives/modal'
-import { Dock } from '@feeef.dev/ui/dock'
+import { Modal, PresentationDock } from '@feeef.dev/ui/presentation'
 import { TextField } from '@feeef.dev/ui/primitives/text-field'
 
 export default function Wide() {
@@ -14,20 +13,19 @@ export default function Wide() {
       </Button>
       <Modal
         open={open}
-        close={close}
+        onOpenChange={setOpen}
         label="Merge duplicate customers"
-        scrollable
-        fitContent
+        title="Merge duplicate customers"
         wide
-        bottom={
-          <Dock label="Merge actions">
+        dock={
+          <PresentationDock>
             <Button variant="text" onClick={close}>
               Keep both
             </Button>
             <Button variant="filled" onClick={close}>
               Merge customers
             </Button>
-          </Dock>
+          </PresentationDock>
         }
       >
         <div

@@ -224,6 +224,15 @@ from its predecoded map; bound pending work and release Blob URLs on eviction/di
 apply a stale map alpha as a second Firefox silhouette. Undo the last written content press scale
 when measuring layout, and clear it when a member leaves.
 
+Presentation surfaces (`src/presentation`, `flutter/lib/presentation`): Alert, Modal and Pane (and
+Sheet in containers) are built from the same parts: `PresentationHost` (top layer or container,
+Escape, focus in and back), `PresentationHeader` (glass title, trailing and close bubbles),
+`PresentationBody` (a ScrollArea that hugs content + chrome up to its room, or fills) and
+`PresentationDock`. Alert and Modal share the pop motion (`motion.ts`: spring from 1.1, fade out
+only); the alert layout rule is pure (`alert-model.ts`, tested on both sides). Flutter adds
+`PresentationRoute` and `showAlert/showModal/showPane/showSheet`; a routed surface reads
+`PresentationRouteScope` instead of `open`. Never hand-roll a dialog shell: compose these parts.
+
 Menus and floating panels (`src/menu`, `flutter/lib/menu`): a list of commands or choices behind a
 button is a `MenuSurface` (asChild on the Radix content): one glass bubble that grows out of its
 trigger and flies back into it (`SPRINGS.menu` / `SPRINGS.menuDismiss`, pure geometry in

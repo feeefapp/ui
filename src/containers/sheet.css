@@ -1,43 +1,13 @@
-/* Sheet: a top-layer host covering the screen (or a container), a scrim, and one panel that moves
-   by transform. Heights at rest are exact, so the panel's scroll area and dock lay out normally. */
-.lab-sheet-host {
+/* Sheet: one panel in a presentation host (presentation/presentation.css) that moves by
+   transform. Heights at rest are exact, so the panel's scroll area and dock lay out normally. */
+.lab-presentation[data-kind='sheet'] {
   --lab-sheet-scrim: rgb(0 0 0 / 0.3);
   --lab-sheet-radius: calc(28px * var(--lab-corner-scale, 1));
   --lab-sheet-shadow: 0 -10px 40px -12px rgb(0 0 0 / 0.22);
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  width: 100%;
-  max-width: none;
-  height: 100%;
-  max-height: none;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  border: 0;
-  background: transparent;
-  color: var(--lab-ink);
-  outline: none;
 }
-html[data-lab-theme='dark'] .lab-sheet-host {
+html[data-lab-theme='dark'] .lab-presentation[data-kind='sheet'] {
   --lab-sheet-scrim: rgb(0 0 0 / 0.55);
   --lab-sheet-shadow: 0 -10px 40px -12px rgb(0 0 0 / 0.6);
-}
-.lab-sheet-host::backdrop {
-  background: transparent;
-}
-.lab-sheet-host[data-inline] {
-  position: absolute;
-}
-/* A non-modal sheet leaves the page usable around it. */
-.lab-sheet-host:not([data-modal]) {
-  pointer-events: none;
-}
-.lab-sheet-host:not([data-modal]) > .lab-sheet {
-  pointer-events: auto;
-}
-html:has(.lab-sheet-host[data-modal][open]) {
-  overflow: hidden;
 }
 
 .lab-sheet-scrim {
@@ -80,9 +50,6 @@ html:has(.lab-sheet-host[data-modal][open]) {
     inset-inline: max(0px, calc((100% - 680px) / 2));
   }
 }
-.lab-sheet-host {
-  container-type: size;
-}
 .lab-sheet[data-presentation='dialog'] {
   top: 50%;
   bottom: auto;
@@ -93,17 +60,6 @@ html:has(.lab-sheet-host[data-modal][open]) {
   border-radius: var(--lab-radius-panel);
   box-shadow: 0 30px 80px -24px rgb(0 0 0 / 0.4);
   will-change: transform, opacity;
-}
-.lab-sheet-scroll {
-  flex: 1 1 0%;
-  --lab-scroll-surface: var(--lab-surface);
-}
-.lab-sheet-scroll .lab-scroll-viewport {
-  overscroll-behavior: contain;
-}
-.lab-sheet-body {
-  display: flow-root;
-  min-width: 0;
 }
 
 /* Grabber: a short pill; the whole row is a drag handle, the pill is a button that cycles heights. */
@@ -139,7 +95,7 @@ html:has(.lab-sheet-host[data-modal][open]) {
   border-radius: calc(10px * var(--lab-corner-scale, 1));
 }
 /* The floating chrome is a drag handle too; a finger there never scrolls the content. */
-.lab-sheet-scroll > .lab-scroll-float {
+.lab-sheet .lab-presentation-scroll > .lab-scroll-float {
   touch-action: none;
 }
 

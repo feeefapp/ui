@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@feeef.dev/ui/primitives/button'
-import { Modal } from '@feeef.dev/ui/primitives/modal'
+import { Alert } from '@feeef.dev/ui/presentation'
 import { Option, Select } from '@feeef.dev/ui/primitives/select'
 import '../patterns.css'
 
@@ -16,10 +16,10 @@ export default function CancelOrder() {
   const cancel = () => {
     if (!reason) {
       setError('Choose why the order is cancelled; it shows in your failure reports.')
-      return
+      return false
     }
     setStatus(`Order #1048 was cancelled (${reason.toLowerCase()}). 2 items went back to stock.`)
-    close()
+    setError(null)
   }
   return (
     <div className="demo-column">
@@ -29,29 +29,24 @@ export default function CancelOrder() {
           Cancel order
         </Button>
       </div>
-      <Modal open={open} close={close} label="Cancel order #1048?" showClose={false}>
-        <div className="pt-dialog">
-          <h2>Cancel order #1048?</h2>
-          <p>
-            Amina Benali won’t be called again, the 2 reserved items go back to stock and the order moves to
-            Failed. You can’t undo this.
-          </p>
-          <Select hint="Reason" value={reason} error={error} onValueChange={(value) => { setReason(value); setError(null) }}>
-            <Option>Customer refused</Option>
-            <Option>Duplicate order</Option>
-            <Option>Fake order</Option>
-            <Option>Out of stock</Option>
-          </Select>
-          <div className="pt-dialog-actions">
-            <Button variant="text" onClick={close}>
-              Keep order
-            </Button>
-            <Button variant="destructive" onClick={cancel}>
-              Cancel order
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      <Alert
+        open={open}
+        onOpenChange={(next) => (next ? setOpen(true) : close())}
+        title="Cancel order #1048?"
+        message="Amina Benali won’t be called again, the 2 reserved items go back to stock and the order moves to Failed. You can’t undo this."
+        actions={[
+          { label: 'Keep order', role: 'cancel' },
+          // Returning false keeps the alert open to show the reason's error.
+          { label: 'Cancel order', role: 'destructive', onAction: cancel },
+        ]}
+      >
+        <Select hint="Reason" value={reason} error={error} onValueChange={(value) => { setReason(value); setError(null) }}>
+          <Option>Customer refused</Option>
+          <Option>Duplicate order</Option>
+          <Option>Fake order</Option>
+          <Option>Out of stock</Option>
+        </Select>
+      </Alert>
     </div>
   )
 }

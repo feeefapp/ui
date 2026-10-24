@@ -117,8 +117,8 @@ function Overview() {
         title="Navigation, work, details: in that order"
         why="A stable spatial model means people stop looking for things. Navigation is always at the start, the work is in the middle, details sit at the end."
         how={[
-          <>Desktop: sidebar → content → inspector. Phones: the same order, collapsed (drawer, content, sheet or dialog).</>,
-          <>As the screen shrinks, collapse in a fixed order: the inspector moves into a dialog, the sidebar becomes a rail and then a drawer, view switches drop to a bottom dock.</>,
+          <>Desktop: sidebar → content → inspector. Phones: the same order, collapsed (drawer, content, sheet).</>,
+          <>As the screen shrinks, collapse in a fixed order: the inspector moves into a pane (a sheet on phones), the sidebar becomes a rail and then a drawer, view switches drop to a bottom dock.</>,
           <>The logo and page identity rise into the app bar when the sidebar collapses; nothing disappears, it moves. See <Link to="/guidelines/layout">Layout</Link>.</>,
         ]}
       />

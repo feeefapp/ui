@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 
 import '../glass/container.dart';
 import '../primitives/button.dart';
-import '../primitives/modal.dart';
+import '../presentation/modal.dart';
 import '../theme.dart';
 import '../toolbar.dart';
 import 'temporal.dart';
@@ -203,11 +203,7 @@ class TemporalDialog extends StatelessWidget {
       return Modal(
         open: open,
         label: label,
-        close: close,
-        scrollable: true,
-        fitContent: true,
-        headerless: true,
-        showClose: false,
+        onOpenChange: (_) => close(),
         returnFocus: returnFocus,
         // `.lab-temporal-dialog`: 400px, 680px with two months; nearly full width on phones.
         width: MediaQuery.sizeOf(context).width < 600
@@ -215,12 +211,10 @@ class TemporalDialog extends StatelessWidget {
             : (edges ? 680 : 400),
         // Bars float the shell gap G from the edges; content starts where the buttons inside
         // them start (G + the group's 2px padding).
-        scrollOptions: ScrollOptions(
-          edgeGap: shellGap,
-          contentPadding: shellGap + 2,
-        ),
-        top: directed(GlassScope(child: top)),
-        bottom: directed(GlassScope(child: bottom)),
+        edgeGap: shellGap,
+        contentPadding: shellGap + 2,
+        header: directed(GlassScope(child: top)),
+        dock: directed(GlassScope(child: bottom)),
         child: directed(
           Column(
             mainAxisSize: MainAxisSize.min,

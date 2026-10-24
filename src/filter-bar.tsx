@@ -19,7 +19,7 @@ import { IconButton, Button } from './primitives/button'
 import { TextField } from './primitives/text-field'
 import { PopoverSurface } from './primitives/popover-surface'
 import { useFloatingBoundary } from './menu/boundary'
-import { Modal } from './primitives/modal'
+import { Modal, PresentationDock } from './presentation'
 import { ScrollArea } from './scroll'
 import { Dock } from './dock'
 import { TemporalFilterEditor } from './filters/temporal-editor'
@@ -723,12 +723,11 @@ export function FilterBar({
         returnFocusRef={returnFocus}
         open={!!dialogSelected && !(selected && isTemporalType(selected.type))}
         label={dialogSelected ? `Edit ${dialogSelected.label} filter` : 'Edit filter'}
-        close={() => setEditing(null)}
-        scrollable
-        fitContent
+        title={dialogSelected ? `Edit ${dialogSelected.label} filter` : 'Edit filter'}
+        onOpenChange={() => setEditing(null)}
         className="lab-filter-editor-dialog"
-        bottom={
-          <Dock label="Filter editor actions">
+        dock={
+          <PresentationDock label="Filter editor actions">
             <Button
               variant="text"
               onClick={() => {
@@ -744,7 +743,7 @@ export function FilterBar({
             <Button variant="filled" type="submit" form={`${formId}-editor`}>
               Apply filter
             </Button>
-          </Dock>
+          </PresentationDock>
         }
       >
         {dialogSelected && selected && (

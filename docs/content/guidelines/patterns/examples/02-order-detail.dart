@@ -138,11 +138,11 @@ class _OrderDetailState extends State<OrderDetail> {
                 ),
               ),
             ),
-            Modal(
+            Pane(
               open: _detailsOpen && narrow,
-              close: () => setState(() => _detailsOpen = false),
+              onOpenChange: (open) => setState(() => _detailsOpen = open),
               label: 'Order details',
-              scrollable: true,
+              title: const Text('Details'),
               child: const _OrderFacts(),
             ),
           ],

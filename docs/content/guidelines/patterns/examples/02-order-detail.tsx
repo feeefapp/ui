@@ -4,7 +4,7 @@ import { ScrollArea } from '@feeef.dev/ui/scroll'
 import { Toolbar, ToolbarGroup } from '@feeef.dev/ui/toolbar'
 import { Dock } from '@feeef.dev/ui/dock'
 import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
-import { Modal } from '@feeef.dev/ui/primitives/modal'
+import { Pane } from '@feeef.dev/ui/presentation'
 import '../patterns.css'
 
 /** True while the element is narrower than `breakpoint`: the inspector then lives in a dialog. */
@@ -143,9 +143,9 @@ export default function OrderDetail() {
           )}
         </div>
       </ScrollArea>
-      <Modal open={detailsOpen && narrow} close={() => setDetailsOpen(false)} label="Order details" scrollable>
+      <Pane open={detailsOpen && narrow} onOpenChange={setDetailsOpen} label="Order details" title="Details">
         <OrderFacts />
-      </Modal>
+      </Pane>
     </div>
   )
 }
@@ -153,5 +153,5 @@ export default function OrderDetail() {
 export const meta = {
   title: 'Order detail',
   description:
-    'The record in the middle, its details in an inspector at the end. Below 640px the inspector moves into a dialog behind the details tool; the dock never moves.',
+    'The record in the middle, its details in an inspector at the end. Below 640px the inspector moves into a Pane behind the details tool (a sheet on phones); the dock never moves.',
 }

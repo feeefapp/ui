@@ -102,6 +102,56 @@ const double menuGlassVeil = 0.88;
 /// Backdrop blur of menu glass in px (`--lab-menu-blur`).
 const double menuGlassBlur = 20;
 
+/// The thick glass menus are made of (`--lab-menu-fill`, `--lab-menu-blur`, saturation and lift):
+/// the full large material at least [menuGlassVeil] veiled and [menuGlassBlur] blurred. Alerts
+/// share it. `GlassStyle.solid` and more contrast make it opaque.
+class MenuMaterial {
+  const MenuMaterial._({
+    required this.fill,
+    required this.filter,
+    required this.solid,
+    required this.contrast,
+  });
+
+  /// The material in [context]'s theme.
+  factory MenuMaterial.of(BuildContext context) {
+    final theme = ThemeProvider.of(context);
+    final c = theme.colors;
+    final solid = glassStyleOf(context) == GlassStyle.solid;
+    final material = glassMaterial(
+      menuGlassTint,
+      dark: theme.brightness == Brightness.dark,
+      size: GlassSize.large,
+    );
+    return MenuMaterial._(
+      fill: solid
+          ? c.surface
+          : c.surface.withValues(alpha: math.max(material.veil, menuGlassVeil)),
+      filter: ui.ImageFilter.compose(
+        outer: ColorFilter.matrix(glassBackdropMatrix(material)),
+        inner: ui.ImageFilter.blur(sigmaX: menuGlassBlur, sigmaY: menuGlassBlur),
+      ),
+      solid: solid,
+      contrast: glassHighContrastOf(context),
+    );
+  }
+
+  /// The veil over the blurred backdrop (the surface colour when [solid]).
+  final Color fill;
+
+  /// The backdrop filter: blur, then saturation and lift.
+  final ui.ImageFilter filter;
+
+  /// Paint [fill] alone, without a backdrop filter.
+  final bool solid;
+
+  /// More contrast: an ink outline and no shadow.
+  final bool contrast;
+}
+
+/// `--lab-menu-shadow: 0 14px 40px -12px rgb(0 0 0 / 24%)`.
+const menuShadowColor = Color.from(alpha: 0.24, red: 0, green: 0, blue: 0);
+
 /// The kit's menu: one Liquid Glass bubble that grows out of the button that opened it (the button
 /// pinches, the bubble springs to the menu's size on `Springs.menu`, the rows sharpen inside it)
 /// and flies back into it when it closes. The twin of `MenuSurface` in `@feeef.dev/ui/menu`. Put it
@@ -301,24 +351,13 @@ class _MenuSurfaceState extends State<MenuSurface>
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeProvider.of(context);
-    final c = theme.colors;
+    final c = ThemeProvider.of(context).colors;
     final tokens = MenuTokens.of(context);
-    final dark = theme.brightness == Brightness.dark;
-    final solid = glassStyleOf(context) == GlassStyle.solid;
-    final contrast = glassHighContrastOf(context);
-    final material = glassMaterial(
-      menuGlassTint,
-      dark: dark,
-      size: GlassSize.large,
-    );
-    final fill = solid
-        ? c.surface
-        : c.surface.withValues(alpha: math.max(material.veil, menuGlassVeil));
-    final filter = ui.ImageFilter.compose(
-      outer: ColorFilter.matrix(glassBackdropMatrix(material)),
-      inner: ui.ImageFilter.blur(sigmaX: menuGlassBlur, sigmaY: menuGlassBlur),
-    );
+    final glass = MenuMaterial.of(context);
+    final solid = glass.solid;
+    final contrast = glass.contrast;
+    final fill = glass.fill;
+    final filter = glass.filter;
     final clipper = _BubbleClipper(_morph);
 
     final content = LayoutBuilder(
@@ -365,7 +404,7 @@ class _MenuSurfaceState extends State<MenuSurface>
           children: [
             Positioned.fill(
               child: CustomPaint(
-                painter: _ShadowPainter(_morph, contrast ? null : _menuShadow),
+                painter: _ShadowPainter(_morph, contrast ? null : menuShadowColor),
               ),
             ),
             Positioned.fill(
@@ -433,8 +472,6 @@ class _MenuSurfaceState extends State<MenuSurface>
   }
 }
 
-/// `--lab-menu-shadow: 0 14px 40px -12px rgb(0 0 0 / 24%)`.
-const _menuShadow = Color.from(alpha: 0.24, red: 0, green: 0, blue: 0);
 
 /// Reports its size after layout without rebuilding.
 class _SizeProbe extends SingleChildRenderObjectWidget {

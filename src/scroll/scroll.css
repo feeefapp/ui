@@ -6,7 +6,9 @@
   min-height: 0;
   min-width: 0;
   flex: 1 1 0%;
+  /* clip, not hidden: focusing a float in a scaled or moving area must never scroll the root. */
   overflow: hidden;
+  overflow: clip;
   border-radius: inherit;
   corner-shape: inherit;
   /* The enclosing bordered surface owns opaque paint and continuous corners. */

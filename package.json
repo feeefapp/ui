@@ -50,6 +50,10 @@
       "types": "./dist/menu/index.d.ts",
       "default": "./dist/menu/index.js"
     },
+    "./presentation": {
+      "types": "./dist/presentation/index.d.ts",
+      "default": "./dist/presentation/index.js"
+    },
     "./*.css": "./dist/*.css",
     "./*": {
       "types": "./dist/*.d.ts",

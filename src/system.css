@@ -166,11 +166,11 @@ html[data-lab-theme='dark'] {
   --lab-control-highlight: rgb(255 255 255 / 20%);
   --lab-control-depth: 0 2px 6px rgb(0 0 0 / 18%);
 }
-:is(.lab-app, .lab-dialog, .lab-floating-root) {
+:is(.lab-app, .lab-presentation, .lab-floating-root) {
   font-family: var(--lab-font);
   color: var(--lab-ink);
 }
-:is(.lab-app, .lab-dialog, .lab-floating-root) :focus-visible {
+:is(.lab-app, .lab-presentation, .lab-floating-root) :focus-visible {
   outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
   outline-offset: var(--lab-focus-ring-offset);
 }
@@ -739,11 +739,11 @@ html[data-lab-glass='solid'] .lab-light-edge::after {
 }
 /* A plain list, not :is(): each branch is rejected by the ancestor filter without walking up. */
 .lab-app *,
-.lab-dialog *,
+.lab-presentation *,
 .lab-floating-root * {
   box-sizing: border-box;
 }
-:is(.lab-app, .lab-dialog) :is(h1, h2, h3, h4) {
+:is(.lab-app, .lab-presentation) :is(h1, h2, h3, h4) {
   margin: 0;
   font-weight: 500;
   letter-spacing: -0.035em;
@@ -754,11 +754,11 @@ html[data-lab-glass='solid'] .lab-light-edge::after {
 .lab-app p {
   margin: 0;
 }
-:is(.lab-app, .lab-dialog) a {
+:is(.lab-app, .lab-presentation) a {
   color: inherit;
   text-decoration: none;
 }
-:is(.lab-app, .lab-dialog) .lab-control {
+:is(.lab-app, .lab-presentation) .lab-control {
   isolation: isolate;
   display: inline-flex;
   align-items: center;
@@ -768,7 +768,7 @@ html[data-lab-glass='solid'] .lab-light-edge::after {
   box-shadow: none;
   font-family: var(--lab-font);
 }
-:is(.lab-app, .lab-dialog) .lab-control > .lab-pixel-texture {
+:is(.lab-app, .lab-presentation) .lab-control > .lab-pixel-texture {
   z-index: -1;
   --pixel-texture-opacity: 0.19;
   clip-path: var(--lab-corner-clip, inset(0 round var(--lab-radius-control)));
@@ -852,34 +852,6 @@ html[data-lab-theme] .lab-select-option[data-disabled] {
   opacity: 0.5;
   pointer-events: none;
 }
-html[data-lab-theme] .lab-dialog {
-  color: var(--lab-ink);
-  background: var(--lab-surface);
-  border: 1px solid var(--lab-line);
-  border-radius: var(--lab-radius-panel);
-  corner-shape: superellipse(1.5);
-  padding: 0;
-  width: 560px;
-  max-width: calc(100vw - 28px);
-  max-height: 90dvh;
-  overflow: auto;
-  position: fixed;
-  margin: auto;
-  font: 15px/23px var(--lab-font);
-}
-.lab-dialog::backdrop {
-  background: rgb(12 24 17 / 40%);
-}
-html[data-lab-theme] .lab-dialog-wide {
-  width: 980px;
-  max-width: calc(100vw - 40px);
-}
-.lab-dialog .lab-close {
-  position: absolute;
-  top: 12px;
-  inset-inline-end: 12px;
-  z-index: 3;
-}
 html[data-lab-theme] .lab-ui-page .lab-theme-switch:not([data-variant]) {
   width: var(--lab-control-height);
   height: var(--lab-control-height);
@@ -894,65 +866,6 @@ html[data-lab-theme] .lab-ui-page .lab-theme-switch:not([data-variant]) {
 
 html[data-lab-theme] .lab-select {
   justify-content: space-between;
-}
-
-/* A scrollable dialog is the enclosing boundary. Only the viewport scrolls; tools float locally. */
-html[data-lab-theme] .lab-dialog--scrollable {
-  height: min(720px, 85dvh);
-  overflow: hidden;
-}
-.lab-modal-floating-top {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: var(--lab-toolbar-gap);
-  padding-inline-start: 0;
-}
-/* Default text needs opaque backing while content moves behind it. Custom top
-slots keep their own material; this surface adds no border, shadow or blur. */
-.lab-modal-floating-top--default {
-  background: transparent;
-}
-.lab-modal-floating-top--default .lab-modal-title {
-  margin: 0;
-  padding: 0 10px;
-  font-size: 13px;
-  line-height: 20px;
-  font-weight: 500;
-}
-.lab-modal-floating-title > .lab-toolbar-group {
-  width: fit-content;
-  max-width: 100%;
-}
-.lab-modal-floating-title h2 {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.lab-modal-floating-title {
-  flex: 1;
-  min-width: 0;
-}
-.lab-dialog .lab-modal-title {
-  font-size: 17px;
-  font-weight: 600;
-  line-height: 24px;
-  letter-spacing: -0.02em;
-  overflow-wrap: anywhere;
-}
-.lab-modal-floating-top > .lab-modal-close {
-  flex-shrink: 0;
-}
-html[data-lab-theme] .lab-dialog--scrollable[open] {
-  display: block;
-}
-
-/* Firefox may clear the dialog host radius for SVG paint. Keep its transparent
-scroll boundary rounded while the enclosing dialog alone paints the surface. */
-.lab-dialog--scrollable .lab-scroll-area {
-  border-radius: var(--lab-radius-panel);
-  --lab-scroll-surface: var(--lab-surface);
 }
 
 @media (pointer: coarse) {
@@ -998,16 +911,6 @@ html[data-lab-theme]
   transform: scaleX(-1);
 }
 
-/* Intrinsic dialog body + measured floating chrome. Long content still scrolls to the boundary. */
-html[data-lab-theme] .lab-dialog.lab-dialog--fit-content {
-  height: min(var(--lab-modal-content-height, 240px), calc(100dvh - 32px));
-  max-height: calc(100dvh - 32px);
-}
-.lab-modal-measured-body {
-  display: flow-root;
-  min-inline-size: 0;
-}
-
 /* Opaque Lab menu with quiet, non-interactive pixel decoration. */
 
 html[data-lab-theme] .lab-select-option[data-state='checked'] {
@@ -1038,11 +941,6 @@ html[data-lab-theme] .lab-select-option[data-state='checked'][data-highlighted] 
     background: Highlight;
     color: HighlightText;
   }
-}
-
-.lab-dialog .lab-modal-floating-top--default .lab-modal-title {
-  font-size: 13px;
-  line-height: 20px;
 }
 
 /* Inline text actions follow the surrounding font metrics. */

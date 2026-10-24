@@ -1,11 +1,13 @@
 'use client'
 
 import * as React from 'react'
-import { PanelLeftClose, PanelLeftOpen, Menu } from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen, Menu, X } from 'lucide-react'
 import { PixelShader, PixelTexture } from '../pixel-art'
 import { IconButton } from '../primitives/button'
 import { ScrollArea } from '../scroll'
-import { Modal } from '../primitives/modal'
+import { PresentationHost } from '../presentation/host'
+import { usePresence } from '../motion'
+import { useI18n } from '../i18n'
 import { cn } from '../utils'
 import './scaffold.css'
 import { GlassScope } from '../glass/container'
@@ -194,20 +196,16 @@ export function Scaffold({
           </div>
         </div>
         {compact && (
-          <Modal
+          <WorkspaceDrawer
             open={drawerOpen}
             label={drawerLabel}
             returnFocusRef={drawerReturnFocusRef}
-            close={() => setDrawerOpen(false)}
-            className="lab-workspace-drawer"
+            onClose={() => setDrawerOpen(false)}
           >
-            <span className="lab-workspace-drawer-paint" aria-hidden="true">
-              <PixelTexture variant="grain" seed="workspace-drawer" density="sparse" />
-            </span>
             <div dir={dir} className="lab-workspace-drawer-side">
               {render(side)}
             </div>
-          </Modal>
+          </WorkspaceDrawer>
         )}
       </div>
     </WorkspaceScaffoldContext.Provider>
@@ -306,5 +304,47 @@ export function ScaffoldToggleButton({
         <PanelLeftOpen className="lab-dir-flip" />
       )}
     </IconButton>
+  )
+}
+
+/** The compact navigation drawer: a full-height panel from the logical start over a dimmed page. */
+function WorkspaceDrawer({
+  open,
+  label,
+  returnFocusRef,
+  onClose,
+  children,
+}: {
+  open: boolean
+  label: string
+  returnFocusRef?: React.RefObject<HTMLElement | null>
+  onClose: () => void
+  children: React.ReactNode
+}) {
+  const { t } = useI18n()
+  const { mounted, state } = usePresence(open, 240)
+  if (!mounted) return null
+  const close = () => {
+    if (state === 'open') onClose()
+  }
+  return (
+    <PresentationHost kind="drawer" label={label} returnFocusRef={returnFocusRef} onEscape={close}>
+      <div className="lab-presentation-scrim lab-workspace-drawer-scrim" data-state={state} aria-hidden="true" onClick={close} />
+      <div className="lab-workspace-drawer" data-state={state}>
+        <span className="lab-workspace-drawer-paint" aria-hidden="true">
+          <PixelTexture variant="grain" seed="workspace-drawer" density="sparse" />
+        </span>
+        <IconButton
+          variant="ghost"
+          controlSize="regular"
+          className="lab-workspace-drawer-close"
+          aria-label={t('lab.common.close')}
+          onClick={close}
+        >
+          <X size={18} />
+        </IconButton>
+        {children}
+      </div>
+    </PresentationHost>
   )
 }

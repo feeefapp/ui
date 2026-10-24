@@ -1,9 +1,11 @@
 'use client'
 
 import * as React from 'react'
-import { createPortal } from 'react-dom'
-import { ScrollArea } from '../scroll'
 import { useI18n } from '../i18n'
+import { PresentationHost, usePresented } from '../presentation/host'
+import { PresentationHeader } from '../presentation/header'
+import { PresentationBody } from '../presentation/body'
+import type { PresentationChromeProps } from '../presentation/modal'
 import { attachPan, canChildPan } from '../physics/gesture'
 import { MotionValue, motionOf, prefersReducedMotion } from '../physics/motion-value'
 import { motionFade } from '../theme-config'
@@ -17,18 +19,17 @@ import {
   type SheetDetent,
 } from './sheet-model'
 import { cn } from '../utils'
+import '../presentation/presentation.css'
 import './sheet.css'
 
 export type { SheetDetent } from './sheet-model'
 
-export type SheetProps = {
+export type SheetProps = PresentationChromeProps & {
   /** Shows the sheet. It animates in and out; keep it mounted and toggle this. */
   open: boolean
-  /** Called with `false` when the person dismisses it (drag down, scrim, Escape), and never with `true`. */
+  /** Called with `false` when the person dismisses it (drag down, scrim, Escape, close bubble), never with `true`. */
   onOpenChange: (open: boolean) => void
-  /** Accessible name of the sheet. */
-  label: string
-  /** Sheet content; it scrolls inside the sheet. */
+  /** Sheet content; it scrolls inside the sheet under the floating header and dock. */
   children: React.ReactNode
   /** Heights the sheet rests at, lowest first is not required. Default `['large']`. */
   detents?: readonly SheetDetent[]
@@ -38,14 +39,10 @@ export type SheetProps = {
   defaultDetent?: SheetDetent
   /** Called when the person drags or taps the grabber to another detent. */
   onDetentChange?: (detent: SheetDetent) => void
-  /** Whether dragging down, the scrim and Escape close it. Default true. */
+  /** Whether dragging down, the scrim and Escape close it. Default true. The close bubble always does. */
   dismissible?: boolean
   /** Shows the grabber. Default: when there is more than one detent. */
   grabber?: boolean
-  /** Floating chrome over the top of the content: a title and a Done button in glass groups. */
-  top?: React.ReactNode
-  /** Floating chrome over the bottom: usually a Dock with the sheet's main action. */
-  bottom?: React.ReactNode
   /**
    * `true` (default) dims and blocks the page. `false` leaves the page usable behind the sheet,
    * like a map with a results sheet; the sheet then has no scrim and no Escape dismissal.
@@ -59,8 +56,13 @@ export type SheetProps = {
   container?: HTMLElement | null
   /** On phones, let the page behind recede (scale back) as a large sheet rises. Default true. */
   recede?: boolean
-  /** Inline content padding in px. */
+  /** Content padding in px. Default: the shell gap G (list sections bring their own inset). */
   contentPadding?: number
+  /** Focused when the sheet opens. Default: the sheet itself. */
+  initialFocusRef?: React.RefObject<HTMLElement | null>
+  /** Focused after it closes, when the control that opened it may be gone. */
+  returnFocusRef?: React.RefObject<HTMLElement | null>
+  /** Class name of the sheet panel. */
   className?: string
 }
 
@@ -73,10 +75,9 @@ const DEFAULT_DETENTS: readonly SheetDetent[] = ['large']
  * it becomes a centered dialog. The page behind dims and, under a full-height sheet, recedes.
  */
 export function Sheet(props: SheetProps) {
-  const [mounted, setMounted] = React.useState(props.open)
-  if (props.open && !mounted) setMounted(true)
+  const { mounted, exited } = usePresented(props.open)
   if (!mounted) return null
-  return <SheetPresentation {...props} onExited={() => setMounted(false)} />
+  return <SheetPresentation {...props} onExited={exited} />
 }
 
 type Metrics = { width: number; hostHeight: number; topInset: number; natural: number }
@@ -92,14 +93,19 @@ function SheetPresentation({
   onDetentChange,
   dismissible = true,
   grabber,
-  top,
-  bottom,
+  title,
+  trailing,
+  showClose = true,
+  header,
+  dock,
   modal = true,
   regular = 'dialog',
   regularBreakpoint = 720,
   container,
   recede = true,
   contentPadding,
+  initialFocusRef,
+  returnFocusRef,
   className,
   onExited,
 }: SheetProps & { onExited: () => void }) {
@@ -108,13 +114,14 @@ function SheetPresentation({
   const panel = React.useRef<HTMLDivElement>(null)
   const scrim = React.useRef<HTMLDivElement>(null)
   const viewport = React.useRef<HTMLDivElement>(null)
-  const body = React.useRef<HTMLDivElement>(null)
   const grabRow = React.useRef<HTMLDivElement>(null)
   const probe = React.useRef<HTMLDivElement>(null)
-  const returnFocus = React.useRef<Element | null>(null)
+  const titleId = React.useId()
   const [metrics, setMetrics] = React.useState<Metrics | null>(null)
+  /** The body's natural height (content + reserved chrome), reported by PresentationBody. */
+  const bodyNatural = React.useRef(0)
+  const measureRef = React.useRef<() => void>(() => {})
 
-  const inline = !!container
   const presentation: 'sheet' | 'dialog' =
     metrics && metrics.width >= regularBreakpoint && regular === 'dialog' ? 'dialog' : 'sheet'
   const heights = metrics ? detentHeights(detents, metrics) : []
@@ -141,7 +148,7 @@ function SheetPresentation({
   }, [container])
 
   const pinned = () => {
-    const area = panel.current?.querySelector(':scope > .lab-sheet-scroll')
+    const area = panel.current?.querySelector('.lab-presentation-scroll')
     return area
       ? Array.from(
           area.querySelectorAll<HTMLElement>(
@@ -217,28 +224,16 @@ function SheetPresentation({
     }
   }, [])
 
-  // Mount: enter the top layer, remember focus, start measuring.
+  // Mount: start measuring the host and the body.
   React.useLayoutEffect(() => {
-    returnFocus.current = document.activeElement
-    const element = host.current
-    if (element instanceof HTMLDialogElement && !element.open) {
-      if (modal) element.showModal()
-      else element.show()
-    }
     const measure = () => {
       const box = host.current
       if (!box) return
-      const content = body.current?.parentElement
-      const style = content ? getComputedStyle(content) : null
-      const natural =
-        (grabRow.current?.offsetHeight ?? 0) +
-        (style ? parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) : 0) +
-        (body.current?.offsetHeight ?? 0)
       const next: Metrics = {
         width: box.clientWidth,
         hostHeight: box.clientHeight,
         topInset: 10 + (probe.current?.offsetHeight ?? 0),
-        natural: Math.ceil(natural),
+        natural: Math.ceil((grabRow.current?.offsetHeight ?? 0) + bodyNatural.current),
       }
       setMetrics((m) =>
         m &&
@@ -250,11 +245,9 @@ function SheetPresentation({
           : next
       )
     }
+    measureRef.current = measure
     const observer = new ResizeObserver(measure)
     if (host.current) observer.observe(host.current)
-    if (body.current) observer.observe(body.current)
-    // Border box: the scroll area's reservations for the floating chrome are padding.
-    if (body.current?.parentElement) observer.observe(body.current.parentElement, { box: 'border-box' })
     measure()
     return () => {
       observer.disconnect()
@@ -263,7 +256,7 @@ function SheetPresentation({
         backdrop.style.clipPath = ''
       }
     }
-  }, [])
+  }, [container])
 
   // Present, follow detent and size changes, and leave.
   const target = heights[index] ?? 0
@@ -274,13 +267,8 @@ function SheetPresentation({
     const motion = motionOf()
     if (!open) {
       presented.current = false
-      const done = () => {
-        // Leave the top layer first: nothing outside a modal dialog can take focus.
-        if (host.current instanceof HTMLDialogElement && host.current.open) host.current.close()
-        const el = returnFocus.current
-        if (el instanceof HTMLElement && el.isConnected) el.focus({ preventScroll: true })
-        onExited()
-      }
+      // Unmounting the host leaves the top layer and returns focus.
+      const done = () => onExited()
       if (presentation === 'dialog') {
         const fade = motionFade(motion, 0.18)
         void shown.animateTo(0, { spring: reduced ? { duration: fade, bounce: 0 } : SPRINGS.smooth, instant: fade === 0 }).then((a) => a && done())
@@ -332,10 +320,12 @@ function SheetPresentation({
       void moveTo(target)
       return
     }
-    if (!visible.isAnimating() && !dragging.current) {
-      if (Math.abs(visible.get() - target) < 1) rest(target)
-      else void moveTo(target)
-    }
+    if (dragging.current) return
+    if (visible.isAnimating()) {
+      // The detent moved while rising (a fit sheet's content measured late): retarget in flight.
+      if (Math.abs(visible.getTarget() - target) >= 1) void moveTo(target)
+    } else if (Math.abs(visible.get() - target) < 1) rest(target)
+    else void moveTo(target)
   }, [open, metrics, presentation, target, dialogHeight])
 
   const setDetentIndex = (next: number) => {
@@ -425,9 +415,32 @@ function SheetPresentation({
   const requestClose = () => {
     if (dismissible) onOpenChange(false)
   }
+  const top =
+    header !== undefined ? (
+      header
+    ) : (
+      <PresentationHeader
+        title={title}
+        titleId={titleId}
+        trailing={trailing}
+        onClose={showClose ? () => open && onOpenChange(false) : undefined}
+        closeLabel={t('lab.composer.closeLabel', { label })}
+        closeDisabled={!open}
+      />
+    )
 
-  const content = (
-    <>
+  return (
+    <PresentationHost
+      ref={host}
+      kind="sheet"
+      label={label}
+      labelledBy={header === undefined && title != null ? titleId : undefined}
+      modal={modal}
+      container={container}
+      initialFocusRef={initialFocusRef ?? panel}
+      returnFocusRef={returnFocusRef}
+      onEscape={requestClose}
+    >
       {modal && <div ref={scrim} className="lab-sheet-scrim" aria-hidden="true" onClick={requestClose} />}
       <div ref={probe} className="lab-sheet-safe-probe" aria-hidden="true" />
       <div
@@ -435,9 +448,6 @@ function SheetPresentation({
         className={cn('lab-sheet', className)}
         data-presentation={presentation}
         data-ready={metrics ? '' : undefined}
-        role={inline ? 'dialog' : undefined}
-        aria-modal={inline && modal ? true : undefined}
-        aria-label={inline ? label : undefined}
         tabIndex={-1}
       >
         {showGrabber && (
@@ -456,53 +466,21 @@ function SheetPresentation({
             />
           </div>
         )}
-        <ScrollArea
+        <PresentationBody
           ref={viewport}
-          className="lab-sheet-scroll"
           label={label}
-          contentPadding={contentPadding}
           top={top}
-          bottom={bottom}
+          bottom={dock}
+          fill
+          contentPadding={contentPadding}
+          onNaturalHeight={(height) => {
+            bodyNatural.current = height
+            measureRef.current()
+          }}
         >
-          <div ref={body} className="lab-sheet-body">
-            {children}
-          </div>
-        </ScrollArea>
+          {children}
+        </PresentationBody>
       </div>
-    </>
-  )
-
-  if (inline)
-    return createPortal(
-      <div
-        ref={host as React.Ref<HTMLDivElement>}
-        className="lab-sheet-host"
-        data-inline=""
-        data-modal={modal || undefined}
-        onKeyDown={(event) => {
-          if (event.key === 'Escape' && modal) {
-            event.stopPropagation()
-            requestClose()
-          }
-        }}
-      >
-        {content}
-      </div>,
-      container!
-    )
-  return createPortal(
-    <dialog
-      ref={host as React.Ref<HTMLDialogElement>}
-      className="lab-sheet-host"
-      data-modal={modal || undefined}
-      aria-label={label}
-      onCancel={(event) => {
-        event.preventDefault()
-        requestClose()
-      }}
-    >
-      {content}
-    </dialog>,
-    document.body
+    </PresentationHost>
   )
 }

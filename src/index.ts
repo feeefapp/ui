@@ -20,7 +20,9 @@ export {
   Select,
   Option,
   Label,
+  Alert,
   Modal,
+  Pane,
   Box,
   Text,
   Link,
@@ -40,6 +42,23 @@ export {
 
 export { FloatingBoundary, MenuSurface, useFloatingBoundary } from './menu'
 export type { FloatingBoundaryProps, MenuSurfaceProps } from './menu'
+
+export {
+  PresentationBody,
+  PresentationDock,
+  PresentationHeader,
+} from './presentation'
+export type {
+  AlertAction,
+  AlertActionRole,
+  AlertProps,
+  ModalProps,
+  PaneProps,
+  PresentationBodyProps,
+  PresentationChromeProps,
+  PresentationDockProps,
+  PresentationHeaderProps,
+} from './presentation'
 
 export { ScrollArea, ScrollGradientOverlay, useShellGap } from './scroll'
 export type { ScrollAreaProps, ScrollGradientOverlayProps } from './scroll'

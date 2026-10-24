@@ -1,70 +1,41 @@
 import { useState } from 'react'
 import { Button } from '@feeef.dev/ui/primitives/button'
-import { Modal } from '@feeef.dev/ui/primitives/modal'
-import { Dock } from '@feeef.dev/ui/dock'
-import { TextField } from '@feeef.dev/ui/primitives/text-field'
+import { Alert, type AlertAction } from '@feeef.dev/ui/presentation'
 import { definePage, examplesFrom } from '../../../src/model'
-import { Playground, jsx } from '../../../src/blocks/playground'
+import { Playground } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
 import { C, Code } from '../../../src/blocks/code'
 import { Link } from '../../../src/router'
 
 const controls = {
-  label: { type: 'text', default: 'Edit delivery address' },
-  scrollable: { type: 'boolean', default: true },
-  fitContent: { type: 'boolean', default: true },
-  showClose: { type: 'boolean', default: true },
-  wide: { type: 'boolean', default: false },
-  dock: { type: 'boolean', label: 'Bottom dock', default: true },
+  title: { type: 'text', default: 'Cancel order #10482?' },
+  message: { type: 'text', default: 'The reserved stock goes back to inventory. You can’t undo this.' },
+  actions: { type: 'select', options: ['Two', 'Three', 'Long labels'], default: 'Two' },
+  destructive: { type: 'boolean', label: 'Destructive', default: true },
 } as const
 
-function PlaygroundModal(props: {
-  label: string
-  scrollable: boolean
-  fitContent: boolean
-  showClose: boolean
-  wide: boolean
-  dock: boolean
-}) {
+function actionsFor(kind: string, destructive: boolean): AlertAction[] {
+  const main: AlertAction = { label: 'Cancel order', role: destructive ? 'destructive' : 'primary' }
+  if (kind === 'Three') return [main, { label: 'Move to Failed' }, { label: 'Keep order', role: 'cancel' }]
+  if (kind === 'Long labels')
+    return [{ label: 'Keep the order as it is', role: 'cancel' }, { ...main, label: 'Cancel and restock 2 items' }]
+  return [{ label: 'Keep order', role: 'cancel' }, main]
+}
+
+function PlaygroundAlert(props: { title: string; message: string; actions: string; destructive: boolean }) {
   const [open, setOpen] = useState(false)
-  const close = () => setOpen(false)
   return (
     <>
       <Button variant="filled" onClick={() => setOpen(true)}>
-        Open dialog
+        Open alert
       </Button>
-      <Modal
+      <Alert
         open={open}
-        close={close}
-        label={props.label}
-        scrollable={props.scrollable}
-        fitContent={props.fitContent}
-        showClose={props.showClose}
-        wide={props.wide}
-        bottom={
-          props.dock ? (
-            <Dock label="Address actions">
-              <Button variant="text" onClick={close}>
-                Cancel
-              </Button>
-              <Button variant="filled" onClick={close}>
-                Save address
-              </Button>
-            </Dock>
-          ) : undefined
-        }
-      >
-        <div style={{ display: 'grid', gap: 16, padding: props.scrollable ? 0 : 24 }}>
-          <TextField hint="Wilaya" defaultValue="Alger" />
-          <TextField hint="Commune" defaultValue="Bab Ezzouar" />
-          <TextField hint="Street and building" defaultValue="Cité 2068 Logements, Bt 12" />
-          {!props.scrollable && (
-            <Button variant="filled" onClick={close}>
-              Save address
-            </Button>
-          )}
-        </div>
-      </Modal>
+        onOpenChange={setOpen}
+        title={props.title}
+        message={props.message}
+        actions={actionsFor(props.actions, props.destructive)}
+      />
     </>
   )
 }
@@ -74,126 +45,152 @@ function Overview() {
     <>
       <Playground
         controls={controls}
-        render={(v) => <PlaygroundModal {...v} />}
+        render={(v) => <PlaygroundAlert {...v} />}
         code={(v) =>
-          jsx(
-            'Modal',
-            {
-              open: '{open}',
-              close: '{close}',
-              label: v.label,
-              scrollable: v.scrollable,
-              fitContent: v.scrollable && v.fitContent,
-              showClose: v.showClose ? undefined : '{false}',
-              wide: v.wide,
-              bottom: v.scrollable && v.dock ? '{<Dock label="Address actions">…</Dock>}' : undefined,
-            },
-            '<TextField hint="Wilaya" />\n…'
-          ).replace(/="\{(.+?)\}"(?=\s|\n|>|\/)/g, '={$1}')
+          `<Alert
+  open={open}
+  onOpenChange={setOpen}
+  title="${v.title}"
+  message="${v.message}"
+  actions={[
+${actionsFor(v.actions, v.destructive)
+  .map((a) => `    { label: '${a.label}'${a.role ? `, role: '${a.role}'` : ''} },`)
+  .join('\n')}
+  ]}
+/>`
         }
       />
 
-      <Section title="When to use">
+      <Section title="Alert or modal">
         <p>
-          A modal interrupts the page for a short, focused task the person must finish or dismiss:
-          confirming a cancellation, editing an address, choosing a courier. Everything behind it is
-          inert until it closes.
+          Both are centred dialogs that interrupt the page; everything behind is inert until they close.
+          Pick by what the person has to do:
+        </p>
+        <Table
+          head={['', 'Use for', 'Looks like']}
+          rows={[
+            [<C>Alert</C>, 'A decision: confirm, discard, allow. A title, a sentence and two or three choices.', 'Thick glass, 320 wide, centred text, capsule buttons.'],
+            [<C>Modal</C>, 'A short task with a form: edit an address, correct a phone, merge two customers.', 'An opaque card that hugs its content, a floating glass header and a dock of actions.'],
+          ]}
+        />
+        <p>
+          When the person needs the page in view, use a <Link to="/components/pane">pane</Link>; for a
+          short task on a phone, a <Link to="/components/sheet">sheet</Link>. Don’t open one dialog from
+          another.
+        </p>
+      </Section>
+
+      <Section title="Alert">
+        <p>
+          <C>actions</C> lists the choices in reading order. Each has a <C>label</C> naming its outcome and
+          an optional <C>role</C>: <C>cancel</C> backs out (Escape runs it), <C>primary</C> is the one main
+          action, <C>destructive</C> deletes or loses something and is tinted danger. Two actions sit side
+          by side when both labels fit, the cancel action first; otherwise they stack full width with the
+          cancel action at the bottom.
         </p>
         <p>
-          Prefer inline editing, a side panel or a{' '}
-          <Link to="/components/popover-surface">popover</Link> when the person needs to see or use
-          the page while working. Don’t open a modal from a modal.
+          Choosing an action runs its <C>onAction</C> and closes the alert. Return <C>false</C> from{' '}
+          <C>onAction</C> to keep it open, for example to show an error in a field you passed as children.
+        </p>
+        <Code
+          code={`<Alert
+  open={open}
+  onOpenChange={setOpen}
+  title="Cancel order #10482?"
+  message="The reserved stock goes back to inventory. You can’t undo this."
+  actions={[
+    { label: 'Keep order', role: 'cancel' },
+    { label: 'Cancel order', role: 'destructive', onAction: cancelOrder },
+  ]}
+/>`}
+        />
+      </Section>
+
+      <Section title="Modal">
+        <Table
+          head={['Prop', 'Effect']}
+          rows={[
+            [<C>title</C>, 'The title bubble of the floating glass header. trailing adds bubbles after it; the close bubble ends the row unless showClose is false.'],
+            [<C>dock</C>, 'Floating actions at the bottom, usually a PresentationDock. They never scroll away.'],
+            [<C>header</C>, 'Replaces the whole header with your own glass bars (a search field, range ends). label still names the dialog.'],
+            [<C>fill</C>, 'Takes the full height (up to 720px) instead of hugging the content: long lists.'],
+            [<C>wide</C>, '980px instead of 560px, for side-by-side content.'],
+            [<C>{'dismissible={false}'}</C>, 'Escape and the backdrop no longer close it; your own actions and the close bubble still do.'],
+          ]}
+        />
+        <Code
+          code={`<Modal
+  open={open}
+  onOpenChange={setOpen}
+  label="Edit delivery address"
+  title="Edit delivery address"
+  dock={
+    <PresentationDock>
+      <Button variant="text" onClick={() => setOpen(false)}>Cancel</Button>
+      <Button variant="filled" onClick={save}>Save address</Button>
+    </PresentationDock>
+  }
+>
+  <TextField hint="Wilaya" />
+  …
+</Modal>`}
+        />
+        <p>
+          The header, body and dock are the shared parts every presentation surface is made of:{' '}
+          <C>PresentationHeader</C>, <C>PresentationBody</C> (a scroll area that hugs its content up to the
+          room it has) and <C>PresentationDock</C>. <C>Pane</C> and <C>Sheet</C> use the same ones.
         </p>
       </Section>
 
       <Section title="Opening and closing">
         <p>
-          <C>Modal</C> is controlled. Keep it mounted, set <C>open</C>, and set it back to false in{' '}
-          <C>close</C>. The dialog plays an exit transition before it unmounts, so toggling{' '}
-          <C>open</C> (rather than rendering the modal conditionally) keeps the animation and focus
-          return intact. <C>close</C> is called by Escape, a click on the backdrop and the close
-          button; your own Cancel and Save buttons call it too.
+          Both are controlled. Keep them mounted, set <C>open</C>, and set it back to false in{' '}
+          <C>onOpenChange</C>. They open with a small spring from a little larger than their size and
+          fade out; with reduced motion they crossfade, and with the theme’s <C>motion: 'none'</C> they
+          appear and disappear at once. The page dims behind them.
         </p>
-        <Code
-          code={`const [open, setOpen] = useState(false)
-
-<Button variant="destructive" onClick={() => setOpen(true)}>Cancel order</Button>
-<Modal open={open} close={() => setOpen(false)} label="Cancel order #10482?">
-  …
-</Modal>`}
-        />
-      </Section>
-
-      <Section title="Layouts">
-        <Table
-          head={['Prop', 'Effect']}
-          rows={[
-            [<C>scrollable</C>, 'The recommended layout. Content fills the dialog and scrolls on its own; a floating header (the label as a quiet title and a close button) and the bottom slot stay put.'],
-            [<C>bottom</C>, 'Floating chrome at the bottom of a scrollable dialog. Put the actions here, in a Dock, so they never scroll away.'],
-            [<C>top</C>, 'Replaces the default title in the floating header, for a toolbar, tabs or a search field. The close button stays unless showClose is false.'],
-            [<C>fitContent</C>, 'With scrollable: the dialog measures its content and floating chrome and grows to fit, up to the viewport. Use it for short forms; long content still scrolls.'],
-            [<C>headerless</C>, 'Drops the default header entirely. The content supplies its own heading and a visible way to close.'],
-            [<C>showClose</C>, 'false hides the close icon when a visible Cancel or Close action already dismisses the dialog.'],
-            [<C>wide</C>, 'A wider dialog (980px instead of 560px), for side-by-side content.'],
-          ]}
-        />
-        <p>
-          Without <C>scrollable</C>, the dialog is a plain surface: your content sets its own padding
-          and a close icon sits in the top corner. Use that only for very short content such as a
-          confirmation.
-        </p>
-      </Section>
-
-      <Section title="Focus">
-        <p>
-          The modal opens with the native <C>showModal()</C>, so the rest of the page is inert and
-          Tab stays inside the dialog. By default the browser focuses the first focusable element. To
-          start somewhere else, pass <C>initialFocusRef</C>, for example the field the person came to
-          edit. On close, focus returns to whatever had it before the dialog opened; pass{' '}
-          <C>returnFocusRef</C> when that element may disappear, such as a row menu that closes when
-          the dialog opens.
-        </p>
+        <Callout title="In Flutter">
+          <p>
+            Declare <C>Alert</C> and <C>Modal</C> the same way, or show them from an event and wait for the
+            result: <C>await showAlert&lt;bool&gt;(context, builder: …)</C> completes with the chosen
+            action’s <C>value</C>, and <C>showModal&lt;T&gt;</C> with what you pass to{' '}
+            <C>Navigator.pop(context, value)</C>. Both work in a plain <C>WidgetsApp</C>.
+          </p>
+        </Callout>
       </Section>
 
       <Section title="Guidelines">
         <DoDont
           doItems={[
-            'Write the label as the task: “Edit delivery address”, “Cancel order #10482?”.',
-            'Use scrollable with the actions in a bottom Dock for anything longer than a sentence.',
-            <>Use <C>fitContent</C> for short forms so the dialog isn’t taller than its content.</>,
-            'Make the destructive choice explicit: “Cancel order”, not “OK”.',
+            'Write the title as the question: “Cancel order #10482?”, then say what happens.',
+            'Name actions by their outcome: “Cancel order”, “Keep order”, never “OK”.',
+            'Give a destructive alert a cancel action; focus starts there.',
+            'Use a Modal with a dock for anything with fields.',
           ]}
           dontItems={[
-            <>Render <C>{'{open && <Modal …/>}'}</C>; toggle <C>open</C> instead.</>,
-            'Repeat the label as a heading inside a scrollable dialog; the header already shows it.',
-            'Stack modals, or open one without a clear way out.',
-            'Put a second scroll area inside a scrollable dialog.',
+            'Render {open && <Modal …/>}; toggle open so the exit can play.',
+            'Put more than three actions in an alert.',
+            'Repeat the title as a heading inside a modal; the header shows it.',
+            'Stack dialogs, or nest a second scroll area inside one.',
           ]}
         />
       </Section>
 
       <Section title="Accessibility">
         <p>
-          The dialog is a native <C>{'<dialog>'}</C> in the browser’s top layer. In a scrollable
-          dialog with the default header, it is labelled by the visible title; otherwise{' '}
-          <C>label</C> becomes its <C>aria-label</C>. Always pass a meaningful <C>label</C>, even when
-          the dialog is headerless. The close button is named from <C>label</C> (“Close Edit delivery
-          address”). Escape and backdrop clicks only call <C>close</C> while the dialog is fully open.
+          Both are native <C>{'<dialog>'}</C> elements in the browser’s top layer: the page is inert, Tab
+          stays inside, and focus returns to the opener (or <C>returnFocusRef</C>) when they close. An
+          alert is an <C>alertdialog</C> named by its title and described by its message; its focus starts
+          on the cancel action, or the last action. A modal is named by its visible title, or by{' '}
+          <C>label</C>; pass <C>initialFocusRef</C> to start in a specific field.
         </p>
         <Keys
           rows={[
-            ['Tab', 'Moves focus to the next control inside the dialog.'],
-            ['Shift + Tab', 'Moves focus to the previous control inside the dialog.'],
-            ['Escape', 'Calls close.'],
+            ['Tab', 'Moves to the next control inside the dialog.'],
+            ['Shift + Tab', 'Moves to the previous control.'],
+            ['Escape', 'Alert: runs the cancel action. Modal: closes it (when dismissible).'],
           ]}
         />
-        <Callout title="Menus and pickers inside a dialog">
-          <p>
-            Kit components that open menus or popovers, such as <C>ActionsBar</C> and the date
-            fields, detect the enclosing dialog and portal into it, so they stay above it and remain
-            reachable.
-          </p>
-        </Callout>
       </Section>
     </>
   )
@@ -202,14 +199,14 @@ function Overview() {
 export default definePage({
   section: 'components',
   id: 'modal',
-  title: 'Modal',
+  title: 'Modal and alert',
   group: 'Containment',
   order: 1,
-  summary: 'A modal dialog for short, focused tasks, with floating header and actions, focus handling and an exit transition.',
-  importLine: "import { Modal } from '@feeef.dev/ui/primitives/modal'",
-  source: 'src/primitives/modal.tsx',
-  api: ['Modal'],
-  keywords: ['dialog', 'popup', 'confirm', 'sheet', 'overlay', 'focus trap'],
+  summary: 'Centred dialogs: Alert for a decision on thick glass, Modal for a short form with a floating header and dock.',
+  importLine: "import { Alert, Modal, PresentationDock } from '@feeef.dev/ui/presentation'",
+  source: 'src/presentation/modal.tsx',
+  api: ['Alert', 'Modal', 'PresentationHeader', 'PresentationBody', 'PresentationDock'],
+  keywords: ['dialog', 'alert', 'confirm', 'popup', 'overlay', 'focus trap', 'showModal', 'showAlert'],
   Overview,
   examples: examplesFrom(
     import.meta.glob('./examples/*.tsx', { eager: true }),
@@ -220,24 +217,24 @@ export default definePage({
     <div
       aria-hidden="true"
       style={{
-        width: 200,
-        padding: 12,
+        width: 180,
+        padding: '14px 10px 10px',
         display: 'grid',
         gap: 10,
-        border: '1px solid var(--lab-line)',
-        borderRadius: 16,
-        background: 'var(--lab-surface)',
-        boxShadow: 'var(--lab-glass-shadow)',
+        borderRadius: 24,
+        background: 'color-mix(in srgb, var(--lab-surface) 90%, transparent)',
+        boxShadow: 'var(--lab-glass-shadow), inset 0 0 0 1px var(--lab-line)',
         fontSize: 12,
+        textAlign: 'center',
       }}
     >
       <strong>Cancel order #10482?</strong>
-      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-        <Button variant="text" controlSize="small" tabIndex={-1}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+        <Button variant="elevated" controlSize="small" tabIndex={-1}>
           Keep
         </Button>
         <Button variant="destructive" controlSize="small" tabIndex={-1}>
-          Cancel order
+          Cancel
         </Button>
       </div>
     </div>

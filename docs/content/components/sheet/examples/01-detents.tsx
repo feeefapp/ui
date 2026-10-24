@@ -4,7 +4,7 @@ import { Sheet, NavigationPage, NavigationStack } from '@feeef.dev/ui/containers
 import { ListRow, ListSection } from '@feeef.dev/ui/primitives/list'
 import { Button } from '@feeef.dev/ui/primitives/button'
 import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
-import { Dock } from '@feeef.dev/ui/dock'
+import { PresentationDock } from '@feeef.dev/ui/presentation'
 import { Device } from '../../../../src/blocks/device'
 
 const STATUSES = ['New', 'Confirmed', 'Shipped', 'Delivered', 'Returned', 'Cancelled']
@@ -54,24 +54,20 @@ export default function FilterSheet() {
             label="Filters"
             container={screen}
             detents={['medium', 'large']}
-            top={
-              <div className="demo-sheet-bar">
-                <ToolbarGroup label="Sheet title">
-                  <strong className="demo-sheet-title">Filters</strong>
-                </ToolbarGroup>
-                <ToolbarGroup label="Sheet actions">
-                  <Button variant="text" appearance="toolbar" onClick={() => setWilayas([])}>
-                    Reset
-                  </Button>
-                </ToolbarGroup>
-              </div>
+            title="Filters"
+            trailing={
+              <ToolbarGroup label="Sheet actions">
+                <Button variant="text" appearance="toolbar" onClick={() => setWilayas([])}>
+                  Reset
+                </Button>
+              </ToolbarGroup>
             }
-            bottom={
-              <Dock label="Apply filters">
+            dock={
+              <PresentationDock label="Apply filters">
                 <Button variant="filled" onClick={() => setOpen(false)}>
                   Show 24 orders
                 </Button>
-              </Dock>
+              </PresentationDock>
             }
           >
             <ListSection header="Status">

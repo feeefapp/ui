@@ -2,7 +2,7 @@
 
 import type { FormEventHandler, ReactNode, RefObject } from 'react'
 import { Button } from '../primitives/button'
-import { Modal } from '../primitives/modal'
+import { Modal } from '../presentation/modal'
 import { useShellGap } from '../scroll/shell-gap'
 import { ToolbarGroup } from '../toolbar'
 import { cn } from '../utils'
@@ -74,21 +74,18 @@ export function TemporalDialog({
     <Modal
       open={open}
       label={label}
-      close={close}
+      onOpenChange={close}
       returnFocusRef={returnFocusRef}
-      scrollable
-      fitContent
-      headerless
-      showClose={false}
       // Bars float the shell gap G from the edges; content starts where the buttons inside them
       // start (G + the group's 2px padding).
-      scrollOptions={{ edgeGap: gap, contentPadding: gap + 2 }}
+      edgeGap={gap}
+      contentPadding={gap + 2}
       className={cn(
         'lab-temporal-dialog',
         editor.range && editor.hasCalendar && 'lab-temporal-dialog--pair',
         className
       )}
-      top={
+      header={
         bar ? (
           <GlassScope className="lab-temporal-dialog-bar" dir={dir}>
             {editor.range && editor.hasCalendar && (
@@ -105,12 +102,12 @@ export function TemporalDialog({
         ) : (
           <GlassScope className="lab-temporal-dialog-bar" dir={dir}>
             <ToolbarGroup label="Dialog title" className="lab-temporal-dialog-title">
-              <h2 className="lab-modal-title">{label}</h2>
+              <h2 className="lab-presentation-title">{label}</h2>
             </ToolbarGroup>
           </GlassScope>
         )
       }
-      bottom={
+      dock={
         <GlassScope className="lab-temporal-dialog-bar" dir={dir}>
           <ToolbarGroup label={`${label} actions`} className="lab-temporal-dialog-actions">
             <Button variant="text" appearance="toolbar" controlSize="regular" onClick={close}>

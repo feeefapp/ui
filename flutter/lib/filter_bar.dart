@@ -13,7 +13,8 @@ import 'glass/container.dart';
 import 'icons/lucide.dart';
 import 'menu/anchored_panel.dart';
 import 'primitives/button.dart';
-import 'primitives/modal.dart';
+import 'presentation/dock.dart';
+import 'presentation/modal.dart';
 import 'primitives/popover_surface.dart';
 import 'primitives/text_field.dart';
 import 'scroll/scroll_area.dart';
@@ -654,12 +655,13 @@ class _FilterBarState extends State<FilterBar> {
             label: dialog != null
                 ? 'Edit ${dialog.label} filter'
                 : 'Edit filter',
-            close: () => setState(() => _editing = null),
-            scrollable: true,
-            fitContent: true,
+            title: Text(
+              dialog != null ? 'Edit ${dialog.label} filter' : 'Edit filter',
+            ),
+            onOpenChange: (_) => setState(() => _editing = null),
             // `.lab-filter-editor-dialog`: at most 460px wide.
             width: 460,
-            bottom: Dock(
+            dock: PresentationDock(
               label: 'Filter editor actions',
               children: [
                 Button(

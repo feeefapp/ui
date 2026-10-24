@@ -191,11 +191,10 @@ class _AddressRowState extends State<_AddressRow> {
       ),
       Modal(
         open: _open,
-        close: _close,
+        onOpenChange: (open) => open ? setState(() => _open = true) : _close(),
         label: 'Change delivery address',
-        scrollable: true,
-        fitContent: true,
-        bottom: Dock(
+        title: const Text('Change delivery address'),
+        dock: PresentationDock(
           label: 'Address actions',
           children: [
             Row(

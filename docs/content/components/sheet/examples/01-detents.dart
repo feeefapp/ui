@@ -92,28 +92,21 @@ class _FilterSheetState extends State<FilterSheet> {
               label: 'Filters',
               container: true,
               detents: const [.medium, .large],
-              top: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                spacing: 8,
-                children: [
-                  const ToolbarGroup(
-                    label: 'Sheet title',
-                    children: [_SheetTitle('Filters')],
-                  ),
-                  ToolbarGroup(
-                    label: 'Sheet actions',
-                    children: [
-                      Button(
-                        variant: .text,
-                        appearance: .toolbar,
-                        onClick: () => setState(() => _wilayasPicked = []),
-                        children: const [Text('Reset')],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              bottom: Dock(
+              title: const Text('Filters'),
+              trailing: [
+                ToolbarGroup(
+                  label: 'Sheet actions',
+                  children: [
+                    Button(
+                      variant: .text,
+                      appearance: .toolbar,
+                      onClick: () => setState(() => _wilayasPicked = []),
+                      children: const [Text('Reset')],
+                    ),
+                  ],
+                ),
+              ],
+              dock: PresentationDock(
                 label: 'Apply filters',
                 children: [
                   Button(
@@ -175,22 +168,6 @@ class _FilterSheetState extends State<FilterSheet> {
       ),
     );
   }
-}
-
-/// `.demo-sheet-title`: the sheet's name in its glass group.
-class _SheetTitle extends StatelessWidget {
-  const _SheetTitle(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 12),
-    child: Text(
-      text,
-      softWrap: false,
-      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-    ),
-  );
 }
 
 /// The docs' pretend phone (docs/src/blocks/device.tsx): lays [child] out at a real phone size and

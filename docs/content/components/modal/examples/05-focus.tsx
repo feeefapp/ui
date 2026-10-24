@@ -1,8 +1,7 @@
 import { useRef, useState } from 'react'
 import { Phone } from 'lucide-react'
 import { Button } from '@feeef.dev/ui/primitives/button'
-import { Modal } from '@feeef.dev/ui/primitives/modal'
-import { Dock } from '@feeef.dev/ui/dock'
+import { Modal, PresentationDock } from '@feeef.dev/ui/presentation'
 import { TextField } from '@feeef.dev/ui/primitives/text-field'
 
 export default function Focus() {
@@ -19,18 +18,17 @@ export default function Focus() {
       </Button>
       <Modal
         open={open}
-        close={close}
+        onOpenChange={setOpen}
         label="Correct the phone number"
-        scrollable
-        fitContent
+        title="Correct the phone number"
         initialFocusRef={phoneField}
         returnFocusRef={row}
-        bottom={
-          <Dock label="Phone actions">
+        dock={
+          <PresentationDock>
             <Button variant="filled" onClick={close}>
               Save
             </Button>
-          </Dock>
+          </PresentationDock>
         }
       >
         <div style={{ display: 'grid', gap: 16 }}>
