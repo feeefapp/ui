@@ -444,6 +444,11 @@ with ShapeDecoration(color: colors.surfaceSoft, shape: SuperellipseBorder(radius
   display: grid;
   gap: 14px;
   width: min(340px, calc(100vw - 24px));
+  /* Never taller than the room Radix found beside the trigger: the panel scrolls instead. */
+  max-height: var(--radix-popover-content-available-height, calc(100dvh - 24px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
   padding: 16px;
 }
 .docs-customize h2 {
