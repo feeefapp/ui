@@ -48,14 +48,6 @@
 .lab-tab-chrome > :not(.lab-glass-material) {
   pointer-events: auto;
 }
-.lab-tab-chrome[data-minimized] {
-  flex-direction: row;
-  align-items: stretch;
-}
-/* Minimized, the current tab leads and the accessory fills the rest of the row. */
-.lab-tab-chrome[data-minimized] > .lab-tab-bar {
-  order: -1;
-}
 html[data-lab-theme] .lab-tab-accessory.lab-glass-group {
   display: flex;
   align-items: center;
@@ -64,10 +56,31 @@ html[data-lab-theme] .lab-tab-accessory.lab-glass-group {
   padding: 4px 8px;
   border-radius: calc(26px * var(--lab-corner-scale, 1));
 }
-.lab-tab-chrome[data-minimized] .lab-tab-accessory {
-  flex: 1 1 0%;
-  width: auto;
-  min-width: 0;
+/* Minimizing (tab-view.tsx, tab-view-minimize.ts): the script places the bar and the accessory for
+the scroll progress --lab-tab-minimize (0 full, 1 minimized); the bar clips to its shrinking width,
+the other tabs and the labels fade early, the selected icon slides to the centre of its tab and the
+pill gives way to the tinted icon. Minimized, the hidden tabs take no pointer. */
+.lab-tab-chrome[data-minimizing] .lab-tab-bar {
+  overflow: hidden;
+}
+.lab-tab-chrome[data-minimizing] .lab-segmented-option:not([data-selected]) {
+  opacity: calc(1 - var(--lab-tab-minimize) * 2.2);
+}
+.lab-tab-chrome[data-minimizing] .lab-segmented-label {
+  opacity: calc(1 - var(--lab-tab-minimize) * 2);
+}
+.lab-tab-chrome[data-minimizing] .lab-segmented-option[data-selected] .lab-segmented-icon {
+  translate: var(--lab-tab-icon-x) var(--lab-tab-icon-y);
+}
+.lab-tab-chrome[data-minimizing] .lab-segmented-pill {
+  opacity: calc(1 - var(--lab-tab-minimize));
+}
+.lab-tab-chrome[data-minimizing] .lab-segmented-option[data-selected] .lab-segmented-content:not(.lab-segmented-ink) {
+  color: color-mix(in srgb, var(--lab-primary) calc(var(--lab-tab-minimize) * 100%), currentColor);
+}
+.lab-tab-chrome[data-minimized] .lab-segmented-option:not([data-selected]) {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 html[data-lab-theme] .lab-tab-bar.lab-glass-group {

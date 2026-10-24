@@ -7,6 +7,9 @@ import { SelectionTrack, type SelectionSource } from '../primitives/selection-tr
 import { cn } from '../utils'
 import './tab-view.css'
 import { GlassBar, GlassScope } from '../glass/container'
+import { GlassContext } from '../glass/context'
+import { SPRINGS } from '../physics/spring'
+import { minimizeGeometry, minimizeProgress, type MinimizeBoxes } from './tab-view-minimize'
 
 export type Tab = {
   /** Stable id; also the value of `value`. */
@@ -82,7 +85,7 @@ export function TabView({
     // Measured only while full: shrinking the reserve would clamp scroll positions and read as a
     // scroll up, expanding the bar again.
     const measure = () => {
-      if (!el.hasAttribute('data-minimized')) host.style.setProperty('--lab-tab-chrome', `${el.offsetHeight}px`)
+      if (progress.get() === 0) host.style.setProperty('--lab-tab-chrome', `${el.offsetHeight}px`)
     }
     measure()
     const observer = new ResizeObserver(measure)
@@ -90,35 +93,131 @@ export function TabView({
     return () => observer.disconnect()
   }, [Boolean(accessory)])
 
-  /** Minimizing changes the layout; the chrome's glass container springs the bubbles and their content. */
-  const setMinimizedMorph = (next: boolean) => {
-    if (next !== minimized) setMinimized(next)
+  // Minimizing is one progress value, 0 (full bar, accessory above) to 1 (the selected tab as a
+  // bubble with the accessory beside it). Scrolling moves it directly, so the morph follows the
+  // finger and reverses with it; when scrolling stops it settles on the nearer end. Every frame
+  // writes positions from boxes measured at rest (tab-view-minimize.ts) and asks the chrome's
+  // glass container to re-measure, so the material tracks the bubbles exactly.
+  const progress = React.useRef(new MotionValue(0, 0.001)).current
+  const glass = React.useRef<{ requestMeasure(): void } | null>(null)
+  const boxes = React.useRef<MinimizeBoxes | null>(null)
+  const measureBoxes = (): MinimizeBoxes | null => {
+    const el = chrome.current
+    const bar = el?.querySelector<HTMLElement>('.lab-tab-bar')
+    const option = bar?.querySelector<HTMLElement>('.lab-segmented-option[data-selected]')
+    if (!el || !bar || !option) return null
+    const rect = (node: Element) => node.getBoundingClientRect()
+    const c = rect(el)
+    const local = (node: Element) => {
+      const r = rect(node)
+      return { x: r.left - c.left, y: r.top - c.top, width: r.width, height: r.height }
+    }
+    const accessoryEl = el.querySelector<HTMLElement>('.lab-tab-accessory')
+    const icon = option.querySelector<HTMLElement>('.lab-segmented-content:not(.lab-segmented-ink) .lab-segmented-icon')
+    const o = local(option)
+    const i = icon ? local(icon) : o
+    return {
+      chrome: { x: 0, y: 0, width: c.width, height: c.height },
+      bar: local(bar),
+      option: o,
+      icon: { dx: o.x + o.width / 2 - (i.x + i.width / 2), dy: o.y + o.height / 2 - (i.y + i.height / 2) },
+      accessory: accessoryEl ? local(accessoryEl) : null,
+      gap: parseFloat(getComputedStyle(el).rowGap) || 0,
+      rtl: getComputedStyle(el).direction === 'rtl',
+    }
   }
+  const paint = (p: number) => {
+    const el = chrome.current
+    if (!el) return
+    const bar = el.querySelector<HTMLElement>('.lab-tab-bar')
+    const accessoryEl = el.querySelector<HTMLElement>('.lab-tab-accessory')
+    const track = el.querySelector<HTMLElement>('.lab-segmented-track')
+    if (!bar) return
+    const pieces = [bar, accessoryEl].filter(Boolean) as HTMLElement[]
+    if (p <= 0) {
+      el.style.height = ''
+      el.removeAttribute('data-minimizing')
+      for (const name of ['--lab-tab-minimize', '--lab-tab-icon-x', '--lab-tab-icon-y']) el.style.removeProperty(name)
+      for (const piece of pieces) for (const key of ['position', 'left', 'top', 'width', 'margin'] as const) piece.style[key] = ''
+      if (track) track.style.transform = ''
+      boxes.current = null
+      glass.current?.requestMeasure()
+      return
+    }
+    const at = (boxes.current ??= measureBoxes())
+    if (!at) return
+    const g = minimizeGeometry(at, p)
+    el.style.height = `${at.chrome.height}px`
+    el.setAttribute('data-minimizing', '')
+    el.style.setProperty('--lab-tab-minimize', String(p))
+    el.style.setProperty('--lab-tab-icon-x', `${g.icon.dx}px`)
+    el.style.setProperty('--lab-tab-icon-y', `${g.icon.dy}px`)
+    const place = (piece: HTMLElement, box: { x: number; y: number; width: number }) => {
+      piece.style.position = 'absolute'
+      piece.style.margin = '0'
+      piece.style.left = `${box.x}px`
+      piece.style.top = `${box.y}px`
+      piece.style.width = `${box.width}px`
+    }
+    place(bar, g.bar)
+    if (accessoryEl && g.accessory) place(accessoryEl, g.accessory)
+    if (track) track.style.transform = `translateX(${g.trackShift}px)`
+    glass.current?.requestMeasure()
+  }
+  React.useEffect(() => progress.subscribe(paint), [])
 
-  // Shrink while the person reads down; come back when they scroll up or reach the top.
   const live = React.useRef({ minimized, minimize, value })
   live.current = { minimized, minimize, value }
+  const showMinimized = (next: boolean) => {
+    if (next !== live.current.minimized) setMinimized(next)
+  }
+  /** Spring to one end (a tap on the small bar, a tab change, scrolling stopped halfway). */
+  const settle = (to: 0 | 1) => {
+    showMinimized(to === 1)
+    if (prefersReducedMotion()) {
+      progress.stop()
+      progress.set(to)
+      return
+    }
+    void progress.animateTo(to, { spring: SPRINGS.snappy })
+  }
+
+  // Scrolling the visible tab drives the progress: down shrinks, up (or reaching the top) restores.
   React.useEffect(() => {
     const host = root.current
     if (!host) return
     const last = new WeakMap<EventTarget, number>()
+    let idle = 0
     const onScroll = (event: Event) => {
       const target = event.target
       if (!(target instanceof HTMLElement) || live.current.minimize !== 'scroll') return
       const panel = panels.current.get(live.current.value)
       if (!panel?.contains(target)) return
       const top = target.scrollTop
-      const previous = last.get(target) ?? 0
+      const previous = last.get(target)
       last.set(target, top)
-      if (top < 24) setMinimizedMorphRef.current(false)
-      else if (top - previous > 6) setMinimizedMorphRef.current(true)
-      else if (previous - top > 10) setMinimizedMorphRef.current(false)
+      if (previous === undefined) return
+      const next = minimizeProgress(progress.get(), top - previous, top)
+      if (prefersReducedMotion()) {
+        if (Math.round(next) !== Math.round(progress.get())) settle(Math.round(next) as 0 | 1)
+        else progress.set(next)
+        return
+      }
+      progress.stop()
+      progress.set(next)
+      showMinimized(next >= 0.5)
+      window.clearTimeout(idle)
+      idle = window.setTimeout(() => {
+        const p = progress.get()
+        if (p > 0 && p < 1) settle(p >= 0.5 ? 1 : 0)
+      }, 140)
     }
     host.addEventListener('scroll', onScroll, { capture: true, passive: true })
-    return () => host.removeEventListener('scroll', onScroll, { capture: true })
+    return () => {
+      window.clearTimeout(idle)
+      host.removeEventListener('scroll', onScroll, { capture: true })
+    }
   }, [])
-  const setMinimizedMorphRef = React.useRef(setMinimizedMorph)
-  setMinimizedMorphRef.current = setMinimizedMorph
 
   // A switched-to panel fades in quickly; it never slides (tabs are siblings, not depth).
   const fade = React.useRef(new MotionValue(1, 0.004)).current
@@ -149,8 +248,8 @@ export function TabView({
     // Keys activate the tab they reach and leave the bar as it is.
     if (source === 'key') return onChange(next)
     // A press on the small bar only brings it back.
-    if (minimized && source === 'press') return setMinimizedMorph(false)
-    setMinimizedMorph(false)
+    if (minimized && source === 'press') return settle(0)
+    settle(0)
     if (next === value) reselect(next)
     else onChange(next)
   }
@@ -181,16 +280,18 @@ export function TabView({
       )}
       <GlassBar>
         <GlassScope ref={chrome} className="lab-tab-chrome" data-minimized={minimized || undefined}>
+          <GlassHandle handle={glass} />
           {accessory && (
-            <GlassGroup className="lab-tab-accessory" data-lab-tab-piece="" glassId="accessory">
+            <GlassGroup className="lab-tab-accessory" data-lab-tab-piece="" glassId="accessory" glassMotion="follow">
               {accessory}
             </GlassGroup>
           )}
           <GlassGroup
             glassId="tabs"
+            glassMotion="follow"
             className="lab-tab-bar"
             data-lab-tab-piece=""
-            onClick={() => minimized && setMinimizedMorph(false)}
+            onClick={() => minimized && settle(0)}
           >
             <SelectionTrack
               semantics="tab"
@@ -201,7 +302,6 @@ export function TabView({
               value={value}
               onSelect={select}
               draggable={!minimized}
-              collapsed={minimized}
               options={tabs.map((tab) => ({
                 value: tab.id,
                 label: tab.label,
@@ -216,4 +316,10 @@ export function TabView({
       </GlassBar>
     </div>
   )
+}
+
+/** Hands the chrome's glass registry to TabView, which re-measures it on every minimize frame. */
+function GlassHandle({ handle }: { handle: React.MutableRefObject<{ requestMeasure(): void } | null> }) {
+  handle.current = React.useContext(GlassContext)
+  return null
 }
