@@ -68,7 +68,7 @@ void main() {
     }
   });
 
-  test('light turns toward a near pointer; rim gradients match', () {
+  test('light turns toward a near pointer', () {
     for (final entry in fixture['light'] as List) {
       final c = entry['centre'];
       final p = entry['pointer'];
@@ -78,18 +78,6 @@ void main() {
       );
       expect(light.dx, closeTo(n(entry['light']['x']), 1e-12));
       expect(light.dy, closeTo(n(entry['light']['y']), 1e-12));
-    }
-    for (final entry in fixture['rim'] as List) {
-      final b = entry['bounds'];
-      final (start, end) = rimGradient(
-        Rect.fromLTWH(n(b['x']), n(b['y']), n(b['width']), n(b['height'])),
-        Offset(n(entry['light']['x']), n(entry['light']['y'])),
-      );
-      final g = entry['gradient'];
-      expect(start.dx, closeTo(n(g['x1']), 1e-9));
-      expect(start.dy, closeTo(n(g['y1']), 1e-9));
-      expect(end.dx, closeTo(n(g['x2']), 1e-9));
-      expect(end.dy, closeTo(n(g['y2']), 1e-9));
     }
   });
 
@@ -109,10 +97,6 @@ void main() {
       expect(glassBlur(n(row[0])), closeTo(n(row[1]), 1e-12));
       expect(glassSize(n(row[0])).name, row[2]);
     }
-    for (final row in fixture['rimAlpha'] as List) {
-      expect(rimAlpha(n(row[0]), dark: false), closeTo(n(row[1]), 1e-12));
-      expect(rimAlpha(n(row[0]), dark: true), closeTo(n(row[2]), 1e-12));
-    }
     for (final row in fixture['tint'] as List) {
       final m = glassMaterial(
         n(row[0]),
@@ -131,11 +115,37 @@ void main() {
       expect(m.offset, closeTo(n(expected['offset']), 1e-12), reason: label);
       expect(m.shadow, closeTo(n(expected['shadow']), 1e-12), reason: label);
     }
-    final stops = fixture['rimStops'] as List;
-    expect(glassRimStops.length, stops.length);
-    for (var i = 0; i < stops.length; i++) {
-      expect(glassRimStops[i].$1, closeTo(n(stops[i][0]), 1e-12));
-      expect(glassRimStops[i].$2, closeTo(n(stops[i][1]), 1e-12));
+    for (final row in fixture['rimLayer'] as List) {
+      final rim = glassRim(n(row[2]), dark: row[3] == 'dark');
+      expect(
+        rimLayer(n(row[0]), n(row[1]), rim),
+        closeTo(n(row[4]), 1e-12),
+        reason: '$row',
+      );
+    }
+    for (final row in fixture['edgeMask'] as List) {
+      expect(edgeMask(n(row[0]), n(row[1])), closeTo(n(row[2]), 1e-12));
+    }
+    for (final row in fixture['blurAt'] as List) {
+      expect(
+        glassBlurAt(n(row[0]), n(row[1]), blurOn: row[2] as bool),
+        closeTo(n(row[3]), 1e-12),
+      );
+    }
+    for (final row in fixture['edgeTerms'] as List) {
+      final dark = row[1] == 'dark';
+      final terms = glassEdgeTerms(
+        n(row[0]),
+        dark: dark,
+        material: glassMaterial(
+          n(row[0]),
+          dark: dark,
+          size: GlassSize.values.byName(row[2] as String),
+        ),
+        surface: n(row[3]),
+      );
+      expect(terms.k1, closeTo(n(row[4]['k1']), 1e-12), reason: '$row');
+      expect(terms.k3, closeTo(n(row[4]['k3']), 1e-12), reason: '$row');
     }
   });
 

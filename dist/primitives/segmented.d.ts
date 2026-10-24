@@ -1,6 +1,4 @@
-import { type ReactNode } from 'react';
-import './lens.css';
-import './segmented.css';
+import type { ReactNode } from 'react';
 /** A status colour for an option's icon. */
 export type SegmentTone = 'success' | 'warning' | 'danger';
 /** One choice of a segmented control. */
@@ -31,7 +29,8 @@ export type SegmentOption<T extends string> = {
  * an edge scrolls on. On touch a swipe scrolls; a drag that starts on the pill moves the pill.
  *
  * It paints no container: put it in glass (`ToolbarGroup`), on a box of your own (a surface-token
- * background; the root already has the capsule radius) or leave it bare.
+ * background; the root already has the capsule radius) or leave it bare. `TabView`'s tab bar is the
+ * same control with tab semantics.
  */
 export declare function SegmentedControl<const T extends string>({ value, onChange, options, label, disabled, equalWidth, className, }: {
     /** The selected option's value. */

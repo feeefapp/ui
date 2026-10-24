@@ -4,7 +4,7 @@ import './primitives/control-variants.css';
 export { Button, IconButton } from './primitives/button.js';
 export { Input, Textarea, Label, Image } from './primitives/fields.js';
 export { Select, Option } from './primitives/select.js';
-export { Modal } from './primitives/modal.js';
+export { Alert, Modal, Pane } from './presentation/index.js';
 export { ProBadge } from './primitives/badge.js';
 export { Box, Text, Link, Form, List, ListItem, Divider, Style, } from './primitives/layout.js';
 export { SegmentedControl } from './primitives/segmented.js';

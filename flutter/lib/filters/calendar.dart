@@ -556,7 +556,7 @@ class _CalendarDayState extends State<_CalendarDay> {
                 child: Opacity(
                   opacity: widget.disabled ? 0.35 : 1,
                   child: TweenAnimationBuilder<Color?>(
-                    tween: ColorTween(end: fill),
+                    tween: PaintColorTween(end: fill),
                     duration: reduced
                         ? Duration.zero
                         : MotionTokens.durationFast,

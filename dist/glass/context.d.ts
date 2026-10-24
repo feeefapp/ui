@@ -14,6 +14,10 @@ export type GlassRegistry = {
     /** Re-measures before the next paint (bubbles call it after every render). */
     requestMeasure(): void;
 };
+/** Inside a GlassBar: the tint it raised its glass to (blur is always on there); null outside one. */
+export declare const GlassBarContext: import("react").Context<{
+    tint: number;
+} | null>;
 /** The nearest GlassContainer, or null when a bubble paints its own glass. */
 export declare const GlassContext: import("react").Context<GlassRegistry | null>;
 //# sourceMappingURL=context.d.ts.map

@@ -1,5 +1,5 @@
-import { cornerFit } from './corner-fit'
-import { FO_CORNER_EXPONENT, foSuperellipsePath, type FoCornerRadii } from './geometry'
+import { cornerFit, trueCornerRadius } from './corner-fit'
+import { foSuperellipsePath, type FoCornerRadii } from './geometry'
 
 const selector =
   '[data-lab-corners], :is([class^="lab-"], [class*=" lab-"]), .lab-app :is(button, a, input, textarea, select), .lab-presentation :is(button, a, input, textarea, select)'
@@ -49,7 +49,7 @@ const restore = (host: HTMLElement, property: string, value: InlineValue) => {
 const radius = (value: string, width: number, height: number, fit: number) => {
   const [horizontal, vertical = horizontal] = value.split(' ')
   const length = (part: string, size: number) =>
-    part.endsWith('%') ? (Number.parseFloat(part) * size) / 100 : (Number.parseFloat(part) || 0) / fit
+    part.endsWith('%') ? (Number.parseFloat(part) * size) / 100 : trueCornerRadius(Number.parseFloat(part) || 0, width, height, fit)
   return { x: length(horizontal, width), y: length(vertical, height) }
 }
 
@@ -114,7 +114,8 @@ export function installFoContinuousCorners(root?: Document | HTMLElement) {
       style.borderBottomRightRadius,
       style.borderBottomLeftRadius,
     ]
-      // CSS radii are shrunk to look right as circles (--lab-corner-fit); the SVG draws the real curve.
+      // Smoothed CSS radii are shrunk to look right as circles (--lab-corner-fit, never a capsule's);
+      // the SVG draws the real clamped continuous curve.
       .map((value) => radius(value, width, height, fit)) as FoCornerRadii
     const image = style.backgroundImage
     if (
@@ -134,8 +135,8 @@ export function installFoContinuousCorners(root?: Document | HTMLElement) {
     const borderWidth = Number.parseFloat(style.borderTopWidth) || 0
     const position = style.position
     const backgroundStyle = style.background
-    const exponent =
-      Number.parseFloat(style.getPropertyValue('--lab-corner-exponent')) || FO_CORNER_EXPONENT
+    // An explicit --lab-corner-exponent applies to every corner; otherwise each corner is clamped.
+    const exponent = Number.parseFloat(style.getPropertyValue('--lab-corner-exponent')) || undefined
     const path = foSuperellipsePath(width, height, radii, 0, exponent)
     const mask = svgImage(width, height, `<path fill="white" d="${path}"/>`)
     if (image === 'none') {
@@ -217,7 +218,7 @@ export function installFoContinuousCorners(root?: Document | HTMLElement) {
     width: number,
     height: number,
     radii: FoCornerRadii,
-    exponent: number
+    exponent: number | undefined
   ) {
     const inner = radii.map((corner) => ({
       x: Math.max(0, corner.x - 1),

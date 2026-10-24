@@ -22,6 +22,16 @@ export declare const GLASS_BLUR: {
 /** Blur (px, a CSS `blur()` length = standard deviation) for glass whose shorter side is `side` px. */
 export declare function glassBlur(side: number): number;
 /**
+ * Clear glass softens what it covers even when the theme's backdrop blur is off (σ 1.6 px,
+ * LIGHT-EDGES.md): that is part of why it reads as a surface over detailed content.
+ */
+export declare const GLASS_CLEAR_BLUR = 1.6;
+/**
+ * The blur (std dev, px) of glass at `tint` whose shorter side is `side` px: clear glass's 1.6 px
+ * mixed with the regular blur (`glassBlur`, or none when ThemeConfig `glassBlur` is off).
+ */
+export declare function glassBlurAt(side: number, tint: number, blurOn: boolean): number;
+/**
  * Saturation applied to the blurred backdrop before the veil: the veil keeps 13–29% of the
  * backdrop's brightness but ~70% of its colour, so saturation makes up the difference.
  */
@@ -47,27 +57,68 @@ export declare const GLASS_VEIL: {
     };
 };
 /**
- * Rim light: a 1 px line of white along the inner edge. Its alpha follows the angle `a` between
- * the edge's normal and the light axis, lit at both ends of the axis: `base + (peak - base) cos²a`.
+ * Rim light, the twin of iOS's (research/liquid-glass/LIGHT-EDGES.md): a layer of white laid over the
+ * material at the inner edge. Its alpha at depth `d` (px inward from the outline) and angle `a`
+ * between the edge normal and the light axis (lit at both ends of the axis) is
+ * `(w0 + w1 · |cos a|^p) · max(0, 1 - (d / width)³)`: flat over the outer ~⅔ px, gone by `width`,
+ * nothing outside the outline. Clear (tint 0) and regular (tint 1) are the measured ends; the tint
+ * mixes every parameter linearly. In dark appearance clear glass adds light that scales with the
+ * backdrop instead (`GLASS_EDGE.add`), so its white layer stays faint.
  */
-export declare const GLASS_RIM: {
-    readonly light: {
-        readonly base: 0.27;
-        readonly peak: 0.72;
+export interface GlassRim {
+    w0: number;
+    w1: number;
+    p: number;
+    width: number;
+}
+export declare const GLASS_RIM: Record<'light' | 'dark', {
+    clear: GlassRim;
+    regular: GlassRim;
+}>;
+/** The widest rim (px) at any tint: how deep the rim's samples must reach. */
+export declare const GLASS_RIM_MAX_WIDTH = 1.2;
+/** The rim at one tint and colour scheme. */
+export declare function glassRim(tint: number, scheme: 'light' | 'dark'): GlassRim;
+/**
+ * Rim alpha at `depth` px inside the outline, where `cosine` is the cosine of the angle between the
+ * edge normal and the light axis (its sign does not matter: both ends are lit). 0 outside.
+ */
+export declare function rimLayer(depth: number, cosine: number, rim: GlassRim): number;
+/**
+ * The edge of the material (LIGHT-EDGES.md §4), applied to the bent backdrop before the veil:
+ * `out = x + (thin + add.gain) · x · E + (add.base - thin · surface) · E`, with the edge mask
+ * `E = mask(depth, cos a)`. `thin` gives part of the veil back to the backdrop over the outer
+ * pixel (regular glass lets more of what is behind it through at its edge); `add` is clear glass's
+ * dark-appearance rim, a light that scales with the backdrop.
+ * - `mask`: `max(0, 1 - (d / width)³) · (floor + (1 - floor) · |cos a|)`.
+ * - `thin` (share of the veil given back at the edge, × tint): light 0.35, dark 0.3.
+ * - `add` (dark appearance, × (1 - tint)): `0.106 + 0.31 · x`.
+ */
+export declare const GLASS_EDGE: {
+    readonly mask: {
+        readonly width: 1;
+        readonly floor: 0.2;
     };
-    readonly dark: {
-        readonly base: 0.14;
-        readonly peak: 0.25;
+    readonly thin: {
+        readonly light: 0.35;
+        readonly dark: 0.3;
+    };
+    readonly add: {
+        readonly base: 0.106;
+        readonly gain: 0.31;
     };
 };
-/** Rim alpha at `angle` (radians) between the edge normal and the light axis. */
-export declare function rimAlpha(angle: number, scheme: 'light' | 'dark'): number;
+/** The edge mask at `depth` px inside the outline (0 outside), for `cosine` against the light axis. */
+export declare function edgeMask(depth: number, cosine: number): number;
 /**
- * Stops for the rim's gradient line (offset 0 and 1 at the lit ends, through the centre): the
- * share of the lit colour laid over the base rim at each offset, cos² of the angle a round shape's
- * edge makes with the light axis there.
+ * The edge terms for one material, as the coefficients of `x + k1 · x · E + k3 · E`, where
+ * `surface` is the grey level of the veil's colour (0–1). The veil `material.veil` is laid over
+ * the result afterwards, so thinning it by K needs `veil · K / (1 - veil)` here.
  */
-export declare const GLASS_RIM_STOPS: readonly (readonly [number, number])[];
+export declare function glassEdgeTerms(tint: number, scheme: 'light' | 'dark', material: GlassMaterial, surface: number): {
+    k1: number;
+    k3: number;
+};
 /** Shadow under the glass: black at the token's alpha, `dy` px down, blurred by `blur` (std dev). */
 export declare const GLASS_SHADOW: {
     readonly dy: 7.5;
@@ -86,6 +137,12 @@ export declare const GLASS_CLEAR: {
  * light veil (~40 %), like iOS 27's default slider position. Flutter's `glassTintDefault` matches.
  */
 export declare const GLASS_TINT_DEFAULT = 0.5;
+/**
+ * The least tint of glass bars floating over scrolling content (a ScrollArea's app bar and dock,
+ * a TabView's tab bar): their labels sit on moving content, so the glass stays this veiled even
+ * when the theme's tint is clearer (GlassBar). Flutter's `glassBarTint` matches.
+ */
+export declare const GLASS_BAR_TINT = 0.85;
 /** A tint clamped to 0–1; anything that is not a finite number is the default. */
 export declare function clampGlassTint(tint: unknown): number;
 /**

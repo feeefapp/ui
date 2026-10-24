@@ -160,7 +160,7 @@ html[data-lab-theme] .lab-calendar-heading .lab-calendar-title.lab-control {
   align-items: center;
   gap: 4px;
 }
-.lab-time-input-fields > .lab-number-field {
+.lab-time-input-fields > .lab-number-field-container {
   flex: 1;
   min-width: 0;
 }

@@ -15,10 +15,12 @@ import 'refraction.dart';
 ({bool refraction, bool backdropBlur}) glassCapabilities() =>
     (refraction: GlassRefraction.supported, backdropBlur: true);
 
-/// The refracting backdrop on Impeller: the blur sized to the cluster when it is on, the measured
-/// refraction (`shaders/glass_refraction.frag`, the twin of the web kit's displacement map), then
-/// the material's colour (saturation and lift). Where shader filters are unsupported (Skia,
-/// Flutter web) or the shader is still loading it is the same backdrop without the bend.
+/// The refracting backdrop on Impeller: the blur, the material's colour (saturation and lift),
+/// then the measured refraction and the edge (`shaders/glass_refraction.frag`, the twin of the
+/// web kit's displacement map and edge terms). The colour is pointwise, so applying it before the
+/// bend is the same picture, and lets the shader thin the veil at the edge on coloured pixels.
+/// Where shader filters are unsupported (Skia, Flutter web) or the shader is still loading it is
+/// the same backdrop without the bend or edge.
 class GlassRefraction extends StatefulWidget {
   const GlassRefraction({
     super.key,
@@ -26,6 +28,8 @@ class GlassRefraction extends StatefulWidget {
     required this.spacing,
     required this.blur,
     required this.colour,
+    this.edge = (k1: 0, k3: 0),
+    this.light = const Offset(-0.7071067811865476, -0.7071067811865476),
     this.backdropKey,
   });
 
@@ -40,8 +44,14 @@ class GlassRefraction extends StatefulWidget {
   /// Blur sigma before the bend; 0 for none.
   final double blur;
 
-  /// The colour matrix after the bend (`glassBackdropMatrix`).
+  /// The colour matrix (`glassBackdropMatrix`).
   final List<double> colour;
+
+  /// The edge terms `x + k1 · x · E + k3 · E` (`glassEdgeTerms`).
+  final ({double k1, double k3}) edge;
+
+  /// Toward the light (unit, y down), for the edge mask's angle.
+  final Offset light;
 
   /// Shapes the shader can blend in one cluster; larger clusters bend their first six.
   static const maxShapes = 6;
@@ -99,6 +109,8 @@ class _GlassRefractionState extends State<GlassRefraction> {
       spacing: widget.spacing,
       blur: widget.blur,
       colour: widget.colour,
+      edge: widget.edge,
+      light: widget.light,
       dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
       backdropKey: widget.backdropKey,
     );
@@ -112,6 +124,8 @@ class _RefractionBackdrop extends LeafRenderObjectWidget {
     required this.spacing,
     required this.blur,
     required this.colour,
+    required this.edge,
+    required this.light,
     required this.dpr,
     required this.backdropKey,
   });
@@ -119,6 +133,8 @@ class _RefractionBackdrop extends LeafRenderObjectWidget {
   final GlassPath path;
   final double spacing, blur, dpr;
   final List<double> colour;
+  final ({double k1, double k3}) edge;
+  final Offset light;
   final BackdropKey? backdropKey;
 
   @override
@@ -197,19 +213,24 @@ class _RenderRefraction extends RenderBox {
     for (var i = 0; i < 8; i++) {
       set(i < shapes.length ? blends[i] : 0);
     }
+    set(config.light.dx);
+    set(config.light.dy);
+    set(config.edge.k1);
+    set(config.edge.k3);
     final bend = ui.ImageFilter.shader(_shader);
+    final colour = ColorFilter.matrix(config.colour);
     final filter = ui.ImageFilter.compose(
-      outer: ColorFilter.matrix(config.colour),
-      // Without blur the shader reads the backdrop itself: no blur stage at all.
+      outer: bend,
+      // Without blur the colour reads the backdrop itself: no blur stage at all.
       inner: config.blur > 0
           ? ui.ImageFilter.compose(
-              outer: bend,
+              outer: colour,
               inner: ui.ImageFilter.blur(
                 sigmaX: config.blur,
                 sigmaY: config.blur,
               ),
             )
-          : bend,
+          : colour,
     );
     _layer.layer = (_layer.layer ?? BackdropFilterLayer())
       ..filter = filter

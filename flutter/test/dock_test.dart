@@ -1,5 +1,5 @@
 import 'package:feeef_ui/feeef_ui.dart';
-import 'package:flutter/widgets.dart' hide RadioGroup;
+import 'package:flutter/widgets.dart' hide Action, RadioGroup;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'widgets_test.dart' show host;
@@ -23,6 +23,55 @@ Widget dock(String key, {DockAlign align = DockAlign.center}) => host(
 );
 
 void main() {
+  for (final platform in [TargetPlatform.iOS, TargetPlatform.macOS]) {
+    testWidgets(
+      'responsive actions preserve dock insets and touch reach: $platform',
+      (tester) async {
+        var calls = 0;
+        await tester.pumpWidget(
+          host(
+            SizedBox(
+              width: 600,
+              child: Dock(
+                label: 'Order bulk actions',
+                children: [
+                  ActionsBar(
+                    label: 'Actions',
+                    actions: [
+                      CommandAction(
+                        id: 'ship',
+                        label: 'Ship',
+                        onAction: () => calls++,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        for (var i = 0; i < 20; i++) {
+          await tester.pump(const Duration(milliseconds: 50));
+        }
+        final glass = tester.getRect(find.byType(GlassGroup).first);
+        final button = find.byType(Button).hitTestable().first;
+        final bounds = tester.getRect(button);
+        expect(bounds.top - glass.top, closeTo(5, 0.01));
+        expect(glass.bottom - bounds.bottom, closeTo(5, 0.01));
+        if (platform == TargetPlatform.iOS) {
+          await tester.tapAt(Offset(bounds.center.dx, bounds.top - 2));
+        } else {
+          await tester.tap(button);
+        }
+        await tester.pump();
+        expect(calls, 1);
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump(const Duration(seconds: 1));
+      },
+      variant: TargetPlatformVariant.only(platform),
+    );
+  }
+
   testWidgets('a new swap key fades the old content out, then the new one in', (
     tester,
   ) async {

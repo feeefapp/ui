@@ -28,6 +28,21 @@ export function glassBlur(side: number) {
 }
 
 /**
+ * Clear glass softens what it covers even when the theme's backdrop blur is off (σ 1.6 px,
+ * LIGHT-EDGES.md): that is part of why it reads as a surface over detailed content.
+ */
+export const GLASS_CLEAR_BLUR = 1.6
+
+/**
+ * The blur (std dev, px) of glass at `tint` whose shorter side is `side` px: clear glass's 1.6 px
+ * mixed with the regular blur (`glassBlur`, or none when ThemeConfig `glassBlur` is off).
+ */
+export function glassBlurAt(side: number, tint: number, blurOn: boolean) {
+  const t = clampGlassTint(tint)
+  return GLASS_CLEAR_BLUR * (1 - t) + t * (blurOn ? glassBlur(side) : 0)
+}
+
+/**
  * Saturation applied to the blurred backdrop before the veil: the veil keeps 13–29% of the
  * backdrop's brightness but ~70% of its colour, so saturation makes up the difference.
  */
@@ -43,28 +58,82 @@ export const GLASS_VEIL = {
 } as const
 
 /**
- * Rim light: a 1 px line of white along the inner edge. Its alpha follows the angle `a` between
- * the edge's normal and the light axis, lit at both ends of the axis: `base + (peak - base) cos²a`.
+ * Rim light, the twin of iOS's (research/liquid-glass/LIGHT-EDGES.md): a layer of white laid over the
+ * material at the inner edge. Its alpha at depth `d` (px inward from the outline) and angle `a`
+ * between the edge normal and the light axis (lit at both ends of the axis) is
+ * `(w0 + w1 · |cos a|^p) · max(0, 1 - (d / width)³)`: flat over the outer ~⅔ px, gone by `width`,
+ * nothing outside the outline. Clear (tint 0) and regular (tint 1) are the measured ends; the tint
+ * mixes every parameter linearly. In dark appearance clear glass adds light that scales with the
+ * backdrop instead (`GLASS_EDGE.add`), so its white layer stays faint.
  */
-export const GLASS_RIM = {
-  light: { base: 0.27, peak: 0.72 },
-  dark: { base: 0.14, peak: 0.25 },
-} as const
+export interface GlassRim {
+  w0: number
+  w1: number
+  p: number
+  width: number
+}
 
-/** Rim alpha at `angle` (radians) between the edge normal and the light axis. */
-export function rimAlpha(angle: number, scheme: 'light' | 'dark') {
-  const { base, peak } = GLASS_RIM[scheme]
-  return base + (peak - base) * Math.cos(angle) ** 2
+export const GLASS_RIM: Record<'light' | 'dark', { clear: GlassRim; regular: GlassRim }> = {
+  light: { clear: { w0: 0.03, w1: 0.63, p: 1.1, width: 1.1 }, regular: { w0: 0.05, w1: 0.81, p: 0.9, width: 1 } },
+  dark: { clear: { w0: 0, w1: 0.08, p: 1.1, width: 1.17 }, regular: { w0: 0, w1: 0.16, p: 1, width: 1.2 } },
+}
+
+/** The widest rim (px) at any tint: how deep the rim's samples must reach. */
+export const GLASS_RIM_MAX_WIDTH = 1.2
+
+/** The rim at one tint and colour scheme. */
+export function glassRim(tint: number, scheme: 'light' | 'dark'): GlassRim {
+  const t = clampGlassTint(tint)
+  const { clear, regular } = GLASS_RIM[scheme]
+  const mix = (a: number, b: number) => a + (b - a) * t
+  return { w0: mix(clear.w0, regular.w0), w1: mix(clear.w1, regular.w1), p: mix(clear.p, regular.p), width: mix(clear.width, regular.width) }
 }
 
 /**
- * Stops for the rim's gradient line (offset 0 and 1 at the lit ends, through the centre): the
- * share of the lit colour laid over the base rim at each offset, cos² of the angle a round shape's
- * edge makes with the light axis there.
+ * Rim alpha at `depth` px inside the outline, where `cosine` is the cosine of the angle between the
+ * edge normal and the light axis (its sign does not matter: both ends are lit). 0 outside.
  */
-export const GLASS_RIM_STOPS: readonly (readonly [number, number])[] = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1].map(
-  (offset) => [offset, Math.round((1 - 2 * offset) ** 2 * 1000) / 1000] as const
-)
+export function rimLayer(depth: number, cosine: number, rim: GlassRim) {
+  if (!(depth >= 0) || depth >= rim.width) return 0
+  const angular = rim.w0 + rim.w1 * Math.min(1, Math.abs(cosine)) ** rim.p
+  return Math.max(0, Math.min(1, angular * (1 - (depth / rim.width) ** 3)))
+}
+
+/**
+ * The edge of the material (LIGHT-EDGES.md §4), applied to the bent backdrop before the veil:
+ * `out = x + (thin + add.gain) · x · E + (add.base - thin · surface) · E`, with the edge mask
+ * `E = mask(depth, cos a)`. `thin` gives part of the veil back to the backdrop over the outer
+ * pixel (regular glass lets more of what is behind it through at its edge); `add` is clear glass's
+ * dark-appearance rim, a light that scales with the backdrop.
+ * - `mask`: `max(0, 1 - (d / width)³) · (floor + (1 - floor) · |cos a|)`.
+ * - `thin` (share of the veil given back at the edge, × tint): light 0.35, dark 0.3.
+ * - `add` (dark appearance, × (1 - tint)): `0.106 + 0.31 · x`.
+ */
+export const GLASS_EDGE = {
+  mask: { width: 1, floor: 0.2 },
+  thin: { light: 0.35, dark: 0.3 },
+  add: { base: 0.106, gain: 0.31 },
+} as const
+
+/** The edge mask at `depth` px inside the outline (0 outside), for `cosine` against the light axis. */
+export function edgeMask(depth: number, cosine: number) {
+  const { width, floor } = GLASS_EDGE.mask
+  if (!(depth >= 0) || depth >= width) return 0
+  return (1 - (depth / width) ** 3) * (floor + (1 - floor) * Math.min(1, Math.abs(cosine)))
+}
+
+/**
+ * The edge terms for one material, as the coefficients of `x + k1 · x · E + k3 · E`, where
+ * `surface` is the grey level of the veil's colour (0–1). The veil `material.veil` is laid over
+ * the result afterwards, so thinning it by K needs `veil · K / (1 - veil)` here.
+ */
+export function glassEdgeTerms(tint: number, scheme: 'light' | 'dark', material: GlassMaterial, surface: number) {
+  const t = clampGlassTint(tint)
+  const k = GLASS_EDGE.thin[scheme] * t
+  const thin = material.veil < 1 ? (material.veil * k) / (1 - material.veil) : 0
+  const add = scheme === 'dark' ? 1 - t : 0
+  return { k1: thin + GLASS_EDGE.add.gain * add, k3: GLASS_EDGE.add.base * add - thin * surface }
+}
 
 /** Shadow under the glass: black at the token's alpha, `dy` px down, blurred by `blur` (std dev). */
 export const GLASS_SHADOW = { dy: 7.5, blur: 19.5 } as const

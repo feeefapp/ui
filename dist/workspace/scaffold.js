@@ -1,11 +1,13 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
-import { PanelLeftClose, PanelLeftOpen, Menu } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, Menu, X } from 'lucide-react';
 import { PixelShader, PixelTexture } from '../pixel-art.js';
 import { IconButton } from '../primitives/button.js';
 import { ScrollArea } from '../scroll/index.js';
-import { Modal } from '../primitives/modal.js';
+import { PresentationHost } from '../presentation/host.js';
+import { usePresence } from '../motion.js';
+import { useI18n } from '../i18n.js';
 import { cn } from '../utils.js';
 import './scaffold.css';
 import { GlassScope } from '../glass/container.js';
@@ -68,7 +70,7 @@ export function Scaffold({ children, renderViewport, side, topSide, appBar, bott
     // The content is a card only when something frames it (a top row or a visible sidebar);
     // otherwise it fills the window edge to edge.
     const framed = Boolean(topSide) || visibleSide;
-    return (_jsx(WorkspaceScaffoldContext.Provider, { value: state, children: _jsxs("div", { ref: host, className: cn('lab-workspace-scaffold', className), style: style, dir: dir, "data-side-mode": visibleSide ? sideMode : 'hidden', "data-framed": framed, "data-compact": compact, "data-lab-sheet-backdrop": "", children: [_jsx(PixelShader, { className: "lab-workspace-scaffold-pixels", density: 0.8, speed: 0.18 }), topSide && _jsx("div", { className: "lab-workspace-top-side", children: render(topSide) }), _jsxs("div", { className: "lab-workspace-scaffold-row", children: [_jsx("div", { className: "lab-workspace-side-boundary", inert: !visibleSide || undefined, "aria-hidden": !visibleSide || undefined, children: _jsx("div", { id: sideId, className: "lab-workspace-side-content", children: !compact && !drawerOpen && render(side) }) }), _jsx("div", { ref: main, className: "lab-workspace-main", tabIndex: -1, children: renderViewport ? (renderViewport({ appBar: render(appBar), bottom: render(bottom) })) : (_jsx(ScrollArea, { ref: contentViewportRef, className: "lab-workspace-route", label: contentLabel, top: appBar ? render(appBar) : undefined, bottom: bottom ? render(bottom) : undefined, children: render(children) })) })] }), compact && (_jsxs(Modal, { open: drawerOpen, label: drawerLabel, returnFocusRef: drawerReturnFocusRef, close: () => setDrawerOpen(false), className: "lab-workspace-drawer", children: [_jsx("span", { className: "lab-workspace-drawer-paint", "aria-hidden": "true", children: _jsx(PixelTexture, { variant: "grain", seed: "workspace-drawer", density: "sparse" }) }), _jsx("div", { dir: dir, className: "lab-workspace-drawer-side", children: render(side) })] }))] }) }));
+    return (_jsx(WorkspaceScaffoldContext.Provider, { value: state, children: _jsxs("div", { ref: host, className: cn('lab-workspace-scaffold', className), style: style, dir: dir, "data-side-mode": visibleSide ? sideMode : 'hidden', "data-framed": framed, "data-compact": compact, "data-lab-sheet-backdrop": "", children: [_jsx(PixelShader, { className: "lab-workspace-scaffold-pixels", density: 0.8, speed: 0.18 }), topSide && _jsx("div", { className: "lab-workspace-top-side", children: render(topSide) }), _jsxs("div", { className: "lab-workspace-scaffold-row", children: [_jsx("div", { className: "lab-workspace-side-boundary", inert: !visibleSide || undefined, "aria-hidden": !visibleSide || undefined, children: _jsx("div", { id: sideId, className: "lab-workspace-side-content", children: !compact && !drawerOpen && render(side) }) }), _jsx("div", { ref: main, className: "lab-workspace-main", tabIndex: -1, children: renderViewport ? (renderViewport({ appBar: render(appBar), bottom: render(bottom) })) : (_jsx(ScrollArea, { ref: contentViewportRef, className: "lab-workspace-route", label: contentLabel, top: appBar ? render(appBar) : undefined, bottom: bottom ? render(bottom) : undefined, children: render(children) })) })] }), compact && (_jsx(WorkspaceDrawer, { open: drawerOpen, label: drawerLabel, returnFocusRef: drawerReturnFocusRef, onClose: () => setDrawerOpen(false), children: _jsx("div", { dir: dir, className: "lab-workspace-drawer-side", children: render(side) }) }))] }) }));
 }
 /** Sidebar body: a scroll area with `leading` floating at the top and `trailing` at the bottom. */
 export function ScaffoldSide({ leading, children, trailing, className }) {
@@ -99,5 +101,17 @@ export function ScaffoldToggleButton({ action = 'cycle', label, }) {
             : action === 'restore'
                 ? state.setSideMode('expanded')
                 : state.cycleSide(), children: drawer ? (_jsx(Menu, {})) : state.sideMode === 'expanded' ? (_jsx(PanelLeftClose, { className: "lab-dir-flip" })) : (_jsx(PanelLeftOpen, { className: "lab-dir-flip" })) }));
+}
+/** The compact navigation drawer: a full-height panel from the logical start over a dimmed page. */
+function WorkspaceDrawer({ open, label, returnFocusRef, onClose, children, }) {
+    const { t } = useI18n();
+    const { mounted, state } = usePresence(open, 240);
+    if (!mounted)
+        return null;
+    const close = () => {
+        if (state === 'open')
+            onClose();
+    };
+    return (_jsxs(PresentationHost, { kind: "drawer", label: label, returnFocusRef: returnFocusRef, onEscape: close, children: [_jsx("div", { className: "lab-presentation-scrim lab-workspace-drawer-scrim", "data-state": state, "aria-hidden": "true", onClick: close }), _jsxs("div", { className: "lab-workspace-drawer", "data-state": state, children: [_jsx("span", { className: "lab-workspace-drawer-paint", "aria-hidden": "true", children: _jsx(PixelTexture, { variant: "grain", seed: "workspace-drawer", density: "sparse" }) }), _jsx(IconButton, { variant: "ghost", controlSize: "regular", className: "lab-workspace-drawer-close", "aria-label": t('lab.common.close'), onClick: close, children: _jsx(X, { size: 18 }) }), children] })] }));
 }
 //# sourceMappingURL=scaffold.js.map

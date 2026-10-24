@@ -1,7 +1,9 @@
 // Glass refraction as a backdrop filter (Impeller): the twin of the web kit's displacement map
 // (src/glass/refraction.ts). Each pixel inside the bezel samples the backdrop from
 // shift * (1 - t / bezel)^4 deeper inside, along the blended outline's inward normal. Our own
-// profile, fitted to measurements of rendered Liquid Glass (ui/research/liquid-glass).
+// profile, fitted to measurements of rendered Liquid Glass (ui/research/liquid-glass). The input
+// already carries the material's colour; over the outer pixel the edge terms apply
+// (x + k1 * x * E + k3 * E, glass/material.dart glassEdgeTerms, edgeMask).
 #version 460 core
 #include <flutter/runtime_effect.glsl>
 
@@ -28,6 +30,9 @@ uniform vec4 uRadiusA;
 uniform vec4 uRadiusB;
 uniform vec4 uBlendA;
 uniform vec4 uBlendB;
+// Toward the light (unit, y down) and the edge terms k1, k3.
+uniform vec2 uLight;
+uniform vec2 uEdge;
 
 uniform sampler2D uTexture;
 
@@ -78,19 +83,30 @@ void main() {
   vec2 p = (frag - uOrigin) / uDpr;
   float d = unionDistance(p);
   vec2 offset = vec2(0.0);
-  if (d < 0.0 && -d < uBezel) {
+  float edge = 0.0;
+  if (d < 0.0 && -d < max(uBezel, 1.0)) {
     vec2 e = vec2(0.5, 0.0);
     vec2 n = vec2(unionDistance(p + e.xy) - unionDistance(p - e.xy), unionDistance(p + e.yx) - unionDistance(p - e.yx));
     float len = length(n);
     if (len > 1e-5) {
-      float t = -d / uBezel;
+      float t = min(1.0, -d / max(uBezel, 1e-5));
       float bend = pow(1.0 - t, 4.0) * uShift;
       offset = -n / len * bend * uDpr;
+      // Edge mask: 1 px wide, (1 - depth^3), 0.2 + 0.8 |cos a| against the light axis.
+      float depth = -d;
+      if (depth < 1.0) {
+        float c = abs(dot(n / len, uLight));
+        edge = (1.0 - depth * depth * depth) * (0.2 + 0.8 * min(c, 1.0));
+      }
     }
   }
   vec2 uv = (frag + offset) / uSize;
 #ifdef IMPELLER_TARGET_OPENGLES
   uv.y = 1.0 - uv.y;
 #endif
-  fragColor = texture(uTexture, clamp(uv, vec2(0.0), vec2(1.0)));
+  vec4 colour = texture(uTexture, clamp(uv, vec2(0.0), vec2(1.0)));
+  // Premultiplied: the backdrop is opaque inside the glass, so treat rgb as straight colour.
+  vec3 x = colour.rgb;
+  colour.rgb = clamp(x + uEdge.x * x * edge + uEdge.y * edge * colour.a, vec3(0.0), vec3(colour.a));
+  fragColor = colour;
 }

@@ -68,13 +68,23 @@ export function PixelTexture({ variant = 'corner', seed = 'feeef-surface', densi
     const pixels = useMemo(() => texturePixels(variant, seed, density), [variant, seed, density]);
     return (_jsx("svg", { className: `lab-pixel-texture ${tone ? `lab-pixel-tone-${tone}` : ''} ${animated ? 'lab-pixel-texture-animated' : ''} ${className}`, viewBox: "0 0 256 96", preserveAspectRatio: "xMidYMid slice", fill: "currentColor", "aria-hidden": "true", focusable: "false", style: style, children: pixels.map((pixel) => (_jsx("rect", { x: pixel.x, y: pixel.y, width: "2", height: "2", opacity: pixel.opacity }, `${pixel.x}-${pixel.y}`))) }));
 }
+/** Squares in wave order: by their wave delay (column 110ms, row 80ms). */
+const LOADER_ORDER = [0, 3, 1, 6, 4, 2, 7, 5, 8];
+/** How lit square `index` is (0 … 1) at `progress` (0 … 1): one square per ninth, in wave order. */
+export function pixelLoaderCell(index, progress) {
+    return Math.min(1, Math.max(0, progress * 9 - LOADER_ORDER.indexOf(index)));
+}
 /** A nine-pixel loading wave; use decorative when adjacent text already announces status. */
-export function PixelLoader({ size = 20, label, decorative = false, className = '', }) {
+export function PixelLoader({ size = 20, label, decorative = false, progress, className = '', }) {
     const { t } = useI18n();
     const resolvedLabel = label ?? t('lab.common.loading');
-    return (_jsx("span", { className: `lab-pixel-loader ${className}`, role: decorative ? undefined : 'status', "aria-label": decorative ? undefined : resolvedLabel, "aria-hidden": decorative || undefined, style: { '--pixel-loader-size': `${size}px` }, children: Array.from({ length: 9 }, (_, index) => (_jsx("span", { className: "lab-pixel-loader-cell", style: {
-                '--pixel-delay': `${(index % 3) * 110 + Math.floor(index / 3) * 80}ms`,
-            } }, index))) }));
+    return (_jsx("span", { className: `lab-pixel-loader ${className}`, role: decorative ? undefined : 'status', "aria-label": decorative ? undefined : resolvedLabel, "aria-hidden": decorative || undefined, style: { '--pixel-loader-size': `${size}px` }, children: Array.from({ length: 9 }, (_, index) => (_jsx("span", { className: "lab-pixel-loader-cell", style: progress == null
+                ? { '--pixel-delay': `${(index % 3) * 110 + Math.floor(index / 3) * 80}ms` }
+                : (() => {
+                    // The wave's resting and peak frames (opacity 0.22 → 1, scale 0.7 → 1).
+                    const lit = pixelLoaderCell(index, progress);
+                    return { animation: 'none', opacity: 0.22 + 0.78 * lit, transform: `scale(${0.7 + 0.3 * lit})` };
+                })() }, index))) }));
 }
 /**
  * Animated, transparent pixel field on a canvas, painted with ordered dithering in the theme's

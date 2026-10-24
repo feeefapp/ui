@@ -2,7 +2,7 @@ import { Checkbox } from '@feeef.dev/ui/primitives/choice'
 import { definePage, examplesFrom } from '../../../src/model'
 import { Playground, jsx } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section } from '../../../src/blocks/prose'
-import { C } from '../../../src/blocks/code'
+import { C, Code } from '../../../src/blocks/code'
 
 const controls = {
   label: { type: 'text', default: 'Send an SMS when the order ships' },
@@ -81,6 +81,22 @@ function Overview() {
         </p>
       </Section>
 
+      <Section title="Without a visible label">
+        <p>
+          A checkbox with no <C>label</C>, <C>description</C> or <C>error</C> is only its box (20px,
+          18px when small), so it fits a list row’s leading slot or a table cell. On touch screens it
+          still reaches a 44px hit area around the box without changing layout. Name it for assistive
+          technology: <C>aria-label</C> on the web, <C>ariaLabel</C> in Flutter.
+        </p>
+        <Code
+          code={`<ListRow
+  static
+  leading={<Checkbox aria-label="Select payout #1042" checked={on} onCheckedChange={setOn} />}
+  title="Amina Benali"
+/>`}
+        />
+      </Section>
+
       <Section title="Indeterminate">
         <p>
           A “select all” checkbox over a list is <C>indeterminate</C> when only some items are
@@ -120,7 +136,8 @@ function Overview() {
           The label and description are linked to the native input with <C>aria-labelledby</C> and{' '}
           <C>aria-describedby</C>; the error is added to the description and announced through a
           polite live region. Without a visible <C>label</C>, give the checkbox an{' '}
-          <C>aria-label</C>, for example “Select order #10234” in a table row.
+          <C>aria-label</C> (Flutter: <C>ariaLabel</C>), for example “Select order #10234” in a table
+          row.
         </p>
         <Keys
           rows={[

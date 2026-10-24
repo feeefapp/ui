@@ -20,7 +20,7 @@ export type PresentationHeaderProps = {
   onClose?: () => void
   /** Accessible name of the close button. Default “Close”. */
   closeLabel?: string
-  /** Disables the close button (while the surface is leaving). */
+  /** Disables the close button (while a save runs, say). A leaving surface keeps its look: closing twice does nothing. */
   closeDisabled?: boolean
   className?: string
 }

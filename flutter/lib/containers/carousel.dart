@@ -691,7 +691,7 @@ class _DotState extends State<_Dot> {
                   builder: (context, width, child) =>
                       SizedBox(width: width, height: 7, child: child),
                   child: TweenAnimationBuilder<Color?>(
-                    tween: ColorTween(
+                    tween: PaintColorTween(
                       end: widget.current
                           ? c.primary
                           : mixSrgb(c.ink, 0.25, transparent),

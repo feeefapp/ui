@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { clampRadius, mergeWidth, prepareUnionDistance, rectGap, shapeDistance, smoothMin, type GlassShape } from '../src/glass/geometry.ts'
 import { GLASS_BEZEL, GLASS_REFRACTION, liveDisplacementMap, refractionAt, refractionScale, webRefractionShift } from '../src/glass/refraction.ts'
+import { DEFAULT_GLASS_LIGHT } from '../src/glass/light.ts'
+import { edgeMask } from '../src/glass/material.ts'
 
 // Frozen dense arithmetic oracle: no tile rejection or prepared distance state. The circular
 // branch deliberately keeps the original generic powers to detect rounding changes in the
@@ -56,6 +58,11 @@ function denseMap(width: number, height: number, w: number, h: number, clusters:
       const gx = distance(px + 1, py) - distance(px - 1, py)
       const gy = distance(px, py + 1) - distance(px, py - 1)
       const length = Math.hypot(gx, gy) || 1
+      // Blue: the edge mask, averaged over four depths across the map pixel.
+      const cosine = (gx * DEFAULT_GLASS_LIGHT.x + gy * DEFAULT_GLASS_LIGHT.y) / length
+      let edge = 0
+      for (let k = 0; k < 4; k++) edge += edgeMask(-d + ((k + 0.5) / 4 - 0.5) * coverage, cosine)
+      data[i + 2] = Math.max(data[i + 2], Math.round((edge / 4) * 255))
       const bend = refractionAt(Math.min(d, -1e-3), gx / length, gy / length, band)
       data[i] = Math.round(128 + bend.x * share * 127)
       data[i + 1] = Math.round(128 + bend.y * share * 127)

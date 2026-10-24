@@ -77,6 +77,7 @@ html[data-lab-theme] .lab-select[data-surface-variant] {
   color: var(--lab-variant-ink);
   box-shadow: var(--lab-variant-shadow);
   border-radius: var(--lab-radius-control);
+  corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
 }
 html[data-lab-theme] .lab-select[data-surface-variant][data-control-size='small'] {
   height: var(--lab-control-small);

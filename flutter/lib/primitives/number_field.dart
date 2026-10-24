@@ -11,7 +11,10 @@ import '../theme/surfaces.dart';
 import '../theme/tokens.dart';
 import 'button.dart';
 import 'number_field_core.dart';
-import 'text_field.dart' show FieldFormMember;
+import 'text_field.dart' show FieldFormMember, ValidationMode;
+
+/// A synchronous check on a number: an actionable error, or null when it is valid.
+typedef NumberValidator = String? Function(double value);
 
 /// A Blender-style number field: the twin of `NumberField` in
 /// `@feeef.dev/ui/primitives/number-field`. Drag anywhere on it to scrub the value (Shift for
@@ -35,7 +38,13 @@ class NumberField extends StatefulWidget {
     this.variant = ControlVariant.elevated,
     this.controlSize = ControlSize.regular,
     this.disabled = false,
+    this.supportingText,
+    this.error,
+    this.validator,
+    this.validationMode = ValidationMode.blur,
+    this.onValidationChange,
     this.name,
+    this.controller,
     this.focusNode,
   });
 
@@ -46,8 +55,12 @@ class NumberField extends StatefulWidget {
   /// Shown inside the field at the start; also the accessible name.
   final String label;
 
-  /// Current value (controlled).
+  /// Current value (controlled). Wins over [controller].
   final double? value;
+
+  /// Holds the value outside the field, like a [TextField]'s `controller`: the field shows its
+  /// value and writes every change to it. Read it on save; set it to change the field.
+  final ValueNotifier<double>? controller;
 
   /// Initial value when uncontrolled, and the value Backspace resets to.
   final double? defaultValue;
@@ -78,6 +91,22 @@ class NumberField extends StatefulWidget {
   final ControlVariant variant;
   final ControlSize controlSize;
   final bool disabled;
+
+  /// Help text under the field. Replaced by an error while there is one.
+  final Widget? supportingText;
+
+  /// An error to show now, such as one from the server. Blocks a [FieldForm] while set.
+  final String? error;
+
+  /// Checks the value; its message shows under the field and blocks a [FieldForm] submit.
+  final NumberValidator? validator;
+
+  /// When [validator] errors appear: after the field first loses focus, on every change, or only
+  /// on submit.
+  final ValidationMode validationMode;
+
+  /// Called with the visible validator message, or null when it clears.
+  final ValueChanged<String?>? onValidationChange;
   final FocusNode? focusNode;
 
   @override
@@ -112,8 +141,13 @@ class _NumberFieldState extends State<NumberField>
   double get _step => widget.step.isFinite && widget.step > 0 ? widget.step : 1;
   NumberFieldBounds get _bounds =>
       NumberFieldBounds(min: widget.min, max: widget.max, step: _step);
-  double get _value =>
-      widget.value == null ? _local : clampNumber(widget.value!, _bounds);
+  double get _value => widget.value != null
+      ? clampNumber(widget.value!, _bounds)
+      : widget.controller != null
+      ? clampNumber(widget.controller!.value, _bounds)
+      : _local;
+  bool _touched = false;
+  String? _validationError;
   bool get _rtl => Directionality.of(context) == TextDirection.rtl;
 
   @override
@@ -121,12 +155,29 @@ class _NumberFieldState extends State<NumberField>
     super.initState();
     _local = clampNumber(widget.defaultValue ?? widget.min ?? 0, _bounds);
     _inputFocus.addListener(() {
-      if (!_inputFocus.hasFocus && _editing != null) _finish(true);
+      if (!_inputFocus.hasFocus && _editing != null) {
+        _finish(true, refocus: false);
+      }
     });
+    widget.controller?.addListener(_controllerChanged);
+  }
+
+  @override
+  void didUpdateWidget(NumberField old) {
+    super.didUpdateWidget(old);
+    if (old.controller != widget.controller) {
+      old.controller?.removeListener(_controllerChanged);
+      widget.controller?.addListener(_controllerChanged);
+    }
+  }
+
+  void _controllerChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    widget.controller?.removeListener(_controllerChanged);
     _ownFocus.dispose();
     _inputFocus.dispose();
     _controller.dispose();
@@ -140,10 +191,41 @@ class _NumberFieldState extends State<NumberField>
     final clamped = clampNumber(next, _bounds);
     _latest = clamped;
     final changed = clamped != _value;
-    if (widget.value == null) setState(() => _local = clamped);
+    if (widget.value == null) {
+      if (widget.controller != null) {
+        widget.controller!.value = clamped;
+      } else {
+        setState(() => _local = clamped);
+      }
+    }
     if (changed) widget.onValueChange?.call(clamped);
     if (commit) widget.onValueCommit?.call(clamped);
+    if (widget.validationMode == ValidationMode.change ||
+        (_touched && widget.validationMode == ValidationMode.blur)) {
+      _reveal(clamped);
+    }
     return clamped;
+  }
+
+  String? _check(double value) {
+    final message = widget.validator?.call(value);
+    return message == null || message.isEmpty ? null : message;
+  }
+
+  void _reveal(double value) {
+    final next = _check(value);
+    if (next == _validationError) return;
+    setState(() => _validationError = next);
+    widget.onValidationChange?.call(next);
+  }
+
+  /// Focus left the field (the control and its typing input): validation may speak from now on.
+  void _focusChanged(bool focused) {
+    if (focused) return;
+    _touched = true;
+    if (widget.validationMode != ValidationMode.submit) {
+      _reveal(_latest ?? _value);
+    }
   }
 
   @override
@@ -158,15 +240,30 @@ class _NumberFieldState extends State<NumberField>
   }
 
   @override
-  bool validateForSubmit() => true;
+  bool validateForSubmit() {
+    _touched = true;
+    _reveal(_value);
+    return (widget.error?.isEmpty ?? true) && _check(_value) == null;
+  }
 
   @override
   void resetField() {
-    final initial = widget.defaultValue ?? widget.min ?? 0;
-    if (widget.value == null) {
-      setState(() => _local = clampNumber(initial, _bounds));
+    _touched = false;
+    if (_validationError != null) {
+      setState(() => _validationError = null);
+      widget.onValidationChange?.call(null);
+    }
+    final initial = clampNumber(
+      widget.defaultValue ?? widget.min ?? 0,
+      _bounds,
+    );
+    _latest = initial;
+    if (widget.value != null) {
+      widget.onValueChange?.call(initial);
+    } else if (widget.controller != null) {
+      widget.controller!.value = initial;
     } else {
-      widget.onValueChange?.call(clampNumber(initial, _bounds));
+      setState(() => _local = initial);
     }
   }
 
@@ -188,11 +285,13 @@ class _NumberFieldState extends State<NumberField>
     );
   }
 
-  void _finish(bool commit) {
+  /// Enter and Escape return focus to the field; a blur leaves it where the person moved it.
+  void _finish(bool commit, {bool refocus = true}) {
     if (_editing == null) return;
     final parsed = commit ? parseNumberExpression(_controller.text) : null;
     setState(() => _editing = null);
     if (parsed != null) _set(parsed, true);
+    if (!refocus) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focus.requestFocus();
     });
@@ -390,10 +489,14 @@ class _NumberFieldState extends State<NumberField>
             ),
           );
 
+    final message = (widget.error?.isNotEmpty ?? false)
+        ? widget.error
+        : _validationError;
+    final invalid = message != null;
     Widget field = CustomPaint(
       painter: ControlSurfacePainter(
         fill: fill,
-        edge: editing ? c.focus : paint.edge,
+        edge: invalid ? c.danger : (editing ? c.focus : paint.edge),
         // Editing reads as a field: its own edge thickens inward, no outer ring.
         edgeWidth: editing ? FocusRingStyle.of(context).width : 1,
         radius: radius,
@@ -450,7 +553,7 @@ class _NumberFieldState extends State<NumberField>
     );
 
     field = Opacity(opacity: widget.disabled ? 0.5 : 1, child: field);
-    return Semantics(
+    field = Semantics(
       slider: bounded && !editing,
       textField: editing,
       label: widget.label,
@@ -557,6 +660,37 @@ class _NumberFieldState extends State<NumberField>
             child: field,
           ),
         ),
+      ),
+    );
+
+    // The supporting line, like FieldShell's: help text, or the error in the danger colour.
+    final details = message != null ? Text(message) : widget.supportingText;
+    return Focus(
+      canRequestFocus: false,
+      skipTraversal: true,
+      onFocusChange: _focusChanged,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(hint: message, child: field),
+          if (details != null)
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(16, 5, 16, 0),
+              child: DefaultTextStyle.merge(
+                style: TextStyle(
+                  fontSize: 12,
+                  height: 18 / 12,
+                  leadingDistribution: TextLeadingDistribution.even,
+                  color: invalid ? c.danger : c.muted,
+                ),
+                child: CssBaseline(
+                  lineHeight: 18,
+                  child: Semantics(liveRegion: true, child: details),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

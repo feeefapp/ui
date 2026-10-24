@@ -16,7 +16,8 @@ export declare class GlassScene {
     private members;
     private cornerFit;
     private shapes;
-    private measured;
+    /** When the container was first measured with a box (null while it has never been rendered). */
+    private shownAt;
     private measureQueued;
     private drawHook;
     private wasMoving;
@@ -41,7 +42,6 @@ export declare class GlassScene {
     /** ThemeConfig `glassTint`: 0 clear … 1 tinted (the CSS reads `--lab-glass-tint`; the refraction filter needs the numbers). */
     cornerShape: 'superellipse' | 'round';
     tint: number;
-    preserveHighlights: boolean;
     /** ThemeConfig `glassBlur`: the measured backdrop blur, sized per cluster. */
     blur: boolean;
     /** ThemeConfig `glassRefraction`: bend the backdrop continuously at the edges, where supported. */
@@ -52,6 +52,8 @@ export declare class GlassScene {
     highlightStrength: number;
     refractionProfile: 'gentle' | 'measured';
     refractionStrength: number;
+    /** Grey level (0–1) of the veil's colour, `--lab-surface`, for the edge terms. */
+    private surfaceGrey;
     private sourceFrame;
     private refractKey;
     private refractionMaps;
@@ -62,7 +64,6 @@ export declare class GlassScene {
     private filters;
     private filterHost;
     private disposed;
-    private mountedAt;
     /** True while some bubble (or an ancestor up to the container) runs a geometric animation. */
     private tracking;
     /** One backdrop element per cluster: a lone bubble clips with border-radius, which every
@@ -77,6 +78,10 @@ export declare class GlassScene {
     private lastSample;
     private sampleLater;
     constructor(host: HTMLElement, backdrop: HTMLElement, paint: SVGSVGElement, shadow: SVGSVGElement, uid: string);
+    /**
+     * The page changed somewhere (a dialog opened, content loaded): read the backdrop once things
+     * settle, never in the frame of the change, which is often busy (a presentation's first frame).
+     */
     private onBackdropChange;
     /** Any scroll changes what is behind the glass; a scroller inside the container also moves bubbles. */
     private onScroll;
@@ -125,4 +130,7 @@ export declare class GlassScene {
     /** The container on screen and the scale its ancestors apply to it. */
     private frame;
 }
+/** Resolve inherited paint tokens in the frame's read phase, before any geometry writes. */
+/** Grey level (0–1, sRGB) of a computed colour: rgb(), color(srgb …) or oklab(); 1 if unknown. */
+export declare function surfaceGrey(value: string): number;
 //# sourceMappingURL=scene.d.ts.map

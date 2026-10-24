@@ -1,4 +1,4 @@
-import { FO_CORNER_EXPONENT, foSuperellipsePath } from '../brand/geometry'
+import { FO_CORNER_EXPONENT, cornerExponentFor, foSuperellipsePath } from '../brand/geometry'
 
 /**
  * Glass geometry: the outline that one glass material takes around a set of bubbles. Shapes far
@@ -10,7 +10,8 @@ export type GlassRect = { x: number; y: number; width: number; height: number }
 export type GlassShape = GlassRect & {
   /** Corner radius before clamping to half the shorter side. */
   radius: number
-  /** Optional corner exponent; 2 draws true circular corners, omitted keeps the kit superellipse. */
+  /** Optional corner exponent; 2 draws true circular corners. Omitted, the corner is the kit's
+   * clamped continuous corner (`cornerExponentFor`: superellipse(1.5) fading to a circle at full radius). */
   cornerExponent?: number
 }
 
@@ -26,13 +27,18 @@ const NORM = Float64Array.from({ length: NORM_STEPS + 1 }, (_, i) =>
   (1 + (i / NORM_STEPS) ** FO_CORNER_EXPONENT) ** (1 / FO_CORNER_EXPONENT)
 )
 
+/** The exponent a shape's corners draw with: its own, or the kit's clamped continuous corner. */
+export function shapeExponent(shape: GlassShape) {
+  return shape.cornerExponent ?? cornerExponentFor(clampRadius(shape), shape.width, shape.height)
+}
+
 /**
- * Signed distance from a point to a rounded box with superellipse corners (exponent 2^1.5, the
- * kit's `corner-shape: superellipse(1.5)`): negative inside, zero on the outline. The zero level
+ * Signed distance from a point to a rounded box with superellipse corners (the kit's clamped
+ * continuous corner, `shapeExponent`): negative inside, zero on the outline. The zero level
  * is exactly the curve `foSuperellipsePath` draws; away from it the value is a close
  * approximation, which is all a smooth union needs.
  */
-export function shapeDistance(px: number, py: number, shape: GlassShape, exponent = shape.cornerExponent ?? FO_CORNER_EXPONENT) {
+export function shapeDistance(px: number, py: number, shape: GlassShape, exponent = shapeExponent(shape)) {
   const r = clampRadius(shape)
   const hx = shape.width / 2
   const hy = shape.height / 2
@@ -124,7 +130,7 @@ export function prepareUnionDistance(shapes: readonly GlassShape[], spacing: num
   const boxes = shapes.map(shape => {
     const hx = shape.width / 2
     const hy = shape.height / 2
-    return { cx: shape.x + hx, cy: shape.y + hy, hx, hy, radius: clampRadius(shape), exponent: shape.cornerExponent ?? FO_CORNER_EXPONENT }
+    return { cx: shape.x + hx, cy: shape.y + hy, hx, hy, radius: clampRadius(shape), exponent: shapeExponent(shape) }
   })
   const widths = blendWidths(shapes, spacing)
   const distance = (px: number, py: number) => {
@@ -209,7 +215,7 @@ export function translatePath(d: string, dx: number, dy: number) {
 export function shapePath(shape: GlassShape) {
   const r = clampRadius(shape)
   const corner = { x: r, y: r }
-  return translatePath(foSuperellipsePath(shape.width, shape.height, [corner, corner, corner, corner], 0, shape.cornerExponent ?? FO_CORNER_EXPONENT), shape.x, shape.y)
+  return translatePath(foSuperellipsePath(shape.width, shape.height, [corner, corner, corner, corner], 0, shape.cornerExponent), shape.x, shape.y)
 }
 
 export type Point = [number, number]

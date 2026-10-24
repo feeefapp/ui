@@ -13,6 +13,8 @@ ancestors: they would stop the backdrop blur from seeing the page. */
   pointer-events: none;
 }
 .lab-glass-material > * {
+  /* Not painted: the scene reads the veil's colour from here for the edge terms. */
+  stop-color: var(--lab-surface);
   position: absolute;
   inset: 0;
   width: 100%;
@@ -223,7 +225,7 @@ The material formulas are system.css's (glass/material.ts glassMaterial). */
   --lab-glass-fill-large: color-mix(in srgb, var(--lab-surface) calc(var(--lab-glass-tint) * var(--lab-glass-veil-large) * 100%), transparent);
   --lab-glass-saturate: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil)));
   --lab-glass-saturate-large: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss-large)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil-large)));
-  --lab-glass-lift: contrast(calc((0.924 + 0.076 * var(--lab-glass-tint)) / (1.076 - 0.076 * var(--lab-glass-tint)))) brightness(calc(1.076 - 0.076 * var(--lab-glass-tint)));
+  --lab-glass-lift: contrast(calc((1.03 - 0.03 * var(--lab-glass-tint)) / (1.182 - 0.182 * var(--lab-glass-tint)))) brightness(calc(1.182 - 0.182 * var(--lab-glass-tint)));
   --lab-glass-shadow-color: rgb(0 0 0 / calc(var(--lab-glass-tint) * var(--lab-glass-shadow-alpha)));
   --lab-glass-shadow-small: rgb(0 0 0 / calc(var(--lab-glass-tint) * var(--lab-glass-shadow-alpha-small)));
 }
@@ -255,3 +257,8 @@ html[data-lab-glass='solid'] .lab-glass-backdrop[data-glass-source]::after { bac
 
 /* Circular glass must share its profile with the native member and the optical renderer. */
 .lab-glass-container[data-glass-corners='round'] [data-glass-member] { corner-shape: round; }
+
+/* GlassBar: layout-neutral; only carries the raised --lab-glass-tint to its glass. */
+.lab-glass-bar {
+  display: contents;
+}

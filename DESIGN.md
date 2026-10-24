@@ -82,6 +82,7 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
 | Commands or choices behind a button | `MenuSurface` (glass, grows out of the button) | a popover with a column of buttons |
 | Light, anchored, dismissable extra | `PopoverSurface` | a modal for a color picker |
 | Task actions for the whole view | `Dock` (+ `ActionsBar`) | buttons scattered through content |
+| Fresh data in a list people keep open | `ScrollArea onRefresh` (pull) + a Refresh button on the same `RefreshController` | pull as the only way to reload |
 | Problem the user must act on | inline error or in-page notice with the next step | a toast that disappears |
 
 ## Layout recipe

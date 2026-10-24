@@ -32,6 +32,18 @@ double glassBlur(double side) => math.min(
   ),
 );
 
+/// Clear glass softens what it covers even when the theme's backdrop blur is off (σ 1.6 px,
+/// LIGHT-EDGES.md): part of why it reads as a surface over detailed content.
+const double glassClearBlur = 1.6;
+
+/// The blur (std dev, px) of glass at [tint] whose shorter side is [side] px: clear glass's
+/// [glassClearBlur] mixed with the regular blur ([glassBlur], or none when the theme's
+/// `glassBlur` is off).
+double glassBlurAt(double side, double tint, {required bool blurOn}) {
+  final t = clampGlassTint(tint);
+  return glassClearBlur * (1 - t) + t * (blurOn ? glassBlur(side) : 0);
+}
+
 /// Saturation applied to the blurred backdrop before the veil, by brightness and size.
 double glassSaturate({required bool dark, required GlassSize size}) => dark
     ? (size == GlassSize.small ? 2.9 : 2.4)
@@ -42,26 +54,82 @@ double glassVeil({required bool dark, required GlassSize size}) => dark
     ? (size == GlassSize.small ? 0.75 : 0.72)
     : (size == GlassSize.small ? 0.87 : 0.71);
 
-/// Rim light alpha: `base + (peak - base) cos²a` for the angle `a` between the edge normal and the
-/// light axis (lit at both ends of the axis).
-({double base, double peak}) glassRim({required bool dark}) =>
-    dark ? (base: 0.14, peak: 0.25) : (base: 0.27, peak: 0.72);
+/// Rim light, the twin of the web kit's `glassRim` (research/liquid-glass/LIGHT-EDGES.md): a layer
+/// of white over the material at the inner edge. At depth `d` (px inward from the outline) and
+/// angle `a` between the edge normal and the light axis (lit at both ends), its alpha is
+/// `(w0 + w1 · |cos a|^p) · max(0, 1 - (d / width)³)`. Clear (tint 0) and regular (tint 1) are the
+/// measured ends; the tint mixes every parameter linearly.
+typedef GlassRim = ({double w0, double w1, double p, double width});
 
-double rimAlpha(double angle, {required bool dark}) {
-  final rim = glassRim(dark: dark);
-  final c = math.cos(angle);
-  return rim.base + (rim.peak - rim.base) * c * c;
+const GlassRim glassRimLightClear = (w0: 0.03, w1: 0.63, p: 1.1, width: 1.1);
+const GlassRim glassRimLightRegular = (w0: 0.05, w1: 0.81, p: 0.9, width: 1);
+const GlassRim glassRimDarkClear = (w0: 0, w1: 0.08, p: 1.1, width: 1.17);
+const GlassRim glassRimDarkRegular = (w0: 0, w1: 0.16, p: 1, width: 1.2);
+
+/// The rim at one tint and brightness.
+GlassRim glassRim(double tint, {required bool dark}) {
+  final t = clampGlassTint(tint);
+  final clear = dark ? glassRimDarkClear : glassRimLightClear;
+  final regular = dark ? glassRimDarkRegular : glassRimLightRegular;
+  double mix(double a, double b) => a + (b - a) * t;
+  return (
+    w0: mix(clear.w0, regular.w0),
+    w1: mix(clear.w1, regular.w1),
+    p: mix(clear.p, regular.p),
+    width: mix(clear.width, regular.width),
+  );
 }
 
-/// Stops for the rim's gradient line (offset 0 and 1 at the lit ends): the share of the lit colour
-/// laid over the base rim at each offset.
-final List<(double, double)> glassRimStops = [
-  for (var i = 0; i <= 10; i++)
-    (
-      i / 10,
-      ((1 - 2 * i / 10) * (1 - 2 * i / 10) * 1000).roundToDouble() / 1000,
-    ),
-];
+/// Rim alpha at [depth] px inside the outline, where [cosine] is the cosine of the angle between
+/// the edge normal and the light axis (its sign does not matter). 0 outside.
+double rimLayer(double depth, double cosine, GlassRim rim) {
+  if (!(depth >= 0) || depth >= rim.width) return 0;
+  final c = math.min(1.0, cosine.abs());
+  final angular = rim.w0 + rim.w1 * math.pow(c, rim.p);
+  final d = depth / rim.width;
+  return (angular * (1 - d * d * d)).clamp(0.0, 1.0);
+}
+
+/// The edge of the material, applied to the bent backdrop before the veil (the twin of the web
+/// kit's `GLASS_EDGE`): `out = x + k1 · x · E + k3 · E` with the edge mask
+/// `E = max(0, 1 - (d / glassEdgeWidth)³) · (glassEdgeFloor + (1 - glassEdgeFloor) · |cos a|)`.
+/// The veil thins at the edge by [glassEdgeThinLight] / [glassEdgeThinDark] × tint; in dark
+/// appearance clear glass adds `glassEdgeAddBase + glassEdgeAddGain · x` × (1 - tint).
+const double glassEdgeWidth = 1;
+const double glassEdgeFloor = 0.2;
+const double glassEdgeThinLight = 0.35;
+const double glassEdgeThinDark = 0.3;
+const double glassEdgeAddBase = 0.106;
+const double glassEdgeAddGain = 0.31;
+
+/// The edge mask at [depth] px inside the outline (0 outside), for [cosine] against the light axis.
+double edgeMask(double depth, double cosine) {
+  if (!(depth >= 0) || depth >= glassEdgeWidth) return 0;
+  final d = depth / glassEdgeWidth;
+  return (1 - d * d * d) *
+      (glassEdgeFloor + (1 - glassEdgeFloor) * math.min(1.0, cosine.abs()));
+}
+
+/// The edge terms `(k1, k3)` for [material], where [surface] is the grey level (0–1) of the
+/// veil's colour: the veil is laid over the result, so thinning it by K needs
+/// `veil · K / (1 - veil)` here.
+({double k1, double k3}) glassEdgeTerms(
+  double tint, {
+  required bool dark,
+  required GlassMaterial material,
+  required double surface,
+}) {
+  final t = clampGlassTint(tint);
+  final k = (dark ? glassEdgeThinDark : glassEdgeThinLight) * t;
+  final thin = material.veil < 1
+      ? material.veil * k / (1 - material.veil)
+      : 0.0;
+  final add = dark ? 1 - t : 0.0;
+  return (
+    k1: thin + glassEdgeAddGain * add,
+    k3: glassEdgeAddBase * add - thin * surface,
+  );
+}
 
 /// Shadow under the glass: [glassShadowDy] px down, blurred by [glassShadowBlur] (std dev).
 const double glassShadowDy = 7.5;

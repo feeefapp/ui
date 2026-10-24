@@ -21,18 +21,6 @@ export declare function glassLightToward(centre: {
     x: number;
     y: number;
 } | null, base?: GlassLight, reach?: number): GlassLight;
-/**
- * Endpoints of the rim gradient over `bounds`, CSS-style: the line runs through the centre along
- * the light and is long enough that its ends touch the farthest corners. Offset 0 is the lit end.
- */
-export declare function rimGradient(bounds: GlassRect, light: GlassLight): {
-    x1: number;
-    y1: number;
-    x2: number;
-    y2: number;
-};
-/** Rim reflection strength from the local surface normal, independent of bubble proportions. */
-export declare function rimReflection(nx: number, ny: number, light: GlassLight): number;
 /** A short outline segment and the outward normal of the blended surface at its midpoint. */
 export declare function rimSurface(shapes: readonly GlassShape[], spacing: number): {
     d: string;
@@ -62,7 +50,4 @@ export declare function highlightSurface(shapes: readonly GlassShape[], spacing:
 };
 /** Soft occlusion on the unlit inner bevel, paired with the reflected light for optical depth. */
 export declare function surfaceShade(depth: number, nx: number, ny: number, light: GlassLight, width?: number): number;
-/** Screenshot-fitted rim: an outer-edge peak with symmetric lighting and a smooth inward fade.
- * Width and falloff are our reconstruction; base/peak come from theme rim tokens. */
-export declare function measuredRimReflection(depth: number, nx: number, ny: number, light: GlassLight, width: number, base: number, peak: number): number;
 //# sourceMappingURL=light.d.ts.map

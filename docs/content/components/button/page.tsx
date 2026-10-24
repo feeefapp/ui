@@ -79,6 +79,12 @@ function Overview() {
           and glows as a whole), so nothing doubles up. The <C>:active</C> fills stay. Reduced motion
           turns the movement off; still and solid glass have no glass press.
         </p>
+        <p>
+          Text is the label. When the button’s width is bounded (a dock, a toolbar, a narrow phone)
+          the label shrinks and ends in an ellipsis on one line, while icons keep their size. In
+          Flutter a <C>Text</C> child does the same, so callers don’t wrap it in <C>Flexible</C>.
+          Still write short labels: an ellipsis is a fallback, not a layout.
+        </p>
       </Section>
 
       <Section title="Guidelines">

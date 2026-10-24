@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowUp, Paperclip } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { PromptComposer } from '@feeef.dev/ui/composer/composer'
 import { ModelLadder, type LadderStop } from '@feeef.dev/ui/model-ladder'
 import { IconButton } from '@feeef.dev/ui/primitives/button'
@@ -32,27 +32,15 @@ export default function PromptComposerDemo() {
         onValueChange={setPrompt}
         onSubmit={send}
         busy={busy}
+        submitLabel="Send message"
         maxLength={4000}
-        tools={
-          <>
-            <IconButton variant="ghost" appearance="toolbar" aria-label="Attach a file">
-              <Paperclip size={18} />
-            </IconButton>
-            <ModelLadder variant="icon" stops={STOPS} index={model} defaultIndex={1} onChange={setModel} />
-          </>
-        }
-        submit={
-          <IconButton
-            type="submit"
-            variant="filled"
-            aria-label="Send message"
-            disabled={!prompt.trim()}
-            loading={busy}
-          >
-            <ArrowUp size={20} />
+        leading={
+          <IconButton variant="ghost" appearance="toolbar" aria-label="Attach a file">
+            <Plus />
           </IconButton>
         }
-        footer={sent && <p style={{ margin: '8px 4px 0', color: 'var(--lab-muted)' }}>Sent: {sent}</p>}
+        tools={<ModelLadder variant="compact" stops={STOPS} index={model} defaultIndex={1} onChange={setModel} />}
+        footer={sent && <p style={{ margin: '0 4px', color: 'var(--lab-muted)' }}>Sent: {sent}</p>}
       />
     </div>
   )
@@ -61,5 +49,5 @@ export default function PromptComposerDemo() {
 export const meta = {
   title: 'Prompt composer',
   description:
-    'One line until the text needs room, then the field takes the top row and the tools move below. Enter sends; Shift+Enter adds a line.',
+    'One calm line until you type or focus it; then the model chip appears on a second row and send moves under the text. Enter sends; Shift+Enter adds a line.',
 }

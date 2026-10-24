@@ -14,10 +14,10 @@ import {
   clampRadius,
   type GlassShape,
 } from '../../src/glass/geometry'
-import { glassLightToward, rimGradient, DEFAULT_GLASS_LIGHT } from '../../src/glass/light'
+import { glassLightToward } from '../../src/glass/light'
 import { mergeWidth } from '../../src/glass/geometry'
 import { refractionAt, refractionScale } from '../../src/glass/refraction'
-import { glassBlur, glassMaterial, glassSize, rimAlpha, GLASS_RIM_STOPS } from '../../src/glass/material'
+import { edgeMask, glassBlur, glassBlurAt, glassEdgeTerms, glassMaterial, glassRim, glassSize, rimLayer } from '../../src/glass/material'
 import { SPRINGS, solveSpring, springCoefficients, rubberBand } from '../../src/physics/spring'
 import { glassStretch, pressedShape } from '../../src/glass/press'
 import { planGlassTransition } from '../../src/glass/transitions'
@@ -60,17 +60,23 @@ const fixture = {
     { centre: { x: 100, y: 100 }, pointer: { x: 100, y: 101 } },
     { centre: { x: 0, y: 0 }, pointer: { x: -50, y: 300 } },
   ].map(({ centre, pointer }) => ({ centre, pointer, light: glassLightToward(centre, pointer) })),
-  rim: [
-    { bounds: { x: 0, y: 0, width: 200, height: 46 }, light: DEFAULT_GLASS_LIGHT },
-    { bounds: { x: 10, y: 5, width: 50, height: 120 }, light: { x: 0.6, y: -0.8 } },
-  ].map(({ bounds, light }) => ({ bounds, light, gradient: rimGradient(bounds, light) })),
   // The measured Liquid Glass model (research/liquid-glass): merge width, bend, material.
   mergeWidth: [[0, 40], [8, 40], [16, 40], [30, 40], [5, 0], [3, 12]].map(([gap, spacing]) => [gap, spacing, mergeWidth(gap, spacing)]),
   refraction: [[-0.2, 1, 0, 27], [-5, 0.6, -0.8, 27], [-13.5, 0, 1, 27], [-30, 1, 0, 27], [1, 1, 0, 27], [-4, 1, 0, 12]].map(([d, nx, ny, bezel]) => [d, nx, ny, bezel, refractionAt(d, nx, ny, bezel)]),
   refractionScale: [20, 44, 64, 88, 300].map((side) => [side, refractionScale(side)]),
   material: [20, 44, 64, 72, 73, 100, 160, 400].map((side) => [side, glassBlur(side), glassSize(side)]),
-  rimAlpha: [0, 0.4, Math.PI / 2, 2.5, Math.PI].map((a) => [a, rimAlpha(a, 'light'), rimAlpha(a, 'dark')]),
-  rimStops: GLASS_RIM_STOPS,
+  // The edge (research/liquid-glass/LIGHT-EDGES.md): rim [depth, cosine, tint, scheme, alpha],
+  // edge mask [depth, cosine, mask], blur [side, tint, blurOn, sigma], edge terms
+  // [tint, scheme, size, surface, {k1, k3}].
+  rimLayer: (['light', 'dark'] as const).flatMap((scheme) => [0, 0.5, 1].flatMap((tint) =>
+    [-0.1, 0, 0.4, 0.8, 1.15].flatMap((depth) => [1, -0.6, 0].map((cosine) =>
+      [depth, cosine, tint, scheme, rimLayer(depth, cosine, glassRim(tint, scheme))])))),
+  edgeMask: [-0.1, 0, 0.3, 0.7, 1].flatMap((depth) => [1, 0.5, 0].map((cosine) => [depth, cosine, edgeMask(depth, cosine)])),
+  blurAt: [44, 120, 300].flatMap((side) => [0, 0.5, 1].flatMap((tint) => [false, true].map((on) => [side, tint, on, glassBlurAt(side, tint, on)]))),
+  edgeTerms: (['light', 'dark'] as const).flatMap((scheme) => [0, 0.5, 1].flatMap((tint) => (['small', 'large'] as const).map((size) => {
+    const surface = scheme === 'light' ? 0.99 : 0.13
+    return [tint, scheme, size, surface, glassEdgeTerms(tint, scheme, glassMaterial(tint, scheme, size), surface)]
+  }))),
   // The tint curve (ThemeConfig glassTint): [tint, scheme, size, material].
   tint: [0, 0.25, 0.5, 0.75, 1, -1, 3].flatMap((tint) =>
     (['light', 'dark'] as const).flatMap((scheme) =>

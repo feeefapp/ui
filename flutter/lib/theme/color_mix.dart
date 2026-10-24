@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:flutter/animation.dart' show Tween;
+
 /// CSS `color-mix(in srgb, a <percent>, b)`: interpolates premultiplied sRGB, like browsers do.
 /// [amount] is `a`'s share, 0–1.
 Color mixSrgb(Color a, double amount, Color b) {
@@ -27,3 +29,18 @@ Color white(double alpha) =>
     Color.from(alpha: alpha, red: 1, green: 1, blue: 1);
 Color black(double alpha) =>
     Color.from(alpha: alpha, red: 0, green: 0, blue: 0);
+
+/// [ColorTween] the way browsers animate colours: premultiplied, so a fade from or to
+/// [transparent] keeps the other end's hue instead of passing through grey (plain [Color.lerp]
+/// mixes RGB and alpha apart, so transparent black darkens every mid frame). Use it for every
+/// animated fill, border and ink in the kit.
+class PaintColorTween extends Tween<Color?> {
+  PaintColorTween({super.begin, super.end});
+
+  @override
+  Color? lerp(double t) {
+    final a = begin, b = end;
+    if (a == null || b == null) return t < 0.5 ? (a ?? b) : (b ?? a);
+    return mixSrgb(b, t, a);
+  }
+}

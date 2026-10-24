@@ -1,4 +1,5 @@
 import { type ReactNode, type HTMLAttributes } from 'react';
+import { type RefreshController } from './pull-refresh.js';
 import './scroll.css';
 export type ScrollAreaProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
     /** The scrolling content. */
@@ -23,6 +24,14 @@ export type ScrollAreaProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> &
     bottomFadeHeight?: number;
     /** Attributes/events for the actual scroll viewport; the forwarded ref points here too. */
     viewportProps?: HTMLAttributes<HTMLDivElement>;
+    /**
+     * Turns on pull to refresh: on a touch screen, pulling down at the top past the threshold runs
+     * it, and the content stays open over a loader until the promise settles. A mouse never pulls,
+     * so also offer a Refresh button (`refreshController`).
+     */
+    onRefresh?: () => Promise<unknown>;
+    /** Runs `onRefresh` from code with the same loader and announcements, for a Refresh button. */
+    refreshController?: RefreshController;
 };
 /**
  * Full-bleed scroll viewport with local floating chrome, measured spacers and edge washes. Fills its
@@ -51,5 +60,13 @@ export declare const ScrollArea: import("react").ForwardRefExoticComponent<Omit<
     bottomFadeHeight?: number;
     /** Attributes/events for the actual scroll viewport; the forwarded ref points here too. */
     viewportProps?: HTMLAttributes<HTMLDivElement>;
+    /**
+     * Turns on pull to refresh: on a touch screen, pulling down at the top past the threshold runs
+     * it, and the content stays open over a loader until the promise settles. A mouse never pulls,
+     * so also offer a Refresh button (`refreshController`).
+     */
+    onRefresh?: () => Promise<unknown>;
+    /** Runs `onRefresh` from code with the same loader and announcements, for a Refresh button. */
+    refreshController?: RefreshController;
 } & import("react").RefAttributes<HTMLDivElement>>;
 //# sourceMappingURL=scroll-area.d.ts.map

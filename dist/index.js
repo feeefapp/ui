@@ -8,10 +8,11 @@ export { PROFILES, THEME_DEFAULTS, applyThemeConfig, motionFade, themeAttributes
 export { glassCapabilities } from './glass/refraction.js';
 export { motionOf, prefersReducedMotion } from './physics/motion-value.js';
 export { useMotion, useReducedMotion } from './physics/react.js';
-export { Button, Input, Textarea, Select, Option, Label, Modal, Box, Text, Link, Form, List, ListItem, Divider, } from './ui.js';
+export { Button, Input, Textarea, Select, Option, Label, Alert, Modal, Pane, Box, Text, Link, Form, List, ListItem, Divider, } from './ui.js';
 export { ScaffoldProvider, GlassGroup, FloatingLayer, ViewTransition, useNavigation, useFloatingReserve, } from './scaffold.js';
 export { FloatingBoundary, MenuSurface, useFloatingBoundary } from './menu/index.js';
-export { ScrollArea, ScrollGradientOverlay, useShellGap } from './scroll/index.js';
+export { PresentationBody, PresentationDock, PresentationHeader, } from './presentation/index.js';
+export { RefreshController, ScrollArea, ScrollGradientOverlay, useRefreshController, useShellGap } from './scroll/index.js';
 export { Dock } from './dock/index.js';
 export { ActionsBar, ActionsWidthProvider } from './actions/index.js';
 export { SegmentedControl } from './ui.js';

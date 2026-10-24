@@ -46,9 +46,18 @@ class ControlOverrides extends InheritedWidget {
     this.pressedFill,
     this.pressedEdge,
     this.touchTarget,
+    this.fill,
+    this.hoverFill,
+    this.activeFill,
+    this.ink,
     required super.child,
   });
   final double? height, radius;
+
+  /// Paint a host gives its controls at rest, hovered and while held, and their ink: the web kit's
+  /// `--lab-control-fill`, `--lab-control-fill-hover`, `--lab-control-fill-pressed` and `color`
+  /// (a composer's × badge over a photo). Toggled-on controls keep [pressedFill].
+  final Color? fill, hoverFill, activeFill, ink;
 
   /// The smallest height on touch screens inside this host (`--lab-control-touch-target`); a
   /// toolbar bubble sets its own control height, since the bubble is the target. Null: 44.
@@ -68,6 +77,10 @@ class ControlOverrides extends InheritedWidget {
     Color? pressedFill,
     Color? pressedEdge,
     double? touchTarget,
+    Color? fill,
+    Color? hoverFill,
+    Color? activeFill,
+    Color? ink,
     required Widget child,
   }) {
     final outer = maybeOf(context);
@@ -77,6 +90,10 @@ class ControlOverrides extends InheritedWidget {
       pressedFill: pressedFill ?? outer?.pressedFill,
       pressedEdge: pressedEdge ?? outer?.pressedEdge,
       touchTarget: touchTarget ?? outer?.touchTarget,
+      fill: fill ?? outer?.fill,
+      hoverFill: hoverFill ?? outer?.hoverFill,
+      activeFill: activeFill ?? outer?.activeFill,
+      ink: ink ?? outer?.ink,
       child: child,
     );
   }
@@ -87,7 +104,11 @@ class ControlOverrides extends InheritedWidget {
       old.radius != radius ||
       old.touchTarget != touchTarget ||
       old.pressedFill != pressedFill ||
-      old.pressedEdge != pressedEdge;
+      old.pressedEdge != pressedEdge ||
+      old.fill != fill ||
+      old.hoverFill != hoverFill ||
+      old.activeFill != activeFill ||
+      old.ink != ink;
 }
 
 /// A button painted by one of the emphasis variants: the Flutter twin of `Button` in
@@ -158,7 +179,8 @@ class Button extends StatefulWidget {
   /// navigation item); null shrink-wraps the content, centred.
   final AlignmentDirectional? alignment;
 
-  /// Content: icons and text, laid out in a row.
+  /// Content: icons and text, laid out in a row. A [Text] child is the label: in a bounded width
+  /// it shrinks and ends in an ellipsis on one line, while icons keep their size.
   final List<Widget> children;
 
   @override
@@ -324,6 +346,21 @@ class _ButtonState extends State<Button> {
       raised = false;
     }
     final overrides = ControlOverrides.maybeOf(context);
+    if (overrides != null &&
+        (overrides.fill ??
+                overrides.hoverFill ??
+                overrides.activeFill ??
+                overrides.ink) !=
+            null) {
+      paint = VariantPaint(
+        fill: overrides.fill ?? paint.fill,
+        hover: overrides.hoverFill ?? paint.hover,
+        pressed: overrides.activeFill ?? paint.pressed,
+        edge: paint.edge,
+        ink: overrides.ink ?? paint.ink,
+      );
+      ink = overrides.ink ?? ink;
+    }
     if (widget.pressed == true) {
       final fill = overrides?.pressedFill;
       paint = VariantPaint(
@@ -369,12 +406,17 @@ class _ButtonState extends State<Button> {
       _ => s.controlPadding,
     };
 
+    // Text labels give way when the button's width is bounded (a dock, a toolbar, a narrow
+    // phone) and end in an ellipsis; icons keep their size. Loose flex shrink-wraps when the
+    // width is unbounded, so nothing changes where the label fits.
     final content = Row(
       mainAxisSize: MainAxisSize.min,
       spacing: widget.gap,
       children: [
         if (widget.loading) PixelLoader(size: 16, decorative: true, color: ink),
-        if (!(widget.loading && icon)) ...widget.children,
+        if (!(widget.loading && icon))
+          for (final child in widget.children)
+            child is Text || child is RichText ? Flexible(child: child) : child,
       ],
     );
 
@@ -428,6 +470,7 @@ class _ButtonState extends State<Button> {
                   ),
                   maxLines: 1,
                   softWrap: false,
+                  overflow: TextOverflow.ellipsis,
                   // Icons in controls use a 1.75 stroke (`.lab-control[data-variant] svg.lucide`).
                   child: LucideStroke(
                     width: 1.75,
@@ -592,7 +635,7 @@ class _ButtonPaint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<Color?>(
-      tween: ColorTween(end: fill),
+      tween: PaintColorTween(end: fill),
       duration: const Duration(milliseconds: 140),
       curve: const Cubic(0.2, 0.8, 0.2, 1),
       builder: (context, animated, child) => CustomPaint(

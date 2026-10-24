@@ -275,7 +275,7 @@ for row sides, headers and hairlines. */
 }
 .lab-list-item[data-lifted] {
   z-index: 3;
-  border-radius: var(--lab-radius-control);
+  border-radius: calc(var(--lab-control-height) / 2 * var(--lab-corner-scale, 1));
   background: var(--lab-surface);
   box-shadow: 0 16px 32px -14px rgb(0 0 0 / 0.38);
 }

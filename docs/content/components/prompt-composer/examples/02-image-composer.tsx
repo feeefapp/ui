@@ -12,9 +12,16 @@ const TEMPLATES = [
   { id: 'studio', name: 'Studio shot', prompt: 'The product on a seamless beige backdrop, soft daylight, 50mm.' },
   { id: 'lifestyle', name: 'Lifestyle', prompt: 'The product on a kitchen counter in morning light, shallow depth of field.' },
 ]
-const PHOTO = `data:image/svg+xml,${encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#e8eae4"/><rect x="26" y="18" width="28" height="44" rx="6" fill="#6f8965"/></svg>'
-)}`
+/** A product photo: a bottle on a pale ground. */
+const photo = (ground: string, bottle: string) =>
+  `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="${ground}"/><rect x="26" y="18" width="28" height="44" rx="6" fill="${bottle}"/></svg>`
+  )}`
+const RECENT = [
+  { id: 'side', prompt: 'Bottle, side', thumbUrl: photo('#efe6da', '#b9824f') },
+  { id: 'back', prompt: 'Bottle, back', thumbUrl: photo('#dfe8ee', '#4f7894') },
+  { id: 'cap', prompt: 'Bottle cap', thumbUrl: photo('#ece3ee', '#8a5f96') },
+]
 
 type Shape = '1:1' | '4:5' | '16:9'
 
@@ -23,13 +30,10 @@ export default function ImageComposer() {
   const [model, setModel] = useState(1)
   const [shape, setShape] = useState<Shape>('1:1')
   const [references, setReferences] = useState<ComposerReference[]>([
-    { id: 'bottle', name: 'Bottle front', url: PHOTO },
+    { id: 'front', name: 'Bottle front', url: photo('#e8eae4', '#6f8965') },
   ])
   const [submitting, setSubmitting] = useState(false)
-  const addFiles = (files: File[]) =>
-    setReferences((old) =>
-      [...old, ...files.map((file) => ({ id: `${file.name}-${file.size}`, name: file.name, url: URL.createObjectURL(file) }))].slice(0, 3)
-    )
+  const add = (added: ComposerReference[]) => setReferences((old) => [...old, ...added].slice(0, 4))
   return (
     <div className="demo-wide" style={{ paddingTop: 72 }}>
       <ImagePromptComposer
@@ -39,17 +43,20 @@ export default function ImageComposer() {
         placeholder="Describe the image you want"
         maxLength={2000}
         references={references}
-        referenceLimit={{ max: 3, formats: ['image/png', 'image/jpeg', 'image/webp'] }}
-        onAddFiles={addFiles}
+        referenceLimit={{ max: 4, formats: ['image/png', 'image/jpeg', 'image/webp'] }}
+        onAddFiles={(files) =>
+          add(files.map((file) => ({ id: `${file.name}-${file.size}`, name: file.name, url: URL.createObjectURL(file) })))
+        }
         onRemoveReference={(id) => setReferences((old) => old.filter((ref) => ref.id !== id))}
-        recent={[]}
-        onUseRecent={() => {}}
-        onEditPhoto={(file) => addFiles([file])}
+        recent={RECENT.filter((image) => !references.some((ref) => ref.id === image.id))}
+        onUseRecent={(id) => {
+          const image = RECENT.find((recent) => recent.id === id)
+          if (image) add([{ id, name: image.prompt, url: image.thumbUrl }])
+        }}
+        onEditPhoto={() => {}}
         templates={TEMPLATES}
         onTemplate={(template) => setPrompt(template.prompt)}
-        ladder={(variant) => (
-          <ModelLadder variant={variant} stops={STOPS} index={model} defaultIndex={1} onChange={setModel} />
-        )}
+        ladder={<ModelLadder variant="compact" stops={STOPS} index={model} defaultIndex={1} onChange={setModel} />}
         settingsLabel={shape}
         settings={
           <SegmentedControl
@@ -82,5 +89,5 @@ export default function ImageComposer() {
 export const meta = {
   title: 'Image studio composer',
   description:
-    'The Lab image composer: references above the card, a + menu (upload, paste, ideas, edit a photo), model ladder, output settings, AI wand and send.',
+    'References sit inside the capsule as thumbnails, the first marked Main. The + menu uploads, pastes, reuses your images (try it), starts from an idea or edits a photo. The model and output settings appear on the second row once you type.',
 }

@@ -107,8 +107,11 @@ export function ModelLadder({
   selectedModel?: LadderStop
   /** Overrides the localized strings. */
   copy?: LadderCopy
-  /** `chip` shows the tier and model name; `icon` is a compact brain button like marchant. */
-  variant?: 'chip' | 'icon'
+  /**
+   * `chip` shows the tier and model name; `icon` is a compact brain button like marchant;
+   * `compact` is one small-control line (brain, tier, chevron) for composer and toolbar rows.
+   */
+  variant?: 'chip' | 'icon' | 'compact'
   /** Popover alignment against the trigger. */
   align?: 'start' | 'center' | 'end'
   /** Which side of the trigger the popover opens on. */
@@ -140,6 +143,25 @@ export function ModelLadder({
       }}
     >
       <Popover.Trigger asChild disabled={!enabled}>
+        {variant === 'compact' ? (
+          <Button
+            ref={trigger}
+            type="button"
+            variant="ghost"
+            appearance="toolbar"
+            controlSize="small"
+            className={`lab-ladder-compact ${className ?? ''}`}
+            data-top={top}
+            aria-label={`${copy.quality}: ${tier}${tier === name ? '' : `, ${name}`}`}
+            title={`${tier}${tier === name ? '' : ` · ${name}`}`}
+          >
+            <Brain aria-hidden="true" />
+            <span key={tier} className="lab-ladder-compact-label lab-ladder-swap">
+              {tier}
+            </span>
+            <ChevronDown className="lab-ladder-compact-chevron" aria-hidden="true" />
+          </Button>
+        ) : (
         <Button
           ref={trigger}
           type="button"
@@ -164,6 +186,7 @@ export function ModelLadder({
           )}
           {variant === 'chip' && <ChevronDown size={14} aria-hidden="true" />}
         </Button>
+        )}
       </Popover.Trigger>
       <Popover.Portal container={container ?? undefined}>
         <PopoverSurface asChild>

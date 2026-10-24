@@ -7,7 +7,7 @@
   min-height: var(--lab-control-height, 44px);
   padding: 6px 10px;
   box-sizing: border-box;
-  border-radius: var(--lab-radius-control, 18px);
+  border-radius: calc(var(--lab-control-height) / 2 * var(--lab-corner-scale, 1));
   corner-shape: superellipse(1.5);
   color: var(--lab-ink);
   font: 400 14px/20px var(--lab-font);
@@ -18,7 +18,16 @@
   gap: 8px;
   padding: 4px 8px;
 }
-.lab-choice:not([data-disabled]):not(:has(.lab-choice-input:disabled)):hover {
+/* No label, description or error: only the mark (it fits a list row's leading slot). Touch still
+reaches 44px through the coarse-pointer hit area (system.css), without changing layout. Name it
+with aria-label. */
+.lab-choice[data-bare],
+.lab-choice[data-bare][data-control-size='small'] {
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+}
+.lab-choice:not([data-disabled], [data-bare]):not(:has(.lab-choice-input:disabled)):hover {
   background: color-mix(in srgb, var(--lab-ink) 4%, transparent);
 }
 .lab-choice-input {
@@ -95,7 +104,7 @@
   outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
   outline-offset: var(--lab-focus-ring-offset);
 }
-.lab-choice:has(.lab-choice-input:focus-visible) {
+.lab-choice:not([data-bare]):has(.lab-choice-input:focus-visible) {
   background: color-mix(in srgb, var(--lab-ink) 4%, transparent);
 }
 .lab-choice-copy {

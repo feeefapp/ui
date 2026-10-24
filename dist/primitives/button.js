@@ -76,9 +76,33 @@ export const Button = React.forwardRef(({ className, children, loading, variant,
             if (press === 'glass')
                 placePressGlow(event);
             props.onPointerDown?.(event);
-        }, disabled: nativeButton ? disabled : undefined, onClickCapture: disabled ? stopActivation : props.onClickCapture, onAuxClickCapture: disabled ? stopActivation : props.onAuxClickCapture, onKeyDownCapture: disabled ? stopActivationKey : props.onKeyDownCapture, "aria-disabled": disabled || props['aria-disabled'], "data-disabled": disabled || undefined, "aria-busy": loading || undefined, "data-lab-corners": true, children: asChild ? (content) : (_jsxs(_Fragment, { children: [filled && _jsx(PixelTexture, { variant: "corner", seed: className || 'control' }), loading && _jsx(PixelLoader, { size: 16, decorative: true }), loading && controlSize === 'icon' ? null : children] })) }));
+        }, disabled: nativeButton ? disabled : undefined, onClickCapture: disabled ? stopActivation : props.onClickCapture, onAuxClickCapture: disabled ? stopActivation : props.onAuxClickCapture, onKeyDownCapture: disabled ? stopActivationKey : props.onKeyDownCapture, "aria-disabled": disabled || props['aria-disabled'], "data-disabled": disabled || undefined, "aria-busy": loading || undefined, "data-lab-corners": true, children: asChild ? (content) : (_jsxs(_Fragment, { children: [filled && _jsx(PixelTexture, { variant: "corner", seed: className || 'control' }), loading && _jsx(PixelLoader, { size: 16, decorative: true }), loading && controlSize === 'icon' ? null : withLabels(children)] })) }));
 });
 Button.displayName = 'Button';
+/**
+ * Wraps each run of text children (strings and numbers, like `Save {count}`) in one
+ * `.lab-control-label`, so the label can end in an ellipsis when the button's width is bounded.
+ */
+function withLabels(children) {
+    const out = [];
+    let run = [];
+    const flush = () => {
+        if (run.length)
+            out.push(_jsx("span", { className: "lab-control-label", children: run }, `label-${out.length}`));
+        run = [];
+    };
+    // toArray keys every element, so the returned list never warns.
+    for (const child of React.Children.toArray(children)) {
+        if (typeof child === 'string' || typeof child === 'number')
+            run.push(child);
+        else {
+            flush();
+            out.push(child);
+        }
+    }
+    flush();
+    return out;
+}
 /** Icon-only actions reuse the button emphasis, loading and surface engines. */
 export const IconButton = React.forwardRef(({ controlSize = 'regular', variant = 'text', ...props }, ref) => (_jsx(Button, { ...props, ref: ref, variant: variant, controlSize: "icon", iconSize: controlSize })));
 IconButton.displayName = 'IconButton';

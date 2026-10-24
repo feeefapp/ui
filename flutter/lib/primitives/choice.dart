@@ -28,6 +28,7 @@ class Checkbox extends StatefulWidget {
     this.disabled = false,
     this.required = false,
     this.controlSize = ControlSize.regular,
+    this.ariaLabel,
     this.focusNode,
   });
 
@@ -58,6 +59,10 @@ class Checkbox extends StatefulWidget {
 
   /// `regular` or `small`.
   final ControlSize controlSize;
+
+  /// Accessible name when there is no visible [label] (the web `aria-label`), such as a row's
+  /// select box: "Select order #1042".
+  final String? ariaLabel;
   final FocusNode? focusNode;
 
   @override
@@ -87,6 +92,7 @@ class _CheckboxState extends State<Checkbox> {
       disabled: widget.disabled,
       required: widget.required,
       controlSize: widget.controlSize,
+      ariaLabel: widget.ariaLabel,
       focusNode: widget.focusNode,
     );
   }
@@ -105,6 +111,7 @@ class Radio extends StatefulWidget {
     this.error,
     this.disabled = false,
     this.controlSize = ControlSize.regular,
+    this.ariaLabel,
     this.focusNode,
   });
 
@@ -121,6 +128,9 @@ class Radio extends StatefulWidget {
   final String? error;
   final bool disabled;
   final ControlSize controlSize;
+
+  /// Accessible name when there is no visible [label] (the web `aria-label`).
+  final String? ariaLabel;
   final FocusNode? focusNode;
 
   @override
@@ -149,6 +159,7 @@ class _RadioState extends State<Radio> {
       error: widget.error,
       disabled: widget.disabled,
       controlSize: widget.controlSize,
+      ariaLabel: widget.ariaLabel,
       focusNode: widget.focusNode,
     );
   }
@@ -364,10 +375,12 @@ class _Choice extends StatefulWidget {
     this.required = false,
     this.invalid = false,
     this.controlSize = ControlSize.regular,
+    this.ariaLabel,
     this.focusNode,
   });
 
   final bool radio, checked, indeterminate, disabled, required, invalid;
+  final String? ariaLabel;
   final VoidCallback? onToggle;
   final Widget? label, description;
   final String? error;
@@ -427,7 +440,7 @@ class _ChoiceState extends State<_Choice> {
       duration: reduced ? Duration.zero : const Duration(milliseconds: 280),
       curve: const Cubic(0.22, 1.5, 0.36, 1),
       child: TweenAnimationBuilder<Color?>(
-        tween: ColorTween(end: markFill),
+        tween: PaintColorTween(end: markFill),
         duration: reduced ? Duration.zero : const Duration(milliseconds: 140),
         builder: (context, fill, child) => DecoratedBox(
           decoration: ShapeDecoration(
@@ -505,37 +518,46 @@ class _ChoiceState extends State<_Choice> {
           )
         : null;
 
-    final row = ConstrainedBox(
-      constraints: BoxConstraints(minHeight: minHeight, minWidth: 44),
-      child: DecoratedBox(
-        decoration: ShapeDecoration(
-          color: (_hovered || _focusVisible) && enabled
-              ? mixSrgb(c.ink, 0.04, transparent)
-              : transparent,
-          shape: SuperellipseBorder(radius: s.radiusControl),
-        ),
-        child: Padding(
-          padding: compact
-              ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
-              : const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            spacing: compact ? 8 : 10,
-            children: [
-              // Keyboard focus hugs the mark.
-              FocusRing(
-                visible: _focusVisible,
-                radius: widget.radio ? markSize / 2 : markRadius,
-                child: mark,
+    // Without copy the control is only its mark (it fits a list row's 32px leading slot); touch
+    // still reaches 44px through TouchTarget, without changing layout.
+    final Widget row = copy == null
+        ? FocusRing(
+            visible: _focusVisible,
+            radius: widget.radio ? markSize / 2 : markRadius,
+            child: mark,
+          )
+        : ConstrainedBox(
+            constraints: BoxConstraints(minHeight: minHeight, minWidth: 44),
+            child: DecoratedBox(
+              decoration: ShapeDecoration(
+                color: (_hovered || _focusVisible) && enabled
+                    ? mixSrgb(c.ink, 0.04, transparent)
+                    : transparent,
+                shape: SuperellipseBorder(radius: s.radiusControl),
               ),
-              ?copy,
-            ],
-          ),
-        ),
-      ),
-    );
+              child: Padding(
+                padding: compact
+                    ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
+                    : const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: compact ? 8 : 10,
+                  children: [
+                    // Keyboard focus hugs the mark.
+                    FocusRing(
+                      visible: _focusVisible,
+                      radius: widget.radio ? markSize / 2 : markRadius,
+                      child: mark,
+                    ),
+                    copy,
+                  ],
+                ),
+              ),
+            ),
+          );
 
     return Semantics(
+      label: widget.label == null ? widget.ariaLabel : null,
       checked: widget.indeterminate ? null : widget.checked,
       mixed: !widget.radio && widget.indeterminate ? true : null,
       inMutuallyExclusiveGroup: widget.radio,

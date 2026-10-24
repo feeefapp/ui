@@ -7,9 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 /// The web kit's glass lens model (`src/primitives/lens-model.ts`) and its Dart twin agree on every
 /// vector in fixtures/lens.json (written by tool/generate_lens_fixture.ts).
 void main() {
-  final fixture =
-      jsonDecode(File('test/fixtures/lens.json').readAsStringSync())
-          as Map<String, dynamic>;
+  final fixture = jsonDecode(
+    File('test/fixtures/lens.json').readAsStringSync(),
+  ) as Map<String, dynamic>;
   double n(Object? v) => (v! as num).toDouble();
 
   test('constants', () {

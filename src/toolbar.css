@@ -29,7 +29,7 @@
   controls fill it less the 2px padding and 1px border a side (--lab-toolbar-control). The bubble is
   the touch target, so its controls don't grow on touch screens; the bubble itself does. */
   --lab-control-height: var(--lab-toolbar-control);
-  --lab-glass-radius: calc((var(--lab-toolbar-control) + 6px) / 2 * var(--lab-corner-scale, 1));
+  --lab-glass-radius: calc((var(--lab-toolbar-control) + 6px) / 2 * var(--lab-capsule-scale, 1));
   display: flex;
   align-items: center;
   gap: 0;

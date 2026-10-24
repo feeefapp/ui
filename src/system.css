@@ -15,6 +15,17 @@ html[data-lab-theme] {
   raw --lab-radius-scale, so both renderings show the same corner. */
   --lab-corner-fit: 1;
   --lab-corner-scale: calc(var(--lab-radius-scale, 1) * var(--lab-corner-fit));
+  /* Clamped continuous corners (brand/geometry.ts cornerSmoothing): smoothing fades from full at
+  0.75 of half the shorter side to none at half of it, so circles and capsules stay round. CSS can't
+  measure a box, so capsule radii (half their own height × the radius scale) use the --lab-capsule-*
+  tokens, where that share is the radius scale itself: --lab-capsule-smoothing is the curve at it,
+  --lab-corner-shape-capsule the matching corner-shape (round at scale 1), and --lab-capsule-scale
+  their radius multiplier, whose circle fallback only shrinks what is smoothed. Other radii keep
+  --lab-corner-scale and superellipse(1.5). */
+  --lab-capsule-fade: clamp(0, (var(--lab-radius-scale, 1) - 0.75) * 4, 1);
+  --lab-capsule-smoothing: calc(1 - var(--lab-capsule-fade) * var(--lab-capsule-fade) * (3 - 2 * var(--lab-capsule-fade)));
+  --lab-capsule-scale: calc(var(--lab-radius-scale, 1) * (1 - (1 - var(--lab-corner-fit)) * var(--lab-capsule-smoothing)));
+  --lab-corner-shape-capsule: superellipse(calc(1 + var(--lab-capsule-smoothing) / 2));
   /* Opacity of the scaffold's ambient pixel field (0 turns it off). */
   --lab-ground-pixels-opacity: 0.18;
   --lab-space-1: 4px;
@@ -79,8 +90,8 @@ html[data-lab-theme] {
   --lab-spring-smooth-duration: 760ms;
   /* Derived: capsule radii (half the height), the control inside a toolbar bubble (2px padding and
   a 1px border a side). */
-  --lab-radius-control: calc(var(--lab-control-height) / 2 * var(--lab-corner-scale, 1));
-  --lab-radius-control-small: calc(var(--lab-control-small) / 2 * var(--lab-corner-scale, 1));
+  --lab-radius-control: calc(var(--lab-control-height) / 2 * var(--lab-capsule-scale, 1));
+  --lab-radius-control-small: calc(var(--lab-control-small) / 2 * var(--lab-capsule-scale, 1));
   --lab-list-radius: calc(var(--lab-list-corner) * var(--lab-corner-scale, 1));
   --lab-toolbar-control: calc(var(--lab-toolbar-item) - 6px);
   /* Keyboard focus: a thin line in the focus colour that hugs the control (iOS-like); pointer and
@@ -129,8 +140,6 @@ html[data-lab-theme] {
   /* Rim light: a base line all round (low) plus light at both ends of the light axis (light). */
   --lab-glass-edge-light: rgb(255 255 255 / 62%);
   --lab-glass-edge-low: rgb(255 255 255 / 27%);
-  --lab-glass-rim-base: 0.27;
-  --lab-glass-rim-peak: 0.718;
   --lab-glass-shadow: 0 8px 24px -14px rgb(0 0 0 / 18%);
   /* Shadow under a GlassContainer's merged outline (7.5px down, blur 19.5px); lighter under controls. */
   --lab-glass-shadow-color: rgb(0 0 0 / calc(var(--lab-glass-tint) * var(--lab-glass-shadow-alpha)));
@@ -155,8 +164,6 @@ html[data-lab-theme='dark'] {
   --lab-glass-colour-loss-large: 0.328;
   --lab-glass-edge-light: rgb(255 255 255 / 13%);
   --lab-glass-edge-low: rgb(255 255 255 / 14%);
-  --lab-glass-rim-base: 0.139;
-  --lab-glass-rim-peak: 0.246;
   --lab-glass-shadow: 0 8px 24px -14px rgb(0 0 0 / 40%);
   --lab-glass-shadow-alpha: 0.14;
   --lab-glass-shadow-alpha-small: 0.033;
@@ -287,8 +294,8 @@ html[data-lab-theme] .lab-control[data-variant] {
   justify-content: center;
   gap: 6px;
   border: 1px solid var(--lab-control-edge);
-  border-radius: calc(var(--lab-control-size) / 2 * var(--lab-corner-scale, 1));
-  corner-shape: superellipse(1.5);
+  border-radius: calc(var(--lab-control-size) / 2 * var(--lab-capsule-scale, 1));
+  corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
   font: 400 var(--lab-control-label) / round(calc(var(--lab-control-label) * 1.3), 1px) var(--lab-font);
   letter-spacing: 0;
   text-transform: none;
@@ -361,6 +368,17 @@ html[data-lab-theme]
 }
 html[data-lab-theme] .lab-control[data-variant] svg.lucide {
   stroke-width: 1.75;
+}
+/* A text label gives way when the button's width is bounded (a dock, a toolbar, a narrow phone)
+and ends in an ellipsis on one line; icons keep their size. Flutter: Button wraps Text in Flexible. */
+html[data-lab-theme] .lab-control[data-variant] {
+  max-width: 100%;
+}
+html[data-lab-theme] .lab-control[data-variant] > .lab-control-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 html[data-lab-theme]
   .lab-control[data-control-size='icon']
@@ -945,7 +963,7 @@ html[data-lab-theme] .lab-select-option[data-state='checked'][data-highlighted] 
 
 /* Inline text actions follow the surrounding font metrics. */
 html[data-lab-theme] .lab-control[data-control-size='icon'][data-icon-size='inline'] {
- width: 1em; min-width: 1em; height: 1em; min-height: 1em; padding: 0; border: 0; border-radius: calc(3px * var(--lab-corner-scale, 1)); font-size: inherit;
+ width: 1em; min-width: 1em; height: 1em; min-height: 1em; padding: 0; border: 0; border-radius: calc(3px * var(--lab-corner-scale, 1)); corner-shape: superellipse(1.5); font-size: inherit;
 }
 
 /* Text for assistive technology only. */

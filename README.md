@@ -104,7 +104,7 @@ How it works: `themeAttributes()` / `applyThemeConfig()` set `data-lab-palette`,
 palette or density, add its token block next to the existing ones (`theme-tokens.css`,
 `system.css`) and extend the union in `theme-config.ts`. Kit CSS must use these tokens, never
 literal colors, control sizes or radii, so every theme reaches it. App CSS should do the same
-(derive from `--lab-*` tokens and `--lab-corner-scale`, the radius scale times the corner fit that browsers without `corner-shape` need).
+(derive from `--lab-*` tokens and `--lab-corner-scale`, the radius scale times the corner fit that browsers without `corner-shape` need; capsules use `--lab-capsule-scale` and `corner-shape: var(--lab-corner-shape-capsule)`).
 
 ## Develop
 
@@ -169,22 +169,23 @@ cannot collapse the workspace navigation rail.
 
 ## Prompt composers
 
-`@feeef.dev/ui/composer/composer` exports `PromptComposer`, `ComposerCard`,
-`ComposerHint`, and `useComposerLayout`. These are the same measured card and
-input layout used by Lab Chat and Image and the Cloud playground.
+`@feeef.dev/ui/composer/composer` exports `PromptComposer` and the parts it and
+`ImagePromptComposer` are built from: `ComposerBar` (a round leading bubble and one
+glass capsule in a `GlassBar`), `ComposerField`, `ComposerAttachments` /
+`ComposerAttachment`, `ComposerSend` and `ComposerHint`. Lab Chat and Image and the
+Cloud playground use them.
 
-Use controlled `value`/`onValueChange`, `onSubmit`, an accessible `label`,
-`tools` for file/record/model controls, `submit` for shared submit/stop actions,
-`above` for references and masks, and `footer` for task hints. `contentRevision`
-remeasures when host tool content changes. Enter sends, Shift+Enter inserts a
-line, and IME composition preserves Enter. Busy, disabled and submitDisabled
-gate keyboard submission. Native selection and the editable node remain stable.
-Advanced editors can keep their field and controls using `ComposerCard` with
-`useComposerLayout`; reusable geometry and motion stay in the package.
-
-Composer file-drop outlines appear only with `PromptComposer dropActive` (or `ComposerCard data-dragging`). Focus keeps the normal shared focus treatment.
-
-Measured composers also expand when toolbar slots leave less than eight glyphs of editing space, keeping an empty prompt usable on narrow screens.
+Use controlled `value`/`onValueChange`, `onSubmit`, an accessible `label` and a
+`submitLabel`; `leading` for the + or attach bubble, `attachments` for tiles inside
+the capsule, `tools` for the second row (model, settings), `actions` for one small
+button beside send, `above` and `footer` around it. Empty and idle it is one line;
+text, focus inside or an open menu (`data-state="open"`, `aria-expanded`,
+`aria-pressed` on a trigger inside) opens the second row, and every layout change
+springs on `SPRINGS.snappy` (`useComposerMotion`, pure rules in `composer-model.ts`).
+Send is neutral until there is something to send; `busy` shows the loader and
+`onStop` turns it into a stop button. Enter sends, Shift+Enter inserts a line, and IME
+composition preserves Enter. Busy, disabled and submitDisabled gate submission.
+File-drop outlines appear only with `dropActive`.
 
 ### Expanding toolbar search
 

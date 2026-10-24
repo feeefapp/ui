@@ -14,7 +14,7 @@ Guidelines; keep it in sync when a principle or decision rule changes.
 Theming is configuration, not code: apps pass `ThemeConfig` (palette, density, radius;
 README "Theme config") and the kit CSS reads the resulting tokens. Never hard-code a color,
 control height/padding or radius in kit CSS: use `--lab-*` color tokens, the density size
-tokens, and `var(--lab-radius-*)` or `calc(Npx * var(--lab-corner-scale, 1))` (never the raw `--lab-radius-scale`: `--lab-corner-scale` also carries the corner fit that keeps circle-only browsers looking like the superellipse). Inside an inset surface the gap between its controls never exceeds the inset (tie both to one variable, like `--lab-segmented-inset`).
+tokens, and `var(--lab-radius-*)` or `calc(Npx * var(--lab-corner-scale, 1))` (never the raw `--lab-radius-scale`: `--lab-corner-scale` also carries the corner fit that keeps circle-only browsers looking like the superellipse). A capsule (radius = half its own height) uses `--lab-capsule-scale` and `corner-shape: var(--lab-corner-shape-capsule)` instead, so it stays a capsule in every browser. Inside an inset surface the gap between its controls never exceeds the inset (tie both to one variable, like `--lab-segmented-inset`).
 
 Keep the kit framework-neutral: no Inertia, Next.js or router imports. Hosts pass locale,
 translations, URL and navigation through `Provider` / `Services`. Modules using hooks
@@ -25,8 +25,16 @@ The live contract is lab.feeef.org/ui and the Lab README.
 Reuse ui.tsx controls, system.css tokens and scaffold.tsx layout/materials.
 Lab buttons and fields own native elements; do not inherit generic UI visual classes.
 New buttons use explicit variant/controlSize props. Never add class-name inference.
-Use native CSS superellipses by default; unsupported browsers use normal rounded
-corners. The shared SVG engine is opt-in through Provider enableCornerFallback.
+Corners are clamped continuous corners: one pure rule, `cornerSmoothing(radius, width, height)`
+(`brand/geometry.ts`, Dart twin `brand/geometry.dart`, vectors `flutter/test/fixtures/corners.json`
+from `flutter/tool/generate_corners_fixture.ts`): full superellipse(1.5) smoothing up to 0.75 of
+half the shorter side, a smoothstep to none (a circular arc) at it, so circles and capsules are
+round. Everything drawn in code (foSuperellipsePath, glass SDF/paths/refraction, menus, Flutter
+superellipsePath and its callers) applies it per corner; never pass a fixed exponent to get the old
+squared capsule. CSS uses native corner-shape: superellipse(1.5) for ordinary radii and the capsule
+tokens above for capsules; unsupported browsers use rounded corners, shrunk by the fit only where
+smoothed (`cssCornerRadius` / `trueCornerRadius` in `corner-fit.ts`). The shared SVG engine is opt-in
+through Provider enableCornerFallback.
 Never clip interactive hosts or fork geometry.
 Update the /ui live examples and this contract when a public primitive changes.
 Run npm run check here and the consuming apps' lint/tests. Preserve browser zoom and reduced-motion,
@@ -178,8 +186,9 @@ Names carry no prefix: components, hooks and constants are `Button`, `useTheme`,
 keys (`lab.*`) keep the `lab` namespace so they never collide with app styles. Never reintroduce a
 prefixed alias.
 
-Liquid glass uses circular corners by default (an exception to the general superellipse rule),
-a 1px reference rim and the measured refraction profile. Keep these defaults shared by
+Liquid glass uses the kit's clamped continuous corners by default (`cornerShape` 'superellipse':
+bubbles and capsules come out round; 'round' forces circular corners at every radius), a 1px
+reference rim and the measured refraction profile. Keep these defaults shared by
 GlassContainer and GlassScene so GlassScope consumers inherit them. Theme tint/blur and
 member CSS radii remain configurable.
 Liquid glass (`src/glass`): `GlassContainer` paints ONE material for every GlassGroup, ToolbarGroup
@@ -211,7 +220,14 @@ anchors); refraction (glass/refraction.ts, pure) stays active during motion in C
 The glass scene measures in the container's own pixels (`hostFrame`), so scaled ancestors (demo
 frames, receding sheets) stay exact; bubbles moved by a running transform/transition/WAAPI animation
 (on them or an ancestor below the container) are followed every frame; departed glass is removed
-within 900 ms even when frames are paused; dispose clears every painted piece.
+within 900 ms even when frames are paused; dispose clears every painted piece. Glass measured
+before its container was ever rendered (a closed dialog, a hidden panel) appears in place when it
+first shows. Inside an element marked `data-glass-instant` (Flutter: `GlassInstant`) glass takes
+every layout change at once (no births, deaths or springs): presentation surfaces set it while they
+enter and leave, so their glass rides the surface and leaves with it. Members with non-finite or
+absurd sizes (over `GLASS_MAX_SIDE` or `GLASS_MAX_SPAN` × container/viewport) are not glass, and
+the rest are clamped (`glassMemberRect`, `member-bounds.ts` / `member_bounds.dart`) before any
+path, map or image is built.
 
 Glass defaults to tint 0.5 (a light veil) on web and Flutter alike (`GLASS_TINT_DEFAULT`,
 `glassTintDefault`). Firefox bends only glass given an explicit backdropSource: a separate,
@@ -225,7 +241,14 @@ apply a stale map alpha as a second Firefox silhouette. Undo the last written co
 when measuring layout, and clear it when a member leaves.
 
 Presentation surfaces (`src/presentation`, `flutter/lib/presentation`): Alert, Modal and Pane (and
-Sheet in containers) are built from the same parts: `PresentationHost` (top layer or container,
+Sheet in containers) are built from the same parts (motion: `useSurfaceMotion` plays transform and
+opacity as Web Animations on the compositor, `will-change` only while moving, the scrim on the same
+timing, entering from nothing one frame after the costly first frame; fades use a fixed curve
+that ends on time, never a spring tail; Flutter fades with `MotionValue.easeTo` and moves the
+surface as a layer: motion ticks rebuild only the wrappers around a `RepaintBoundary`, never the
+surface; a leaving surface keeps its controls' look (handlers ignore a second close); the dialog
+element is shown before its content's layout effects run, so nothing measures inside display:
+none): `PresentationHost` (top layer or container,
 Escape, focus in and back), `PresentationHeader` (glass title, trailing and close bubbles),
 `PresentationBody` (a ScrollArea that hugs content + chrome up to its room, or fills) and
 `PresentationDock`. Alert and Modal share the pop motion (`motion.ts`: spring from 1.1, fade out

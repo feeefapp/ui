@@ -25,7 +25,7 @@ test('moving and adaptive glass keeps its live lens; accessibility still removes
     // is covered by map tests and browser checks; this catches the old motion/fallback switch.
     const scene = Object.assign(Object.create(GlassScene.prototype), {
       refraction: true, refractionStrength: 1, refractionProfile: 'measured', tint: 0,
-      blur: false, preserveHighlights: true, refractKey: '', pieces: [piece], decodedMaps: [], decodedScales: [], refractionWork: [], refractionRequests: [],
+      blur: false, surfaceGrey: 1, refractKey: '', pieces: [piece], decodedMaps: [], decodedScales: [], refractionWork: [], refractionRequests: [],
       filters: [{ remove: () => { removedFilters++ } }],
       shapes: new Map([['moving', { values: () => [{ isAnimating: () => true }] }]]),
       scheme: () => tone,

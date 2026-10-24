@@ -1,6 +1,6 @@
-import { cornerFit } from './corner-fit.js';
-import { FO_CORNER_EXPONENT, foSuperellipsePath } from './geometry.js';
-const selector = '[data-lab-corners], :is([class^="lab-"], [class*=" lab-"]), .lab-app :is(button, a, input, textarea, select), .lab-dialog :is(button, a, input, textarea, select)';
+import { cornerFit, trueCornerRadius } from './corner-fit.js';
+import { foSuperellipsePath } from './geometry.js';
+const selector = '[data-lab-corners], :is([class^="lab-"], [class*=" lab-"]), .lab-app :is(button, a, input, textarea, select), .lab-presentation :is(button, a, input, textarea, select)';
 const ownedProperties = [
     'background-color',
     'background-image',
@@ -38,7 +38,7 @@ const restore = (host, property, value) => {
 };
 const radius = (value, width, height, fit) => {
     const [horizontal, vertical = horizontal] = value.split(' ');
-    const length = (part, size) => part.endsWith('%') ? (Number.parseFloat(part) * size) / 100 : (Number.parseFloat(part) || 0) / fit;
+    const length = (part, size) => part.endsWith('%') ? (Number.parseFloat(part) * size) / 100 : trueCornerRadius(Number.parseFloat(part) || 0, width, height, fit);
     return { x: length(horizontal, width), y: length(vertical, height) };
 };
 /**
@@ -96,7 +96,8 @@ export function installFoContinuousCorners(root) {
             style.borderBottomRightRadius,
             style.borderBottomLeftRadius,
         ]
-            // CSS radii are shrunk to look right as circles (--lab-corner-fit); the SVG draws the real curve.
+            // Smoothed CSS radii are shrunk to look right as circles (--lab-corner-fit, never a capsule's);
+            // the SVG draws the real clamped continuous curve.
             .map((value) => radius(value, width, height, fit));
         const image = style.backgroundImage;
         if (!width ||
@@ -114,7 +115,8 @@ export function installFoContinuousCorners(root) {
         const borderWidth = Number.parseFloat(style.borderTopWidth) || 0;
         const position = style.position;
         const backgroundStyle = style.background;
-        const exponent = Number.parseFloat(style.getPropertyValue('--lab-corner-exponent')) || FO_CORNER_EXPONENT;
+        // An explicit --lab-corner-exponent applies to every corner; otherwise each corner is clamped.
+        const exponent = Number.parseFloat(style.getPropertyValue('--lab-corner-exponent')) || undefined;
         const path = foSuperellipsePath(width, height, radii, 0, exponent);
         const mask = svgImage(width, height, `<path fill="white" d="${path}"/>`);
         if (image === 'none') {
@@ -130,9 +132,9 @@ export function installFoContinuousCorners(root) {
             set(host, entry, 'border-image-width', '0');
             set(host, entry, 'border-image-outset', '0');
             set(host, entry, 'border-image-repeat', 'stretch');
-            // Firefox otherwise clips scrolling dialog contents with a circular curve
+            // Firefox otherwise clips scrolling dialog and pane contents with a circular curve
             // inside the superellipse paint, leaving a crescent around nested panels.
-            if (host.matches('dialog, .lab-upgrade-art'))
+            if (host.matches('.lab-modal, .lab-pane, .lab-upgrade-art'))
                 set(host, entry, 'border-radius', '0');
         }
         else {

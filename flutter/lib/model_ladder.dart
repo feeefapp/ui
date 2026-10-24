@@ -48,8 +48,9 @@ LadderCopy ladderCopyOf(BuildContext context, [LadderCopy? copy]) {
   );
 }
 
-/// `chip` shows the tier and model name; `icon` is a compact brain button like marchant.
-enum ModelLadderVariant { chip, icon }
+/// `chip` shows the tier and model name; `icon` is a compact brain button like marchant;
+/// `compact` is one small-control line (brain, tier, chevron) for composer and toolbar rows.
+enum ModelLadderVariant { chip, icon, compact }
 
 // --------------------------------------------------------------------------------- trigger
 
@@ -358,6 +359,34 @@ class _Trigger extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
+    if (variant == ModelLadderVariant.compact) {
+      // `.lab-ladder-compact`: a toolbar button one control tall.
+      return Semantics(
+        expanded: open,
+        child: Button(
+          variant: ButtonVariant.ghost,
+          appearance: ButtonAppearance.toolbar,
+          controlSize: ControlSize.small,
+          ariaLabel: label,
+          focusNode: focusNode,
+          disabled: !enabled,
+          onClick: enabled ? onTap : null,
+          children: [
+            const LucideBrain(),
+            _EnterOnKey(
+              key: ValueKey(tier),
+              child: Text(
+                tier,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            LucideChevronDown(size: 14, color: c.muted),
+          ],
+        ),
+      );
+    }
     final icon = variant == ModelLadderVariant.icon;
     final side = icon && theme.coarsePointer(context) ? 44.0 : 40.0;
     final tint = mixSrgb(c.primary, 0.14, transparent);
@@ -1662,7 +1691,7 @@ class _LadderControlState extends State<_LadderControl> {
             opacity: widget.disabled ? 0.42 : 1,
             duration: MotionTokens.durationFast,
             child: TweenAnimationBuilder<Color?>(
-              tween: ColorTween(end: fill),
+              tween: PaintColorTween(end: fill),
               duration: MotionTokens.durationFast,
               curve: MotionTokens.ease,
               builder: (context, animated, child) => CustomPaint(

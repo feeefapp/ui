@@ -80,42 +80,46 @@ void main() {
   });
 
   group('Alert', () {
-    testWidgets('two short actions sit side by side, cancel first; RTL mirrors', (
-      tester,
-    ) async {
-      _size(tester, const Size(800, 700));
-      for (final direction in TextDirection.values) {
-        await tester.pumpWidget(
-          _overlay(
-            direction: direction,
-            (_) => const Alert(
-              title: 'Delete order #1042?',
-              message: Text("You can't undo this."),
-              actions: [
-                AlertAction(label: 'Delete', role: AlertActionRole.destructive),
-                AlertAction(label: 'Cancel', role: AlertActionRole.cancel),
-              ],
+    testWidgets(
+      'two short actions sit side by side, cancel first; RTL mirrors',
+      (tester) async {
+        _size(tester, const Size(800, 700));
+        for (final direction in TextDirection.values) {
+          await tester.pumpWidget(
+            _overlay(
+              direction: direction,
+              (_) => const Alert(
+                title: 'Delete order #1042?',
+                message: Text("You can't undo this."),
+                actions: [
+                  AlertAction(
+                    label: 'Delete',
+                    role: AlertActionRole.destructive,
+                  ),
+                  AlertAction(label: 'Cancel', role: AlertActionRole.cancel),
+                ],
+              ),
             ),
-          ),
-        );
-        await tester.pumpAndSettle();
-        final cancel = tester.getRect(find.text('Cancel'));
-        final delete = tester.getRect(find.text('Delete'));
-        expect(cancel.center.dy, closeTo(delete.center.dy, 0.5));
-        if (direction == TextDirection.ltr) {
-          expect(cancel.center.dx, lessThan(delete.center.dx));
-        } else {
-          expect(cancel.center.dx, greaterThan(delete.center.dx));
+          );
+          await tester.pumpAndSettle();
+          final cancel = tester.getRect(find.text('Cancel'));
+          final delete = tester.getRect(find.text('Delete'));
+          expect(cancel.center.dy, closeTo(delete.center.dy, 0.5));
+          if (direction == TextDirection.ltr) {
+            expect(cancel.center.dx, lessThan(delete.center.dx));
+          } else {
+            expect(cancel.center.dx, greaterThan(delete.center.dx));
+          }
+          final render = tester.renderObject<RenderAlertActions>(
+            find.byType(AlertActionsLayout),
+          );
+          expect(render.sideBySide, isTrue);
+          // 320 wide, 16 from the edges, 48px capsules.
+          expect(render.size.width, 320 - 32);
+          expect(render.size.height, 48);
         }
-        final render = tester.renderObject<RenderAlertActions>(
-          find.byType(AlertActionsLayout),
-        );
-        expect(render.sideBySide, isTrue);
-        // 320 wide, 16 from the edges, 48px capsules.
-        expect(render.size.width, 320 - 32);
-        expect(render.size.height, 48);
-      }
-    });
+      },
+    );
 
     testWidgets('long labels and three actions stack, cancel at the bottom', (
       tester,
@@ -297,7 +301,11 @@ void main() {
       set(() => open = false);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 60));
-      expect(pop().controller.scale, closeTo(1, 1e-3), reason: 'no scale on exit');
+      expect(
+        pop().controller.scale,
+        closeTo(1, 1e-3),
+        reason: 'no scale on exit',
+      );
       expect(pop().controller.opacity, inExclusiveRange(0, 1));
       await tester.pumpAndSettle();
       expect(find.byType(PopTransition), findsNothing);
@@ -308,17 +316,16 @@ void main() {
     ) async {
       var open = false;
       late StateSetter set;
-      Widget app(Motion motion) => _overlay(config: ThemeConfig(motion: motion), (
-        setState,
-      ) {
-        set = setState;
-        return Alert(
-          open: open,
-          onOpenChange: (v) => setState(() => open = v),
-          title: 'Delete?',
-          actions: _cancelDelete,
-        );
-      });
+      Widget app(Motion motion) =>
+          _overlay(config: ThemeConfig(motion: motion), (setState) {
+            set = setState;
+            return Alert(
+              open: open,
+              onOpenChange: (v) => setState(() => open = v),
+              title: 'Delete?',
+              actions: _cancelDelete,
+            );
+          });
       await tester.pumpWidget(app(Motion.reduced));
       set(() => open = true);
       await tester.pump();
@@ -454,7 +461,11 @@ void main() {
                 onClick: () => setState(() => open = true),
                 children: const [Text('Open')],
               ),
-              Button(focusNode: target, onClick: () {}, children: const [Text('Row')]),
+              Button(
+                focusNode: target,
+                onClick: () {},
+                children: const [Text('Row')],
+              ),
               Modal(
                 open: open,
                 onOpenChange: (v) => setState(() => open = v),
@@ -492,7 +503,9 @@ void main() {
         label: 'Edit customer',
         title: const Text('Edit customer'),
         dock: PresentationDock(
-          children: [Button(onClick: () {}, children: const [Text('Save')])],
+          children: [
+            Button(onClick: () {}, children: const [Text('Save')]),
+          ],
         ),
         child: const SizedBox(height: 80, child: Text('Fields')),
       ),
@@ -509,11 +522,17 @@ void main() {
       final moving = tester.getRect(find.text('Fields'));
       await tester.pumpAndSettle();
       final rest = tester.getRect(find.text('Fields'));
-      expect(moving.left, greaterThan(rest.left + 20), reason: 'it comes from the right');
+      expect(
+        moving.left,
+        greaterThan(rest.left + 20),
+        reason: 'it comes from the right',
+      );
       // 420 wide, G (8) from the right edge; content 16 inside a 1px border.
       expect(rest.left, closeTo(1200 - 8 - 420 + 1 + 16, 0.5));
       // The close bubble floats beside it, to its start.
-      final close = tester.getRect(find.bySemanticsLabel('Close Edit customer').last);
+      final close = tester.getRect(
+        find.bySemanticsLabel('Close Edit customer').last,
+      );
       expect(close.right, lessThan(1200 - 8 - 420));
       expect(close.top, lessThan(8 + 50));
 
@@ -582,7 +601,11 @@ void main() {
       expect(find.byType(Sheet), findsOneWidget);
       final fields = tester.getRect(find.text('Fields'));
       expect(fields.left, closeTo(16, 0.5), reason: 'full width, 16 inside');
-      expect(fields.top, greaterThan(800 - 300), reason: 'fit: a short sheet at the bottom');
+      expect(
+        fields.top,
+        greaterThan(800 - 300),
+        reason: 'fit: a short sheet at the bottom',
+      );
       // The close bubble moved into the sheet's header.
       await tester.tap(find.bySemanticsLabel('Close Edit customer').last);
       await tester.pumpAndSettle();
@@ -601,7 +624,9 @@ void main() {
             title: const Text('Contact'),
             detents: const [SheetDetent.fit],
             dock: PresentationDock(
-              children: [Button(onClick: () {}, children: const [Text('Call')])],
+              children: [
+                Button(onClick: () {}, children: const [Text('Call')]),
+              ],
             ),
             child: const SizedBox(height: 120, child: Text('Rows')),
           ),
@@ -610,9 +635,21 @@ void main() {
       await tester.pumpAndSettle();
       final rows = tester.getRect(find.text('Rows'));
       final call = tester.getRect(find.text('Call'));
-      expect(call.top, greaterThan(rows.top + 120 - 1), reason: 'the dock sits below the content');
-      expect(800 - call.bottom, lessThan(40), reason: 'the dock is at the bottom');
-      expect(rows.top, greaterThan(800 - 120 - 160), reason: 'no taller than it needs');
+      expect(
+        call.top,
+        greaterThan(rows.top + 120 - 1),
+        reason: 'the dock sits below the content',
+      );
+      expect(
+        800 - call.bottom,
+        lessThan(40),
+        reason: 'the dock is at the bottom',
+      );
+      expect(
+        rows.top,
+        greaterThan(800 - 120 - 160),
+        reason: 'no taller than it needs',
+      );
     });
 
     testWidgets('a pull down from the top of the content dismisses it', (
@@ -694,48 +731,49 @@ void main() {
       expect(find.text('Delete order?'), findsNothing);
     });
 
-    testWidgets('showModal completes with Navigator.pop\'s value; Escape gives null', (
-      tester,
-    ) async {
-      final results = <String?>[];
-      await tester.pumpWidget(
-        _app(
-          (context) => Center(
-            child: Button(
-              onClick: () async => results.add(
-                await showModal<String>(
-                  context,
-                  builder: (context) => Modal(
-                    label: 'Rename',
-                    dock: PresentationDock(
-                      children: [
-                        Button(
-                          onClick: () => Navigator.pop(context, 'Atlas'),
-                          children: const [Text('Save')],
-                        ),
-                      ],
+    testWidgets(
+      'showModal completes with Navigator.pop\'s value; Escape gives null',
+      (tester) async {
+        final results = <String?>[];
+        await tester.pumpWidget(
+          _app(
+            (context) => Center(
+              child: Button(
+                onClick: () async => results.add(
+                  await showModal<String>(
+                    context,
+                    builder: (context) => Modal(
+                      label: 'Rename',
+                      dock: PresentationDock(
+                        children: [
+                          Button(
+                            onClick: () => Navigator.pop(context, 'Atlas'),
+                            children: const [Text('Save')],
+                          ),
+                        ],
+                      ),
+                      child: const Text('Name'),
                     ),
-                    child: const Text('Name'),
                   ),
                 ),
+                children: const [Text('Open')],
               ),
-              children: const [Text('Open')],
             ),
           ),
-        ),
-      );
-      await tester.tap(find.text('Open'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Save'));
-      await tester.pumpAndSettle();
-      expect(find.text('Name'), findsNothing);
-      await tester.tap(find.text('Open'));
-      await tester.pumpAndSettle();
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
-      expect(results, ['Atlas', null]);
-      expect(find.text('Name'), findsNothing);
-    });
+        );
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Save'));
+        await tester.pumpAndSettle();
+        expect(find.text('Name'), findsNothing);
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pumpAndSettle();
+        expect(results, ['Atlas', null]);
+        expect(find.text('Name'), findsNothing);
+      },
+    );
 
     testWidgets('showPane and showSheet return the popped value', (
       tester,

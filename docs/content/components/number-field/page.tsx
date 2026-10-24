@@ -96,8 +96,8 @@ function Overview() {
         <p>
           <C>onValueChange</C> fires on every change, including each drag move, so use it for live
           state. <C>onValueCommit</C> fires once a change is final (release, step, Enter); use it for
-          saves and requests. <C>defaultValue</C> is also what Backspace resets to. Give the field a{' '}
-          <C>name</C> to submit it with a form.
+          saves and requests. <C>defaultValue</C> is also what Backspace resets to, and what a form
+          reset restores. Give the field a <C>name</C> to submit it with a form.
         </p>
         <Code
           code={`const [fee, setFee] = useState(400)
@@ -116,6 +116,33 @@ function Overview() {
           Need the parser elsewhere? <C>parseNumberExpression(text)</C> is exported too; it returns{' '}
           <C>null</C> for anything that isn’t arithmetic and never evaluates code.
         </p>
+      </Section>
+
+      <Section title="Validation and help">
+        <p>
+          Number fields validate like text fields. <C>validator(value)</C> returns an actionable message
+          or nothing; <C>validationMode</C> shows it after the field first loses focus (<C>blur</C>,
+          the default), on every <C>change</C>, or only on <C>submit</C>. <C>error</C> shows a message
+          now, such as one from the server. Either one paints the edge red, replaces{' '}
+          <C>supportingText</C> under the field and blocks the form: the web field carries its
+          validity on the input that submits it, and Flutter’s takes part in <C>FieldForm</C>.
+        </p>
+        <p>
+          The <C>label</C> stays inside the field (it is the field’s hint); help goes in{' '}
+          <C>supportingText</C>. In Flutter, <C>controller</C> (a <C>ValueNotifier&lt;double&gt;</C>)
+          holds the value outside the field like a <C>TextField</C>’s controller; on the web, pass{' '}
+          <C>value</C> and <C>onValueChange</C>.
+        </p>
+        <Code
+          code={`<NumberField
+  label="Price"
+  unit="DA"
+  value={price}
+  onValueChange={setPrice}
+  supportingText="What the customer pays on delivery."
+  validator={(value) => (value <= 0 ? 'Enter a price above 0 DA.' : null)}
+/>`}
+        />
       </Section>
 
       <Section title="Guidelines">

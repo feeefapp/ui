@@ -96,4 +96,3 @@ class SegmentedControl<T> extends StatelessWidget {
     equalWidth: equalWidth,
   );
 }
-

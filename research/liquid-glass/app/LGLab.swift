@@ -117,6 +117,56 @@ func backgroundImage(_ spec: Spec, width: Int, height: Int) -> CGImage? {
                 put(x, y, v, v, v)
             }
         }
+    case "lightstripes":
+        // Pale vertical bars (220/250), 12px period, rows offset like `stripes`: light content with detail.
+        for y in 0..<height {
+            for x in 0..<width {
+                let on = ((x / 6) % 2 == 0) != ((y / 48) % 2 == 0)
+                let v: UInt8 = on ? 220 : 250
+                put(x, y, v, v, v)
+            }
+        }
+    case "text":
+        // Text-like lines on near-white: 20pt line pitch, 10pt glyph band, "words" of vertical
+        // strokes (3px every 9px) plus a crossbar, word lengths from a hash, dark grey ink.
+        for y in 0..<height {
+            let line = y / 60, yb = y % 60 - 15
+            for x in 0..<width {
+                var v: UInt8 = 250
+                if yb >= 0 && yb < 30 {
+                    // Words: 18px gaps; lengths 40..175px from a per-line hash walk.
+                    var start = 9 + (line * 37) % 50, i = 0, inWord = false, wx = 0
+                    while start < width {
+                        let len = 40 + ((line * 7919 + i * 104729) % 136)
+                        if x >= start && x < start + len { inWord = true; wx = x - start; break }
+                        start += len + 18; i += 1
+                    }
+                    if inWord && (wx % 9 < 3 || (yb >= 13 && yb < 17)) { v = 60 }
+                }
+                put(x, y, v, v, v)
+            }
+        }
+    case "lightphoto", "darkphoto":
+        // The photo field pushed toward white (55%) or toward black (×0.3).
+        let blobs: [(Double, Double, Double, (Double, Double, Double))] = [
+            (0.2, 0.15, 0.25, (0.95, 0.45, 0.20)), (0.8, 0.25, 0.3, (0.15, 0.55, 0.95)),
+            (0.35, 0.55, 0.3, (0.20, 0.80, 0.45)), (0.75, 0.7, 0.28, (0.90, 0.20, 0.55)),
+            (0.25, 0.88, 0.25, (0.98, 0.85, 0.25)), (0.6, 0.45, 0.18, (0.10, 0.10, 0.25)),
+        ]
+        let light = kind == "lightphoto"
+        for y in 0..<height {
+            for x in 0..<width {
+                let u = Double(x) / Double(width), v = Double(y) / Double(height)
+                var r = 0.55 + 0.25 * v, g = 0.65 + 0.15 * v, b = 0.85 - 0.2 * v
+                for (cx, cy, s, c) in blobs {
+                    let d2 = ((u - cx) * (u - cx) * 0.25 + (v - cy) * (v - cy) * 0.25 * 4.6) / (s * s * 0.25)
+                    let w = exp(-d2 * 2.2)
+                    r = r * (1 - w) + c.0 * w; g = g * (1 - w) + c.1 * w; b = b * (1 - w) + c.2 * w
+                }
+                if light { r = 0.55 + 0.45 * r; g = 0.55 + 0.45 * g; b = 0.55 + 0.45 * b } else { r *= 0.3; g *= 0.3; b *= 0.3 }
+                put(x, y, UInt8(min(255, r * 255)), UInt8(min(255, g * 255)), UInt8(min(255, b * 255)))
+            }
+        }
     case "photo":
         // A smooth, colourful, photo-like field (sum of soft coloured blobs over a sky gradient).
         let blobs: [(Double, Double, Double, (Double, Double, Double))] = [

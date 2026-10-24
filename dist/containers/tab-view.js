@@ -3,20 +3,22 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
 import { GlassGroup } from '../scaffold.js';
 import { MotionValue, prefersReducedMotion } from '../physics/motion-value.js';
-import { SPRINGS, springTiming } from '../physics/spring.js';
+import { SelectionTrack } from '../primitives/selection-track.js';
 import { cn } from '../utils.js';
 import './tab-view.css';
-import { GlassScope } from '../glass/container.js';
-const SNAPPY = springTiming(SPRINGS.snappy);
+import { GlassBar, GlassScope } from '../glass/container.js';
 /**
  * App-level tabs, like iOS: each tab keeps its own content (and stack) alive, a floating glass
  * tab bar switches between them, and while the person scrolls down it shrinks to the selected
  * tab so content gets the screen. Picking the current tab again returns it to the top.
+ *
+ * The bar is a segmented control with tab semantics (the shared selection track): press the
+ * selected tab and it becomes a glass lens you can drag across the tabs; the tab under it on
+ * release is chosen. Tabs can carry a count (`badge`).
  */
 export function TabView({ tabs, value, onChange, onReselect, minimize = 'scroll', accessory, label = 'Tabs', className, }) {
     const id = React.useId();
     const root = React.useRef(null);
-    const bar = React.useRef(null);
     const chrome = React.useRef(null);
     const panels = React.useRef(new Map());
     const [minimized, setMinimized] = React.useState(false);
@@ -92,53 +94,40 @@ export function TabView({ tabs, value, onChange, onReselect, minimize = 'scroll'
         });
         return unsubscribe;
     }, [value]);
-    const pick = (tab) => {
-        if (tab.id === value) {
-            setMinimizedMorph(false);
-            if (onReselect)
-                onReselect(tab.id);
-            else
-                panels.current
-                    .get(tab.id)
-                    ?.querySelector('.lab-scroll-viewport')
-                    ?.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
-            return;
-        }
+    const reselect = (tabId) => {
+        if (onReselect)
+            onReselect(tabId);
+        else
+            panels.current
+                .get(tabId)
+                ?.querySelector('.lab-scroll-viewport')
+                ?.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+    };
+    const select = (next, source) => {
+        // Keys activate the tab they reach and leave the bar as it is.
+        if (source === 'key')
+            return onChange(next);
+        // A press on the small bar only brings it back.
+        if (minimized && source === 'press')
+            return setMinimizedMorph(false);
         setMinimizedMorph(false);
-        onChange(tab.id);
+        if (next === value)
+            reselect(next);
+        else
+            onChange(next);
     };
-    const onKeyDown = (event) => {
-        const index = tabs.findIndex((t) => t.id === value);
-        const rtl = getComputedStyle(event.currentTarget).direction === 'rtl';
-        const keys = { ArrowRight: rtl ? -1 : 1, ArrowLeft: rtl ? 1 : -1 };
-        let next = -1;
-        if (event.key in keys)
-            next = (index + keys[event.key] + tabs.length) % tabs.length;
-        else if (event.key === 'Home')
-            next = 0;
-        else if (event.key === 'End')
-            next = tabs.length - 1;
-        if (next < 0)
-            return;
-        event.preventDefault();
-        onChange(tabs[next].id);
-        bar.current?.querySelectorAll('[role="tab"]')[next]?.focus();
-    };
-    return (_jsxs("div", { ref: root, className: cn('lab-tab-view', className), style: { '--lab-tab-ease': SNAPPY.easing, '--lab-tab-duration': `${SNAPPY.duration}ms` }, children: [tabs.map((tab) => visited.has(tab.id) ? (_jsx("div", { ref: (el) => {
+    return (_jsxs("div", { ref: root, className: cn('lab-tab-view', className), children: [tabs.map((tab) => visited.has(tab.id) ? (_jsx("div", { ref: (el) => {
                     if (el)
                         panels.current.set(tab.id, el);
                     else
                         panels.current.delete(tab.id);
-                }, id: `${id}-panel-${tab.id}`, role: "tabpanel", "aria-labelledby": `${id}-tab-${tab.id}`, className: "lab-tab-panel", "data-active": tab.id === value || undefined, inert: tab.id !== value || undefined, children: tab.content }, tab.id)) : null), _jsxs(GlassScope, { ref: chrome, className: "lab-tab-chrome", "data-minimized": minimized || undefined, children: [accessory && (_jsx(GlassGroup, { className: "lab-tab-accessory", "data-lab-tab-piece": "", glassId: "accessory", children: accessory })), _jsx(GlassGroup, { ref: bar, glassId: "tabs", className: "lab-tab-bar", role: "tablist", "aria-label": label, "data-lab-tab-piece": "", onKeyDown: onKeyDown, onClick: () => minimized && setMinimizedMorph(false), children: tabs.map((tab) => {
-                            const selected = tab.id === value;
-                            return (_jsxs("button", { id: `${id}-tab-${tab.id}`, type: "button", role: "tab", className: "lab-tab", "aria-selected": selected, "aria-controls": `${id}-panel-${tab.id}`, tabIndex: selected ? 0 : -1, "data-selected": selected || undefined, onClick: (event) => {
-                                    if (minimized) {
-                                        event.stopPropagation();
-                                        setMinimizedMorph(false);
-                                        return;
-                                    }
-                                    pick(tab);
-                                }, children: [_jsxs("span", { className: "lab-tab-icon", "aria-hidden": "true", children: [tab.icon, tab.badge !== undefined && tab.badge !== null && tab.badge !== false && (_jsx("span", { className: "lab-tab-badge", children: tab.badge }))] }), _jsx("span", { className: "lab-tab-label", children: tab.label }), (typeof tab.badge === 'string' || typeof tab.badge === 'number') && (_jsxs("span", { className: "lab-sr-only", children: [", ", tab.badge] }))] }, tab.id));
-                        }) })] })] }));
+                }, id: `${id}-panel-${tab.id}`, role: "tabpanel", "aria-labelledby": `${id}-tab-${tab.id}`, className: "lab-tab-panel", "data-active": tab.id === value || undefined, inert: tab.id !== value || undefined, children: tab.content }, tab.id)) : null), _jsx(GlassBar, { children: _jsxs(GlassScope, { ref: chrome, className: "lab-tab-chrome", "data-minimized": minimized || undefined, children: [accessory && (_jsx(GlassGroup, { className: "lab-tab-accessory", "data-lab-tab-piece": "", glassId: "accessory", children: accessory })), _jsx(GlassGroup, { glassId: "tabs", className: "lab-tab-bar", "data-lab-tab-piece": "", onClick: () => minimized && setMinimizedMorph(false), children: _jsx(SelectionTrack, { semantics: "tab", layout: "stacked", pill: "tinted", className: "lab-tab-track", label: label, value: value, onSelect: select, draggable: !minimized, collapsed: minimized, options: tabs.map((tab) => ({
+                                    value: tab.id,
+                                    label: tab.label,
+                                    icon: tab.icon,
+                                    badge: tab.badge,
+                                    id: `${id}-tab-${tab.id}`,
+                                    controls: `${id}-panel-${tab.id}`,
+                                })) }) })] }) })] }));
 }
 //# sourceMappingURL=tab-view.js.map

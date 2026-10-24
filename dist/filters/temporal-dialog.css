@@ -1,14 +1,14 @@
 /* Temporal dialog: dialog → glass groups, never deeper. The top bar and the action bar span the
    same width as the calendars between them, so every edge lines up. */
-html[data-lab-theme] .lab-dialog.lab-temporal-dialog {
-  width: min(400px, calc(100vw - 24px));
+html[data-lab-theme] .lab-modal.lab-temporal-dialog {
+  inline-size: min(400px, calc(100% - 24px));
 }
-html[data-lab-theme] .lab-dialog.lab-temporal-dialog--pair {
-  width: min(680px, calc(100vw - 24px));
+html[data-lab-theme] .lab-modal.lab-temporal-dialog--pair {
+  inline-size: min(680px, calc(100% - 24px));
 }
 @media (max-width: 599px) {
-  html[data-lab-theme] .lab-dialog.lab-temporal-dialog {
-    width: calc(100vw - 16px);
+  html[data-lab-theme] .lab-modal.lab-temporal-dialog {
+    inline-size: calc(100% - 2 * var(--lab-shell-gap, 8px));
   }
 }
 
@@ -58,7 +58,7 @@ html[data-lab-theme] .lab-temporal-dialog-presets.lab-toolbar-group {
   flex: none;
   scroll-snap-align: start;
 }
-.lab-temporal-dialog-title .lab-modal-title {
+.lab-temporal-dialog-title .lab-presentation-title {
   margin: 0;
   padding-inline: 12px;
   overflow: hidden;

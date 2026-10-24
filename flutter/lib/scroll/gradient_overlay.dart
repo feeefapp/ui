@@ -74,8 +74,10 @@ class _WashPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     var opacity = (top: scrollRestTop, bottom: scrollRestBottom);
-    if (controller.hasClients && controller.position.hasContentDimensions) {
-      final p = controller.position;
+    // Replacing a sheet's keyed editor can briefly leave both scroll views attached.
+    // Follow the newest view until the outgoing one detaches, without a single-client assertion.
+    final p = controller.hasClients ? controller.positions.last : null;
+    if (p != null && p.hasContentDimensions) {
       opacity = scrollEdgeOpacities(p.pixels, p.maxScrollExtent, fadeZone);
     }
     canvas.save();

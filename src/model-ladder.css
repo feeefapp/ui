@@ -86,6 +86,7 @@ html[data-lab-theme] .lab-control.lab-ladder-trigger--icon[data-variant] {
   padding: 0;
   justify-content: center;
   border-radius: calc(14px * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
 }
 .lab-ladder-trigger--icon .lab-ladder-trigger-icon {
   background: transparent;
@@ -143,6 +144,7 @@ html[data-lab-theme] .lab-control.lab-ladder-title[data-variant] {
   padding: 2px 6px;
   border: 0;
   border-radius: calc(10px * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
   background: transparent;
   color: inherit;
   font: inherit;
@@ -373,6 +375,7 @@ html[data-lab-theme] .lab-control.lab-ladder-option[data-variant] {
   padding: 9px 10px;
   border: 0;
   border-radius: calc(14px * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
   background: transparent;
   color: inherit;
   font: inherit;
@@ -522,4 +525,23 @@ html[data-lab-theme] .lab-ladder-shape-options.lab-segmented .lab-segmented-trac
 .lab-model-access[data-access='free'] {
   background: var(--lab-surface-soft);
   color: var(--lab-ink);
+}
+
+/* Compact trigger: a toolbar button one control tall (brain, tier, chevron), for composer rows. */
+.lab-ladder-compact-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html[data-lab-theme] .lab-control.lab-ladder-compact[data-variant] {
+  min-width: 0;
+  max-width: 100%;
+}
+html[data-lab-theme] .lab-control.lab-ladder-compact[data-state='open'] {
+  background: var(--lab-control-fill-hover);
+}
+html[data-lab-theme] .lab-control.lab-ladder-compact[data-variant] > svg.lab-ladder-compact-chevron {
+  width: 14px;
+  height: 14px;
+  color: var(--lab-muted);
 }

@@ -31,7 +31,8 @@ html[data-lab-theme] .lab-workspace-actions > .lab-control[data-variant] {
   min-height: var(--lab-row-height);
   padding: 0 var(--lab-control-padding);
   gap: 8px;
-  border-radius: var(--lab-radius-control);
+  border-radius: calc(var(--lab-control-height) / 2 * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
   font-size: 13px;
   font-weight: 400;
   --lab-control-elevation: none;

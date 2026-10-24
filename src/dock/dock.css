@@ -19,7 +19,8 @@
   max-width: 100%;
   min-width: 0;
   padding: var(--lab-dock-inset);
-  --lab-glass-radius: var(--lab-radius-panel);
+  /* A capsule one row tall (the toolbar control, the inset and the 1px border a side). */
+  --lab-glass-radius: calc((var(--lab-toolbar-control) + 2 * var(--lab-dock-inset) + 2px) / 2 * var(--lab-capsule-scale, 1));
   /* Regular controls take the toolbar control height: 38 + the 4px inset and 1px border a side is
   48 at comfortable density, iOS's bottom bar. */
   --lab-control-height: var(--lab-toolbar-control);

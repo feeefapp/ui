@@ -32,7 +32,9 @@ export declare function refractionAt(d: number, nx: number, ny: number, bezel?: 
 /**
  * RGBA displacement map for `width` × `height` px (material coordinates) holding the blended
  * outlines of `clusters`. Red/green carry the shift (neutral in the flat middle) as a share of
- * `scale / 2` px, the value to pass to `feDisplacementMap`; alpha is the glass shape itself
+ * `scale / 2` px, the value to pass to `feDisplacementMap`; blue is the edge mask
+ * (`material.ts` `edgeMask`, lit by the default light so the map stays independent of the
+ * pointer), averaged over each map pixel; alpha is the glass shape itself
  * (anti-aliased), so the filter can clip its own output: Chromium ignores an element's clip-path
  * for `backdrop-filter: url()`. Each cluster bends by its own size (its smallest shape).
  */

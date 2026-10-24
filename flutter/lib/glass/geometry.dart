@@ -58,10 +58,16 @@ final Float64List _norm = Float64List.fromList([
         .toDouble(),
 ]);
 
-/// Signed distance from a point to a rounded box with superellipse corners (the kit's
-/// `corner-shape: superellipse(1.5)`): negative inside, zero on the outline.
+/// The exponent a shape's corners draw with: the kit's clamped continuous corner
+/// ([cornerExponentFor]: superellipse(1.5) fading to a circle at full radius).
+double shapeExponent(GlassShape shape) =>
+    cornerExponentFor(clampRadius(shape), shape.width, shape.height);
+
+/// Signed distance from a point to a rounded box with the kit's clamped continuous corners
+/// ([shapeExponent]): negative inside, zero on the outline.
 double shapeDistance(double px, double py, GlassShape shape) {
   final r = clampRadius(shape);
+  final exponent = shapeExponent(shape);
   final hx = shape.width / 2;
   final hy = shape.height / 2;
   final qx = (px - (shape.x + hx)).abs() - hx + r;
@@ -71,6 +77,12 @@ double shapeDistance(double px, double py, GlassShape shape) {
   double outside;
   if (ox == 0 || oy == 0) {
     outside = ox + oy;
+  } else if (exponent == 2) {
+    outside = math.sqrt(ox * ox + oy * oy);
+  } else if (exponent != cornerExponent) {
+    outside = math
+        .pow(math.pow(ox, exponent) + math.pow(oy, exponent), 1 / exponent)
+        .toDouble();
   } else {
     // (a^n + b^n)^(1/n) = max · (1 + (min/max)^n)^(1/n), read from a table: this runs per pixel.
     final high = math.max(ox, oy);
@@ -205,6 +217,18 @@ Path shapePath(GlassShape shape) {
   return superellipsePath(shape.rect, [r, r, r, r]);
 }
 
+/// Conservative bounds of the blended surface, including the growth outside member boxes: a
+/// smooth minimum can move the outline outwards by k / 4, so the same blend is repeated on the
+/// distance lower bound. Twin of the web kit's `unionBounds`.
+Rect unionBounds(List<GlassShape> shapes, double spacing) {
+  if (shapes.isEmpty) return Rect.zero;
+  var growth = 0.0;
+  for (final width in _blendWidths(shapes, spacing)) {
+    growth = -smoothMin(-growth, 0, width);
+  }
+  return boundsOf(shapes).inflate(growth);
+}
+
 /// Closed outlines of the blended union of [shapes] (marching squares on a [cell]-sized grid with
 /// linear interpolation). Every loop keeps the inside on its left, so outer outlines and holes
 /// wind opposite ways and fill correctly with the nonzero rule.
@@ -214,7 +238,7 @@ List<List<Offset>> unionLoops(
   double cell = 2,
 ]) {
   if (shapes.isEmpty) return [];
-  final box = boundsOf(shapes);
+  final box = unionBounds(shapes, spacing);
   final pad = cell * 2;
   final ox = box.left - pad;
   final oy = box.top - pad;

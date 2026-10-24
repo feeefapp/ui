@@ -6,7 +6,9 @@
   min-height: 0;
   min-width: 0;
   flex: 1 1 0%;
+  /* clip, not hidden: focusing a float in a scaled or moving area must never scroll the root. */
   overflow: hidden;
+  overflow: clip;
   border-radius: inherit;
   corner-shape: inherit;
   /* The enclosing bordered surface owns opaque paint and continuous corners. */
@@ -93,4 +95,21 @@
   .lab-scroll-gradient {
     display: none;
   }
+}
+/* Pull to refresh: the loader sits in the gap the pull opens, just below the top reservation and
+under the floats. It moves with transforms only; the viewport above it moves the same way. */
+.lab-scroll-refresh {
+  position: absolute;
+  z-index: 1;
+  inset-inline: 0;
+  top: calc(var(--lab-scroll-top-reserve) + env(safe-area-inset-top, 0px));
+  display: flex;
+  justify-content: center;
+  height: 0;
+  pointer-events: none;
+}
+.lab-scroll-refresh-loader {
+  display: grid;
+  height: max-content;
+  color: var(--lab-muted);
 }

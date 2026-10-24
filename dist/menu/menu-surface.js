@@ -3,7 +3,7 @@ import { jsx as _jsx, Fragment as _Fragment, jsxs as _jsxs } from "react/jsx-run
 import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cn } from '../utils.js';
-import { cornerFit } from '../brand/corner-fit.js';
+import { cornerFit, cssCornerRadius, cssCornerShape, trueCornerRadius } from '../brand/corner-fit.js';
 import { motionOf, onAnimationFrame } from '../physics/motion-value.js';
 import { useFloatingBoundary } from './boundary.js';
 import { MENU_MORPH, menuAlign, menuBubblePath, menuCloseFrame, menuFadeFrame, menuOpenFrame, menuRestFrame, } from './morph-model.js';
@@ -118,7 +118,7 @@ function isToolbarTrigger(trigger) {
 }
 function radiusOf(element, box) {
     const css = Number.parseFloat(getComputedStyle(element).borderTopLeftRadius) || 0;
-    return Math.min(css / cornerFit(), Math.min(box.width, box.height) / 2);
+    return Math.min(trueCornerRadius(css, box.width, box.height), Math.min(box.width, box.height) / 2);
 }
 /**
  * Drives one menu's morph on its own frame loop: waits for Radix to place it, grows it out of its
@@ -162,12 +162,14 @@ function runMorph(content, layers, cover, placed) {
                 s.width = '';
                 s.height = '';
                 s.borderRadius = '';
+                s.removeProperty('corner-shape');
             }
             else {
                 s.inset = `${frame.box.y}px auto auto ${frame.box.x}px`;
                 s.width = `${frame.box.width}px`;
                 s.height = `${frame.box.height}px`;
-                s.borderRadius = `${frame.radius * fit}px`;
+                s.borderRadius = `${cssCornerRadius(frame.radius, frame.box.width, frame.box.height, fit)}px`;
+                s.setProperty('corner-shape', cssCornerShape(frame.radius, frame.box.width, frame.box.height));
             }
             s.opacity = frame.materialOpacity >= 1 ? '' : String(frame.materialOpacity);
         }

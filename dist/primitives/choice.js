@@ -14,7 +14,7 @@ function Choice({ kind, forwardedRef, label, description, error, controlSize = '
             node.current.setCustomValidity(error || '');
         }
     }, [kind, indeterminate, error]);
-    return (_jsxs("label", { className: cn('lab-choice', containerClassName), "data-kind": kind, "data-control-size": controlSize, "data-disabled": props.disabled || undefined, "data-invalid": Boolean(error) || undefined, children: [_jsx("input", { ...props, type: kind, id: id, ref: (el) => {
+    return (_jsxs("label", { className: cn('lab-choice', containerClassName), "data-kind": kind, "data-control-size": controlSize, "data-disabled": props.disabled || undefined, "data-invalid": Boolean(error) || undefined, "data-bare": label || description || error ? undefined : '', children: [_jsx("input", { ...props, type: kind, id: id, ref: (el) => {
                     node.current = el;
                     if (el)
                         el.indeterminate = kind === 'checkbox' && indeterminate;

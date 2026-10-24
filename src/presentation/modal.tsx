@@ -109,7 +109,6 @@ function ModalPresentation({
         trailing={trailing}
         onClose={showClose ? close : undefined}
         closeLabel={t('lab.composer.closeLabel', { label })}
-        closeDisabled={!open}
       />
     )
   const labelledBy = header === undefined && title != null ? titleId : undefined

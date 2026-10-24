@@ -1526,7 +1526,7 @@ class _SegmentState<T> extends State<_Segment<T>> {
                   opacity: widget.disabled ? 0.42 : (folded ? 0 : 1),
                   duration: Duration(milliseconds: folded || sized ? 160 : 140),
                   child: TweenAnimationBuilder<Color?>(
-                    tween: ColorTween(end: fill),
+                    tween: PaintColorTween(end: fill),
                     duration: const Duration(milliseconds: 140),
                     curve: const Cubic(0.2, 0.8, 0.2, 1),
                     builder: (context, color, child) => FocusRing(

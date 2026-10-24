@@ -25,6 +25,9 @@ const PRESETS: Record<string, ThemeConfig> = {
   css: { glassTint: 1, glassBlur: true, glassRefraction: false },
   canvas: { glassTint: 1, glassBlur: true, glassRefraction: true },
   default: {},
+  // LIGHT-EDGES.md: iOS .regular and .clear against the kit's endpoints, refraction on.
+  regular: { glassTint: 1, glassBlur: true, glassRefraction: true },
+  clear: { glassTint: 0, glassBlur: false, glassRefraction: true },
 }
 
 function Background() {
@@ -53,7 +56,7 @@ function Scene() {
   return (
     <div id="stage">
       <Background />
-      <GlassContainer light="static" interactive={false} adaptive={false} style={{ position: 'absolute', inset: 0 }}>
+      <GlassContainer light="static" interactive={false} adaptive={false} cornerShape={query.get('corners') === 'round' ? 'round' : undefined} style={{ position: 'absolute', inset: 0 }}>
         {layout.map((s) => (
           <GlassGroup
             key={s.id}

@@ -15,6 +15,7 @@ import { GlassBar } from '../glass/container'
 import { ScrollGradientOverlay } from './gradient-overlay'
 import { scrollContentReserve } from './metrics'
 import { useShellGap } from './shell-gap'
+import { PullRefreshIndicator, usePullToRefresh, type RefreshController } from './pull-refresh'
 import './scroll.css'
 
 export type ScrollAreaProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
@@ -40,6 +41,14 @@ export type ScrollAreaProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> &
   bottomFadeHeight?: number
   /** Attributes/events for the actual scroll viewport; the forwarded ref points here too. */
   viewportProps?: HTMLAttributes<HTMLDivElement>
+  /**
+   * Turns on pull to refresh: on a touch screen, pulling down at the top past the threshold runs
+   * it, and the content stays open over a loader until the promise settles. A mouse never pulls,
+   * so also offer a Refresh button (`refreshController`).
+   */
+  onRefresh?: () => Promise<unknown>
+  /** Runs `onRefresh` from code with the same loader and announcements, for a Refresh button. */
+  refreshController?: RefreshController
 }
 
 /**
@@ -59,6 +68,8 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
     topFadeHeight,
     bottomFadeHeight,
     viewportProps,
+    onRefresh,
+    refreshController,
     className,
     style,
     ...props
@@ -74,6 +85,7 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
     bottomRef = useRef<HTMLDivElement>(null)
   const [heights, setHeights] = useState({ top: 0, bottom: 0 })
   useImperativeHandle(ref, () => viewport.current!, [])
+  const refresh = usePullToRefresh(viewport, onRefresh, refreshController)
   useLayoutEffect(() => {
     const measure = () => {
       const next = {
@@ -129,6 +141,8 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
           bottomHeight={bottomFadeHeight ?? Math.max(140, heights.bottom + edgeGap * 2)}
         />
       )}
+      {/* Over the washes, under the floats. */}
+      {onRefresh && <PullRefreshIndicator pull={refresh.pull} state={refresh.state} />}
       {bottom && (
         <div ref={bottomRef} className="lab-scroll-float lab-scroll-float--bottom">
           <GlassBar>{bottom}</GlassBar>

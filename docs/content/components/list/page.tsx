@@ -20,8 +20,8 @@ function Overview() {
           head={['Prop', 'Use']}
           rows={[
             [<C>chevron</C>, 'The row opens another page. Not on wide split views, where the item opens beside the list.'],
-            [<C>leading</C>, 'An icon, avatar or thumbnail. Hairlines start after it.'],
-            [<C>trailing</C>, 'A value, count, badge or control (a switch).'],
+            [<C>leading</C>, 'An icon, avatar, thumbnail or a checkbox without a label (name it with aria-label). Hairlines start after it.'],
+            [<C>trailing</C>, 'A value, count, badge or control (a switch). It takes up to 45% of the row’s width inside its insets; longer text ellipsizes.'],
             [<C>selected</C>, 'The open item in a split view.'],
             [<C>static</C>, 'Not interactive: information or a row that holds its own control.'],
             [<C>asChild</C>, 'Your router link as the row.'],

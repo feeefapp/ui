@@ -225,11 +225,17 @@ class _ActionsBarState extends State<ActionsBar> {
     final s = theme.sizes;
     final inherited = ActionsWidthProvider.maybeOf(context);
     final small = widget.size == ControlSize.small;
-    final minHeight = theme.coarsePointer(context)
-        ? s.touchTarget
-        : (small
-              ? s.controlSmall
-              : ControlOverrides.maybeOf(context)?.height ?? s.controlHeight);
+    final overrides = ControlOverrides.maybeOf(context);
+    // A toolbar/dock owns the visual height; TouchTarget keeps coarse-pointer
+    // reach independently. Growing this row to 44 would add 3px above and below
+    // its 38px buttons, breaking the host's equal inset.
+    final minHeight = !small && overrides?.height != null
+        ? overrides!.height!
+        : theme.coarsePointer(context)
+        ? overrides?.touchTarget ?? s.touchTarget
+        : small
+        ? s.controlSmall
+        : s.controlHeight;
     final measured = widget.actions.every((a) => _widths.containsKey(a.id));
 
     return LayoutBuilder(

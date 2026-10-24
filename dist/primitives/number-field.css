@@ -15,7 +15,7 @@ html[data-lab-theme] .lab-number-field {
   padding: 0;
   overflow: hidden;
   border: 1px solid var(--lab-variant-edge);
-  border-radius: var(--lab-radius-control);
+  border-radius: calc(var(--lab-control-height) / 2 * var(--lab-corner-scale, 1));
   corner-shape: superellipse(1.5);
   background: var(--lab-variant-fill);
   box-shadow: var(--lab-variant-shadow);
@@ -33,7 +33,7 @@ html[data-lab-theme] .lab-number-field {
 html[data-lab-theme] .lab-number-field[data-control-size='small'] {
   --lab-number-pad: 12px;
   --lab-number-height: var(--lab-field-height-small);
-  border-radius: var(--lab-radius-control-small);
+  border-radius: calc(var(--lab-control-small) / 2 * var(--lab-corner-scale, 1));
   font-size: 13px;
 }
 /* The field is also a .lab-control: out-specify a sized button rule's padding, which would
@@ -169,4 +169,43 @@ html[data-lab-theme] .lab-number-field[data-dragging] > .lab-number-field-steppe
     background: Highlight;
     opacity: 0.4;
   }
+}
+
+/* The control plus its supporting line, like a TextField's details row. */
+.lab-number-field-container {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+}
+.lab-number-field-details {
+  padding: 5px 16px 0;
+  color: var(--lab-muted);
+  font: 400 12px/18px var(--lab-font);
+  text-align: start;
+}
+.lab-number-field-details:has(> :only-child:empty) {
+  display: none;
+}
+html[data-lab-theme] .lab-number-field-container[data-invalid] > .lab-number-field {
+  border-color: var(--lab-field-error, var(--lab-danger));
+}
+html[data-lab-theme] .lab-number-field-container[data-invalid] > .lab-number-field[data-editing] {
+  box-shadow: inset 0 0 0 calc(var(--lab-focus-ring-width) - 1px) var(--lab-field-error, var(--lab-danger));
+}
+.lab-number-field-container[data-invalid] > .lab-number-field-details {
+  color: var(--lab-field-error, var(--lab-danger));
+}
+/* Carries the value and its validity for forms; never seen, focused by Tab or announced. */
+.lab-number-field-validity {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
 }

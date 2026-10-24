@@ -13,6 +13,7 @@ import '../theme.dart';
 import 'geometry.dart';
 import 'light.dart';
 import 'material.dart';
+import 'member_bounds.dart';
 import 'press.dart';
 import 'refraction_filter.dart';
 import 'transitions.dart';
@@ -65,6 +66,16 @@ class GlassContainer extends StatefulWidget {
       ((container as StatefulElement).state as _GlassContainerState)
           ._scene
           .paths;
+
+  /// Whether any of a container's glass springs on its own this frame (moving, growing in,
+  /// leaving), rather than resting where its bubbles are.
+  @visibleForTesting
+  static bool debugMovingOf(BuildContext container) =>
+      ((container as StatefulElement).state as _GlassContainerState)
+          ._scene
+          ._shapes
+          .values
+          .any((shape) => shape.values.any((value) => value.isAnimating));
 }
 
 /// A [GlassContainer] unless one already encloses it, then just [child]. Kit rows (toolbar, dock,
@@ -100,6 +111,27 @@ class GlassScope extends StatelessWidget {
           child: child,
         );
 }
+
+/// Marks a subtree that moves as one piece (a presentation surface entering or leaving) while
+/// [instant] is true: the glass inside takes every layout change at once, with no births, deaths
+/// or springs, so it rides the surface's transition and leaves with it in the same frames. The
+/// twin of the web kit's `data-glass-instant`.
+class GlassInstant extends InheritedWidget {
+  const GlassInstant({super.key, required this.instant, required super.child});
+  final bool instant;
+
+  /// Whether the glass at [context] sits on a surface that is moving as one piece.
+  static bool of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<GlassInstant>()?.instant ??
+      false;
+
+  @override
+  bool updateShouldNotify(GlassInstant old) => old.instant != instant;
+}
+
+/// How far (px) glass may reach past its container before it is cut: a member is clamped to the
+/// container grown by this (`GLASS_MARGIN`).
+const double glassMargin = 32;
 
 /// The tone of what lies behind glass (the web kit's `GlassTone`).
 enum GlassTone { light, dark }
@@ -293,6 +325,8 @@ class _GlassContainerState extends State<GlassContainer> {
     _scene
       ..spacing = math.max(0, widget.spacing)
       ..reduceMotion = reduced
+      ..instant = GlassInstant.of(context)
+      ..viewport = MediaQuery.maybeSizeOf(context) ?? Size.zero
       ..followPointer = widget.light == GlassLightMode.pointer && liquid
       ..interactive = widget.interactive && liquid;
     _scene._requestMeasure();
@@ -367,11 +401,11 @@ class _GlassMaterial {
   Color get outlineColor => highContrast ? colors.ink : colors.line;
 
   /// The backdrop filter for a cluster whose smallest bubble's shorter side is [side] px:
-  /// saturation and the clear lift, after the blur when it is on.
+  /// saturation and the clear lift, after the blur (clear glass always softens a little).
   ui.ImageFilter backdropFor(double side) {
     final colour = ColorFilter.matrix(glassBackdropMatrix(materialFor(side)));
-    if (!blur) return colour;
-    final sigma = glassBlur(side);
+    final sigma = blurFor(side);
+    if (sigma <= 0) return colour;
     return ui.ImageFilter.compose(
       outer: colour,
       inner: ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
@@ -380,6 +414,23 @@ class _GlassMaterial {
 
   GlassMaterial materialFor(double side) =>
       glassMaterial(tint, dark: dark, size: glassSize(side));
+
+  /// Blur (std dev, px) for a cluster whose smallest bubble's shorter side is [side] px.
+  double blurFor(double side) => glassBlurAt(side, tint, blurOn: blur);
+
+  /// The edge terms (veil thinning, dark clear light) for that cluster.
+  ({double k1, double k3}) edgeFor(double side) {
+    final s = fillFor(side);
+    return glassEdgeTerms(
+      tint,
+      dark: dark,
+      material: materialFor(side),
+      surface: 0.2126 * s.r + 0.7152 * s.g + 0.0722 * s.b,
+    );
+  }
+
+  /// The rim at this tint and brightness.
+  GlassRim get rimLight => glassRim(tint, dark: dark);
 }
 
 /// Shorter side of the smallest bubble in a cluster: the material and bend follow it.
@@ -422,12 +473,12 @@ class _GlassLayers extends StatelessWidget {
                         path: path,
                         spacing: scene.spacing,
                         backdropKey: scene.backdropKey,
-                        blur: material.blur
-                            ? glassBlur(_smallestSide(path))
-                            : 0,
+                        blur: material.blurFor(_smallestSide(path)),
                         colour: glassBackdropMatrix(
                           material.materialFor(_smallestSide(path)),
                         ),
+                        edge: material.edgeFor(_smallestSide(path)),
+                        light: scene.lightFor(path.bounds),
                       )
                     : BackdropFilter(
                         filter: material.backdropFor(_smallestSide(path)),
@@ -585,32 +636,13 @@ class _GlassPainter extends CustomPainter {
         );
       }
       if (material.rim) {
-        // A base rim all round, plus light at both ends of the light axis (cos² of the angle).
-        canvas.drawPath(
-          p.path,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 2
-            ..color = c.glassEdgeLow,
-        );
-        final (start, end) = rimGradient(p.bounds, scene.lightFor(p.bounds));
-        canvas.drawPath(
-          p.path,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 2
-            ..shader = ui.Gradient.linear(
-              start,
-              end,
-              [
-                for (final (_, share) in glassRimStops)
-                  c.glassEdgeLight.withValues(
-                    alpha: c.glassEdgeLight.a * share,
-                  ),
-              ],
-              [for (final (offset, _) in glassRimStops) offset],
-            ),
-        );
+        // A layer of white inside the outline (clipped above), lit at both ends of the light
+        // axis by the edge normal: glassRim / rimLayer, drawn as a band of vertices.
+        final rim = _rimVertices(p.path, scene.lightFor(p.bounds), material.rimLight);
+        if (rim != null) {
+          canvas.drawVertices(rim, BlendMode.dst, Paint());
+          rim.dispose();
+        }
       }
       canvas.restore();
     }
@@ -771,6 +803,12 @@ class _GlassScene extends ChangeNotifier {
   RenderBox? Function() host = () => null;
   double spacing = 8;
   bool reduceMotion = false;
+
+  /// On a surface moving as one piece ([GlassInstant]): layout changes apply at once.
+  bool instant = false;
+
+  /// The window, for the absurd-size rule ([glassMemberRect]).
+  Size viewport = Size.zero;
   bool followPointer = true;
   bool interactive = true;
 
@@ -922,10 +960,18 @@ class _GlassScene extends ChangeNotifier {
       final render = member.key.currentContext?.findRenderObject();
       if (render is! RenderBox || !render.attached || !render.hasSize) continue;
       if (render.size.isEmpty) continue;
-      final rect = MatrixUtils.transformRect(
-        render.getTransformTo(box),
-        Offset.zero & render.size,
+      // A broken layout (an error widget overflowing by thousands of px) is not glass, and
+      // nothing is drawn past the material's reach around the container.
+      final rect = glassMemberRect(
+        MatrixUtils.transformRect(
+          render.getTransformTo(box),
+          Offset.zero & render.size,
+        ),
+        box.size,
+        viewport,
+        glassMargin,
       );
+      if (rect == null) continue;
       final radius = member.radius();
       final (clip, scrolled) = _clipOf(render, box);
       final view = (clip: clip, scrolled: scrolled);
@@ -955,7 +1001,10 @@ class _GlassScene extends ChangeNotifier {
     final now = SchedulerBinding.instance.currentSystemFrameTimeStamp;
     final first = _firstMeasure ??= now;
     final instant =
-        reduceMotion || !_measured || (now - first).inMilliseconds < 300;
+        reduceMotion ||
+        this.instant ||
+        !_measured ||
+        (now - first).inMilliseconds < 300;
     var dirty = false;
     final previous = {
       for (final MapEntry(key: id, value: s) in _shapes.entries) id: s.rect(),
@@ -1218,4 +1267,53 @@ class GlassBar extends StatelessWidget {
       child: child,
     );
   }
+}
+
+/// The rim as a triangle band along [outline]: at each sample along the outline the alpha of
+/// `rimLayer` at depth 0, ⅔ of the rim's width and its full width, by the outward normal there
+/// against [light]. Clipped to the outline by the caller, so nothing paints outside.
+ui.Vertices? _rimVertices(Path outline, Offset light, GlassRim rim) {
+  const step = 1.5;
+  final positions = <Offset>[];
+  final colors = <Color>[];
+  final indices = <int>[];
+  const depths = [0.0, 2 / 3, 1.0];
+  for (final metric in outline.computeMetrics()) {
+    final count = math.max(3, (metric.length / step).ceil());
+    // The outward side: probe once per contour (union outlines are simple closed loops).
+    final probe = metric.getTangentForOffset(0);
+    if (probe == null) continue;
+    final n0 = Offset(probe.vector.dy, -probe.vector.dx);
+    final outward = outline.contains(probe.position + n0 * 0.75) ? -1.0 : 1.0;
+    final first = positions.length;
+    for (var i = 0; i <= count; i++) {
+      final tangent = metric.getTangentForOffset(metric.length * i / count);
+      if (tangent == null) continue;
+      final normal =
+          Offset(tangent.vector.dy, -tangent.vector.dx) * outward;
+      final cosine = normal.dx * light.dx + normal.dy * light.dy;
+      for (final depth in depths) {
+        final d = depth * rim.width;
+        positions.add(tangent.position - normal * d);
+        colors.add(
+          const Color(0xFFFFFFFF).withValues(alpha: rimLayer(d, cosine, rim)),
+        );
+      }
+    }
+    final rows = (positions.length - first) ~/ depths.length;
+    for (var i = 0; i + 1 < rows; i++) {
+      for (var k = 0; k + 1 < depths.length; k++) {
+        final a = first + i * depths.length + k;
+        final b = a + depths.length;
+        indices.addAll([a, b, a + 1, a + 1, b, b + 1]);
+      }
+    }
+  }
+  if (indices.isEmpty) return null;
+  return ui.Vertices(
+    ui.VertexMode.triangles,
+    positions,
+    colors: colors,
+    indices: indices,
+  );
 }

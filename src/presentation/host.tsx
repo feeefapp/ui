@@ -31,6 +31,25 @@ export type PresentationHostProps = {
 }
 
 /**
+ * Enters the top layer from the dialog's first child, so the dialog is shown before any of its
+ * content runs a layout effect: React runs children's layout effects before their parent's, and
+ * everything measured in a closed (display: none) dialog would read zeros (a dock sized to its
+ * padding, glass that then grows in, a body height of 0).
+ */
+function TopLayerEntry({ modal, opener }: { modal: boolean; opener: React.MutableRefObject<HTMLElement | null> }) {
+  const mark = React.useRef<HTMLSpanElement>(null)
+  React.useLayoutEffect(() => {
+    const dialog = mark.current?.parentElement
+    if (!(dialog instanceof HTMLDialogElement) || dialog.open) return
+    // Showing a modal dialog moves focus into it: remember what had it, to give it back.
+    opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    if (modal) dialog.showModal()
+    else dialog.show()
+  }, [])
+  return <span ref={mark} hidden />
+}
+
+/**
  * The layer every presentation surface lives in: a `<dialog>` covering the viewport in the top
  * layer (or a `role="dialog"` box covering a container), shown modally or not. It owns what all
  * surfaces share: entering and leaving the top layer, the accessible name, Escape, and focus in
@@ -60,13 +79,16 @@ export const PresentationHost = React.forwardRef<HTMLElement, PresentationHostPr
   escape.current = onEscape
   const returnTo = React.useRef(returnFocusRef)
   returnTo.current = returnFocusRef
+  const opener = React.useRef<HTMLElement | null>(null)
   React.useImperativeHandle(ref, () => host.current!, [])
   const inline = container !== undefined
 
   React.useLayoutEffect(() => {
     const element = host.current
     if (!element) return
-    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    // TopLayerEntry already showed the dialog and remembered what had focus before it.
+    const previous = opener.current ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null)
+    opener.current = null
     if (element instanceof HTMLDialogElement && !element.open) {
       if (modal) element.showModal()
       else element.show()
@@ -124,6 +146,7 @@ export const PresentationHost = React.forwardRef<HTMLElement, PresentationHostPr
         escape.current?.()
       }}
     >
+      <TopLayerEntry modal={modal} opener={opener} />
       {children}
     </dialog>,
     document.body

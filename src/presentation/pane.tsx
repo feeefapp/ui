@@ -5,13 +5,11 @@ import { useI18n } from '../i18n'
 import { cn } from '../utils'
 import { useLatched } from '../motion'
 import { GlassScope } from '../glass/container'
-import { MotionValue, motionOf, prefersReducedMotion } from '../physics/motion-value'
-import { SPRINGS } from '../physics/spring'
-import { motionFade } from '../theme-config'
 import { Sheet } from '../containers/sheet'
 import { PresentationHost, usePresented } from './host'
 import { CloseBubble, PresentationHeader } from './header'
 import { PresentationBody } from './body'
+import { slidePlan, useSurfaceMotion } from './motion'
 import type { PresentationChromeProps } from './modal'
 import './presentation.css'
 
@@ -120,59 +118,12 @@ function PanePresentation({
   const frame = React.useRef<HTMLDivElement>(null)
   const scrim = React.useRef<HTMLDivElement>(null)
   const titleId = React.useId()
-  const exited = React.useRef(onExited)
-  exited.current = onExited
-  // 0 = off screen, 1 = in place. `fade` replaces the slide under reduced motion.
-  const shown = React.useRef(new MotionValue(0, 0.001)).current
-  const fade = React.useRef(new MotionValue(0, 0.002)).current
-
-  React.useLayoutEffect(() => {
-    const paint = () => {
-      const element = frame.current
-      if (!element) return
-      const rtl = getComputedStyle(element).direction === 'rtl'
-      // The end side is the right in LTR: off screen means a positive x there, negative in RTL.
-      const outward = (side === 'end' ? 1 : -1) * (rtl ? -1 : 1)
-      const x = (1 - shown.get()) * element.offsetWidth * outward
-      const opacity = Math.max(0, Math.min(1, fade.get()))
-      element.style.transform = Math.abs(x) < 0.01 ? '' : `translate3d(${x}px, 0, 0)`
-      element.style.opacity = opacity >= 1 ? '' : String(opacity)
-      if (scrim.current) scrim.current.style.opacity = String(Math.max(0, Math.min(1, shown.get())) * opacity)
-    }
-    const off = [shown.subscribe(paint), fade.subscribe(paint)]
-    paint()
-    return () => {
-      off.forEach((stop) => stop())
-      shown.stop()
-      fade.stop()
-    }
-  }, [side])
-
-  React.useLayoutEffect(() => {
-    const motion = motionOf()
-    const reduced = prefersReducedMotion()
-    if (open) {
-      if (reduced) {
-        shown.set(1)
-        fade.set(fade.isAnimating() ? fade.get() : 0)
-        const length = motionFade(motion, 0.2)
-        void fade.animateTo(1, { spring: { duration: length, bounce: 0 }, instant: length === 0 })
-        return
-      }
-      fade.set(1)
-      void shown.animateTo(1, { spring: SPRINGS.smooth })
-      return
-    }
-    const done = (arrived: boolean) => {
-      if (arrived) exited.current()
-    }
-    if (reduced) {
-      const length = motionFade(motion, 0.2)
-      void fade.animateTo(0, { spring: { duration: length, bounce: 0 }, instant: length === 0 }).then(done)
-      return
-    }
-    void shown.animateTo(0, { spring: SPRINGS.smooth }).then(done)
-  }, [open])
+  useSurfaceMotion(open, frame, scrim, onExited, (opening, motion, now, element) => {
+    // The end side is the right in LTR: off screen means a positive x there, negative in RTL.
+    const rtl = getComputedStyle(element).direction === 'rtl'
+    const outward = (side === 'end' ? 1 : -1) * (rtl ? -1 : 1)
+    return slidePlan(opening, motion, now, `translate3d(${element.offsetWidth * outward}px, 0, 0)`)
+  })
 
   const close = () => {
     if (open) onOpenChange(false)
@@ -215,7 +166,7 @@ function PanePresentation({
       >
         {showClose && (
           <GlassScope className="lab-pane-close">
-            <CloseBubble label={closeLabel} disabled={!open} onClose={close} />
+            <CloseBubble label={closeLabel} onClose={close} />
           </GlassScope>
         )}
         <div className={cn('lab-pane', className)}>

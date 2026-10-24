@@ -13,6 +13,7 @@ import '../theme/color_mix.dart';
 import 'body.dart';
 import 'header.dart';
 import 'host.dart';
+import 'motion.dart';
 
 /// The side a [Pane] slides in from.
 enum PaneSide {
@@ -165,6 +166,9 @@ class _DesktopPaneState extends State<_DesktopPane>
   // 0 = off screen, 1 = in place. `fade` replaces the slide under reduced motion.
   final _shownValue = MotionValue(0, 0.001);
   final _fade = MotionValue(0, 0.002);
+
+  /// Ticks on every motion frame: only the slide, the fade and the dim rebuild, never the pane.
+  final _tick = ValueNotifier(0);
   late final List<void Function()> _off;
   late Pane _shown = widget.pane;
 
@@ -180,7 +184,7 @@ class _DesktopPaneState extends State<_DesktopPane>
   }
 
   void _paint(double _) {
-    if (mounted) setState(() {});
+    if (mounted) _tick.value++;
   }
 
   @override
@@ -189,11 +193,10 @@ class _DesktopPaneState extends State<_DesktopPane>
     if (motion != Motion.full) {
       _shownValue.set(1);
       if (!_fade.isAnimating) _fade.set(0);
-      final length = motionFade(motion, _paneFade);
-      _fade.animateTo(
+      _fade.easeTo(
         1,
-        spring: Spring(duration: length.inMicroseconds / 1e6, bounce: 0),
-        instant: length == Duration.zero,
+        motionFade(motion, _paneFade) * (1 - _fade.get()),
+        curve: PopMotion.fadeCurve,
       );
       return;
     }
@@ -205,11 +208,10 @@ class _DesktopPaneState extends State<_DesktopPane>
   Future<bool> exit() {
     final motion = motionOf(context);
     if (motion != Motion.full) {
-      final length = motionFade(motion, _paneFade);
-      return _fade.animateTo(
+      return _fade.easeTo(
         0,
-        spring: Spring(duration: length.inMicroseconds / 1e6, bounce: 0),
-        instant: length == Duration.zero,
+        motionFade(motion, _paneFade) * _fade.get(),
+        curve: PopMotion.fadeCurve,
       );
     }
     return _shownValue.animateTo(0, spring: Springs.smooth);
@@ -229,6 +231,7 @@ class _DesktopPaneState extends State<_DesktopPane>
     }
     _shownValue.stop();
     _fade.stop();
+    _tick.dispose();
     super.dispose();
   }
 
@@ -259,8 +262,6 @@ class _DesktopPaneState extends State<_DesktopPane>
     final open = isOpen;
     final g = s.shellGap;
     final rtl = Directionality.of(context) == TextDirection.rtl;
-    final p = _shownValue.get();
-    final opacity = _fade.get().clamp(0.0, 1.0);
     final i18n = I18n.of(context);
     final closeLabel = i18n.t('lab.composer.closeLabel', {'label': pane.label});
 
@@ -322,55 +323,71 @@ class _DesktopPaneState extends State<_DesktopPane>
     );
     final close = pane.showClose
         ? GlassScope(
-            child: CloseBubble(
-              label: closeLabel,
-              disabled: !open,
-              onClose: () => this.close(),
-            ),
+            child: CloseBubble(label: closeLabel, onClose: () => this.close()),
           )
         : null;
     final end = pane.side == PaneSide.end;
-    // The frame: [close][pane] at the end side, [pane][close] at the start side, G inside.
-    final frame = _PaneFrame(
-      progress: p,
-      outward: (end ? 1.0 : -1.0) * (rtl ? -1.0 : 1.0),
-      child: Opacity(
-        opacity: opacity,
-        child: Padding(
-          padding: EdgeInsets.all(g),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: g,
-            children: end
-                ? [?close, Flexible(child: surface)]
-                : [Flexible(child: surface), ?close],
-          ),
+    final outward = (end ? 1.0 : -1.0) * (rtl ? -1.0 : 1.0);
+    final dim = black(theme.brightness == Brightness.dark ? 0.48 : 0.2);
+    // The frame: [close][pane] at the end side, [pane][close] at the start side, G inside. Built
+    // and painted once per change; motion frames only move or fade its layer.
+    final row = RepaintBoundary(
+      child: Padding(
+        padding: EdgeInsets.all(g),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: g,
+          children: end
+              ? [?close, Flexible(child: surface)]
+              : [Flexible(child: surface), ?close],
         ),
       ),
     );
 
-    Widget view = Stack(
-      fit: StackFit.expand,
-      children: [
-        if (pane.modal)
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: open ? _dismiss : null,
-            child: ExcludeSemantics(
-              child: Opacity(
-                opacity: (p.clamp(0.0, 1.0) * opacity).toDouble(),
-                child: ColoredBox(
-                  color: black(theme.brightness == Brightness.dark ? 0.48 : 0.2),
+    Widget view = ListenableBuilder(
+      listenable: _tick,
+      child: row,
+      builder: (context, row) {
+        final p = _shownValue.get();
+        final opacity = _fade.get().clamp(0.0, 1.0);
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            if (pane.modal)
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: open ? _dismiss : null,
+                child: ExcludeSemantics(
+                  child: Opacity(
+                    opacity: (p.clamp(0.0, 1.0) * opacity).toDouble(),
+                    child: ColoredBox(color: dim),
+                  ),
+                ),
+              ),
+            Align(
+              alignment: end
+                  ? AlignmentDirectional.centerEnd
+                  : AlignmentDirectional.centerStart,
+              child: IgnorePointer(
+                ignoring: !open,
+                child: _PaneFrame(
+                  progress: p,
+                  outward: outward,
+                  child: Opacity(
+                    opacity: opacity,
+                    // While it slides or fades, its glass rides it as is and leaves with it.
+                    child: GlassInstant(
+                      instant: _shownValue.isAnimating || _fade.isAnimating,
+                      child: row!,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        Align(
-          alignment: end ? AlignmentDirectional.centerEnd : AlignmentDirectional.centerStart,
-          child: IgnorePointer(ignoring: !open, child: frame),
-        ),
-      ],
+          ],
+        );
+      },
     );
     if (!pane.modal) view = PassThrough(child: view);
     return PresentationRouteScope.none(

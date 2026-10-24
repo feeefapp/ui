@@ -35,7 +35,8 @@ class PresentationHeader extends StatelessWidget {
   /// Accessible name of the close button. Default “Close”.
   final String? closeLabel;
 
-  /// Disables the close button (while the surface is leaving).
+  /// Disables the close button (while a save runs, say). A leaving surface keeps its look: closing
+  /// twice does nothing.
   final bool closeDisabled;
 
   @override

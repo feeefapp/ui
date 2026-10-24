@@ -9,7 +9,7 @@ import { IconButton, Button } from './primitives/button.js';
 import { TextField } from './primitives/text-field.js';
 import { PopoverSurface } from './primitives/popover-surface.js';
 import { useFloatingBoundary } from './menu/boundary.js';
-import { Modal } from './primitives/modal.js';
+import { Modal, PresentationDock } from './presentation/index.js';
 import { ScrollArea } from './scroll/index.js';
 import { Dock } from './dock/index.js';
 import { TemporalFilterEditor } from './filters/temporal-editor.js';
@@ -251,7 +251,7 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
                     change(selected, next);
                     pin(selected.id);
                     setEditing(null);
-                } })), _jsx(Modal, { returnFocusRef: returnFocus, open: !!dialogSelected && !(selected && isTemporalType(selected.type)), label: dialogSelected ? `Edit ${dialogSelected.label} filter` : 'Edit filter', close: () => setEditing(null), scrollable: true, fitContent: true, className: "lab-filter-editor-dialog", bottom: _jsxs(Dock, { label: "Filter editor actions", children: [_jsx(Button, { variant: "text", onClick: () => {
+                } })), _jsx(Modal, { returnFocusRef: returnFocus, open: !!dialogSelected && !(selected && isTemporalType(selected.type)), label: dialogSelected ? `Edit ${dialogSelected.label} filter` : 'Edit filter', title: dialogSelected ? `Edit ${dialogSelected.label} filter` : 'Edit filter', onOpenChange: () => setEditing(null), className: "lab-filter-editor-dialog", dock: _jsxs(PresentationDock, { label: "Filter editor actions", children: [_jsx(Button, { variant: "text", onClick: () => {
                                 if (selected) {
                                     change(selected, null);
                                     pin(selected.id);

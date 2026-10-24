@@ -11,7 +11,41 @@ export function backgroundPixels(kind: string, width: number, height: number): U
     data[i + 2] = b
     data[i + 3] = 255
   }
-  if (kind === 'photo') {
+  if (kind === 'lightstripes') {
+    for (let y = 0; y < height; y++)
+      for (let x = 0; x < width; x++) {
+        const on = (Math.floor(x / 6) % 2 === 0) !== (Math.floor(y / 48) % 2 === 0)
+        const v = on ? 220 : 250
+        put(x, y, v, v, v)
+      }
+    return data
+  }
+  if (kind === 'text') {
+    for (let y = 0; y < height; y++) {
+      const line = Math.floor(y / 60)
+      const yb = (y % 60) - 15
+      for (let x = 0; x < width; x++) {
+        let v = 250
+        if (yb >= 0 && yb < 30) {
+          let start = 9 + ((line * 37) % 50)
+          let i = 0
+          let wx = -1
+          while (start < width) {
+            const len = 40 + ((line * 7919 + i * 104729) % 136)
+            if (x >= start && x < start + len) { wx = x - start; break }
+            start += len + 18
+            i++
+          }
+          if (wx >= 0 && (wx % 9 < 3 || (yb >= 13 && yb < 17))) v = 60
+        }
+        put(x, y, v, v, v)
+      }
+    }
+    return data
+  }
+  if (kind === 'photo' || kind === 'lightphoto' || kind === 'darkphoto') {
+    const light = kind === 'lightphoto'
+    const dark = kind === 'darkphoto'
     const blobs: [number, number, number, [number, number, number]][] = [
       [0.2, 0.15, 0.25, [0.95, 0.45, 0.2]], [0.8, 0.25, 0.3, [0.15, 0.55, 0.95]],
       [0.35, 0.55, 0.3, [0.2, 0.8, 0.45]], [0.75, 0.7, 0.28, [0.9, 0.2, 0.55]],
@@ -30,6 +64,15 @@ export function backgroundPixels(kind: string, width: number, height: number): U
           r = r * (1 - w) + c[0] * w
           g = g * (1 - w) + c[1] * w
           b = b * (1 - w) + c[2] * w
+        }
+        if (light) {
+          r = 0.55 + 0.45 * r
+          g = 0.55 + 0.45 * g
+          b = 0.55 + 0.45 * b
+        } else if (dark) {
+          r *= 0.3
+          g *= 0.3
+          b *= 0.3
         }
         put(x, y, Math.trunc(Math.min(255, r * 255)), Math.trunc(Math.min(255, g * 255)), Math.trunc(Math.min(255, b * 255)))
       }

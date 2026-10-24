@@ -6,7 +6,7 @@ import { cn } from '../utils'
 import './choice.css'
 
 type ChoiceDecoration = {
-  /** Visible label next to the mark. Clicking it toggles the control. */
+  /** Visible label next to the mark. Clicking it toggles the control. Without one (and without description or error) the control is only its mark; name it with `aria-label`. */
   label?: React.ReactNode
   /** Secondary text under the label, linked as the control's description. */
   description?: React.ReactNode
@@ -65,6 +65,7 @@ function Choice({
       data-control-size={controlSize}
       data-disabled={props.disabled || undefined}
       data-invalid={Boolean(error) || undefined}
+      data-bare={label || description || error ? undefined : ''}
     >
       <input
         {...props}

@@ -77,3 +77,24 @@ export function sameRect(a: GlassRect, b: GlassRect) {
     Math.abs(a.height - b.height) < 0.5
   )
 }
+
+/**
+ * Mark an element with this attribute while it moves as one piece (a presentation surface entering
+ * or leaving): the glass inside it takes every layout change at once, with no births, deaths or
+ * springs, so it rides the element's transform and leaves with it in the same frames.
+ */
+export const GLASS_INSTANT_ATTRIBUTE = 'data-glass-instant'
+
+/** For this long (ms) after glass first appears, its bubbles appear in place (lazy content). */
+export const GLASS_SETTLE_MS = 300
+
+/**
+ * Whether a layout change applies at once instead of springing: with reduced motion, inside an
+ * element marked `GLASS_INSTANT_ATTRIBUTE`, before the container has ever been rendered
+ * (`shownAt` null: glass measured inside a closed dialog or a hidden panel must not grow in once
+ * shown), and for `GLASS_SETTLE_MS` after it first was.
+ */
+export function glassChangesAtOnce(options: { reduceMotion: boolean; instant: boolean; shownAt: number | null; now: number }) {
+  const { reduceMotion, instant, shownAt, now } = options
+  return reduceMotion || instant || shownAt === null || now - shownAt < GLASS_SETTLE_MS
+}

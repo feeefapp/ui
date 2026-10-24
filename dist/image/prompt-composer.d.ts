@@ -17,11 +17,13 @@ export type RecentImage = {
     prompt: string;
 };
 /**
- * The image studio composer, after marchant `image_gen_view` `_buildComposer`: an attachment
- * row above a glass card that is one compact line until you type, then grows upward with its
- * controls on a second row. Model ladder, AI enhance, output settings and send are icon controls.
+ * The image studio composer, built from the composer parts (`ComposerBar`): a round + bubble with
+ * the add menu, and a glass capsule holding the reference thumbnails (the first is marked "Main"),
+ * the prompt and send. Empty and idle it is one calm line with the AI ideas button beside send;
+ * with text or focus, a second row shows the model ladder and the output settings chip, and the
+ * AI button turns into "Improve my prompt".
  */
-export declare function ImagePromptComposer({ prompt, onPrompt, placeholder, maxLength, references, referenceLimit, onAddFiles, onRemoveReference, recent, onUseRecent, onEditPhoto, templates, templatesLabel, onTemplate, mode, templateName, onClearTemplate, onBrowseTemplates, ladder, settings, settingsLabel, settingsDisabled, onSettings, settingsActive, referenceNoun, wandLabel, enhancing, onEnhance, onSubmit, submitDisabled, submitting, submitLabel, caption, above, onKeyDown, }: {
+export declare function ImagePromptComposer({ prompt, onPrompt, placeholder, maxLength, references, referenceLimit, onAddFiles, onRemoveReference, recent, onUseRecent, onEditPhoto, templates, templatesLabel, onTemplate, mode, templateName, onClearTemplate, onBrowseTemplates, ladder, settings, settingsLabel, settingsDisabled, onSettings, settingsActive, referenceNoun, wandLabel, enhancing, onEnhance, onSubmit, submitDisabled, submitting, submitLabel, onStop, stopLabel, caption, above, onKeyDown, }: {
     /** The prompt text (controlled). */
     prompt: string;
     /** Called with the new text on every edit. */
@@ -30,16 +32,16 @@ export declare function ImagePromptComposer({ prompt, onPrompt, placeholder, max
     placeholder: string;
     /** Maximum prompt length in characters. */
     maxLength: number;
-    /** Attached reference images, shown as chips above the card. The first is the main image. */
+    /** Attached reference images, shown as thumbnails inside the capsule. The first is the main image. */
     references: ComposerReference[];
-    /** `null` when the selected model takes no image input. */
+    /** `null` when the selected model takes no image input. `max` is shown as "1 of 3". */
     referenceLimit: {
         max: number;
         formats: string[];
     } | null;
     /** Called with files from upload, paste, clipboard or drop. The owner validates type and count. */
     onAddFiles(files: File[]): void;
-    /** Called when a reference chip is removed. */
+    /** Called when a reference's × badge is pressed. */
     onRemoveReference(id: string): void;
     /** The user's earlier images for the "From your images" submenu (first 12). Empty hides it. */
     recent: RecentImage[];
@@ -55,42 +57,47 @@ export declare function ImagePromptComposer({ prompt, onPrompt, placeholder, max
     onTemplate(template: ComposerTemplate): void;
     /** Image makes one picture; Poster builds a tall landing-page image from the brief. */
     mode: 'image' | 'poster';
-    /** The poster template in use, shown as a chip above the card. */
+    /** The poster template in use, shown as a wide tile before the references. */
     templateName?: string | null;
+    /** Shows the template tile's × badge. */
     onClearTemplate?(): void;
     /** Replaces the template submenu with one entry that opens a full template browser. */
     onBrowseTemplates?(): void;
-    /** Renders the model control for a slot, usually a ModelLadder with that variant. */
-    ladder(variant: 'icon' | 'chip'): ReactNode;
+    /** The model control on the second row, usually `<ModelLadder variant="compact" … />`. */
+    ladder: ReactNode;
     /** Content of the output settings popover (shape, resolution, format). */
     settings: ReactNode;
-    /** Short summary of the current settings, used in the settings button's label. */
+    /** Short summary of the current settings ("1:1"), shown on the settings chip. */
     settingsLabel: string;
-    /** Disables the settings button and closes its popover. */
+    /** Disables the settings chip and closes its popover. */
     settingsDisabled?: boolean;
-    /** When set, the settings button toggles a panel the page owns instead of a popover. */
+    /** When set, the settings chip toggles a panel the page owns instead of a popover. */
     onSettings?(): void;
-    /** Pressed state of the settings button when `onSettings` is set. */
+    /** Pressed state of the settings chip when `onSettings` is set. */
     settingsActive?: boolean;
     /** What attached images are called in the + menu ("References", "Product photos"). */
     referenceNoun?: string;
-    /** Overrides the wand's label (posters suggest details instead of rewriting the prompt). */
+    /** Overrides the AI button's label (posters suggest details instead of rewriting the prompt). */
     wandLabel?: string;
-    /** The AI wand request in flight, or `''` when idle. Shows a loader on the wand. */
+    /** The AI request in flight, or `''` when idle. Shows a loader on the AI button. */
     enhancing: '' | 'enhance' | 'ideas';
-    /** Improve the prompt, or suggest ideas when it is empty. */
+    /** Improve the prompt, or suggest ideas when it is empty. Omit to hide the AI button. */
     onEnhance?(mode: 'enhance' | 'ideas'): void;
-    /** Called by the send button and by Enter (Shift+Enter breaks the line). */
+    /** Called by send and by Enter (Shift+Enter breaks the line). */
     onSubmit(): void;
     /** Disables sending. */
     submitDisabled: boolean;
-    /** A generation is being sent: the send button shows a loader and is disabled. */
+    /** A generation is being sent: send shows the loader. */
     submitting: boolean;
-    /** Accessible name of the send button, such as "Create image". */
+    /** Accessible name of send, such as "Create image". */
     submitLabel: string;
-    /** Small text under the card, such as price or allowance. */
+    /** While submitting, send becomes a stop button that calls this. */
+    onStop?(): void;
+    /** Accessible name of send while it stops. Defaults to the localized "Stop". */
+    stopLabel?: string;
+    /** Small text under the composer, such as price or allowance. */
     caption: ReactNode;
-    /** Suggestion cards shown right above the card (AI proposals, conflicts). */
+    /** Suggestion cards shown right above the composer (AI proposals, conflicts). */
     above?: ReactNode;
     /** Runs before the built-in Enter handling; call `preventDefault()` to skip it. */
     onKeyDown?(event: KeyboardEvent): void;

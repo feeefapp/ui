@@ -66,35 +66,28 @@ class _PromptComposerDemoState extends State<PromptComposerDemo> {
         onValueChange: (value) => setState(() => _prompt = value),
         onSubmit: _send,
         busy: _busy,
+        submitLabel: 'Send message',
         maxLength: 4000,
+        leading: IconButton(
+          variant: .ghost,
+          appearance: .toolbar,
+          ariaLabel: 'Attach a file',
+          onClick: () {},
+          icon: const LucideIcon(LucideIcons.plus),
+        ),
         tools: [
-          IconButton(
-            variant: .ghost,
-            appearance: .toolbar,
-            ariaLabel: 'Attach a file',
-            onClick: () {},
-            icon: const LucideIcon(LucideIcons.paperclip),
-          ),
           ModelLadder(
-            variant: .icon,
+            variant: .compact,
             stops: _stops,
             index: _model,
             defaultIndex: 1,
             onChange: (value) => setState(() => _model = value),
           ),
         ],
-        submit: IconButton(
-          variant: .filled,
-          ariaLabel: 'Send message',
-          disabled: _prompt.trim().isEmpty,
-          loading: _busy,
-          onClick: _send,
-          icon: const LucideIcon(LucideIcons.arrowUp),
-        ),
         footer: _sent == null
             ? null
             : Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(4, 8, 4, 0),
+                padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Text(
                   'Sent: $_sent',
                   style: TextStyle(

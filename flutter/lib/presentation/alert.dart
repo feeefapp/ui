@@ -275,7 +275,7 @@ class _AlertState extends State<Alert> with PresentationStateMixin<Alert> {
                       AlertActionRole.destructive => ButtonVariant.destructive,
                       _ => ButtonVariant.elevated,
                     },
-                    disabled: actions[i].disabled || !open,
+                    disabled: actions[i].disabled,
                     onClick: () => _choose(i),
                     children: [
                       Text(
@@ -295,8 +295,14 @@ class _AlertState extends State<Alert> with PresentationStateMixin<Alert> {
     final screen = MediaQuery.sizeOf(context);
     surface = ConstrainedBox(
       constraints: BoxConstraints(
-        maxWidth: math.max(0, math.min(tokens.width, screen.width - 2 * tokens.inset)),
-        minWidth: math.max(0, math.min(tokens.width, screen.width - 2 * tokens.inset)),
+        maxWidth: math.max(
+          0,
+          math.min(tokens.width, screen.width - 2 * tokens.inset),
+        ),
+        minWidth: math.max(
+          0,
+          math.min(tokens.width, screen.width - 2 * tokens.inset),
+        ),
         maxHeight: math.max(0, screen.height - 2 * tokens.inset),
       ),
       child: _AlertMaterial(
@@ -492,7 +498,10 @@ class AlertActionsLayout extends MultiChildRenderObjectWidget {
       RenderAlertActions(gap, roles, Directionality.of(context));
 
   @override
-  void updateRenderObject(BuildContext context, RenderAlertActions renderObject) {
+  void updateRenderObject(
+    BuildContext context,
+    RenderAlertActions renderObject,
+  ) {
     renderObject
       ..gap = gap
       ..roles = roles
@@ -554,8 +563,7 @@ class RenderAlertActions extends RenderBox
     final children = _children;
     final width = constraints.maxWidth;
     final widths = [
-      for (final child in children)
-        child.getMaxIntrinsicWidth(double.infinity),
+      for (final child in children) child.getMaxIntrinsicWidth(double.infinity),
     ];
     sideBySide = alertActionsFit(widths, width, _gap);
     final roles = [
@@ -569,7 +577,10 @@ class RenderAlertActions extends RenderBox
       var x = 0.0;
       for (final index in order) {
         final child = children[index];
-        child.layout(BoxConstraints.tightFor(width: cell), parentUsesSize: true);
+        child.layout(
+          BoxConstraints.tightFor(width: cell),
+          parentUsesSize: true,
+        );
         final left = _textDirection == TextDirection.rtl ? width - x - cell : x;
         (child.parentData! as _AlertActionData).offset = Offset(left, 0);
         x += cell + _gap;
@@ -579,7 +590,10 @@ class RenderAlertActions extends RenderBox
       for (final index in order) {
         final child = children[index];
         if (height > 0) height += _gap;
-        child.layout(BoxConstraints.tightFor(width: width), parentUsesSize: true);
+        child.layout(
+          BoxConstraints.tightFor(width: width),
+          parentUsesSize: true,
+        );
         (child.parentData! as _AlertActionData).offset = Offset(0, height);
         height += child.size.height;
       }
@@ -598,7 +612,9 @@ class RenderAlertActions extends RenderBox
     final h = children
         .map((c) => c.getMaxIntrinsicHeight(double.infinity))
         .reduce(math.max);
-    return children.length == 2 ? h : h * children.length + _gap * (children.length - 1);
+    return children.length == 2
+        ? h
+        : h * children.length + _gap * (children.length - 1);
   }
 
   @override

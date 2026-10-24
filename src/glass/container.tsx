@@ -56,7 +56,11 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
    * Keep it below the gap between bubbles at rest so separate bubbles stay apart. Default 8.
    */
   spacing?: number
-  /** Corner profile of the glass: circular `round` corners (default) or kit superellipse. */
+  /**
+   * Corner profile of the glass: `superellipse` (default) is the kit's clamped continuous corner,
+   * so circle- and capsule-sized bubbles are circles and capsules and larger glass keeps the
+   * continuous curve; `round` draws circular corners at every radius.
+   */
   cornerShape?: 'superellipse' | 'round'
   /** `pointer` (default) turns the light toward a mouse or pen; `static` keeps it at the top-left. */
   light?: 'pointer' | 'static'
@@ -76,7 +80,7 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
   highlightWidth?: number
   /** `surface` uses a convex bevel; `rim` (default) uses the thin, symmetric screenshot-fitted highlight. */
   highlightProfile?: 'surface' | 'rim'
-  /** Local material tint, 0 clear–1 tinted, preserving bright backdrop detail; omitted inherits ThemeConfig glassTint. */
+  /** Local material tint, 0 clear–1 tinted (clear lifts what is behind it, clipping light content to white like iOS); omitted inherits ThemeConfig glassTint. */
   tint?: number
   /** Surface highlight opacity multiplier, 0–10; default 1. */
   highlightStrength?: number
@@ -98,7 +102,7 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
  * JavaScript, or in forced colors, every bubble paints its own glass as before.
  */
 export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>(function GlassContainer(
-  { as = 'div', spacing = 8, cornerShape = 'round', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 1, highlightProfile = 'rim', highlightStrength = 1, refractionStrength = 1, refractionProfile = 'measured', tint, backdropSource, className, children, ...props },
+  { as = 'div', spacing = 8, cornerShape = 'superellipse', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 1, highlightProfile = 'rim', highlightStrength = 1, refractionStrength = 1, refractionProfile = 'measured', tint, backdropSource, className, children, ...props },
   ref
 ) {
   const host = React.useRef<HTMLElement | null>(null)
@@ -169,7 +173,6 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
     current.followPointer = light === 'pointer' && liquid
     current.interactive = interactive && liquid
     current.adaptive = adaptive
-    current.preserveHighlights = true
     current.tint = tint === undefined ? options.tint : clampGlassTint(tint)
     current.blur = options.blur || bar !== null
     current.highlightWidth = Number.isFinite(highlightWidth) ? Math.min(100, Math.max(0, highlightWidth)) : 1

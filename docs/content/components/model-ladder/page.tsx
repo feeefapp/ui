@@ -38,7 +38,7 @@ function Overview() {
         <Table
           head={['Component', 'Use it for']}
           rows={[
-            [<C>ModelLadder</C>, 'A trigger (chip or icon) that opens the ladder in a popover.'],
+            [<C>ModelLadder</C>, 'A trigger (chip, icon, or compact for toolbar and composer rows) that opens the ladder in a popover.'],
             [<C>ModelLadderCard</C>, 'The same ladder card, inline in an inspector that is already open.'],
           ]}
         />

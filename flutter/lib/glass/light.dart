@@ -32,12 +32,3 @@ Offset glassLightToward(
     base.dy + (toward.dy - base.dy) * pull,
   );
 }
-
-/// Endpoints of the rim gradient over [bounds], CSS-style: the line runs through the centre along
-/// the light and its ends touch the farthest corners. The first point is the lit end.
-(Offset, Offset) rimGradient(Rect bounds, Offset light) {
-  final c = bounds.center;
-  final half =
-      ((bounds.width * light.dx).abs() + (bounds.height * light.dy).abs()) / 2;
-  return (c + light * half, c - light * half);
-}

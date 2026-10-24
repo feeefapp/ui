@@ -73,13 +73,7 @@ class _WorkspaceState extends State<Workspace> {
             value: _prompt,
             onValueChange: (value) => setState(() => _prompt = value),
             onSubmit: () => setState(() => _prompt = ''),
-            submit: IconButton(
-              variant: .filled,
-              ariaLabel: 'Create image',
-              disabled: _prompt.trim().isEmpty,
-              onClick: () => setState(() => _prompt = ''),
-              icon: const LucideIcon(LucideIcons.arrowUp),
-            ),
+            submitLabel: 'Create image',
           ),
           board: (insets) => FreeformBoard(
             embedded: true,

@@ -12,7 +12,7 @@ function Overview() {
   return (
     <>
       <SplitMerge />
-      <p>These examples use the clear reference material: a 1px curved rim, circular corners and the measured lens. Each example supplies its background separately so Firefox refracts it too. The <a href="/foundations/glass-reflections">Glass reflections controls</a> let you tune these same component parameters.</p>
+      <p>These examples use the clear reference material: a 1px curved rim, the kit’s clamped continuous corners and the measured lens. Each example supplies its background separately so Firefox refracts it too. The <a href="/foundations/glass-reflections">Glass reflections controls</a> let you tune these same component parameters.</p>
 
       <Section title="One material for a row of bubbles">
         <p>
@@ -56,7 +56,7 @@ function Overview() {
             [<C>backdropSource</C>, 'GlassContainer', 'ID of a separate background-only element. Enables live background refraction in Firefox; the source must not contain the glass.'],
             [<C>refractionProfile</C>, 'GlassContainer', 'gentle: monotonic lens; measured (default): native screenshot-fitted mirrored edge band.'],
             [<C>refractionStrength</C>, 'GlassContainer', 'Backdrop bend, 0–10 (default 1). Above 1 allows stronger distortion. Theme refraction must be enabled.'],
-            [<C>cornerShape</C>, 'GlassContainer', 'Round by default; circular corners are used consistently across the outline, highlights and refraction. Supply member radii in CSS px; superellipse remains opt-in.'],
+            [<C>cornerShape</C>, 'GlassContainer', 'The kit\'s clamped continuous corner by default (superellipse that turns round at full radius, so bubbles are circles and capsules), used consistently across the outline, highlights and refraction; round forces circular corners at every radius. Supply member radii in CSS px.'],
             [<C>spacing</C>, 'GlassContainer', 'Blend distance in px (default 8). Keep it below the gap between bubbles at rest.'],
             [<C>light</C>, 'GlassContainer', <><C>pointer</C> (default) or <C>static</C>.</>],
             [<C>interactive</C>, 'GlassContainer', 'Press response: swell, stretch and glow (default true).'],

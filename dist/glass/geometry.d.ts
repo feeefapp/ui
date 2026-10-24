@@ -13,14 +13,17 @@ export type GlassRect = {
 export type GlassShape = GlassRect & {
     /** Corner radius before clamping to half the shorter side. */
     radius: number;
-    /** Optional corner exponent; 2 draws true circular corners, omitted keeps the kit superellipse. */
+    /** Optional corner exponent; 2 draws true circular corners. Omitted, the corner is the kit's
+     * clamped continuous corner (`cornerExponentFor`: superellipse(1.5) fading to a circle at full radius). */
     cornerExponent?: number;
 };
 /** Corner radius a shape actually draws with: never more than half its shorter side. */
 export declare function clampRadius(shape: GlassShape): number;
+/** The exponent a shape's corners draw with: its own, or the kit's clamped continuous corner. */
+export declare function shapeExponent(shape: GlassShape): number;
 /**
- * Signed distance from a point to a rounded box with superellipse corners (exponent 2^1.5, the
- * kit's `corner-shape: superellipse(1.5)`): negative inside, zero on the outline. The zero level
+ * Signed distance from a point to a rounded box with superellipse corners (the kit's clamped
+ * continuous corner, `shapeExponent`): negative inside, zero on the outline. The zero level
  * is exactly the curve `foSuperellipsePath` draws; away from it the value is a close
  * approximation, which is all a smooth union needs.
  */

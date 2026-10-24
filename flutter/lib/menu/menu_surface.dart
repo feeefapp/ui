@@ -129,7 +129,10 @@ class MenuMaterial {
           : c.surface.withValues(alpha: math.max(material.veil, menuGlassVeil)),
       filter: ui.ImageFilter.compose(
         outer: ColorFilter.matrix(glassBackdropMatrix(material)),
-        inner: ui.ImageFilter.blur(sigmaX: menuGlassBlur, sigmaY: menuGlassBlur),
+        inner: ui.ImageFilter.blur(
+          sigmaX: menuGlassBlur,
+          sigmaY: menuGlassBlur,
+        ),
       ),
       solid: solid,
       contrast: glassHighContrastOf(context),
@@ -404,7 +407,10 @@ class _MenuSurfaceState extends State<MenuSurface>
           children: [
             Positioned.fill(
               child: CustomPaint(
-                painter: _ShadowPainter(_morph, contrast ? null : menuShadowColor),
+                painter: _ShadowPainter(
+                  _morph,
+                  contrast ? null : menuShadowColor,
+                ),
               ),
             ),
             Positioned.fill(
@@ -471,7 +477,6 @@ class _MenuSurfaceState extends State<MenuSurface>
     );
   }
 }
-
 
 /// Reports its size after layout without rebuilding.
 class _SizeProbe extends SingleChildRenderObjectWidget {

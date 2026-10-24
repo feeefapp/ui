@@ -1,0 +1,5090 @@
+{
+ "clear-light/flat-ffffff": {
+  "circle44": {
+   "compare": 0.0,
+   "compare_plus": 0.0,
+   "silhouette": {
+    "ios": 0.0,
+    "kit": 0.0,
+    "plus": 0.0,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 0.0,
+   "compare_plus": 0.0,
+   "silhouette": {
+    "ios": 0.0,
+    "kit": 0.0,
+    "plus": 0.0,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 0.0,
+   "compare_plus": 0.0,
+   "silhouette": {
+    "ios": 0.0,
+    "kit": 0.0,
+    "plus": 0.0,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 0.0,
+   "compare_plus": 0.0,
+   "silhouette": {
+    "ios": 0.0,
+    "kit": 0.0,
+    "plus": 0.0,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 0.0,
+   "compare_plus": 0.0,
+   "silhouette": {
+    "ios": 0.0,
+    "kit": 0.0,
+    "plus": 0.0,
+    "none": 0.0
+   }
+  }
+ },
+ "clear-light/flat-ebebeb": {
+  "circle44": {
+   "compare": 4.95,
+   "compare_plus": 0.04,
+   "silhouette": {
+    "ios": 20.0,
+    "kit": 2.18,
+    "plus": 19.96,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 8.13,
+   "compare_plus": 0.04,
+   "silhouette": {
+    "ios": 20.0,
+    "kit": 2.18,
+    "plus": 19.97,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 13.67,
+   "compare_plus": 0.02,
+   "silhouette": {
+    "ios": 19.99,
+    "kit": 2.16,
+    "plus": 19.97,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 7.99,
+   "compare_plus": 0.03,
+   "silhouette": {
+    "ios": 20.0,
+    "kit": 2.16,
+    "plus": 19.95,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 10.84,
+   "compare_plus": 0.03,
+   "silhouette": {
+    "ios": 19.98,
+    "kit": 2.19,
+    "plus": 19.96,
+    "none": 0.0
+   }
+  }
+ },
+ "clear-light/flat-d0d0d0": {
+  "circle44": {
+   "compare": 6.52,
+   "compare_plus": 0.76,
+   "silhouette": {
+    "ios": 30.37,
+    "kit": 5.63,
+    "plus": 27.68,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 10.68,
+   "compare_plus": 1.23,
+   "silhouette": {
+    "ios": 30.61,
+    "kit": 5.65,
+    "plus": 27.76,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 17.82,
+   "compare_plus": 1.99,
+   "silhouette": {
+    "ios": 30.83,
+    "kit": 5.69,
+    "plus": 27.83,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 10.44,
+   "compare_plus": 1.18,
+   "silhouette": {
+    "ios": 30.43,
+    "kit": 5.61,
+    "plus": 27.63,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 14.19,
+   "compare_plus": 1.61,
+   "silhouette": {
+    "ios": 30.71,
+    "kit": 5.71,
+    "plus": 27.78,
+    "none": 0.0
+   }
+  }
+ },
+ "clear-light/lightphoto": {
+  "circle44": {
+   "compare": 5.48,
+   "compare_plus": 0.53,
+   "silhouette": {
+    "ios": 25.18,
+    "kit": 5.12,
+    "plus": 25.14,
+    "none": 0.28
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 1.127,
+      "chroma_ratio": 0.874,
+      "lum": 231.4
+     },
+     "interior": {
+      "std_ratio": 0.973,
+      "chroma_ratio": 0.889,
+      "lum": 230.7
+     },
+     "backdrop_lum": 206.7
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 1.52,
+      "chroma_ratio": 0.945,
+      "lum": 211.0
+     },
+     "interior": {
+      "std_ratio": 0.573,
+      "chroma_ratio": 0.958,
+      "lum": 209.7
+     },
+     "backdrop_lum": 206.7
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 9.71,
+   "compare_plus": 0.8,
+   "silhouette": {
+    "ios": 26.47,
+    "kit": 4.62,
+    "plus": 25.27,
+    "none": 0.06
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 2.609,
+      "chroma_ratio": 0.733,
+      "lum": 243.5
+     },
+     "interior": {
+      "std_ratio": 1.25,
+      "chroma_ratio": 0.758,
+      "lum": 242.9
+     },
+     "backdrop_lum": 217.9
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 4.133,
+      "chroma_ratio": 0.891,
+      "lum": 221.3
+     },
+     "interior": {
+      "std_ratio": 0.456,
+      "chroma_ratio": 0.925,
+      "lum": 220.3
+     },
+     "backdrop_lum": 217.9
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 17.11,
+   "compare_plus": 1.48,
+   "silhouette": {
+    "ios": 30.04,
+    "kit": 7.23,
+    "plus": 28.18,
+    "none": 0.19
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 1.087,
+      "chroma_ratio": 0.886,
+      "lum": 242.4
+     },
+     "interior": {
+      "std_ratio": 1.029,
+      "chroma_ratio": 0.851,
+      "lum": 242.0
+     },
+     "backdrop_lum": 215.1
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.824,
+      "chroma_ratio": 0.942,
+      "lum": 219.1
+     },
+     "interior": {
+      "std_ratio": 0.741,
+      "chroma_ratio": 0.912,
+      "lum": 218.3
+     },
+     "backdrop_lum": 215.1
+    }
+   }
+  },
+  "circle88": {
+   "compare": 9.68,
+   "compare_plus": 0.92,
+   "silhouette": {
+    "ios": 22.73,
+    "kit": 5.55,
+    "plus": 24.43,
+    "none": 0.38
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.415,
+      "chroma_ratio": 1.061,
+      "lum": 228.8
+     },
+     "interior": {
+      "std_ratio": 0.873,
+      "chroma_ratio": 1.02,
+      "lum": 229.6
+     },
+     "backdrop_lum": 204.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.779,
+      "chroma_ratio": 0.968,
+      "lum": 207.1
+     },
+     "interior": {
+      "std_ratio": 0.727,
+      "chroma_ratio": 0.962,
+      "lum": 206.4
+     },
+     "backdrop_lum": 204.0
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 13.95,
+   "compare_plus": 1.14,
+   "silhouette": {
+    "ios": 25.97,
+    "kit": 3.53,
+    "plus": 25.38,
+    "none": 0.14
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 1.149,
+      "chroma_ratio": 0.862,
+      "lum": 246.2
+     },
+     "interior": {
+      "std_ratio": 1.167,
+      "chroma_ratio": 0.851,
+      "lum": 246.1
+     },
+     "backdrop_lum": 219.4
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.995,
+      "chroma_ratio": 0.901,
+      "lum": 222.5
+     },
+     "interior": {
+      "std_ratio": 0.882,
+      "chroma_ratio": 0.906,
+      "lum": 221.7
+     },
+     "backdrop_lum": 219.4
+    }
+   }
+  }
+ },
+ "clear-light/lightstripes": {
+  "circle44": {
+   "compare": 4.86,
+   "compare_plus": 0.05,
+   "silhouette": {
+    "ios": 20.01,
+    "kit": 5.68,
+    "plus": 19.96,
+    "none": 5.46
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 255.0
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 255.0
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.899,
+      "chroma_ratio": 0.0,
+      "lum": 237.5
+     },
+     "interior": {
+      "std_ratio": 0.933,
+      "chroma_ratio": 0.0,
+      "lum": 236.0
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 8.1,
+   "compare_plus": 0.04,
+   "silhouette": {
+    "ios": 20.0,
+    "kit": 4.84,
+    "plus": 19.97,
+    "none": 5.46
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.01,
+      "chroma_ratio": 0.0,
+      "lum": 255.0
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 255.0
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.908,
+      "chroma_ratio": 0.0,
+      "lum": 236.9
+     },
+     "interior": {
+      "std_ratio": 0.933,
+      "chroma_ratio": 0.0,
+      "lum": 236.0
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 13.66,
+   "compare_plus": 0.03,
+   "silhouette": {
+    "ios": 19.95,
+    "kit": 2.28,
+    "plus": 19.94,
+    "none": 0.49
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.041,
+      "chroma_ratio": 0.805,
+      "lum": 255.0
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 255.0
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.91,
+      "chroma_ratio": 0.0,
+      "lum": 236.5
+     },
+     "interior": {
+      "std_ratio": 0.933,
+      "chroma_ratio": 0.0,
+      "lum": 236.0
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  },
+  "circle88": {
+   "compare": 7.99,
+   "compare_plus": 0.08,
+   "silhouette": {
+    "ios": 20.0,
+    "kit": 3.95,
+    "plus": 19.87,
+    "none": 5.33
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 255.0
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 255.0
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.897,
+      "chroma_ratio": 0.0,
+      "lum": 236.5
+     },
+     "interior": {
+      "std_ratio": 0.933,
+      "chroma_ratio": 0.0,
+      "lum": 236.1
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 10.86,
+   "compare_plus": 0.04,
+   "silhouette": {
+    "ios": 19.98,
+    "kit": 2.9,
+    "plus": 19.95,
+    "none": 1.35
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.053,
+      "chroma_ratio": 0.54,
+      "lum": 255.0
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 255.0
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.909,
+      "chroma_ratio": 0.0,
+      "lum": 236.4
+     },
+     "interior": {
+      "std_ratio": 0.933,
+      "chroma_ratio": 0.0,
+      "lum": 236.0
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  }
+ },
+ "clear-light/text": {
+  "circle44": {
+   "compare": 11.6,
+   "compare_plus": 4.79,
+   "silhouette": {
+    "ios": 43.55,
+    "kit": 33.23,
+    "plus": 32.41,
+    "none": 21.96
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.371,
+      "chroma_ratio": 485.4,
+      "lum": 218.7
+     },
+     "interior": {
+      "std_ratio": 0.36,
+      "chroma_ratio": 263.843,
+      "lum": 238.9
+     },
+     "backdrop_lum": 215.7
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 1.051,
+      "chroma_ratio": 0.0,
+      "lum": 199.5
+     },
+     "interior": {
+      "std_ratio": 0.868,
+      "chroma_ratio": 0.0,
+      "lum": 223.0
+     },
+     "backdrop_lum": 215.7
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 13.67,
+   "compare_plus": 4.61,
+   "silhouette": {
+    "ios": 39.52,
+    "kit": 31.02,
+    "plus": 36.81,
+    "none": 17.12
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.386,
+      "chroma_ratio": 427.584,
+      "lum": 225.2
+     },
+     "interior": {
+      "std_ratio": 0.328,
+      "chroma_ratio": 229.748,
+      "lum": 240.6
+     },
+     "backdrop_lum": 213.5
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.898,
+      "chroma_ratio": 0.0,
+      "lum": 215.2
+     },
+     "interior": {
+      "std_ratio": 0.781,
+      "chroma_ratio": 0.0,
+      "lum": 227.8
+     },
+     "backdrop_lum": 213.5
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 22.3,
+   "compare_plus": 4.28,
+   "silhouette": {
+    "ios": 29.55,
+    "kit": 11.63,
+    "plus": 17.74,
+    "none": 8.2
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.439,
+      "chroma_ratio": 282.917,
+      "lum": 231.2
+     },
+     "interior": {
+      "std_ratio": 0.393,
+      "chroma_ratio": 245.214,
+      "lum": 236.1
+     },
+     "backdrop_lum": 214.7
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.969,
+      "chroma_ratio": 0.0,
+      "lum": 212.4
+     },
+     "interior": {
+      "std_ratio": 0.869,
+      "chroma_ratio": 0.0,
+      "lum": 222.2
+     },
+     "backdrop_lum": 214.7
+    }
+   }
+  },
+  "circle88": {
+   "compare": 14.74,
+   "compare_plus": 2.78,
+   "silhouette": {
+    "ios": 23.8,
+    "kit": 25.59,
+    "plus": 25.96,
+    "none": 11.96
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.357,
+      "chroma_ratio": 285.082,
+      "lum": 237.7
+     },
+     "interior": {
+      "std_ratio": 0.439,
+      "chroma_ratio": 290.82,
+      "lum": 230.1
+     },
+     "backdrop_lum": 214.1
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.847,
+      "chroma_ratio": 0.0,
+      "lum": 222.6
+     },
+     "interior": {
+      "std_ratio": 0.947,
+      "chroma_ratio": 0.0,
+      "lum": 214.8
+     },
+     "backdrop_lum": 214.1
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 24.94,
+   "compare_plus": 10.08,
+   "silhouette": {
+    "ios": 25.86,
+    "kit": 39.07,
+    "plus": 18.14,
+    "none": 13.25
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.405,
+      "chroma_ratio": 440.492,
+      "lum": 225.9
+     },
+     "interior": {
+      "std_ratio": 0.321,
+      "chroma_ratio": 273.015,
+      "lum": 239.8
+     },
+     "backdrop_lum": 216.2
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.898,
+      "chroma_ratio": 0.0,
+      "lum": 218.5
+     },
+     "interior": {
+      "std_ratio": 0.984,
+      "chroma_ratio": 0.0,
+      "lum": 213.4
+     },
+     "backdrop_lum": 216.2
+    }
+   }
+  }
+ },
+ "clear-light/flat-808080": {
+  "circle44": {
+   "compare": 4.31,
+   "compare_plus": 0.54,
+   "silhouette": {
+    "ios": 36.36,
+    "kit": 16.02,
+    "plus": 35.37,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 6.99,
+   "compare_plus": 0.88,
+   "silhouette": {
+    "ios": 37.38,
+    "kit": 16.0,
+    "plus": 35.48,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 11.14,
+   "compare_plus": 1.24,
+   "silhouette": {
+    "ios": 38.22,
+    "kit": 16.12,
+    "plus": 35.73,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 6.64,
+   "compare_plus": 0.75,
+   "silhouette": {
+    "ios": 36.54,
+    "kit": 16.1,
+    "plus": 35.33,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 9.06,
+   "compare_plus": 1.06,
+   "silhouette": {
+    "ios": 37.88,
+    "kit": 16.19,
+    "plus": 35.65,
+    "none": 0.0
+   }
+  }
+ },
+ "clear-light/flat-1a1a1a": {
+  "circle44": {
+   "compare": 1.66,
+   "compare_plus": 0.39,
+   "silhouette": {
+    "ios": 44.53,
+    "kit": 29.37,
+    "plus": 45.42,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 2.44,
+   "compare_plus": 0.65,
+   "silhouette": {
+    "ios": 46.54,
+    "kit": 29.35,
+    "plus": 45.6,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 2.87,
+   "compare_plus": 0.58,
+   "silhouette": {
+    "ios": 48.15,
+    "kit": 29.59,
+    "plus": 46.05,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 1.99,
+   "compare_plus": 0.37,
+   "silhouette": {
+    "ios": 44.89,
+    "kit": 29.52,
+    "plus": 45.36,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 2.73,
+   "compare_plus": 0.63,
+   "silhouette": {
+    "ios": 47.53,
+    "kit": 29.71,
+    "plus": 45.96,
+    "none": 0.0
+   }
+  }
+ },
+ "clear-light/flat-000000": {
+  "circle44": {
+   "compare": 1.04,
+   "compare_plus": 0.51,
+   "silhouette": {
+    "ios": 46.64,
+    "kit": 32.81,
+    "plus": 49.43,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 1.35,
+   "compare_plus": 0.81,
+   "silhouette": {
+    "ios": 48.95,
+    "kit": 32.83,
+    "plus": 49.51,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 0.83,
+   "compare_plus": 0.72,
+   "silhouette": {
+    "ios": 50.81,
+    "kit": 33.11,
+    "plus": 49.89,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 0.85,
+   "compare_plus": 0.49,
+   "silhouette": {
+    "ios": 47.04,
+    "kit": 32.95,
+    "plus": 49.4,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 1.18,
+   "compare_plus": 0.78,
+   "silhouette": {
+    "ios": 50.06,
+    "kit": 33.24,
+    "plus": 49.91,
+    "none": 0.0
+   }
+  }
+ },
+ "clear-light/darkphoto": {
+  "circle44": {
+   "compare": 2.03,
+   "compare_plus": 0.61,
+   "silhouette": {
+    "ios": 41.92,
+    "kit": 26.51,
+    "plus": 43.1,
+    "none": 0.19
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 17.152,
+      "chroma_ratio": 1.092,
+      "lum": 74.9
+     },
+     "interior": {
+      "std_ratio": 0.549,
+      "chroma_ratio": 1.07,
+      "lum": 64.3
+     },
+     "backdrop_lum": 44.1
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 9.438,
+      "chroma_ratio": 0.939,
+      "lum": 65.2
+     },
+     "interior": {
+      "std_ratio": 0.546,
+      "chroma_ratio": 0.956,
+      "lum": 59.5
+     },
+     "backdrop_lum": 44.1
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 3.47,
+   "compare_plus": 0.74,
+   "silhouette": {
+    "ios": 44.5,
+    "kit": 26.24,
+    "plus": 43.19,
+    "none": 0.05
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 64.442,
+      "chroma_ratio": 1.069,
+      "lum": 84.6
+     },
+     "interior": {
+      "std_ratio": 0.639,
+      "chroma_ratio": 1.043,
+      "lum": 72.4
+     },
+     "backdrop_lum": 51.6
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 32.46,
+      "chroma_ratio": 0.878,
+      "lum": 72.2
+     },
+     "interior": {
+      "std_ratio": 0.719,
+      "chroma_ratio": 0.907,
+      "lum": 66.7
+     },
+     "backdrop_lum": 51.6
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 4.81,
+   "compare_plus": 0.79,
+   "silhouette": {
+    "ios": 47.68,
+    "kit": 28.06,
+    "plus": 45.07,
+    "none": 0.11
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 6.751,
+      "chroma_ratio": 1.1,
+      "lum": 83.2
+     },
+     "interior": {
+      "std_ratio": 0.857,
+      "chroma_ratio": 1.014,
+      "lum": 71.0
+     },
+     "backdrop_lum": 49.8
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 3.392,
+      "chroma_ratio": 0.946,
+      "lum": 70.6
+     },
+     "interior": {
+      "std_ratio": 0.732,
+      "chroma_ratio": 0.915,
+      "lum": 65.2
+     },
+     "backdrop_lum": 49.8
+    }
+   }
+  },
+  "circle88": {
+   "compare": 2.61,
+   "compare_plus": 0.55,
+   "silhouette": {
+    "ios": 39.01,
+    "kit": 24.72,
+    "plus": 41.17,
+    "none": 0.24
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 7.086,
+      "chroma_ratio": 1.155,
+      "lum": 71.5
+     },
+     "interior": {
+      "std_ratio": 0.814,
+      "chroma_ratio": 1.073,
+      "lum": 62.2
+     },
+     "backdrop_lum": 42.3
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 4.213,
+      "chroma_ratio": 0.965,
+      "lum": 62.5
+     },
+     "interior": {
+      "std_ratio": 0.719,
+      "chroma_ratio": 0.952,
+      "lum": 57.3
+     },
+     "backdrop_lum": 42.3
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 4.36,
+   "compare_plus": 0.88,
+   "silhouette": {
+    "ios": 44.27,
+    "kit": 25.45,
+    "plus": 42.51,
+    "none": 0.08
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 8.269,
+      "chroma_ratio": 1.067,
+      "lum": 85.3
+     },
+     "interior": {
+      "std_ratio": 1.004,
+      "chroma_ratio": 0.994,
+      "lum": 73.5
+     },
+     "backdrop_lum": 52.6
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 4.338,
+      "chroma_ratio": 0.897,
+      "lum": 72.7
+     },
+     "interior": {
+      "std_ratio": 0.88,
+      "chroma_ratio": 0.888,
+      "lum": 67.4
+     },
+     "backdrop_lum": 52.6
+    }
+   }
+  }
+ },
+ "clear-light/photo": {
+  "circle44": {
+   "compare": 4.64,
+   "compare_plus": 1.26,
+   "silhouette": {
+    "ios": 29.28,
+    "kit": 11.6,
+    "plus": 31.74,
+    "none": 0.64
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 1.543,
+      "chroma_ratio": 1.054,
+      "lum": 175.3
+     },
+     "interior": {
+      "std_ratio": 0.534,
+      "chroma_ratio": 1.067,
+      "lum": 172.5
+     },
+     "backdrop_lum": 148.3
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 1.505,
+      "chroma_ratio": 0.944,
+      "lum": 158.1
+     },
+     "interior": {
+      "std_ratio": 0.589,
+      "chroma_ratio": 0.958,
+      "lum": 155.3
+     },
+     "backdrop_lum": 148.3
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 8.89,
+   "compare_plus": 1.07,
+   "silhouette": {
+    "ios": 32.44,
+    "kit": 10.68,
+    "plus": 31.65,
+    "none": 0.12
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 5.344,
+      "chroma_ratio": 0.997,
+      "lum": 202.4
+     },
+     "interior": {
+      "std_ratio": 0.761,
+      "chroma_ratio": 1.026,
+      "lum": 199.3
+     },
+     "backdrop_lum": 173.2
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 4.291,
+      "chroma_ratio": 0.895,
+      "lum": 181.2
+     },
+     "interior": {
+      "std_ratio": 0.707,
+      "chroma_ratio": 0.927,
+      "lum": 179.0
+     },
+     "backdrop_lum": 173.2
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 14.22,
+   "compare_plus": 1.5,
+   "silhouette": {
+    "ios": 38.59,
+    "kit": 16.49,
+    "plus": 36.49,
+    "none": 0.43
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 1.014,
+      "chroma_ratio": 1.05,
+      "lum": 197.1
+     },
+     "interior": {
+      "std_ratio": 0.861,
+      "chroma_ratio": 1.014,
+      "lum": 194.2
+     },
+     "backdrop_lum": 167.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.82,
+      "chroma_ratio": 0.945,
+      "lum": 176.4
+     },
+     "interior": {
+      "std_ratio": 0.747,
+      "chroma_ratio": 0.917,
+      "lum": 174.6
+     },
+     "backdrop_lum": 167.0
+    }
+   }
+  },
+  "circle88": {
+   "compare": 7.2,
+   "compare_plus": 1.35,
+   "silhouette": {
+    "ios": 19.45,
+    "kit": 12.28,
+    "plus": 26.22,
+    "none": 0.84
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.48,
+      "chroma_ratio": 1.132,
+      "lum": 164.9
+     },
+     "interior": {
+      "std_ratio": 0.796,
+      "chroma_ratio": 1.075,
+      "lum": 165.4
+     },
+     "backdrop_lum": 142.3
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.773,
+      "chroma_ratio": 0.977,
+      "lum": 149.9
+     },
+     "interior": {
+      "std_ratio": 0.713,
+      "chroma_ratio": 0.968,
+      "lum": 148.5
+     },
+     "backdrop_lum": 142.3
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 11.97,
+   "compare_plus": 1.71,
+   "silhouette": {
+    "ios": 29.41,
+    "kit": 8.32,
+    "plus": 29.42,
+    "none": 0.3
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 1.122,
+      "chroma_ratio": 1.036,
+      "lum": 205.1
+     },
+     "interior": {
+      "std_ratio": 0.998,
+      "chroma_ratio": 1.004,
+      "lum": 202.8
+     },
+     "backdrop_lum": 176.6
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.988,
+      "chroma_ratio": 0.904,
+      "lum": 183.9
+     },
+     "interior": {
+      "std_ratio": 0.883,
+      "chroma_ratio": 0.901,
+      "lum": 182.1
+     },
+     "backdrop_lum": 176.6
+    }
+   }
+  }
+ },
+ "clear-dark/flat-ffffff": {
+  "circle44": {
+   "compare": 0.0,
+   "compare_plus": 0.0,
+   "silhouette": {
+    "ios": 0.0,
+    "kit": 0.0,
+    "plus": 0.0,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 0.0,
+   "compare_plus": 0.0,
+   "silhouette": {
+    "ios": 0.0,
+    "kit": 0.0,
+    "plus": 0.0,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 0.0,
+   "compare_plus": 0.0,
+   "silhouette": {
+    "ios": 0.0,
+    "kit": 0.0,
+    "plus": 0.0,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 0.0,
+   "compare_plus": 0.0,
+   "silhouette": {
+    "ios": 0.0,
+    "kit": 0.0,
+    "plus": 0.0,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 0.0,
+   "compare_plus": 0.0,
+   "silhouette": {
+    "ios": 0.0,
+    "kit": 0.0,
+    "plus": 0.0,
+    "none": 0.0
+   }
+  }
+ },
+ "clear-dark/flat-ebebeb": {
+  "circle44": {
+   "compare": 5.01,
+   "compare_plus": 0.04,
+   "silhouette": {
+    "ios": 20.0,
+    "kit": 1.47,
+    "plus": 20.0,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 8.19,
+   "compare_plus": 0.03,
+   "silhouette": {
+    "ios": 20.0,
+    "kit": 1.45,
+    "plus": 20.0,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 13.7,
+   "compare_plus": 0.02,
+   "silhouette": {
+    "ios": 19.99,
+    "kit": 1.41,
+    "plus": 20.0,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 8.04,
+   "compare_plus": 0.03,
+   "silhouette": {
+    "ios": 20.0,
+    "kit": 1.44,
+    "plus": 20.0,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 10.89,
+   "compare_plus": 0.03,
+   "silhouette": {
+    "ios": 19.98,
+    "kit": 1.44,
+    "plus": 20.0,
+    "none": 0.0
+   }
+  }
+ },
+ "clear-dark/flat-d0d0d0": {
+  "circle44": {
+   "compare": 6.67,
+   "compare_plus": 0.94,
+   "silhouette": {
+    "ios": 30.57,
+    "kit": 3.98,
+    "plus": 33.81,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 10.83,
+   "compare_plus": 1.38,
+   "silhouette": {
+    "ios": 30.82,
+    "kit": 3.98,
+    "plus": 33.64,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 17.9,
+   "compare_plus": 2.07,
+   "silhouette": {
+    "ios": 31.04,
+    "kit": 3.91,
+    "plus": 33.48,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 10.57,
+   "compare_plus": 1.32,
+   "silhouette": {
+    "ios": 30.61,
+    "kit": 3.92,
+    "plus": 33.79,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 14.31,
+   "compare_plus": 1.73,
+   "silhouette": {
+    "ios": 30.92,
+    "kit": 3.93,
+    "plus": 33.67,
+    "none": 0.0
+   }
+  }
+ },
+ "clear-dark/lightphoto": {
+  "circle44": {
+   "compare": 5.73,
+   "compare_plus": 0.68,
+   "silhouette": {
+    "ios": 26.91,
+    "kit": 3.44,
+    "plus": 30.6,
+    "none": 0.28
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 1.868,
+      "chroma_ratio": 0.834,
+      "lum": 232.2
+     },
+     "interior": {
+      "std_ratio": 0.973,
+      "chroma_ratio": 0.889,
+      "lum": 230.7
+     },
+     "backdrop_lum": 206.7
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.639,
+      "chroma_ratio": 0.963,
+      "lum": 210.1
+     },
+     "interior": {
+      "std_ratio": 0.573,
+      "chroma_ratio": 0.958,
+      "lum": 209.7
+     },
+     "backdrop_lum": 206.7
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 9.87,
+   "compare_plus": 0.88,
+   "silhouette": {
+    "ios": 27.28,
+    "kit": 3.34,
+    "plus": 28.96,
+    "none": 0.06
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 3.923,
+      "chroma_ratio": 0.694,
+      "lum": 243.9
+     },
+     "interior": {
+      "std_ratio": 1.25,
+      "chroma_ratio": 0.758,
+      "lum": 242.9
+     },
+     "backdrop_lum": 217.9
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 1.727,
+      "chroma_ratio": 0.909,
+      "lum": 220.7
+     },
+     "interior": {
+      "std_ratio": 0.456,
+      "chroma_ratio": 0.925,
+      "lum": 220.3
+     },
+     "backdrop_lum": 217.9
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 17.19,
+   "compare_plus": 1.51,
+   "silhouette": {
+    "ios": 30.88,
+    "kit": 5.84,
+    "plus": 31.57,
+    "none": 0.19
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 1.114,
+      "chroma_ratio": 0.84,
+      "lum": 242.8
+     },
+     "interior": {
+      "std_ratio": 1.029,
+      "chroma_ratio": 0.851,
+      "lum": 242.0
+     },
+     "backdrop_lum": 215.1
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.724,
+      "chroma_ratio": 0.959,
+      "lum": 218.5
+     },
+     "interior": {
+      "std_ratio": 0.741,
+      "chroma_ratio": 0.912,
+      "lum": 218.3
+     },
+     "backdrop_lum": 215.1
+    }
+   }
+  },
+  "circle88": {
+   "compare": 9.95,
+   "compare_plus": 0.98,
+   "silhouette": {
+    "ios": 26.05,
+    "kit": 5.17,
+    "plus": 29.82,
+    "none": 0.38
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.89,
+      "chroma_ratio": 0.992,
+      "lum": 230.3
+     },
+     "interior": {
+      "std_ratio": 0.873,
+      "chroma_ratio": 1.02,
+      "lum": 229.6
+     },
+     "backdrop_lum": 204.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.403,
+      "chroma_ratio": 0.986,
+      "lum": 206.2
+     },
+     "interior": {
+      "std_ratio": 0.727,
+      "chroma_ratio": 0.962,
+      "lum": 206.4
+     },
+     "backdrop_lum": 204.0
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 14.06,
+   "compare_plus": 1.16,
+   "silhouette": {
+    "ios": 26.79,
+    "kit": 2.77,
+    "plus": 28.33,
+    "none": 0.14
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 1.174,
+      "chroma_ratio": 0.817,
+      "lum": 246.5
+     },
+     "interior": {
+      "std_ratio": 1.167,
+      "chroma_ratio": 0.851,
+      "lum": 246.1
+     },
+     "backdrop_lum": 219.4
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.894,
+      "chroma_ratio": 0.918,
+      "lum": 221.9
+     },
+     "interior": {
+      "std_ratio": 0.882,
+      "chroma_ratio": 0.906,
+      "lum": 221.7
+     },
+     "backdrop_lum": 219.4
+    }
+   }
+  }
+ },
+ "clear-dark/lightstripes": {
+  "circle44": {
+   "compare": 4.92,
+   "compare_plus": 0.05,
+   "silhouette": {
+    "ios": 20.01,
+    "kit": 5.25,
+    "plus": 19.99,
+    "none": 5.46
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 255.0
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 255.0
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.908,
+      "chroma_ratio": 0.0,
+      "lum": 237.1
+     },
+     "interior": {
+      "std_ratio": 0.933,
+      "chroma_ratio": 0.0,
+      "lum": 236.0
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 8.15,
+   "compare_plus": 0.04,
+   "silhouette": {
+    "ios": 20.0,
+    "kit": 4.39,
+    "plus": 20.0,
+    "none": 5.46
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.009,
+      "chroma_ratio": 0.0,
+      "lum": 255.0
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 255.0
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.917,
+      "chroma_ratio": 0.0,
+      "lum": 236.6
+     },
+     "interior": {
+      "std_ratio": 0.933,
+      "chroma_ratio": 0.0,
+      "lum": 236.0
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 13.69,
+   "compare_plus": 0.03,
+   "silhouette": {
+    "ios": 19.95,
+    "kit": 1.78,
+    "plus": 19.96,
+    "none": 0.49
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.041,
+      "chroma_ratio": 0.483,
+      "lum": 255.0
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 255.0
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.919,
+      "chroma_ratio": 0.0,
+      "lum": 236.1
+     },
+     "interior": {
+      "std_ratio": 0.933,
+      "chroma_ratio": 0.0,
+      "lum": 236.0
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  },
+  "circle88": {
+   "compare": 8.05,
+   "compare_plus": 0.09,
+   "silhouette": {
+    "ios": 20.0,
+    "kit": 3.73,
+    "plus": 19.94,
+    "none": 5.33
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 255.0
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 255.0
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.907,
+      "chroma_ratio": 0.0,
+      "lum": 236.1
+     },
+     "interior": {
+      "std_ratio": 0.933,
+      "chroma_ratio": 0.0,
+      "lum": 236.1
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 10.9,
+   "compare_plus": 0.04,
+   "silhouette": {
+    "ios": 19.98,
+    "kit": 2.68,
+    "plus": 19.99,
+    "none": 1.35
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.052,
+      "chroma_ratio": 0.54,
+      "lum": 255.0
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 255.0
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.918,
+      "chroma_ratio": 0.0,
+      "lum": 236.1
+     },
+     "interior": {
+      "std_ratio": 0.933,
+      "chroma_ratio": 0.0,
+      "lum": 236.0
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  }
+ },
+ "clear-dark/text": {
+  "circle44": {
+   "compare": 11.82,
+   "compare_plus": 4.64,
+   "silhouette": {
+    "ios": 43.61,
+    "kit": 35.02,
+    "plus": 34.49,
+    "none": 21.96
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.371,
+      "chroma_ratio": 467.173,
+      "lum": 218.8
+     },
+     "interior": {
+      "std_ratio": 0.36,
+      "chroma_ratio": 263.843,
+      "lum": 238.9
+     },
+     "backdrop_lum": 215.7
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 1.071,
+      "chroma_ratio": 0.0,
+      "lum": 198.1
+     },
+     "interior": {
+      "std_ratio": 0.868,
+      "chroma_ratio": 0.0,
+      "lum": 223.0
+     },
+     "backdrop_lum": 215.7
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 13.93,
+   "compare_plus": 4.39,
+   "silhouette": {
+    "ios": 39.44,
+    "kit": 31.4,
+    "plus": 40.13,
+    "none": 17.12
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.386,
+      "chroma_ratio": 416.885,
+      "lum": 225.3
+     },
+     "interior": {
+      "std_ratio": 0.328,
+      "chroma_ratio": 229.748,
+      "lum": 240.6
+     },
+     "backdrop_lum": 213.5
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.931,
+      "chroma_ratio": 0.0,
+      "lum": 213.6
+     },
+     "interior": {
+      "std_ratio": 0.781,
+      "chroma_ratio": 0.0,
+      "lum": 227.8
+     },
+     "backdrop_lum": 213.5
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 22.31,
+   "compare_plus": 4.25,
+   "silhouette": {
+    "ios": 29.63,
+    "kit": 11.11,
+    "plus": 20.34,
+    "none": 8.2
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.439,
+      "chroma_ratio": 266.824,
+      "lum": 231.2
+     },
+     "interior": {
+      "std_ratio": 0.393,
+      "chroma_ratio": 245.214,
+      "lum": 236.1
+     },
+     "backdrop_lum": 214.7
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.974,
+      "chroma_ratio": 0.0,
+      "lum": 212.0
+     },
+     "interior": {
+      "std_ratio": 0.869,
+      "chroma_ratio": 0.0,
+      "lum": 222.2
+     },
+     "backdrop_lum": 214.7
+    }
+   }
+  },
+  "circle88": {
+   "compare": 14.77,
+   "compare_plus": 2.69,
+   "silhouette": {
+    "ios": 23.83,
+    "kit": 25.72,
+    "plus": 26.62,
+    "none": 11.96
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.357,
+      "chroma_ratio": 266.558,
+      "lum": 237.7
+     },
+     "interior": {
+      "std_ratio": 0.439,
+      "chroma_ratio": 290.82,
+      "lum": 230.1
+     },
+     "backdrop_lum": 214.1
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.851,
+      "chroma_ratio": 0.0,
+      "lum": 222.3
+     },
+     "interior": {
+      "std_ratio": 0.947,
+      "chroma_ratio": 0.0,
+      "lum": 214.8
+     },
+     "backdrop_lum": 214.1
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 25.09,
+   "compare_plus": 9.97,
+   "silhouette": {
+    "ios": 25.98,
+    "kit": 41.06,
+    "plus": 16.29,
+    "none": 13.25
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.406,
+      "chroma_ratio": 420.683,
+      "lum": 226.0
+     },
+     "interior": {
+      "std_ratio": 0.321,
+      "chroma_ratio": 273.015,
+      "lum": 239.8
+     },
+     "backdrop_lum": 216.2
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.924,
+      "chroma_ratio": 0.0,
+      "lum": 217.3
+     },
+     "interior": {
+      "std_ratio": 0.984,
+      "chroma_ratio": 0.0,
+      "lum": 213.4
+     },
+     "backdrop_lum": 216.2
+    }
+   }
+  }
+ },
+ "clear-dark/flat-808080": {
+  "circle44": {
+   "compare": 4.67,
+   "compare_plus": 0.61,
+   "silhouette": {
+    "ios": 36.45,
+    "kit": 11.58,
+    "plus": 35.96,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 7.31,
+   "compare_plus": 0.91,
+   "silhouette": {
+    "ios": 37.5,
+    "kit": 11.61,
+    "plus": 35.93,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 11.32,
+   "compare_plus": 1.25,
+   "silhouette": {
+    "ios": 38.34,
+    "kit": 11.66,
+    "plus": 36.04,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 6.92,
+   "compare_plus": 0.81,
+   "silhouette": {
+    "ios": 36.65,
+    "kit": 11.62,
+    "plus": 35.99,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 9.34,
+   "compare_plus": 1.09,
+   "silhouette": {
+    "ios": 38.0,
+    "kit": 11.66,
+    "plus": 36.11,
+    "none": 0.0
+   }
+  }
+ },
+ "clear-dark/flat-1a1a1a": {
+  "circle44": {
+   "compare": 1.0,
+   "compare_plus": 0.24,
+   "silhouette": {
+    "ios": 27.17,
+    "kit": 21.36,
+    "plus": 26.33,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 1.58,
+   "compare_plus": 0.33,
+   "silhouette": {
+    "ios": 27.74,
+    "kit": 21.43,
+    "plus": 26.49,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 2.34,
+   "compare_plus": 0.34,
+   "silhouette": {
+    "ios": 28.14,
+    "kit": 21.55,
+    "plus": 26.68,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 1.44,
+   "compare_plus": 0.25,
+   "silhouette": {
+    "ios": 27.27,
+    "kit": 21.43,
+    "plus": 26.28,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 1.97,
+   "compare_plus": 0.34,
+   "silhouette": {
+    "ios": 27.99,
+    "kit": 21.58,
+    "plus": 26.6,
+    "none": 0.0
+   }
+  }
+ },
+ "clear-dark/flat-000000": {
+  "circle44": {
+   "compare": 0.19,
+   "compare_plus": 0.25,
+   "silhouette": {
+    "ios": 24.82,
+    "kit": 23.95,
+    "plus": 25.1,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 0.26,
+   "compare_plus": 0.38,
+   "silhouette": {
+    "ios": 25.31,
+    "kit": 24.02,
+    "plus": 25.2,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 0.17,
+   "compare_plus": 0.41,
+   "silhouette": {
+    "ios": 25.6,
+    "kit": 24.07,
+    "plus": 25.33,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 0.15,
+   "compare_plus": 0.29,
+   "silhouette": {
+    "ios": 24.92,
+    "kit": 23.94,
+    "plus": 25.05,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 0.22,
+   "compare_plus": 0.4,
+   "silhouette": {
+    "ios": 25.49,
+    "kit": 24.11,
+    "plus": 25.25,
+    "none": 0.0
+   }
+  }
+ },
+ "clear-dark/darkphoto": {
+  "circle44": {
+   "compare": 1.62,
+   "compare_plus": 0.56,
+   "silhouette": {
+    "ios": 28.16,
+    "kit": 19.16,
+    "plus": 27.51,
+    "none": 0.19
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 6.48,
+      "chroma_ratio": 1.215,
+      "lum": 68.3
+     },
+     "interior": {
+      "std_ratio": 0.549,
+      "chroma_ratio": 1.07,
+      "lum": 64.3
+     },
+     "backdrop_lum": 44.1
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 3.31,
+      "chroma_ratio": 0.957,
+      "lum": 61.5
+     },
+     "interior": {
+      "std_ratio": 0.546,
+      "chroma_ratio": 0.956,
+      "lum": 59.5
+     },
+     "backdrop_lum": 44.1
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 2.93,
+   "compare_plus": 0.53,
+   "silhouette": {
+    "ios": 30.72,
+    "kit": 19.2,
+    "plus": 29.05,
+    "none": 0.05
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 26.914,
+      "chroma_ratio": 1.195,
+      "lum": 77.5
+     },
+     "interior": {
+      "std_ratio": 0.639,
+      "chroma_ratio": 1.043,
+      "lum": 72.4
+     },
+     "backdrop_lum": 51.6
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 12.045,
+      "chroma_ratio": 0.896,
+      "lum": 68.8
+     },
+     "interior": {
+      "std_ratio": 0.719,
+      "chroma_ratio": 0.907,
+      "lum": 66.7
+     },
+     "backdrop_lum": 51.6
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 4.46,
+   "compare_plus": 0.63,
+   "silhouette": {
+    "ios": 32.68,
+    "kit": 20.82,
+    "plus": 30.36,
+    "none": 0.11
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 2.871,
+      "chroma_ratio": 1.224,
+      "lum": 75.8
+     },
+     "interior": {
+      "std_ratio": 0.857,
+      "chroma_ratio": 1.014,
+      "lum": 71.0
+     },
+     "backdrop_lum": 49.8
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 1.441,
+      "chroma_ratio": 0.962,
+      "lum": 67.2
+     },
+     "interior": {
+      "std_ratio": 0.732,
+      "chroma_ratio": 0.915,
+      "lum": 65.2
+     },
+     "backdrop_lum": 49.8
+    }
+   }
+  },
+  "circle88": {
+   "compare": 2.27,
+   "compare_plus": 0.49,
+   "silhouette": {
+    "ios": 23.67,
+    "kit": 17.16,
+    "plus": 25.05,
+    "none": 0.24
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 2.011,
+      "chroma_ratio": 1.26,
+      "lum": 64.3
+     },
+     "interior": {
+      "std_ratio": 0.814,
+      "chroma_ratio": 1.073,
+      "lum": 62.2
+     },
+     "backdrop_lum": 42.3
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 1.491,
+      "chroma_ratio": 0.983,
+      "lum": 58.8
+     },
+     "interior": {
+      "std_ratio": 0.719,
+      "chroma_ratio": 0.952,
+      "lum": 57.3
+     },
+     "backdrop_lum": 42.3
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 3.88,
+   "compare_plus": 0.73,
+   "silhouette": {
+    "ios": 30.06,
+    "kit": 18.19,
+    "plus": 28.2,
+    "none": 0.08
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 3.502,
+      "chroma_ratio": 1.214,
+      "lum": 78.2
+     },
+     "interior": {
+      "std_ratio": 1.004,
+      "chroma_ratio": 0.994,
+      "lum": 73.5
+     },
+     "backdrop_lum": 52.6
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 1.815,
+      "chroma_ratio": 0.913,
+      "lum": 69.3
+     },
+     "interior": {
+      "std_ratio": 0.88,
+      "chroma_ratio": 0.888,
+      "lum": 67.4
+     },
+     "backdrop_lum": 52.6
+    }
+   }
+  }
+ },
+ "clear-dark/photo": {
+  "circle44": {
+   "compare": 4.85,
+   "compare_plus": 1.34,
+   "silhouette": {
+    "ios": 27.28,
+    "kit": 7.86,
+    "plus": 32.05,
+    "none": 0.64
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 1.308,
+      "chroma_ratio": 1.081,
+      "lum": 174.4
+     },
+     "interior": {
+      "std_ratio": 0.534,
+      "chroma_ratio": 1.067,
+      "lum": 172.5
+     },
+     "backdrop_lum": 148.3
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.627,
+      "chroma_ratio": 0.963,
+      "lum": 156.2
+     },
+     "interior": {
+      "std_ratio": 0.589,
+      "chroma_ratio": 0.958,
+      "lum": 155.3
+     },
+     "backdrop_lum": 148.3
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 9.14,
+   "compare_plus": 1.18,
+   "silhouette": {
+    "ios": 33.09,
+    "kit": 7.86,
+    "plus": 36.83,
+    "none": 0.12
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 5.955,
+      "chroma_ratio": 0.985,
+      "lum": 202.7
+     },
+     "interior": {
+      "std_ratio": 0.761,
+      "chroma_ratio": 1.026,
+      "lum": 199.3
+     },
+     "backdrop_lum": 173.2
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 1.742,
+      "chroma_ratio": 0.912,
+      "lum": 179.9
+     },
+     "interior": {
+      "std_ratio": 0.707,
+      "chroma_ratio": 0.927,
+      "lum": 179.0
+     },
+     "backdrop_lum": 173.2
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 14.35,
+   "compare_plus": 1.57,
+   "silhouette": {
+    "ios": 38.94,
+    "kit": 13.4,
+    "plus": 41.99,
+    "none": 0.43
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 1.078,
+      "chroma_ratio": 1.046,
+      "lum": 197.2
+     },
+     "interior": {
+      "std_ratio": 0.861,
+      "chroma_ratio": 1.014,
+      "lum": 194.2
+     },
+     "backdrop_lum": 167.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.718,
+      "chroma_ratio": 0.961,
+      "lum": 175.0
+     },
+     "interior": {
+      "std_ratio": 0.747,
+      "chroma_ratio": 0.917,
+      "lum": 174.6
+     },
+     "backdrop_lum": 167.0
+    }
+   }
+  },
+  "circle88": {
+   "compare": 7.36,
+   "compare_plus": 1.47,
+   "silhouette": {
+    "ios": 15.89,
+    "kit": 11.33,
+    "plus": 26.7,
+    "none": 0.84
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.369,
+      "chroma_ratio": 1.178,
+      "lum": 163.2
+     },
+     "interior": {
+      "std_ratio": 0.796,
+      "chroma_ratio": 1.075,
+      "lum": 165.4
+     },
+     "backdrop_lum": 142.3
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.406,
+      "chroma_ratio": 0.996,
+      "lum": 147.9
+     },
+     "interior": {
+      "std_ratio": 0.713,
+      "chroma_ratio": 0.968,
+      "lum": 148.5
+     },
+     "backdrop_lum": 142.3
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 12.16,
+   "compare_plus": 1.88,
+   "silhouette": {
+    "ios": 29.62,
+    "kit": 6.5,
+    "plus": 35.44,
+    "none": 0.3
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 1.204,
+      "chroma_ratio": 1.02,
+      "lum": 205.4
+     },
+     "interior": {
+      "std_ratio": 0.998,
+      "chroma_ratio": 1.004,
+      "lum": 202.8
+     },
+     "backdrop_lum": 176.6
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.884,
+      "chroma_ratio": 0.92,
+      "lum": 182.6
+     },
+     "interior": {
+      "std_ratio": 0.883,
+      "chroma_ratio": 0.901,
+      "lum": 182.1
+     },
+     "backdrop_lum": 176.6
+    }
+   }
+  }
+ },
+ "regular-light/flat-ffffff": {
+  "circle44": {
+   "compare": 1.52,
+   "compare_plus": 1.52,
+   "silhouette": {
+    "ios": 6.05,
+    "kit": 4.78,
+    "plus": 4.78,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 1.37,
+   "compare_plus": 1.37,
+   "silhouette": {
+    "ios": 6.08,
+    "kit": 5.47,
+    "plus": 5.47,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 3.88,
+   "compare_plus": 3.88,
+   "silhouette": {
+    "ios": 6.69,
+    "kit": 9.39,
+    "plus": 9.39,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 2.46,
+   "compare_plus": 2.46,
+   "silhouette": {
+    "ios": 9.4,
+    "kit": 9.47,
+    "plus": 9.47,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 1.45,
+   "compare_plus": 1.45,
+   "silhouette": {
+    "ios": 6.86,
+    "kit": 6.46,
+    "plus": 6.46,
+    "none": 0.0
+   }
+  }
+ },
+ "regular-light/flat-ebebeb": {
+  "circle44": {
+   "compare": 1.33,
+   "compare_plus": 1.34,
+   "silhouette": {
+    "ios": 23.04,
+    "kit": 22.04,
+    "plus": 22.17,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 1.38,
+   "compare_plus": 1.39,
+   "silhouette": {
+    "ios": 23.08,
+    "kit": 22.53,
+    "plus": 22.67,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 2.68,
+   "compare_plus": 2.68,
+   "silhouette": {
+    "ios": 22.11,
+    "kit": 22.92,
+    "plus": 23.37,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 1.97,
+   "compare_plus": 1.98,
+   "silhouette": {
+    "ios": 24.05,
+    "kit": 22.97,
+    "plus": 23.38,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 1.5,
+   "compare_plus": 1.5,
+   "silhouette": {
+    "ios": 23.83,
+    "kit": 23.3,
+    "plus": 23.44,
+    "none": 0.0
+   }
+  }
+ },
+ "regular-light/flat-d0d0d0": {
+  "circle44": {
+   "compare": 1.42,
+   "compare_plus": 1.44,
+   "silhouette": {
+    "ios": 46.55,
+    "kit": 45.0,
+    "plus": 45.31,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 1.41,
+   "compare_plus": 1.42,
+   "silhouette": {
+    "ios": 46.67,
+    "kit": 45.61,
+    "plus": 45.95,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 1.03,
+   "compare_plus": 1.01,
+   "silhouette": {
+    "ios": 43.08,
+    "kit": 41.61,
+    "plus": 42.64,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 1.97,
+   "compare_plus": 1.97,
+   "silhouette": {
+    "ios": 42.71,
+    "kit": 41.78,
+    "plus": 42.75,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 1.51,
+   "compare_plus": 1.52,
+   "silhouette": {
+    "ios": 47.29,
+    "kit": 46.53,
+    "plus": 46.85,
+    "none": 0.0
+   }
+  }
+ },
+ "regular-light/lightphoto": {
+  "circle44": {
+   "compare": 1.21,
+   "compare_plus": 1.25,
+   "silhouette": {
+    "ios": 42.45,
+    "kit": 41.46,
+    "plus": 42.16,
+    "none": 0.28
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.688,
+      "chroma_ratio": 0.474,
+      "lum": 243.0
+     },
+     "interior": {
+      "std_ratio": 0.661,
+      "chroma_ratio": 0.481,
+      "lum": 242.6
+     },
+     "backdrop_lum": 206.7
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.585,
+      "chroma_ratio": 0.422,
+      "lum": 244.4
+     },
+     "interior": {
+      "std_ratio": 0.648,
+      "chroma_ratio": 0.434,
+      "lum": 244.1
+     },
+     "backdrop_lum": 206.7
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 1.17,
+   "compare_plus": 1.2,
+   "silhouette": {
+    "ios": 37.09,
+    "kit": 36.43,
+    "plus": 36.77,
+    "none": 0.06
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 1.708,
+      "chroma_ratio": 0.463,
+      "lum": 248.0
+     },
+     "interior": {
+      "std_ratio": 0.402,
+      "chroma_ratio": 0.477,
+      "lum": 247.6
+     },
+     "backdrop_lum": 217.9
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.806,
+      "chroma_ratio": 0.392,
+      "lum": 249.3
+     },
+     "interior": {
+      "std_ratio": 0.383,
+      "chroma_ratio": 0.406,
+      "lum": 249.1
+     },
+     "backdrop_lum": 217.9
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 1.94,
+   "compare_plus": 1.95,
+   "silhouette": {
+    "ios": 38.99,
+    "kit": 39.15,
+    "plus": 39.97,
+    "none": 0.19
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.441,
+      "chroma_ratio": 0.601,
+      "lum": 242.2
+     },
+     "interior": {
+      "std_ratio": 0.206,
+      "chroma_ratio": 0.655,
+      "lum": 241.8
+     },
+     "backdrop_lum": 215.1
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.372,
+      "chroma_ratio": 0.576,
+      "lum": 244.0
+     },
+     "interior": {
+      "std_ratio": 0.332,
+      "chroma_ratio": 0.576,
+      "lum": 243.9
+     },
+     "backdrop_lum": 215.1
+    }
+   }
+  },
+  "circle88": {
+   "compare": 1.9,
+   "compare_plus": 1.97,
+   "silhouette": {
+    "ios": 37.68,
+    "kit": 37.66,
+    "plus": 39.16,
+    "none": 0.38
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.383,
+      "chroma_ratio": 0.632,
+      "lum": 232.9
+     },
+     "interior": {
+      "std_ratio": 0.365,
+      "chroma_ratio": 0.622,
+      "lum": 232.4
+     },
+     "backdrop_lum": 204.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.373,
+      "chroma_ratio": 0.67,
+      "lum": 235.4
+     },
+     "interior": {
+      "std_ratio": 0.397,
+      "chroma_ratio": 0.671,
+      "lum": 235.2
+     },
+     "backdrop_lum": 204.0
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 1.39,
+   "compare_plus": 1.41,
+   "silhouette": {
+    "ios": 36.16,
+    "kit": 35.64,
+    "plus": 35.96,
+    "none": 0.14
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.431,
+      "chroma_ratio": 0.515,
+      "lum": 248.0
+     },
+     "interior": {
+      "std_ratio": 0.256,
+      "chroma_ratio": 0.516,
+      "lum": 247.7
+     },
+     "backdrop_lum": 219.4
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.194,
+      "chroma_ratio": 0.458,
+      "lum": 249.7
+     },
+     "interior": {
+      "std_ratio": 0.194,
+      "chroma_ratio": 0.467,
+      "lum": 249.5
+     },
+     "backdrop_lum": 219.4
+    }
+   }
+  }
+ },
+ "regular-light/lightstripes": {
+  "circle44": {
+   "compare": 1.36,
+   "compare_plus": 1.37,
+   "silhouette": {
+    "ios": 23.19,
+    "kit": 21.62,
+    "plus": 21.75,
+    "none": 5.46
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.083,
+      "chroma_ratio": 216.799,
+      "lum": 250.8
+     },
+     "interior": {
+      "std_ratio": 0.03,
+      "chroma_ratio": 294.966,
+      "lum": 250.3
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.028,
+      "chroma_ratio": 0.0,
+      "lum": 252.2
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 252.0
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 1.24,
+   "compare_plus": 1.24,
+   "silhouette": {
+    "ios": 23.25,
+    "kit": 22.24,
+    "plus": 22.38,
+    "none": 5.46
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.088,
+      "chroma_ratio": 245.296,
+      "lum": 250.8
+     },
+     "interior": {
+      "std_ratio": 0.03,
+      "chroma_ratio": 279.829,
+      "lum": 250.3
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.023,
+      "chroma_ratio": 0.0,
+      "lum": 252.1
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 252.0
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 2.76,
+   "compare_plus": 2.76,
+   "silhouette": {
+    "ios": 21.92,
+    "kit": 23.05,
+    "plus": 23.5,
+    "none": 0.49
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.146,
+      "chroma_ratio": 2009.064,
+      "lum": 246.2
+     },
+     "interior": {
+      "std_ratio": 0.013,
+      "chroma_ratio": 3549.085,
+      "lum": 245.6
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.027,
+      "chroma_ratio": 0.0,
+      "lum": 249.1
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 249.0
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  },
+  "circle88": {
+   "compare": 2.03,
+   "compare_plus": 2.04,
+   "silhouette": {
+    "ios": 24.02,
+    "kit": 23.2,
+    "plus": 23.61,
+    "none": 5.33
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.119,
+      "chroma_ratio": 141.411,
+      "lum": 246.7
+     },
+     "interior": {
+      "std_ratio": 0.015,
+      "chroma_ratio": 207.3,
+      "lum": 245.9
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.041,
+      "chroma_ratio": 0.0,
+      "lum": 249.2
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 249.0
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 1.38,
+   "compare_plus": 1.39,
+   "silhouette": {
+    "ios": 23.81,
+    "kit": 23.18,
+    "plus": 23.32,
+    "none": 1.35
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.106,
+      "chroma_ratio": 168.741,
+      "lum": 250.5
+     },
+     "interior": {
+      "std_ratio": 0.024,
+      "chroma_ratio": 234.377,
+      "lum": 250.2
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.022,
+      "chroma_ratio": 0.0,
+      "lum": 252.1
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 252.0
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  }
+ },
+ "regular-light/text": {
+  "circle44": {
+   "compare": 1.41,
+   "compare_plus": 1.43,
+   "silhouette": {
+    "ios": 55.87,
+    "kit": 54.41,
+    "plus": 54.86,
+    "none": 21.96
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.051,
+      "chroma_ratio": 204.328,
+      "lum": 247.5
+     },
+     "interior": {
+      "std_ratio": 0.05,
+      "chroma_ratio": 199.474,
+      "lum": 248.6
+     },
+     "backdrop_lum": 215.7
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.042,
+      "chroma_ratio": 0.0,
+      "lum": 248.7
+     },
+     "interior": {
+      "std_ratio": 0.046,
+      "chroma_ratio": 0.0,
+      "lum": 250.5
+     },
+     "backdrop_lum": 215.7
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 1.44,
+   "compare_plus": 1.48,
+   "silhouette": {
+    "ios": 52.46,
+    "kit": 51.35,
+    "plus": 51.77,
+    "none": 17.12
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.051,
+      "chroma_ratio": 197.347,
+      "lum": 248.8
+     },
+     "interior": {
+      "std_ratio": 0.046,
+      "chroma_ratio": 206.689,
+      "lum": 248.9
+     },
+     "backdrop_lum": 213.5
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.042,
+      "chroma_ratio": 0.0,
+      "lum": 249.8
+     },
+     "interior": {
+      "std_ratio": 0.043,
+      "chroma_ratio": 0.0,
+      "lum": 250.8
+     },
+     "backdrop_lum": 213.5
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 2.26,
+   "compare_plus": 2.25,
+   "silhouette": {
+    "ios": 32.5,
+    "kit": 32.15,
+    "plus": 32.9,
+    "none": 8.2
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.057,
+      "chroma_ratio": 292.734,
+      "lum": 242.3
+     },
+     "interior": {
+      "std_ratio": 0.028,
+      "chroma_ratio": 278.366,
+      "lum": 241.8
+     },
+     "backdrop_lum": 214.7
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.046,
+      "chroma_ratio": 0.0,
+      "lum": 243.5
+     },
+     "interior": {
+      "std_ratio": 0.042,
+      "chroma_ratio": 0.0,
+      "lum": 243.7
+     },
+     "backdrop_lum": 214.7
+    }
+   }
+  },
+  "circle88": {
+   "compare": 2.7,
+   "compare_plus": 2.71,
+   "silhouette": {
+    "ios": 33.26,
+    "kit": 32.07,
+    "plus": 32.81,
+    "none": 11.96
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.075,
+      "chroma_ratio": 188.398,
+      "lum": 241.5
+     },
+     "interior": {
+      "std_ratio": 0.102,
+      "chroma_ratio": 156.332,
+      "lum": 239.1
+     },
+     "backdrop_lum": 214.1
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.075,
+      "chroma_ratio": 0.0,
+      "lum": 244.3
+     },
+     "interior": {
+      "std_ratio": 0.087,
+      "chroma_ratio": 0.0,
+      "lum": 242.7
+     },
+     "backdrop_lum": 214.1
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 1.54,
+   "compare_plus": 1.51,
+   "silhouette": {
+    "ios": 26.32,
+    "kit": 25.16,
+    "plus": 25.83,
+    "none": 13.25
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.053,
+      "chroma_ratio": 145.33,
+      "lum": 248.0
+     },
+     "interior": {
+      "std_ratio": 0.054,
+      "chroma_ratio": 204.496,
+      "lum": 247.1
+     },
+     "backdrop_lum": 216.2
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.048,
+      "chroma_ratio": 0.0,
+      "lum": 249.7
+     },
+     "interior": {
+      "std_ratio": 0.049,
+      "chroma_ratio": 0.0,
+      "lum": 249.3
+     },
+     "backdrop_lum": 216.2
+    }
+   }
+  }
+ },
+ "regular-light/flat-808080": {
+  "circle44": {
+   "compare": 1.28,
+   "compare_plus": 1.32,
+   "silhouette": {
+    "ios": 114.5,
+    "kit": 114.09,
+    "plus": 114.9,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 1.75,
+   "compare_plus": 1.77,
+   "silhouette": {
+    "ios": 114.64,
+    "kit": 114.56,
+    "plus": 115.41,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 1.13,
+   "compare_plus": 1.09,
+   "silhouette": {
+    "ios": 101.17,
+    "kit": 97.13,
+    "plus": 99.87,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 2.12,
+   "compare_plus": 2.1,
+   "silhouette": {
+    "ios": 97.62,
+    "kit": 97.22,
+    "plus": 99.83,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 2.05,
+   "compare_plus": 2.09,
+   "silhouette": {
+    "ios": 115.07,
+    "kit": 115.18,
+    "plus": 115.99,
+    "none": 0.0
+   }
+  }
+ },
+ "regular-light/flat-1a1a1a": {
+  "circle44": {
+   "compare": 0.89,
+   "compare_plus": 0.93,
+   "silhouette": {
+    "ios": 202.08,
+    "kit": 200.94,
+    "plus": 202.44,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 1.39,
+   "compare_plus": 1.41,
+   "silhouette": {
+    "ios": 202.26,
+    "kit": 201.12,
+    "plus": 202.71,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 1.17,
+   "compare_plus": 1.13,
+   "silhouette": {
+    "ios": 171.6,
+    "kit": 167.7,
+    "plus": 172.63,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 2.77,
+   "compare_plus": 2.73,
+   "silhouette": {
+    "ios": 167.23,
+    "kit": 167.43,
+    "plus": 172.17,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 1.59,
+   "compare_plus": 1.63,
+   "silhouette": {
+    "ios": 202.17,
+    "kit": 201.42,
+    "plus": 202.92,
+    "none": 0.0
+   }
+  }
+ },
+ "regular-light/flat-000000": {
+  "circle44": {
+   "compare": 0.77,
+   "compare_plus": 0.81,
+   "silhouette": {
+    "ios": 224.47,
+    "kit": 223.43,
+    "plus": 225.1,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 1.37,
+   "compare_plus": 1.39,
+   "silhouette": {
+    "ios": 224.68,
+    "kit": 223.47,
+    "plus": 225.23,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 1.89,
+   "compare_plus": 1.85,
+   "silhouette": {
+    "ios": 188.7,
+    "kit": 185.19,
+    "plus": 190.71,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 2.74,
+   "compare_plus": 2.69,
+   "silhouette": {
+    "ios": 184.82,
+    "kit": 185.05,
+    "plus": 190.34,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 1.59,
+   "compare_plus": 1.63,
+   "silhouette": {
+    "ios": 224.47,
+    "kit": 223.54,
+    "plus": 225.2,
+    "none": 0.0
+   }
+  }
+ },
+ "regular-light/darkphoto": {
+  "circle44": {
+   "compare": 1.36,
+   "compare_plus": 1.44,
+   "silhouette": {
+    "ios": 185.61,
+    "kit": 186.98,
+    "plus": 188.23,
+    "none": 0.19
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 2.406,
+      "chroma_ratio": 0.742,
+      "lum": 227.1
+     },
+     "interior": {
+      "std_ratio": 0.211,
+      "chroma_ratio": 0.748,
+      "lum": 225.6
+     },
+     "backdrop_lum": 44.1
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 1.251,
+      "chroma_ratio": 0.587,
+      "lum": 230.2
+     },
+     "interior": {
+      "std_ratio": 0.356,
+      "chroma_ratio": 0.608,
+      "lum": 229.4
+     },
+     "backdrop_lum": 44.1
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 1.49,
+   "compare_plus": 1.54,
+   "silhouette": {
+    "ios": 181.38,
+    "kit": 180.89,
+    "plus": 182.17,
+    "none": 0.05
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 10.986,
+      "chroma_ratio": 0.714,
+      "lum": 229.6
+     },
+     "interior": {
+      "std_ratio": 0.491,
+      "chroma_ratio": 0.729,
+      "lum": 227.9
+     },
+     "backdrop_lum": 51.6
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 4.288,
+      "chroma_ratio": 0.676,
+      "lum": 230.9
+     },
+     "interior": {
+      "std_ratio": 0.396,
+      "chroma_ratio": 0.704,
+      "lum": 230.2
+     },
+     "backdrop_lum": 51.6
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 0.94,
+   "compare_plus": 0.9,
+   "silhouette": {
+    "ios": 156.89,
+    "kit": 153.05,
+    "plus": 157.41,
+    "none": 0.11
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 2.447,
+      "chroma_ratio": 0.633,
+      "lum": 199.3
+     },
+     "interior": {
+      "std_ratio": 0.218,
+      "chroma_ratio": 0.622,
+      "lum": 195.6
+     },
+     "backdrop_lum": 49.8
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 1.046,
+      "chroma_ratio": 0.639,
+      "lum": 198.0
+     },
+     "interior": {
+      "std_ratio": 0.182,
+      "chroma_ratio": 0.622,
+      "lum": 196.2
+     },
+     "backdrop_lum": 49.8
+    }
+   }
+  },
+  "circle88": {
+   "compare": 2.61,
+   "compare_plus": 2.65,
+   "silhouette": {
+    "ios": 151.13,
+    "kit": 151.91,
+    "plus": 156.55,
+    "none": 0.24
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 2.579,
+      "chroma_ratio": 0.638,
+      "lum": 188.6
+     },
+     "interior": {
+      "std_ratio": 0.379,
+      "chroma_ratio": 0.607,
+      "lum": 185.2
+     },
+     "backdrop_lum": 42.3
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 1.445,
+      "chroma_ratio": 0.608,
+      "lum": 192.3
+     },
+     "interior": {
+      "std_ratio": 0.206,
+      "chroma_ratio": 0.602,
+      "lum": 190.7
+     },
+     "backdrop_lum": 42.3
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 1.76,
+   "compare_plus": 1.82,
+   "silhouette": {
+    "ios": 179.87,
+    "kit": 179.43,
+    "plus": 180.68,
+    "none": 0.08
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 2.456,
+      "chroma_ratio": 0.735,
+      "lum": 228.6
+     },
+     "interior": {
+      "std_ratio": 0.588,
+      "chroma_ratio": 0.711,
+      "lum": 227.1
+     },
+     "backdrop_lum": 52.6
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.813,
+      "chroma_ratio": 0.687,
+      "lum": 230.2
+     },
+     "interior": {
+      "std_ratio": 0.587,
+      "chroma_ratio": 0.675,
+      "lum": 229.5
+     },
+     "backdrop_lum": 52.6
+    }
+   }
+  }
+ },
+ "regular-light/photo": {
+  "circle44": {
+   "compare": 2.39,
+   "compare_plus": 2.45,
+   "silhouette": {
+    "ios": 85.65,
+    "kit": 90.19,
+    "plus": 91.33,
+    "none": 0.64
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.57,
+      "chroma_ratio": 0.454,
+      "lum": 229.8
+     },
+     "interior": {
+      "std_ratio": 0.654,
+      "chroma_ratio": 0.458,
+      "lum": 229.2
+     },
+     "backdrop_lum": 148.3
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.331,
+      "chroma_ratio": 0.29,
+      "lum": 236.3
+     },
+     "interior": {
+      "std_ratio": 0.113,
+      "chroma_ratio": 0.302,
+      "lum": 235.7
+     },
+     "backdrop_lum": 148.3
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 1.21,
+   "compare_plus": 1.25,
+   "silhouette": {
+    "ios": 73.86,
+    "kit": 73.49,
+    "plus": 74.24,
+    "none": 0.12
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 1.306,
+      "chroma_ratio": 0.43,
+      "lum": 241.0
+     },
+     "interior": {
+      "std_ratio": 0.515,
+      "chroma_ratio": 0.44,
+      "lum": 240.4
+     },
+     "backdrop_lum": 173.2
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.895,
+      "chroma_ratio": 0.39,
+      "lum": 242.4
+     },
+     "interior": {
+      "std_ratio": 0.467,
+      "chroma_ratio": 0.404,
+      "lum": 241.9
+     },
+     "backdrop_lum": 173.2
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 1.73,
+   "compare_plus": 1.74,
+   "silhouette": {
+    "ios": 76.42,
+    "kit": 75.33,
+    "plus": 77.11,
+    "none": 0.43
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.402,
+      "chroma_ratio": 0.572,
+      "lum": 230.7
+     },
+     "interior": {
+      "std_ratio": 0.269,
+      "chroma_ratio": 0.616,
+      "lum": 230.2
+     },
+     "backdrop_lum": 167.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.333,
+      "chroma_ratio": 0.562,
+      "lum": 230.9
+     },
+     "interior": {
+      "std_ratio": 0.297,
+      "chroma_ratio": 0.564,
+      "lum": 230.6
+     },
+     "backdrop_lum": 167.0
+    }
+   }
+  },
+  "circle88": {
+   "compare": 2.46,
+   "compare_plus": 2.61,
+   "silhouette": {
+    "ios": 70.97,
+    "kit": 73.69,
+    "plus": 76.83,
+    "none": 0.84
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.286,
+      "chroma_ratio": 0.631,
+      "lum": 209.6
+     },
+     "interior": {
+      "std_ratio": 0.361,
+      "chroma_ratio": 0.617,
+      "lum": 209.2
+     },
+     "backdrop_lum": 142.3
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.316,
+      "chroma_ratio": 0.609,
+      "lum": 213.8
+     },
+     "interior": {
+      "std_ratio": 0.21,
+      "chroma_ratio": 0.602,
+      "lum": 213.5
+     },
+     "backdrop_lum": 142.3
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 1.63,
+   "compare_plus": 1.68,
+   "silhouette": {
+    "ios": 70.93,
+    "kit": 71.02,
+    "plus": 71.73,
+    "none": 0.3
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.357,
+      "chroma_ratio": 0.501,
+      "lum": 241.4
+     },
+     "interior": {
+      "std_ratio": 0.217,
+      "chroma_ratio": 0.496,
+      "lum": 241.0
+     },
+     "backdrop_lum": 176.6
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.182,
+      "chroma_ratio": 0.453,
+      "lum": 243.3
+     },
+     "interior": {
+      "std_ratio": 0.158,
+      "chroma_ratio": 0.45,
+      "lum": 243.2
+     },
+     "backdrop_lum": 176.6
+    }
+   }
+  }
+ },
+ "regular-dark/flat-ffffff": {
+  "circle44": {
+   "compare": 47.64,
+   "compare_plus": 47.1,
+   "silhouette": {
+    "ios": 6.05,
+    "kit": 169.42,
+    "plus": 164.49,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 76.55,
+   "compare_plus": 75.92,
+   "silhouette": {
+    "ios": 6.08,
+    "kit": 169.06,
+    "plus": 164.22,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 7.32,
+   "compare_plus": 7.09,
+   "silhouette": {
+    "ios": 131.03,
+    "kit": 151.36,
+    "plus": 146.59,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 3.8,
+   "compare_plus": 3.54,
+   "silhouette": {
+    "ios": 145.29,
+    "kit": 151.73,
+    "plus": 146.87,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 101.03,
+   "compare_plus": 100.5,
+   "silhouette": {
+    "ios": 6.86,
+    "kit": 168.59,
+    "plus": 163.54,
+    "none": 0.0
+   }
+  }
+ },
+ "regular-dark/flat-ebebeb": {
+  "circle44": {
+   "compare": 1.93,
+   "compare_plus": 1.67,
+   "silhouette": {
+    "ios": 144.67,
+    "kit": 154.28,
+    "plus": 149.56,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 2.56,
+   "compare_plus": 2.23,
+   "silhouette": {
+    "ios": 143.67,
+    "kit": 153.93,
+    "plus": 149.31,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 7.97,
+   "compare_plus": 7.74,
+   "silhouette": {
+    "ios": 117.8,
+    "kit": 138.11,
+    "plus": 133.55,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 4.39,
+   "compare_plus": 4.12,
+   "silhouette": {
+    "ios": 130.74,
+    "kit": 138.4,
+    "plus": 133.76,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 3.02,
+   "compare_plus": 2.77,
+   "silhouette": {
+    "ios": 142.02,
+    "kit": 153.41,
+    "plus": 148.61,
+    "none": 0.0
+   }
+  }
+ },
+ "regular-dark/flat-d0d0d0": {
+  "circle44": {
+   "compare": 2.02,
+   "compare_plus": 1.77,
+   "silhouette": {
+    "ios": 124.59,
+    "kit": 134.35,
+    "plus": 129.94,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 2.92,
+   "compare_plus": 2.62,
+   "silhouette": {
+    "ios": 123.66,
+    "kit": 134.16,
+    "plus": 129.83,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 7.91,
+   "compare_plus": 7.69,
+   "silhouette": {
+    "ios": 100.18,
+    "kit": 119.74,
+    "plus": 115.48,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 4.34,
+   "compare_plus": 4.07,
+   "silhouette": {
+    "ios": 111.78,
+    "kit": 120.12,
+    "plus": 115.77,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 3.57,
+   "compare_plus": 3.34,
+   "silhouette": {
+    "ios": 122.23,
+    "kit": 133.81,
+    "plus": 129.32,
+    "none": 0.0
+   }
+  }
+ },
+ "regular-dark/lightphoto": {
+  "circle44": {
+   "compare": 2.73,
+   "compare_plus": 2.59,
+   "silhouette": {
+    "ios": 124.12,
+    "kit": 136.62,
+    "plus": 132.13,
+    "none": 0.28
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 4.495,
+      "chroma_ratio": 0.851,
+      "lum": 75.6
+     },
+     "interior": {
+      "std_ratio": 0.247,
+      "chroma_ratio": 0.751,
+      "lum": 71.5
+     },
+     "backdrop_lum": 206.7
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 2.477,
+      "chroma_ratio": 0.557,
+      "lum": 66.2
+     },
+     "interior": {
+      "std_ratio": 0.675,
+      "chroma_ratio": 0.563,
+      "lum": 64.0
+     },
+     "backdrop_lum": 206.7
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 3.44,
+   "compare_plus": 3.12,
+   "silhouette": {
+    "ios": 128.52,
+    "kit": 140.97,
+    "plus": 136.54,
+    "none": 0.06
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 20.578,
+      "chroma_ratio": 0.83,
+      "lum": 81.2
+     },
+     "interior": {
+      "std_ratio": 0.359,
+      "chroma_ratio": 0.726,
+      "lum": 75.8
+     },
+     "backdrop_lum": 217.9
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 8.575,
+      "chroma_ratio": 0.555,
+      "lum": 71.9
+     },
+     "interior": {
+      "std_ratio": 0.66,
+      "chroma_ratio": 0.564,
+      "lum": 69.7
+     },
+     "backdrop_lum": 217.9
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 8.25,
+   "compare_plus": 8.03,
+   "silhouette": {
+    "ios": 101.62,
+    "kit": 122.46,
+    "plus": 118.17,
+    "none": 0.19
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 2.171,
+      "chroma_ratio": 0.684,
+      "lum": 90.2
+     },
+     "interior": {
+      "std_ratio": 0.125,
+      "chroma_ratio": 0.602,
+      "lum": 84.7
+     },
+     "backdrop_lum": 215.1
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.911,
+      "chroma_ratio": 0.602,
+      "lum": 76.1
+     },
+     "interior": {
+      "std_ratio": 0.344,
+      "chroma_ratio": 0.59,
+      "lum": 74.3
+     },
+     "backdrop_lum": 215.1
+    }
+   }
+  },
+  "circle88": {
+   "compare": 4.69,
+   "compare_plus": 4.58,
+   "silhouette": {
+    "ios": 117.64,
+    "kit": 125.02,
+    "plus": 120.53,
+    "none": 0.38
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 1.635,
+      "chroma_ratio": 0.693,
+      "lum": 76.4
+     },
+     "interior": {
+      "std_ratio": 0.352,
+      "chroma_ratio": 0.605,
+      "lum": 73.3
+     },
+     "backdrop_lum": 204.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 1.113,
+      "chroma_ratio": 0.711,
+      "lum": 67.1
+     },
+     "interior": {
+      "std_ratio": 0.413,
+      "chroma_ratio": 0.7,
+      "lum": 65.2
+     },
+     "backdrop_lum": 204.0
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 3.79,
+   "compare_plus": 3.57,
+   "silhouette": {
+    "ios": 129.38,
+    "kit": 142.54,
+    "plus": 137.9,
+    "none": 0.14
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 2.818,
+      "chroma_ratio": 0.852,
+      "lum": 80.6
+     },
+     "interior": {
+      "std_ratio": 0.342,
+      "chroma_ratio": 0.709,
+      "lum": 75.1
+     },
+     "backdrop_lum": 219.4
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 1.104,
+      "chroma_ratio": 0.593,
+      "lum": 71.8
+     },
+     "interior": {
+      "std_ratio": 0.181,
+      "chroma_ratio": 0.589,
+      "lum": 69.8
+     },
+     "backdrop_lum": 219.4
+    }
+   }
+  }
+ },
+ "regular-dark/lightstripes": {
+  "circle44": {
+   "compare": 2.03,
+   "compare_plus": 1.77,
+   "silhouette": {
+    "ios": 144.35,
+    "kit": 154.27,
+    "plus": 149.56,
+    "none": 5.46
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.699,
+      "chroma_ratio": 203.369,
+      "lum": 82.6
+     },
+     "interior": {
+      "std_ratio": 0.047,
+      "chroma_ratio": 130.86,
+      "lum": 78.4
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.347,
+      "chroma_ratio": 0.0,
+      "lum": 76.2
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 74.0
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 2.75,
+   "compare_plus": 2.42,
+   "silhouette": {
+    "ios": 143.37,
+    "kit": 153.99,
+    "plus": 149.36,
+    "none": 5.46
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.807,
+      "chroma_ratio": 177.136,
+      "lum": 83.6
+     },
+     "interior": {
+      "std_ratio": 0.043,
+      "chroma_ratio": 131.568,
+      "lum": 78.4
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.335,
+      "chroma_ratio": 0.0,
+      "lum": 76.1
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 74.0
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 7.98,
+   "compare_plus": 7.74,
+   "silhouette": {
+    "ios": 117.78,
+    "kit": 137.96,
+    "plus": 133.4,
+    "none": 0.49
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.907,
+      "chroma_ratio": 77.891,
+      "lum": 94.6
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 89.0
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.331,
+      "chroma_ratio": 0.0,
+      "lum": 81.1
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 79.0
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  },
+  "circle88": {
+   "compare": 4.38,
+   "compare_plus": 4.12,
+   "silhouette": {
+    "ios": 130.77,
+    "kit": 138.33,
+    "plus": 133.68,
+    "none": 5.33
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.723,
+      "chroma_ratio": 2614.078,
+      "lum": 90.0
+     },
+     "interior": {
+      "std_ratio": 0.023,
+      "chroma_ratio": 2010.254,
+      "lum": 85.6
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.349,
+      "chroma_ratio": 0.0,
+      "lum": 81.2
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 79.0
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 3.26,
+   "compare_plus": 3.01,
+   "silhouette": {
+    "ios": 142.07,
+    "kit": 153.55,
+    "plus": 148.74,
+    "none": 1.35
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.899,
+      "chroma_ratio": 221.147,
+      "lum": 83.7
+     },
+     "interior": {
+      "std_ratio": 0.032,
+      "chroma_ratio": 150.835,
+      "lum": 78.4
+     },
+     "backdrop_lum": 235.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.335,
+      "chroma_ratio": 0.0,
+      "lum": 76.1
+     },
+     "interior": {
+      "std_ratio": 0.0,
+      "chroma_ratio": 0.0,
+      "lum": 74.0
+     },
+     "backdrop_lum": 235.0
+    }
+   }
+  }
+ },
+ "regular-dark/text": {
+  "circle44": {
+   "compare": 2.21,
+   "compare_plus": 2.03,
+   "silhouette": {
+    "ios": 117.53,
+    "kit": 127.12,
+    "plus": 122.75,
+    "none": 21.96
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.152,
+      "chroma_ratio": 138.137,
+      "lum": 75.5
+     },
+     "interior": {
+      "std_ratio": 0.097,
+      "chroma_ratio": 169.058,
+      "lum": 74.9
+     },
+     "backdrop_lum": 215.7
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.098,
+      "chroma_ratio": 0.0,
+      "lum": 68.6
+     },
+     "interior": {
+      "std_ratio": 0.087,
+      "chroma_ratio": 0.0,
+      "lum": 70.2
+     },
+     "backdrop_lum": 215.7
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 2.97,
+   "compare_plus": 2.73,
+   "silhouette": {
+    "ios": 118.97,
+    "kit": 129.39,
+    "plus": 125.23,
+    "none": 17.12
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.159,
+      "chroma_ratio": 178.721,
+      "lum": 78.8
+     },
+     "interior": {
+      "std_ratio": 0.089,
+      "chroma_ratio": 147.13,
+      "lum": 75.5
+     },
+     "backdrop_lum": 213.5
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.092,
+      "chroma_ratio": 0.0,
+      "lum": 70.6
+     },
+     "interior": {
+      "std_ratio": 0.082,
+      "chroma_ratio": 0.0,
+      "lum": 70.9
+     },
+     "backdrop_lum": 213.5
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 8.8,
+   "compare_plus": 8.62,
+   "silhouette": {
+    "ios": 108.6,
+    "kit": 129.07,
+    "plus": 124.71,
+    "none": 8.2
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.188,
+      "chroma_ratio": 315.103,
+      "lum": 90.0
+     },
+     "interior": {
+      "std_ratio": 0.025,
+      "chroma_ratio": 287.651,
+      "lum": 84.9
+     },
+     "backdrop_lum": 214.7
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.086,
+      "chroma_ratio": 0.0,
+      "lum": 75.7
+     },
+     "interior": {
+      "std_ratio": 0.04,
+      "chroma_ratio": 0.0,
+      "lum": 74.2
+     },
+     "backdrop_lum": 214.7
+    }
+   }
+  },
+  "circle88": {
+   "compare": 4.38,
+   "compare_plus": 4.2,
+   "silhouette": {
+    "ios": 121.43,
+    "kit": 129.55,
+    "plus": 124.99,
+    "none": 11.96
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.155,
+      "chroma_ratio": 385.38,
+      "lum": 85.5
+     },
+     "interior": {
+      "std_ratio": 0.079,
+      "chroma_ratio": 321.444,
+      "lum": 80.2
+     },
+     "backdrop_lum": 214.1
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.103,
+      "chroma_ratio": 0.0,
+      "lum": 76.6
+     },
+     "interior": {
+      "std_ratio": 0.084,
+      "chroma_ratio": 0.0,
+      "lum": 73.3
+     },
+     "backdrop_lum": 214.1
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 3.51,
+   "compare_plus": 3.23,
+   "silhouette": {
+    "ios": 145.57,
+    "kit": 157.93,
+    "plus": 152.94,
+    "none": 13.25
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.211,
+      "chroma_ratio": 175.585,
+      "lum": 77.7
+     },
+     "interior": {
+      "std_ratio": 0.105,
+      "chroma_ratio": 138.265,
+      "lum": 72.2
+     },
+     "backdrop_lum": 216.2
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.098,
+      "chroma_ratio": 0.0,
+      "lum": 70.4
+     },
+     "interior": {
+      "std_ratio": 0.095,
+      "chroma_ratio": 0.0,
+      "lum": 67.9
+     },
+     "backdrop_lum": 216.2
+    }
+   }
+  }
+ },
+ "regular-dark/flat-808080": {
+  "circle44": {
+   "compare": 1.51,
+   "compare_plus": 1.33,
+   "silhouette": {
+    "ios": 67.66,
+    "kit": 74.42,
+    "plus": 70.89,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 2.22,
+   "compare_plus": 1.99,
+   "silhouette": {
+    "ios": 66.87,
+    "kit": 74.3,
+    "plus": 70.83,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 7.63,
+   "compare_plus": 7.46,
+   "silhouette": {
+    "ios": 49.45,
+    "kit": 65.56,
+    "plus": 62.17,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 5.2,
+   "compare_plus": 4.98,
+   "silhouette": {
+    "ios": 55.02,
+    "kit": 65.78,
+    "plus": 62.31,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 2.69,
+   "compare_plus": 2.51,
+   "silhouette": {
+    "ios": 65.88,
+    "kit": 73.95,
+    "plus": 70.41,
+    "none": 0.0
+   }
+  }
+ },
+ "regular-dark/flat-1a1a1a": {
+  "circle44": {
+   "compare": 0.94,
+   "compare_plus": 0.86,
+   "silhouette": {
+    "ios": 5.47,
+    "kit": 1.39,
+    "plus": 4.39,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 1.5,
+   "compare_plus": 1.39,
+   "silhouette": {
+    "ios": 6.01,
+    "kit": 1.42,
+    "plus": 4.39,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 3.76,
+   "compare_plus": 3.7,
+   "silhouette": {
+    "ios": 8.77,
+    "kit": 2.24,
+    "plus": 4.76,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 5.3,
+   "compare_plus": 5.22,
+   "silhouette": {
+    "ios": 14.76,
+    "kit": 2.14,
+    "plus": 4.75,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 1.91,
+   "compare_plus": 1.82,
+   "silhouette": {
+    "ios": 6.51,
+    "kit": 1.61,
+    "plus": 4.54,
+    "none": 0.0
+   }
+  }
+ },
+ "regular-dark/flat-000000": {
+  "circle44": {
+   "compare": 1.16,
+   "compare_plus": 1.1,
+   "silhouette": {
+    "ios": 24.82,
+    "kit": 20.72,
+    "plus": 22.86,
+    "none": 0.0
+   }
+  },
+  "capsule132x44": {
+   "compare": 1.9,
+   "compare_plus": 1.81,
+   "silhouette": {
+    "ios": 25.31,
+    "kit": 20.67,
+    "plus": 22.78,
+    "none": 0.0
+   }
+  },
+  "card240x160r28": {
+   "compare": 0.88,
+   "compare_plus": 0.84,
+   "silhouette": {
+    "ios": 21.46,
+    "kit": 19.76,
+    "plus": 21.79,
+    "none": 0.0
+   }
+  },
+  "circle88": {
+   "compare": 5.1,
+   "compare_plus": 5.06,
+   "silhouette": {
+    "ios": 32.37,
+    "kit": 19.78,
+    "plus": 21.87,
+    "none": 0.0
+   }
+  },
+  "capsule300x64": {
+   "compare": 2.44,
+   "compare_plus": 2.37,
+   "silhouette": {
+    "ios": 25.49,
+    "kit": 20.83,
+    "plus": 22.85,
+    "none": 0.0
+   }
+  }
+ },
+ "regular-dark/darkphoto": {
+  "circle44": {
+   "compare": 1.2,
+   "compare_plus": 1.16,
+   "silhouette": {
+    "ios": 7.37,
+    "kit": 12.56,
+    "plus": 9.95,
+    "none": 0.19
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 5.112,
+      "chroma_ratio": 0.849,
+      "lum": 33.1
+     },
+     "interior": {
+      "std_ratio": 0.261,
+      "chroma_ratio": 0.75,
+      "lum": 30.0
+     },
+     "backdrop_lum": 44.1
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 4.26,
+      "chroma_ratio": 0.743,
+      "lum": 29.1
+     },
+     "interior": {
+      "std_ratio": 0.179,
+      "chroma_ratio": 0.732,
+      "lum": 26.6
+     },
+     "backdrop_lum": 44.1
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 1.94,
+   "compare_plus": 1.83,
+   "silhouette": {
+    "ios": 10.12,
+    "kit": 16.45,
+    "plus": 13.83,
+    "none": 0.05
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 20.935,
+      "chroma_ratio": 0.838,
+      "lum": 36.9
+     },
+     "interior": {
+      "std_ratio": 0.356,
+      "chroma_ratio": 0.728,
+      "lum": 33.0
+     },
+     "backdrop_lum": 51.6
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 15.054,
+      "chroma_ratio": 0.698,
+      "lum": 31.8
+     },
+     "interior": {
+      "std_ratio": 0.37,
+      "chroma_ratio": 0.711,
+      "lum": 29.2
+     },
+     "backdrop_lum": 51.6
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 4.72,
+   "compare_plus": 4.65,
+   "silhouette": {
+    "ios": 4.26,
+    "kit": 11.33,
+    "plus": 8.82,
+    "none": 0.11
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 2.126,
+      "chroma_ratio": 0.696,
+      "lum": 38.7
+     },
+     "interior": {
+      "std_ratio": 0.152,
+      "chroma_ratio": 0.628,
+      "lum": 34.9
+     },
+     "backdrop_lum": 49.8
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 1.543,
+      "chroma_ratio": 0.673,
+      "lum": 31.2
+     },
+     "interior": {
+      "std_ratio": 0.175,
+      "chroma_ratio": 0.65,
+      "lum": 28.7
+     },
+     "backdrop_lum": 49.8
+    }
+   }
+  },
+  "circle88": {
+   "compare": 5.16,
+   "compare_plus": 5.09,
+   "silhouette": {
+    "ios": 3.11,
+    "kit": 12.73,
+    "plus": 10.08,
+    "none": 0.24
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 1.96,
+      "chroma_ratio": 0.687,
+      "lum": 37.2
+     },
+     "interior": {
+      "std_ratio": 0.347,
+      "chroma_ratio": 0.607,
+      "lum": 34.7
+     },
+     "backdrop_lum": 42.3
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 1.951,
+      "chroma_ratio": 0.607,
+      "lum": 25.7
+     },
+     "interior": {
+      "std_ratio": 0.168,
+      "chroma_ratio": 0.598,
+      "lum": 23.1
+     },
+     "backdrop_lum": 42.3
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 2.38,
+   "compare_plus": 2.29,
+   "silhouette": {
+    "ios": 11.34,
+    "kit": 17.61,
+    "plus": 14.98,
+    "none": 0.08
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 2.683,
+      "chroma_ratio": 0.854,
+      "lum": 36.3
+     },
+     "interior": {
+      "std_ratio": 0.338,
+      "chroma_ratio": 0.712,
+      "lum": 32.4
+     },
+     "backdrop_lum": 52.6
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 2.033,
+      "chroma_ratio": 0.724,
+      "lum": 31.4
+     },
+     "interior": {
+      "std_ratio": 0.351,
+      "chroma_ratio": 0.711,
+      "lum": 28.7
+     },
+     "backdrop_lum": 52.6
+    }
+   }
+  }
+ },
+ "regular-dark/photo": {
+  "circle44": {
+   "compare": 3.7,
+   "compare_plus": 3.7,
+   "silhouette": {
+    "ios": 82.57,
+    "kit": 97.14,
+    "plus": 93.2,
+    "none": 0.64
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 1.843,
+      "chroma_ratio": 0.846,
+      "lum": 60.6
+     },
+     "interior": {
+      "std_ratio": 0.24,
+      "chroma_ratio": 0.751,
+      "lum": 56.9
+     },
+     "backdrop_lum": 148.3
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 1.253,
+      "chroma_ratio": 0.543,
+      "lum": 48.5
+     },
+     "interior": {
+      "std_ratio": 0.511,
+      "chroma_ratio": 0.537,
+      "lum": 46.7
+     },
+     "backdrop_lum": 148.3
+    }
+   }
+  },
+  "capsule132x44": {
+   "compare": 4.34,
+   "compare_plus": 4.14,
+   "silhouette": {
+    "ios": 93.08,
+    "kit": 107.7,
+    "plus": 103.75,
+    "none": 0.12
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 9.673,
+      "chroma_ratio": 0.832,
+      "lum": 72.2
+     },
+     "interior": {
+      "std_ratio": 0.21,
+      "chroma_ratio": 0.726,
+      "lum": 66.6
+     },
+     "backdrop_lum": 173.2
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 4.316,
+      "chroma_ratio": 0.551,
+      "lum": 60.8
+     },
+     "interior": {
+      "std_ratio": 0.536,
+      "chroma_ratio": 0.561,
+      "lum": 58.5
+     },
+     "backdrop_lum": 173.2
+    }
+   }
+  },
+  "card240x160r28": {
+   "compare": 8.79,
+   "compare_plus": 8.63,
+   "silhouette": {
+    "ios": 66.85,
+    "kit": 87.04,
+    "plus": 83.33,
+    "none": 0.43
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.906,
+      "chroma_ratio": 0.682,
+      "lum": 78.0
+     },
+     "interior": {
+      "std_ratio": 0.126,
+      "chroma_ratio": 0.608,
+      "lum": 72.8
+     },
+     "backdrop_lum": 167.0
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.505,
+      "chroma_ratio": 0.58,
+      "lum": 63.4
+     },
+     "interior": {
+      "std_ratio": 0.294,
+      "chroma_ratio": 0.574,
+      "lum": 61.6
+     },
+     "backdrop_lum": 167.0
+    }
+   }
+  },
+  "circle88": {
+   "compare": 4.77,
+   "compare_plus": 4.77,
+   "silhouette": {
+    "ios": 84.56,
+    "kit": 89.27,
+    "plus": 85.31,
+    "none": 0.84
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 0.494,
+      "chroma_ratio": 0.692,
+      "lum": 54.1
+     },
+     "interior": {
+      "std_ratio": 0.348,
+      "chroma_ratio": 0.606,
+      "lum": 52.7
+     },
+     "backdrop_lum": 142.3
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.566,
+      "chroma_ratio": 0.611,
+      "lum": 46.5
+     },
+     "interior": {
+      "std_ratio": 0.164,
+      "chroma_ratio": 0.604,
+      "lum": 44.6
+     },
+     "backdrop_lum": 142.3
+    }
+   }
+  },
+  "capsule300x64": {
+   "compare": 4.34,
+   "compare_plus": 4.21,
+   "silhouette": {
+    "ios": 97.58,
+    "kit": 111.42,
+    "plus": 107.27,
+    "none": 0.3
+   },
+   "band": {
+    "ios": {
+     "band": {
+      "std_ratio": 1.238,
+      "chroma_ratio": 0.847,
+      "lum": 70.3
+     },
+     "interior": {
+      "std_ratio": 0.335,
+      "chroma_ratio": 0.711,
+      "lum": 65.0
+     },
+     "backdrop_lum": 176.6
+    },
+    "kit": {
+     "band": {
+      "std_ratio": 0.542,
+      "chroma_ratio": 0.585,
+      "lum": 60.9
+     },
+     "interior": {
+      "std_ratio": 0.177,
+      "chroma_ratio": 0.583,
+      "lum": 58.7
+     },
+     "backdrop_lum": 176.6
+    }
+   }
+  }
+ }
+}

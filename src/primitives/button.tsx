@@ -152,7 +152,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           <>
             {filled && <PixelTexture variant="corner" seed={className || 'control'} />}
             {loading && <PixelLoader size={16} decorative />}
-            {loading && controlSize === 'icon' ? null : children}
+            {loading && controlSize === 'icon' ? null : withLabels(children)}
           </>
         )}
       </Component>
@@ -161,6 +161,34 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 )
 
 Button.displayName = 'Button'
+
+/**
+ * Wraps each run of text children (strings and numbers, like `Save {count}`) in one
+ * `.lab-control-label`, so the label can end in an ellipsis when the button's width is bounded.
+ */
+function withLabels(children: React.ReactNode) {
+  const out: React.ReactNode[] = []
+  let run: Array<string | number> = []
+  const flush = () => {
+    if (run.length)
+      out.push(
+        <span key={`label-${out.length}`} className="lab-control-label">
+          {run}
+        </span>
+      )
+    run = []
+  }
+  // toArray keys every element, so the returned list never warns.
+  for (const child of React.Children.toArray(children)) {
+    if (typeof child === 'string' || typeof child === 'number') run.push(child)
+    else {
+      flush()
+      out.push(child)
+    }
+  }
+  flush()
+  return out
+}
 
 export type IconButtonProps = Omit<ButtonProps, 'controlSize' | 'iconSize' | 'size'> & {
   /** Required: the icon is the button's only content, so this is its accessible name. */

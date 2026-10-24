@@ -4,64 +4,6 @@
   --lab-ease-in: cubic-bezier(0.55, 0, 0.75, 0.2);
 }
 
-/* Dialogs: scale/fade in, quicker fade out; the backdrop follows the dialog. */
-.lab-dialog[data-state='open'] {
-  animation: lab-dialog-in 300ms var(--lab-ease-out) both;
-}
-.lab-dialog[data-state='closed'] {
-  animation: lab-dialog-out 180ms var(--lab-ease-in) both;
-  pointer-events: none;
-}
-.lab-dialog[data-state='open']::backdrop {
-  animation: lab-backdrop-in 300ms var(--lab-ease-out) both;
-}
-.lab-dialog[data-state='closed']::backdrop {
-  animation: lab-backdrop-out 180ms var(--lab-ease-in) both;
-}
-@keyframes lab-dialog-in {
-  from {
-    opacity: 0;
-    transform: translateY(14px) scale(0.965);
-  }
-}
-@keyframes lab-dialog-out {
-  to {
-    opacity: 0;
-    transform: translateY(8px) scale(0.98);
-  }
-}
-@keyframes lab-backdrop-in {
-  from {
-    opacity: 0;
-  }
-}
-@keyframes lab-backdrop-out {
-  to {
-    opacity: 0;
-  }
-}
-@media (max-width: 720px) {
-  .lab-dialog[data-state='open'] {
-    animation-name: lab-sheet-in;
-    animation-duration: 360ms;
-  }
-  .lab-dialog[data-state='closed'] {
-    animation-name: lab-sheet-out;
-    animation-duration: 220ms;
-  }
-  @keyframes lab-sheet-in {
-    from {
-      opacity: 0;
-      transform: translateY(32px);
-    }
-  }
-  @keyframes lab-sheet-out {
-    to {
-      opacity: 0;
-      transform: translateY(24px);
-    }
-  }
-}
 
 /* Select menus grow from their trigger as a glass bubble: menu/menu.css + menu-surface.tsx. */
 @keyframes lab-menu-in {
@@ -118,42 +60,7 @@
   }
 }
 
-/* Upgrade dialog on desktop: the art panel stays put, only the offer scrolls. */
-@media (min-width: 721px) {
-  .lab-dialog.lab-dialog-wide[open] {
-    overflow: hidden;
-    height: min(720px, calc(100dvh - 48px));
-    max-height: none;
-    grid-template-rows: minmax(0, 1fr);
-  }
-  .lab-dialog-wide > .lab-upgrade-art {
-    min-height: 0;
-    height: 100%;
-  }
-  .lab-dialog-wide > .lab-upgrade-content {
-    min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
-    padding-bottom: 0;
-  }
-  .lab-upgrade-footer {
-    position: sticky;
-    bottom: 0;
-    z-index: 2;
-    margin: 0 -28px;
-    padding: 18px 28px 20px;
-    background: linear-gradient(
-      to bottom,
-      transparent,
-      var(--lab-surface, #fff) 18px
-    );
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .lab-dialog[data-state],
-  .lab-dialog[data-state]::backdrop,
   .lab-expression-suggestions[data-state],
   .lab-swap > .lab-swap-item {
     animation-duration: 1ms !important;

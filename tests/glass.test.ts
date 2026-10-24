@@ -13,7 +13,7 @@ import {
   type GlassShape,
 } from '../src/glass/geometry.ts'
 import { planGlassTransition, sameRect } from '../src/glass/transitions.ts'
-import { DEFAULT_GLASS_LIGHT, glassLightToward, rimGradient } from '../src/glass/light.ts'
+import { DEFAULT_GLASS_LIGHT, glassLightToward } from '../src/glass/light.ts'
 
 const pill = (x: number, width = 80, y = 0): GlassShape => ({ x, y, width, height: 46, radius: 23 })
 const near = (a: number, b: number, tolerance: number) => Math.abs(a - b) <= tolerance
@@ -161,14 +161,6 @@ test('light defaults to the top-left and turns toward a near pointer', () => {
   assert.ok(near(far.x, DEFAULT_GLASS_LIGHT.x, 0.01))
 })
 
-test('the rim gradient spans the bounds along the light, lit end first', () => {
-  const g = rimGradient({ x: 0, y: 0, width: 100, height: 40 }, DEFAULT_GLASS_LIGHT)
-  assert.ok(g.x1 < g.x2 && g.y1 < g.y2)
-  assert.ok(near(g.x1 + g.x2, 100, 1e-9))
-  // Like CSS: the projection of the bounds onto the gradient line.
-  assert.ok(near(Math.hypot(g.x2 - g.x1, g.y2 - g.y1), (100 + 40) * Math.SQRT1_2, 1e-9))
-})
-
 import { GLASS_STRETCH_LIMIT, glassStretch, pressedShape } from '../src/glass/press.ts'
 
 test('a press swells the bubble around its centre', () => {
@@ -280,7 +272,7 @@ test('only running animations that move or resize count as geometry', () => {
 })
 
 import { webRefractionShift, refractionScale } from '../src/glass/refraction.ts'
-import { GLASS_BLUR, GLASS_RIM, GLASS_RIM_STOPS, glassBlur, glassSize, rimAlpha } from '../src/glass/material.ts'
+import { GLASS_BLUR, GLASS_CLEAR_BLUR, GLASS_RIM, edgeMask, glassBlur, glassBlurAt, glassEdgeTerms, glassMaterial, glassRim, glassSize, rimLayer } from '../src/glass/material.ts'
 import { mergeWidth } from '../src/glass/geometry.ts'
 
 test('the bend follows the fitted profile: (1 - t)^4 of the bezel, smaller glass scales down', () => {
@@ -293,19 +285,63 @@ test('the bend follows the fitted profile: (1 - t)^4 of the bezel, smaller glass
   assert.ok(Math.abs(small.scale - 2 * webRefractionShift(44)) < 1e-9, 'filter scale follows the size')
 })
 
-test('material: denser control glass, blur grows with size, rim lit at both ends of the axis', () => {
+test('material: denser control glass, blur grows with size, clear glass always softens a little', () => {
   assert.equal(glassSize(44), 'small')
   assert.equal(glassSize(72), 'small')
   assert.equal(glassSize(120), 'large')
   assert.equal(glassBlur(30), GLASS_BLUR.min)
   assert.equal(glassBlur(400), GLASS_BLUR.max)
   assert.ok(glassBlur(100) > GLASS_BLUR.min && glassBlur(100) < GLASS_BLUR.max)
-  assert.ok(Math.abs(rimAlpha(0, 'light') - GLASS_RIM.light.peak) < 1e-9)
-  assert.ok(Math.abs(rimAlpha(Math.PI, 'light') - GLASS_RIM.light.peak) < 1e-9, 'symmetric')
-  assert.ok(Math.abs(rimAlpha(Math.PI / 2, 'light') - GLASS_RIM.light.base) < 1e-9)
-  assert.deepEqual(GLASS_RIM_STOPS[0], [0, 1])
-  assert.deepEqual(GLASS_RIM_STOPS[5], [0.5, 0])
-  assert.deepEqual(GLASS_RIM_STOPS[10], [1, 1])
+  assert.equal(glassBlurAt(44, 0, false), GLASS_CLEAR_BLUR)
+  assert.equal(glassBlurAt(44, 0, true), GLASS_CLEAR_BLUR)
+  assert.equal(glassBlurAt(44, 1, false), 0)
+  assert.equal(glassBlurAt(200, 1, true), glassBlur(200))
+  assert.ok(near(glassBlurAt(44, 0.5, false), GLASS_CLEAR_BLUR / 2, 1e-12))
+})
+
+test('rim: a white layer inside the outline, lit at both ends, flat then gone by its width', () => {
+  for (const scheme of ['light', 'dark'] as const) for (const tint of [0, 0.5, 1]) {
+    const rim = glassRim(tint, scheme)
+    assert.equal(rimLayer(0, 1, rim), rim.w0 + rim.w1, 'lit end')
+    assert.equal(rimLayer(0, -1, rim), rim.w0 + rim.w1, 'both ends')
+    assert.equal(rimLayer(0, 0, rim), rim.w0, 'perpendicular')
+    assert.equal(rimLayer(-0.01, 1, rim), 0, 'nothing outside')
+    assert.equal(rimLayer(rim.width, 1, rim), 0)
+    let previous = rimLayer(0, 1, rim)
+    for (let i = 1; i <= 100; i++) {
+      const alpha = rimLayer((i / 100) * rim.width, 1, rim)
+      assert.ok(alpha <= previous && alpha >= 0)
+      previous = alpha
+    }
+    // Flat top: still ≥ 70 % of the peak two thirds of the way in.
+    assert.ok(rimLayer(rim.width * 2 / 3, 1, rim) >= 0.7 * (rim.w0 + rim.w1))
+  }
+  // Measured ends (LIGHT-EDGES.md): clear light 0.66 at the lit ends, near nothing across.
+  assert.ok(near(rimLayer(0, 1, glassRim(0, 'light')), 0.66, 1e-9))
+  assert.ok(rimLayer(0, 0, glassRim(0, 'light')) < 0.05)
+  assert.deepEqual(glassRim(1, 'light'), GLASS_RIM.light.regular)
+  assert.deepEqual(glassRim(0, 'dark'), GLASS_RIM.dark.clear)
+})
+
+test('edge terms: the veil thins at the edge, dark clear glass adds light that scales with the backdrop', () => {
+  assert.equal(edgeMask(-0.1, 1), 0)
+  assert.equal(edgeMask(0, 1), 1)
+  assert.ok(near(edgeMask(0, 0), 0.2, 1e-12))
+  assert.equal(edgeMask(1, 1), 0)
+  const regular = glassMaterial(1, 'light', 'small')
+  const light = glassEdgeTerms(1, 'light', regular, 0.99)
+  // x + k1·x·E + k3·E under veil v reproduces a veil thinned by K = 0.35 at E = 1.
+  const v = regular.veil
+  for (const x of [0.2, 0.6, 0.9]) {
+    const filtered = x + light.k1 * x + light.k3
+    const shown = v * 0.99 + (1 - v) * filtered
+    const target = v * (1 - 0.35) * 0.99 + (1 - v * (1 - 0.35)) * x
+    assert.ok(near(shown, target, 1e-9), `x ${x}`)
+  }
+  const clear = glassEdgeTerms(0, 'light', glassMaterial(0, 'light', 'small'), 0.99)
+  assert.deepEqual(clear, { k1: 0, k3: 0 })
+  const darkClear = glassEdgeTerms(0, 'dark', glassMaterial(0, 'dark', 'small'), 0.13)
+  assert.ok(near(darkClear.k1, 0.31, 1e-12) && near(darkClear.k3, 0.106, 1e-12))
 })
 
 test('merging: full spacing while apart, a slimmer blend as shapes touch', () => {
@@ -324,32 +360,6 @@ test('merging: full spacing while apart, a slimmer blend as shapes touch', () =>
   const neck = neckOf((y) => unionDistance(72, y, [a, b], 40))
   const constant = neckOf((y) => smoothMin(shapeDistance(72, y, a), shapeDistance(72, y, b), 40))
   assert.ok(neck > 4 && neck < constant - 2, `neck ${neck} vs ${constant}`)
-})
-
-
-import { rimReflection, rimSurface } from '../src/glass/light.ts'
-
-test('rim reflection follows normals, not the position or aspect ratio', () => {
-  const light = { x: 0, y: -1 }
-  assert.equal(rimReflection(0, -1, light), 1)
-  assert.equal(rimReflection(0, 1, light), 1)
-  assert.equal(rimReflection(1, 0, light), 0)
-  assert.ok(near(rimReflection(1, -1, light), 0.5, 1e-9))
-  assert.equal(rimReflection(0, 0, light), 0)
-  for (const width of [96, 240]) {
-    const segments = rimSurface([{ x: 0, y: 0, width, height: 48, radius: 24 }], 8)
-    const top = segments.filter((s) => Math.abs(s.nx) < 1e-6 && s.ny < 0)
-    assert.ok(top.length > 0)
-    assert.ok(top.every((s) => rimReflection(s.nx, s.ny, light) === 1))
-  }
-})
-
-test('merged rim normals follow the union including its concave neck', () => {
-  const shapes = [{ x: 0, y: 0, width: 48, height: 48, radius: 24 }, { x: 52, y: 0, width: 48, height: 48, radius: 24 }]
-  const segments = rimSurface(shapes, 16)
-  assert.ok(segments.length > 0)
-  assert.ok(segments.every((s) => Number.isFinite(rimReflection(s.nx, s.ny, DEFAULT_GLASS_LIGHT))))
-  assert.ok(segments.some((s) => s.d.startsWith('M49') || s.d.startsWith('M50')))
 })
 
 
@@ -421,15 +431,19 @@ test('Firefox live source landmarks stay aligned through scaled hosts and inset 
 })
 
 
-test('circular glass stays a circle at every angle instead of a maximal-radius squircle', () => {
+test('full-radius glass is a circle at every angle, round or clamped continuous', () => {
   const circle = { x: 0, y: 0, width: 72, height: 72, radius: 36, cornerExponent: 2 }
-  for (let angle = 0; angle < 2 * Math.PI; angle += Math.PI / 16) {
-    const x = 36 + 36 * Math.cos(angle)
-    const y = 36 + 36 * Math.sin(angle)
-    assert.ok(Math.abs(shapeDistance(x, y, circle)) < 1e-8)
-  }
-  const diagonal = 36 - 36 / Math.sqrt(2)
-  assert.ok(shapeDistance(diagonal, diagonal, { ...circle, cornerExponent: undefined }) < -1)
+  for (const shape of [circle, { ...circle, cornerExponent: undefined }])
+    for (let angle = 0; angle < 2 * Math.PI; angle += Math.PI / 16) {
+      const x = 36 + 36 * Math.cos(angle)
+      const y = 36 + 36 * Math.sin(angle)
+      assert.ok(Math.abs(shapeDistance(x, y, shape)) < 1e-8)
+    }
+  // A smaller radius keeps the continuous corner: fuller than a circular one at the diagonal.
+  const card = { x: 0, y: 0, width: 300, height: 200, radius: 16 }
+  const diagonal = 16 - 16 / Math.sqrt(2)
+  assert.ok(Math.abs(shapeDistance(diagonal, diagonal, { ...card, cornerExponent: 2 })) < 1e-8)
+  assert.ok(shapeDistance(diagonal, diagonal, card) < -1)
   assert.equal(pressedShape(circle, 1.06, 3, 0).cornerExponent, 2)
 })
 
@@ -438,28 +452,6 @@ test('round glass corner radius follows its full visible range and clamps at a c
   const distances = [0, 0.25, 0.5, 0.75, 1].map(value => shapeDistance(2, 2, { ...shape, radius: 36 * value }))
   assert.ok(distances.every((value, index) => index === 0 || value > distances[index - 1]))
   assert.equal(shapeDistance(2, 2, { ...shape, radius: 36 }), shapeDistance(2, 2, { ...shape, radius: 100 }))
-})
-
-
-import { measuredRimReflection } from '../src/glass/light.ts'
-
-test('reference rim matches measured angular endpoints and fades inward without a second peak', () => {
-  const light = { x: 0, y: -1 }
-  for (const [base, peak] of [[0.27, 0.718], [0.139, 0.246]]) {
-    assert.equal(measuredRimReflection(0, 0, -1, light, 1, base, peak), peak)
-    assert.equal(measuredRimReflection(0, 0, 1, light, 1, base, peak), peak)
-    assert.equal(measuredRimReflection(0, 1, 0, light, 1, base, peak), base)
-    let previous = peak
-    for (let i = 1; i <= 100; i++) {
-      const alpha = measuredRimReflection(i / 100, 0, -1, light, 1, base, peak)
-      assert.ok(alpha <= previous && alpha >= 0)
-      previous = alpha
-    }
-    assert.equal(previous, 0)
-    assert.equal(measuredRimReflection(0, 0, -1, light, 0, base, peak), 0)
-    assert.equal(measuredRimReflection(-1, 0, -1, light, 1, base, peak), 0)
-    assert.equal(measuredRimReflection(1, 0, -1, light, 1, base, peak), 0)
-  }
 })
 
 

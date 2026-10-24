@@ -104,9 +104,10 @@ Future<T?> showModal<T>(
   required Modal Function(BuildContext context) builder,
   bool useRootNavigator = false,
   RouteSettings? settings,
-}) => Navigator.of(context, rootNavigator: useRootNavigator).push(
-  PresentationRoute<T>(builder: builder, settings: settings),
-);
+}) => Navigator.of(
+  context,
+  rootNavigator: useRootNavigator,
+).push(PresentationRoute<T>(builder: builder, settings: settings));
 
 /// Shows an [Alert] in a route and completes with the chosen action's `value` (null when it has
 /// none). The alert's own `open` and `onOpenChange` are ignored: the route drives it.
@@ -115,9 +116,10 @@ Future<T?> showAlert<T>(
   required Alert Function(BuildContext context) builder,
   bool useRootNavigator = false,
   RouteSettings? settings,
-}) => Navigator.of(context, rootNavigator: useRootNavigator).push(
-  PresentationRoute<T>(builder: builder, settings: settings),
-);
+}) => Navigator.of(
+  context,
+  rootNavigator: useRootNavigator,
+).push(PresentationRoute<T>(builder: builder, settings: settings));
 
 /// Shows a [Pane] in a route (a bottom sheet below its compact breakpoint) and completes with
 /// the value it is closed with. Always modal; declare a non-modal pane with `open` instead.
@@ -126,9 +128,10 @@ Future<T?> showPane<T>(
   required Pane Function(BuildContext context) builder,
   bool useRootNavigator = false,
   RouteSettings? settings,
-}) => Navigator.of(context, rootNavigator: useRootNavigator).push(
-  PresentationRoute<T>(builder: builder, settings: settings),
-);
+}) => Navigator.of(
+  context,
+  rootNavigator: useRootNavigator,
+).push(PresentationRoute<T>(builder: builder, settings: settings));
 
 /// Shows a [Sheet] in a route and completes with the value it is closed with (null when it is
 /// dragged down, the scrim is tapped or Escape is pressed).
@@ -137,6 +140,7 @@ Future<T?> showSheet<T>(
   required Sheet Function(BuildContext context) builder,
   bool useRootNavigator = false,
   RouteSettings? settings,
-}) => Navigator.of(context, rootNavigator: useRootNavigator).push(
-  PresentationRoute<T>(builder: builder, settings: settings),
-);
+}) => Navigator.of(
+  context,
+  rootNavigator: useRootNavigator,
+).push(PresentationRoute<T>(builder: builder, settings: settings));

@@ -164,7 +164,7 @@ function AlertPresentation({
                 variant={variantOf(action.role)}
                 className="lab-alert-action"
                 data-role={action.role}
-                disabled={action.disabled || !open}
+                disabled={action.disabled}
                 onClick={() => choose(index)}
               >
                 <span className="lab-alert-action-label">{action.label}</span>

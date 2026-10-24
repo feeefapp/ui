@@ -137,4 +137,59 @@ void widgetTests() {
     await tester.pump();
     expect(values, [4, 14, 3]);
   }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+
+  testWidgets('a controller holds the value; the validator blocks the form', (
+    tester,
+  ) async {
+    final price = ValueNotifier<double>(0);
+    late BuildContext inner;
+    Map<String, String>? sent;
+    await tester.pumpWidget(
+      numberHost(
+        FieldForm(
+          onSubmit: (data) => sent = data,
+          child: Builder(
+            builder: (context) {
+              inner = context;
+              return NumberField(
+                label: 'Price',
+                name: 'price',
+                unit: 'DA',
+                controller: price,
+                supportingText: const Text('Before delivery.'),
+                validator: (v) => v <= 0 ? 'Enter a price above 0 DA.' : null,
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Before delivery.'), findsOneWidget);
+    expect(FieldForm.of(inner).submit(), isFalse);
+    await tester.pump();
+    expect(find.text('Enter a price above 0 DA.'), findsOneWidget);
+    expect(find.text('Before delivery.'), findsNothing);
+    // Setting the controller updates the field; a touched field revalidates on change.
+    price.value = 1250;
+    await tester.pump();
+    expect(find.textContaining('1,250'), findsOneWidget);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+    await tester.pump();
+    expect(price.value, 1251, reason: 'changes write to the controller');
+    expect(find.text('Enter a price above 0 DA.'), findsNothing);
+    expect(FieldForm.of(inner).submit(), isTrue);
+    expect(sent, {'price': '1251'});
+    FieldForm.of(inner).reset();
+    expect(price.value, 0);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+
+  testWidgets('an error from the server shows under the field', (tester) async {
+    await tester.pumpWidget(
+      numberHost(
+        const NumberField(label: 'Stock', error: 'Stock changed; reload it.'),
+      ),
+    );
+    expect(find.text('Stock changed; reload it.'), findsOneWidget);
+  });
 }

@@ -615,6 +615,7 @@ function Overview() {
             ['Many items from one list', <C>SplitView</C>, 'Side by side when wide, a stack on phones.'],
             ['Top-level places on a phone', <C>TabView</C>, 'Each tab keeps its stack; the bar shrinks while reading.'],
             ['Browsing a few items sideways', <C>Carousel</C>, 'Snap paging, a peek of the next item, never auto-advancing.'],
+            ['Fresh data in a list people keep open', <><C>ScrollArea onRefresh</C> + a Refresh button</>, 'Pull at the top on touch; the button runs the same RefreshController.'],
             ['A glance or a quick control on one element', <>Popover on <C>PopoverSurface</C></>, 'Anchored, light, dismissed by clicking away.'],
             ['A few more lines about the same thing', <>Inline, in <C>AutoHeight</C></>, 'Stays in context; nothing covers the page.'],
             ['Properties of the selected item', <>Inspector column, or a <C>Pane</C></>, 'List and details visible together; a sheet on phones.'],

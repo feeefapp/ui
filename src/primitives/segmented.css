@@ -26,8 +26,8 @@ data-selected (aria-checked for a radio, aria-selected for a tab). Variants: dat
   min-width: 0;
   max-width: 100%;
   min-height: var(--lab-segmented-size);
-  border-radius: calc(var(--lab-segmented-size) / 2 * var(--lab-corner-scale, 1));
-  corner-shape: superellipse(1.5);
+  border-radius: calc(var(--lab-segmented-size) / 2 * var(--lab-capsule-scale, 1));
+  corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
   /* Horizontal drags move the pill; vertical ones still scroll the page. */
   touch-action: pan-y;
   user-select: none;
@@ -100,7 +100,8 @@ html[data-lab-theme] .lab-segmented-track > .lab-segmented-option.lab-control[da
   height: var(--lab-segmented-option);
   min-height: var(--lab-segmented-option);
   padding: 0 var(--lab-control-padding);
-  border-radius: calc(var(--lab-segmented-option) / 2 * var(--lab-corner-scale, 1));
+  border-radius: calc(var(--lab-segmented-option) / 2 * var(--lab-capsule-scale, 1));
+  corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
   font: 600 13px/18px var(--lab-font);
   color: var(--lab-muted);
   --lab-control-elevation: none;
@@ -170,8 +171,8 @@ option and, in the selected ink, on the pill (it turns over with the label as th
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  border-radius: calc(9px * var(--lab-corner-scale, 1));
-  corner-shape: superellipse(1.5);
+  border-radius: calc(9px * var(--lab-capsule-scale, 1));
+  corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
   background: color-mix(in srgb, currentColor 14%, transparent);
   font: 600 11px/18px var(--lab-font);
   font-variant-numeric: tabular-nums;
@@ -273,8 +274,8 @@ html[data-lab-theme]:is([data-lab-motion='reduced'], [data-lab-motion='none']) .
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  border-radius: calc(var(--lab-segmented-option) / 2 * var(--lab-corner-scale, 1) * var(--lab-segmented-press, 1));
-  corner-shape: superellipse(1.5);
+  border-radius: calc(var(--lab-segmented-option) / 2 * var(--lab-capsule-scale, 1) * var(--lab-segmented-press, 1));
+  corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
   box-shadow: 0 4px 14px color-mix(in srgb, var(--lab-glass-shadow-small) calc(var(--lab-lens) * 100%), transparent);
   will-change: transform;
 }

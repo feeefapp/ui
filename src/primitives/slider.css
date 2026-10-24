@@ -50,8 +50,9 @@ switch is iOS's too: a --lab-switch-width × --lab-switch-height track with the 
   width: 100%;
   min-width: var(--lab-slider-size);
   height: var(--lab-slider-size);
-  border-radius: calc(var(--lab-slider-size) / 2 * var(--lab-corner-fit, 1));
-  corner-shape: superellipse(1.5);
+  /* Tracks and thumbs are always capsules: round ends, the full radius in every browser. */
+  border-radius: calc(var(--lab-slider-size) / 2);
+  corner-shape: round;
   cursor: pointer;
   touch-action: pan-y pinch-zoom;
   user-select: none;
@@ -63,8 +64,8 @@ switch is iOS's too: a --lab-switch-width × --lab-switch-height track with the 
   inset-block: 0;
   margin-block: auto;
   height: var(--lab-slider-track-height);
-  border-radius: calc(var(--lab-slider-track-height) / 2 * var(--lab-corner-fit, 1));
-  corner-shape: superellipse(1.5);
+  border-radius: calc(var(--lab-slider-track-height) / 2);
+  corner-shape: round;
   pointer-events: none;
 }
 .lab-slider-rail {
@@ -119,8 +120,8 @@ switch is iOS's too: a --lab-switch-width × --lab-switch-height track with the 
   place-items: center;
   width: var(--lab-slider-thumb-drawn-width);
   height: var(--lab-slider-thumb-drawn-height);
-  border-radius: calc(var(--lab-slider-thumb-radius) * var(--lab-slider-press, 1) * var(--lab-corner-fit, 1));
-  corner-shape: superellipse(1.5);
+  border-radius: calc(var(--lab-slider-thumb-radius) * var(--lab-slider-press, 1));
+  corner-shape: round;
   /* Rest paint fades out as the glass lens (.lab-lens, lens.css) fades in. */
   background: color-mix(
     in srgb,

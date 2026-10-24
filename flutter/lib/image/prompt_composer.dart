@@ -9,16 +9,14 @@ import '../icons/lucide.dart';
 import '../brand/geometry.dart' show SuperellipseBorder;
 import '../menu/anchored_panel.dart';
 import '../menu/menu_surface.dart';
-import '../model_ladder.dart' show ModelLadderVariant;
 import '../primitives/button.dart';
 import '../theme.dart';
 import '../theme/color_mix.dart';
-import '../theme/css_text.dart';
 import '../theme/tokens.dart' show MotionTokens;
 import 'freeform_board.dart' show imageProviderFor;
 import 'prompt_settings_panel.dart';
 
-/// An attached reference image, shown as a chip above the card.
+/// An attached reference image, shown as a thumbnail inside the composer.
 @immutable
 class ComposerReference {
   const ComposerReference({
@@ -29,7 +27,7 @@ class ComposerReference {
   });
   final String id;
 
-  /// Image URL (network, or a base64 `data:` URL) for the 28px thumbnail.
+  /// Image URL (network, or a base64 `data:` URL) for the thumbnail.
   final String url;
   final String name;
 
@@ -100,10 +98,12 @@ typedef ComposerFilePicker = Future<List<ComposerFile>> Function({
   required List<String> accept,
 });
 
-/// The image studio composer, after marchant `image_gen_view` `_buildComposer`: the twin of
-/// `ImagePromptComposer` in `@feeef.dev/ui/image/prompt-composer`. An attachment row above a
-/// glass card that is one compact line until you type, then grows upward with its controls on a
-/// second row. Model ladder, AI enhance, output settings and send are icon controls.
+/// The image studio composer, built from the composer parts ([ComposerBar]): the twin of
+/// `ImagePromptComposer` in `@feeef.dev/ui/image/prompt-composer`. A round + bubble with the add
+/// menu, and a glass capsule holding the reference thumbnails (the first is marked "Main"), the
+/// prompt and send. Empty and idle it is one calm line with the AI ideas button beside send; with
+/// text or focus, a second row shows the model ladder and the output settings chip, and the AI
+/// button turns into "Improve my prompt".
 ///
 /// Flutter has no file input, clipboard images or file drops without plugins, so the host passes
 /// [pickFiles] and [readClipboard] (menu entries stay disabled without them) and drives
@@ -143,6 +143,8 @@ class ImagePromptComposer extends StatefulWidget {
     required this.submitDisabled,
     required this.submitting,
     required this.submitLabel,
+    this.onStop,
+    this.stopLabel,
     required this.caption,
     this.above,
     this.onKeyEvent,
@@ -164,16 +166,17 @@ class ImagePromptComposer extends StatefulWidget {
   /// Maximum prompt length in characters.
   final int maxLength;
 
-  /// Attached reference images, shown as chips above the card. The first is the main image.
+  /// Attached reference images, shown as thumbnails inside the capsule. The first is the main
+  /// image.
   final List<ComposerReference> references;
 
-  /// Null when the selected model takes no image input.
+  /// Null when the selected model takes no image input. `max` is shown as "1 of 3".
   final ReferenceLimit? referenceLimit;
 
   /// Called with files from upload or paste. The owner validates type and count.
   final ValueChanged<List<ComposerFile>> onAddFiles;
 
-  /// Called when a reference chip is removed.
+  /// Called when a reference's × badge is pressed.
   final ValueChanged<String> onRemoveReference;
 
   /// The user's earlier images for the "From your images" submenu (first 12). Empty hides it.
@@ -197,59 +200,67 @@ class ImagePromptComposer extends StatefulWidget {
   /// Image makes one picture; Poster builds a tall landing-page image from the brief.
   final ImageComposerMode mode;
 
-  /// The poster template in use, shown as a chip above the card.
+  /// The poster template in use, shown as a wide tile before the references.
   final String? templateName;
+
+  /// Shows the template tile's × badge.
   final VoidCallback? onClearTemplate;
 
   /// Replaces the template submenu with one entry that opens a full template browser.
   final VoidCallback? onBrowseTemplates;
 
-  /// Renders the model control for a slot, usually a ModelLadder with that variant.
-  final Widget Function(ModelLadderVariant variant) ladder;
+  /// The model control on the second row, usually `ModelLadder(variant: .compact, …)`.
+  final Widget ladder;
 
   /// Content of the output settings popover (shape, resolution, format).
   final Widget settings;
 
-  /// Short summary of the current settings, used in the settings button's label.
+  /// Short summary of the current settings ("1:1"), shown on the settings chip.
   final String settingsLabel;
 
-  /// Disables the settings button and closes its popover.
+  /// Disables the settings chip and closes its popover.
   final bool settingsDisabled;
 
-  /// When set, the settings button toggles a panel the page owns instead of a popover.
+  /// When set, the settings chip toggles a panel the page owns instead of a popover.
   final VoidCallback? onSettings;
 
-  /// Pressed state of the settings button when [onSettings] is set.
+  /// Pressed state of the settings chip when [onSettings] is set.
   final bool settingsActive;
 
   /// What attached images are called in the + menu ("References", "Product photos").
   final String? referenceNoun;
 
-  /// Overrides the wand's label (posters suggest details instead of rewriting the prompt).
+  /// Overrides the AI button's label (posters suggest details instead of rewriting the prompt).
   final String? wandLabel;
 
-  /// The AI wand request in flight, or null when idle. Shows a loader on the wand.
+  /// The AI request in flight, or null when idle. Shows a loader on the AI button.
   final EnhanceMode? enhancing;
 
-  /// Improve the prompt, or suggest ideas when it is empty. Null hides the wand.
+  /// Improve the prompt, or suggest ideas when it is empty. Null hides the AI button.
   final ValueChanged<EnhanceMode>? onEnhance;
 
-  /// Called by the send button and by Enter (Shift+Enter breaks the line).
+  /// Called by send and by Enter (Shift+Enter breaks the line).
   final VoidCallback onSubmit;
 
   /// Disables sending.
   final bool submitDisabled;
 
-  /// A generation is being sent: the send button shows a loader and is disabled.
+  /// A generation is being sent: send shows the loader.
   final bool submitting;
 
-  /// Accessible name of the send button, such as "Create image".
+  /// Accessible name of send, such as "Create image".
   final String submitLabel;
 
-  /// Small text under the card, such as price or allowance. Shown while the composer has focus.
-  final Widget caption;
+  /// While submitting, send becomes a stop button that calls this.
+  final VoidCallback? onStop;
 
-  /// Suggestion cards shown right above the card (AI proposals, conflicts).
+  /// Accessible name of send while it stops. Defaults to the localized "Stop".
+  final String? stopLabel;
+
+  /// Small text under the composer, such as price or allowance.
+  final Widget? caption;
+
+  /// Suggestion cards shown right above the composer (AI proposals, conflicts).
   final Widget? above;
 
   /// Runs before the built-in Enter handling; return `handled` to skip it.
@@ -262,7 +273,7 @@ class ImagePromptComposer extends StatefulWidget {
   /// service).
   final Future<List<ComposerFile>> Function()? readClipboard;
 
-  /// Highlights the card while the host's drop target carries compatible files.
+  /// Highlights the capsule while the host's drop target carries compatible files.
   final bool dropActive;
 
   /// Focus of the prompt field.
@@ -275,10 +286,8 @@ class ImagePromptComposer extends StatefulWidget {
 class _ImagePromptComposerState extends State<ImagePromptComposer> {
   late final FocusNode _ownFocus = FocusNode(debugLabel: 'image prompt');
   FocusNode get _field => widget.focusNode ?? _ownFocus;
-  bool _focusedWithin = false;
-  bool _fieldFocused = false;
   bool _settingsOpen = false;
-  bool _expanded = false;
+  bool _menuOpen = false;
 
   @override
   void didUpdateWidget(ImagePromptComposer oldWidget) {
@@ -334,191 +343,171 @@ class _ImagePromptComposerState extends State<ImagePromptComposer> {
     }
   }
 
-  KeyEventResult _key(KeyEvent event, TextEditingValue value) {
-    final own = widget.onKeyEvent?.call(event);
-    if (own == KeyEventResult.handled) return own!;
-    // Enter sends, Shift+Enter breaks the line, like a chat.
-    return composerEnterKey(event, value, () {
-      if (!widget.submitDisabled && !widget.submitting) widget.onSubmit();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeProvider.of(context);
-    final c = theme.colors;
-    final s = theme.sizes;
+    final s = ThemeProvider.of(context).sizes;
     final t = I18n.of(context).t;
-    final m = ComposerInput.metrics(s);
-    // `--pc-action-radius: calc(26px * scale - 6px)`; icon controls are 40px in every density.
-    final actionRadius = math.max(0.0, 26 * s.radiusScale - 6);
     final wandMode = widget.prompt.trim().isNotEmpty
         ? EnhanceMode.enhance
         : EnhanceMode.ideas;
 
-    Widget icons(Widget child) =>
-        ControlOverrides(height: 40, radius: actionRadius, child: child);
-
     final wand = widget.onEnhance == null
-        ? const SizedBox.shrink()
-        : icons(
-            IconButton(
-              variant: ButtonVariant.ghost,
-              appearance: ButtonAppearance.toolbar,
-              ariaLabel:
-                  widget.wandLabel ??
-                  (wandMode == EnhanceMode.enhance
-                      ? t('lab.imgcomposer.improvePrompt')
-                      : t('lab.imgcomposer.suggestIdeas')),
-              disabled: widget.enhancing != null,
-              loading: widget.enhancing != null,
-              onClick: () => widget.onEnhance?.call(wandMode),
-              icon: LucideIcon(
-                wandMode == EnhanceMode.enhance
-                    ? LucideIcons.wandSparkles
-                    : LucideIcons.lightbulb,
-              ),
+        ? null
+        : IconButton(
+            variant: ButtonVariant.ghost,
+            appearance: ButtonAppearance.toolbar,
+            controlSize: ControlSize.small,
+            ariaLabel:
+                widget.wandLabel ??
+                (wandMode == EnhanceMode.enhance
+                    ? t('lab.imgcomposer.improvePrompt')
+                    : t('lab.imgcomposer.suggestIdeas')),
+            loading: widget.enhancing != null,
+            onClick: () => widget.onEnhance?.call(wandMode),
+            icon: LucideIcon(
+              wandMode == EnhanceMode.enhance
+                  ? LucideIcons.wandSparkles
+                  : LucideIcons.lightbulb,
             ),
           );
 
-    final settingsButton = widget.onSettings != null
-        ? icons(
-            IconButton(
-              variant: ButtonVariant.ghost,
-              appearance: ButtonAppearance.toolbar,
-              ariaLabel: t('lab.imgcomposer.settingsWith', {
-                'label': widget.settingsLabel,
-              }),
-              pressed: widget.settingsActive,
-              disabled: widget.settingsDisabled,
-              onClick: widget.onSettings,
-              icon: const LucideIcon(LucideIcons.slidersHorizontal),
-            ),
+    Widget chip({
+      required String label,
+      bool? pressed,
+      required VoidCallback onClick,
+    }) => Button(
+      variant: ButtonVariant.ghost,
+      appearance: ButtonAppearance.toolbar,
+      controlSize: ControlSize.small,
+      ariaLabel: label,
+      pressed: pressed,
+      disabled: widget.settingsDisabled,
+      onClick: onClick,
+      children: [
+        const LucideIcon(LucideIcons.slidersHorizontal),
+        Text(
+          widget.settingsLabel,
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+
+    final settingsControl = widget.onSettings != null
+        ? chip(
+            label: t('lab.imgcomposer.settingsWith', {
+              'label': widget.settingsLabel,
+            }),
+            pressed: widget.settingsActive,
+            onClick: widget.onSettings!,
           )
         : _Anchored(
             open: _settingsOpen && !widget.settingsDisabled,
             onClose: () => setState(() => _settingsOpen = false),
-            alignEnd: true,
             label: t('lab.imgcomposer.outputSettings'),
             content: (context, maxHeight) => PromptSettingsPanel(
               maxHeight: maxHeight,
               onClose: () => setState(() => _settingsOpen = false),
               children: [widget.settings],
             ),
-            trigger: icons(
-              IconButton(
-                variant: ButtonVariant.ghost,
-                appearance: ButtonAppearance.toolbar,
-                ariaLabel: t('lab.imgcomposer.outputWith', {
-                  'label': widget.settingsLabel,
-                }),
-                pressed: _settingsOpen ? true : null,
-                disabled: widget.settingsDisabled,
-                onClick: () => setState(() => _settingsOpen = !_settingsOpen),
-                icon: const LucideIcon(LucideIcons.slidersHorizontal),
-              ),
+            trigger: chip(
+              label: t('lab.imgcomposer.outputWith', {
+                'label': widget.settingsLabel,
+              }),
+              onClick: () => setState(() => _settingsOpen = !_settingsOpen),
             ),
           );
-
-    final send = icons(
-      IconButton(
-        variant: ButtonVariant.filled,
-        ariaLabel: widget.submitLabel,
-        disabled: widget.submitDisabled || widget.submitting,
-        loading: widget.submitting,
-        onClick: widget.onSubmit,
-        icon: const LucideIcon(LucideIcons.arrowUp, strokeWidth: 2),
-      ),
-    );
 
     final add = _AddMenu(
       composer: widget,
       canReference: _canReference,
       full: _full,
-      trigger: (open, toggle) => icons(
-        IconButton(
-          variant: ButtonVariant.ghost,
-          appearance: ButtonAppearance.toolbar,
-          ariaLabel: t('lab.imgcomposer.add'),
-          pressed: open ? true : null,
-          onClick: toggle,
-          icon: const LucideIcon(LucideIcons.plus),
-        ),
+      onOpenChange: (open) {
+        if (open != _menuOpen) setState(() => _menuOpen = open);
+      },
+      trigger: (open, toggle) => IconButton(
+        variant: ButtonVariant.ghost,
+        appearance: ButtonAppearance.toolbar,
+        ariaLabel: t('lab.imgcomposer.add'),
+        onClick: toggle,
+        icon: const LucideIcon(LucideIcons.plus),
       ),
       onUpload: _upload,
       onPaste: _paste,
       onEditPhoto: _editPhoto,
     );
 
-    final input = ComposerInput(
-      value: widget.prompt,
-      onValueChange: widget.onPrompt,
-      label: widget.mode == ImageComposerMode.poster
-          ? t('lab.imgcomposer.describeProductOffer')
-          : t('lab.imgcomposer.describeImage'),
-      placeholder: widget.placeholder,
-      maxLength: widget.maxLength,
-      focusNode: _field,
-      onKeyEvent: _key,
-      onFocusChange: (value) => setState(() => _fieldFocused = value),
-    );
-
-    final card = ComposerCard(
-      expanded: _expanded,
-      focused: _fieldFocused ? true : null,
-      dropActive: widget.dropActive,
-      shellInset: 6,
-      child: ComposerLayout(
-        prompt: widget.prompt,
-        textStyle: ComposerInput.textStyle.copyWith(
-          fontFamily: DefaultTextStyle.of(context).style.fontFamily,
-          fontFamilyFallback: DefaultTextStyle.of(context)
-              .style
-              .fontFamilyFallback,
-        ),
-        fieldPadding: m.padInline * 2,
-        fieldMinHeight: m.minHeight,
-        gap: s.density == Density.thin ? 2 : 4,
-        onExpandedChange: (value) {
-          if (mounted && value != _expanded) setState(() => _expanded = value);
-        },
-        children: [
-          ComposerSlot(
-            compact: ComposerSlotSide.start,
-            expanded: ComposerSlotSide.start,
-            child: add,
-          ),
-          ComposerSlot(
-            compact: ComposerSlotSide.start,
-            expanded: ComposerSlotSide.start,
-            child: widget.ladder(ModelLadderVariant.icon),
-          ),
-          input,
-          ComposerSlot(
-            compact: ComposerSlotSide.end,
-            expanded: ComposerSlotSide.start,
-            child: settingsButton,
-          ),
-          ComposerSlot(child: wand),
-          ComposerSlot(child: send),
-        ],
-      ),
-    );
-
-    final attachments =
+    final hasAttachments =
         widget.references.isNotEmpty || widget.templateName != null;
-    final caption = AnimatedOpacity(
-      // Unfocused: one quiet line, no caption.
-      opacity: _focusedWithin ? 1 : 0,
-      duration: const Duration(milliseconds: 200),
-      child: DefaultTextStyle.merge(
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 11.5,
-          height: 16 / 11.5,
-          color: mixSrgb(c.muted, 0.82, transparent),
-        ),
-        child: CssBaseline(lineHeight: 16, child: widget.caption),
+    final attachments = !hasAttachments
+        ? null
+        : ComposerAttachments(
+            label: t('lab.imgcomposer.referenceImages'),
+            count: widget.references.length,
+            max: widget.referenceLimit?.max,
+            children: [
+              if (widget.templateName != null)
+                ComposerAttachment(
+                  key: const ValueKey('template'),
+                  id: 'template',
+                  icon: const LucideIcon(LucideIcons.sparkle),
+                  title: widget.templateName,
+                  label: widget.templateName!,
+                  onRemove: widget.onClearTemplate,
+                  removeLabel: t('lab.imgcomposer.removeTemplate'),
+                ),
+              for (final (index, ref) in widget.references.indexed)
+                ComposerAttachment(
+                  key: ValueKey(ref.id),
+                  id: ref.id,
+                  label: ref.name,
+                  badge: index == 0 ? t('lab.imgcomposer.main') : null,
+                  onRemove: () => widget.onRemoveReference(ref.id),
+                  preview:
+                      ref.preview ??
+                      (ref.url.isEmpty
+                          ? null
+                          : Image(
+                              image: imageProviderFor(ref.url),
+                              fit: BoxFit.cover,
+                              excludeFromSemantics: true,
+                              errorBuilder: (_, _, _) =>
+                                  const SizedBox.shrink(),
+                            )),
+                ),
+            ],
+          );
+
+    final bar = ComposerBar(
+      leading: add,
+      attachments: attachments,
+      hasText: widget.prompt.isNotEmpty,
+      pinned: _settingsOpen || _menuOpen || widget.settingsActive,
+      dropActive: widget.dropActive,
+      field: ComposerField(
+        value: widget.prompt,
+        onValueChange: widget.onPrompt,
+        label: widget.mode == ImageComposerMode.poster
+            ? t('lab.imgcomposer.describeProductOffer')
+            : t('lab.imgcomposer.describeImage'),
+        placeholder: widget.placeholder,
+        maxLength: widget.maxLength,
+        focusNode: _field,
+        onKeyEvent: widget.onKeyEvent,
+        onSubmit: () {
+          if (!widget.submitDisabled && !widget.submitting) widget.onSubmit();
+        },
+      ),
+      tools: [widget.ladder, settingsControl],
+      actions: wand,
+      send: ComposerSend(
+        label: widget.submitLabel,
+        ready: !widget.submitDisabled,
+        submitting: widget.submitting,
+        onSend: widget.onSubmit,
+        onStop: widget.onStop,
+        stopLabel: widget.stopLabel,
       ),
     );
 
@@ -528,221 +517,23 @@ class _ImagePromptComposerState extends State<ImagePromptComposer> {
       label: widget.mode == ImageComposerMode.poster
           ? t('lab.imgcomposer.posterComposer')
           : t('lab.imgcomposer.composer'),
-      child: Focus(
-        canRequestFocus: false,
-        skipTraversal: true,
-        onFocusChange: (value) => setState(() => _focusedWithin = value),
-        child: Center(
-          heightFactor: 1,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 780),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 8,
-              children: [
-                if (attachments)
-                  _Attachments(
-                    references: widget.references,
-                    templateName: widget.templateName,
-                    onClearTemplate: widget.onClearTemplate,
-                    onRemoveReference: widget.onRemoveReference,
-                  ),
-                ?widget.above,
-                card,
-                caption,
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Attachment row -----------------------------------------------------------------------------
-
-/// `.lab-pc-attachments`: the poster template chip and the reference strip.
-class _Attachments extends StatelessWidget {
-  const _Attachments({
-    required this.references,
-    required this.templateName,
-    required this.onClearTemplate,
-    required this.onRemoveReference,
-  });
-  final List<ComposerReference> references;
-  final String? templateName;
-  final VoidCallback? onClearTemplate;
-  final ValueChanged<String> onRemoveReference;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = ThemeProvider.of(context).colors;
-    final t = I18n.of(context).t;
-    final s = ThemeProvider.of(context).sizes;
-    Widget remove(String label, VoidCallback onClick) => ControlOverrides(
-      height: 40,
-      radius: 14 * s.radiusScale,
-      child: IconButton(
-        variant: ButtonVariant.ghost,
-        appearance: ButtonAppearance.toolbar,
-        ariaLabel: label,
-        onClick: onClick,
-        icon: LucideIcon(LucideIcons.x, color: c.muted),
-      ),
-    );
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 40),
-      child: Row(
-        spacing: 6,
-        children: [
-          if (templateName != null)
-            DecoratedBox(
-              decoration: ShapeDecoration(
-                color: mixSrgb(c.primary, 0.14, transparent),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  side: BorderSide(color: mixSrgb(c.primary, 0.45, c.line)),
-                ),
-              ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 46),
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.only(start: 11, end: 7),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    spacing: 6,
-                    children: [
-                      const LucideIcon(LucideIcons.sparkle, size: 13),
-                      Text(
-                        templateName!,
-                        style: const TextStyle(fontSize: 12),
-                        maxLines: 1,
-                        softWrap: false,
-                      ),
-                      if (onClearTemplate != null)
-                        remove(
-                          t('lab.imgcomposer.removeTemplate'),
-                          onClearTemplate!,
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          Expanded(
-            child: Semantics(
-              container: true,
-              explicitChildNodes: true,
-              label: t('lab.imgcomposer.referenceImages'),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  spacing: 6,
-                  children: [
-                    for (final (index, ref) in references.indexed)
-                      _ReferenceChip(
-                        key: ValueKey(ref.id),
-                        reference: ref,
-                        primary: index == 0,
-                        name: index == 0
-                            ? t('lab.imgcomposer.mainImage')
-                            : ref.name,
-                        remove: remove(
-                          t('lab.composer.removeItem', {'name': ref.name}),
-                          () => onRemoveReference(ref.id),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// `.lab-pc-ref`: thumbnail, name and remove button; it scales in (`lab-pc-in`).
-class _ReferenceChip extends StatelessWidget {
-  const _ReferenceChip({
-    super.key,
-    required this.reference,
-    required this.primary,
-    required this.name,
-    required this.remove,
-  });
-  final ComposerReference reference;
-  final bool primary;
-  final String name;
-  final Widget remove;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = ThemeProvider.of(context).colors;
-    final reduced = reducedMotionOf(context);
-    final chip = DecoratedBox(
-      decoration: ShapeDecoration(
-        color: mixSrgb(c.surface, 0.86, transparent),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: BorderSide(
-            color: primary ? mixSrgb(c.primary, 0.60, c.line) : c.line,
-          ),
-        ),
-      ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 46),
-        child: Padding(
-          // 1px border + padding 3px, inline-end 4px.
-          padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 5, 4),
-          child: Row(
+      child: Center(
+        heightFactor: 1,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 780),
+          child: Column(
             mainAxisSize: MainAxisSize.min,
-            spacing: 7,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: s.shellGap,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: SizedBox.square(
-                  dimension: 28,
-                  child:
-                      reference.preview ??
-                      (reference.url.isEmpty
-                          ? const SizedBox.shrink()
-                          : Image(
-                              image: imageProviderFor(reference.url),
-                              fit: BoxFit.cover,
-                              excludeFromSemantics: true,
-                              errorBuilder: (_, _, _) =>
-                                  const SizedBox.shrink(),
-                            )),
-                ),
-              ),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 110),
-                child: Text(
-                  name,
-                  style: const TextStyle(fontSize: 12),
-                  maxLines: 1,
-                  softWrap: false,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              remove,
+              ?widget.above,
+              bar,
+              if (widget.caption != null)
+                ComposerCaption(child: widget.caption!),
             ],
           ),
         ),
       ),
-    );
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: reduced ? 1 : 0, end: 1),
-      duration: reduced ? Duration.zero : const Duration(milliseconds: 220),
-      curve: MotionTokens.easeOut,
-      builder: (context, p, child) => Opacity(
-        opacity: p.clamp(0, 1),
-        child: Transform.scale(scale: 0.94 + 0.06 * p, child: child),
-      ),
-      child: chip,
     );
   }
 }
@@ -759,7 +550,6 @@ class _Anchored extends StatefulWidget {
     required this.onClose,
     required this.trigger,
     required this.content,
-    this.alignEnd = false,
     this.inlineSide = false,
     this.menu = false,
     this.offset = 8,
@@ -772,9 +562,6 @@ class _Anchored extends StatefulWidget {
 
   /// Builds the floating content with the height available on its side.
   final Widget Function(BuildContext context, double maxHeight) content;
-
-  /// Aligns the content's end edge with the trigger's (`align="end"`).
-  final bool alignEnd;
 
   /// Opens beside the trigger, toward the inline end (a submenu), instead of above it.
   final bool inlineSide;
@@ -828,9 +615,7 @@ class _AnchoredState extends State<_Anchored>
   Widget build(BuildContext context) => AnchoredPanel(
     open: widget.open,
     side: widget.inlineSide ? PanelSide.end : PanelSide.top,
-    align: widget.inlineSide || !widget.alignEnd
-        ? PanelAlign.start
-        : PanelAlign.end,
+    align: PanelAlign.start,
     sideOffset: widget.offset,
     cover: widget.menu && !widget.inlineSide,
     panel: _overlay,
@@ -1072,6 +857,7 @@ class _AddMenu extends StatefulWidget {
     required this.canReference,
     required this.full,
     required this.trigger,
+    required this.onOpenChange,
     required this.onUpload,
     required this.onPaste,
     required this.onEditPhoto,
@@ -1079,6 +865,9 @@ class _AddMenu extends StatefulWidget {
   final ImagePromptComposer composer;
   final bool canReference, full;
   final Widget Function(bool open, VoidCallback toggle) trigger;
+
+  /// Called when the menu opens or closes (it keeps the composer's second row in place).
+  final ValueChanged<bool> onOpenChange;
   final Future<void> Function() onUpload, onPaste, onEditPhoto;
 
   @override
@@ -1123,6 +912,7 @@ class _AddMenuState extends State<_AddMenu> {
       _open = open;
       _sub = _Sub.none;
     });
+    widget.onOpenChange(open);
     if (open) _focusSoon(() => [_upload, _paste, _recent, _ideas, _edit]);
   }
 
@@ -1196,7 +986,10 @@ class _AddMenuState extends State<_AddMenu> {
                   padding: const EdgeInsets.fromLTRB(10, 6, 10, 4),
                   child: Text(
                     widget.canReference
-                        ? '$noun · up to ${composer.referenceLimit!.max}'
+                        ? t('lab.imgcomposer.upTo', {
+                            'noun': noun,
+                            'max': '${composer.referenceLimit!.max}',
+                          })
                         : t('lab.imgcomposer.modelNoReference'),
                     style: TextStyle(fontSize: 11, color: c.muted),
                   ),
@@ -1206,14 +999,14 @@ class _AddMenuState extends State<_AddMenu> {
                   icon: LucideIcons.upload,
                   disabled: blocked || !picking,
                   onSelect: () => _select(widget.onUpload),
-                  child: const Text('Upload images'),
+                  child: Text(t('lab.imgcomposer.uploadImages')),
                 ),
                 _MenuItem(
                   focusNode: _paste,
                   icon: LucideIcons.clipboardPaste,
                   disabled: blocked || composer.readClipboard == null,
                   onSelect: () => _select(widget.onPaste),
-                  child: const Text('Paste from clipboard'),
+                  child: Text(t('lab.imgcomposer.pasteClipboard')),
                 ),
                 separator(),
                 if (composer.recent.isNotEmpty)
@@ -1222,7 +1015,7 @@ class _AddMenuState extends State<_AddMenu> {
                     sub: _Sub.recent,
                     node: _recent,
                     icon: LucideIcons.history,
-                    label: 'From your images',
+                    label: t('lab.imgcomposer.fromYourImages'),
                     disabled: blocked,
                     width: null,
                     items: (nodes) => _RecentGrid(
@@ -1299,7 +1092,7 @@ class _AddMenuState extends State<_AddMenu> {
                   icon: LucideIcons.brush,
                   disabled: !picking,
                   onSelect: () => _select(widget.onEditPhoto),
-                  child: const Text('Edit a photo…'),
+                  child: Text(t('lab.imgcomposer.editPhoto')),
                 ),
               ],
             ),

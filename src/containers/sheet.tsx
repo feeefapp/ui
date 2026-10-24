@@ -19,6 +19,8 @@ import {
   type SheetDetent,
 } from './sheet-model'
 import { cn } from '../utils'
+import { GLASS_INSTANT_ATTRIBUTE } from '../glass/transitions'
+import { POP_MOTION } from '../presentation/motion'
 import '../presentation/presentation.css'
 import './sheet.css'
 
@@ -181,9 +183,12 @@ function SheetPresentation({
       scrim.current.style.opacity = live.current.modal ? String(sheetDim(v, live.current.heights)) : '0'
     paintRecede(v)
   }
+  /** While the panel moves, its glass rides it as is (no springs of its own) and leaves with it. */
+  const riding = (on: boolean) => panel.current?.toggleAttribute(GLASS_INSTANT_ATTRIBUTE, on)
   /** Switches to transform-only motion: the panel is tall enough for any position, nothing reflows. */
   const beginMotion = () => {
     const el = panel.current
+    riding(true)
     if (!el || motionHeight.current) return
     motionHeight.current = Math.max(...live.current.heights, visible.get(), 1) + 240
     el.style.height = `${motionHeight.current}px`
@@ -194,6 +199,7 @@ function SheetPresentation({
     const el = panel.current
     if (!el) return
     motionHeight.current = 0
+    riding(false)
     el.style.height = `${height}px`
     el.style.transform = ''
     for (const node of pinned()) node.style.translate = ''
@@ -270,8 +276,20 @@ function SheetPresentation({
       // Unmounting the host leaves the top layer and returns focus.
       const done = () => onExited()
       if (presentation === 'dialog') {
-        const fade = motionFade(motion, 0.18)
-        void shown.animateTo(0, { spring: reduced ? { duration: fade, bounce: 0 } : SPRINGS.smooth, instant: fade === 0 }).then((a) => a && done())
+        // Like Modal: the panel and the dim fade out on one fixed curve that ends exactly at its
+        // length (a spring's tail would leave it faintly on screen), while the move eases back.
+        const length = motionFade(motion, POP_MOTION.fadeOut)
+        riding(true)
+        void shown.animateTo(0, { spring: reduced ? { duration: length, bounce: 0 } : SPRINGS.smooth, instant: length === 0 })
+        const el = panel.current
+        const fades = [el, scrim.current].flatMap((node) => {
+          if (!node || !length || typeof node.animate !== 'function') return []
+          const from = getComputedStyle(node).opacity
+          node.getAnimations().forEach((animation) => animation.cancel())
+          return [node.animate([{ opacity: from }, { opacity: 0 }], { duration: length * 1000, easing: POP_MOTION.fadeEasing, fill: 'forwards' })]
+        })
+        if (!fades.length) done()
+        else void Promise.all(fades.map((fade) => fade.finished)).then(done, () => {})
       } else if (reduced) {
         // The panel fades out, then unmounts once the fade has ended.
         const fade = motionFade(motion, 0.16)
@@ -297,9 +315,14 @@ function SheetPresentation({
       paintRecede(0)
       if (!presented.current) {
         presented.current = true
+        // Opened again while fading out: the fade gives way to the spring.
+        for (const node of [el, scrim.current]) node?.getAnimations?.().forEach((animation) => animation.cancel())
         if (!shown.isAnimating()) shown.set(0)
         const fade = motionFade(motion, 0.2)
-        void shown.animateTo(1, { spring: reduced ? { duration: fade, bounce: 0 } : SPRINGS.smooth, instant: fade === 0 })
+        riding(true)
+        void shown
+          .animateTo(1, { spring: reduced ? { duration: fade, bounce: 0 } : SPRINGS.smooth, instant: fade === 0 })
+          .then((arrived) => arrived && riding(false))
       } else paintDialog()
       return
     }
@@ -425,7 +448,6 @@ function SheetPresentation({
         trailing={trailing}
         onClose={showClose ? () => open && onOpenChange(false) : undefined}
         closeLabel={t('lab.composer.closeLabel', { label })}
-        closeDisabled={!open}
       />
     )
 

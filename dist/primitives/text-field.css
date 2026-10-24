@@ -10,7 +10,8 @@
   --lab-text-field-float-top: 4px;
   --lab-text-field-font: 16px;
   --lab-text-field-line: 20px;
-  --lab-text-field-radius: var(--lab-radius-control);
+  /* A field is taller than the control its radius matches: a continuous corner, not a capsule. */
+  --lab-text-field-radius: calc(var(--lab-control-height) / 2 * var(--lab-corner-scale, 1));
   --lab-field-inset-start: 12px;
   --lab-field-inset-end: 12px;
   min-width: 0;
@@ -196,7 +197,7 @@ edge turns the focus colour and thickens inward to --lab-focus-ring-width. */
 }
 .lab-text-field[data-control-size='small'] {
   --lab-text-field-height: var(--lab-field-height-small);
-  --lab-text-field-radius: var(--lab-radius-control-small);
+  --lab-text-field-radius: calc(var(--lab-control-small) / 2 * var(--lab-corner-scale, 1));
 }
 /* Outlined (border) labels and label-less fields center the value: the padding follows the field
 height, so every size and density fits (44 → 11px, 40 → 9px, 28 → 4px). */

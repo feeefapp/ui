@@ -63,7 +63,7 @@ export type { FilterBarProps, FilterOption, FilterValue } from './filter-bar'
 
 export { Slider, SlideSwitch, SlideSwitchIndicator } from './primitives/slider'
 export { NumberField } from './primitives/number-field'
-export type { NumberFieldProps } from './primitives/number-field'
+export type { NumberFieldProps, NumberValidator } from './primitives/number-field'
 export { parseNumberExpression } from './primitives/number-field-core'
 export type {
   SliderProps,

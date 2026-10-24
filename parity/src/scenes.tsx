@@ -1,4 +1,5 @@
 import type React from 'react'
+import { cssCornerShape } from '@feeef.dev/ui/brand/corner-fit'
 import { useState, type ReactNode } from 'react'
 import { LucideArrowRight, LucideDownload, LucidePlus, LucideSearch, LucideTrash2 } from 'lucide-react'
 import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
@@ -549,11 +550,12 @@ export const SCENES: Record<string, () => ReactNode> = {
       </div>
     </>
   ),
-  // Raw corner geometry: native corner-shape in Chrome vs the kit's superellipse maths.
+  // Raw corner geometry: native corner-shape in Chrome vs the kit's clamped continuous corner maths
+  // (40 on a 100-tall box is in the fade; 50 is a capsule).
   corners: () => (
     <div className="row">
-      {[12, 23, 40].map((radius) => (
-        <div key={radius} style={{ width: 200, height: 100, borderRadius: radius, cornerShape: 'superellipse(1.5)', background: 'var(--lab-ink)' } as React.CSSProperties} />
+      {[12, 23, 40, 50].map((radius) => (
+        <div key={radius} style={{ width: 200, height: 100, borderRadius: radius, cornerShape: cssCornerShape(radius, 200, 100), background: 'var(--lab-ink)' } as React.CSSProperties} />
       ))}
     </div>
   ),

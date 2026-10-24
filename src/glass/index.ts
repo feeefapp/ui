@@ -19,9 +19,10 @@ export {
   unionLoops,
 } from './geometry'
 export type { GlassRect, GlassShape } from './geometry'
-export { DEFAULT_GLASS_LIGHT, glassLightToward, rimGradient } from './light'
+export { DEFAULT_GLASS_LIGHT, glassLightToward } from './light'
 export type { GlassLight } from './light'
-export { planGlassTransition } from './transitions'
+export { GLASS_MAX_SIDE, GLASS_MAX_SPAN, glassMemberRect } from './member-bounds'
+export { GLASS_INSTANT_ATTRIBUTE, GLASS_SETTLE_MS, glassChangesAtOnce, planGlassTransition } from './transitions'
 export type { GlassBirth, GlassDeath, GlassPlan } from './transitions'
 export {
   GLASS_BEZEL,
@@ -39,8 +40,10 @@ export {
 export {
   GLASS_BLUR,
   GLASS_CLEAR,
+  GLASS_CLEAR_BLUR,
+  GLASS_EDGE,
   GLASS_RIM,
-  GLASS_RIM_STOPS,
+  GLASS_RIM_MAX_WIDTH,
   GLASS_SATURATE,
   GLASS_SHADOW,
   GLASS_SMALL_SIDE,
@@ -48,13 +51,17 @@ export {
   GLASS_TINT_DEFAULT,
   GLASS_VEIL,
   clampGlassTint,
+  edgeMask,
   glassBlur,
+  glassBlurAt,
+  glassEdgeTerms,
   glassMaterial,
+  glassRim,
   glassSize,
   liftFilter,
-  rimAlpha,
+  rimLayer,
 } from './material'
-export type { GlassMaterial, GlassSize } from './material'
+export type { GlassMaterial, GlassRim, GlassSize } from './material'
 export { adaptiveGlassTone, backdropTone } from './adaptive'
 export type { BackdropSample, GlassTone } from './adaptive'
 export { glassStretch, pressedShape } from './press'

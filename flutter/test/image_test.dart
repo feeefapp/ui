@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:feeef_ui/composer/composer_layout.dart';
 import 'package:feeef_ui/image/board_utils.dart';
 import 'package:feeef_ui/image/freeform_board.dart';
 import 'package:feeef_ui/image/freeform_frame.dart';
@@ -162,27 +161,6 @@ void main() {
       expect(view.x, closeTo(n(expected['x']), 1e-9));
       expect(view.y, closeTo(n(expected['y']), 1e-9));
       expect(view.scale, closeTo(n(expected['scale']), 1e-9));
-    }
-  });
-
-  test('the composer expands when the web kit does', () {
-    for (final row in fixture['composer'] as List) {
-      final available = composerAvailableWidth(
-        rowWidth: n(row['row']),
-        slotWidths: [for (final w in row['slots'] as List) n(w)],
-        gap: n(row['gap']),
-        fieldPadding: n(row['padding']),
-      );
-      expect(available, closeTo(n(row['available']), 1e-9));
-      expect(
-        composerExpands(
-          prompt: row['prompt'] as String,
-          available: available,
-          textWidth: n(row['width']),
-          minimum: n(row['minimum']),
-        ),
-        row['expanded'],
-      );
     }
   });
 }

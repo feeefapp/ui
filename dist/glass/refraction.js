@@ -1,4 +1,6 @@
 import { prepareUnionDistance, unionBounds } from './geometry.js';
+import { DEFAULT_GLASS_LIGHT } from './light.js';
+import { edgeMask } from './material.js';
 /**
  * Refraction for the canvas renderer: glass that bends the content behind it near its edges, as a
  * displacement map (red = x, green = y, 128 = no shift) for SVG `feDisplacementMap`. Only the
@@ -41,7 +43,9 @@ export function refractionAt(d, nx, ny, bezel = GLASS_BEZEL) {
 /**
  * RGBA displacement map for `width` × `height` px (material coordinates) holding the blended
  * outlines of `clusters`. Red/green carry the shift (neutral in the flat middle) as a share of
- * `scale / 2` px, the value to pass to `feDisplacementMap`; alpha is the glass shape itself
+ * `scale / 2` px, the value to pass to `feDisplacementMap`; blue is the edge mask
+ * (`material.ts` `edgeMask`, lit by the default light so the map stays independent of the
+ * pointer), averaged over each map pixel; alpha is the glass shape itself
  * (anti-aliased), so the filter can clip its own output: Chromium ignores an element's clip-path
  * for `backdrop-filter: url()`. Each cluster bends by its own size (its smallest shape).
  */
@@ -156,6 +160,12 @@ function sampleDisplacementMap(logicalWidth, logicalHeight, w, h, clusters, spac
                         const gx = field ? field[fieldIndex + 1] - field[fieldIndex - 1] : distance(px + 1, py) - distance(px - 1, py);
                         const gy = field ? field[fieldIndex + stride] - field[fieldIndex - stride] : distance(px, py + 1) - distance(px, py - 1);
                         const length = Math.hypot(gx, gy) || 1;
+                        const cosine = (gx * DEFAULT_GLASS_LIGHT.x + gy * DEFAULT_GLASS_LIGHT.y) / length;
+                        // The mask is ~1 px wide: average it across a coarse map pixel so its weight survives.
+                        let edge = 0;
+                        for (let k = 0; k < 4; k++)
+                            edge += edgeMask(-d + ((k + 0.5) / 4 - 0.5) * coverageWidth, cosine);
+                        data[i + 2] = Math.max(data[i + 2], Math.round((edge / 4) * 255));
                         const bend = refractionAt(Math.min(d, -1e-3), gx / length, gy / length, band);
                         data[i] = Math.round(128 + bend.x * share * 127);
                         data[i + 1] = Math.round(128 + bend.y * share * 127);

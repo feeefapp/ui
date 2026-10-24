@@ -144,6 +144,7 @@ function Overview() {
       </Section>
 
       <Section title="Supporting text, errors and counters">
+        <p>Character counters keep current / limit order in both left-to-right and right-to-left layouts.</p>
         <p>
           <C>supportingText</C> sits under the field and is linked to it with{' '}
           <C>aria-describedby</C>. While there is an error, the error replaces it in the same place
@@ -173,6 +174,23 @@ function Overview() {
           feedback helps. <C>submit</C> reveals and updates errors only when the form is submitted.
           Resetting the form clears every message. <C>onValidationChange</C> reports the visible
           message if you need it elsewhere, for example to disable a step.
+        </p>
+      </Section>
+
+      <Section title="Keyboards and input rules">
+        <p>
+          Every native input attribute reaches the input, so the phone keyboard and the browser help
+          as they would on a plain field: <C>inputMode</C> (<C>numeric</C>, <C>decimal</C>,{' '}
+          <C>tel</C>, <C>email</C>) picks the on-screen keyboard, <C>pattern</C> checks the value on
+          submit, <C>autoCapitalize</C> (<C>words</C>, <C>sentences</C>, <C>characters</C>,{' '}
+          <C>none</C>) shapes the text and <C>autoComplete</C> lets the browser fill it.
+        </p>
+        <p>
+          Flutter fields edit as you type instead: <C>keyboardType</C> picks the keyboard,{' '}
+          <C>inputFormatters</C> rewrite or reject edits (digits only, a phone mask; they run before{' '}
+          <C>maxLength</C>), <C>textCapitalization</C> is the twin of <C>autoCapitalize</C> and{' '}
+          <C>autofillHints</C> of <C>autoComplete</C>. Keep a <C>validator</C> for the rule itself:
+          a formatter shapes the text, the message tells people what is expected.
         </p>
       </Section>
 

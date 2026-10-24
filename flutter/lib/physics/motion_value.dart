@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/animation.dart' show Curve, Curves;
 import 'package:flutter/scheduler.dart';
 
 import 'spring.dart';
@@ -150,6 +151,52 @@ class MotionValue {
       }
       _speed = state.velocity;
       _write(state.position);
+    });
+    return settle.future;
+  }
+
+  /// Eases to [target] along [curve] in exactly [length], from where it is: for fades, which must
+  /// end on time (a spring's tail would leave them faintly on screen). The web kit plays these as
+  /// Web Animations. Completes `true` at the end, `false` when interrupted.
+  Future<bool> easeTo(
+    double target,
+    Duration length, {
+    Curve curve = Curves.linear,
+  }) {
+    final solver = _solver;
+    final from = solver != null ? solver(_elapsed()).position : _value;
+    _tracking = false;
+    _finish(false);
+    final seconds = length.inMicroseconds / 1e6;
+    if (seconds <= 0 || (from - target).abs() <= restDelta) {
+      _speed = 0;
+      _write(target);
+      return Future.value(true);
+    }
+    _target = target;
+    _write(from);
+    SpringState next(double t) => (
+      position:
+          from +
+          (target - from) * curve.transform((t / seconds).clamp(0.0, 1.0)),
+      velocity: 0,
+    );
+    _solver = next;
+    _started = null;
+    final settle = Completer<bool>();
+    _settle = settle;
+    _stopFrame = _FrameLoop.add((time) {
+      if (_solver != next) return;
+      final started = _started ??= time - 1 / 60;
+      final t = time - started;
+      if (t >= seconds) {
+        _speed = 0;
+        _solver = null;
+        _write(target);
+        _finish(true);
+        return;
+      }
+      _write(next(t).position);
     });
     return settle.future;
   }

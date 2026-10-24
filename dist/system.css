@@ -15,6 +15,17 @@ html[data-lab-theme] {
   raw --lab-radius-scale, so both renderings show the same corner. */
   --lab-corner-fit: 1;
   --lab-corner-scale: calc(var(--lab-radius-scale, 1) * var(--lab-corner-fit));
+  /* Clamped continuous corners (brand/geometry.ts cornerSmoothing): smoothing fades from full at
+  0.75 of half the shorter side to none at half of it, so circles and capsules stay round. CSS can't
+  measure a box, so capsule radii (half their own height × the radius scale) use the --lab-capsule-*
+  tokens, where that share is the radius scale itself: --lab-capsule-smoothing is the curve at it,
+  --lab-corner-shape-capsule the matching corner-shape (round at scale 1), and --lab-capsule-scale
+  their radius multiplier, whose circle fallback only shrinks what is smoothed. Other radii keep
+  --lab-corner-scale and superellipse(1.5). */
+  --lab-capsule-fade: clamp(0, (var(--lab-radius-scale, 1) - 0.75) * 4, 1);
+  --lab-capsule-smoothing: calc(1 - var(--lab-capsule-fade) * var(--lab-capsule-fade) * (3 - 2 * var(--lab-capsule-fade)));
+  --lab-capsule-scale: calc(var(--lab-radius-scale, 1) * (1 - (1 - var(--lab-corner-fit)) * var(--lab-capsule-smoothing)));
+  --lab-corner-shape-capsule: superellipse(calc(1 + var(--lab-capsule-smoothing) / 2));
   /* Opacity of the scaffold's ambient pixel field (0 turns it off). */
   --lab-ground-pixels-opacity: 0.18;
   --lab-space-1: 4px;
@@ -79,8 +90,8 @@ html[data-lab-theme] {
   --lab-spring-smooth-duration: 760ms;
   /* Derived: capsule radii (half the height), the control inside a toolbar bubble (2px padding and
   a 1px border a side). */
-  --lab-radius-control: calc(var(--lab-control-height) / 2 * var(--lab-corner-scale, 1));
-  --lab-radius-control-small: calc(var(--lab-control-small) / 2 * var(--lab-corner-scale, 1));
+  --lab-radius-control: calc(var(--lab-control-height) / 2 * var(--lab-capsule-scale, 1));
+  --lab-radius-control-small: calc(var(--lab-control-small) / 2 * var(--lab-capsule-scale, 1));
   --lab-list-radius: calc(var(--lab-list-corner) * var(--lab-corner-scale, 1));
   --lab-toolbar-control: calc(var(--lab-toolbar-item) - 6px);
   /* Keyboard focus: a thin line in the focus colour that hugs the control (iOS-like); pointer and
@@ -129,8 +140,6 @@ html[data-lab-theme] {
   /* Rim light: a base line all round (low) plus light at both ends of the light axis (light). */
   --lab-glass-edge-light: rgb(255 255 255 / 62%);
   --lab-glass-edge-low: rgb(255 255 255 / 27%);
-  --lab-glass-rim-base: 0.27;
-  --lab-glass-rim-peak: 0.718;
   --lab-glass-shadow: 0 8px 24px -14px rgb(0 0 0 / 18%);
   /* Shadow under a GlassContainer's merged outline (7.5px down, blur 19.5px); lighter under controls. */
   --lab-glass-shadow-color: rgb(0 0 0 / calc(var(--lab-glass-tint) * var(--lab-glass-shadow-alpha)));
@@ -155,8 +164,6 @@ html[data-lab-theme='dark'] {
   --lab-glass-colour-loss-large: 0.328;
   --lab-glass-edge-light: rgb(255 255 255 / 13%);
   --lab-glass-edge-low: rgb(255 255 255 / 14%);
-  --lab-glass-rim-base: 0.139;
-  --lab-glass-rim-peak: 0.246;
   --lab-glass-shadow: 0 8px 24px -14px rgb(0 0 0 / 40%);
   --lab-glass-shadow-alpha: 0.14;
   --lab-glass-shadow-alpha-small: 0.033;
@@ -166,11 +173,11 @@ html[data-lab-theme='dark'] {
   --lab-control-highlight: rgb(255 255 255 / 20%);
   --lab-control-depth: 0 2px 6px rgb(0 0 0 / 18%);
 }
-:is(.lab-app, .lab-dialog, .lab-floating-root) {
+:is(.lab-app, .lab-presentation, .lab-floating-root) {
   font-family: var(--lab-font);
   color: var(--lab-ink);
 }
-:is(.lab-app, .lab-dialog, .lab-floating-root) :focus-visible {
+:is(.lab-app, .lab-presentation, .lab-floating-root) :focus-visible {
   outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
   outline-offset: var(--lab-focus-ring-offset);
 }
@@ -287,8 +294,8 @@ html[data-lab-theme] .lab-control[data-variant] {
   justify-content: center;
   gap: 6px;
   border: 1px solid var(--lab-control-edge);
-  border-radius: calc(var(--lab-control-size) / 2 * var(--lab-corner-scale, 1));
-  corner-shape: superellipse(1.5);
+  border-radius: calc(var(--lab-control-size) / 2 * var(--lab-capsule-scale, 1));
+  corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
   font: 400 var(--lab-control-label) / round(calc(var(--lab-control-label) * 1.3), 1px) var(--lab-font);
   letter-spacing: 0;
   text-transform: none;
@@ -361,6 +368,17 @@ html[data-lab-theme]
 }
 html[data-lab-theme] .lab-control[data-variant] svg.lucide {
   stroke-width: 1.75;
+}
+/* A text label gives way when the button's width is bounded (a dock, a toolbar, a narrow phone)
+and ends in an ellipsis on one line; icons keep their size. Flutter: Button wraps Text in Flexible. */
+html[data-lab-theme] .lab-control[data-variant] {
+  max-width: 100%;
+}
+html[data-lab-theme] .lab-control[data-variant] > .lab-control-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 html[data-lab-theme]
   .lab-control[data-control-size='icon']
@@ -739,11 +757,11 @@ html[data-lab-glass='solid'] .lab-light-edge::after {
 }
 /* A plain list, not :is(): each branch is rejected by the ancestor filter without walking up. */
 .lab-app *,
-.lab-dialog *,
+.lab-presentation *,
 .lab-floating-root * {
   box-sizing: border-box;
 }
-:is(.lab-app, .lab-dialog) :is(h1, h2, h3, h4) {
+:is(.lab-app, .lab-presentation) :is(h1, h2, h3, h4) {
   margin: 0;
   font-weight: 500;
   letter-spacing: -0.035em;
@@ -754,11 +772,11 @@ html[data-lab-glass='solid'] .lab-light-edge::after {
 .lab-app p {
   margin: 0;
 }
-:is(.lab-app, .lab-dialog) a {
+:is(.lab-app, .lab-presentation) a {
   color: inherit;
   text-decoration: none;
 }
-:is(.lab-app, .lab-dialog) .lab-control {
+:is(.lab-app, .lab-presentation) .lab-control {
   isolation: isolate;
   display: inline-flex;
   align-items: center;
@@ -768,7 +786,7 @@ html[data-lab-glass='solid'] .lab-light-edge::after {
   box-shadow: none;
   font-family: var(--lab-font);
 }
-:is(.lab-app, .lab-dialog) .lab-control > .lab-pixel-texture {
+:is(.lab-app, .lab-presentation) .lab-control > .lab-pixel-texture {
   z-index: -1;
   --pixel-texture-opacity: 0.19;
   clip-path: var(--lab-corner-clip, inset(0 round var(--lab-radius-control)));
@@ -852,34 +870,6 @@ html[data-lab-theme] .lab-select-option[data-disabled] {
   opacity: 0.5;
   pointer-events: none;
 }
-html[data-lab-theme] .lab-dialog {
-  color: var(--lab-ink);
-  background: var(--lab-surface);
-  border: 1px solid var(--lab-line);
-  border-radius: var(--lab-radius-panel);
-  corner-shape: superellipse(1.5);
-  padding: 0;
-  width: 560px;
-  max-width: calc(100vw - 28px);
-  max-height: 90dvh;
-  overflow: auto;
-  position: fixed;
-  margin: auto;
-  font: 15px/23px var(--lab-font);
-}
-.lab-dialog::backdrop {
-  background: rgb(12 24 17 / 40%);
-}
-html[data-lab-theme] .lab-dialog-wide {
-  width: 980px;
-  max-width: calc(100vw - 40px);
-}
-.lab-dialog .lab-close {
-  position: absolute;
-  top: 12px;
-  inset-inline-end: 12px;
-  z-index: 3;
-}
 html[data-lab-theme] .lab-ui-page .lab-theme-switch:not([data-variant]) {
   width: var(--lab-control-height);
   height: var(--lab-control-height);
@@ -894,65 +884,6 @@ html[data-lab-theme] .lab-ui-page .lab-theme-switch:not([data-variant]) {
 
 html[data-lab-theme] .lab-select {
   justify-content: space-between;
-}
-
-/* A scrollable dialog is the enclosing boundary. Only the viewport scrolls; tools float locally. */
-html[data-lab-theme] .lab-dialog--scrollable {
-  height: min(720px, 85dvh);
-  overflow: hidden;
-}
-.lab-modal-floating-top {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: var(--lab-toolbar-gap);
-  padding-inline-start: 0;
-}
-/* Default text needs opaque backing while content moves behind it. Custom top
-slots keep their own material; this surface adds no border, shadow or blur. */
-.lab-modal-floating-top--default {
-  background: transparent;
-}
-.lab-modal-floating-top--default .lab-modal-title {
-  margin: 0;
-  padding: 0 10px;
-  font-size: 13px;
-  line-height: 20px;
-  font-weight: 500;
-}
-.lab-modal-floating-title > .lab-toolbar-group {
-  width: fit-content;
-  max-width: 100%;
-}
-.lab-modal-floating-title h2 {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.lab-modal-floating-title {
-  flex: 1;
-  min-width: 0;
-}
-.lab-dialog .lab-modal-title {
-  font-size: 17px;
-  font-weight: 600;
-  line-height: 24px;
-  letter-spacing: -0.02em;
-  overflow-wrap: anywhere;
-}
-.lab-modal-floating-top > .lab-modal-close {
-  flex-shrink: 0;
-}
-html[data-lab-theme] .lab-dialog--scrollable[open] {
-  display: block;
-}
-
-/* Firefox may clear the dialog host radius for SVG paint. Keep its transparent
-scroll boundary rounded while the enclosing dialog alone paints the surface. */
-.lab-dialog--scrollable .lab-scroll-area {
-  border-radius: var(--lab-radius-panel);
-  --lab-scroll-surface: var(--lab-surface);
 }
 
 @media (pointer: coarse) {
@@ -998,16 +929,6 @@ html[data-lab-theme]
   transform: scaleX(-1);
 }
 
-/* Intrinsic dialog body + measured floating chrome. Long content still scrolls to the boundary. */
-html[data-lab-theme] .lab-dialog.lab-dialog--fit-content {
-  height: min(var(--lab-modal-content-height, 240px), calc(100dvh - 32px));
-  max-height: calc(100dvh - 32px);
-}
-.lab-modal-measured-body {
-  display: flow-root;
-  min-inline-size: 0;
-}
-
 /* Opaque Lab menu with quiet, non-interactive pixel decoration. */
 
 html[data-lab-theme] .lab-select-option[data-state='checked'] {
@@ -1040,14 +961,9 @@ html[data-lab-theme] .lab-select-option[data-state='checked'][data-highlighted] 
   }
 }
 
-.lab-dialog .lab-modal-floating-top--default .lab-modal-title {
-  font-size: 13px;
-  line-height: 20px;
-}
-
 /* Inline text actions follow the surrounding font metrics. */
 html[data-lab-theme] .lab-control[data-control-size='icon'][data-icon-size='inline'] {
- width: 1em; min-width: 1em; height: 1em; min-height: 1em; padding: 0; border: 0; border-radius: calc(3px * var(--lab-corner-scale, 1)); font-size: inherit;
+ width: 1em; min-width: 1em; height: 1em; min-height: 1em; padding: 0; border: 0; border-radius: calc(3px * var(--lab-corner-scale, 1)); corner-shape: superellipse(1.5); font-size: inherit;
 }
 
 /* Text for assistive technology only. */

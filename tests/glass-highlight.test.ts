@@ -27,10 +27,10 @@ test('culled highlight tiles preserve every dense bevel sample through corners a
       const px = bounds.x + (x + 0.5) / 2
       const py = bounds.y + (y + 0.5) / 2
       const distance = unionDistance(px, py, shapes, 16)
-      if (distance >= 0.25 || distance <= -field.bezel) continue
+      if (distance >= 0 || distance <= -field.bezel) continue
       const sample = samples.get((y * field.width + x) * 4)
       assert.ok(sample, `missing pixel ${x},${y}, width ${width}`)
-      assert.equal(sample.depth, Math.max(0, -distance))
+      assert.equal(sample.depth, -distance)
       assert.equal(sample.nx, unionDistance(px + 0.5, py, shapes, 16) - unionDistance(px - 0.5, py, shapes, 16))
       assert.equal(sample.ny, unionDistance(px, py + 0.5, shapes, 16) - unionDistance(px, py - 0.5, shapes, 16))
       count++

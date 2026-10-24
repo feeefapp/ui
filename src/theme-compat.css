@@ -144,6 +144,7 @@ html[data-lab-theme] .lab-control.lab-voice-input[data-variant] {
   min-height: var(--lab-voice-input-size);
   padding: 0;
   border-radius: var(--lab-radius-control-small);
+  corner-shape: superellipse(1.5);
   color: var(--lab-focus);
   background: var(--lab-surface-soft);
 }

@@ -63,4 +63,15 @@ export declare function segmentedAutoScrollSpeed(pointer: number, viewStart: num
  * `scroll-padding`.
  */
 export declare function segmentedRevealOffset(offset: number, max: number, viewport: number, start: number, end: number, padding?: number): number;
+/** What a selection track is to assistive technology: a segmented control's radio group, or a tab
+ * bar's tab list. */
+export type SelectionSemantics = 'radio' | 'tab';
+/**
+ * Where a key moves the selection among `count` enabled options from `current` (-1: none), as an
+ * index into those enabled options: the next or previous one, wrapping (Left and Right mirror in
+ * right-to-left), the first (Home) or the last (End). A radio group also answers Up and Down; a tab
+ * list, being horizontal, only Left and Right. null: the key isn't handled. Both activate the
+ * option they reach (a tab bar's tabs activate automatically, like a radio group).
+ */
+export declare function selectionKeyTarget(key: string, current: number, count: number, rtl: boolean, semantics: SelectionSemantics): number | null;
 //# sourceMappingURL=segmented-model.d.ts.map

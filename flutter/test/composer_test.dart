@@ -1,4 +1,7 @@
 import 'package:feeef_ui/feeef_ui.dart';
+
+import 'dart:ui' show Tristate;
+
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' hide RadioGroup;
 import 'package:flutter_test/flutter_test.dart';
@@ -45,9 +48,10 @@ Widget app(
 );
 
 class _Chat extends StatefulWidget {
-  _Chat({this.onSubmit, this.busy = false, this.initial = ''})
+  _Chat({this.onSubmit, this.onStop, this.busy = false, this.initial = ''})
     : super(key: ValueKey(initial));
   final VoidCallback? onSubmit;
+  final VoidCallback? onStop;
   final bool busy;
   final String initial;
   @override
@@ -62,27 +66,124 @@ class _ChatState extends State<_Chat> {
     placeholder: 'Ask anything',
     value: value,
     busy: widget.busy,
+    onStop: widget.onStop,
     onValueChange: (next) => setState(() => value = next),
     onSubmit: widget.onSubmit ?? () {},
+    submitLabel: 'Send',
+    leading: IconButton(
+      variant: .ghost,
+      appearance: .toolbar,
+      ariaLabel: 'Attach',
+      onClick: () {},
+      icon: const LucideIcon(LucideIcons.plus),
+    ),
     tools: [
-      IconButton(
+      Button(
         variant: .ghost,
         appearance: .toolbar,
-        ariaLabel: 'Attach',
+        ariaLabel: 'Model',
         onClick: () {},
-        icon: const LucideIcon(LucideIcons.paperclip),
+        children: const [Text('Smart')],
       ),
     ],
-    submit: IconButton(
-      variant: .filled,
-      ariaLabel: 'Send',
-      onClick: () {},
-      icon: const LucideIcon(LucideIcons.arrowUp),
-    ),
   );
 }
 
+/// The capsule: the glass group holding the field.
+Rect capsule(WidgetTester tester) => tester.getRect(
+  find
+      .ancestor(
+        of: find.byType(ComposerCapsuleLayout),
+        matching: find.byType(GlassGroup),
+      )
+      .first,
+);
+
+bool toolsShown(WidgetTester tester) => !tester
+    .widget<IgnorePointer>(
+      find
+          .ancestor(
+            of: find.text('Smart'),
+            matching: find.byType(IgnorePointer),
+          )
+          .first,
+    )
+    .ignoring;
+
 void main() {
+  group('composer model', () {
+    test('the second row opens with text, focus or a pinned menu', () {
+      expect(
+        composerExpanded(hasText: false, focusWithin: false, pinned: false),
+        isFalse,
+      );
+      expect(
+        composerExpanded(hasText: true, focusWithin: false, pinned: false),
+        isTrue,
+      );
+      expect(
+        composerExpanded(hasText: false, focusWithin: true, pinned: false),
+        isTrue,
+      );
+      expect(
+        composerExpanded(hasText: false, focusWithin: false, pinned: true),
+        isTrue,
+      );
+    });
+
+    test('send states', () {
+      expect(
+        composerSendState(ready: false, submitting: false, stoppable: true),
+        ComposerSendState.idle,
+      );
+      expect(
+        composerSendState(ready: true, submitting: false, stoppable: false),
+        ComposerSendState.ready,
+      );
+      expect(
+        composerSendState(ready: true, submitting: true, stoppable: false),
+        ComposerSendState.sending,
+      );
+      expect(
+        composerSendState(ready: false, submitting: true, stoppable: true),
+        ComposerSendState.stop,
+      );
+    });
+
+    test('frames mix in capsule pixels; new slots fade in where they land', () {
+      const ComposerLayoutSnapshot from = (
+        height: 44,
+        slots: {
+          ComposerSlotName.field: (x: 0, y: 0, height: 38, opacity: 1),
+          ComposerSlotName.send: (x: 300, y: 0, height: 38, opacity: 1),
+        },
+      );
+      const ComposerLayoutSnapshot to = (
+        height: 82,
+        slots: {
+          ComposerSlotName.field: (x: 0, y: 0, height: 38, opacity: 1),
+          ComposerSlotName.send: (x: 300, y: 38, height: 38, opacity: 1),
+          ComposerSlotName.tools: (x: 0, y: 38, height: 38, opacity: 1),
+        },
+      );
+      final start = composerFrame(from, to, 0);
+      expect(start.height, 44);
+      expect(start.slots[ComposerSlotName.send]!.dy, -38);
+      expect(start.slots[ComposerSlotName.tools]!.opacity, 0);
+      final half = composerFrame(from, to, 0.5);
+      expect(half.height, 63);
+      expect(half.slots[ComposerSlotName.send]!.dy, -19);
+      expect(half.slots[ComposerSlotName.tools]!.opacity, 0.5);
+      final end = composerFrame(from, to, 1);
+      expect(end.slots[ComposerSlotName.send]!.dy, 0);
+      expect(composerSameLayout(from, to), isFalse);
+      expect(composerSameLayout(to, to), isTrue);
+      final mid = composerFrameSnapshot(from, to, 0.5);
+      expect(mid.height, 63);
+      expect(mid.slots[ComposerSlotName.send]!.y, 19);
+    });
+  });
+
   group('PromptComposer', () {
     testWidgets('typing reports the text; Enter sends, Shift+Enter does not', (
       tester,
@@ -126,53 +227,102 @@ void main() {
       await finish(tester);
     }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
 
+    testWidgets('send: quiet while empty, sends when ready, stops while busy', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      var sent = 0, stopped = 0;
+      await tester.pumpWidget(app(_Chat(onSubmit: () => sent++)));
+      await settle(tester);
+      expect(
+        tester
+            .getSemantics(find.bySemanticsLabel('Send'))
+            .flagsCollection
+            .isEnabled,
+        Tristate.isFalse,
+      );
+      await tester.tap(find.bySemanticsLabel('Send'));
+      expect(sent, 0);
+
+      await tester.pumpWidget(
+        app(_Chat(onSubmit: () => sent++, initial: 'Hi')),
+      );
+      await settle(tester);
+      await tester.tap(find.bySemanticsLabel('Send'));
+      expect(sent, 1);
+
+      await tester.pumpWidget(
+        app(_Chat(busy: true, onStop: () => stopped++, initial: 'Hi')),
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(find.bySemanticsLabel('Send'), findsNothing);
+      await tester.tap(find.bySemanticsLabel('Stop'));
+      expect(stopped, 1);
+      await finish(tester);
+      handle.dispose();
+    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+
     testWidgets(
-      'one row while the text fits; the field takes its own row after',
+      'calm on one line; focus or text opens the second row on a spring',
       (tester) async {
-        await tester.pumpWidget(app(_Chat(initial: 'Short')));
-        await settle(tester);
+        await tester.pumpWidget(app(_Chat()));
+        await settle(tester, 30);
+        expect(toolsShown(tester), isFalse);
+        final calm = capsule(tester);
         final field = tester.getRect(find.byType(EditableText));
         final send = tester.getRect(find.bySemanticsLabel('Send'));
         expect((field.center.dy - send.center.dy).abs(), lessThan(4));
-        expect(
-          field.left,
-          greaterThan(tester.getRect(find.bySemanticsLabel('Attach')).right),
-        );
+        expect(calm.height, 44);
 
-        await tester.pumpWidget(app(_Chat(initial: 'A long prompt ' * 12)));
-        await settle(tester);
-        final wide = tester.getRect(find.byType(EditableText));
+        // Focus opens the second row; the capsule springs to its new height.
+        await tester.tap(find.byType(EditableText));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 60));
+        final moving = capsule(tester).height;
+        await settle(tester, 30);
+        final open = capsule(tester);
+        expect(toolsShown(tester), isTrue);
+        expect(open.height, greaterThan(calm.height + 30));
+        expect(moving, greaterThan(calm.height));
+        expect(moving, lessThan(open.height));
         final below = tester.getRect(find.bySemanticsLabel('Send'));
-        expect(below.top, greaterThan(wide.bottom));
         expect(
-          tester.getRect(find.bySemanticsLabel('Attach')).top,
-          greaterThan(wide.bottom),
+          below.top,
+          greaterThanOrEqualTo(
+            tester.getRect(find.byType(EditableText)).bottom - 1,
+          ),
+        );
+        expect(
+          tester.getRect(find.text('Smart')).center.dy,
+          closeTo(below.center.dy, 2),
         );
 
-        // A line break expands even when the text is short.
-        await tester.pumpWidget(app(_Chat(initial: 'a\nb')));
-        await settle(tester);
-        expect(
-          tester.getRect(find.bySemanticsLabel('Send')).top,
-          greaterThan(tester.getRect(find.byType(EditableText)).top + 20),
-        );
+        // With text it stays open without focus.
+        await tester.pumpWidget(app(_Chat(initial: 'Hello')));
+        await settle(tester, 30);
+        expect(toolsShown(tester), isTrue);
         await finish(tester);
       },
       variant: TargetPlatformVariant.only(TargetPlatform.macOS),
     );
 
-    testWidgets('right to left: tools at the right, send at the left', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        app(_Chat(initial: 'Short'), direction: TextDirection.rtl),
-      );
-      await settle(tester);
-      final attach = tester.getRect(find.bySemanticsLabel('Attach'));
-      final send = tester.getRect(find.bySemanticsLabel('Send'));
-      expect(attach.left, greaterThan(send.right));
-      await finish(tester);
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    testWidgets(
+      'right to left: leading bubble at the right, send at the left',
+      (tester) async {
+        await tester.pumpWidget(
+          app(_Chat(initial: 'Short'), direction: TextDirection.rtl),
+        );
+        await settle(tester, 30);
+        final attach = tester.getRect(find.bySemanticsLabel('Attach'));
+        final send = tester.getRect(find.bySemanticsLabel('Send'));
+        final model = tester.getRect(find.text('Smart'));
+        expect(attach.left, greaterThan(capsule(tester).right));
+        expect(send.right, lessThan(model.left));
+        expect(model.right, greaterThan(capsule(tester).center.dx));
+        await finish(tester);
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.macOS),
+    );
 
     testWidgets(
       'the field is a labelled multiline text field; the hint is decorative',
@@ -210,6 +360,7 @@ void main() {
       ValueChanged<String>? onPrompt,
       ValueChanged<EnhanceMode>? onEnhance,
       bool submitDisabled = false,
+      int max = 3,
     }) => ImagePromptComposer(
       mode: .image,
       prompt: prompt,
@@ -217,7 +368,7 @@ void main() {
       placeholder: 'Describe the image you want',
       maxLength: 2000,
       references: references,
-      referenceLimit: const ReferenceLimit(max: 3, formats: ['image/png']),
+      referenceLimit: ReferenceLimit(max: max, formats: const ['image/png']),
       onAddFiles: (_) {},
       onRemoveReference: onRemove ?? (_) {},
       recent: const [],
@@ -232,7 +383,7 @@ void main() {
         ComposerTemplate(id: 'life', name: 'Lifestyle', prompt: 'Life prompt'),
       ],
       onTemplate: onTemplate ?? (_) {},
-      ladder: (variant) => const SizedBox(width: 40, height: 40),
+      ladder: const SizedBox(width: 40, height: 38),
       settings: const Text('Shape options'),
       settingsLabel: '1:1',
       enhancing: null,
@@ -244,26 +395,79 @@ void main() {
       caption: const Text('About 4 DZD'),
     );
 
-    testWidgets('reference chips name the main image and remove by id', (
+    testWidgets('references: the first is marked Main; × removes by id', (
       tester,
     ) async {
       String? removed;
+      final handle = tester.ensureSemantics();
       await tester.pumpWidget(app(composer(onRemove: (id) => removed = id)));
       await settle(tester);
-      expect(find.text('Main image'), findsOneWidget);
-      expect(find.text('Label'), findsOneWidget);
+      expect(find.text('Main'), findsOneWidget);
+      expect(find.bySemanticsLabel('Main: Bottle'), findsOneWidget);
+      expect(find.bySemanticsLabel('Label'), findsOneWidget);
+      expect(find.text('2 of 3'), findsOneWidget);
+      // Inside the capsule, above the field.
+      expect(
+        tester.getRect(find.bySemanticsLabel('Main: Bottle')).bottom,
+        lessThanOrEqualTo(tester.getRect(find.byType(EditableText)).top),
+      );
+      expect(
+        capsule(tester).contains(
+          tester.getRect(find.bySemanticsLabel('Main: Bottle')).center,
+        ),
+        isTrue,
+      );
       await tester.tap(find.bySemanticsLabel('Remove Label'));
       expect(removed, 'b');
       await finish(tester);
+      handle.dispose();
     }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
 
-    testWidgets('no attachment row without references or a template', (
+    testWidgets('no attachments without references or a template', (
       tester,
     ) async {
+      final handle = tester.ensureSemantics();
       await tester.pumpWidget(app(composer(references: const [])));
       await settle(tester);
-      expect(find.text('Main image'), findsNothing);
+      expect(find.text('Main'), findsNothing);
       expect(find.bySemanticsLabel('Reference images'), findsNothing);
+      expect(capsule(tester).height, 44);
+      await finish(tester);
+      handle.dispose();
+    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+
+    testWidgets('many references scroll sideways inside the capsule', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        app(
+          composer(
+            max: 8,
+            references: [
+              for (var i = 0; i < 8; i++)
+                ComposerReference(id: '$i', url: '', name: 'Photo $i'),
+            ],
+          ),
+          width: 360,
+        ),
+      );
+      await settle(tester);
+      final scroller = tester.widget<SingleChildScrollView>(
+        find.descendant(
+          of: find.byType(ComposerAttachments),
+          matching: find.byType(SingleChildScrollView),
+        ),
+      );
+      final controller = scroller.controller!;
+      expect(controller.position.maxScrollExtent, greaterThan(0));
+      final strip = tester.getRect(find.byType(ComposerAttachments));
+      expect(strip.right, lessThanOrEqualTo(capsule(tester).right));
+      await tester.drag(
+        find.byType(SingleChildScrollView).first,
+        const Offset(-200, 0),
+      );
+      await settle(tester);
+      expect(controller.offset, greaterThan(0));
       await finish(tester);
     }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
 
@@ -302,12 +506,12 @@ void main() {
       await finish(tester);
     }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
 
-    testWidgets('the settings popover shows the panel and closes', (
+    testWidgets('the settings chip (second row) opens the panel and closes', (
       tester,
     ) async {
-      await tester.pumpWidget(app(composer()));
-      await settle(tester);
-      await tester.tap(find.bySemanticsLabel('Output settings: 1:1'));
+      await tester.pumpWidget(app(composer(prompt: 'A vase')));
+      await settle(tester, 30);
+      await tester.tap(find.bySemanticsLabel(RegExp('^Output settings: 1:1')));
       await settle(tester);
       expect(find.text('Shape options'), findsOneWidget);
       expect(find.text('Output settings'), findsWidgets);
@@ -318,7 +522,7 @@ void main() {
     }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
 
     testWidgets(
-      'Enter sends unless sending is disabled; the wand suggests ideas when empty',
+      'Enter sends unless sending is disabled; the AI button suggests ideas when empty',
       (tester) async {
         var sent = 0;
         EnhanceMode? wand;
@@ -358,23 +562,13 @@ void main() {
       variant: TargetPlatformVariant.only(TargetPlatform.macOS),
     );
 
-    testWidgets('the caption shows only while the composer has focus', (
-      tester,
-    ) async {
+    testWidgets('the caption sits quietly under the composer', (tester) async {
       await tester.pumpWidget(app(composer()));
       await settle(tester);
-      double opacity() => tester
-          .widget<AnimatedOpacity>(
-            find.ancestor(
-              of: find.text('About 4 DZD'),
-              matching: find.byType(AnimatedOpacity),
-            ),
-          )
-          .opacity;
-      expect(opacity(), 0);
-      await tester.tap(find.byType(EditableText));
-      await settle(tester);
-      expect(opacity(), 1);
+      expect(
+        tester.getRect(find.text('About 4 DZD')).top,
+        greaterThan(capsule(tester).bottom),
+      );
       await finish(tester);
     }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
   });

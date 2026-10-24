@@ -79,6 +79,11 @@
 .lab-glass-group::before {
   display: none;
 }
+/* Toolbar bubbles and docks are capsules: their corners are round at full radius (system.css
+--lab-corner-shape-capsule), not the superellipse that squares a capsule's ends. */
+.lab-glass-group:is(.lab-toolbar-group, .lab-dock) {
+  corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
+}
 
 .lab-view-transition {
   view-transition-name: lab-content;

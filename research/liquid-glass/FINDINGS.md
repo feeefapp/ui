@@ -69,6 +69,9 @@ matches Apple's 0.99).
 
 ### 4. Rim light
 
+(Superseded by LIGHT-EDGES.md: a white layer `(w0 + w1·|cos a|^p)·(1 − (d/width)³)` inside the
+outline, fitted per tint and appearance, plus veil thinning and a dark-mode additive edge.)
+
 A ~1 pt line of light on the inner edge, peaking at the outermost pixel, lit at **both** ends of a
 top-left ↔ bottom-right axis (the old kit rim was one-sided). White over the material, by the
 angle `a` between edge normal and light axis:
@@ -198,10 +201,8 @@ local backdrop tone (bright sky / dark ridge) and use control-sized geometry so 
 existing adaptive foreground can keep labels legible. Tint is an optional GlassContainer
 configuration; its local derived CSS and SVG material parameters share the same value.
 
-For explicit local tint, the clear lift preserves the white point: gain is capped at
-`1 - offset`. This keeps pale backgrounds from clipping to white when tint approaches clear.
-CSS fallback uses gain `0.924 + 0.076t`, offset `0.076(1-t)`; the SVG filter uses the same
-white-preserving cap. Theme-inherited material retains the measured lift for compatibility.
+(Superseded, LIGHT-EDGES.md: the white-point cap on the clear lift made clear glass vanish on light
+content. Web and Flutter now use the measured `min(1, 1.03·x + 0.076)` at every tint.)
 
 A final browser pass raised the opposite specular bounce to 55% (45% for the grazing lobe):
 the earlier 28% bounce left the lower silhouette too weak on the dark landscape ridge.
@@ -275,8 +276,7 @@ the surface. These are web tuning ranges, not native Apple limits.
 
 ### Consistent web material and Firefox floating chrome
 
-Web now defaults to tint 0 and uses the same white-point preservation for inherited
-and explicit tint. Flutter is intentionally unchanged. ScrollArea provides its viewport
+Web now defaults to tint 0 (lift: see LIGHT-EDGES.md). ScrollArea provides its viewport
 as a live disjoint Firefox source only to its floating top/bottom slots, including
 Scaffold header, dock and sidebar controls. Source descendants do not inherit that
 source, preventing recursive captures. Explicit demo sources still override inherited

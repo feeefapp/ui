@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
+import '../glass/container.dart';
 import '../layout/size_reporter.dart';
 import '../i18n/i18n.dart';
 import '../physics/motion_value.dart';
@@ -13,6 +14,7 @@ import '../physics/spring.dart';
 import '../presentation/body.dart';
 import '../presentation/header.dart';
 import '../presentation/host.dart';
+import '../presentation/motion.dart';
 import '../theme.dart';
 import '../theme/surfaces.dart';
 import '../theme/color_mix.dart';
@@ -225,6 +227,13 @@ class _SheetState extends State<Sheet> {
   final _visible = MotionValue(0, 0.5);
   final _shown = MotionValue(0, 0.004);
   final _lift = MotionValue(0, 0.5);
+
+  /// The dialog's closing fade (1 at rest): a fixed curve that ends on time, like Modal's.
+  final _dialogFade = MotionValue(1, 0.002);
+
+  /// Ticks on every motion frame: only the panel's position, fade and the dim rebuild, never the
+  /// panel's content.
+  final _tick = ValueNotifier(0);
   late final List<void Function()> _unsubscribe;
 
   Size? _host;
@@ -255,6 +264,7 @@ class _SheetState extends State<Sheet> {
       _visible.subscribe(_paint),
       _shown.subscribe(_paint),
       _lift.subscribe(_paint),
+      _dialogFade.subscribe(_paint),
     ];
   }
 
@@ -299,6 +309,8 @@ class _SheetState extends State<Sheet> {
     _visible.stop();
     _shown.stop();
     _lift.stop();
+    _dialogFade.stop();
+    _tick.dispose();
     // The tree is locked while it unmounts: release the backdrop after this frame.
     final backdrop = _backdrop;
     if (backdrop is _Recede && backdrop.value != 0) {
@@ -319,7 +331,7 @@ class _SheetState extends State<Sheet> {
 
   void _paint(double _) {
     if (!mounted) return;
-    setState(() {});
+    _tick.value++;
     _paintRecede();
   }
 
@@ -434,19 +446,23 @@ class _SheetState extends State<Sheet> {
         _visible.set(0);
         _shown.set(0);
         _lift.set(0);
+        _dialogFade.set(1);
         _backdrop?.value = 0;
       }
 
       if (dialog) {
-        final fade = motionFade(motion, const Duration(milliseconds: 180));
-        _shown
-            .animateTo(
-              0,
-              spring: reduced
-                  ? Spring(duration: fade.inMicroseconds / 1e6, bounce: 0)
-                  : Springs.smooth,
-              instant: fade == Duration.zero,
-            )
+        // Like Modal: the panel and the dim fade out on one fixed curve that ends exactly at its
+        // length (a spring's tail would leave it faintly on screen), while the move eases back.
+        final fade = motionFade(motion, PopMotion.fadeOut);
+        _shown.animateTo(
+          0,
+          spring: reduced
+              ? Spring(duration: fade.inMicroseconds / 1e6, bounce: 0)
+              : Springs.smooth,
+          instant: fade == Duration.zero,
+        );
+        _dialogFade
+            .easeTo(0, fade * _dialogFade.get(), curve: PopMotion.fadeCurve)
             .then((arrived) => arrived ? done() : null);
       } else if (reduced) {
         // The panel fades out (_sheetFade), then unmounts once the fade has ended.
@@ -469,6 +485,12 @@ class _SheetState extends State<Sheet> {
       _paintRecede();
       if (!_presented) {
         _presented = true;
+        // Opened again while fading out: the fade turns back from where it is.
+        _dialogFade.easeTo(
+          1,
+          motionFade(motion, PopMotion.fadeIn) * (1 - _dialogFade.get()),
+          curve: PopMotion.fadeCurve,
+        );
         if (!_shown.isAnimating) _shown.set(0);
         final fade = motionFade(motion, const Duration(milliseconds: 200));
         _shown.animateTo(
@@ -652,11 +674,48 @@ class _SheetState extends State<Sheet> {
   Widget _hostView(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
-    final dark = theme.brightness == Brightness.dark;
     final dialog = _presentation == SheetRegular.dialog;
+    // Built once per change of state; motion frames only move, size or fade it.
+    final content = RepaintBoundary(child: _panel(context, dialog));
+    final motion = ListenableBuilder(
+      listenable: _tick,
+      child: content,
+      builder: (context, content) => _motionView(context, content!, dialog),
+    );
+    Widget view = SizeReporter(
+      key: _hostKey,
+      onSize: (size) {
+        if (size != _host) setState(() => _host = size);
+      },
+      child: motion,
+    );
+    if (!widget.modal) {
+      // A non-modal sheet leaves the page usable around it: the host only hits the panel.
+      view = PassThrough(child: view);
+    }
+    return PresentationRouteScope.none(
+      child: PresentationHost(
+        label: widget.label,
+        modal: widget.modal,
+        onEscape: () {
+          if (_open && widget.modal) _requestClose();
+        },
+        initialFocus: widget.initialFocus,
+        returnFocus: widget.returnFocus,
+        child: DefaultTextStyle.merge(
+          style: TextStyle(color: c.ink),
+          child: view,
+        ),
+      ),
+    );
+  }
+
+  /// The scrim and the panel at this motion frame.
+  Widget _motionView(BuildContext context, Widget content, bool dialog) {
+    final dark = ThemeProvider.of(context).brightness == Brightness.dark;
     final host = _host;
     final v = _visible.get();
-    final p = _shown.get().clamp(0.0, 1.0);
+    final p = _shown.get().clamp(0.0, 1.0) * _dialogFade.get().clamp(0.0, 1.0);
     final heights = _heights;
     final scrimOpacity = !widget.modal || _fading || !_ready
         ? 0.0
@@ -664,13 +723,21 @@ class _SheetState extends State<Sheet> {
         ? p
         : sheetDim(v, heights);
 
-    Widget panel = _panel(context, dialog);
+    // While the panel moves, its glass rides it as is (no springs of its own) and leaves with it.
+    Widget panel = GlassInstant(
+      instant:
+          _visible.isAnimating ||
+          _shown.isAnimating ||
+          _dialogFade.isAnimating ||
+          _dragging,
+      child: content,
+    );
     if (dialog) {
       final width = host == null ? 0.0 : math.min(560.0, host.width - 48);
       final shown = _shown.get();
       panel = Center(
         child: Opacity(
-          opacity: shown.clamp(0.0, 1.0),
+          opacity: p,
           child: Transform(
             alignment: Alignment.center,
             transform: Matrix4.translationValues(
@@ -703,57 +770,31 @@ class _SheetState extends State<Sheet> {
         ),
       );
     }
-
-    Widget view = SizeReporter(
-      key: _hostKey,
-      onSize: (size) {
-        if (size != _host) setState(() => _host = size);
-      },
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (widget.modal)
-            Positioned.fill(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: _open ? _requestClose : null,
-                child: ExcludeSemantics(
-                  child: Opacity(
-                    opacity: scrimOpacity.clamp(0.0, 1.0),
-                    // --lab-sheet-scrim: rgb(0 0 0 / 0.3), dark 0.55.
-                    child: ColoredBox(color: black(dark ? 0.55 : 0.3)),
-                  ),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (widget.modal)
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _open ? _requestClose : null,
+              child: ExcludeSemantics(
+                child: Opacity(
+                  opacity: scrimOpacity.clamp(0.0, 1.0),
+                  // --lab-sheet-scrim: rgb(0 0 0 / 0.3), dark 0.55.
+                  child: ColoredBox(color: black(dark ? 0.55 : 0.3)),
                 ),
               ),
             ),
-          Visibility(
-            visible: _ready,
-            maintainState: true,
-            maintainAnimation: true,
-            maintainSize: true,
-            child: dialog ? panel : Stack(children: [panel]),
           ),
-        ],
-      ),
-    );
-    if (!widget.modal) {
-      // A non-modal sheet leaves the page usable around it: the host only hits the panel.
-      view = PassThrough(child: view);
-    }
-    return PresentationRouteScope.none(
-      child: PresentationHost(
-        label: widget.label,
-        modal: widget.modal,
-        onEscape: () {
-          if (_open && widget.modal) _requestClose();
-        },
-        initialFocus: widget.initialFocus,
-        returnFocus: widget.returnFocus,
-        child: DefaultTextStyle.merge(
-          style: TextStyle(color: c.ink),
-          child: view,
+        Visibility(
+          visible: _ready,
+          maintainState: true,
+          maintainAnimation: true,
+          maintainSize: true,
+          child: dialog ? panel : Stack(children: [panel]),
         ),
-      ),
+      ],
     );
   }
 
@@ -773,10 +814,8 @@ class _SheetState extends State<Sheet> {
           title: widget.title,
           trailing: widget.trailing,
           onClose: widget.showClose ? _close : null,
-          closeLabel: I18n.of(
-            context,
-          ).t('lab.composer.closeLabel', {'label': widget.label}),
-          closeDisabled: !_open,
+          closeLabel: I18n.of(context)
+              .t('lab.composer.closeLabel', {'label': widget.label}),
         );
     final dock = widget.dock;
     final content = Column(
@@ -793,7 +832,9 @@ class _SheetState extends State<Sheet> {
             radius: dialog ? s.radiusPanel : sheetRadius,
             // Keyed so a drag that starts on the chrome is told from one on the content.
             top: KeyedSubtree(key: _topKey, child: header),
-            bottom: dock == null ? null : KeyedSubtree(key: _bottomKey, child: dock),
+            bottom: dock == null
+                ? null
+                : KeyedSubtree(key: _bottomKey, child: dock),
             onNaturalHeight: (height) {
               if (height != _bodyNatural) setState(() => _bodyNatural = height);
             },

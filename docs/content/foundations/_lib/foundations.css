@@ -135,6 +135,37 @@
   border: 1px solid var(--lab-control-border);
   background: var(--lab-surface);
 }
+.fd-corner-figure {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  font: 11px var(--lab-font);
+  fill: var(--lab-muted);
+}
+.fd-corner-figure__plot {
+  fill: none;
+  stroke: var(--lab-line);
+}
+.fd-corner-figure__mark {
+  stroke: var(--lab-line);
+  stroke-dasharray: 3 3;
+}
+.fd-corner-figure__curve {
+  fill: none;
+  stroke: var(--lab-primary);
+  stroke-width: 2;
+}
+.fd-corner-figure__shape {
+  fill: var(--lab-surface);
+  stroke: var(--lab-ink);
+  stroke-width: 1;
+}
+.fd-corner-figure__old {
+  fill: none;
+  stroke: var(--lab-danger);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
 .fd-motion-track {
   position: relative;
   width: 100%;

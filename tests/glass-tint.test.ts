@@ -116,6 +116,9 @@ test('the CSS tokens carry the same anchors and lift as material.ts', () => {
   // The lift: gain + 2 · offset at tint 0, and its slope.
   const top = liftFilter(GLASS_CLEAR.gain, GLASS_CLEAR.offset).brightness
   assert.ok(system.includes(`brightness(calc(${top.toFixed(3)} - ${(top - 1).toFixed(3)} * var(--lab-glass-tint)))`))
+  // A container's own tint uses the same measured lift: no white-point cap (LIGHT-EDGES.md).
+  assert.ok(glass.includes(`brightness(calc(${top.toFixed(3)} - ${(top - 1).toFixed(3)} * var(--lab-glass-tint)))`), 'local tint lift')
+  assert.ok(!glass.includes('0.924'), 'no capped lift left')
   assert.ok(system.includes(`--lab-glass-tint: ${GLASS_TINT_DEFAULT};`))
 })
 

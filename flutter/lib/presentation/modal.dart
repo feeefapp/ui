@@ -158,10 +158,8 @@ class _ModalState extends State<Modal> with PresentationStateMixin<Modal> {
           title: shown.title,
           trailing: shown.trailing,
           onClose: shown.showClose ? close : null,
-          closeLabel: I18n.of(
-            context,
-          ).t('lab.composer.closeLabel', {'label': shown.label}),
-          closeDisabled: !open,
+          closeLabel: I18n.of(context)
+              .t('lab.composer.closeLabel', {'label': shown.label}),
         );
     final body = PresentationBody(
       label: shown.label,
@@ -185,7 +183,10 @@ class _ModalState extends State<Modal> with PresentationStateMixin<Modal> {
         child: DecoratedBox(
           decoration: ShapeDecoration(
             color: c.surface,
-            shape: SuperellipseBorder(radius: radius, side: BorderSide(color: c.line)),
+            shape: SuperellipseBorder(
+              radius: radius,
+              side: BorderSide(color: c.line),
+            ),
             shadows: [
               // 0 30px 80px -24px rgb(0 0 0 / 40%).
               BoxShadow(
@@ -243,7 +244,9 @@ class _ModalState extends State<Modal> with PresentationStateMixin<Modal> {
                     opacity: _motion.opacity,
                     // --lab-presentation-scrim: 20% black, 48% in dark.
                     child: ColoredBox(
-                      color: black(theme.brightness == Brightness.dark ? 0.48 : 0.2),
+                      color: black(
+                        theme.brightness == Brightness.dark ? 0.48 : 0.2,
+                      ),
                     ),
                   ),
                 ),

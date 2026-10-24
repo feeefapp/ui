@@ -33,8 +33,11 @@ export declare function ModelLadder({ stops, index, defaultIndex, onChange, enab
     selectedModel?: LadderStop;
     /** Overrides the localized strings. */
     copy?: LadderCopy;
-    /** `chip` shows the tier and model name; `icon` is a compact brain button like marchant. */
-    variant?: 'chip' | 'icon';
+    /**
+     * `chip` shows the tier and model name; `icon` is a compact brain button like marchant;
+     * `compact` is one small-control line (brain, tier, chevron) for composer and toolbar rows.
+     */
+    variant?: 'chip' | 'icon' | 'compact';
     /** Popover alignment against the trigger. */
     align?: 'start' | 'center' | 'end';
     /** Which side of the trigger the popover opens on. */

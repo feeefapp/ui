@@ -24,5 +24,5 @@ export default function InAForm() {
 
 export const meta = {
   title: 'In a form',
-  description: 'name submits the value through a hidden input. Backspace on a focused field returns it to defaultValue.',
+  description: 'name submits the value with the form. Backspace on a focused field returns it to defaultValue.',
 }

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import './choice.css';
 type ChoiceDecoration = {
-    /** Visible label next to the mark. Clicking it toggles the control. */
+    /** Visible label next to the mark. Clicking it toggles the control. Without one (and without description or error) the control is only its mark; name it with `aria-label`. */
     label?: React.ReactNode;
     /** Secondary text under the label, linked as the control's description. */
     description?: React.ReactNode;

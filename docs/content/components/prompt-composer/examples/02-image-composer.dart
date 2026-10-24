@@ -36,6 +36,26 @@ const _templates = [
     prompt: 'The product on a kitchen counter in morning light, shallow depth of field.',
   ),
 ];
+const _recent = [
+  RecentImage(
+    id: 'side',
+    prompt: 'Bottle, side',
+    thumbUrl: '',
+    preview: CustomPaint(painter: _Photo(Color(0xFFEFE6DA), Color(0xFFB9824F))),
+  ),
+  RecentImage(
+    id: 'back',
+    prompt: 'Bottle, back',
+    thumbUrl: '',
+    preview: CustomPaint(painter: _Photo(Color(0xFFDFE8EE), Color(0xFF4F7894))),
+  ),
+  RecentImage(
+    id: 'cap',
+    prompt: 'Bottle cap',
+    thumbUrl: '',
+    preview: CustomPaint(painter: _Photo(Color(0xFFECE3EE), Color(0xFF8A5F96))),
+  ),
+];
 
 class ImageComposer extends StatefulWidget {
   const ImageComposer({super.key});
@@ -50,25 +70,17 @@ class _ImageComposerState extends State<ImageComposer> {
   String _shape = '1:1';
   List<ComposerReference> _references = const [
     ComposerReference(
-      id: 'bottle',
+      id: 'front',
       name: 'Bottle front',
       url: '',
-      preview: CustomPaint(painter: _Photo()),
+      preview: CustomPaint(painter: _Photo(Color(0xFFE8EAE4), Color(0xFF6F8965))),
     ),
   ];
   bool _submitting = false;
   Timer? _timer;
 
-  void _addFiles(List<ComposerFile> files) => setState(
-    () => _references = [
-      ..._references,
-      for (final file in files)
-        ComposerReference(
-          id: '${file.name}-${file.bytes.length}',
-          name: file.name,
-          url: 'data:${file.type};base64,${base64Encode(file.bytes)}',
-        ),
-    ].take(3).toList(),
+  void _add(List<ComposerReference> added) => setState(
+    () => _references = [..._references, ...added].take(4).toList(),
   );
 
   @override
@@ -91,23 +103,43 @@ class _ImageComposerState extends State<ImageComposer> {
           maxLength: 2000,
           references: _references,
           referenceLimit: const ReferenceLimit(
-            max: 3,
+            max: 4,
             formats: ['image/png', 'image/jpeg', 'image/webp'],
           ),
-          onAddFiles: _addFiles,
+          onAddFiles: (files) => _add([
+            for (final file in files)
+              ComposerReference(
+                id: '${file.name}-${file.bytes.length}',
+                name: file.name,
+                url: 'data:${file.type};base64,${base64Encode(file.bytes)}',
+              ),
+          ]),
           onRemoveReference: (id) => setState(
             () => _references = [
               for (final ref in _references)
                 if (ref.id != id) ref,
             ],
           ),
-          recent: const [],
-          onUseRecent: (_) {},
-          onEditPhoto: (file) => _addFiles([file]),
+          recent: [
+            for (final image in _recent)
+              if (!_references.any((ref) => ref.id == image.id)) image,
+          ],
+          onUseRecent: (id) {
+            final image = _recent.firstWhere((recent) => recent.id == id);
+            _add([
+              ComposerReference(
+                id: id,
+                name: image.prompt,
+                url: image.thumbUrl,
+                preview: image.preview,
+              ),
+            ]);
+          },
+          onEditPhoto: (_) {},
           templates: _templates,
           onTemplate: (template) => setState(() => _prompt = template.prompt),
-          ladder: (variant) => ModelLadder(
-            variant: variant,
+          ladder: ModelLadder(
+            variant: .compact,
             stops: _stops,
             index: _model,
             defaultIndex: 1,
@@ -153,26 +185,24 @@ class _ImageComposerState extends State<ImageComposer> {
   }
 }
 
-/// The reference photo: a bottle on a pale ground (the web example's SVG).
+/// A product photo: a bottle on a pale ground (the web example's SVG).
 class _Photo extends CustomPainter {
-  const _Photo();
+  const _Photo(this.ground, this.bottle);
+  final Color ground, bottle;
 
   @override
   void paint(Canvas canvas, Size size) {
     final k = size.width / 80;
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()..color = const Color(0xFFE8EAE4),
-    );
+    canvas.drawRect(Offset.zero & size, Paint()..color = ground);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(26 * k, 18 * k, 28 * k, 44 * k),
         Radius.circular(6 * k),
       ),
-      Paint()..color = const Color(0xFF6F8965),
+      Paint()..color = bottle,
     );
   }
 
   @override
-  bool shouldRepaint(_Photo old) => false;
+  bool shouldRepaint(_Photo old) => old.ground != ground || old.bottle != bottle;
 }

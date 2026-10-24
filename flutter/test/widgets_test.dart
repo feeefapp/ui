@@ -2,6 +2,7 @@ import 'dart:ui' show CheckedState;
 
 import 'package:feeef_ui/feeef_ui.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter/services.dart';
 // The kit's RadioGroup (same name as the web kit's) shadows Flutter's.
 import 'package:flutter/widgets.dart' hide RadioGroup;
@@ -30,6 +31,46 @@ Widget host(
 
 void main() {
   group('Button', () {
+    testWidgets('a long label ellipsizes in a bounded width; icons keep size', (
+      tester,
+    ) async {
+      const label = 'Confirm and send to the courier today';
+      await tester.pumpWidget(
+        host(
+          Center(
+            child: SizedBox(
+              width: 120,
+              child: Button(
+                variant: .filled,
+                onClick: () {},
+                children: const [LucidePlus(), Text(label)],
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      expect(tester.getSize(find.byType(Button)).width, 120);
+      expect(tester.getSize(find.byType(LucidePlus)).width, 18);
+      final paragraph = tester.renderObject<RenderParagraph>(
+        find.descendant(of: find.text(label), matching: find.byType(RichText)),
+      );
+      expect(paragraph.didExceedMaxLines, isTrue);
+      expect(paragraph.overflow, TextOverflow.ellipsis);
+      // Unbounded, it still shrink-wraps the whole label.
+      await tester.pumpWidget(
+        host(
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Button(onClick: () {}, children: const [Text('Save')]),
+            ],
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets(
       'desktop sizes follow the CSS: regular 44, compact 40, compact density 34',
       (tester) async {
@@ -442,6 +483,48 @@ void main() {
       await tester.tap(find.text('Send SMS'));
       expect(checked, isFalse);
     });
+
+    testWidgets(
+      'an unlabelled checkbox fits a list row and still reaches 44px',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        var checked = false;
+        await tester.pumpWidget(
+          host(
+            SizedBox(
+              width: 360,
+              child: ListSection(
+                children: [
+                  StatefulBuilder(
+                    builder: (context, setState) => ListRow(
+                      leading: Checkbox(
+                        checked: checked,
+                        ariaLabel: 'Select order #1042',
+                        onCheckedChange: (v) => setState(() => checked = v),
+                      ),
+                      title: const Text('x'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        expect(tester.takeException(), isNull);
+        final mark = tester.getRect(find.byType(Checkbox));
+        expect(mark.size, const Size(20, 20), reason: 'only its box');
+        // 11px past the box edge: inside the 44px reach (12px each side of a 20px box).
+        await tester.tapAt(mark.centerRight + const Offset(11, 0));
+        await tester.pump();
+        expect(checked, isTrue);
+        await tester.tapAt(mark.bottomCenter + const Offset(0, 11));
+        await tester.pump();
+        expect(checked, isFalse);
+        expect(find.bySemanticsLabel('Select order #1042'), findsOneWidget);
+        handle.dispose();
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
 
     testWidgets('radio arrows select the next enabled option', (tester) async {
       var value = 'standard';

@@ -1,4 +1,4 @@
-import { FO_CORNER_EXPONENT, foSuperellipsePath } from '../brand/geometry.js';
+import { FO_CORNER_EXPONENT, cornerExponentFor, foSuperellipsePath } from '../brand/geometry.js';
 const finite = (value) => (Number.isFinite(value) ? value : 0);
 /** Corner radius a shape actually draws with: never more than half its shorter side. */
 export function clampRadius(shape) {
@@ -6,13 +6,17 @@ export function clampRadius(shape) {
 }
 const NORM_STEPS = 512;
 const NORM = Float64Array.from({ length: NORM_STEPS + 1 }, (_, i) => (1 + (i / NORM_STEPS) ** FO_CORNER_EXPONENT) ** (1 / FO_CORNER_EXPONENT));
+/** The exponent a shape's corners draw with: its own, or the kit's clamped continuous corner. */
+export function shapeExponent(shape) {
+    return shape.cornerExponent ?? cornerExponentFor(clampRadius(shape), shape.width, shape.height);
+}
 /**
- * Signed distance from a point to a rounded box with superellipse corners (exponent 2^1.5, the
- * kit's `corner-shape: superellipse(1.5)`): negative inside, zero on the outline. The zero level
+ * Signed distance from a point to a rounded box with superellipse corners (the kit's clamped
+ * continuous corner, `shapeExponent`): negative inside, zero on the outline. The zero level
  * is exactly the curve `foSuperellipsePath` draws; away from it the value is a close
  * approximation, which is all a smooth union needs.
  */
-export function shapeDistance(px, py, shape, exponent = shape.cornerExponent ?? FO_CORNER_EXPONENT) {
+export function shapeDistance(px, py, shape, exponent = shapeExponent(shape)) {
     const r = clampRadius(shape);
     const hx = shape.width / 2;
     const hy = shape.height / 2;
@@ -104,7 +108,7 @@ export function prepareUnionDistance(shapes, spacing) {
     const boxes = shapes.map(shape => {
         const hx = shape.width / 2;
         const hy = shape.height / 2;
-        return { cx: shape.x + hx, cy: shape.y + hy, hx, hy, radius: clampRadius(shape), exponent: shape.cornerExponent ?? FO_CORNER_EXPONENT };
+        return { cx: shape.x + hx, cy: shape.y + hy, hx, hy, radius: clampRadius(shape), exponent: shapeExponent(shape) };
     });
     const widths = blendWidths(shapes, spacing);
     const distance = (px, py) => {
@@ -184,7 +188,7 @@ export function translatePath(d, dx, dy) {
 export function shapePath(shape) {
     const r = clampRadius(shape);
     const corner = { x: r, y: r };
-    return translatePath(foSuperellipsePath(shape.width, shape.height, [corner, corner, corner, corner], 0, shape.cornerExponent ?? FO_CORNER_EXPONENT), shape.x, shape.y);
+    return translatePath(foSuperellipsePath(shape.width, shape.height, [corner, corner, corner, corner], 0, shape.cornerExponent), shape.x, shape.y);
 }
 /**
  * Closed outlines of the blended union of `shapes` (marching squares on a `cell`-sized grid with

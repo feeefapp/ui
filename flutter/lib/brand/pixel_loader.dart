@@ -12,6 +12,7 @@ class PixelLoader extends StatefulWidget {
     this.size = 20,
     this.label,
     this.decorative = false,
+    this.progress,
     this.color,
   });
 
@@ -23,6 +24,10 @@ class PixelLoader extends StatefulWidget {
 
   /// Hides the loader from assistive technology.
   final bool decorative;
+
+  /// Shows progress instead of the wave: 0 … 1 lights the squares one by one in wave order (a
+  /// pull-to-refresh pulling toward its threshold).
+  final double? progress;
 
   /// Square colour; defaults to the icon colour, then the text colour.
   final Color? color;
@@ -41,8 +46,19 @@ class _PixelLoaderState extends State<PixelLoader>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final still = reducedMotionOf(context);
-    if (still) {
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(PixelLoader old) {
+    super.didUpdateWidget(old);
+    if ((old.progress == null) != (widget.progress == null)) _sync();
+  }
+
+  /// The wave runs only while it shows: not under reduced motion, not while showing progress (it
+  /// starts from its first frame when progress ends).
+  void _sync() {
+    if (reducedMotionOf(context) || widget.progress != null) {
       _clock.stop();
     } else if (!_clock.isAnimating) {
       _clock.forward(from: 0);
@@ -69,6 +85,7 @@ class _PixelLoaderState extends State<PixelLoader>
         builder: (context, _) => CustomPaint(
           painter: _LoaderPainter(
             color: color,
+            progress: widget.progress,
             elapsed: still
                 ? null
                 : (_clock.lastElapsedDuration ?? Duration.zero),
@@ -85,9 +102,18 @@ class _PixelLoaderState extends State<PixelLoader>
   }
 }
 
+/// Squares in wave order: by their wave delay (column 110ms, row 80ms).
+const _loaderOrder = [0, 3, 1, 6, 4, 2, 7, 5, 8];
+
+/// How lit square [index] is (0 … 1) at [progress] (0 … 1): one square per ninth, in wave order.
+/// The twin of `pixelLoaderCell` in `@feeef.dev/ui/pixel-art`.
+double pixelLoaderCell(int index, double progress) =>
+    (progress * 9 - _loaderOrder.indexOf(index)).clamp(0.0, 1.0);
+
 class _LoaderPainter extends CustomPainter {
-  _LoaderPainter({required this.color, required this.elapsed});
+  _LoaderPainter({required this.color, required this.elapsed, this.progress});
   final Color color;
+  final double? progress;
 
   /// Time since the loader appeared; null under reduced motion.
   final Duration? elapsed;
@@ -114,7 +140,11 @@ class _LoaderPainter extends CustomPainter {
     for (var index = 0; index < 9; index++) {
       final col = index % 3, row = index ~/ 3;
       double opacity, scale;
-      if (elapsed == null) {
+      if (progress != null) {
+        // The wave's resting and peak frames (opacity 0.22 → 1, scale 0.7 → 1).
+        final lit = pixelLoaderCell(index, progress!);
+        (opacity, scale) = (0.22 + 0.78 * lit, 0.7 + 0.3 * lit);
+      } else if (elapsed == null) {
         (opacity, scale) = (0.7, 1);
       } else {
         final delay = col * 110 + row * 80;
@@ -138,5 +168,5 @@ class _LoaderPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_LoaderPainter old) =>
-      old.elapsed != elapsed || old.color != color;
+      old.elapsed != elapsed || old.color != color || old.progress != progress;
 }

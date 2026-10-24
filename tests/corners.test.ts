@@ -1,11 +1,15 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
+  CORNER_SMOOTHING_FADE,
   FO_CORNER_EXPONENT,
+  cornerExponentFor,
+  cornerSmoothing,
   foContinuousEdge,
   foSuperellipsePath,
   type FoCornerRadii,
 } from '../src/brand/geometry.ts'
+import { cssCornerRadius, cssCornerShape, trueCornerRadius } from '../src/brand/corner-fit.ts'
 
 const points = (path: string) =>
   [...path.matchAll(/[ML](-?[\d.]+),(-?[\d.]+)/g)].map((match) => ({
@@ -61,4 +65,51 @@ test('empty dimensions, invalid radii and excessive insets never emit invalid SV
       /NaN|Infinity/
     )
   }
+})
+
+test('smoothing is full up to 0.75 of the full radius and eases to none at it', () => {
+  assert.equal(cornerSmoothing(0, 120, 44), 1)
+  assert.equal(cornerSmoothing(22 * CORNER_SMOOTHING_FADE, 120, 44), 1)
+  assert.equal(cornerSmoothing(22, 120, 44), 0)
+  assert.equal(cornerSmoothing(80, 120, 44), 0)
+  assert.equal(cornerSmoothing(19.25, 120, 44), 0.5)
+  let previous = 1
+  for (let r = 16.5; r <= 22; r += 0.1) {
+    const s = cornerSmoothing(r, 120, 44)
+    assert.ok(s <= previous + 1e-12, 'monotonic')
+    previous = s
+  }
+  assert.equal(cornerExponentFor(16, 300, 200), FO_CORNER_EXPONENT)
+  assert.equal(cornerExponentFor(22, 44, 44), 2)
+})
+
+test('a 44 × 44 bubble at r 22 is a circle and a 132 × 44 bar a capsule', () => {
+  const corner = { x: 22, y: 22 }
+  const radii: FoCornerRadii = [corner, corner, corner, corner]
+  for (const { x, y } of points(foSuperellipsePath(44, 44, radii)))
+    assert.ok(Math.abs(Math.hypot(x - 22, y - 22) - 22) < 0.25)
+  for (const { x, y } of points(foSuperellipsePath(132, 44, radii)))
+    assert.ok(Math.abs(Math.hypot(x - Math.min(110, Math.max(22, x)), y - 22) - 22) < 0.25)
+})
+
+test('a 300 × 200 card at r 16 keeps the full continuous corner', () => {
+  const corner = { x: 16, y: 16 }
+  const radii: FoCornerRadii = [corner, corner, corner, corner]
+  const clamped = points(foSuperellipsePath(300, 200, radii))
+  const full = points(foSuperellipsePath(300, 200, radii, 0, FO_CORNER_EXPONENT))
+  clamped.forEach((p, i) => assert.ok(Math.hypot(p.x - full[i].x, p.y - full[i].y) < 0.1))
+})
+
+test('the circle fallback shrinks only smoothed radii, and maps back', () => {
+  assert.equal(cssCornerRadius(22, 132, 44, 0.76), 22)
+  assert.ok(Math.abs(cssCornerRadius(16, 300, 200, 0.76) - 12.16) < 1e-9)
+  for (const r of [4, 12, 16, 17.5, 19, 20.5, 21.9, 22]) {
+    const css = cssCornerRadius(r, 132, 44, 0.76)
+    assert.ok(Math.abs(trueCornerRadius(css, 132, 44, 0.76) - r) < 1e-4, `r ${r}`)
+  }
+  assert.equal(trueCornerRadius(999, 132, 44, 0.76), 999)
+  assert.equal(trueCornerRadius(12, 132, 44, 1), 12)
+  assert.equal(cssCornerShape(22, 44, 44), 'round')
+  assert.equal(cssCornerShape(16, 300, 200), 'superellipse(1.5)')
+  assert.equal(cssCornerShape(19.25, 132, 44), 'superellipse(1.25)')
 })

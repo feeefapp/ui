@@ -6,8 +6,6 @@
  * - image/board-utils.ts: stageRatio, elapsed, takeErrorText.
  * - image/freeform-frame.ts: sideInset, revealCovered.
  * - image/freeform-board.tsx: layoutCards, fitView.
- * - composer/use-composer-layout.ts: the expansion test is inline in the hook, so its formula is
- *   copied verbatim below.
  */
 import { register } from 'node:module'
 import { writeFileSync } from 'node:fs'
@@ -26,14 +24,6 @@ register(
 const { stageRatio, elapsed, takeErrorText } = await import('../../src/image/board-utils')
 const { sideInset, revealCovered } = await import('../../src/image/freeform-frame')
 const { layoutCards, fitView } = await import('../../src/image/freeform-board')
-
-// From use-composer-layout.ts `measureExpansion`.
-function expands(prompt: string, available: number, width: number, minimum: number) {
-  return available < minimum || prompt.includes('\n') || (!!prompt && width > Math.max(0, available) + 0.5)
-}
-function availableWidth(row: number, slots: number[], gap: number, padding: number) {
-  return row - slots.reduce((sum, w) => sum + w, 0) - slots.length * gap - padding
-}
 
 // Deterministic pseudo-random numbers (mulberry32).
 let seed = 0x9e3779b9
@@ -157,21 +147,8 @@ for (let i = 0; i < 60; i++) {
   fitCases.push({ rect, viewport, insets, padding, maxScale, view: fitView(rect, viewport, insets, padding, maxScale) })
 }
 
-const composerCases: unknown[] = []
-for (let i = 0; i < 60; i++) {
-  const prompt = ['', 'Hello', 'A cat\non a mat', 'Long prompt '.repeat(1 + (i % 9)), '   '][i % 5]
-  const row = between(80, 780)
-  const slots = Array.from({ length: 1 + (i % 6) }, () => Math.round(between(0, 48)))
-  const gap = [4, 2, 4, 8][i % 4]
-  const padding = [16, 12][i % 2]
-  const available = availableWidth(row, slots, gap, padding)
-  const width = prompt ? between(0, 900) : 0
-  const minimum = between(90, 140)
-  composerCases.push({ prompt, row, slots, gap, padding, available, width, minimum, expanded: expands(prompt, available, width, minimum) })
-}
-
 writeFileSync(
   new URL('../test/fixtures/image.json', import.meta.url),
-  JSON.stringify({ stage, elapsed: elapsedCases, errors: errorCases, insets: insetCases, reveal: revealCases, layout: layoutCases, fit: fitCases, composer: composerCases }, null, 1)
+  JSON.stringify({ stage, elapsed: elapsedCases, errors: errorCases, insets: insetCases, reveal: revealCases, layout: layoutCases, fit: fitCases }, null, 1)
 )
 console.log('wrote flutter/test/fixtures/image.json')

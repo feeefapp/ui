@@ -7,7 +7,8 @@ html[data-lab-theme] .lab-navigation-item[data-variant] {
   height: var(--lab-row-height);
   min-height: var(--lab-row-height);
   padding: 0 8px;
-  border-radius: var(--lab-radius-control-small);
+  border-radius: calc(var(--lab-control-small) / 2 * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
   text-align: start;
 }
 html[data-lab-theme] .lab-navigation-item[aria-current='page'] {

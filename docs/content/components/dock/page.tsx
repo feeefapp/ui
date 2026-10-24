@@ -95,7 +95,10 @@ function Overview() {
           <li>
             <strong>Actions</strong> (<C>children</C>): buttons laid out in a row, or one{' '}
             <C>ActionsBar</C>. The dock passes the width left after the tile to the actions bar, which
-            moves low-priority actions into a More menu instead of wrapping.
+            moves low-priority actions into a More menu instead of wrapping. Regular actions share the dock’s
+            38px control height on touch and desktop, retaining a 5px inset on each side (4px padding
+            plus the glass edge). Touch targets extend beyond the visible controls without enlarging
+            the action row.
           </li>
         </ol>
       </Section>

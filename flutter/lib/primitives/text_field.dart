@@ -156,21 +156,32 @@ class _FieldShellState extends State<FieldShell> {
     // Outlined labels, label-less fields and dense inside labels center the value.
     final insideLabel =
         widget.labelStyle == FieldLabelStyle.inside && hasLabel && !dense;
-    final centered = ((height - line - 2) / 2).clamp(0.0, double.infinity);
-    final padTop = insideLabel ? 17.0 : centered;
-    final padBottom = insideLabel ? 5.0 : centered;
     final borderLabel =
         widget.labelStyle == FieldLabelStyle.outlined ||
         (widget.labelStyle == FieldLabelStyle.inside && dense);
-    // The resting hint sits where one line of value sits: centred at every size and density.
-    final restTop = (height - line) / 2;
-    final floatTop = borderLabel ? -6.0 : 4.0;
+    final scaler = MediaQuery.textScalerOf(context);
     final floatFont = borderLabel
         ? (widget.labelStyle == FieldLabelStyle.inside ? 11.0 : 12.0)
         : 10.0;
     final floatLine = borderLabel
         ? (widget.labelStyle == FieldLabelStyle.inside ? 12.0 : 14.0)
         : 12.0;
+    final scaledFloatLine = scaler.scale(floatFont) * floatLine / floatFont;
+    // The label's box and border notch follow the same text scaler as the value.
+    final floatTop = borderLabel ? 1 - scaledFloatLine / 2 : 4.0;
+    final centered = ((height - line - 2) / 2).clamp(0.0, double.infinity);
+    final labelGrowth = insideLabel
+        ? math.max(0.0, scaledFloatLine - floatLine)
+        : 0.0;
+    final padTop = insideLabel
+        ? 17.0 + labelGrowth
+        : hasLabel && borderLabel && scaledFloatLine > floatLine
+        ? math.max(centered, scaledFloatLine / 2 + 1)
+        : centered;
+    final padBottom = insideLabel ? 5.0 : centered;
+    final restTop = insideLabel
+        ? (height - line) / 2 + labelGrowth / 2
+        : 1 + padTop;
     final floated = widget.populated || widget.alwaysFloat || _focused;
     final labelText = hint == null
         ? null
@@ -190,6 +201,7 @@ class _FieldShellState extends State<FieldShell> {
           ),
         ),
         maxLines: 1,
+        textScaler: scaler,
         textDirection: Directionality.of(context),
       )..layout();
       notchWidth = painter.width + 8;
@@ -314,7 +326,7 @@ class _FieldShellState extends State<FieldShell> {
             floatFont: floatFont,
             floatLine: floatLine,
             start: borderLabel ? insetStart - 4 : insetStart,
-            end: borderLabel ? null : insetEnd,
+            end: insetEnd,
             padded: borderLabel,
             color: labelColor,
           ),
@@ -421,6 +433,8 @@ class _FloatingLabel extends StatelessWidget {
         final line = restLine + (floatLine - restLine) * t;
         final top = restTop + (floatTop - restTop) * t;
         final shift = restShift + (floatShift - restShift) * t;
+        final scaledLine =
+            line * MediaQuery.textScalerOf(context).scale(size) / size;
         return PositionedDirectional(
           start: start,
           end: end,
@@ -435,7 +449,7 @@ class _FloatingLabel extends StatelessWidget {
                     horizontal: padded ? 4 : 0,
                   ),
                   child: SizedBox(
-                    height: line,
+                    height: scaledLine,
                     child: Transform.translate(
                       offset: Offset(0, shift),
                       child: Text(
@@ -515,7 +529,9 @@ class _FieldPainter extends CustomPainter {
     }
     if (notch case final n?) {
       // The outline's notch (text-field.css masks a 3px band from 1px outside the control).
-      final width = n.width.clamp(0.0, size.width);
+      final width = n.width
+          .clamp(0.0, math.max(0.0, size.width - n.start - 12))
+          .toDouble();
       final x = rtl ? size.width - n.start - width : n.start;
       canvas.save();
       canvas.clipRect(
@@ -597,6 +613,8 @@ class TextField extends StatefulWidget {
     this.keyboardType,
     this.textInputAction,
     this.autofillHints,
+    this.inputFormatters,
+    this.textCapitalization = TextCapitalization.none,
     this.textDirection,
     this.autofocus = false,
     this.controller,
@@ -663,6 +681,14 @@ class TextField extends StatefulWidget {
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
+
+  /// Rewrite or reject edits as they are typed (digits only, upper case, a phone mask). They run
+  /// before [maxLength]'s limit. The web field uses native attributes instead (`inputMode`,
+  /// `pattern`).
+  final List<TextInputFormatter>? inputFormatters;
+
+  /// Which letters the on-screen keyboard capitalizes: the twin of the web `autoCapitalize`.
+  final TextCapitalization textCapitalization;
 
   /// Text direction of the field. Null follows the surrounding direction.
   final TextDirection? textDirection;
@@ -852,6 +878,7 @@ class _TextFieldState extends State<TextField>
               widget.maxLength != null
                   ? '${text.length} / ${widget.maxLength}'
                   : '${text.length}',
+              textDirection: TextDirection.ltr,
             )
           : null,
       child: Builder(
@@ -883,7 +910,9 @@ class _TextFieldState extends State<TextField>
                 (widget.multiline ? TextInputType.multiline : null),
             textInputAction: widget.textInputAction,
             autofillHints: widget.autofillHints,
+            textCapitalization: widget.textCapitalization,
             inputFormatters: [
+              ...?widget.inputFormatters,
               if (widget.maxLength != null)
                 LengthLimitingTextInputFormatter(widget.maxLength),
             ],

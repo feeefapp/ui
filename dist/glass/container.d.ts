@@ -21,7 +21,11 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
      * Keep it below the gap between bubbles at rest so separate bubbles stay apart. Default 8.
      */
     spacing?: number;
-    /** Corner profile of the glass: circular `round` corners (default) or kit superellipse. */
+    /**
+     * Corner profile of the glass: `superellipse` (default) is the kit's clamped continuous corner,
+     * so circle- and capsule-sized bubbles are circles and capsules and larger glass keeps the
+     * continuous curve; `round` draws circular corners at every radius.
+     */
     cornerShape?: 'superellipse' | 'round';
     /** `pointer` (default) turns the light toward a mouse or pen; `static` keeps it at the top-left. */
     light?: 'pointer' | 'static';
@@ -41,7 +45,7 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
     highlightWidth?: number;
     /** `surface` uses a convex bevel; `rim` (default) uses the thin, symmetric screenshot-fitted highlight. */
     highlightProfile?: 'surface' | 'rim';
-    /** Local material tint, 0 clear–1 tinted, preserving bright backdrop detail; omitted inherits ThemeConfig glassTint. */
+    /** Local material tint, 0 clear–1 tinted (clear lifts what is behind it, clipping light content to white like iOS); omitted inherits ThemeConfig glassTint. */
     tint?: number;
     /** Surface highlight opacity multiplier, 0–10; default 1. */
     highlightStrength?: number;
@@ -69,7 +73,11 @@ export declare const GlassContainer: React.ForwardRefExoticComponent<React.HTMLA
      * Keep it below the gap between bubbles at rest so separate bubbles stay apart. Default 8.
      */
     spacing?: number;
-    /** Corner profile of the glass: circular `round` corners (default) or kit superellipse. */
+    /**
+     * Corner profile of the glass: `superellipse` (default) is the kit's clamped continuous corner,
+     * so circle- and capsule-sized bubbles are circles and capsules and larger glass keeps the
+     * continuous curve; `round` draws circular corners at every radius.
+     */
     cornerShape?: "superellipse" | "round";
     /** `pointer` (default) turns the light toward a mouse or pen; `static` keeps it at the top-left. */
     light?: "pointer" | "static";
@@ -89,7 +97,7 @@ export declare const GlassContainer: React.ForwardRefExoticComponent<React.HTMLA
     highlightWidth?: number;
     /** `surface` uses a convex bevel; `rim` (default) uses the thin, symmetric screenshot-fitted highlight. */
     highlightProfile?: "surface" | "rim";
-    /** Local material tint, 0 clear–1 tinted, preserving bright backdrop detail; omitted inherits ThemeConfig glassTint. */
+    /** Local material tint, 0 clear–1 tinted (clear lifts what is behind it, clipping light content to white like iOS); omitted inherits ThemeConfig glassTint. */
     tint?: number;
     /** Surface highlight opacity multiplier, 0–10; default 1. */
     highlightStrength?: number;
@@ -112,7 +120,11 @@ export declare const GlassScope: React.ForwardRefExoticComponent<React.HTMLAttri
      * Keep it below the gap between bubbles at rest so separate bubbles stay apart. Default 8.
      */
     spacing?: number;
-    /** Corner profile of the glass: circular `round` corners (default) or kit superellipse. */
+    /**
+     * Corner profile of the glass: `superellipse` (default) is the kit's clamped continuous corner,
+     * so circle- and capsule-sized bubbles are circles and capsules and larger glass keeps the
+     * continuous curve; `round` draws circular corners at every radius.
+     */
     cornerShape?: "superellipse" | "round";
     /** `pointer` (default) turns the light toward a mouse or pen; `static` keeps it at the top-left. */
     light?: "pointer" | "static";
@@ -132,7 +144,7 @@ export declare const GlassScope: React.ForwardRefExoticComponent<React.HTMLAttri
     highlightWidth?: number;
     /** `surface` uses a convex bevel; `rim` (default) uses the thin, symmetric screenshot-fitted highlight. */
     highlightProfile?: "surface" | "rim";
-    /** Local material tint, 0 clear–1 tinted, preserving bright backdrop detail; omitted inherits ThemeConfig glassTint. */
+    /** Local material tint, 0 clear–1 tinted (clear lifts what is behind it, clipping light content to white like iOS); omitted inherits ThemeConfig glassTint. */
     tint?: number;
     /** Surface highlight opacity multiplier, 0–10; default 1. */
     highlightStrength?: number;
@@ -143,5 +155,15 @@ export declare const GlassScope: React.ForwardRefExoticComponent<React.HTMLAttri
     /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
     backdropSource?: string;
 } & React.RefAttributes<HTMLElement>>;
+/**
+ * Glass bars floating over scrolling content (a ScrollArea's app bar and dock, a TabView's tab
+ * bar): their labels sit on moving content, so every glass inside is at least `GLASS_BAR_TINT`
+ * tinted and blurred with the measured blur, whatever the theme's `glassTint` and `glassBlur`
+ * (glass elsewhere keeps them), as iOS bars are. Wraps its children in a layout-neutral element.
+ */
+export declare function GlassBar({ children, className }: {
+    children: React.ReactNode;
+    className?: string;
+}): React.JSX.Element;
 export {};
 //# sourceMappingURL=container.d.ts.map

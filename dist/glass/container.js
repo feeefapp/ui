@@ -3,9 +3,9 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
 import { cn } from '../utils.js';
 import { useReducedMotion } from '../physics/react.js';
-import { GlassContext } from './context.js';
+import { GlassContext, GlassBarContext } from './context.js';
 import { GlassScene } from './scene.js';
-import { clampGlassTint } from './material.js';
+import { clampGlassTint, GLASS_BAR_TINT } from './material.js';
 import './glass.css';
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
 /** A value read from `<html>`, live: `read` runs again whenever one of `attributes` changes. */
@@ -42,7 +42,7 @@ export function useGlassOptions() {
  * materialize. Bubbles keep their layout, focus and semantics; only the paint moves here. Without
  * JavaScript, or in forced colors, every bubble paints its own glass as before.
  */
-export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'div', spacing = 8, cornerShape = 'round', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 1, highlightProfile = 'rim', highlightStrength = 1, refractionStrength = 1, refractionProfile = 'measured', tint, backdropSource, className, children, ...props }, ref) {
+export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'div', spacing = 8, cornerShape = 'superellipse', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 1, highlightProfile = 'rim', highlightStrength = 1, refractionStrength = 1, refractionProfile = 'measured', tint, backdropSource, className, children, ...props }, ref) {
     const host = React.useRef(null);
     const backdrop = React.useRef(null);
     const paint = React.useRef(null);
@@ -52,6 +52,9 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
     const uid = React.useId();
     const reduced = useReducedMotion();
     const style = useGlassStyle();
+    // Inside a GlassBar the theme tint is raised and the backdrop blurred (an explicit `tint` wins).
+    const bar = React.useContext(GlassBarContext);
+    tint ??= bar?.tint;
     const options = useGlassOptions();
     const liquid = style === 'liquid';
     const setHost = React.useCallback((element) => {
@@ -105,9 +108,8 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
         current.followPointer = light === 'pointer' && liquid;
         current.interactive = interactive && liquid;
         current.adaptive = adaptive;
-        current.preserveHighlights = true;
         current.tint = tint === undefined ? options.tint : clampGlassTint(tint);
-        current.blur = options.blur;
+        current.blur = options.blur || bar !== null;
         current.highlightWidth = Number.isFinite(highlightWidth) ? Math.min(100, Math.max(0, highlightWidth)) : 1;
         current.highlightProfile = highlightProfile;
         current.highlightStrength = Number.isFinite(highlightStrength) ? Math.min(10, Math.max(0, highlightStrength)) : 1;
@@ -158,4 +160,16 @@ export const GlassScope = React.forwardRef(function GlassScope({ as = 'div', spa
         return React.createElement(as, { ...props, ref });
     return _jsx(GlassContainer, { ...props, as: as, spacing: spacing, cornerShape: cornerShape, light: light, interactive: interactive, adaptive: adaptive, tint: tint, highlightWidth: highlightWidth, highlightProfile: highlightProfile, highlightStrength: highlightStrength, refractionStrength: refractionStrength, refractionProfile: refractionProfile, backdropSource: backdropSource, ref: ref });
 });
+/**
+ * Glass bars floating over scrolling content (a ScrollArea's app bar and dock, a TabView's tab
+ * bar): their labels sit on moving content, so every glass inside is at least `GLASS_BAR_TINT`
+ * tinted and blurred with the measured blur, whatever the theme's `glassTint` and `glassBlur`
+ * (glass elsewhere keeps them), as iOS bars are. Wraps its children in a layout-neutral element.
+ */
+export function GlassBar({ children, className }) {
+    const { tint } = useGlassOptions();
+    const raised = Math.max(tint, GLASS_BAR_TINT);
+    const bar = React.useMemo(() => ({ tint: raised }), [raised]);
+    return (_jsx(GlassBarContext.Provider, { value: bar, children: _jsx("div", { className: cn('lab-glass-bar', className), style: { '--lab-glass-tint': raised }, children: children }) }));
+}
 //# sourceMappingURL=container.js.map

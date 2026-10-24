@@ -1,15 +1,19 @@
 'use client';
-import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
-import { createPortal } from 'react-dom';
-import { ScrollArea } from '../scroll/index.js';
 import { useI18n } from '../i18n.js';
+import { PresentationHost, usePresented } from '../presentation/host.js';
+import { PresentationHeader } from '../presentation/header.js';
+import { PresentationBody } from '../presentation/body.js';
 import { attachPan, canChildPan } from '../physics/gesture.js';
 import { MotionValue, motionOf, prefersReducedMotion } from '../physics/motion-value.js';
 import { motionFade } from '../theme-config.js';
 import { SPRINGS, projectMomentum, rubberBand } from '../physics/spring.js';
 import { detentHeights, dragHeight, releaseTarget, sheetDim, sheetRecede, } from './sheet-model.js';
 import { cn } from '../utils.js';
+import { GLASS_INSTANT_ATTRIBUTE } from '../glass/transitions.js';
+import { POP_MOTION } from '../presentation/motion.js';
+import '../presentation/presentation.css';
 import './sheet.css';
 const DEFAULT_DETENTS = ['large'];
 /**
@@ -19,25 +23,24 @@ const DEFAULT_DETENTS = ['large'];
  * it becomes a centered dialog. The page behind dims and, under a full-height sheet, recedes.
  */
 export function Sheet(props) {
-    const [mounted, setMounted] = React.useState(props.open);
-    if (props.open && !mounted)
-        setMounted(true);
+    const { mounted, exited } = usePresented(props.open);
     if (!mounted)
         return null;
-    return _jsx(SheetPresentation, { ...props, onExited: () => setMounted(false) });
+    return _jsx(SheetPresentation, { ...props, onExited: exited });
 }
-function SheetPresentation({ open, onOpenChange, label, children, detents = DEFAULT_DETENTS, detent: controlledDetent, defaultDetent, onDetentChange, dismissible = true, grabber, top, bottom, modal = true, regular = 'dialog', regularBreakpoint = 720, container, recede = true, contentPadding, className, onExited, }) {
+function SheetPresentation({ open, onOpenChange, label, children, detents = DEFAULT_DETENTS, detent: controlledDetent, defaultDetent, onDetentChange, dismissible = true, grabber, title, trailing, showClose = true, header, dock, modal = true, regular = 'dialog', regularBreakpoint = 720, container, recede = true, contentPadding, initialFocusRef, returnFocusRef, className, onExited, }) {
     const { t } = useI18n();
     const host = React.useRef(null);
     const panel = React.useRef(null);
     const scrim = React.useRef(null);
     const viewport = React.useRef(null);
-    const body = React.useRef(null);
     const grabRow = React.useRef(null);
     const probe = React.useRef(null);
-    const returnFocus = React.useRef(null);
+    const titleId = React.useId();
     const [metrics, setMetrics] = React.useState(null);
-    const inline = !!container;
+    /** The body's natural height (content + reserved chrome), reported by PresentationBody. */
+    const bodyNatural = React.useRef(0);
+    const measureRef = React.useRef(() => { });
     const presentation = metrics && metrics.width >= regularBreakpoint && regular === 'dialog' ? 'dialog' : 'sheet';
     const heights = metrics ? detentHeights(detents, metrics) : [];
     const showGrabber = presentation === 'sheet' && (grabber ?? detents.length > 1);
@@ -58,7 +61,7 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
         return (container ?? document).querySelector('[data-lab-sheet-backdrop]');
     }, [container]);
     const pinned = () => {
-        const area = panel.current?.querySelector(':scope > .lab-sheet-scroll');
+        const area = panel.current?.querySelector('.lab-presentation-scroll');
         return area
             ? Array.from(area.querySelectorAll(':scope > .lab-scroll-float--bottom, :scope > .lab-scroll-gradient > .lab-scroll-wash--bottom'))
             : [];
@@ -89,9 +92,12 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
             scrim.current.style.opacity = live.current.modal ? String(sheetDim(v, live.current.heights)) : '0';
         paintRecede(v);
     };
+    /** While the panel moves, its glass rides it as is (no springs of its own) and leaves with it. */
+    const riding = (on) => panel.current?.toggleAttribute(GLASS_INSTANT_ATTRIBUTE, on);
     /** Switches to transform-only motion: the panel is tall enough for any position, nothing reflows. */
     const beginMotion = () => {
         const el = panel.current;
+        riding(true);
         if (!el || motionHeight.current)
             return;
         motionHeight.current = Math.max(...live.current.heights, visible.get(), 1) + 240;
@@ -104,6 +110,7 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
         if (!el)
             return;
         motionHeight.current = 0;
+        riding(false);
         el.style.height = `${height}px`;
         el.style.transform = '';
         for (const node of pinned())
@@ -136,30 +143,17 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
             b();
         };
     }, []);
-    // Mount: enter the top layer, remember focus, start measuring.
+    // Mount: start measuring the host and the body.
     React.useLayoutEffect(() => {
-        returnFocus.current = document.activeElement;
-        const element = host.current;
-        if (element instanceof HTMLDialogElement && !element.open) {
-            if (modal)
-                element.showModal();
-            else
-                element.show();
-        }
         const measure = () => {
             const box = host.current;
             if (!box)
                 return;
-            const content = body.current?.parentElement;
-            const style = content ? getComputedStyle(content) : null;
-            const natural = (grabRow.current?.offsetHeight ?? 0) +
-                (style ? parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) : 0) +
-                (body.current?.offsetHeight ?? 0);
             const next = {
                 width: box.clientWidth,
                 hostHeight: box.clientHeight,
                 topInset: 10 + (probe.current?.offsetHeight ?? 0),
-                natural: Math.ceil(natural),
+                natural: Math.ceil((grabRow.current?.offsetHeight ?? 0) + bodyNatural.current),
             };
             setMetrics((m) => m &&
                 m.width === next.width &&
@@ -169,14 +163,10 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
                 ? m
                 : next);
         };
+        measureRef.current = measure;
         const observer = new ResizeObserver(measure);
         if (host.current)
             observer.observe(host.current);
-        if (body.current)
-            observer.observe(body.current);
-        // Border box: the scroll area's reservations for the floating chrome are padding.
-        if (body.current?.parentElement)
-            observer.observe(body.current.parentElement, { box: 'border-box' });
         measure();
         return () => {
             observer.disconnect();
@@ -185,7 +175,7 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
                 backdrop.style.clipPath = '';
             }
         };
-    }, []);
+    }, [container]);
     // Present, follow detent and size changes, and leave.
     const target = heights[index] ?? 0;
     const dialogHeight = metrics ? Math.min(metrics.natural, metrics.hostHeight - 64) : 0;
@@ -196,18 +186,26 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
         const motion = motionOf();
         if (!open) {
             presented.current = false;
-            const done = () => {
-                // Leave the top layer first: nothing outside a modal dialog can take focus.
-                if (host.current instanceof HTMLDialogElement && host.current.open)
-                    host.current.close();
-                const el = returnFocus.current;
-                if (el instanceof HTMLElement && el.isConnected)
-                    el.focus({ preventScroll: true });
-                onExited();
-            };
+            // Unmounting the host leaves the top layer and returns focus.
+            const done = () => onExited();
             if (presentation === 'dialog') {
-                const fade = motionFade(motion, 0.18);
-                void shown.animateTo(0, { spring: reduced ? { duration: fade, bounce: 0 } : SPRINGS.smooth, instant: fade === 0 }).then((a) => a && done());
+                // Like Modal: the panel and the dim fade out on one fixed curve that ends exactly at its
+                // length (a spring's tail would leave it faintly on screen), while the move eases back.
+                const length = motionFade(motion, POP_MOTION.fadeOut);
+                riding(true);
+                void shown.animateTo(0, { spring: reduced ? { duration: length, bounce: 0 } : SPRINGS.smooth, instant: length === 0 });
+                const el = panel.current;
+                const fades = [el, scrim.current].flatMap((node) => {
+                    if (!node || !length || typeof node.animate !== 'function')
+                        return [];
+                    const from = getComputedStyle(node).opacity;
+                    node.getAnimations().forEach((animation) => animation.cancel());
+                    return [node.animate([{ opacity: from }, { opacity: 0 }], { duration: length * 1000, easing: POP_MOTION.fadeEasing, fill: 'forwards' })];
+                });
+                if (!fades.length)
+                    done();
+                else
+                    void Promise.all(fades.map((fade) => fade.finished)).then(done, () => { });
             }
             else if (reduced) {
                 // The panel fades out, then unmounts once the fade has ended.
@@ -241,10 +239,16 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
             paintRecede(0);
             if (!presented.current) {
                 presented.current = true;
+                // Opened again while fading out: the fade gives way to the spring.
+                for (const node of [el, scrim.current])
+                    node?.getAnimations?.().forEach((animation) => animation.cancel());
                 if (!shown.isAnimating())
                     shown.set(0);
                 const fade = motionFade(motion, 0.2);
-                void shown.animateTo(1, { spring: reduced ? { duration: fade, bounce: 0 } : SPRINGS.smooth, instant: fade === 0 });
+                riding(true);
+                void shown
+                    .animateTo(1, { spring: reduced ? { duration: fade, bounce: 0 } : SPRINGS.smooth, instant: fade === 0 })
+                    .then((arrived) => arrived && riding(false));
             }
             else
                 paintDialog();
@@ -268,12 +272,17 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
             void moveTo(target);
             return;
         }
-        if (!visible.isAnimating() && !dragging.current) {
-            if (Math.abs(visible.get() - target) < 1)
-                rest(target);
-            else
+        if (dragging.current)
+            return;
+        if (visible.isAnimating()) {
+            // The detent moved while rising (a fit sheet's content measured late): retarget in flight.
+            if (Math.abs(visible.getTarget() - target) >= 1)
                 void moveTo(target);
         }
+        else if (Math.abs(visible.get() - target) < 1)
+            rest(target);
+        else
+            void moveTo(target);
     }, [open, metrics, presentation, target, dialogHeight]);
     const setDetentIndex = (next) => {
         if (controlledDetent === undefined)
@@ -368,22 +377,15 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
         if (dismissible)
             onOpenChange(false);
     };
-    const content = (_jsxs(_Fragment, { children: [modal && _jsx("div", { ref: scrim, className: "lab-sheet-scrim", "aria-hidden": "true", onClick: requestClose }), _jsx("div", { ref: probe, className: "lab-sheet-safe-probe", "aria-hidden": "true" }), _jsxs("div", { ref: panel, className: cn('lab-sheet', className), "data-presentation": presentation, "data-ready": metrics ? '' : undefined, role: inline ? 'dialog' : undefined, "aria-modal": inline && modal ? true : undefined, "aria-label": inline ? label : undefined, tabIndex: -1, children: [showGrabber && (_jsx("div", { ref: grabRow, className: "lab-sheet-grabber-row", "data-lab-sheet-handle": "", children: _jsx("button", { type: "button", className: "lab-sheet-grabber", "aria-label": t('lab.sheet.grabber'), onClick: () => cycle(1), onKeyDown: (event) => {
+    const top = header !== undefined ? (header) : (_jsx(PresentationHeader, { title: title, titleId: titleId, trailing: trailing, onClose: showClose ? () => open && onOpenChange(false) : undefined, closeLabel: t('lab.composer.closeLabel', { label }) }));
+    return (_jsxs(PresentationHost, { ref: host, kind: "sheet", label: label, labelledBy: header === undefined && title != null ? titleId : undefined, modal: modal, container: container, initialFocusRef: initialFocusRef ?? panel, returnFocusRef: returnFocusRef, onEscape: requestClose, children: [modal && _jsx("div", { ref: scrim, className: "lab-sheet-scrim", "aria-hidden": "true", onClick: requestClose }), _jsx("div", { ref: probe, className: "lab-sheet-safe-probe", "aria-hidden": "true" }), _jsxs("div", { ref: panel, className: cn('lab-sheet', className), "data-presentation": presentation, "data-ready": metrics ? '' : undefined, tabIndex: -1, children: [showGrabber && (_jsx("div", { ref: grabRow, className: "lab-sheet-grabber-row", "data-lab-sheet-handle": "", children: _jsx("button", { type: "button", className: "lab-sheet-grabber", "aria-label": t('lab.sheet.grabber'), onClick: () => cycle(1), onKeyDown: (event) => {
                                 if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
                                     event.preventDefault();
                                     cycle(event.key === 'ArrowUp' ? 1 : -1);
                                 }
-                            } }) })), _jsx(ScrollArea, { ref: viewport, className: "lab-sheet-scroll", label: label, contentPadding: contentPadding, top: top, bottom: bottom, children: _jsx("div", { ref: body, className: "lab-sheet-body", children: children }) })] })] }));
-    if (inline)
-        return createPortal(_jsx("div", { ref: host, className: "lab-sheet-host", "data-inline": "", "data-modal": modal || undefined, onKeyDown: (event) => {
-                if (event.key === 'Escape' && modal) {
-                    event.stopPropagation();
-                    requestClose();
-                }
-            }, children: content }), container);
-    return createPortal(_jsx("dialog", { ref: host, className: "lab-sheet-host", "data-modal": modal || undefined, "aria-label": label, onCancel: (event) => {
-            event.preventDefault();
-            requestClose();
-        }, children: content }), document.body);
+                            } }) })), _jsx(PresentationBody, { ref: viewport, label: label, top: top, bottom: dock, fill: true, contentPadding: contentPadding, onNaturalHeight: (height) => {
+                            bodyNatural.current = height;
+                            measureRef.current();
+                        }, children: children })] })] }));
 }
 //# sourceMappingURL=sheet.js.map

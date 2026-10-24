@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../glass/container.dart';
 import '../physics/motion_value.dart';
 import '../physics/spring.dart';
 import '../theme_config.dart';
@@ -20,14 +21,20 @@ abstract final class PopMotion {
 
   /// Fade-out length (also the reduced-motion crossfade).
   static const fadeOut = Duration(milliseconds: 200);
+
+  /// The fade's curve, in and out: quick at first and exactly done at its length, with no tail
+  /// (`cubic-bezier(0, 0, 0.58, 1)`).
+  static const fadeCurve = Cubic(0, 0, 0.58, 1);
 }
 
 /// Surface scale at a given open progress (1 = open; past 1 while the spring overshoots).
 double popScale(double progress) =>
     PopMotion.fromScale - (PopMotion.fromScale - 1) * progress;
 
-Spring _fade(Duration length) =>
-    Spring(duration: length.inMicroseconds / 1e6, bounce: 0);
+/// [length] scaled to the share of the fade still to run (a fade turned around mid-way keeps its
+/// rate).
+Duration _remaining(Duration length, double share) =>
+    length * share.clamp(0.0, 1.0);
 
 /// Drives the pop motion: [scale] for the surface, [opacity] for the surface and its dimming.
 class PopMotionController extends ChangeNotifier {
@@ -47,33 +54,35 @@ class PopMotionController extends ChangeNotifier {
   /// The surface's (and the dimming's) opacity now, 0–1.
   double get opacity => _fadeValue.get().clamp(0.0, 1.0);
 
-  /// Opens: a spring from [PopMotion.fromScale] and a fade in; a crossfade when [motion] is
-  /// reduced, nothing when it is none.
-  void enter(Motion motion) {
-    if (motion != Motion.full) {
-      _progress.set(1);
-      final length = motionFade(motion, PopMotion.fadeOut);
-      _fadeValue.animateTo(
-        1,
-        spring: _fade(length),
-        instant: length == Duration.zero,
-      );
-      return;
-    }
-    _progress.animateTo(1, spring: PopMotion.spring);
-    _fadeValue.animateTo(1, spring: _fade(PopMotion.fadeIn));
-  }
+  /// Whether it is moving: the glass inside rides the surface as is meanwhile ([GlassInstant]).
+  bool get moving => _progress.isAnimating || _fadeValue.isAnimating;
 
-  /// Closes with a fade (instant under [Motion.none]). Completes `true` once faded out, `false`
-  /// when [enter] interrupted it.
-  Future<bool> exit(Motion motion) {
-    final length = motionFade(motion, PopMotion.fadeOut);
-    return _fadeValue.animateTo(
-      0,
-      spring: _fade(length),
-      instant: length == Duration.zero,
+  /// Opens: a spring from [PopMotion.fromScale] and a fade in; a crossfade when [motion] is
+  /// reduced, nothing when it is none. Opened again while fading out, it fades back from there.
+  void enter(Motion motion) {
+    final length = motionFade(
+      motion,
+      motion == Motion.full ? PopMotion.fadeIn : PopMotion.fadeOut,
+    );
+    if (motion == Motion.full) {
+      _progress.animateTo(1, spring: PopMotion.spring);
+    } else {
+      _progress.set(1);
+    }
+    _fadeValue.easeTo(
+      1,
+      _remaining(length, 1 - _fadeValue.get()),
+      curve: PopMotion.fadeCurve,
     );
   }
+
+  /// Closes with a fade that ends exactly at [PopMotion.fadeOut] (instant under [Motion.none]).
+  /// Completes `true` once faded out, `false` when [enter] interrupted it.
+  Future<bool> exit(Motion motion) => _fadeValue.easeTo(
+    0,
+    _remaining(motionFade(motion, PopMotion.fadeOut), _fadeValue.get()),
+    curve: PopMotion.fadeCurve,
+  );
 
   @override
   void dispose() {
@@ -88,7 +97,11 @@ class PopMotionController extends ChangeNotifier {
 
 /// Paints [child] at [controller]'s scale and opacity.
 class PopTransition extends StatelessWidget {
-  const PopTransition({super.key, required this.controller, required this.child});
+  const PopTransition({
+    super.key,
+    required this.controller,
+    required this.child,
+  });
   final PopMotionController controller;
   final Widget child;
 
@@ -99,7 +112,15 @@ class PopTransition extends StatelessWidget {
     // One structure at every scale, so the surface never remounts.
     builder: (context, child) => Opacity(
       opacity: controller.opacity,
-      child: Transform.scale(scale: controller.scale, child: child),
+      child: Transform.scale(
+        scale: controller.scale,
+        // The surface paints once and its layer is moved and faded (the web kit's compositor
+        // animation): nothing inside, glass included, repaints on motion frames.
+        child: GlassInstant(
+          instant: controller.moving,
+          child: RepaintBoundary(child: child),
+        ),
+      ),
     ),
   );
 }

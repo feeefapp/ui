@@ -1,15 +1,15 @@
 import * as React from 'react';
+import type { PresentationChromeProps } from '../presentation/modal.js';
 import { type SheetDetent } from './sheet-model.js';
+import '../presentation/presentation.css';
 import './sheet.css';
 export type { SheetDetent } from './sheet-model.js';
-export type SheetProps = {
+export type SheetProps = PresentationChromeProps & {
     /** Shows the sheet. It animates in and out; keep it mounted and toggle this. */
     open: boolean;
-    /** Called with `false` when the person dismisses it (drag down, scrim, Escape), and never with `true`. */
+    /** Called with `false` when the person dismisses it (drag down, scrim, Escape, close bubble), never with `true`. */
     onOpenChange: (open: boolean) => void;
-    /** Accessible name of the sheet. */
-    label: string;
-    /** Sheet content; it scrolls inside the sheet. */
+    /** Sheet content; it scrolls inside the sheet under the floating header and dock. */
     children: React.ReactNode;
     /** Heights the sheet rests at, lowest first is not required. Default `['large']`. */
     detents?: readonly SheetDetent[];
@@ -19,14 +19,10 @@ export type SheetProps = {
     defaultDetent?: SheetDetent;
     /** Called when the person drags or taps the grabber to another detent. */
     onDetentChange?: (detent: SheetDetent) => void;
-    /** Whether dragging down, the scrim and Escape close it. Default true. */
+    /** Whether dragging down, the scrim and Escape close it. Default true. The close bubble always does. */
     dismissible?: boolean;
     /** Shows the grabber. Default: when there is more than one detent. */
     grabber?: boolean;
-    /** Floating chrome over the top of the content: a title and a Done button in glass groups. */
-    top?: React.ReactNode;
-    /** Floating chrome over the bottom: usually a Dock with the sheet's main action. */
-    bottom?: React.ReactNode;
     /**
      * `true` (default) dims and blocks the page. `false` leaves the page usable behind the sheet,
      * like a map with a results sheet; the sheet then has no scrim and no Escape dismissal.
@@ -40,8 +36,13 @@ export type SheetProps = {
     container?: HTMLElement | null;
     /** On phones, let the page behind recede (scale back) as a large sheet rises. Default true. */
     recede?: boolean;
-    /** Inline content padding in px. */
+    /** Content padding in px. Default: the shell gap G (list sections bring their own inset). */
     contentPadding?: number;
+    /** Focused when the sheet opens. Default: the sheet itself. */
+    initialFocusRef?: React.RefObject<HTMLElement | null>;
+    /** Focused after it closes, when the control that opened it may be gone. */
+    returnFocusRef?: React.RefObject<HTMLElement | null>;
+    /** Class name of the sheet panel. */
     className?: string;
 };
 /**

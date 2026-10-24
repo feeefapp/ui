@@ -40,7 +40,8 @@ function Overview() {
           head={['What', 'Keyboard focus shows']}
           rows={[
             ['Buttons, icon buttons, segments, tabs, chips, list rows, sliders, switches', <>A <C>--lab-focus-ring-width</C> (2px) line in <C>--lab-focus-ring-color</C> (the focus color at 65%) <C>--lab-focus-ring-offset</C> (1px) outside the shape, following its corners, plus the hover fill. Rows, tabs and other edge-to-edge items draw it just inside.</>],
-            ['Text fields, selects, number fields while typing, composers', 'No ring outside. The field’s own edge turns the focus color and thickens inward to the ring width; the floating hint takes the focus color.'],
+            ['Text fields, selects, number fields while typing', 'No ring outside. The field’s own edge turns the focus color and thickens inward to the ring width; the floating hint takes the focus color.'],
+            ['Prompt composers', 'No ring on the glass capsule: the caret shows where you type, and the second row (model, settings) opens while focus is inside. Its controls keep their own ring.'],
             ['Increased contrast, forced colors', <>A strong ring: 3px, 2px out, the full focus color (<C>Highlight</C> in forced colors). It wins over the app’s <C>metrics</C>.</>],
             ['Scrolled-to elements', <><C>ScrollArea</C> sets <C>scroll-padding</C> to the space its floating bars (and a tab bar) reserve, so a focused element never lands under them.</>],
           ]}

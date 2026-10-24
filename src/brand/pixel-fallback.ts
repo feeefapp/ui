@@ -143,14 +143,10 @@ export function installFoPixelFallback(
       for (let column = 0; column < columns; column++) {
         const index = row * columns + column
         const z = (v - crest[column]) / 0.22
-        if (!rings.length && z * z > bandCut) {
-          next[index] = 0
-          continue
-        }
-        const band = Math.exp(-(z ** 2))
-        // sin(u·11 + v·5 − t·0.42), by angle addition.
-        const fold = 0.5 + 0.5 * (foldSin[column] * rowCos + foldCos[column] * rowSin)
-        let strength = band * (0.23 + fold * 0.38) * density
+        // Rings first: a square outside the band lights only where a ring reaches it, so after a
+        // click (a ripple) the far squares still skip the band's exp and fold.
+        let ripple = 0,
+          touched = false
         if (rings.length) {
           const x = column * STEP
           for (const ring of rings) {
@@ -158,10 +154,19 @@ export function installFoPixelFallback(
               dy = (y - ring.y) / h,
               squared = dx * dx + dy * dy
             if (squared < ring.inner || squared > ring.outer) continue
+            touched = true
             const distance = Math.hypot(dx, dy)
-            strength += Math.exp(-(((distance - ring.radius) / 0.045) ** 2)) * ring.decay * 0.35
+            ripple += Math.exp(-(((distance - ring.radius) / 0.045) ** 2)) * ring.decay * 0.35
           }
         }
+        if (!touched && z * z > bandCut) {
+          next[index] = 0
+          continue
+        }
+        const band = Math.exp(-(z ** 2))
+        // sin(u·11 + v·5 − t·0.42), by angle addition.
+        const fold = 0.5 + 0.5 * (foldSin[column] * rowCos + foldCos[column] * rowSin)
+        const strength = band * (0.23 + fold * 0.38) * density + ripple
         next[index] = strength > (BAYER[bayerRow + (column % 8)] + 0.5) / 64 ? 1 : 0
       }
     }

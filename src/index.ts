@@ -60,7 +60,7 @@ export type {
   PresentationHeaderProps,
 } from './presentation'
 
-export { ScrollArea, ScrollGradientOverlay, useShellGap } from './scroll'
+export { RefreshController, ScrollArea, ScrollGradientOverlay, useRefreshController, useShellGap } from './scroll'
 export type { ScrollAreaProps, ScrollGradientOverlayProps } from './scroll'
 export { Dock } from './dock'
 export type { DockProps } from './dock'

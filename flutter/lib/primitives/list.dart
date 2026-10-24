@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -617,14 +619,25 @@ class _ListRowState extends State<ListRow> {
     return KeyEventResult.handled;
   }
 
+  // Every row measures its real width: the trailing cap and the swipe distances depend on it.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) => _build(context, constraints.maxWidth),
+  );
+
+  Widget _build(BuildContext context, double width) {
+    _width = width.isFinite ? width : 360;
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
     final s = theme.sizes;
     final reorder =
         context.dependOnInheritedWidgetOfExactType<_RowScope>()?.reorder ??
         false;
+    final padEnd = reorder ? 52.0 : s.listInset;
+    // `max-width: 45%` of the row's content box (inside its inline padding).
+    final trailingCap = width.isFinite
+        ? math.max(0.0, width - s.listInset - padEnd) * 0.45
+        : double.infinity;
     final interactive = widget.onClick != null && !widget.disabled;
     final card = mixSrgb(c.ink, 0.04, c.surface);
     final fill = widget.selected
@@ -686,7 +699,7 @@ class _ListRowState extends State<ListRow> {
         ),
         if (widget.trailing != null)
           ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: _width * 0.45),
+            constraints: BoxConstraints(maxWidth: trailingCap),
             child: IconTheme.merge(
               data: IconThemeData(color: c.muted),
               child: DefaultTextStyle.merge(
@@ -725,12 +738,7 @@ class _ListRowState extends State<ListRow> {
       child: ConstrainedBox(
         constraints: BoxConstraints(minHeight: s.listRowHeight),
         child: Padding(
-          padding: EdgeInsetsDirectional.fromSTEB(
-            s.listInset,
-            8,
-            reorder ? 52 : s.listInset,
-            8,
-          ),
+          padding: EdgeInsetsDirectional.fromSTEB(s.listInset, 8, padEnd, 8),
           child: DefaultTextStyle.merge(
             style: TextStyle(color: c.ink),
             child: body,
@@ -811,46 +819,38 @@ class _ListRowState extends State<ListRow> {
     final v = _offset.get();
     final sides = _sides;
     final full = swipeIsFull(v, sides);
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        _width = constraints.maxWidth;
-        return ClipRect(
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onHorizontalDragStart: _dragStart,
-            onHorizontalDragUpdate: _dragUpdate,
-            onHorizontalDragEnd: _dragEnd,
-            child: Stack(
-              children: [
-                if (v > 0.5)
-                  _Actions(
-                    side: SwipeSide.leading,
-                    width: v.abs(),
-                    full: full,
-                    open: _open == SwipeSide.leading,
-                    actions: widget.leadingActions,
-                    onRun: _run,
-                    onEscape: _close,
-                  ),
-                if (v < -0.5)
-                  _Actions(
-                    side: SwipeSide.trailing,
-                    width: v.abs(),
-                    full: full,
-                    open: _open == SwipeSide.trailing,
-                    actions: widget.trailingActions,
-                    onRun: _run,
-                    onEscape: _close,
-                  ),
-                Transform.translate(
-                  offset: Offset(_rtl ? -v : v, 0),
-                  child: row,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+    return ClipRect(
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onHorizontalDragStart: _dragStart,
+        onHorizontalDragUpdate: _dragUpdate,
+        onHorizontalDragEnd: _dragEnd,
+        child: Stack(
+          children: [
+            if (v > 0.5)
+              _Actions(
+                side: SwipeSide.leading,
+                width: v.abs(),
+                full: full,
+                open: _open == SwipeSide.leading,
+                actions: widget.leadingActions,
+                onRun: _run,
+                onEscape: _close,
+              ),
+            if (v < -0.5)
+              _Actions(
+                side: SwipeSide.trailing,
+                width: v.abs(),
+                full: full,
+                open: _open == SwipeSide.trailing,
+                actions: widget.trailingActions,
+                onRun: _run,
+                onEscape: _close,
+              ),
+            Transform.translate(offset: Offset(_rtl ? -v : v, 0), child: row),
+          ],
+        ),
+      ),
     );
   }
 }

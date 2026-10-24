@@ -100,8 +100,30 @@ def reference():
                     shoot(f"layout=shapes-a&glass={glass}&scheme={scheme}&bg={bg}", RAW / name)
 
 
+LIGHT_EDGE_BACKGROUNDS = ["flat&color=ffffff", "flat&color=ebebeb", "flat&color=d0d0d0", "lightphoto", "lightstripes",
+                          "text", "flat&color=808080", "flat&color=1a1a1a", "flat&color=000000", "darkphoto", "photo"]
+
+
+def bg_tag(bg):
+    return bg.replace("flat&color=", "flat-")
+
+
+def lightedges():
+    """LIGHT-EDGES.md: what makes the edge readable on light content. `edges` layout (44 circle,
+    132x44 capsule, 240x160 card, 88 circle, 300x64 capsule), clear and regular, both schemes."""
+    for bg in LIGHT_EDGE_BACKGROUNDS:
+        name = f"lightedges/none-{bg_tag(bg)}.png"
+        if not (RAW / name).exists():
+            shoot(f"layout=edges&glass=none&scheme=light&bg={bg}", RAW / name)
+        for glass in ["regular", "clear"]:
+            for scheme in ["light", "dark"]:
+                name = f"lightedges/{glass}-{scheme}-{bg_tag(bg)}.png"
+                if not (RAW / name).exists():
+                    shoot(f"layout=edges&glass={glass}&scheme={scheme}&bg={bg}", RAW / name)
+
+
 if __name__ == "__main__":
-    groups = sys.argv[1:] or ["fringe", "tint", "edge", "noise", "merge", "reference"]
+    groups = sys.argv[1:] or ["fringe", "tint", "edge", "noise", "merge", "reference", "lightedges"]
     if os.environ.get("LG_INSTALL", "1") == "1":
         install()
     for group in groups:

@@ -22,23 +22,6 @@ export function glassLightToward(centre, pointer, base = DEFAULT_GLASS_LIGHT, re
     const toward = normalize(dx, dy);
     return normalize(base.x + (toward.x - base.x) * pull, base.y + (toward.y - base.y) * pull);
 }
-/**
- * Endpoints of the rim gradient over `bounds`, CSS-style: the line runs through the centre along
- * the light and is long enough that its ends touch the farthest corners. Offset 0 is the lit end.
- */
-export function rimGradient(bounds, light) {
-    const cx = bounds.x + bounds.width / 2;
-    const cy = bounds.y + bounds.height / 2;
-    const half = (Math.abs(bounds.width * light.x) + Math.abs(bounds.height * light.y)) / 2;
-    return { x1: cx + light.x * half, y1: cy + light.y * half, x2: cx - light.x * half, y2: cy - light.y * half };
-}
-/** Rim reflection strength from the local surface normal, independent of bubble proportions. */
-export function rimReflection(nx, ny, light) {
-    const length = Math.hypot(nx, ny) * Math.hypot(light.x, light.y);
-    if (length < 1e-6)
-        return 0;
-    return Math.min(1, ((nx * light.x + ny * light.y) / length) ** 2);
-}
 /** A short outline segment and the outward normal of the blended surface at its midpoint. */
 export function rimSurface(shapes, spacing) {
     return unionLoops(shapes, spacing, 1).flatMap((loop) => loop.map(([x, y], i) => {
@@ -100,7 +83,7 @@ export function highlightSurface(shapes, spacing, bounds, highlightWidth = GLASS
             const cy = bounds.y + (row + bottom) / (2 * scale);
             const reach = Math.hypot(right - column - 1, bottom - row - 1) / (2 * scale) * 1.01;
             const centre = distance(cx, cy);
-            if (canCull && (centre - reach >= 0.25 || centre + reach <= -bezel))
+            if (canCull && (centre - reach >= 0 || centre + reach <= -bezel))
                 continue;
             spans.push([column, right]);
         }
@@ -110,11 +93,12 @@ export function highlightSurface(shapes, spacing, bounds, highlightWidth = GLASS
                     const px = bounds.x + (x + 0.5) / scale;
                     const py = bounds.y + (y + 0.5) / scale;
                     const d = distance(px, py);
-                    if (d >= 0.25 || d <= -bezel)
+                    // Inside the outline only: nothing of the rim paints past the glass's edge (iOS draws none).
+                    if (d >= 0 || d <= -bezel)
                         continue;
                     const nx = distance(px + 0.5, py) - distance(px - 0.5, py);
                     const ny = distance(px, py + 0.5) - distance(px, py - 0.5);
-                    samples.push({ index: (y * width + x) * 4, depth: Math.max(0, -d), nx, ny, coverage: Math.min(1, Math.max(0, 0.5 - d * scale)) });
+                    samples.push({ index: (y * width + x) * 4, depth: -d, nx, ny, coverage: Math.min(1, -d * scale) });
                 }
     }
     return { width, height, bezel, samples };
@@ -128,14 +112,5 @@ export function surfaceShade(depth, nx, ny, light, width = GLASS_HIGHLIGHT_WIDTH
         return 0;
     const away = Math.max(0, -(nx * light.x + ny * light.y) / length);
     return away * away * Math.sin(Math.PI * depth / width) ** 2 * 0.65;
-}
-/** Screenshot-fitted rim: an outer-edge peak with symmetric lighting and a smooth inward fade.
- * Width and falloff are our reconstruction; base/peak come from theme rim tokens. */
-export function measuredRimReflection(depth, nx, ny, light, width, base, peak) {
-    if (width <= 0 || depth < 0 || depth >= width)
-        return 0;
-    const angular = rimReflection(nx, ny, light);
-    const fade = Math.cos(depth / width * Math.PI / 2) ** 2;
-    return Math.max(0, Math.min(1, (base + (peak - base) * angular) * fade));
 }
 //# sourceMappingURL=light.js.map

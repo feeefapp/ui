@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react'
-import { ArrowUp } from 'lucide-react'
 import { ImageWorkspace } from '@feeef.dev/ui/image/workspace'
 import { FreeformBoard } from '@feeef.dev/ui/image/freeform-board'
 import type { ImageTake } from '@feeef.dev/ui/image/types'
 import { PromptComposer } from '@feeef.dev/ui/composer/composer'
 import { GlassGroup } from '@feeef.dev/ui/scaffold'
-import { IconButton } from '@feeef.dev/ui/primitives/button'
 
 const art = (w: number, h: number, fill: string) =>
   `data:image/svg+xml,${encodeURIComponent(
@@ -64,11 +62,7 @@ export default function Workspace() {
             value={prompt}
             onValueChange={setPrompt}
             onSubmit={() => setPrompt('')}
-            submit={
-              <IconButton type="submit" variant="filled" aria-label="Create image" disabled={!prompt.trim()}>
-                <ArrowUp size={20} />
-              </IconButton>
-            }
+            submitLabel="Create image"
           />
         }
         board={(insets) => (

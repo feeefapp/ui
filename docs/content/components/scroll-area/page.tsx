@@ -7,6 +7,7 @@ import { definePage, examplesFrom } from '../../../src/model'
 import { Playground, jsx } from '../../../src/blocks/playground'
 import { Callout, DoDont, Keys, Section, Table } from '../../../src/blocks/prose'
 import { C, Code } from '../../../src/blocks/code'
+import { Link } from '../../../src/router'
 import './scroll-demo.css'
 
 const controls = {
@@ -146,6 +147,13 @@ function Overview() {
           <C>bottomFadeHeight</C>. The color comes from <C>--lab-scroll-surface</C>, falling back to{' '}
           <C>--lab-surface</C>; set that custom property when the box has a different paint. For a scroller
           you build yourself, use <C>ScrollGradientOverlay</C>.
+        </p>
+      </Section>
+
+      <Section title="Pull to refresh">
+        <p>
+          Pass <C>onRefresh</C> and a touch pull at the top refreshes the area, with a loader below
+          the top float. See <Link to="/components/pull-to-refresh">Pull to refresh</Link>.
         </p>
       </Section>
 

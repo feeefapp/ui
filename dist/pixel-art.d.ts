@@ -46,10 +46,14 @@ export type PixelLoaderProps = {
     label?: string;
     /** Hides the loader from assistive technology when nearby text already announces the work. */
     decorative?: boolean;
+    /** Shows progress instead of the wave: 0 … 1 lights the squares one by one in wave order (a pull-to-refresh pulling toward its threshold). */
+    progress?: number;
     className?: string;
 };
+/** How lit square `index` is (0 … 1) at `progress` (0 … 1): one square per ninth, in wave order. */
+export declare function pixelLoaderCell(index: number, progress: number): number;
 /** A nine-pixel loading wave; use decorative when adjacent text already announces status. */
-export declare function PixelLoader({ size, label, decorative, className, }: PixelLoaderProps): import("react").JSX.Element;
+export declare function PixelLoader({ size, label, decorative, progress, className, }: PixelLoaderProps): import("react").JSX.Element;
 export type PixelShaderProps = {
     /** Sizes and places the canvas. Copied to the drawing canvas when it starts. */
     className?: string;

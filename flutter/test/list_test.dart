@@ -37,6 +37,36 @@ void main() {
     }
   });
 
+  testWidgets('trailing is capped at 45% of the row it is in, not of 360px', (
+    tester,
+  ) async {
+    Future<double> trailingWidth(double rowWidth) async {
+      const trailing = Key('trailing');
+      await tester.pumpWidget(
+        host(
+          SizedBox(
+            width: rowWidth,
+            child: const ListSection(
+              children: [
+                ListRow(
+                  title: Text('Cash on hand'),
+                  trailing: SizedBox(key: trailing, width: 250, height: 20),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      return tester.getSize(find.byKey(trailing)).width;
+    }
+
+    // Wide rows give trailing its full 250px (it used to be capped at 162px and overflow).
+    expect(await trailingWidth(1000), 250);
+    // Narrow rows still cap it: 45% of the 360px row's content box (inside its 16px insets).
+    expect(await trailingWidth(360), closeTo((360 - 32) * 0.45, 0.01));
+  });
+
   testWidgets('a long swipe runs the first trailing action', (tester) async {
     var archived = 0;
     await tester.pumpWidget(
