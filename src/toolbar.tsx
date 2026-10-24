@@ -1,6 +1,6 @@
 'use client'
 
-import { forwardRef, type ComponentPropsWithoutRef, type HTMLAttributes, type ReactNode } from 'react'
+import { createContext, forwardRef, useContext, type ComponentPropsWithoutRef, type HTMLAttributes, type ReactNode } from 'react'
 import { cn } from './utils'
 import { GlassGroup } from './scaffold'
 import { GlassScope } from './glass/container'
@@ -33,6 +33,14 @@ export function Toolbar({
   )
 }
 
+export type ToolbarOrientation = 'horizontal' | 'vertical'
+
+/**
+ * The orientation ToolbarGroups take when they don't set one. A collapsed sidebar (the scaffold's
+ * rail) provides `vertical`, so its bottom groups stack their controls in a column that fits.
+ */
+export const ToolbarOrientationContext = createContext<ToolbarOrientation>('horizontal')
+
 /**
  * One glass pill for related toolbar controls (`role="group"`). Children use
  * `appearance="toolbar"` and the default `regular` size, which the group sets to fill its
@@ -41,6 +49,18 @@ export function Toolbar({
 export const ToolbarGroup = forwardRef<HTMLElement, Omit<ComponentPropsWithoutRef<typeof GlassGroup>, 'as'> & {
   /** Accessible name of the group. */
   label: string
-}>(function ToolbarGroup({ label, className, ...props }, ref) {
-  return <GlassGroup {...props} ref={ref} className={cn('lab-toolbar-group', className)} role="group" aria-label={label}/>
+  /** Lay the controls out in a row or a column. Default: the surrounding ToolbarOrientationContext. */
+  orientation?: ToolbarOrientation
+}>(function ToolbarGroup({ label, orientation, className, ...props }, ref) {
+  const inherited = useContext(ToolbarOrientationContext)
+  return (
+    <GlassGroup
+      {...props}
+      ref={ref}
+      className={cn('lab-toolbar-group', className)}
+      role="group"
+      aria-label={label}
+      data-orientation={orientation ?? inherited}
+    />
+  )
 })

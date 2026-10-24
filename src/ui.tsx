@@ -25,7 +25,8 @@ export type {
 } from './primitives/button'
 
 export { SegmentedControl } from './primitives/segmented'
-export { Toolbar, ToolbarGroup } from './toolbar'
+export { Toolbar, ToolbarGroup, ToolbarOrientationContext } from './toolbar'
+export type { ToolbarOrientation } from './toolbar'
 export type { SegmentOption, SegmentTone } from './primitives/segmented'
 
 export { RawInput } from './primitives/raw-input'

@@ -11,6 +11,8 @@ import { useI18n } from '../i18n'
 import { cn } from '../utils'
 import './scaffold.css'
 import { GlassScope } from '../glass/container'
+import { ToolbarOrientationContext } from '../toolbar'
+import { LayoutGroup } from '../physics/layout-group'
 
 /** Sidebar width: `expanded` (304px), `rail` (64px icons) or `hidden` (0). */
 export type ScaffoldSideMode = 'expanded' | 'rail' | 'hidden'
@@ -223,6 +225,17 @@ type ThreeSlots = {
 }
 /** Sidebar body: a scroll area with `leading` floating at the top and `trailing` at the bottom. */
 export function ScaffoldSide({ leading, children, trailing, className }: ThreeSlots) {
+  // In the rail the sidebar is one toolbar bubble wide: bottom groups stack their controls, and a
+  // layout transition carries each control from its place in the row to its place in the column.
+  const rail = React.useContext(WorkspaceScaffoldContext)?.sideMode === 'rail'
+  const trailingRef = React.useRef<HTMLDivElement>(null)
+  React.useLayoutEffect(() => {
+    trailingRef.current
+      ?.querySelectorAll<HTMLElement>('.lab-toolbar-group > *')
+      .forEach((control, i) => {
+        control.dataset.labLayoutId ??= `side-trailing-${i}`
+      })
+  })
   return (
     <aside className={cn('lab-workspace-side', className)} aria-label="Workspace sidebar">
       {/* The ScrollArea's default shell gap G: from the window, between the header/footer and the
@@ -232,7 +245,15 @@ export function ScaffoldSide({ leading, children, trailing, className }: ThreeSl
         label="Sidebar navigation content"
         top={leading ? <div className="lab-workspace-side-leading">{leading}</div> : undefined}
         bottom={
-          trailing ? <div className="lab-workspace-side-trailing">{trailing}</div> : undefined
+          trailing ? (
+            <div ref={trailingRef} className="lab-workspace-side-trailing">
+              <ToolbarOrientationContext.Provider value={rail ? 'vertical' : 'horizontal'}>
+                <LayoutGroup layoutKey={rail} animateEnter={false}>
+                  {trailing}
+                </LayoutGroup>
+              </ToolbarOrientationContext.Provider>
+            </div>
+          ) : undefined
         }
       >
         {children}

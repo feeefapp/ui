@@ -276,4 +276,60 @@ void main() {
       ); // sidebar items → panel (1px border)
     },
   );
+
+  testWidgets('sidebar toolbar groups stack vertically in the rail', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    Widget control(String label) => IconButton(
+      ariaLabel: label,
+      icon: const LucideArrowLeft(),
+      appearance: ButtonAppearance.toolbar,
+      onClick: () {},
+    );
+    await tester.pumpWidget(
+      app(
+        Scaffold(
+          side: ScaffoldSide(
+            trailing: ToolbarGroup(
+              label: 'Appearance',
+              children: [control('Palette'), control('Theme')],
+            ),
+            child: const Text('Nav item'),
+          ),
+          appBar: const ScaffoldAppBar(leading: ScaffoldToggleButton()),
+          child: const Text('Page content'),
+        ),
+      ),
+    );
+    await settle(tester);
+    final palette = find.bySemanticsLabel('Palette');
+    final theme = find.bySemanticsLabel('Theme');
+    expect(
+      tester.getCenter(palette).dy,
+      tester.getCenter(theme).dy,
+      reason: 'a row',
+    );
+    expect(
+      tester.getCenter(theme).dx,
+      greaterThan(tester.getCenter(palette).dx),
+    );
+
+    await tester.tap(find.bySemanticsLabel('Minimize workspace sidebar'));
+    await settle(tester);
+    expect(
+      tester.getCenter(palette).dx,
+      tester.getCenter(theme).dx,
+      reason: 'a column',
+    );
+    expect(
+      tester.getCenter(theme).dy,
+      greaterThan(tester.getCenter(palette).dy),
+    );
+    expect(
+      tester.getSize(find.byType(ToolbarGroup)).width,
+      lessThanOrEqualTo(64),
+    );
+  });
 }

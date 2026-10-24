@@ -38,6 +38,12 @@
   padding: 2px;
   pointer-events: auto;
 }
+.lab-toolbar-group[data-orientation='vertical'] {
+  flex-direction: column;
+  inline-size: auto;
+  min-block-size: 0;
+  min-inline-size: calc(var(--lab-toolbar-control) + 6px);
+}
 .lab-toolbar-group > .lab-control[data-variant] {
   border-radius: calc(var(--lab-glass-radius) - 2px);
 }

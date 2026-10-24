@@ -9,12 +9,14 @@ import '../brand/pixel_noise.dart' show TextureDensity, TextureVariant;
 import '../brand/pixel_texture.dart';
 import '../glass/container.dart';
 import '../icons/lucide.dart';
+import '../physics/layout_group.dart';
 import '../primitives/button.dart';
 import '../scroll/scroll_area.dart';
 import '../theme.dart';
 import '../theme/surfaces.dart';
 import '../theme/color_mix.dart';
 import '../theme/tokens.dart';
+import '../toolbar.dart';
 
 /// Sidebar width: `expanded` (304px), `rail` (64px icons) or `hidden` (0).
 enum ScaffoldSideMode { expanded, rail, hidden }
@@ -807,6 +809,7 @@ class ScaffoldSide extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
+    final rail = Scaffold.maybeOf(context)?.sideMode == ScaffoldSideMode.rail;
     return Semantics(
       container: true,
       explicitChildNodes: true,
@@ -820,9 +823,21 @@ class ScaffoldSide extends StatelessWidget {
         top: leading == null
             ? null
             : SizedBox(width: double.infinity, child: leading),
+        // In the rail the sidebar is one toolbar bubble wide: bottom groups stack their controls,
+        // and a layout transition carries each control from the row to the column.
         bottom: trailing == null
             ? null
-            : SizedBox(width: double.infinity, child: trailing),
+            : SizedBox(
+                width: double.infinity,
+                child: ToolbarOrientation(
+                  axis: rail ? Axis.vertical : Axis.horizontal,
+                  child: LayoutGroup(
+                    layoutKey: rail,
+                    animateEnter: false,
+                    child: trailing!,
+                  ),
+                ),
+              ),
         child: child ?? const SizedBox.shrink(),
       ),
     );
