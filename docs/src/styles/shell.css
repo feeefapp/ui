@@ -112,10 +112,13 @@ body {
   padding-top: 12px;
   font-size: 13px;
 }
-.docs-pager .lab-control {
+/* Two-line pager links: out-specify the kit's fixed control height (html[data-lab-theme]
+.lab-control[data-variant]) so the capsule grows around both lines. */
+html[data-lab-theme] .docs-pager .lab-control[data-variant] {
   height: auto;
   min-height: 56px;
   padding-block: 8px;
+  line-height: 20px;
 }
 .docs-pager span {
   display: grid;

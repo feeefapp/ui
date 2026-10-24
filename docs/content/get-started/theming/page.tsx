@@ -74,7 +74,7 @@ export function Root({ children }: { children: React.ReactNode }) {
             [
               <C>glassTint</C>,
               <>A number: <C>0</C> clear … <C>1</C> tinted, <C>0.5</C> default, clamped to 0–1</>,
-              <>The Liquid Glass slider: how much of the surface veils the backdrop. Clear has no veil and no shadow; tinted is the measured regular material; the default is a light veil (~40%). Sets <C>--lab-glass-tint</C>. Bars floating over scrolling content (a scroll area's app bar and dock, the tab bar) stay at least <C>0.85</C> tinted and always blurred, as iOS bars are, so their labels read over moving content (<C>GlassBar</C>, <C>GLASS_BAR_TINT</C>).</>,
+              <>The Liquid Glass slider: how much of the surface veils the backdrop. Clear has no veil; tinted is iOS 27's regular material; the default is halfway (a 26 % veil in light). Sets <C>--lab-glass-tint</C>. Bars floating over scrolling content (a scroll area's app bar and dock, the tab bar) stay at least <C>0.85</C> tinted and always blurred, as iOS bars are, so their labels read over moving content (<C>GlassBar</C>, <C>GLASS_BAR_TINT</C>).</>,
             ],
             [
               <C>glassBlur</C>,

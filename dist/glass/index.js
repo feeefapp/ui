@@ -6,7 +6,7 @@ export { DEFAULT_GLASS_LIGHT, glassLightToward } from './light.js';
 export { GLASS_MAX_SIDE, GLASS_MAX_SPAN, glassMemberRect } from './member-bounds.js';
 export { GLASS_INSTANT_ATTRIBUTE, GLASS_SETTLE_MS, glassChangesAtOnce, planGlassTransition } from './transitions.js';
 export { GLASS_BEZEL, GLASS_BEZEL_POWER, GLASS_LARGE_SIDE, GLASS_REFRACTION, GLASS_SIZE_EXPONENT, displacementMap, glassCapabilities, refractionAt, refractionScale, supportsRefraction, supportsElementRefraction, } from './refraction.js';
-export { GLASS_BLUR, GLASS_CLEAR, GLASS_CLEAR_BLUR, GLASS_EDGE, GLASS_RIM, GLASS_RIM_MAX_WIDTH, GLASS_SATURATE, GLASS_SHADOW, GLASS_SMALL_SIDE, GLASS_BAR_TINT, GLASS_TINT_DEFAULT, GLASS_VEIL, clampGlassTint, edgeMask, glassBlur, glassBlurAt, glassEdgeTerms, glassMaterial, glassRim, glassSize, liftFilter, rimLayer, } from './material.js';
+export { GLASS_BLUR, GLASS_CLEAR, GLASS_CLEAR_BLUR, GLASS_EDGE, GLASS_HAIRLINE, GLASS_REGULAR_LIFT, GLASS_RIM, GLASS_RIM_MAX_WIDTH, GLASS_SATURATE, GLASS_SHADOW, GLASS_SMALL_SIDE, GLASS_BAR_TINT, GLASS_TINT_DEFAULT, GLASS_VEIL, clampGlassTint, edgeMask, glassBlur, glassBlurAt, glassEdgeTerms, glassHairline, glassMaterial, glassRim, glassSize, liftFilter, rimLayer, } from './material.js';
 export { adaptiveGlassTone, backdropTone } from './adaptive.js';
 export { glassStretch, pressedShape } from './press.js';
 //# sourceMappingURL=index.js.map

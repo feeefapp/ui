@@ -318,14 +318,15 @@ class _ButtonState extends State<Button> {
         paint = c.variant(ControlVariant.text);
         ink = c.focus;
       case ButtonVariant.destructive:
+        // Prominent glass in the danger colour (below).
         paint = VariantPaint(
-          fill: mixSrgb(c.danger, 0.07, c.surface),
-          hover: mixSrgb(c.danger, 0.12, c.surface),
-          pressed: mixSrgb(c.danger, 0.18, c.surface),
-          edge: mixSrgb(c.danger, 0.19, c.surface),
-          ink: c.danger,
+          fill: c.danger,
+          hover: c.danger,
+          pressed: c.danger,
+          edge: const Color(0x00000000),
+          ink: c.onDanger,
         );
-        ink = c.danger;
+        ink = c.onDanger;
       case ButtonVariant.ghost:
         paint = VariantPaint(
           fill: transparent,
@@ -335,7 +336,26 @@ class _ButtonState extends State<Button> {
           ink: c.ink,
         );
     }
-    if (toolbar && widget.variant != ButtonVariant.filled) {
+    // Filled (primary) and destructive buttons are iOS 27's prominent glass (FIGMA-27.md): the
+    // tint, a bright inner rim at top and bottom, a shaded upper third, a lighter lower edge, the
+    // faint glass shadow and two side slivers. They stay prominent in toolbars.
+    final prominent =
+        widget.variant == ButtonVariant.filled ||
+        widget.variant == ButtonVariant.destructive;
+    if (prominent) {
+      final tint = widget.variant == ButtonVariant.destructive
+          ? c.danger
+          : c.primary;
+      paint = VariantPaint(
+        fill: tint,
+        hover: mixSrgb(tint, 0.92, const Color(0xFFFFFFFF)),
+        pressed: mixSrgb(tint, 0.88, const Color(0xFF000000)),
+        edge: const Color(0x00000000),
+        ink: paint.ink,
+      );
+      raised = false;
+    }
+    if (toolbar && !prominent) {
       paint = VariantPaint(
         fill: transparent,
         hover: paint.hover,
@@ -426,6 +446,8 @@ class _ButtonState extends State<Button> {
       radius: radius,
       raised: raised && !(interactive && _down),
       texture: widget.variant == ButtonVariant.filled ? ink : null,
+      prominent: prominent && widget.pressed != true,
+      shadow: c.glassShadowColor,
       pressedInset: interactive && _down,
       highlight: c.controlHighlight,
       depth: theme.brightness == Brightness.dark ? 0.18 : 0.08,
@@ -623,12 +645,14 @@ class _ButtonPaint extends StatelessWidget {
     required this.focus,
     required this.child,
     this.texture,
+    this.prominent = false,
+    this.shadow = const Color(0x00000000),
   });
 
-  final Color fill, edge, highlight;
+  final Color fill, edge, highlight, shadow;
   final Color? texture;
   final double radius, depth;
-  final bool raised, pressedInset;
+  final bool raised, pressedInset, prominent;
   final FocusRingStyle? focus;
   final Widget child;
 
@@ -649,6 +673,8 @@ class _ButtonPaint extends StatelessWidget {
           depth: depth,
           focus: focus,
           texture: texture,
+          prominent: prominent,
+          shadow: shadow,
         ),
         child: child,
       ),
@@ -668,11 +694,13 @@ class _SurfacePainter extends CustomPainter {
     required this.depth,
     required this.focus,
     this.texture,
+    this.prominent = false,
+    this.shadow = const Color(0x00000000),
   });
 
-  final Color fill, edge, highlight;
+  final Color fill, edge, highlight, shadow;
   final double radius, depth;
-  final bool raised, pressedInset;
+  final bool raised, pressedInset, prominent;
   final FocusRingStyle? focus;
 
   /// Filled buttons carry the kit's corner pixel texture in their ink colour.
@@ -691,9 +719,11 @@ class _SurfacePainter extends CustomPainter {
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
       );
     }
+    if (prominent) _paintProminentBehind(canvas, rect, radii, shape);
     canvas.drawPath(shape, Paint()..color = fill);
     // CSS inset shadows live inside the 1px border (the padding box).
     final inner = superellipsePath(rect, radii, inset: 1);
+    if (prominent) _paintProminentFace(canvas, rect, radii, shape, inner);
     canvas.save();
     canvas.clipPath(inner);
     if (raised) {
@@ -748,10 +778,123 @@ class _SurfacePainter extends CustomPainter {
     if (focus != null) paintFocusRing(canvas, rect, radius, focus!);
   }
 
+  /// Under the prominent fill (control-variants.css): the faint glass shadow (y 8, blur 15) and
+  /// the side slivers, the shape moved 1.25px left and right and pulled in by 0.75px.
+  void _paintProminentBehind(
+    Canvas canvas,
+    Rect rect,
+    List<double> radii,
+    Path shape,
+  ) {
+    canvas.drawPath(
+      shape.shift(const Offset(0, 8)),
+      Paint()
+        ..color = shadow
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7.5),
+    );
+    final pulled = superellipsePath(rect, radii, inset: 0.75);
+    final slivers = Path.combine(
+      PathOperation.difference,
+      Path.combine(
+        PathOperation.union,
+        pulled.shift(const Offset(1.25, 0)),
+        pulled.shift(const Offset(-1.25, 0)),
+      ),
+      shape,
+    );
+    canvas.drawPath(
+      slivers,
+      Paint()..color = const Color.from(alpha: 0.098, red: 0, green: 0, blue: 0),
+    );
+  }
+
+  /// Over the prominent fill: the shaded upper third, the lighter lower edge (inset 0 -8px 8px
+  /// -4px white 6 %) and the bright rim in the 1px border, white 55 % at top and bottom and 15 %
+  /// at the sides (the web kit's border colours, which meet at 45° on a capsule).
+  void _paintProminentFace(
+    Canvas canvas,
+    Rect rect,
+    List<double> radii,
+    Path shape,
+    Path inner,
+  ) {
+    canvas.save();
+    canvas.clipPath(shape);
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: const [
+            Color(0x00000000),
+            Color.from(alpha: 0.05, red: 0, green: 0, blue: 0),
+            Color(0x00000000),
+          ],
+          stops: const [0.06, 0.24, 0.46],
+        ).createShader(rect),
+    );
+    canvas.restore();
+    canvas.save();
+    canvas.clipPath(inner);
+    final outside = Path()..addRect(rect.inflate(24));
+    // A CSS inset shadow: paint outside the padding box grown by -spread, moved by offset.
+    void insetShadow(Offset offset, double spread, double sigma, Color color) {
+      final hole = superellipsePath(rect, radii, inset: 1 + spread).shift(offset);
+      canvas.drawPath(
+        Path.combine(PathOperation.difference, outside, hole),
+        Paint()
+          ..color = color
+          ..maskFilter = sigma > 0
+              ? MaskFilter.blur(BlurStyle.normal, sigma)
+              : null,
+      );
+    }
+
+    insetShadow(
+      const Offset(0, -8),
+      -4,
+      4,
+      const Color.from(alpha: 0.06, red: 1, green: 1, blue: 1),
+    );
+    canvas.restore();
+    // The rim: the 1px border ring (a stroke at 0.5px, like the edge), its top and bottom
+    // quarters brighter: on a capsule the CSS border's sides meet at the 45° point of each end
+    // arc, whose centre is half the height in from the end.
+    final ring = superellipsePath(rect, radii, inset: 0.5);
+    Paint stroke(double alpha) => Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = Color.from(alpha: alpha, red: 1, green: 1, blue: 1);
+    canvas.drawPath(ring, stroke(0.15));
+    final c = rect.center;
+    final half = rect.height / 2;
+    final reach = rect.width + rect.height;
+    final quarters = Path()
+      ..addPolygon([
+        Offset(rect.left + half, c.dy),
+        Offset(rect.left + half - reach, c.dy - reach),
+        Offset(rect.right - half + reach, c.dy - reach),
+        Offset(rect.right - half, c.dy),
+      ], true)
+      ..addPolygon([
+        Offset(rect.left + half, c.dy),
+        Offset(rect.left + half - reach, c.dy + reach),
+        Offset(rect.right - half + reach, c.dy + reach),
+        Offset(rect.right - half, c.dy),
+      ], true);
+    canvas.save();
+    canvas.clipPath(quarters);
+    canvas.drawPath(ring, stroke(0.47));
+    canvas.restore();
+  }
+
   @override
   bool shouldRepaint(_SurfacePainter old) =>
       old.fill != fill ||
       old.edge != edge ||
+      old.prominent != prominent ||
+      old.shadow != shadow ||
       old.radius != radius ||
       old.raised != raised ||
       old.pressedInset != pressedInset ||

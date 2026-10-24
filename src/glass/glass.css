@@ -56,8 +56,11 @@ returns where contrast matters (prefers-contrast, solid glass). */
 .lab-glass-shadow-shape {
   fill: var(--lab-glass-shadow-color);
 }
-.lab-glass-shadow-shape[data-glass-size='small'] {
-  fill: var(--lab-glass-shadow-small);
+/* iOS 27's hairline (material.ts GLASS_HAIRLINE): outside every glass shape, the ring and side
+slivers as even-odd paths filled black at their strength (the scene sets fill-opacity). It stays
+with reduced transparency and more contrast: it is the contrast cue. */
+.lab-glass-hairline {
+  fill: #000;
 }
 
 /* Once the container has measured, its bubbles stop painting their own glass. Layout (the 1px
@@ -127,7 +130,8 @@ html[data-lab-glass='solid'] .lab-glass-backdrop {
   -webkit-backdrop-filter: none;
 }
 html[data-lab-glass='solid'] .lab-glass-rim,
-html[data-lab-glass='solid'] .lab-glass-glow-stop {
+html[data-lab-glass='solid'] .lab-glass-glow-stop,
+html[data-lab-glass='solid'] .lab-glass-hairline {
   display: none;
 }
 html[data-lab-glass='solid'] .lab-glass-edge {
@@ -143,8 +147,8 @@ The material formulas are system.css's (glass/material.ts glassMaterial). */
   --lab-glass-fill-large: color-mix(in srgb, var(--lab-surface) calc(var(--lab-glass-tint) * var(--lab-glass-veil-large) * 100%), transparent);
   --lab-glass-saturate: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil)));
   --lab-glass-saturate-large: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss-large)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil-large)));
-  --lab-glass-shadow-color: rgb(0 0 0 / calc(var(--lab-glass-tint) * var(--lab-glass-shadow-alpha)));
-  --lab-glass-shadow-small: rgb(0 0 0 / calc(var(--lab-glass-tint) * var(--lab-glass-shadow-alpha-small)));
+  --lab-glass-shadow-color: rgb(0 0 0 / var(--lab-glass-shadow-alpha));
+  --lab-glass-lift: contrast(calc((1.03 + (var(--lab-glass-lift-gain) - 1.03) * var(--lab-glass-tint)) / (1.182 + (var(--lab-glass-lift-gain) + 2 * var(--lab-glass-lift-offset) - 1.182) * var(--lab-glass-tint)))) brightness(calc(1.182 + (var(--lab-glass-lift-gain) + 2 * var(--lab-glass-lift-offset) - 1.182) * var(--lab-glass-tint)));
   --lab-control-surface: var(--lab-surface);
   --lab-control-border: color-mix(in srgb, var(--lab-ink) 15%, var(--lab-surface));
   --lab-control-hover: color-mix(in srgb, var(--lab-ink) 6%, var(--lab-surface));
@@ -159,12 +163,13 @@ The material formulas are system.css's (glass/material.ts glassMaterial). */
   --lab-ink: #f2f5f0;
   --lab-muted: #b7c0b4;
   --lab-line: rgb(255 255 255 / 16%);
-  --lab-glass-veil: 0.75;
-  --lab-glass-veil-large: 0.72;
-  --lab-glass-colour-loss: 0.275;
-  --lab-glass-colour-loss-large: 0.328;
-  --lab-glass-shadow-alpha: 0.14;
-  --lab-glass-shadow-alpha-small: 0.033;
+  --lab-glass-veil: 0.05;
+  --lab-glass-veil-large: 0.05;
+  --lab-glass-colour-loss: -0.147;
+  --lab-glass-colour-loss-large: -0.147;
+  --lab-glass-lift-gain: 0.863;
+  --lab-glass-lift-offset: 0.095;
+  --lab-glass-shadow-alpha: 0.04;
   --lab-control-highlight: rgb(255 255 255 / 20%);
 }
 .lab-glass-container[data-glass-backdrop='light'] {
@@ -173,12 +178,13 @@ The material formulas are system.css's (glass/material.ts glassMaterial). */
   --lab-ink: #151a16;
   --lab-muted: #5d675a;
   --lab-line: rgb(0 0 0 / 12%);
-  --lab-glass-veil: 0.87;
-  --lab-glass-veil-large: 0.71;
-  --lab-glass-colour-loss: 0.285;
-  --lab-glass-colour-loss-large: 0.362;
-  --lab-glass-shadow-alpha: 0.095;
-  --lab-glass-shadow-alpha-small: 0.066;
+  --lab-glass-veil: 0.52;
+  --lab-glass-veil-large: 0.52;
+  --lab-glass-colour-loss: 0.435;
+  --lab-glass-colour-loss-large: 0.435;
+  --lab-glass-lift-gain: 0.92;
+  --lab-glass-lift-offset: 0;
+  --lab-glass-shadow-alpha: 0.02;
   --lab-control-highlight: rgb(255 255 255 / 76%);
 }
 .lab-glass-material > .lab-glass-filters {
@@ -225,9 +231,8 @@ The material formulas are system.css's (glass/material.ts glassMaterial). */
   --lab-glass-fill-large: color-mix(in srgb, var(--lab-surface) calc(var(--lab-glass-tint) * var(--lab-glass-veil-large) * 100%), transparent);
   --lab-glass-saturate: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil)));
   --lab-glass-saturate-large: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss-large)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil-large)));
-  --lab-glass-lift: contrast(calc((1.03 - 0.03 * var(--lab-glass-tint)) / (1.182 - 0.182 * var(--lab-glass-tint)))) brightness(calc(1.182 - 0.182 * var(--lab-glass-tint)));
-  --lab-glass-shadow-color: rgb(0 0 0 / calc(var(--lab-glass-tint) * var(--lab-glass-shadow-alpha)));
-  --lab-glass-shadow-small: rgb(0 0 0 / calc(var(--lab-glass-tint) * var(--lab-glass-shadow-alpha-small)));
+  --lab-glass-lift: contrast(calc((1.03 + (var(--lab-glass-lift-gain) - 1.03) * var(--lab-glass-tint)) / (1.182 + (var(--lab-glass-lift-gain) + 2 * var(--lab-glass-lift-offset) - 1.182) * var(--lab-glass-tint)))) brightness(calc(1.182 + (var(--lab-glass-lift-gain) + 2 * var(--lab-glass-lift-offset) - 1.182) * var(--lab-glass-tint)));
+  --lab-glass-shadow-color: rgb(0 0 0 / var(--lab-glass-shadow-alpha));
 }
 
 .lab-glass-reflection-layer { pointer-events: none; }

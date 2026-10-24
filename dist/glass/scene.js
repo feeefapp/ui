@@ -9,7 +9,8 @@ import { liveDisplacementMap, rgbaBmpDataUrl, elementImagePlacement, supportsEle
 import { DecodedRefractionMap } from './decoded-refraction-map.js';
 import { RefractionWork } from './refraction-work.js';
 import { obsoleteRimRegions, rimBufferCapacity } from './rim-buffer.js';
-import { GLASS_RIM_MAX_WIDTH, GLASS_SHADOW, glassBlurAt, glassEdgeTerms, glassMaterial, glassRim, glassSize, rimLayer } from './material.js';
+import { GLASS_RIM_MAX_WIDTH, GLASS_SHADOW, glassBlurAt, glassEdgeTerms, glassHairline, glassMaterial, glassRim, glassSize, rimLayer } from './material.js';
+import { bandPath, hairlineBands } from './hairline.js';
 import { GLASS_CONTENT_FOLLOW, GLASS_GLOW_START, GLASS_PRESS_SCALE, glassGlowRadius, glassLayoutRect, glassStretch, pressedShape } from './press.js';
 import { cornerFit, cssCornerRadius, cssCornerShape, trueCornerRadius } from '../brand/corner-fit.js';
 /** How far (px) the material may reach past the container, for overshoot and growing bubbles. */
@@ -198,7 +199,7 @@ export class GlassScene {
     highlightWidth = 1;
     highlightProfile = 'rim';
     highlightStrength = 1;
-    refractionProfile = 'measured';
+    refractionProfile = 'gentle';
     refractionStrength = 1;
     /** Grey level (0–1) of the veil's colour, `--lab-surface`, for the edge terms. */
     surfaceGrey = 1;
@@ -217,6 +218,9 @@ export class GlassScene {
     /** One backdrop element per cluster: a lone bubble clips with border-radius, which every
      * browser applies to backdrop-filter; only merging bubbles need a path clip, in their own box. */
     pieces = [];
+    /** Per cluster, the hairline's ring and sliver paths, in their own SVG layer above the glass. */
+    hairlines = [];
+    hairlineHost = null;
     /** Cancels a queued backdrop read (and the write that follows it). */
     stopSample = null;
     visibility = null;
@@ -478,6 +482,9 @@ export class GlassScene {
         for (const piece of this.pieces)
             piece.remove();
         this.pieces = [];
+        this.hairlineHost?.remove();
+        this.hairlineHost = null;
+        this.hairlines = [];
         reflectionLayers.get(this.paint)?.remove();
         reflectionLayers.delete(this.paint);
         this.paint.replaceChildren();
@@ -758,9 +765,8 @@ export class GlassScene {
         const glow = this.glow;
         this.surfaceGrey = input.paint.surface;
         renderPaint(this.paint, paths, lights, this.uid, this.spacing, this.highlightWidth, this.highlightStrength, this.highlightProfile, glassRim(this.tint, this.scheme()), input.paint, glow ? { x: glow.x + m, y: glow.y + m, radius: glow.radius.get(), opacity: glow.opacity.get() } : null);
-        setStyleIfChanged(this.shadow.style, 'display', this.tint > 0 ? '' : 'none');
-        if (this.tint > 0)
-            renderShadow(this.shadow, paths, this.uid);
+        // iOS 27 casts the faint shadow under clear glass too.
+        renderShadow(this.shadow, paths, this.uid);
         if (!this.host.hasAttribute('data-glass-ready'))
             this.host.setAttribute('data-glass-ready', '');
         this.updateRefraction(key);
@@ -774,6 +780,7 @@ export class GlassScene {
         }
         while (this.pieces.length > paths.length)
             this.pieces.pop().remove();
+        this.syncHairlines(paths);
         paths.forEach((path, i) => {
             const { x, y, width, height } = path.bounds;
             const piece = this.pieces[i];
@@ -806,6 +813,51 @@ export class GlassScene {
                 setStyleIfChanged(style, 'borderRadius', '');
                 setStyleIfChanged(style, 'clipPath', `path("${translatePath(path.visible, -x, -y)}")`);
             }
+        });
+    }
+    /**
+     * The dark hairline outside each cluster (material.ts GLASS_HAIRLINE): per cluster, the ring and
+     * the side slivers as even-odd SVG paths filled black at their strength, in their own layer above
+     * the glass. On white that is exactly iOS 27's plus-darker; over darker content it darkens
+     * proportionally (a backdrop-filter clipped to the band would be exact, but Chromium clips such
+     * filters to the clip's bounding box inside glass, darkening the whole box). Bands are cached
+     * per cluster shape and follow merged outlines.
+     */
+    syncHairlines(paths) {
+        if (!this.hairlineHost) {
+            this.hairlineHost = node('svg', { 'aria-hidden': 'true', 'class': 'lab-glass-hairlines' });
+        }
+        if (this.hairlineHost.parentElement !== this.backdrop.parentElement)
+            this.backdrop.after(this.hairlineHost);
+        const strength = glassHairline(this.tint, this.scheme());
+        while (this.hairlines.length > paths.length) {
+            const gone = this.hairlines.pop();
+            gone.ring.remove();
+            gone.sliver.remove();
+        }
+        paths.forEach((path, i) => {
+            let line = this.hairlines[i];
+            if (!line) {
+                const make = (kind) => node('path', { 'class': 'lab-glass-hairline', 'fill-rule': 'evenodd', 'data-glass-hairline': kind });
+                line = { ring: make('ring'), sliver: make('sliver'), key: '', bands: { ring: [], sliver: [] } };
+                this.hairlines[i] = line;
+                this.hairlineHost.append(line.ring, line.sliver);
+            }
+            const clip = path.clip;
+            const key = `${this.spacing}|${path.shapes.map((v) => `${v.x.toFixed(2)},${v.y.toFixed(2)},${v.width.toFixed(2)},${v.height.toFixed(2)},${v.radius.toFixed(2)},${v.cornerExponent ?? ''}`).join(';')}|${clip ? `${clip.x.toFixed(1)},${clip.y.toFixed(1)},${clip.width.toFixed(1)},${clip.height.toFixed(1)}` : ''}`;
+            if (line.key !== key) {
+                const bands = hairlineBands(path.shapes, this.spacing);
+                // A scroller's clip cuts the bands straight at its edge.
+                const cut = (loops) => clip
+                    ? loops.map((points) => points.map(([px, py]) => [Math.min(clip.x + clip.width, Math.max(clip.x, px)), Math.min(clip.y + clip.height, Math.max(clip.y, py))]))
+                    : loops;
+                line.bands = { ring: cut(bands.ring), sliver: cut(bands.sliver) };
+                line.key = key;
+                setAttributeIfChanged(line.ring, 'd', bandPath(line.bands.ring));
+                setAttributeIfChanged(line.sliver, 'd', bandPath(line.bands.sliver));
+            }
+            setAttributeIfChanged(line.ring, 'fill-opacity', strength.ring.toFixed(4));
+            setAttributeIfChanged(line.sliver, 'fill-opacity', strength.sliver.toFixed(4));
         });
     }
     /** Keep the same optical layer alive through motion, merges and adaptive tone changes. */

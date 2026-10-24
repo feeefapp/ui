@@ -27,7 +27,7 @@ class LensPaint {
     edge: c.line,
     highlight: c.glassEdgeLow,
     light: c.glassEdgeLight,
-    shadow: c.glassShadowSmall,
+    shadow: c.glassShadowColor,
     glow: c.glassGlow,
   );
 

@@ -78,6 +78,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       variant === 'primary' ||
       variant === 'filled' ||
       (!variant && legacyButtonHasTexture(className))
+    // Filled (primary) and destructive buttons are iOS 27's prominent glass (control-variants.css).
+    const prominent = resolvedVariant === 'filled' || variant === 'destructive'
     const disabled = Boolean(props.disabled || loading)
     const press = !variant
       ? undefined
@@ -133,6 +135,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         data-control-appearance={variant ? appearance : undefined}
         data-loading={loading || undefined}
         data-press={press}
+        data-prominent={prominent || undefined}
         onPointerDown={(event: React.PointerEvent<HTMLButtonElement>) => {
           if (press === 'glass') placePressGlow(event)
           props.onPointerDown?.(event)

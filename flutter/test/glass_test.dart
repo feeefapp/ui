@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:feeef_ui/glass/geometry.dart';
+import 'package:feeef_ui/glass/hairline.dart';
 import 'package:feeef_ui/glass/light.dart';
 import 'package:feeef_ui/glass/material.dart';
 import 'package:feeef_ui/glass/refraction.dart';
@@ -113,7 +115,6 @@ void main() {
       );
       expect(m.gain, closeTo(n(expected['gain']), 1e-12), reason: label);
       expect(m.offset, closeTo(n(expected['offset']), 1e-12), reason: label);
-      expect(m.shadow, closeTo(n(expected['shadow']), 1e-12), reason: label);
     }
     for (final row in fixture['rimLayer'] as List) {
       final rim = glassRim(n(row[2]), dark: row[3] == 'dark');
@@ -122,6 +123,38 @@ void main() {
         closeTo(n(row[4]), 1e-12),
         reason: '$row',
       );
+    }
+    for (final row in fixture['hairline'] as List) {
+      final h = glassHairline(n(row[0]), dark: row[1] == 'dark');
+      expect(h.ring, closeTo(n(row[2]['ring']), 1e-12), reason: '$row');
+      expect(h.sliver, closeTo(n(row[2]['sliver']), 1e-12), reason: '$row');
+    }
+    for (final row in fixture['hairlineBands'] as List) {
+      final shapes = [
+        for (final s in row['shapes'] as List)
+          GlassShape(
+            x: n(s['x']),
+            y: n(s['y']),
+            width: n(s['width']),
+            height: n(s['height']),
+            radius: n(s['radius']),
+          ),
+      ];
+      final bands = hairlineBands(shapes, n(row['spacing']));
+      expect(bands.ring.length, row['ringLoops'], reason: '$row');
+      expect(bands.sliver.length, row['sliverLoops'], reason: '$row');
+      double reach(List<List<Offset>> loops) {
+        var most = 0.0;
+        for (var i = 0; i + 1 < loops.length; i += 2) {
+          for (var k = 0; k < loops[i].length; k++) {
+            most = math.max(most, (loops[i][k] - loops[i + 1][k]).distance);
+          }
+        }
+        return most;
+      }
+
+      expect(reach(bands.ring), closeTo(n(row['ringReach']), 1e-3));
+      expect(reach(bands.sliver), closeTo(n(row['sliverReach']), 0.02));
     }
     for (final row in fixture['edgeMask'] as List) {
       expect(edgeMask(n(row[0]), n(row[1])), closeTo(n(row[2]), 1e-12));

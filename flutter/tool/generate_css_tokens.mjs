@@ -20,7 +20,7 @@ const TOKENS = [
   'accent', 'success', 'warning', 'danger', 'on-danger', 'control-surface', 'control-border',
   'control-hover', 'control-pressed', 'control-selected', 'glass-fill',
   'glass-edge-light', 'glass-edge-low', 'glass-shadow-color', 'glass-glow', 'control-highlight',
-  'glass-fill-large', 'glass-shadow-small', 'focus-ring-color',
+  'glass-fill-large', 'focus-ring-color',
 ]
 // Size tokens (px) per density; SizeTokens getters in tokens_test.dart.
 const SIZES = [

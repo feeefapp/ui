@@ -271,7 +271,7 @@ test('only running animations that move or resize count as geometry', () => {
   assert.equal(movesGeometry(keyframes([{ offset: 0, maxHeight: '0px' }])), true)
 })
 
-import { webRefractionShift, refractionScale } from '../src/glass/refraction.ts'
+import { gentleRefractionShift, refractionScale } from '../src/glass/refraction.ts'
 import { GLASS_BLUR, GLASS_CLEAR_BLUR, GLASS_RIM, edgeMask, glassBlur, glassBlurAt, glassEdgeTerms, glassMaterial, glassRim, glassSize, rimLayer } from '../src/glass/material.ts'
 import { mergeWidth } from '../src/glass/geometry.ts'
 
@@ -282,7 +282,7 @@ test('the bend follows the fitted profile: (1 - t)^4 of the bezel, smaller glass
   assert.equal(refractionScale(88), 1)
   assert.ok(Math.abs(refractionScale(44) - 0.5 ** 0.78) < 1e-9)
   const small = displacementMap(60, 60, [[{ x: 8, y: 8, width: 44, height: 44, radius: 22 }]], 8)
-  assert.ok(Math.abs(small.scale - 2 * webRefractionShift(44)) < 1e-9, 'filter scale follows the size')
+  assert.ok(Math.abs(small.scale - 2 * gentleRefractionShift(44)) < 1e-9, 'filter scale follows the size')
 })
 
 test('material: denser control glass, blur grows with size, clear glass always softens a little', () => {
@@ -464,4 +464,32 @@ test('measured lens restores native shift while preserving gentle default and sh
   for (let i = 3; i < measured.data.length; i += 4) assert.equal(measured.data[i], gentle.data[i])
   const small = displacementMap(44, 44, [[{ x: 0, y: 0, width: 44, height: 44, radius: 22 }]], 0, undefined, 'measured')
   assert.ok(Math.abs(small.scale - 94 * refractionScale(44)) < 1e-9)
+})
+
+import { hairlineBands, bandPath } from '../src/glass/hairline.ts'
+import { glassHairline } from '../src/glass/material.ts'
+
+test('hairline: a 0.5 px ring all round, slivers only at the left and right, merged outlines walked once', () => {
+  const circle = [{ x: 10, y: 10, width: 48, height: 48, radius: 24, cornerExponent: 2 }]
+  const { ring, sliver } = hairlineBands(circle, 8)
+  // Each band is its outer loop plus the outline itself, filled even-odd.
+  assert.equal(ring.length, 2)
+  assert.equal(sliver.length, 2)
+  const widths = (loops: [number, number][][]) => loops[0].map(([x, y], i) => ({ x: loops[1][i][0], y: loops[1][i][1], w: Math.hypot(x - loops[1][i][0], y - loops[1][i][1]) }))
+  assert.ok(widths(ring).every(({ w }) => Math.abs(w - 0.5) < 1e-3))
+  const slivers = widths(sliver)
+  const side = slivers.filter(({ y }) => Math.abs(y - 34) < 1)
+  const top = slivers.filter(({ x }) => Math.abs(x - 34) < 1)
+  assert.ok(side.length && side.every(({ w }) => w > 0.45 && w <= 0.5 + 1e-6), 'widest at the sides')
+  assert.ok(top.length && top.every(({ w }) => w < 1e-6), 'nothing at the top and bottom')
+  // Two bubbles close enough to merge: one union outline.
+  const merged = hairlineBands([circle[0], { ...circle[0], x: 60 }], 16)
+  assert.equal(merged.ring.length, 2)
+  assert.ok(bandPath(merged.ring).startsWith('M') && !bandPath(merged.ring).includes('NaN'))
+  assert.equal(bandPath([]), '')
+  assert.deepEqual(hairlineBands([], 8), { ring: [], sliver: [] })
+  // Strengths (iOS 27 Figma kit): light clear 0.2 / 0.184, regular 0.09 / 0.184, dark 0.349.
+  assert.deepEqual(glassHairline(0, 'light'), { ring: 0.2, sliver: 0.184 })
+  assert.ok(Math.abs(glassHairline(1, 'light').ring - 0.09) < 1e-12)
+  assert.deepEqual(glassHairline(0.5, 'dark'), { ring: 0.349, sliver: 0.349 })
 })

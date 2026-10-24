@@ -113,27 +113,28 @@ html[data-lab-theme] {
   --lab-control-border: color-mix(in srgb, var(--lab-ink) 15%, var(--lab-surface));
   --lab-control-hover: color-mix(in srgb, var(--lab-ink) 5%, var(--lab-surface));
   --lab-control-pressed: color-mix(in srgb, var(--lab-ink) 10%, var(--lab-surface));
-  /* Glass material, fitted to rendered Liquid Glass (research/liquid-glass/FINDINGS.md): the surface
-  veils the saturated, lifted backdrop. --lab-glass-tint (ThemeConfig glassTint, 0 clear … 1 tinted,
-  set on <html> by themeAttributes) moves it from measured clear glass to the measured regular
-  material; the anchors below are regular glass for this scheme, control-sized (up to 72px) and
-  panel-sized. glass/material.ts glassMaterial is the same curve: veil = tint · veil₁, colour kept
+  /* Glass material, fitted to iOS 27 (Apple's Figma kit, research/liquid-glass/FIGMA-27.md): the
+  surface veils the saturated, lifted backdrop. --lab-glass-tint (ThemeConfig glassTint, 0 clear …
+  1 tinted, set on <html> by themeAttributes) moves it from clear glass to regular glass; the anchors
+  below are regular glass for this scheme (control-sized and panel-sized agree in iOS 27).
+  glass/material.ts glassMaterial is the same curve: veil = tint · veil₁, colour kept
   1 - tint · colour-loss₁ (colour-loss₁ = 1 - (1 - veil₁) · saturate₁), saturate = colour / (1 - veil),
-  shadow = tint · shadow₁, and the clear lift 1.03 · x + 0.076 fades out as tint grows. */
+  and the lift gain · x + offset moves from clear's 1.03 · x + 0.076 to regular's
+  (--lab-glass-lift-gain, --lab-glass-lift-offset). The shadow does not depend on the tint. */
   --lab-glass-tint: 0.5;
-  --lab-glass-veil: 0.87;
-  --lab-glass-veil-large: 0.71;
-  --lab-glass-colour-loss: 0.285;
-  --lab-glass-colour-loss-large: 0.362;
-  --lab-glass-shadow-alpha: 0.095;
-  --lab-glass-shadow-alpha-small: 0.066;
+  --lab-glass-veil: 0.52;
+  --lab-glass-veil-large: 0.52;
+  --lab-glass-colour-loss: 0.435;
+  --lab-glass-colour-loss-large: 0.435;
+  --lab-glass-lift-gain: 0.92;
+  --lab-glass-lift-offset: 0;
+  --lab-glass-shadow-alpha: 0.02;
   --lab-glass-fill: color-mix(in srgb, var(--lab-surface) calc(var(--lab-glass-tint) * var(--lab-glass-veil) * 100%), transparent);
   --lab-glass-fill-large: color-mix(in srgb, var(--lab-surface) calc(var(--lab-glass-tint) * var(--lab-glass-veil-large) * 100%), transparent);
   --lab-glass-saturate: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil)));
   --lab-glass-saturate-large: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss-large)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil-large)));
-  /* The clear lift gain · x + offset (gain 1.03 → 1, offset 0.076 → 0) as contrast() then brightness(). */
-  --lab-glass-lift: contrast(calc((1.03 - 0.03 * var(--lab-glass-tint)) / (1.182 - 0.182 * var(--lab-glass-tint))))
-    brightness(calc(1.182 - 0.182 * var(--lab-glass-tint)));
+  /* The lift gain · x + offset (clear 1.03 · x + 0.076 → the regular anchors) as contrast() then brightness(). */
+  --lab-glass-lift: contrast(calc((1.03 + (var(--lab-glass-lift-gain) - 1.03) * var(--lab-glass-tint)) / (1.182 + (var(--lab-glass-lift-gain) + 2 * var(--lab-glass-lift-offset) - 1.182) * var(--lab-glass-tint)))) brightness(calc(1.182 + (var(--lab-glass-lift-gain) + 2 * var(--lab-glass-lift-offset) - 1.182) * var(--lab-glass-tint)));
   /* Backdrop blur only with ThemeConfig glassBlur (data-lab-glass-blur='on'). */
   --lab-glass-blur: 0px;
   --lab-glass-blur-large: 0px;
@@ -142,8 +143,7 @@ html[data-lab-theme] {
   --lab-glass-edge-low: rgb(255 255 255 / 27%);
   --lab-glass-shadow: 0 8px 24px -14px rgb(0 0 0 / 18%);
   /* Shadow under a GlassContainer's merged outline (7.5px down, blur 19.5px); lighter under controls. */
-  --lab-glass-shadow-color: rgb(0 0 0 / calc(var(--lab-glass-tint) * var(--lab-glass-shadow-alpha)));
-  --lab-glass-shadow-small: rgb(0 0 0 / calc(var(--lab-glass-tint) * var(--lab-glass-shadow-alpha-small)));
+  --lab-glass-shadow-color: rgb(0 0 0 / var(--lab-glass-shadow-alpha));
   /* Light that spreads from a finger pressing glass. */
   --lab-glass-glow: rgb(255 255 255 / 45%);
   --lab-glass-light: inset 0 1px 0 var(--lab-glass-edge-low), inset 0 -1px 0 rgb(0 0 0 / 6%);
@@ -158,15 +158,16 @@ html[data-lab-theme] {
   }
 }
 html[data-lab-theme='dark'] {
-  --lab-glass-veil: 0.75;
-  --lab-glass-veil-large: 0.72;
-  --lab-glass-colour-loss: 0.275;
-  --lab-glass-colour-loss-large: 0.328;
+  --lab-glass-veil: 0.05;
+  --lab-glass-veil-large: 0.05;
+  --lab-glass-colour-loss: -0.147;
+  --lab-glass-colour-loss-large: -0.147;
+  --lab-glass-lift-gain: 0.863;
+  --lab-glass-lift-offset: 0.095;
   --lab-glass-edge-light: rgb(255 255 255 / 13%);
   --lab-glass-edge-low: rgb(255 255 255 / 14%);
   --lab-glass-shadow: 0 8px 24px -14px rgb(0 0 0 / 40%);
-  --lab-glass-shadow-alpha: 0.14;
-  --lab-glass-shadow-alpha-small: 0.033;
+  --lab-glass-shadow-alpha: 0.04;
   --lab-glass-glow: rgb(255 255 255 / 16%);
   --lab-danger: #ffb4ab;
   --lab-on-danger: #571812;
@@ -330,6 +331,7 @@ its selected fill. */
 html[data-lab-theme]
   .lab-control[data-control-appearance='toolbar']:not([data-variant='primary']):not(
     [data-variant='filled'],
+    [data-variant='destructive'],
     [aria-pressed='true'],
     [data-state='on']
   ) {

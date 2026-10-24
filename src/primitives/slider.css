@@ -131,7 +131,7 @@ switch is iOS's too: a --lab-switch-width × --lab-switch-height track with the 
   color: var(--lab-ink);
   box-shadow:
     var(--lab-slider-thumb-rest-shadow),
-    0 4px 14px color-mix(in srgb, var(--lab-glass-shadow-small) calc(var(--lab-lens, 0) * 100%), transparent);
+    0 4px 14px color-mix(in srgb, var(--lab-glass-shadow-color) calc(var(--lab-lens, 0) * 100%), transparent);
   pointer-events: none;
 }
 /* The lens sits on the thumb's background, under its content (renderThumb). */

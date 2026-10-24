@@ -86,7 +86,7 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
   highlightStrength?: number
   /** Backdrop bend multiplier, 0–10; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
   refractionStrength?: number
-  /** `gentle` avoids edge reversal; `measured` (default) restores the screenshot-fitted mirrored lens band. */
+  /** `gentle` (default, iOS 27's lens: it never folds the backdrop back) or `measured` (the iOS 26.2 screenshot fit, with its mirrored band at the rim). */
   refractionProfile?: 'gentle' | 'measured'
   /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
   backdropSource?: string
@@ -102,7 +102,7 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
  * JavaScript, or in forced colors, every bubble paints its own glass as before.
  */
 export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>(function GlassContainer(
-  { as = 'div', spacing = 8, cornerShape = 'superellipse', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 1, highlightProfile = 'rim', highlightStrength = 1, refractionStrength = 1, refractionProfile = 'measured', tint, backdropSource, className, children, ...props },
+  { as = 'div', spacing = 8, cornerShape = 'superellipse', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 1, highlightProfile = 'rim', highlightStrength = 1, refractionStrength = 1, refractionProfile = 'gentle', tint, backdropSource, className, children, ...props },
   ref
 ) {
   const host = React.useRef<HTMLElement | null>(null)

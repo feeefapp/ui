@@ -61,8 +61,9 @@ void main() {
       for (final layer in tester.layers.whereType<BackdropFilterLayer>())
         layer.backdropKey,
     ];
-    // Three apart bubbles per container: three backdrops each, one key per container.
-    expect(keys, hasLength(6));
+    // Three apart bubbles per container: the glass and its two hairline bands (ring, slivers)
+    // for each, nine backdrops per container, one key (one backdrop read) per container.
+    expect(keys, hasLength(18));
     expect(keys, everyElement(isNotNull));
     expect(keys.toSet(), hasLength(2));
   });

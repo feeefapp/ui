@@ -87,7 +87,6 @@ void main() {
         'glass-edge-light': tokens.glassEdgeLight,
         'glass-edge-low': tokens.glassEdgeLow,
         'glass-shadow-color': tokens.glassShadowColor,
-        'glass-shadow-small': tokens.glassShadowSmall,
         'glass-glow': tokens.glassGlow,
         'control-highlight': tokens.controlHighlight,
         'focus-ring-color': tokens.focusRing,
@@ -181,8 +180,8 @@ void main() {
     expect(dark.ink, const Color(0xFFF2F5F0));
     expect(dark.focus, dark.ink);
     expect(dark.muted, const Color(0xFFB7C0B4));
-    // At the default tint (0.5) the veil is half the measured regular one.
-    expect(dark.glassFill.a, closeTo(0.375, 1e-3));
+    // At the default tint (0.5) the veil is half the regular one (iOS 27 dark: 5 %).
+    expect(dark.glassFill.a, closeTo(0.025, 1e-3));
     // The palette's own colours stay.
     expect(dark.primary, base.primary);
     expect(dark.ground, base.ground);
@@ -192,29 +191,30 @@ void main() {
     ).backdrop(Brightness.light);
     expect(light.surface, const Color(0xFFFBFCFA));
     expect(light.ink, const Color(0xFF151A16));
-    expect(light.glassFill.a, closeTo(0.435, 1e-3));
+    expect(light.glassFill.a, closeTo(0.26, 1e-3));
     expect(light.backdropTone, Brightness.light);
   });
 
   test(
-    'the glass tint scales the veil and the shadow, from clear to regular',
+    'the glass tint scales the veil, from clear to regular; the shadow stays faint',
     () {
       ColorTokens at(double tint, Brightness b) =>
           ColorTokens.resolve(Palette.lab, b, glassTint: tint);
       final clear = at(0, Brightness.light);
       expect(clear.glassFill.a, 0);
-      expect(clear.glassShadowColor.a, 0);
+      // iOS 27 casts the faint shadow under clear glass too.
+      expect(clear.glassShadowColor.a, closeTo(0.02, 1e-3));
       final regular = at(1, Brightness.light);
-      expect(regular.glassFill.a, closeTo(0.87, 1e-3));
-      expect(regular.glassFillLarge.a, closeTo(0.71, 1e-3));
-      expect(regular.glassShadowColor.a, closeTo(0.095, 1e-3));
-      expect(at(1, Brightness.dark).glassFill.a, closeTo(0.75, 1e-3));
-      expect(at(1, Brightness.dark).glassShadowSmall.a, closeTo(0.033, 1e-3));
+      expect(regular.glassFill.a, closeTo(0.52, 1e-3));
+      expect(regular.glassFillLarge.a, closeTo(0.52, 1e-3));
+      expect(regular.glassShadowColor.a, closeTo(0.02, 1e-3));
+      expect(at(1, Brightness.dark).glassFill.a, closeTo(0.05, 1e-3));
+      expect(at(1, Brightness.dark).glassShadowColor.a, closeTo(0.04, 1e-3));
       // Out of range clamps; the backdrop tokens keep the tint.
-      expect(at(7, Brightness.light).glassFill.a, closeTo(0.87, 1e-3));
+      expect(at(7, Brightness.light).glassFill.a, closeTo(0.52, 1e-3));
       expect(
         at(0.2, Brightness.light).backdrop(Brightness.dark).glassFill.a,
-        closeTo(0.15, 1e-3),
+        closeTo(0.01, 1e-3),
       );
     },
   );

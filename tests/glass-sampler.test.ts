@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { clampRadius, mergeWidth, prepareUnionDistance, rectGap, shapeDistance, smoothMin, type GlassShape } from '../src/glass/geometry.ts'
-import { GLASS_BEZEL, GLASS_REFRACTION, liveDisplacementMap, refractionAt, refractionScale, webRefractionShift } from '../src/glass/refraction.ts'
+import { GLASS_BEZEL, GLASS_REFRACTION, liveDisplacementMap, refractionAt, refractionScale, gentleRefractionShift } from '../src/glass/refraction.ts'
 import { DEFAULT_GLASS_LIGHT } from '../src/glass/light.ts'
 import { edgeMask } from '../src/glass/material.ts'
 
@@ -39,7 +39,7 @@ function denseMap(width: number, height: number, w: number, h: number, clusters:
   const pixelHeight = height / h
   const coverage = Math.max(pixelWidth, pixelHeight)
   const sides = clusters.map(shapes => shapes.length ? Math.min(...shapes.map(s => Math.min(s.width, s.height))) : 0)
-  const shifts = sides.map(side => profile === 'measured' ? GLASS_REFRACTION * refractionScale(side) : webRefractionShift(side))
+  const shifts = sides.map(side => profile === 'measured' ? GLASS_REFRACTION * refractionScale(side) : gentleRefractionShift(side))
   const maximum = Math.max(0, ...shifts)
   const data = new Uint8ClampedArray(w * h * 4)
   for (let i = 0; i < data.length; i += 4) data[i] = data[i + 1] = 128

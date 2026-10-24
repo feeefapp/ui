@@ -52,10 +52,11 @@ export function refractionAt(d: number, nx: number, ny: number, bezel = GLASS_BE
  * for `backdrop-filter: url()`. Each cluster bends by its own size (its smallest shape).
  */
 /**
- * Web transport cap: for the quartic bezel, max |d(shift)/d(depth)| = 4 × shift / bezel.
- * Keep it below one so the sampled background cannot reverse direction along an edge.
+ * The gentle lens (the default; iOS 27's lens never folds the backdrop back): for the quartic bezel,
+ * max |d(shift)/d(depth)| = 4 × shift / bezel, kept below one so the sampled background cannot
+ * reverse direction along an edge. Flutter's `gentleRefractionShift` matches.
  */
-export function webRefractionShift(side: number, bezel = GLASS_BEZEL) {
+export function gentleRefractionShift(side: number, bezel = GLASS_BEZEL) {
   const size = refractionScale(side)
   const band = Math.min(bezel * size, side / 2)
   return Math.max(0, Math.min(GLASS_REFRACTION * size, band * 0.8 / GLASS_BEZEL_POWER))
@@ -121,7 +122,7 @@ function sampleDisplacementMap(
   const sizes = clusters.map((shapes) => (shapes.length ? refractionScale(Math.min(...shapes.map((s) => Math.min(s.width, s.height)))) : 0))
   const shifts = clusters.map((shapes, index) => profile === 'measured'
     ? GLASS_REFRACTION * sizes[index]
-    : shapes.length ? webRefractionShift(Math.min(...shapes.map(s => Math.min(s.width, s.height))), bezel) : 0)
+    : shapes.length ? gentleRefractionShift(Math.min(...shapes.map(s => Math.min(s.width, s.height))), bezel) : 0)
   const largest = Math.max(0, ...shifts)
   clusters.forEach((shapes, index) => {
     if (!shapes.length) return

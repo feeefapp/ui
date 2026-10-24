@@ -29,7 +29,6 @@ class ColorTokens {
     required this.glassEdgeLight,
     required this.glassEdgeLow,
     required double glassShadowAlpha,
-    required double glassShadowAlphaSmall,
     required this.glassGlow,
     required this.controlHighlight,
     required double glassVeil,
@@ -38,12 +37,11 @@ class ColorTokens {
     this.backdropTone,
   }) : _veil = glassVeil,
        _veilLarge = glassVeilLarge,
-       _shadow = glassShadowAlpha,
-       _shadowSmall = glassShadowAlphaSmall;
+       _shadow = glassShadowAlpha;
 
-  /// The measured regular material's veil (share of the surface), control-sized and panel glass
-  /// (glass/material.dart), and its shadow alphas: the anchors the tint scales.
-  final double _veil, _veilLarge, _shadow, _shadowSmall;
+  /// The regular material's veil (share of the surface), control-sized and panel glass
+  /// (glass/material.dart): the anchors the tint scales; and the shadow's alpha, which it doesn't.
+  final double _veil, _veilLarge, _shadow;
 
   /// `--lab-glass-tint` (ThemeConfig `glassTint`, clamped): 0 clear … 1 tinted.
   final double glassTint;
@@ -66,12 +64,8 @@ class ColorTokens {
   final Color success, warning, danger, onDanger;
   final Color glassEdgeLight, glassEdgeLow, glassGlow, controlHighlight;
 
-  /// `--lab-glass-shadow-color`: the shadow under panel-sized glass, scaled by the tint (clear
-  /// glass casts none).
-  Color get glassShadowColor => black(glassTint * _shadow);
-
-  /// `--lab-glass-shadow-small`: the lighter shadow under control-sized glass.
-  Color get glassShadowSmall => black(glassTint * _shadowSmall);
+  /// `--lab-glass-shadow-color`: the faint shadow under every glass, clear included (iOS 27).
+  Color get glassShadowColor => black(_shadow);
 
   /// `--lab-focus-ring-color`: the keyboard focus ring, the focus colour at 65 %.
   Color get focusRing => mixSrgb(focus, 0.65, transparent);
@@ -117,12 +111,11 @@ class ColorTokens {
       onDanger: onDanger,
       glassEdgeLight: white(dark ? 0.13 : 0.62),
       glassEdgeLow: white(dark ? 0.14 : 0.27),
-      glassShadowAlpha: dark ? 0.14 : 0.095,
-      glassShadowAlphaSmall: dark ? 0.033 : 0.066,
+      glassShadowAlpha: dark ? 0.04 : 0.02,
       glassGlow: white(dark ? 0.18 : 0.45),
       controlHighlight: white(dark ? 0.20 : 0.76),
-      glassVeil: dark ? 0.75 : 0.87,
-      glassVeilLarge: dark ? 0.72 : 0.71,
+      glassVeil: dark ? 0.05 : 0.52,
+      glassVeilLarge: dark ? 0.05 : 0.52,
       glassTint: glassTint,
       backdropTone: tone,
     );
@@ -177,13 +170,12 @@ class ColorTokens {
     final tint = clampGlassTint(glassTint);
     final dark = brightness == Brightness.dark;
     final shared = (
-      // Glass material fitted to rendered Liquid Glass (glass/material.dart).
+      // Glass material fitted to iOS 27 (glass/material.dart).
       edgeLight: white(dark ? 0.13 : 0.62),
       edgeLow: white(dark ? 0.14 : 0.27),
-      shadow: dark ? 0.14 : 0.095,
-      shadowSmall: dark ? 0.033 : 0.066,
-      veil: dark ? 0.75 : 0.87,
-      veilLarge: dark ? 0.72 : 0.71,
+      shadow: dark ? 0.04 : 0.02,
+      veil: dark ? 0.05 : 0.52,
+      veilLarge: dark ? 0.05 : 0.52,
       glow: white(dark ? 0.16 : 0.45),
       highlight: white(dark ? 0.20 : 0.76),
       danger: hex(dark ? 0xffb4ab : 0xa02b2b),
@@ -222,7 +214,6 @@ class ColorTokens {
       glassEdgeLight: shared.edgeLight,
       glassEdgeLow: shared.edgeLow,
       glassShadowAlpha: shared.shadow,
-      glassShadowAlphaSmall: shared.shadowSmall,
       glassGlow: shared.glow,
       controlHighlight: shared.highlight,
       glassVeil: shared.veil,

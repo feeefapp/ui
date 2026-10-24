@@ -51,7 +51,7 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
     highlightStrength?: number;
     /** Backdrop bend multiplier, 0–10; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
     refractionStrength?: number;
-    /** `gentle` avoids edge reversal; `measured` (default) restores the screenshot-fitted mirrored lens band. */
+    /** `gentle` (default, iOS 27's lens: it never folds the backdrop back) or `measured` (the iOS 26.2 screenshot fit, with its mirrored band at the rim). */
     refractionProfile?: 'gentle' | 'measured';
     /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
     backdropSource?: string;
@@ -103,7 +103,7 @@ export declare const GlassContainer: React.ForwardRefExoticComponent<React.HTMLA
     highlightStrength?: number;
     /** Backdrop bend multiplier, 0–10; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
     refractionStrength?: number;
-    /** `gentle` avoids edge reversal; `measured` (default) restores the screenshot-fitted mirrored lens band. */
+    /** `gentle` (default, iOS 27's lens: it never folds the backdrop back) or `measured` (the iOS 26.2 screenshot fit, with its mirrored band at the rim). */
     refractionProfile?: "gentle" | "measured";
     /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
     backdropSource?: string;
@@ -150,7 +150,7 @@ export declare const GlassScope: React.ForwardRefExoticComponent<React.HTMLAttri
     highlightStrength?: number;
     /** Backdrop bend multiplier, 0–10; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
     refractionStrength?: number;
-    /** `gentle` avoids edge reversal; `measured` (default) restores the screenshot-fitted mirrored lens band. */
+    /** `gentle` (default, iOS 27's lens: it never folds the backdrop back) or `measured` (the iOS 26.2 screenshot fit, with its mirrored band at the rim). */
     refractionProfile?: "gentle" | "measured";
     /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
     backdropSource?: string;

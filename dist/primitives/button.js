@@ -32,6 +32,8 @@ export const Button = React.forwardRef(({ className, children, loading, variant,
     const filled = variant === 'primary' ||
         variant === 'filled' ||
         (!variant && legacyButtonHasTexture(className));
+    // Filled (primary) and destructive buttons are iOS 27's prominent glass (control-variants.css).
+    const prominent = resolvedVariant === 'filled' || variant === 'destructive';
     const disabled = Boolean(props.disabled || loading);
     const press = !variant
         ? undefined
@@ -72,7 +74,7 @@ export const Button = React.forwardRef(({ className, children, loading, variant,
     return (_jsx(Component, { ref: ref, type: nativeButton ? type : undefined, className: cn('lab-control', className), ...props, "data-legacy-size": !variant ? size : undefined, "data-variant": resolvedVariant, "data-surface-variant": resolvedVariant &&
             ['filled', 'tonal', 'elevated', 'outlined', 'text'].includes(resolvedVariant)
             ? resolvedVariant
-            : undefined, "data-control-size": variant ? controlSize : undefined, "data-icon-size": controlSize === 'icon' ? iconSize : undefined, "data-control-appearance": variant ? appearance : undefined, "data-loading": loading || undefined, "data-press": press, onPointerDown: (event) => {
+            : undefined, "data-control-size": variant ? controlSize : undefined, "data-icon-size": controlSize === 'icon' ? iconSize : undefined, "data-control-appearance": variant ? appearance : undefined, "data-loading": loading || undefined, "data-press": press, "data-prominent": prominent || undefined, onPointerDown: (event) => {
             if (press === 'glass')
                 placePressGlow(event);
             props.onPointerDown?.(event);

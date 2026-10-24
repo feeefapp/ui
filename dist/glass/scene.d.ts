@@ -69,6 +69,9 @@ export declare class GlassScene {
     /** One backdrop element per cluster: a lone bubble clips with border-radius, which every
      * browser applies to backdrop-filter; only merging bubbles need a path clip, in their own box. */
     private pieces;
+    /** Per cluster, the hairline's ring and sliver paths, in their own SVG layer above the glass. */
+    private hairlines;
+    private hairlineHost;
     /** Cancels a queued backdrop read (and the write that follows it). */
     private stopSample;
     private visibility;
@@ -116,6 +119,15 @@ export declare class GlassScene {
     /** Paints the current frame: element offsets, backdrop clip, edge, light and shadow. */
     draw(): void;
     private syncBackdrops;
+    /**
+     * The dark hairline outside each cluster (material.ts GLASS_HAIRLINE): per cluster, the ring and
+     * the side slivers as even-odd SVG paths filled black at their strength, in their own layer above
+     * the glass. On white that is exactly iOS 27's plus-darker; over darker content it darkens
+     * proportionally (a backdrop-filter clipped to the band would be exact, but Chromium clips such
+     * filters to the clip's bounding box inside glass, darkening the whole box). Bands are cached
+     * per cluster shape and follow merged outlines.
+     */
+    private syncHairlines;
     /** Keep the same optical layer alive through motion, merges and adaptive tone changes. */
     private updateRefraction;
     /** Sampling a separate paint layer avoids Firefox's recursive element-image prohibition. */

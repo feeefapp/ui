@@ -198,7 +198,8 @@ class _RenderRefraction extends RenderBox {
     set(origin.dy);
     set(config.dpr);
     set(bezel);
-    set(glassRefraction * scale);
+    // The gentle lens (iOS 27): no mirrored band at the rim.
+    set(gentleRefractionShift(side));
     set(shapes.length.toDouble());
     for (var i = 0; i < GlassRefraction.maxShapes; i++) {
       final s = i < shapes.length ? shapes[i] : null;

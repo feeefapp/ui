@@ -19,6 +19,7 @@ export default defineConfig({
     alias: [
       { find: /^@feeef\.dev\/ui\/(provider|scaffold)$/, replacement: `${kit}/$1${ext}` },
       { find: /^@feeef\.dev\/ui\/glass$/, replacement: `${kit}/glass/${index}` },
+      { find: /^@feeef\.dev\/ui\/primitives\/(.*)$/, replacement: `${kit}/primitives/$1${ext}` },
     ],
   },
   build: { outDir: process.env.OUT_DIR ?? 'dist', emptyOutDir: true },

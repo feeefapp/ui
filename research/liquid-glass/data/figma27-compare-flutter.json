@@ -1,0 +1,1153 @@
+{
+ "sheet": {
+  "regular-light/255": {
+   "figma": {
+    "side": [
+     -68.0,
+     -34.5
+    ],
+    "top_bottom": [
+     -23.0,
+     -12.5
+    ],
+    "interior": 241.0
+   },
+   "before": {
+    "side": [
+     -4.5,
+     -4.5
+    ],
+    "top_bottom": [
+     -4.5,
+     -4.5
+    ],
+    "interior": 254.0,
+    "mean": 3.95
+   },
+   "after": {
+    "side": [
+     -69.5,
+     -32.0
+    ],
+    "top_bottom": [
+     -24.0,
+     -13.0
+    ],
+    "interior": 244.0,
+    "mean": 0.77
+   }
+  },
+  "regular-light/235": {
+   "figma": {
+    "side": [
+     -67.0,
+     -35.0
+    ],
+    "top_bottom": [
+     -23.0,
+     -13.0
+    ],
+    "interior": 233.0
+   },
+   "before": {
+    "side": [
+     -4.0,
+     -4.0
+    ],
+    "top_bottom": [
+     -4.0,
+     -4.0
+    ],
+    "interior": 252.0,
+    "mean": 4.42
+   },
+   "after": {
+    "side": [
+     -68.5,
+     -26.0
+    ],
+    "top_bottom": [
+     -24.0,
+     -13.0
+    ],
+    "interior": 235.0,
+    "mean": 0.82
+   }
+  },
+  "regular-light/128": {
+   "figma": {
+    "side": [
+     -63.8,
+     -33.0
+    ],
+    "top_bottom": [
+     -23.0,
+     -12.0
+    ],
+    "interior": 186.0
+   },
+   "before": {
+    "side": [
+     -2.0,
+     -2.0
+    ],
+    "top_bottom": [
+     -2.5,
+     -2.5
+    ],
+    "interior": 238.0,
+    "mean": 6.37
+   },
+   "after": {
+    "side": [
+     -63.5,
+     -30.5
+    ],
+    "top_bottom": [
+     -23.0,
+     -12.0
+    ],
+    "interior": 189.0,
+    "mean": 0.79
+   }
+  },
+  "regular-light/26": {
+   "figma": {
+    "side": [
+     -19.0,
+     -15.0
+    ],
+    "top_bottom": [
+     -23.0,
+     -11.0
+    ],
+    "interior": 139.0
+   },
+   "before": {
+    "side": [
+     0.0,
+     0.0
+    ],
+    "top_bottom": [
+     -0.5,
+     -0.5
+    ],
+    "interior": 225.0,
+    "mean": 9.95
+   },
+   "after": {
+    "side": [
+     -22.0,
+     -17.5
+    ],
+    "top_bottom": [
+     -23.0,
+     -12.0
+    ],
+    "interior": 144.0,
+    "mean": 0.99
+   }
+  },
+  "regular-light/0": {
+   "figma": {
+    "side": [
+     6.0,
+     0.0
+    ],
+    "top_bottom": [
+     0.0,
+     0.0
+    ],
+    "interior": 128.0
+   },
+   "before": {
+    "side": [
+     0.0,
+     0.0
+    ],
+    "top_bottom": [
+     0.0,
+     0.0
+    ],
+    "interior": 222.0,
+    "mean": 10.84
+   },
+   "after": {
+    "side": [
+     4.0,
+     0.0
+    ],
+    "top_bottom": [
+     0.0,
+     0.0
+    ],
+    "interior": 133.0,
+    "mean": 1.04
+   }
+  },
+  "regular-dark/255": {
+   "figma": {
+    "side": [
+     -171.5,
+     -93.0
+    ],
+    "top_bottom": [
+     -90.0,
+     -45.0
+    ],
+    "interior": 230.0
+   },
+   "before": {
+    "side": [
+     -2.0,
+     -2.0
+    ],
+    "top_bottom": [
+     -2.0,
+     -2.0
+    ],
+    "interior": 78.0,
+    "mean": 14.15
+   },
+   "after": {
+    "side": [
+     -179.0,
+     -71.0
+    ],
+    "top_bottom": [
+     -90.0,
+     -46.0
+    ],
+    "interior": 227.0,
+    "mean": 1.41
+   }
+  },
+  "regular-dark/235": {
+   "figma": {
+    "side": [
+     -172.0,
+     -93.0
+    ],
+    "top_bottom": [
+     -90.0,
+     -45.0
+    ],
+    "interior": 213.0
+   },
+   "before": {
+    "side": [
+     -2.0,
+     -2.0
+    ],
+    "top_bottom": [
+     -1.5,
+     -1.5
+    ],
+    "interior": 73.0,
+    "mean": 13.12
+   },
+   "after": {
+    "side": [
+     -179.0,
+     -70.0
+    ],
+    "top_bottom": [
+     -90.0,
+     -46.0
+    ],
+    "interior": 212.0,
+    "mean": 1.34
+   }
+  },
+  "regular-dark/128": {
+   "figma": {
+    "side": [
+     -120.0,
+     -71.5
+    ],
+    "top_bottom": [
+     -89.0,
+     -45.0
+    ],
+    "interior": 126.0
+   },
+   "before": {
+    "side": [
+     -1.0,
+     -1.0
+    ],
+    "top_bottom": [
+     -1.0,
+     -1.0
+    ],
+    "interior": 47.0,
+    "mean": 10.34
+   },
+   "after": {
+    "side": [
+     -128.0,
+     -77.0
+    ],
+    "top_bottom": [
+     -89.0,
+     -45.0
+    ],
+    "interior": 127.0,
+    "mean": 1.17
+   }
+  },
+  "regular-dark/26": {
+   "figma": {
+    "side": [
+     -23.0,
+     -16.0
+    ],
+    "top_bottom": [
+     -26.0,
+     -13.0
+    ],
+    "interior": 43.0
+   },
+   "before": {
+    "side": [
+     0.0,
+     0.0
+    ],
+    "top_bottom": [
+     0.0,
+     0.0
+    ],
+    "interior": 22.0,
+    "mean": 5.94
+   },
+   "after": {
+    "side": [
+     -26.0,
+     -18.0
+    ],
+    "top_bottom": [
+     -26.0,
+     -13.0
+    ],
+    "interior": 45.0,
+    "mean": 1.13
+   }
+  },
+  "regular-dark/0": {
+   "figma": {
+    "side": [
+     2.0,
+     0.0
+    ],
+    "top_bottom": [
+     0.0,
+     0.0
+    ],
+    "interior": 21.0
+   },
+   "before": {
+    "side": [
+     0.0,
+     0.0
+    ],
+    "top_bottom": [
+     0.0,
+     0.0
+    ],
+    "interior": 16.0,
+    "mean": 4.91
+   },
+   "after": {
+    "side": [
+     0.0,
+     0.0
+    ],
+    "top_bottom": [
+     0.0,
+     0.0
+    ],
+    "interior": 24.0,
+    "mean": 1.13
+   }
+  },
+  "clear-light/255": {
+   "figma": {
+    "side": [
+     -95.0,
+     -44.5
+    ],
+    "top_bottom": [
+     -51.0,
+     -26.0
+    ],
+    "interior": 249.0
+   },
+   "before": {
+    "side": [
+     0.0,
+     0.0
+    ],
+    "top_bottom": [
+     0.0,
+     0.0
+    ],
+    "interior": 255.0,
+    "mean": 3.66
+   },
+   "after": {
+    "side": [
+     -99.0,
+     -40.5
+    ],
+    "top_bottom": [
+     -52.0,
+     -27.0
+    ],
+    "interior": 252.0,
+    "mean": 2.75
+   }
+  },
+  "clear-light/235": {
+   "figma": {
+    "side": [
+     -94.0,
+     -44.0
+    ],
+    "top_bottom": [
+     -51.0,
+     -26.0
+    ],
+    "interior": 245.0
+   },
+   "before": {
+    "side": [
+     0.0,
+     0.0
+    ],
+    "top_bottom": [
+     0.0,
+     0.0
+    ],
+    "interior": 255.0,
+    "mean": 4.26
+   },
+   "after": {
+    "side": [
+     -99.0,
+     -40.0
+    ],
+    "top_bottom": [
+     -52.0,
+     -27.0
+    ],
+    "interior": 252.0,
+    "mean": 2.66
+   }
+  },
+  "clear-light/128": {
+   "figma": {
+    "side": [
+     -92.5,
+     -43.5
+    ],
+    "top_bottom": [
+     -51.0,
+     -25.5
+    ],
+    "interior": 144.0
+   },
+   "before": {
+    "side": [
+     0.0,
+     0.0
+    ],
+    "top_bottom": [
+     0.0,
+     0.0
+    ],
+    "interior": 151.0,
+    "mean": 3.94
+   },
+   "after": {
+    "side": [
+     -98.0,
+     -39.0
+    ],
+    "top_bottom": [
+     -51.0,
+     -26.0
+    ],
+    "interior": 149.0,
+    "mean": 2.14
+   }
+  },
+  "clear-light/26": {
+   "figma": {
+    "side": [
+     -25.0,
+     -13.0
+    ],
+    "top_bottom": [
+     -26.0,
+     -12.5
+    ],
+    "interior": 47.0
+   },
+   "before": {
+    "side": [
+     0.0,
+     0.0
+    ],
+    "top_bottom": [
+     0.0,
+     0.0
+    ],
+    "interior": 46.0,
+    "mean": 4.9
+   },
+   "after": {
+    "side": [
+     -26.0,
+     -16.0
+    ],
+    "top_bottom": [
+     -26.0,
+     -13.0
+    ],
+    "interior": 45.0,
+    "mean": 3.24
+   }
+  },
+  "clear-light/0": {
+   "figma": {
+    "side": [
+     0.5,
+     0.0
+    ],
+    "top_bottom": [
+     0.0,
+     0.0
+    ],
+    "interior": 22.0
+   },
+   "before": {
+    "side": [
+     0.0,
+     0.0
+    ],
+    "top_bottom": [
+     0.0,
+     0.0
+    ],
+    "interior": 19.0,
+    "mean": 5.34
+   },
+   "after": {
+    "side": [
+     0.0,
+     0.0
+    ],
+    "top_bottom": [
+     0.0,
+     0.0
+    ],
+    "interior": 19.0,
+    "mean": 3.6
+   }
+  }
+ },
+ "sizes": {
+  "bar-light/ffffff": {
+   "figma": {
+    "side": [
+     -67.5,
+     -27.5
+    ],
+    "top_bottom": [
+     -24.0,
+     -12.0
+    ],
+    "interior": 243.0
+   },
+   "before": {
+    "side": [
+     -3.5,
+     -3.0
+    ],
+    "top_bottom": [
+     -5.0,
+     -5.0
+    ],
+    "interior": 254.0,
+    "mean": 11.15
+   },
+   "after": {
+    "side": [
+     -69.5,
+     -23.0
+    ],
+    "top_bottom": [
+     -24.0,
+     -13.0
+    ],
+    "interior": 243.0,
+    "mean": 2.74
+   }
+  },
+  "capsule-light/ffffff": {
+   "figma": {
+    "side": [
+     -67.0,
+     -37.5
+    ],
+    "top_bottom": [
+     -24.0,
+     -14.0
+    ],
+    "interior": 247.0
+   },
+   "before": {
+    "side": [
+     -5.0,
+     -5.0
+    ],
+    "top_bottom": [
+     -7.5,
+     -7.5
+    ],
+    "interior": 248.0,
+    "mean": 4.05
+   },
+   "after": {
+    "side": [
+     -69.0,
+     -34.0
+    ],
+    "top_bottom": [
+     -24.0,
+     -14.0
+    ],
+    "interior": 243.0,
+    "mean": 3.82
+   }
+  },
+  "bar-light/ebebeb": {
+   "figma": {
+    "side": [
+     -67.5,
+     -27.0
+    ],
+    "top_bottom": [
+     -24.0,
+     -12.0
+    ],
+    "interior": 235.0
+   },
+   "before": {
+    "side": [
+     -3.0,
+     -3.0
+    ],
+    "top_bottom": [
+     -5.0,
+     -5.0
+    ],
+    "interior": 251.0,
+    "mean": 13.92
+   },
+   "after": {
+    "side": [
+     -69.5,
+     -23.0
+    ],
+    "top_bottom": [
+     -24.0,
+     -13.0
+    ],
+    "interior": 234.0,
+    "mean": 3.19
+   }
+  },
+  "capsule-light/ebebeb": {
+   "figma": {
+    "side": [
+     -67.0,
+     -37.5
+    ],
+    "top_bottom": [
+     -23.0,
+     -14.0
+    ],
+    "interior": 239.0
+   },
+   "before": {
+    "side": [
+     -5.0,
+     -4.5
+    ],
+    "top_bottom": [
+     -6.5,
+     -6.5
+    ],
+    "interior": 243.0,
+    "mean": 6.24
+   },
+   "after": {
+    "side": [
+     -69.0,
+     -34.0
+    ],
+    "top_bottom": [
+     -24.0,
+     -14.0
+    ],
+    "interior": 234.0,
+    "mean": 4.39
+   }
+  },
+  "bar-light/gradient": {
+   "figma": {
+    "side": [
+     -66.8,
+     -28.2
+    ],
+    "top_bottom": [
+     -24.2,
+     -13.0
+    ],
+    "interior": 225.7
+   },
+   "before": {
+    "side": [
+     -2.3,
+     -2.3
+    ],
+    "top_bottom": [
+     -4.3,
+     -4.7
+    ],
+    "interior": 248.3,
+    "mean": 17.38
+   },
+   "after": {
+    "side": [
+     -68.7,
+     -23.2
+    ],
+    "top_bottom": [
+     -24.3,
+     -13.7
+    ],
+    "interior": 226.0,
+    "mean": 3.18
+   }
+  },
+  "capsule-light/gradient": {
+   "figma": {
+    "side": [
+     -66.0,
+     -37.0
+    ],
+    "top_bottom": [
+     -23.7,
+     -13.0
+    ],
+    "interior": 229.7
+   },
+   "before": {
+    "side": [
+     -4.0,
+     -4.0
+    ],
+    "top_bottom": [
+     -5.7,
+     -6.0
+    ],
+    "interior": 237.7,
+    "mean": 9.6
+   },
+   "after": {
+    "side": [
+     -67.7,
+     -32.8
+    ],
+    "top_bottom": [
+     -23.7,
+     -13.7
+    ],
+    "interior": 226.0,
+    "mean": 3.74
+   }
+  },
+  "bar-light/1a1a1a": {
+   "figma": {
+    "side": [
+     -19.0,
+     -13.0
+    ],
+    "top_bottom": [
+     -23.0,
+     -11.0
+    ],
+    "interior": 144.0
+   },
+   "before": {
+    "side": [
+     0.0,
+     0.0
+    ],
+    "top_bottom": [
+     -1.0,
+     -1.0
+    ],
+    "interior": 225.0,
+    "mean": 48.68
+   },
+   "after": {
+    "side": [
+     -17.0,
+     -13.5
+    ],
+    "top_bottom": [
+     -23.0,
+     -12.0
+    ],
+    "interior": 144.0,
+    "mean": 3.2
+   }
+  },
+  "capsule-light/1a1a1a": {
+   "figma": {
+    "side": [
+     -19.0,
+     -15.0
+    ],
+    "top_bottom": [
+     -23.0,
+     -12.0
+    ],
+    "interior": 144.0
+   },
+   "before": {
+    "side": [
+     -0.5,
+     -0.5
+    ],
+    "top_bottom": [
+     -0.5,
+     -0.5
+    ],
+    "interior": 188.0,
+    "mean": 41.4
+   },
+   "after": {
+    "side": [
+     -26.0,
+     -18.0
+    ],
+    "top_bottom": [
+     -23.0,
+     -12.0
+    ],
+    "interior": 144.0,
+    "mean": 1.98
+   }
+  },
+  "bar-dark/ffffff": {
+   "figma": {
+    "side": [
+     -172.0,
+     -72.5
+    ],
+    "top_bottom": [
+     -90.0,
+     -45.0
+    ],
+    "interior": 233.0
+   },
+   "before": {
+    "side": [
+     -1.5,
+     -1.5
+    ],
+    "top_bottom": [
+     -2.5,
+     -2.5
+    ],
+    "interior": 78.0,
+    "mean": 71.91
+   },
+   "after": {
+    "side": [
+     -178.5,
+     -62.5
+    ],
+    "top_bottom": [
+     -90.0,
+     -46.0
+    ],
+    "interior": 223.0,
+    "mean": 6.73
+   }
+  },
+  "capsule-dark/ffffff": {
+   "figma": {
+    "side": [
+     -171.0,
+     -98.0
+    ],
+    "top_bottom": [
+     -90.0,
+     -51.0
+    ],
+    "interior": 237.0
+   },
+   "before": {
+    "side": [
+     -7.5,
+     -7.0
+    ],
+    "top_bottom": [
+     -10.0,
+     -10.0
+    ],
+    "interior": 76.0,
+    "mean": 97.3
+   },
+   "after": {
+    "side": [
+     -172.0,
+     -88.0
+    ],
+    "top_bottom": [
+     -90.0,
+     -47.0
+    ],
+    "interior": 223.0,
+    "mean": 11.04
+   }
+  },
+  "bar-dark/ebebeb": {
+   "figma": {
+    "side": [
+     -171.5,
+     -73.0
+    ],
+    "top_bottom": [
+     -90.0,
+     -45.0
+    ],
+    "interior": 216.0
+   },
+   "before": {
+    "side": [
+     -1.5,
+     -1.5
+    ],
+    "top_bottom": [
+     -2.0,
+     -2.0
+    ],
+    "interior": 73.0,
+    "mean": 66.8
+   },
+   "after": {
+    "side": [
+     -177.5,
+     -62.0
+    ],
+    "top_bottom": [
+     -90.0,
+     -46.0
+    ],
+    "interior": 208.0,
+    "mean": 6.26
+   }
+  },
+  "capsule-dark/ebebeb": {
+   "figma": {
+    "side": [
+     -171.0,
+     -98.0
+    ],
+    "top_bottom": [
+     -90.0,
+     -51.0
+    ],
+    "interior": 220.0
+   },
+   "before": {
+    "side": [
+     -7.0,
+     -7.0
+    ],
+    "top_bottom": [
+     -9.5,
+     -9.0
+    ],
+    "interior": 71.0,
+    "mean": 90.04
+   },
+   "after": {
+    "side": [
+     -171.5,
+     -87.5
+    ],
+    "top_bottom": [
+     -90.0,
+     -46.0
+    ],
+    "interior": 208.0,
+    "mean": 9.73
+   }
+  },
+  "bar-dark/gradient": {
+   "figma": {
+    "side": [
+     -170.8,
+     -72.3
+    ],
+    "top_bottom": [
+     -91.0,
+     -46.0
+    ],
+    "interior": 199.3
+   },
+   "before": {
+    "side": [
+     -0.7,
+     -0.7
+    ],
+    "top_bottom": [
+     -2.0,
+     -2.0
+    ],
+    "interior": 67.7,
+    "mean": 61.85
+   },
+   "after": {
+    "side": [
+     -177.2,
+     -61.7
+    ],
+    "top_bottom": [
+     -89.7,
+     -47.0
+    ],
+    "interior": 192.7,
+    "mean": 6.05
+   }
+  },
+  "capsule-dark/gradient": {
+   "figma": {
+    "side": [
+     -170.0,
+     -96.7
+    ],
+    "top_bottom": [
+     -90.0,
+     -50.3
+    ],
+    "interior": 203.7
+   },
+   "before": {
+    "side": [
+     -6.0,
+     -6.0
+    ],
+    "top_bottom": [
+     -8.2,
+     -8.3
+    ],
+    "interior": 66.3,
+    "mean": 83.15
+   },
+   "after": {
+    "side": [
+     -170.7,
+     -86.8
+    ],
+    "top_bottom": [
+     -89.0,
+     -47.0
+    ],
+    "interior": 192.7,
+    "mean": 9.1
+   }
+  },
+  "bar-dark/1a1a1a": {
+   "figma": {
+    "side": [
+     -23.5,
+     -14.5
+    ],
+    "top_bottom": [
+     -26.0,
+     -13.0
+    ],
+    "interior": 48.0
+   },
+   "before": {
+    "side": [
+     0.0,
+     0.0
+    ],
+    "top_bottom": [
+     0.0,
+     0.0
+    ],
+    "interior": 22.0,
+    "mean": 22.21
+   },
+   "after": {
+    "side": [
+     -26.0,
+     -15.5
+    ],
+    "top_bottom": [
+     -26.0,
+     -13.0
+    ],
+    "interior": 45.0,
+    "mean": 3.2
+   }
+  },
+  "capsule-dark/1a1a1a": {
+   "figma": {
+    "side": [
+     -23.0,
+     -15.5
+    ],
+    "top_bottom": [
+     -26.0,
+     -13.0
+    ],
+    "interior": 48.0
+   },
+   "before": {
+    "side": [
+     -1.0,
+     -1.0
+    ],
+    "top_bottom": [
+     -1.0,
+     -1.0
+    ],
+    "interior": 20.0,
+    "mean": 22.06
+   },
+   "after": {
+    "side": [
+     -26.0,
+     -19.0
+    ],
+    "top_bottom": [
+     -26.0,
+     -13.0
+    ],
+    "interior": 44.0,
+    "mean": 4.39
+   }
+  }
+ }
+}

@@ -34,17 +34,30 @@ export function glassBlurAt(side, tint, blurOn) {
     return GLASS_CLEAR_BLUR * (1 - t) + t * (blurOn ? glassBlur(side) : 0);
 }
 /**
- * Saturation applied to the blurred backdrop before the veil: the veil keeps 13–29% of the
- * backdrop's brightness but ~70% of its colour, so saturation makes up the difference.
+ * Saturation applied to the backdrop under the regular veil, so that the share of its colour that
+ * reaches the eye, `(1 - veil) · gain · saturate`, is iOS 27's: 0.52 in light, 0.99 in dark
+ * (Apple's Figma kit, research/liquid-glass/FIGMA-27.md). iOS 27 shows no size dependence (bars,
+ * bubbles and 300 pt panels agree within 4 levels), so both sizes carry the same values.
  */
 export const GLASS_SATURATE = {
-    light: { small: 5.5, large: 2.2 },
-    dark: { small: 2.9, large: 2.4 },
+    light: { small: 1.177, large: 1.177 },
+    dark: { small: 1.207, large: 1.207 },
 };
-/** Share of the theme surface laid over the backdrop (`--lab-glass-fill*` mix in the tokens). */
+/**
+ * Share of the theme surface laid over the backdrop by regular glass (`--lab-glass-fill*`): iOS 27
+ * regular glass is `0.443 · x + 0.514` in light and `0.82 · x + 0.094` in dark over grey backdrops;
+ * with the surface colour as the veil, that is a 52 % veil plus a slight dimming (light) and, in
+ * dark (whose Figma veil is a light grey, not the dark surface), a 5 % veil over a lifted, dimmed
+ * backdrop that never clips (`GLASS_REGULAR_LIFT`).
+ */
 export const GLASS_VEIL = {
-    light: { small: 0.87, large: 0.71 },
-    dark: { small: 0.75, large: 0.72 },
+    light: { small: 0.52, large: 0.52 },
+    dark: { small: 0.05, large: 0.05 },
+};
+/** Regular glass's own `gain · backdrop + offset` under its veil (iOS 27, see GLASS_VEIL). */
+export const GLASS_REGULAR_LIFT = {
+    light: { gain: 0.92, offset: 0 },
+    dark: { gain: 0.863, offset: 0.095 },
 };
 export const GLASS_RIM = {
     light: { clear: { w0: 0.03, w1: 0.63, p: 1.1, width: 1.1 }, regular: { w0: 0.05, w1: 0.81, p: 0.9, width: 1 } },
@@ -103,16 +116,42 @@ export function glassEdgeTerms(tint, scheme, material, surface) {
     const add = scheme === 'dark' ? 1 - t : 0;
     return { k1: thin + GLASS_EDGE.add.gain * add, k3: GLASS_EDGE.add.base * add - thin * surface };
 }
-/** Shadow under the glass: black at the token's alpha, `dy` px down, blurred by `blur` (std dev). */
-export const GLASS_SHADOW = { dy: 7.5, blur: 19.5 };
 /**
- * Measured clear glass (FINDINGS §3): no veil, no shadow, full colour, and a slight brightness
- * lift on what is behind it, `out = gain · backdrop + offset` in sRGB.
+ * Shadow under every glass, clear included (iOS 27's Figma kit: y 8, blur 15 = std dev 7.5):
+ * black at `--lab-glass-shadow-alpha` (2 % light, 4 % dark), `dy` px down, blurred by `blur`.
+ */
+export const GLASS_SHADOW = { dy: 8, blur: 7.5, alpha: { light: 0.02, dark: 0.04 } };
+/**
+ * The dark hairline iOS 27 draws outside every glass shape, in light and dark (FIGMA-27.md): a
+ * ring `ring.width` px wide all round, plus two slivers where the shape, moved `sliver.shift` px
+ * left and right and shrunk by `sliver.inset` px, reaches past its own outline (strongest at the
+ * left and right, up to 0.5 px). Both darken the backdrop by their strength (plus-darker in iOS;
+ * the web paints black at that alpha, Flutter subtracts it). Strengths by colour scheme for clear (tint 0) and regular (tint 1) glass,
+ * mixed by the tint. It is the contrast cue that keeps glass readable on white, so it stays with
+ * reduced transparency and more contrast.
+ */
+export const GLASS_HAIRLINE = {
+    ring: { width: 0.5 },
+    sliver: { shift: 1.25, inset: 0.75 },
+    strength: {
+        light: { clear: { ring: 0.2, sliver: 0.184 }, regular: { ring: 0.09, sliver: 0.184 } },
+        dark: { clear: { ring: 0.349, sliver: 0.349 }, regular: { ring: 0.349, sliver: 0.349 } },
+    },
+};
+/** The hairline's ring and sliver strengths (0–1 subtracted) at one tint and colour scheme. */
+export function glassHairline(tint, scheme) {
+    const t = clampGlassTint(tint);
+    const { clear, regular } = GLASS_HAIRLINE.strength[scheme];
+    return { ring: clear.ring + (regular.ring - clear.ring) * t, sliver: clear.sliver + (regular.sliver - clear.sliver) * t };
+}
+/**
+ * Measured clear glass (FINDINGS §3, and iOS 27's Figma kit): no veil, full colour, and a slight
+ * brightness lift on what is behind it, `out = gain · backdrop + offset` in sRGB.
  */
 export const GLASS_CLEAR = { gain: 1.03, offset: 0.076 };
 /**
  * The tint (ThemeConfig `glassTint`, 0 clear … 1 tinted) an app gets by default: the midpoint, a
- * light veil (~40 %), like iOS 27's default slider position. Flutter's `glassTintDefault` matches.
+ * light veil (26 % light, 2.5 % dark), like iOS 27's default slider position. Flutter's `glassTintDefault` matches.
  */
 export const GLASS_TINT_DEFAULT = 0.5;
 /**
@@ -126,14 +165,12 @@ export function clampGlassTint(tint) {
     return typeof tint === 'number' && Number.isFinite(tint) ? Math.min(1, Math.max(0, tint)) : GLASS_TINT_DEFAULT;
 }
 /**
- * The tint curve. Clear (0) and regular (1) are the measured materials; between them every
- * parameter follows the tint in a straight line, except saturation: what stays linear is the
- * share of the backdrop's colour that reaches the eye, `(1 - veil) · saturate`, which is 1 for
- * clear glass and 0.64–0.73 for regular glass (FINDINGS §3), so saturation is derived from it
- * and the veil. At the default 0.5 the veil is 36–44 % (light small 43.5 %, light large 35.5 %,
- * dark small 37.5 %, dark large 36 %), saturation 1.27–1.52, half the regular shadow, half the
- * clear lift. `glass/material.dart` and the `--lab-glass-*` formulas in system.css and glass.css
- * follow the same curve.
+ * The tint curve. Clear (0) and regular (1) are the measured materials (iOS 27); between them every
+ * parameter follows the tint in a straight line, except saturation: what stays linear is
+ * `(1 - veil) · saturate`, which is 1 for clear glass and 0.565 (light) / 1.147 (dark) for regular
+ * glass, so saturation is derived from it and the veil. At the default 0.5 the veil is 26 % (light)
+ * / 2.5 % (dark) and the lift is halfway between clear and regular. `glass/material.dart` and the
+ * `--lab-glass-*` formulas in system.css and glass.css follow the same curve.
  */
 export function glassMaterial(tint, scheme, size) {
     const t = clampGlassTint(tint);
@@ -141,12 +178,12 @@ export function glassMaterial(tint, scheme, size) {
     const regularColour = (1 - regularVeil) * GLASS_SATURATE[scheme][size];
     const veil = t * regularVeil;
     const colour = 1 - t * (1 - regularColour);
+    const lift = GLASS_REGULAR_LIFT[scheme];
     return {
         veil,
         saturate: colour / (1 - veil),
-        gain: 1 + (GLASS_CLEAR.gain - 1) * (1 - t),
-        offset: GLASS_CLEAR.offset * (1 - t),
-        shadow: t,
+        gain: GLASS_CLEAR.gain + (lift.gain - GLASS_CLEAR.gain) * t,
+        offset: GLASS_CLEAR.offset + (lift.offset - GLASS_CLEAR.offset) * t,
     };
 }
 /**

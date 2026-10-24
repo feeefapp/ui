@@ -17,7 +17,8 @@ import {
 import { glassLightToward } from '../../src/glass/light'
 import { mergeWidth } from '../../src/glass/geometry'
 import { refractionAt, refractionScale } from '../../src/glass/refraction'
-import { edgeMask, glassBlur, glassBlurAt, glassEdgeTerms, glassMaterial, glassRim, glassSize, rimLayer } from '../../src/glass/material'
+import { edgeMask, glassBlur, glassBlurAt, glassEdgeTerms, glassHairline, glassMaterial, glassRim, glassSize, rimLayer } from '../../src/glass/material'
+import { hairlineBands } from '../../src/glass/hairline'
 import { SPRINGS, solveSpring, springCoefficients, rubberBand } from '../../src/physics/spring'
 import { glassStretch, pressedShape } from '../../src/glass/press'
 import { planGlassTransition } from '../../src/glass/transitions'
@@ -71,6 +72,21 @@ const fixture = {
   rimLayer: (['light', 'dark'] as const).flatMap((scheme) => [0, 0.5, 1].flatMap((tint) =>
     [-0.1, 0, 0.4, 0.8, 1.15].flatMap((depth) => [1, -0.6, 0].map((cosine) =>
       [depth, cosine, tint, scheme, rimLayer(depth, cosine, glassRim(tint, scheme))])))),
+  // iOS 27's hairline: strengths [tint, scheme, {ring, sliver}] and bands (loop counts, widest reach).
+  hairline: (['light', 'dark'] as const).flatMap((scheme) => [0, 0.5, 1].map((tint) => [tint, scheme, glassHairline(tint, scheme)])),
+  hairlineBands: [
+    { shapes: [{ x: 10, y: 10, width: 48, height: 48, radius: 24, cornerExponent: 2 }], spacing: 8 },
+    { shapes: [{ x: 10, y: 10, width: 160, height: 44, radius: 22, cornerExponent: 2 }], spacing: 8 },
+    { shapes: [{ x: 10, y: 10, width: 48, height: 48, radius: 24, cornerExponent: 2 }, { x: 60, y: 10, width: 48, height: 48, radius: 24, cornerExponent: 2 }], spacing: 16 },
+  ].map(({ shapes, spacing }) => {
+    const bands = hairlineBands(shapes, spacing)
+    const reach = (loops: [number, number][][]) => {
+      let most = 0
+      for (let i = 0; i + 1 < loops.length; i += 2) loops[i].forEach(([x, y], k) => { most = Math.max(most, Math.hypot(x - loops[i + 1][k][0], y - loops[i + 1][k][1])) })
+      return most
+    }
+    return { shapes, spacing, ringLoops: bands.ring.length, sliverLoops: bands.sliver.length, ringReach: reach(bands.ring), sliverReach: reach(bands.sliver) }
+  }),
   edgeMask: [-0.1, 0, 0.3, 0.7, 1].flatMap((depth) => [1, 0.5, 0].map((cosine) => [depth, cosine, edgeMask(depth, cosine)])),
   blurAt: [44, 120, 300].flatMap((side) => [0, 0.5, 1].flatMap((tint) => [false, true].map((on) => [side, tint, on, glassBlurAt(side, tint, on)]))),
   edgeTerms: (['light', 'dark'] as const).flatMap((scheme) => [0, 0.5, 1].flatMap((tint) => (['small', 'large'] as const).map((size) => {

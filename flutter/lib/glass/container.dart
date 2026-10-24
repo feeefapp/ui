@@ -11,6 +11,7 @@ import '../physics/motion_value.dart';
 import '../physics/spring.dart';
 import '../theme.dart';
 import 'geometry.dart';
+import 'hairline.dart';
 import 'light.dart';
 import 'material.dart';
 import 'member_bounds.dart';
@@ -431,6 +432,10 @@ class _GlassMaterial {
 
   /// The rim at this tint and brightness.
   GlassRim get rimLight => glassRim(tint, dark: dark);
+
+  /// The hairline's strengths at this tint and brightness.
+  ({double ring, double sliver}) get hairline =>
+      glassHairline(tint, dark: dark);
 }
 
 /// Shorter side of the smallest bubble in a cluster: the material and bend follow it.
@@ -487,11 +492,64 @@ class _GlassLayers extends StatelessWidget {
                       ),
               ),
             ),
+          // iOS 27's hairline outside each cluster: the backdrop minus a constant (plus-darker),
+          // clipped to the ring band and the side slivers (glassHairline, hairlineBands).
+          for (final path in scene.paths)
+            for (final sliver in const [false, true])
+              Positioned.fill(
+                child: ClipPath(
+                  clipper: _HairlineClipper(
+                    scene,
+                    scene.paths.indexOf(path),
+                    sliver: sliver,
+                  ),
+                  child: BackdropFilter(
+                    filter: ColorFilter.matrix(
+                      subtractMatrix(
+                        sliver
+                            ? material.hairline.sliver
+                            : material.hairline.ring,
+                      ),
+                    ),
+                    backdropGroupKey: scene.backdropKey,
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              ),
           Positioned.fill(child: paint),
         ],
       ),
     );
   }
+}
+
+/// Cluster [index]'s hairline band (the ring, or with [sliver] the side slivers), cut to its
+/// clip, cached per outline.
+class _HairlineClipper extends CustomClipper<Path> {
+  _HairlineClipper(this.scene, this.index, {required this.sliver})
+    : super(reclip: scene);
+  final _GlassScene scene;
+  final int index;
+  final bool sliver;
+
+  static final _bands =
+      Expando<({List<List<Offset>> ring, List<List<Offset>> sliver})>();
+
+  @override
+  Path getClip(Size size) {
+    if (index < 0 || index >= scene.paths.length) return Path();
+    final path = scene.paths[index];
+    final bands = _bands[path] ??= hairlineBands(path.shapes, scene.spacing);
+    final band = bandPath(sliver ? bands.sliver : bands.ring);
+    final clip = path.clip;
+    return clip == null
+        ? band
+        : Path.combine(PathOperation.intersect, band, Path()..addRect(clip));
+  }
+
+  @override
+  bool shouldReclip(_HairlineClipper old) =>
+      old.index != index || old.sliver != sliver || old.scene != scene;
 }
 
 /// The outline of cluster [index], cut to its clip, read while painting: a scroll moves the
@@ -517,7 +575,7 @@ class _GlassPainter extends CustomPainter {
   final _GlassMaterial material;
   final double dpr;
 
-  /// Each cluster's wide shadow (blurred, lighter under control-sized glass), cut at its clip.
+  /// Each cluster's faint shadow (iOS 27: y 8, std dev 7.5), cut at its clip.
   void _shadows(Canvas canvas, List<GlassPath> paths) {
     final c = material.colors;
     for (final p in paths) {
@@ -526,9 +584,7 @@ class _GlassPainter extends CustomPainter {
       canvas.drawPath(
         p.path.shift(const Offset(0, glassShadowDy)),
         Paint()
-          ..color = glassSize(_smallestSide(p)) == GlassSize.small
-              ? c.glassShadowSmall
-              : c.glassShadowColor
+          ..color = c.glassShadowColor
           ..maskFilter = const MaskFilter.blur(
             BlurStyle.normal,
             glassShadowBlur,
@@ -545,7 +601,7 @@ class _GlassPainter extends CustomPainter {
   bool _cachedShadows(Canvas canvas, List<GlassPath> paths, Rect region) {
     final c = material.colors;
     final key =
-        '${scene._key}|${c.glassShadowSmall.toARGB32()}|${c.glassShadowColor.toARGB32()}|$dpr';
+        '${scene._key}|${c.glassShadowColor.toARGB32()}|$dpr';
     final still = key == scene._shadowKey;
     scene._shadowKey = key;
     final cached = scene._shadowImage;

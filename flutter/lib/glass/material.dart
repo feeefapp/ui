@@ -44,15 +44,19 @@ double glassBlurAt(double side, double tint, {required bool blurOn}) {
   return glassClearBlur * (1 - t) + t * (blurOn ? glassBlur(side) : 0);
 }
 
-/// Saturation applied to the blurred backdrop before the veil, by brightness and size.
-double glassSaturate({required bool dark, required GlassSize size}) => dark
-    ? (size == GlassSize.small ? 2.9 : 2.4)
-    : (size == GlassSize.small ? 5.5 : 2.2);
+/// Saturation applied to the backdrop under the regular veil (iOS 27, the web kit's
+/// `GLASS_SATURATE`): the share of its colour that reaches the eye is 0.52 in light, 0.99 in dark.
+/// iOS 27 shows no size dependence, so [size] carries the same values.
+double glassSaturate({required bool dark, required GlassSize size}) =>
+    dark ? 1.207 : 1.177;
 
-/// Share of the theme surface laid over the backdrop, by brightness and size.
-double glassVeil({required bool dark, required GlassSize size}) => dark
-    ? (size == GlassSize.small ? 0.75 : 0.72)
-    : (size == GlassSize.small ? 0.87 : 0.71);
+/// Share of the theme surface laid over the backdrop by regular glass (iOS 27, `GLASS_VEIL`).
+double glassVeil({required bool dark, required GlassSize size}) =>
+    dark ? 0.05 : 0.52;
+
+/// Regular glass's own `gain · backdrop + offset` under its veil (`GLASS_REGULAR_LIFT`).
+({double gain, double offset}) glassRegularLift({required bool dark}) =>
+    dark ? (gain: 0.863, offset: 0.095) : (gain: 0.92, offset: 0.0);
 
 /// Rim light, the twin of the web kit's `glassRim` (research/liquid-glass/LIGHT-EDGES.md): a layer
 /// of white over the material at the inner edge. At depth `d` (px inward from the outline) and
@@ -131,9 +135,32 @@ double edgeMask(double depth, double cosine) {
   );
 }
 
-/// Shadow under the glass: [glassShadowDy] px down, blurred by [glassShadowBlur] (std dev).
-const double glassShadowDy = 7.5;
-const double glassShadowBlur = 19.5;
+/// Shadow under every glass, clear included (iOS 27): [glassShadowDy] px down, blurred by
+/// [glassShadowBlur] (std dev), black at the theme's `glassShadowColor` (2 % light, 4 % dark).
+const double glassShadowDy = 8;
+const double glassShadowBlur = 7.5;
+
+/// The dark hairline iOS 27 draws outside every glass shape (the web kit's `GLASS_HAIRLINE`): a
+/// ring [glassHairlineRingWidth] px wide, plus slivers where the shape moved
+/// [glassHairlineSliverShift] px left and right and shrunk by [glassHairlineSliverInset] px reaches
+/// past its outline. Both subtract from the backdrop (plus-darker), by [glassHairline].
+const double glassHairlineRingWidth = 0.5;
+const double glassHairlineSliverShift = 1.25;
+const double glassHairlineSliverInset = 0.75;
+
+/// The hairline's ring and sliver strengths (0–1 subtracted) at one tint and brightness: clear
+/// light 0.2 / 0.184, regular light 0.09 / 0.184, dark 0.349 / 0.349.
+({double ring, double sliver}) glassHairline(double tint, {required bool dark}) {
+  final t = clampGlassTint(tint);
+  if (dark) return (ring: 0.349, sliver: 0.349);
+  return (ring: 0.2 + (0.09 - 0.2) * t, sliver: 0.184);
+}
+
+/// `x - strength` (clamped at 0) as a `ColorFilter.matrix`: plus-darker with a constant.
+List<double> subtractMatrix(double strength) {
+  final bias = -255.0 * math.max(0.0, strength);
+  return [1, 0, 0, 0, bias, 0, 1, 0, 0, bias, 0, 0, 1, 0, bias, 0, 0, 0, 1, 0];
+}
 
 /// The CSS `saturate()` matrix, for `ColorFilter.matrix`.
 List<double> saturateMatrix(double s) => [
@@ -167,14 +194,12 @@ typedef GlassMaterial = ({
   double saturate,
   double gain,
   double offset,
-  double shadow,
 });
 
 /// The tint curve, the twin of `glassMaterial` in `@feeef.dev/ui/glass/material`. Clear (0) and
-/// regular (1) are the measured materials; between them every parameter follows the tint in a
-/// straight line, except saturation: the share of the backdrop's colour that reaches the eye,
-/// `(1 - veil) · saturate`, is what stays linear (1 for clear glass, 0.64–0.73 for regular), so
-/// saturation is derived from it and the veil. At the default 0.5 the veil is 36–44 %.
+/// regular (1) are the measured materials (iOS 27); between them every parameter follows the tint
+/// in a straight line, except saturation: `(1 - veil) · saturate` stays linear (1 for clear glass,
+/// 0.565 light / 1.147 dark for regular), so saturation is derived from it and the veil.
 GlassMaterial glassMaterial(
   double tint, {
   required bool dark,
@@ -186,12 +211,12 @@ GlassMaterial glassMaterial(
       (1 - regularVeil) * glassSaturate(dark: dark, size: size);
   final veil = t * regularVeil;
   final colour = 1 - t * (1 - regularColour);
+  final lift = glassRegularLift(dark: dark);
   return (
     veil: veil,
     saturate: colour / (1 - veil),
-    gain: 1 + (glassClearGain - 1) * (1 - t),
-    offset: glassClearOffset * (1 - t),
-    shadow: t,
+    gain: glassClearGain + (lift.gain - glassClearGain) * t,
+    offset: glassClearOffset + (lift.offset - glassClearOffset) * t,
   );
 }
 
