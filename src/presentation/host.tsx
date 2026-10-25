@@ -87,6 +87,8 @@ export const PresentationHost = React.forwardRef<HTMLElement, PresentationHostPr
   const returnTo = React.useRef(returnFocusRef)
   returnTo.current = returnFocusRef
   const opener = React.useRef<HTMLElement | null>(null)
+  /** What had focus before the surface opened, kept across an effect that runs again. */
+  const giveBack = React.useRef<HTMLElement | null>(null)
   React.useImperativeHandle(ref, () => host.current!, [])
   const inline = container !== undefined
 
@@ -100,6 +102,7 @@ export const PresentationHost = React.forwardRef<HTMLElement, PresentationHostPr
     // TopLayerEntry already showed the dialog and remembered what had focus before it.
     const previous = opener.current ?? (autofocused ? null : active)
     opener.current = null
+    if (previous && !element.contains(previous)) giveBack.current = previous
     if (element instanceof HTMLDialogElement && !element.open) {
       if (modal) element.showModal()
       else element.show()
@@ -108,11 +111,16 @@ export const PresentationHost = React.forwardRef<HTMLElement, PresentationHostPr
     if (first) first.focus({ preventScroll: true })
     else if (inline && modal) element.focus({ preventScroll: true })
     return () => {
-      if (element instanceof HTMLDialogElement && element.open) element.close()
-      // Leave the top layer first: nothing outside a modal dialog can take focus.
-      const preferred = returnTo.current?.current
-      const target = preferred?.isConnected ? preferred : previous
-      if (target?.isConnected) target.focus({ preventScroll: true })
+      // React can run this effect again at once (Strict Mode, a new container): closing and
+      // handing focus back then would blur the field inside. Only a host that really left does it.
+      queueMicrotask(() => {
+        if (element.isConnected) return
+        // Leave the top layer first: nothing outside a modal dialog can take focus.
+        if (element instanceof HTMLDialogElement && element.open) element.close()
+        const preferred = returnTo.current?.current
+        const target = preferred?.isConnected ? preferred : giveBack.current
+        if (target?.isConnected) target.focus({ preventScroll: true })
+      })
     }
     // A container that arrives later (a ref set after the first render) mounts the host then.
   }, [container])
