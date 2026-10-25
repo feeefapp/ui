@@ -140,8 +140,10 @@ html[data-lab-theme] .lab-presentation-title {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  inline-size: min(var(--lab-modal-width), calc(100% - 4 * var(--lab-shell-gap, 8px)));
-  max-block-size: calc(100% - 4 * var(--lab-shell-gap, 8px));
+  /* Sized from the host (a size container): a percentage would measure the grid row, which is as
+     tall as the content, so a hugging modal could grow past the screen. */
+  inline-size: min(var(--lab-modal-width), calc(100cqi - 4 * var(--lab-shell-gap, 8px)));
+  max-block-size: calc(100cqb - 4 * var(--lab-shell-gap, 8px));
   overflow: clip;
   border: 1px solid var(--lab-line);
   border-radius: var(--lab-radius-panel);
@@ -151,10 +153,10 @@ html[data-lab-theme] .lab-presentation-title {
   transform-origin: 50% 50%;
 }
 .lab-modal--wide {
-  inline-size: min(var(--lab-modal-wide-width), calc(100% - 4 * var(--lab-shell-gap, 8px)));
+  inline-size: min(var(--lab-modal-wide-width), calc(100cqi - 4 * var(--lab-shell-gap, 8px)));
 }
 .lab-modal[data-fill] {
-  block-size: min(var(--lab-modal-fill-height), calc(100% - 4 * var(--lab-shell-gap, 8px)));
+  block-size: min(var(--lab-modal-fill-height), calc(100cqb - 4 * var(--lab-shell-gap, 8px)));
 }
 /* Firefox may clear the surface radius for SVG corner paint; the scroll boundary stays rounded. */
 :is(.lab-modal, .lab-pane) .lab-presentation-scroll {
@@ -168,8 +170,8 @@ html[data-lab-theme] .lab-presentation-title {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  inline-size: min(var(--lab-alert-width), calc(100% - 2 * var(--lab-alert-inset)));
-  max-block-size: calc(100% - 2 * var(--lab-alert-inset));
+  inline-size: min(var(--lab-alert-width), calc(100cqi - 2 * var(--lab-alert-inset)));
+  max-block-size: calc(100cqb - 2 * var(--lab-alert-inset));
   overflow-y: auto;
   overscroll-behavior: contain;
   border-radius: var(--lab-alert-radius);
