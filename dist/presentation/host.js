@@ -51,8 +51,12 @@ export const PresentationHost = React.forwardRef(function PresentationHost({ kin
         const element = host.current;
         if (!element)
             return;
+        // A field that focused itself while mounting (React's `autoFocus`) keeps focus: showing the
+        // dialog would hand it to the first control, and the blur would mark the field as visited.
+        const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        const autofocused = active && element.contains(active) ? active : null;
         // TopLayerEntry already showed the dialog and remembered what had focus before it.
-        const previous = opener.current ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+        const previous = opener.current ?? (autofocused ? null : active);
         opener.current = null;
         if (element instanceof HTMLDialogElement && !element.open) {
             if (modal)
@@ -60,7 +64,7 @@ export const PresentationHost = React.forwardRef(function PresentationHost({ kin
             else
                 element.show();
         }
-        const first = initialFocusRef?.current;
+        const first = initialFocusRef?.current ?? autofocused;
         if (first)
             first.focus({ preventScroll: true });
         else if (inline && modal)
