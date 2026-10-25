@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:feeef_ui/feeef_ui.dart';
 import 'package:feeef_ui/glass/refraction_filter.dart';
+import 'package:flutter/rendering.dart' show BackdropFilterLayer;
 import 'package:flutter/widgets.dart' hide RadioGroup;
 import 'package:flutter_test/flutter_test.dart';
 
@@ -46,7 +47,7 @@ void main() {
     skip: !GlassRefraction.supported,
   );
 
-  testWidgets('control-sized glass keeps its painted rim and never refracts', (
+  testWidgets('toolbar glass refracts from where it actually sits', (
     tester,
   ) async {
     await tester.runAsync(() async {
@@ -73,6 +74,20 @@ void main() {
     );
     await tester.pumpAndSettle();
     final root = tester.element(find.byType(GlassScope));
-    expect(GlassRefraction.debugOriginsOf(root), isEmpty);
+    final origins = GlassRefraction.debugOriginsOf(root);
+    expect(origins, isNotEmpty);
+    for (final origin in origins) {
+      expect(origin.painted, origin.actual);
+    }
+    // The bend is its own plain shader pass: composed with the blur, Impeller may count its
+    // fragments from the clip's corner and draw a second, offset rim inside the real one.
+    final shaders = [
+      for (final layer in tester.layers.whereType<BackdropFilterLayer>())
+        if (layer.filter.toString().contains('shader')) layer.filter.toString(),
+    ];
+    expect(shaders, isNotEmpty);
+    for (final filter in shaders) {
+      expect(filter, isNot(contains('compose')));
+    }
   }, skip: !GlassRefraction.supported);
 }

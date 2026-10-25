@@ -177,6 +177,7 @@ class _RenderRefraction extends RenderBox {
   _RenderRefraction(this._shader);
   final ui.FragmentShader _shader;
   _RefractionBackdrop? _config;
+  final _base = LayerHandle<BackdropFilterLayer>();
   final _layer = LayerHandle<BackdropFilterLayer>();
 
   void update(_RefractionBackdrop config) {
@@ -187,8 +188,19 @@ class _RenderRefraction extends RenderBox {
   /// The origin the shader was last given, physical px.
   Offset? _painted;
 
-  /// Where the glass's (0, 0) lies on screen now, physical px.
-  Offset _origin() => localToGlobal(Offset.zero) * _config!.dpr;
+  /// Where the glass's (0, 0) lies in the surface the bend pass renders into, physical px: the
+  /// window, or the texture of an enclosing image filter (Android's overscroll stretch wraps a
+  /// scroll view in one while you pull), whose corner FlutterFragCoord then counts from.
+  Offset _origin() =>
+      localToGlobal(Offset.zero, ancestor: _filterSubpass()) * _config!.dpr;
+
+  RenderObject? _filterSubpass() {
+    for (var node = parent; node != null; node = node.parent) {
+      // ignore: invalid_use_of_protected_member
+      if (node.layer is ImageFilterLayer) return node;
+    }
+    return null;
+  }
 
   // The shader needs the glass's place on screen, but an ancestor can move it without repainting
   // it (a route sliding in, a page transform, a scroll view around a repaint boundary). After each
@@ -269,12 +281,15 @@ class _RenderRefraction extends RenderBox {
     set(config.light.dy);
     set(config.edge.k1);
     set(config.edge.k3);
-    final bend = ui.ImageFilter.shader(_shader);
+    // Two passes, never one composed filter: blur and colour first (sharing the container's
+    // backdrop read), then the bend alone, which reads that result. Under a composed filter
+    // Impeller may crop the shader's input to the clip and count FlutterFragCoord from the
+    // crop's corner, depending on the engine; a plain shader pass always counts in the surface
+    // frame, which is what [_origin] measures.
     final colour = ColorFilter.matrix(config.colour);
-    final filter = ui.ImageFilter.compose(
-      outer: bend,
+    _base.layer = (_base.layer ?? BackdropFilterLayer())
       // Without blur the colour reads the backdrop itself: no blur stage at all.
-      inner: config.blur > 0
+      ..filter = config.blur > 0
           ? ui.ImageFilter.compose(
               outer: colour,
               inner: ui.ImageFilter.blur(
@@ -282,16 +297,18 @@ class _RenderRefraction extends RenderBox {
                 sigmaY: config.blur,
               ),
             )
-          : colour,
-    );
-    _layer.layer = (_layer.layer ?? BackdropFilterLayer())
-      ..filter = filter
+          : colour
       ..backdropKey = config.backdropKey;
+    context.pushLayer(_base.layer!, (context, offset) {}, offset);
+    // No shared key: the bend must see the blurred glass beneath it, not the page.
+    _layer.layer = (_layer.layer ?? BackdropFilterLayer())
+      ..filter = ui.ImageFilter.shader(_shader);
     context.pushLayer(_layer.layer!, (context, offset) {}, offset);
   }
 
   @override
   void dispose() {
+    _base.layer = null;
     _layer.layer = null;
     _shader.dispose();
     super.dispose();

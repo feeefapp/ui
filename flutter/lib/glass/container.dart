@@ -497,12 +497,7 @@ class _GlassLayers extends StatelessWidget {
             Positioned.fill(
               child: ClipPath(
                 clipper: _PathClipper(scene, scene.paths.indexOf(path)),
-                // Control-sized glass keeps the painted rim only: the bend needs the glass's place
-                // in Impeller's backdrop texture, which an enclosing clip or layer shifts, and on a
-                // button it reads as a second, offset outline rather than a lens.
-                child:
-                    refract &&
-                        glassSize(_materialSide(scene, path)) == GlassSize.large
+                child: refract
                     ? GlassRefraction(
                         path: path,
                         spacing: scene.spacing,
