@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 import 'geometry.dart';
@@ -59,6 +60,28 @@ class GlassRefraction extends StatefulWidget {
   /// Whether this engine can run shaders as backdrop filters (Impeller only).
   static bool get supported =>
       !kIsWeb && ui.ImageFilter.isShaderFilterSupported;
+
+  /// Where each refracting backdrop under [root] last told its shader the glass sits (physical
+  /// px), next to where it sits now.
+  @visibleForTesting
+  static List<({Offset painted, Offset actual})> debugOriginsOf(
+    BuildContext root,
+  ) {
+    final found = <({Offset painted, Offset actual})>[];
+    void visit(RenderObject object) {
+      if (object is _RenderRefraction && object._painted != null) {
+        found.add((painted: object._painted!, actual: object._origin()));
+      }
+      object.visitChildren(visit);
+    }
+
+    root.findRenderObject()?.visitChildren(visit);
+    return found;
+  }
+
+  /// Uses [program] as the loaded shader (a package's own tests load it by its unprefixed path).
+  @visibleForTesting
+  static set debugProgram(ui.FragmentProgram program) => _loaded = program;
 
   static Future<ui.FragmentProgram>? _program;
   static ui.FragmentProgram? _loaded;
@@ -161,6 +184,34 @@ class _RenderRefraction extends RenderBox {
     markNeedsPaint();
   }
 
+  /// The origin the shader was last given, physical px.
+  Offset? _painted;
+
+  /// Where the glass's (0, 0) lies on screen now, physical px.
+  Offset _origin() => localToGlobal(Offset.zero) * _config!.dpr;
+
+  // The shader needs the glass's place on screen, but an ancestor can move it without repainting
+  // it (a route sliding in, a page transform, a scroll view around a repaint boundary). After each
+  // frame we check, and repaint once if it moved; otherwise the rim refracts where the glass was.
+  bool _watching = false;
+
+  void _watch() {
+    if (_watching || !attached) return;
+    _watching = true;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _watching = false;
+      if (!attached || _config == null) return;
+      if (_painted != null && _origin() != _painted) markNeedsPaint();
+      _watch();
+    });
+  }
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _watch();
+  }
+
   @override
   bool get sizedByParent => true;
 
@@ -181,7 +232,7 @@ class _RenderRefraction extends RenderBox {
     final scale = refractionScale(side);
     final bezel = math.min(glassBezel * scale, side / 2);
     // The backdrop texture is in physical pixels of the layer the filter paints into.
-    final origin = localToGlobal(Offset.zero) * config.dpr;
+    final origin = _painted = _origin();
     final blends = <double>[
       for (var i = 0; i < shapes.length; i++)
         i == 0
