@@ -1,5 +1,5 @@
 import type { GlassMemberOptions } from './context.js';
-/** How far (px) the material may reach past the container, for overshoot and growing bubbles. */
+/** How far (px) a member may reach past the container and still be drawn (overshoot, growing bubbles). */
 export declare const GLASS_MARGIN = 32;
 /** True when `animation` is running and changes geometry (CSS transition, keyframes or WAAPI). */
 export declare function movesGeometry(animation: Animation): boolean;

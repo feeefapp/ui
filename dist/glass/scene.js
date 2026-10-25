@@ -13,7 +13,7 @@ import { GLASS_RIM_MAX_WIDTH, GLASS_SHADOW, glassBlurAt, glassEdgeTerms, glassHa
 import { bandPath, hairlineBands } from './hairline.js';
 import { GLASS_CONTENT_FOLLOW, GLASS_GLOW_START, GLASS_PRESS_SCALE, glassGlowRadius, glassLayoutRect, glassStretch, pressedShape } from './press.js';
 import { cornerFit, cssCornerRadius, cssCornerShape, trueCornerRadius } from '../brand/corner-fit.js';
-/** How far (px) the material may reach past the container, for overshoot and growing bubbles. */
+/** How far (px) a member may reach past the container and still be drawn (overshoot, growing bubbles). */
 export const GLASS_MARGIN = 32;
 const SPRING = SPRINGS.snappy;
 const SVG = 'http://www.w3.org/2000/svg';
@@ -339,7 +339,7 @@ export class GlassScene {
         if (this.adaptive && paths.length && typeof document.elementsFromPoint === 'function') {
             const frame = this.frame();
             const tones = paths.map((path) => {
-                const { x, y } = toScreenPoint(frame, path.bounds.x - GLASS_MARGIN + path.bounds.width / 2, path.bounds.y - GLASS_MARGIN + path.bounds.height / 2);
+                const { x, y } = toScreenPoint(frame, path.bounds.x + path.bounds.width / 2, path.bounds.y + path.bounds.height / 2);
                 const samples = document
                     .elementsFromPoint(x, y)
                     .filter((element) => !this.host.contains(element) && !element.closest('[data-glass-container]'))
@@ -754,7 +754,7 @@ export class GlassScene {
         const clips = [];
         for (const [id, shape] of this.shapes) {
             visuals.push({ ...shape.visual(), id });
-            clips.push(shape.clip && { ...shape.clip, x: shape.clip.x + GLASS_MARGIN, y: shape.clip.y + GLASS_MARGIN });
+            clips.push(shape.clip);
             const member = this.members.get(id);
             if (!member || shape.leaving || !shape.layout)
                 continue;
@@ -773,8 +773,7 @@ export class GlassScene {
             shape.contentScale = Math.abs(press - 1) < 0.001 ? 1 : press;
             setStyleIfChanged(member.element.style, 'scale', shape.contentScale === 1 ? '' : String(shape.contentScale));
         }
-        const m = GLASS_MARGIN;
-        const placed = visuals.map((v) => ({ ...v, x: v.x + m, y: v.y + m }));
+        const placed = visuals;
         const key = `${this.cornerShape}|${this.spacing}|${placed.map((v) => `${v.x.toFixed(1)},${v.y.toFixed(1)},${v.width.toFixed(1)},${v.height.toFixed(1)},${v.radius.toFixed(1)}`).join(';')}|${clips.map((c) => (c ? `${c.x.toFixed(1)},${c.y.toFixed(1)},${c.width.toFixed(1)},${c.height.toFixed(1)}` : '')).join(';')}`;
         if (key !== this.cache.key)
             this.cache = { key, paths: clippedGlassPaths(placed, clips, this.spacing) };
@@ -783,7 +782,7 @@ export class GlassScene {
         const lights = paths.map((p) => this.lightFor(p.bounds, frame));
         const glow = this.glow;
         this.surfaceGrey = input.paint.surface;
-        renderPaint(this.paint, paths, lights, this.uid, this.spacing, this.highlightWidth, this.highlightStrength, this.highlightProfile, glassRim(this.tint, this.scheme()), input.paint, glow ? { x: glow.x + m, y: glow.y + m, radius: glow.radius.get(), opacity: glow.opacity.get() } : null);
+        renderPaint(this.paint, paths, lights, this.uid, this.spacing, this.highlightWidth, this.highlightStrength, this.highlightProfile, glassRim(this.tint, this.scheme()), input.paint, glow ? { x: glow.x, y: glow.y, radius: glow.radius.get(), opacity: glow.opacity.get() } : null);
         // iOS 27 casts the faint shadow under clear glass too.
         renderShadow(this.shadow, paths, this.uid);
         if (!this.host.hasAttribute('data-glass-ready'))
@@ -924,7 +923,7 @@ export class GlassScene {
             return;
         const x = Number.parseFloat(piece.style.left) || 0;
         const y = Number.parseFloat(piece.style.top) || 0;
-        const placement = elementImagePlacement({ ...box, x: box.x + GLASS_MARGIN, y: box.y + GLASS_MARGIN }, { x, y, width: Number.parseFloat(piece.style.width) || 0, height: Number.parseFloat(piece.style.height) || 0 });
+        const placement = elementImagePlacement(box, { x, y, width: Number.parseFloat(piece.style.width) || 0, height: Number.parseFloat(piece.style.height) || 0 });
         // Only real changes: any write re-renders the live element image.
         const size = `${placement.width}px ${placement.height}px`;
         const position = `${placement.x}px ${placement.y}px`;
@@ -1067,7 +1066,7 @@ export class GlassScene {
     lightFor(bounds, frame) {
         if (!this.followPointer || this.reduceMotion || !this.pointer)
             return DEFAULT_GLASS_LIGHT;
-        const centre = toScreenPoint(frame, bounds.x - GLASS_MARGIN + bounds.width / 2, bounds.y - GLASS_MARGIN + bounds.height / 2);
+        const centre = toScreenPoint(frame, bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
         return glassLightToward(centre, this.pointer);
     }
     /** True when `element`, or an ancestor below the container, runs a geometric animation. */
