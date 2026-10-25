@@ -17,6 +17,7 @@ import './composer.css';
 export { composerExpanded, composerSendState } from './composer-model.js';
 /** Controls whose menu, popover or panel is open keep the second row in place (`pinned`). */
 const PINNED = '[data-state="open"], [aria-expanded="true"], [aria-pressed="true"]';
+const coarsePointer = () => typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches === true;
 /**
  * Placeholder that fades in word by word. Decorative (`aria-hidden`); label the field separately.
  * Its words are inline blocks, so it takes the direction of its own text (`dir="auto"`): an English
@@ -28,7 +29,7 @@ export function ComposerHint({ text }) {
 /**
  * The composer's text field: an unpainted multiline input in the control font that grows from one
  * line to `maxLines`, then scrolls, with the animated `ComposerHint` while empty. Enter calls
- * `onSubmit`; Shift+Enter breaks the line. Place it in `ComposerBar`'s `field` slot.
+ * `onSubmit`; Shift+Enter breaks the line (on touch keyboards Return always breaks it). Place it in `ComposerBar`'s `field` slot.
  */
 export const ComposerField = React.forwardRef(function ComposerField({ value, onValueChange, label, placeholder, onSubmit, maxLines = 6, onKeyDown, className, ...props }, ref) {
     return (_jsxs("div", { className: "lab-composer-field", children: [!value && placeholder && _jsx(ComposerHint, { text: placeholder }), _jsx(RawInput, { ...props, ref: ref, multiline: true, minLines: 1, maxLines: maxLines, className: cn('lab-composer-input', className), dir: "auto", rows: 1, value: value, "aria-label": label, onValueChange: onValueChange, onKeyDown: (event) => {
@@ -36,6 +37,9 @@ export const ComposerField = React.forwardRef(function ComposerField({ value, on
                     if (event.defaultPrevented)
                         return;
                     if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+                        // Touch keyboards have no Shift+Enter: Return adds a line there and send sends.
+                        if (coarsePointer())
+                            return;
                         event.preventDefault();
                         onSubmit?.();
                     }

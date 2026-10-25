@@ -20,7 +20,7 @@ export type ComposerFieldProps = Omit<React.TextareaHTMLAttributes<HTMLTextAreaE
     label: string;
     /** Animated hint shown while the field is empty. */
     placeholder?: string;
-    /** Called on Enter (not Shift+Enter, not while an input method composes). The owner decides whether it sends. */
+    /** Called on Enter (not Shift+Enter, not while an input method composes, not on touch keyboards). The owner decides whether it sends. */
     onSubmit?(): void;
     /** Lines the field grows to before it scrolls. Default 6. */
     maxLines?: number;
@@ -28,7 +28,7 @@ export type ComposerFieldProps = Omit<React.TextareaHTMLAttributes<HTMLTextAreaE
 /**
  * The composer's text field: an unpainted multiline input in the control font that grows from one
  * line to `maxLines`, then scrolls, with the animated `ComposerHint` while empty. Enter calls
- * `onSubmit`; Shift+Enter breaks the line. Place it in `ComposerBar`'s `field` slot.
+ * `onSubmit`; Shift+Enter breaks the line (on touch keyboards Return always breaks it). Place it in `ComposerBar`'s `field` slot.
  */
 export declare const ComposerField: React.ForwardRefExoticComponent<Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, "value" | "onChange" | "onSubmit" | "placeholder" | "rows"> & {
     /** The text (controlled). */
@@ -39,7 +39,7 @@ export declare const ComposerField: React.ForwardRefExoticComponent<Omit<React.T
     label: string;
     /** Animated hint shown while the field is empty. */
     placeholder?: string;
-    /** Called on Enter (not Shift+Enter, not while an input method composes). The owner decides whether it sends. */
+    /** Called on Enter (not Shift+Enter, not while an input method composes, not on touch keyboards). The owner decides whether it sends. */
     onSubmit?(): void;
     /** Lines the field grows to before it scrolls. Default 6. */
     maxLines?: number;

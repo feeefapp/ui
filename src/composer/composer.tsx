@@ -21,6 +21,9 @@ export type { ComposerSendState } from './composer-model'
 /** Controls whose menu, popover or panel is open keep the second row in place (`pinned`). */
 const PINNED = '[data-state="open"], [aria-expanded="true"], [aria-pressed="true"]'
 
+const coarsePointer = () =>
+  typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches === true
+
 /**
  * Placeholder that fades in word by word. Decorative (`aria-hidden`); label the field separately.
  * Its words are inline blocks, so it takes the direction of its own text (`dir="auto"`): an English
@@ -51,7 +54,7 @@ export type ComposerFieldProps = Omit<
   label: string
   /** Animated hint shown while the field is empty. */
   placeholder?: string
-  /** Called on Enter (not Shift+Enter, not while an input method composes). The owner decides whether it sends. */
+  /** Called on Enter (not Shift+Enter, not while an input method composes, not on touch keyboards). The owner decides whether it sends. */
   onSubmit?(): void
   /** Lines the field grows to before it scrolls. Default 6. */
   maxLines?: number
@@ -60,7 +63,7 @@ export type ComposerFieldProps = Omit<
 /**
  * The composer's text field: an unpainted multiline input in the control font that grows from one
  * line to `maxLines`, then scrolls, with the animated `ComposerHint` while empty. Enter calls
- * `onSubmit`; Shift+Enter breaks the line. Place it in `ComposerBar`'s `field` slot.
+ * `onSubmit`; Shift+Enter breaks the line (on touch keyboards Return always breaks it). Place it in `ComposerBar`'s `field` slot.
  */
 export const ComposerField = React.forwardRef<HTMLTextAreaElement, ComposerFieldProps>(function ComposerField(
   { value, onValueChange, label, placeholder, onSubmit, maxLines = 6, onKeyDown, className, ...props },
@@ -85,6 +88,8 @@ export const ComposerField = React.forwardRef<HTMLTextAreaElement, ComposerField
           onKeyDown?.(event)
           if (event.defaultPrevented) return
           if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+            // Touch keyboards have no Shift+Enter: Return adds a line there and send sends.
+            if (coarsePointer()) return
             event.preventDefault()
             onSubmit?.()
           }
