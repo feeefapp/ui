@@ -100,17 +100,22 @@ class _PromptSettingsPanelState extends State<PromptSettingsPanel> {
                   onClose: widget.onClose,
                 ),
               ),
-              child: SizeReporter(
-                onSize: (size) {
-                  if (mounted && size.height != _content) {
-                    setState(() => _content = size.height);
-                  }
-                },
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  spacing: 14,
-                  children: widget.children,
+              // The scroll area stretches its child to the viewport: measure the controls'
+              // own height so the panel can shrink to them.
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: SizeReporter(
+                  onSize: (size) {
+                    if (mounted && size.height != _content) {
+                      setState(() => _content = size.height);
+                    }
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    spacing: 14,
+                    children: widget.children,
+                  ),
                 ),
               ),
             ),

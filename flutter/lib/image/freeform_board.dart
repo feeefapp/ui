@@ -280,7 +280,14 @@ class _FreeformBoardState extends State<FreeformBoard>
   ({double w, double h}) get _viewport => (w: _size.width, h: _size.height);
 
   FrameView _fitted(FreeformCard card) {
-    final insets = widget.insets;
+    // The zoom rail floats 14px inside the right inset; a fitted card stays clear of it.
+    final rail = 14 + ThemeProvider.of(context).sizes.toolbarItem + 8;
+    final insets = (
+      top: widget.insets.top,
+      right: widget.insets.right + rail,
+      bottom: widget.insets.bottom,
+      left: widget.insets.left,
+    );
     final fitted = fitView(
       (x: card.x, y: card.y, w: card.w, h: card.h),
       _viewport,

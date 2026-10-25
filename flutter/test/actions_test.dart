@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:feeef_ui/feeef_ui.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' hide Action, RadioGroup;
 import 'package:flutter_test/flutter_test.dart';
 
@@ -132,4 +133,79 @@ void main() {
     expect(reported, isA<StateError>());
     expect(find.text('Sync could not complete. Try again.'), findsOneWidget);
   }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+
+  testWidgets(
+    'an inserted action as wide as its neighbour is measured and shown',
+    (tester) async {
+      CommandAction icon(String id) => CommandAction(
+        id: id,
+        label: id,
+        icon: const LucidePlus(),
+        display: ActionDisplay.icon,
+        onAction: () {},
+      );
+      final actions = ValueNotifier<List<Action>>([icon('undo'), icon('redo')]);
+      width.value = 600;
+      await tester.pumpWidget(liveBar(actions));
+      await settle(tester);
+      actions.value = [icon('first'), icon('undo'), icon('redo')];
+      await settle(tester);
+      // Hidden controls stay hit-testable (Visibility.maintain): check the bar is shown.
+      final shown = tester.widget<Visibility>(
+        find.descendant(
+          of: find.byType(ActionsBar),
+          matching: find.byType(Visibility),
+        ),
+      );
+      expect(shown.visible, isTrue);
+    },
+  );
+
+  testWidgets('an action that grows refits without overflowing', (
+    tester,
+  ) async {
+    List<Action> dock(String primary) => [
+      CommandAction(id: 'add', label: 'Add block', onAction: () {}),
+      CommandAction(
+        id: 'go',
+        label: primary,
+        variant: ButtonVariant.filled,
+        priority: 10,
+        onAction: () {},
+      ),
+    ];
+    final actions = ValueNotifier<List<Action>>(dock('Next'));
+    width.value = 330;
+    await tester.pumpWidget(liveBar(actions));
+    await settle(tester);
+    expect(find.text('Next'), findsWidgets);
+    actions.value = dock('Generate identity');
+    await settle(tester);
+    // Refitted on the next frame (here into More); the stale frame clipped instead of erroring.
+    expect(tester.takeException(), isNull);
+    expect(find.bySemanticsLabel('More actions'), findsOneWidget);
+  });
 }
+
+/// [bar] whose actions change after the first pump.
+Widget liveBar(ValueListenable<List<Action>> actions) => host(
+  Overlay(
+    initialEntries: [
+      OverlayEntry(
+        builder: (context) => Center(
+          child: ValueListenableBuilder<double>(
+            valueListenable: width,
+            builder: (context, w, _) => SizedBox(
+              width: w,
+              child: ValueListenableBuilder<List<Action>>(
+                valueListenable: actions,
+                builder: (context, list, _) =>
+                    ActionsBar(label: 'Order actions', actions: list),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ],
+  ),
+);

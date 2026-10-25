@@ -145,12 +145,16 @@ class _DockState extends State<Dock> {
             glassMotion: GlassMotion.follow,
             radius: theme.sizes.radiusPanel,
             padding: const EdgeInsets.all(4),
-            child: AnimatedSize(
-              duration: reduced ? Duration.zero : MotionTokens.durationNormal,
-              curve: MotionTokens.ease,
-              alignment: Alignment.center,
-              child: row,
-            ),
+            // A zero-length AnimatedSize re-dirties itself during its own layout: reduced
+            // motion just resizes.
+            child: reduced
+                ? row
+                : AnimatedSize(
+                    duration: MotionTokens.durationNormal,
+                    curve: MotionTokens.ease,
+                    alignment: Alignment.center,
+                    child: row,
+                  ),
           ),
         );
         return GlassScope(

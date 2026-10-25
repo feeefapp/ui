@@ -90,8 +90,12 @@ class _ActionsBarState extends State<ActionsBar> {
 
   GlobalKey _keyFor(String id) => _entryKeys.putIfAbsent(id, GlobalKey.new);
 
+  /// Stopping the motions in [dispose] notifies their listeners; they must not rebuild.
+  bool _disposing = false;
+
   @override
   void dispose() {
+    _disposing = true;
     for (final m in _motion.values) {
       m.dispose();
     }
@@ -180,10 +184,10 @@ class _ActionsBarState extends State<ActionsBar> {
           final to = more != null ? more.center - before.center : Offset.zero;
           ghost.to = to;
           ghost.motion.subscribe((_) {
-            if (mounted) setState(() {});
+            if (mounted && !_disposing) setState(() {});
           });
           ghost.motion.animateTo(1, spring: Springs.snappy).then((_) {
-            if (mounted) setState(() => _ghosts.remove(id));
+            if (mounted && !_disposing) setState(() => _ghosts.remove(id));
           });
         }
       }
@@ -203,7 +207,7 @@ class _ActionsBarState extends State<ActionsBar> {
   _EntryMotion _motionFor(String id) => _motion.putIfAbsent(id, () {
     final m = _EntryMotion();
     m.listenable.addListener(() {
-      if (mounted) setState(() {});
+      if (mounted && !_disposing) setState(() {});
     });
     return m;
   });
@@ -337,8 +341,11 @@ class _ActionsBarState extends State<ActionsBar> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                // Keyed: an inserted action gets its own reporter even when
+                                // it is as wide as the one whose slot it takes.
                                 for (final action in widget.actions)
                                   SizeReporter(
+                                    key: ValueKey(action.id),
                                     onSize: (size) =>
                                         _measured(action.id, size),
                                     child: _ActionControl(
@@ -375,7 +382,17 @@ class _ActionsBarState extends State<ActionsBar> {
                             alignment: widget.align == ActionsAlign.end
                                 ? AlignmentDirectional.centerEnd
                                 : AlignmentDirectional.centerStart,
-                            child: row,
+                            // An action that grows (a loader, a longer label) is laid out one
+                            // frame before it is measured again and refitted: that frame clips
+                            // instead of overflowing.
+                            child: UnconstrainedBox(
+                              constrainedAxis: Axis.vertical,
+                              clipBehavior: Clip.hardEdge,
+                              alignment: widget.align == ActionsAlign.end
+                                  ? AlignmentDirectional.centerEnd
+                                  : AlignmentDirectional.centerStart,
+                              child: row,
+                            ),
                           ),
                         ),
                       ),
