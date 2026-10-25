@@ -68,7 +68,7 @@ export function Root({ children }: { children: React.ReactNode }) {
             ],
             [
               <C>glass</C>,
-              <><C>liquid</C> (default), <C>still</C> or <C>solid</C></>,
+              <><C>liquid</C> (default), <C>transparent</C> or <C>solid</C></>,
               <>Floating chrome. Liquid glass merges, lights up toward the pointer and responds to presses; still glass keeps the material and the morphs with a fixed light; solid paints opaque surfaces, for dense tools. See <Link to="/components/glass-container">Glass container</Link>.</>,
             ],
             [
@@ -110,7 +110,7 @@ export function Root({ children }: { children: React.ReactNode }) {
           head={['Profile', 'glass', 'glassRefraction', 'glassBlur', 'motion']}
           rows={[
             [<C>quality</C>, <C>liquid</C>, <C>true</C>, <C>true</C>, <C>full</C>],
-            [<C>balanced</C>, <C>still</C>, <C>false</C>, <C>false</C>, <C>full</C>],
+            [<C>balanced</C>, <C>transparent</C>, <C>false</C>, <C>false</C>, <C>full</C>],
             [<C>performance</C>, <C>solid</C>, <C>false</C>, <C>false</C>, <C>none</C>],
           ]}
         />

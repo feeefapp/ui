@@ -82,7 +82,7 @@ pill gives way to the tinted icon. Minimized, the hidden tabs take no pointer. *
 .lab-tab-chrome[data-minimizing] .lab-segmented-option[data-selected] .lab-segmented-icon {
   translate: var(--lab-tab-icon-x) var(--lab-tab-icon-y);
 }
-.lab-tab-chrome[data-minimizing] .lab-segmented-pill {
+.lab-tab-chrome[data-minimizing] :is(.lab-segmented-pill, .lab-segmented-lens) {
   opacity: calc(1 - var(--lab-tab-minimize));
 }
 .lab-tab-chrome[data-minimizing] .lab-segmented-option[data-selected] .lab-segmented-content:not(.lab-segmented-ink) {

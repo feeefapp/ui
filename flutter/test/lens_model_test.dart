@@ -21,6 +21,8 @@ void main() {
     expect(switchSlopMouse, n(c['switchSlopMouse']));
     expect(switchSlopTouch, n(c['switchSlopTouch']));
     expect(contentPressScale, n(c['contentPressScale']));
+    expect(lensPillLift, n(c['lensPillLift']));
+    expect(lensMagnify, n(c['lensMagnify']));
   });
   test('lensStretch', () {
     for (final v in fixture['stretch'] as List) {

@@ -6,7 +6,9 @@
     "switchDeceleration": 0.97,
     "switchSlopMouse": 4,
     "switchSlopTouch": 10,
-    "contentPressScale": 1.03
+    "contentPressScale": 1.03,
+    "lensPillLift": 0.15,
+    "lensMagnify": 0.18
   },
   "stretch": [
     [

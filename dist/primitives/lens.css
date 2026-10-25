@@ -1,26 +1,64 @@
-/* A control's glass lens: the moving part of a segmented control, a switch or a slider turns into
-clear glass while pressed or dragged (lens-model.ts; Flutter lens.dart paints the same). The owner
-writes --lab-lens (0 its rest paint … 1 glass), --lab-lens-glow (the touch glow, 0 … 1) and the
-glow's centre and radius (--lab-lens-glow-x, -y, -r) on an ancestor. .lab-lens is the glass layer
-and .lab-lens-glow the glow; both fill their positioned parent and take its corners. Owners keep
-their rest paint where this layer is hidden: reduced transparency, more contrast, forced colours
-and glass: 'solid'. */
-.lab-lens,
-.lab-lens-glow {
+/* A control's glass lens: the moving part of a segmented control, a tab bar, a switch or a slider
+turns into real glass while pressed or dragged (glass/lens-layer.ts writes its backdrop filter and
+material; Flutter's GlassLens is the twin). .lab-lens is the glass: the backdrop at clear glass's
+tint, never blurred (bent and magnified for liquid glass where the browser can), the rim light
+(::after) and the exterior hairline (its shadows); .lab-lens-glow inside it is the touch glow. The
+owner places the lens above what it bends and writes --lab-lens (0 rest … 1 glass), --lab-lens-glow
+(0 … 1) and the glow's centre and radius (--lab-lens-glow-x, -y, -r) on an ancestor. Owners keep
+their rest paint where the lens is off: reduced transparency, more contrast, forced colours and
+glass: 'solid'. */
+.lab-lens {
   position: absolute;
   inset: 0;
   box-sizing: border-box;
   border-radius: inherit;
   corner-shape: inherit;
   pointer-events: none;
+  /* iOS 27's hairline outside every glass (material.ts GLASS_HAIRLINE): a 0.5 px ring and the
+  slivers where the shape, moved 1.25 px sideways and shrunk by 0.75 px, passes its own outline. */
+  box-shadow:
+    0 0 0 0.5px rgb(0 0 0 / var(--lab-lens-ring, 0)),
+    -1.25px 0 0 -0.75px rgb(0 0 0 / var(--lab-lens-sliver, 0)),
+    1.25px 0 0 -0.75px rgb(0 0 0 / var(--lab-lens-sliver, 0));
 }
-.lab-lens {
-  border: 1px solid var(--lab-line);
-  background: var(--lab-glass-fill);
-  box-shadow: var(--lab-glass-light);
-  opacity: var(--lab-lens, 0);
+.lab-lens[data-hidden] {
+  visibility: hidden;
 }
-.lab-lens-glow {
+/* The rim light (material.ts glassRim at the clear tint): white along the inner edge, lit where the
+edge faces the light axis (top left and bottom right), w0 where it runs across it. */
+.lab-lens::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  padding: var(--lab-lens-rim-width, 1px);
+  border-radius: inherit;
+  corner-shape: inherit;
+  background: conic-gradient(
+    rgb(255 255 255 / var(--lab-lens-rim-mid, 0)),
+    rgb(255 255 255 / var(--lab-lens-rim-base, 0)) 45deg,
+    rgb(255 255 255 / var(--lab-lens-rim-mid, 0)) 90deg,
+    rgb(255 255 255 / var(--lab-lens-rim-peak, 0)) 135deg,
+    rgb(255 255 255 / var(--lab-lens-rim-mid, 0)) 180deg,
+    rgb(255 255 255 / var(--lab-lens-rim-base, 0)) 225deg,
+    rgb(255 255 255 / var(--lab-lens-rim-mid, 0)) 270deg,
+    rgb(255 255 255 / var(--lab-lens-rim-peak, 0)) 315deg,
+    rgb(255 255 255 / var(--lab-lens-rim-mid, 0))
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+.lab-lens > .lab-lens-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  corner-shape: inherit;
   background: radial-gradient(
     circle var(--lab-lens-glow-r, 8px) at var(--lab-lens-glow-x, 50%) var(--lab-lens-glow-y, 50%),
     var(--lab-glass-glow),
@@ -29,11 +67,10 @@ and glass: 'solid'. */
   opacity: calc(var(--lab-lens-glow, 0) * var(--lab-lens, 0));
 }
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
-  .lab-lens,
-  .lab-lens-glow {
+  .lab-lens {
     display: none;
   }
 }
-html[data-lab-glass='solid'] :is(.lab-lens, .lab-lens-glow) {
+html[data-lab-glass='solid'] .lab-lens {
   display: none;
 }

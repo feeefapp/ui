@@ -21,13 +21,12 @@ export type SelectionSource = 'press' | 'drag' | 'key';
  * the label with the badge on the icon (a tab). */
 export type SelectionLayout = 'inline' | 'stacked';
 /** The pill at rest: the primary fill with on-primary ink (a segmented control), or a light primary
- * tint with the ink colour (a tab bar). Pressed or dragged, both become the same glass lens. */
+ * tint with the ink colour (a tab bar). Pressed or dragged, both become the same glass lens
+ * (`GlassLensLayer`, laid over the options it slides across). */
 export type SelectionPill = 'filled' | 'quiet';
 /** What a track does when its options don't fit: scroll them inside itself, or fold into one
  * capsule (the selection and a chevron) that opens the options as a single-choice menu. */
 export type SelectionOverflow = 'scroll' | 'menu';
-/** How much the pressed or dragged pill (a water drop) magnifies the options under it. */
-export declare const LENS_MAGNIFY = 0.18;
 /**
  * One row of options and one moving pill: measuring, the pill and its glass lens with the touch
  * glow, drag with rubber band and momentum snap, auto-scroll, one-row overflow with edge fades and

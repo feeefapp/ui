@@ -88,8 +88,11 @@ function Overview() {
         <p>
           While pressed or dragged the thumb becomes a glass lens, the switch’s and the segmented
           control’s: 1.4× larger, stretched along the drag with its speed, with the touch glow under the
-          finger, springing back when released. Reduced motion turns it off; reduced transparency, more
-          contrast and the <C>solid</C> glass style keep a solid thumb.
+          finger, springing back when released. The lens is real glass over the track, never blurred:
+          clear glass’s lift, the rim light and the dark hairline outside it. With <C>liquid</C> glass it
+          also bends at its rim and magnifies the track under it (1.18×) where the browser can bend a
+          backdrop (Chromium); <C>transparent</C> glass is a plain clear lens. Reduced motion turns it
+          off; reduced transparency, more contrast and the <C>solid</C> glass style keep a solid thumb.
         </p>
       </Section>
 

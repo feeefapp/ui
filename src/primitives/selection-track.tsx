@@ -37,7 +37,8 @@ import {
   type SegmentSpan,
   type SelectionSemantics,
 } from './segmented-model'
-import { lensStretch } from './lens-model'
+import { LENS_MAGNIFY, lensInkZoom, lensPillShape, lensStretch } from './lens-model'
+import { GlassLensLayer, lensMagnifies, lensMode } from '../glass/lens-layer'
 import type { SegmentOption } from './segmented'
 import '../actions/actions.css'
 import './lens.css'
@@ -65,7 +66,8 @@ export type SelectionSource = 'press' | 'drag' | 'key'
 export type SelectionLayout = 'inline' | 'stacked'
 
 /** The pill at rest: the primary fill with on-primary ink (a segmented control), or a light primary
- * tint with the ink colour (a tab bar). Pressed or dragged, both become the same glass lens. */
+ * tint with the ink colour (a tab bar). Pressed or dragged, both become the same glass lens
+ * (`GlassLensLayer`, laid over the options it slides across). */
 export type SelectionPill = 'filled' | 'quiet'
 
 /** What a track does when its options don't fit: scroll them inside itself, or fold into one
@@ -75,8 +77,6 @@ export type SelectionOverflow = 'scroll' | 'menu'
 /** A measured option, in the track's own (unscaled) pixels. */
 type Box = { x: number; y: number; w: number; h: number; border: number }
 
-/** How much the pressed or dragged pill (a water drop) magnifies the options under it. */
-export const LENS_MAGNIFY = 0.18
 type Drag = {
   pointer: number
   touch: boolean
@@ -155,6 +155,8 @@ export function SelectionTrack<const T extends string>({
   const scrollerRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const pillRef = useRef<HTMLSpanElement>(null)
+  const lensRef = useRef<HTMLSpanElement>(null)
+  const lensLayer = useRef<GlassLensLayer | null>(null)
   const reduced = useReducedMotion()
   // Pill: centre, width and top; press response: swell, stretch, lens (0 filled … 1 glass), glow.
   const center = useMotionValue(0, 0.05)
@@ -290,18 +292,32 @@ export function SelectionTrack<const T extends string>({
     pillEl.style.width = `${shape.width}px`
     pillEl.style.height = `${shape.height}px`
     el.style.setProperty('--lab-segmented-press', String(scale))
-    el.style.setProperty('--lab-lens', String(Math.max(0, Math.min(1, lens.get()))))
-    el.style.setProperty('--lab-lens-glow-x', `${glowAt.current.x - shape.x}px`)
-    el.style.setProperty('--lab-lens-glow-y', `${glowAt.current.y - shape.y}px`)
+    const lensAmount = Math.max(0, Math.min(1, lens.get()))
+    el.style.setProperty('--lab-lens', String(lensAmount))
+    const radius = (Math.min(shape.width, shape.height) / 2) * corner
+    // Pressed or dragged, the pill is real glass over the options (a liquid one lifts out of the
+    // pill, past the track, and magnifies what it covers).
+    const mode = lensMode()
+    const liquid = mode === 'liquid'
+    const glass = lensPillShape(shape, radius, lensAmount, liquid)
+    const lensEl = lensRef.current
+    if (lensEl) {
+      lensEl.style.transform = `translate(${glass.x}px, ${glass.y}px)`
+      lensEl.style.width = `${glass.width}px`
+      lensEl.style.height = `${glass.height}px`
+      lensEl.style.borderRadius = `${glass.radius}px`
+      lensLayer.current?.update(lensAmount, liquid ? LENS_MAGNIFY : 0, glass)
+    }
+    el.style.setProperty('--lab-lens-glow-x', `${glowAt.current.x - glass.x}px`)
+    el.style.setProperty('--lab-lens-glow-y', `${glowAt.current.y - glass.y}px`)
     el.style.setProperty('--lab-lens-glow-r', `${Math.max(1, glowRadius.get())}px`)
     el.style.setProperty('--lab-lens-glow', String(Math.max(0, Math.min(1, glowOpacity.get()))))
     // Selected ink shows exactly where the pill is, so a label turns over as the pill crosses it.
-    // Pressed or dragged, the pill is a water drop that magnifies what is under it: the ink copy
-    // scales up around the drop's centre (its clip mapped back so it still fills the drop), and
-    // the plain content underneath is cut out where the drop is.
-    const lensAmount = Math.max(0, Math.min(1, lens.get()))
-    const zoom = 1 + LENS_MAGNIFY * lensAmount
-    const radius = (Math.min(shape.width, shape.height) / 2) * corner
+    // Where liquid glass can't bend (lensInkZoom), the ink copy stands in for its magnifier: it
+    // scales up around the drop's centre (its clip mapped back so it still fills the drop) and
+    // the plain content underneath is cut out where the drop is. Glass that magnifies for real
+    // leaves the copy at 1, so nothing is enlarged twice.
+    const zoom = lensInkZoom(lensAmount, liquid, liquid && lensMagnifies())
     buttons().forEach((button, i) => {
       const box = boxes[i]
       if (!box) return
@@ -319,12 +335,23 @@ export function SelectionTrack<const T extends string>({
       button.style.setProperty('--lab-segmented-zoom', String(zoom))
       const plain = button.firstElementChild as HTMLElement | null
       if (!plain) return
-      const crosses = lensAmount > 0.01 && local.x < innerW && local.x + local.w > 0
+      const crosses = zoom > 1 && lensAmount > 0.01 && local.x < innerW && local.x + local.w > 0
       plain.style.maskImage = crosses
         ? `radial-gradient(ellipse ${local.w / 2}px ${local.h / 2}px at ${ox - plain.offsetLeft}px ${oy - plain.offsetTop}px, transparent 94%, #000 100%)`
         : ''
     })
   }
+
+  useLayoutEffect(() => {
+    const el = lensRef.current
+    if (!el) return
+    const layer = new GlassLensLayer(el)
+    lensLayer.current = layer
+    return () => {
+      layer.dispose()
+      lensLayer.current = null
+    }
+  }, [])
 
   useLayoutEffect(() => {
     const values = [center, width, top, press, stretch, lens, glowRadius, glowOpacity]
@@ -742,8 +769,6 @@ export function SelectionTrack<const T extends string>({
         <div ref={trackRef} className="lab-segmented-track">
           <span ref={pillRef} className="lab-segmented-pill" aria-hidden="true" data-hidden="">
             <span className="lab-segmented-fill" />
-            <span className="lab-lens lab-light-edge" />
-            <span className="lab-lens-glow" />
           </span>
           {options.map((option) => {
             const isSelected = option.value === value
@@ -786,6 +811,10 @@ export function SelectionTrack<const T extends string>({
               </Button>
             )
           })}
+          {/* The pill's glass, above the options it bends. */}
+          <span ref={lensRef} className="lab-lens lab-segmented-lens" aria-hidden="true" data-hidden="">
+            <span className="lab-lens-glow" />
+          </span>
         </div>
       </div>
       {menu && (

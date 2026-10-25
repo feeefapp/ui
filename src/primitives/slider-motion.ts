@@ -3,7 +3,8 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react'
 import { GLASS_GLOW_START, glassGlowRadius } from '../glass/press'
 import { SPRINGS, springCoefficients } from '../physics/spring'
-import { LENS_THUMB_SCALE, lensStretch } from './lens-model'
+import { GlassLensLayer } from '../glass/lens-layer'
+import { LENS_MAGNIFY, LENS_THUMB_SCALE, lensStretch } from './lens-model'
 import { stepSpring, type StepSpringState } from './spring-core'
 import { reducedMotionQuery } from '../physics/motion-value'
 
@@ -18,7 +19,8 @@ export type SliderPointer = { x: number; y: number }
 /**
  * One spring clock for fill, thumb travel and the thumb's glass lens; never rerenders the owner.
  * While `pressed` the thumb turns into a lens (`lens-model.ts`): it grows by `LENS_THUMB_SCALE`,
- * stretches with its speed, shows the touch glow at the pointer (`pointer()`) and springs back on
+ * becomes real glass over the track (`GlassLensLayer`, magnifying it for liquid glass), stretches
+ * with its speed, shows the touch glow at the pointer (`pointer()`) and springs back on
  * release, on the segmented pill's springs. Reduced motion and a disabled control skip all of it.
  */
 export function useSliderMotion(
@@ -60,6 +62,8 @@ export function useSliderMotion(
     const media = reducedMotionQuery()
     const state = simulation.current
     let alive = true
+    const lensEl = host.current?.querySelector<HTMLElement>(':scope > .lab-slider-thumb > .lab-lens')
+    const lensLayer = lensEl ? new GlassLensLayer(lensEl, true) : null
     /**
      * The thumb's travel (px) and inset (the edge-to-centre distance at either end), the track's
      * height and direction. Every read of a frame happens here, before paint writes anything.
@@ -83,6 +87,7 @@ export function useSliderMotion(
       el.style.setProperty('--lab-slider-stretch', `${stretch}px`)
       el.style.setProperty('--lab-slider-stretch-size', `${Math.abs(stretch)}px`)
       el.style.setProperty('--lab-lens', String(Math.max(0, Math.min(1, state.lens.position))))
+      lensLayer?.update(state.lens.position, LENS_MAGNIFY)
       el.style.setProperty('--lab-lens-glow', String(Math.max(0, Math.min(1, state.glowOpacity.position))))
       el.style.setProperty('--lab-lens-glow-r', `${Math.max(1, state.glowRadius.position)}px`)
       const pointer = g.pointer
@@ -190,6 +195,7 @@ export function useSliderMotion(
     wake.current()
     return () => {
       alive = false
+      lensLayer?.dispose()
       cancelAnimationFrame(state.frame)
       state.frame = 0
       state.time = 0

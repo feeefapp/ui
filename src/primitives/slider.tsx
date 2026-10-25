@@ -418,8 +418,9 @@ function SliderControl({
           ))}
         <span className="lab-slider-thumb" aria-hidden="true">
           {/* Pressed or dragged, the thumb turns into a glass lens (slider-motion.ts). */}
-          <span className="lab-lens lab-light-edge" />
-          <span className="lab-lens-glow" />
+          <span className="lab-lens">
+            <span className="lab-lens-glow" />
+          </span>
           {renderThumb?.(state)}
         </span>
         {switchMode && (

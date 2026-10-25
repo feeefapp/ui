@@ -32,6 +32,8 @@ export {
   GLASS_SIZE_EXPONENT,
   displacementMap,
   glassCapabilities,
+  lensDisplacementMap,
+  magnifyOffset,
   refractionAt,
   refractionScale,
   supportsRefraction,
@@ -61,10 +63,13 @@ export {
   glassMaterial,
   glassRim,
   glassSize,
+  lensMaterial,
   liftFilter,
   rimLayer,
 } from './material'
 export type { GlassMaterial, GlassRim, GlassSize } from './material'
+export { GlassLensLayer, lensMagnifies, lensMode } from './lens-layer'
+export type { LensMode } from './lens-layer'
 export { adaptiveGlassTone, backdropTone } from './adaptive'
 export type { BackdropSample, GlassTone } from './adaptive'
 export { glassStretch, pressedShape } from './press'

@@ -92,9 +92,17 @@ function Overview() {
       <Section title="Glass style">
         <p>
           The app's <C>ThemeConfig</C> <C>glass</C> option sets how all of it behaves: <C>liquid</C>{' '}
-          (default) has the moving light and press response, <C>still</C> keeps the material and the
-          morphs with a fixed light and no press response, <C>solid</C> paints opaque chrome for dense
-          tools. Try it in Customize.
+          (default) has the moving light, the press response and the bend, <C>transparent</C> keeps the
+          clear material and the morphs without the liquid effect (no bend, a fixed light, no press
+          response), <C>solid</C> paints opaque chrome for dense tools. Try it in Customize.
+        </p>
+        <p>
+          Controls follow the same style. The moving part of a slider, a switch, a segmented control
+          and a tab bar turns into a glass lens while pressed (<C>GlassLensLayer</C>): clear glass,
+          never blurred, with the rim light and the hairline. A <C>liquid</C> lens lifts out bigger and
+          magnifies what it covers through the same SVG backdrop filter that bends glass edges in
+          Chromium; a <C>transparent</C> lens is plain clear glass; <C>solid</C> keeps the controls’
+          rest paint.
         </p>
       </Section>
 

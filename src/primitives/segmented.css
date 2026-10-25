@@ -150,8 +150,9 @@ html[data-lab-theme] .lab-segmented[data-dragging] .lab-segmented-track > .lab-s
   /* At rest the pill's ink; as a drop, the lens ink (its fill is gone, the glass is clear). */
   color: color-mix(in srgb, var(--lab-segmented-pill-ink) calc((1 - var(--lab-lens)) * 100%), var(--lab-segmented-lens-ink));
   clip-path: var(--lab-segmented-clip);
-  /* The drop magnifies (selection-track.tsx LENS_MAGNIFY): scaled around its centre, the clip is
-  set in the scaled space so it still matches the drop. */
+  /* Where liquid glass can't bend, the copy stands in for its magnifier (lens-model.ts
+  lensInkZoom): scaled around the drop's centre, the clip set in the scaled space so it still
+  matches the drop. Glass that magnifies for real leaves it at 1. */
   transform-origin: var(--lab-segmented-lens-at, 50% 50%);
   scale: var(--lab-segmented-zoom, 1);
   pointer-events: none;
@@ -338,8 +339,9 @@ html[data-lab-theme]:is([data-lab-motion='reduced'], [data-lab-motion='none']) :
   transition-duration: 0ms;
 }
 
-/* The pill: filled at rest; pressed or dragged it becomes a glass lens (fill → glass), swells with
---lab-segmented-press and shows the touch glow, like a pressed GlassContainer bubble. */
+/* The pill: filled at rest; pressed or dragged the fill fades out under the glass lens laid over the
+options (.lab-segmented-lens, glass/lens-layer.ts), it swells with --lab-segmented-press and casts
+the lens's shadow, like a pressed GlassContainer bubble. */
 .lab-segmented-pill {
   position: absolute;
   left: 0;
@@ -354,6 +356,16 @@ html[data-lab-theme]:is([data-lab-motion='reduced'], [data-lab-motion='none']) :
 }
 .lab-segmented-pill[data-hidden] {
   visibility: hidden;
+}
+/* The pill's glass (lens.css), placed by selection-track.tsx: above the options it bends and
+magnifies, and free to lift out past the track. */
+.lab-segmented-track > .lab-segmented-lens {
+  inset: auto;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
+  will-change: transform;
 }
 .lab-segmented-pill > span {
   position: absolute;

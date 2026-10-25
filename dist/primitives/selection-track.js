@@ -17,12 +17,11 @@ import { GLASS_FOLLOW_ATTRIBUTE } from '../glass/transitions.js';
 import { useMotionValue, useReducedMotion } from '../physics/react.js';
 import { SPRINGS, springTiming } from '../physics/spring.js';
 import { SEGMENTED_FADE, SEGMENTED_SLOP, segmentIndexAt, segmentedAutoScrollSpeed, segmentedDragCenter, segmentedPillWidth, segmentedSnapIndex, selectionKeyTarget, } from './segmented-model.js';
-import { lensStretch } from './lens-model.js';
+import { LENS_MAGNIFY, lensInkZoom, lensPillShape, lensStretch } from './lens-model.js';
+import { GlassLensLayer, lensMagnifies, lensMode } from '../glass/lens-layer.js';
 import '../actions/actions.css';
 import './lens.css';
 import './segmented.css';
-/** How much the pressed or dragged pill (a water drop) magnifies the options under it. */
-export const LENS_MAGNIFY = 0.18;
 const COLLAPSE = springTiming(SPRINGS.snappy);
 /**
  * One row of options and one moving pill: measuring, the pill and its glass lens with the touch
@@ -40,6 +39,8 @@ export function SelectionTrack({ value, onSelect, options, label, semantics = 'r
     const scrollerRef = useRef(null);
     const trackRef = useRef(null);
     const pillRef = useRef(null);
+    const lensRef = useRef(null);
+    const lensLayer = useRef(null);
     const reduced = useReducedMotion();
     // Pill: centre, width and top; press response: swell, stretch, lens (0 filled … 1 glass), glow.
     const center = useMotionValue(0, 0.05);
@@ -166,18 +167,32 @@ export function SelectionTrack({ value, onSelect, options, label, semantics = 'r
         pillEl.style.width = `${shape.width}px`;
         pillEl.style.height = `${shape.height}px`;
         el.style.setProperty('--lab-segmented-press', String(scale));
-        el.style.setProperty('--lab-lens', String(Math.max(0, Math.min(1, lens.get()))));
-        el.style.setProperty('--lab-lens-glow-x', `${glowAt.current.x - shape.x}px`);
-        el.style.setProperty('--lab-lens-glow-y', `${glowAt.current.y - shape.y}px`);
+        const lensAmount = Math.max(0, Math.min(1, lens.get()));
+        el.style.setProperty('--lab-lens', String(lensAmount));
+        const radius = (Math.min(shape.width, shape.height) / 2) * corner;
+        // Pressed or dragged, the pill is real glass over the options (a liquid one lifts out of the
+        // pill, past the track, and magnifies what it covers).
+        const mode = lensMode();
+        const liquid = mode === 'liquid';
+        const glass = lensPillShape(shape, radius, lensAmount, liquid);
+        const lensEl = lensRef.current;
+        if (lensEl) {
+            lensEl.style.transform = `translate(${glass.x}px, ${glass.y}px)`;
+            lensEl.style.width = `${glass.width}px`;
+            lensEl.style.height = `${glass.height}px`;
+            lensEl.style.borderRadius = `${glass.radius}px`;
+            lensLayer.current?.update(lensAmount, liquid ? LENS_MAGNIFY : 0, glass);
+        }
+        el.style.setProperty('--lab-lens-glow-x', `${glowAt.current.x - glass.x}px`);
+        el.style.setProperty('--lab-lens-glow-y', `${glowAt.current.y - glass.y}px`);
         el.style.setProperty('--lab-lens-glow-r', `${Math.max(1, glowRadius.get())}px`);
         el.style.setProperty('--lab-lens-glow', String(Math.max(0, Math.min(1, glowOpacity.get()))));
         // Selected ink shows exactly where the pill is, so a label turns over as the pill crosses it.
-        // Pressed or dragged, the pill is a water drop that magnifies what is under it: the ink copy
-        // scales up around the drop's centre (its clip mapped back so it still fills the drop), and
-        // the plain content underneath is cut out where the drop is.
-        const lensAmount = Math.max(0, Math.min(1, lens.get()));
-        const zoom = 1 + LENS_MAGNIFY * lensAmount;
-        const radius = (Math.min(shape.width, shape.height) / 2) * corner;
+        // Where liquid glass can't bend (lensInkZoom), the ink copy stands in for its magnifier: it
+        // scales up around the drop's centre (its clip mapped back so it still fills the drop) and
+        // the plain content underneath is cut out where the drop is. Glass that magnifies for real
+        // leaves the copy at 1, so nothing is enlarged twice.
+        const zoom = lensInkZoom(lensAmount, liquid, liquid && lensMagnifies());
         buttons().forEach((button, i) => {
             const box = boxes[i];
             if (!box)
@@ -197,12 +212,23 @@ export function SelectionTrack({ value, onSelect, options, label, semantics = 'r
             const plain = button.firstElementChild;
             if (!plain)
                 return;
-            const crosses = lensAmount > 0.01 && local.x < innerW && local.x + local.w > 0;
+            const crosses = zoom > 1 && lensAmount > 0.01 && local.x < innerW && local.x + local.w > 0;
             plain.style.maskImage = crosses
                 ? `radial-gradient(ellipse ${local.w / 2}px ${local.h / 2}px at ${ox - plain.offsetLeft}px ${oy - plain.offsetTop}px, transparent 94%, #000 100%)`
                 : '';
         });
     };
+    useLayoutEffect(() => {
+        const el = lensRef.current;
+        if (!el)
+            return;
+        const layer = new GlassLensLayer(el);
+        lensLayer.current = layer;
+        return () => {
+            layer.dispose();
+            lensLayer.current = null;
+        };
+    }, []);
     useLayoutEffect(() => {
         const values = [center, width, top, press, stretch, lens, glowRadius, glowOpacity];
         const off = values.map((motion) => motion.subscribe(paint));
@@ -595,7 +621,7 @@ export function SelectionTrack({ value, onSelect, options, label, semantics = 'r
                 return;
             event.preventDefault();
             event.stopPropagation();
-        }, "data-lab-corners": true, children: [_jsx("div", { ref: scrollerRef, className: "lab-segmented-scroller", children: _jsxs("div", { ref: trackRef, className: "lab-segmented-track", children: [_jsxs("span", { ref: pillRef, className: "lab-segmented-pill", "aria-hidden": "true", "data-hidden": "", children: [_jsx("span", { className: "lab-segmented-fill" }), _jsx("span", { className: "lab-lens lab-light-edge" }), _jsx("span", { className: "lab-lens-glow" })] }), options.map((option) => {
+        }, "data-lab-corners": true, children: [_jsx("div", { ref: scrollerRef, className: "lab-segmented-scroller", children: _jsxs("div", { ref: trackRef, className: "lab-segmented-track", children: [_jsx("span", { ref: pillRef, className: "lab-segmented-pill", "aria-hidden": "true", "data-hidden": "", children: _jsx("span", { className: "lab-segmented-fill" }) }), options.map((option) => {
                             const isSelected = option.value === value;
                             const content = renderContent(option, menu && isSelected);
                             // Folded: the selected option is the capsule that opens the menu; the rest fold away.
@@ -606,7 +632,7 @@ export function SelectionTrack({ value, onSelect, options, label, semantics = 'r
                                 style: menu && measurements?.widths.get(option.value)
                                     ? { '--lab-segmented-natural': `${measurements.widths.get(option.value)}px` }
                                     : undefined, inert: folded && !isSelected ? true : undefined, tabIndex: folded ? (isSelected ? 0 : -1) : option.value === tabValue ? 0 : -1, disabled: disabled || option.disabled, onClick: () => (trigger ? openMenu() : onSelect(option.value, 'press')), children: [_jsx("span", { className: "lab-segmented-content", children: content }), _jsx("span", { className: "lab-segmented-content lab-segmented-ink", "aria-hidden": "true", children: content })] }, option.value));
-                        })] }) }), menu && (_jsxs(_Fragment, { children: [_jsx("div", { className: "lab-segmented-measure", "aria-hidden": "true", inert: true, children: _jsxs("div", { ref: measuringRow, className: "lab-segmented-track", children: [options.map((option) => (_jsx(Button, { variant: "ghost", appearance: "toolbar", controlSize: "regular", className: "lab-segmented-option", tabIndex: -1, "data-lab-action-id": option.value, children: _jsx("span", { className: "lab-segmented-content", children: renderContent(option, false) }) }, option.value))), _jsx("span", { className: "lab-segmented-chevron", "data-lab-overflow-measure": "", children: _jsx(ChevronDown, {}) })] }) }), _jsxs(DropdownMenu.Root, { modal: false, open: folded && menuOpen, onOpenChange: setMenuOpen, dir: menuDir, children: [_jsx(DropdownMenu.Trigger, { asChild: true, children: _jsx("span", { className: "lab-segmented-menu-anchor", "aria-hidden": "true", tabIndex: -1 }) }), _jsx(DropdownMenu.Portal, { container: menuContainer, children: _jsx(MenuSurface, { asChild: true, children: _jsx(DropdownMenu.Content, { className: "lab-actions-menu lab-segmented-menu", "aria-label": label, ...(menuContainer ? { collisionBoundary: menuContainer } : {}), ref: menuContent, onCloseAutoFocus: (event) => {
+                        }), _jsx("span", { ref: lensRef, className: "lab-lens lab-segmented-lens", "aria-hidden": "true", "data-hidden": "", children: _jsx("span", { className: "lab-lens-glow" }) })] }) }), menu && (_jsxs(_Fragment, { children: [_jsx("div", { className: "lab-segmented-measure", "aria-hidden": "true", inert: true, children: _jsxs("div", { ref: measuringRow, className: "lab-segmented-track", children: [options.map((option) => (_jsx(Button, { variant: "ghost", appearance: "toolbar", controlSize: "regular", className: "lab-segmented-option", tabIndex: -1, "data-lab-action-id": option.value, children: _jsx("span", { className: "lab-segmented-content", children: renderContent(option, false) }) }, option.value))), _jsx("span", { className: "lab-segmented-chevron", "data-lab-overflow-measure": "", children: _jsx(ChevronDown, {}) })] }) }), _jsxs(DropdownMenu.Root, { modal: false, open: folded && menuOpen, onOpenChange: setMenuOpen, dir: menuDir, children: [_jsx(DropdownMenu.Trigger, { asChild: true, children: _jsx("span", { className: "lab-segmented-menu-anchor", "aria-hidden": "true", tabIndex: -1 }) }), _jsx(DropdownMenu.Portal, { container: menuContainer, children: _jsx(MenuSurface, { asChild: true, children: _jsx(DropdownMenu.Content, { className: "lab-actions-menu lab-segmented-menu", "aria-label": label, ...(menuContainer ? { collisionBoundary: menuContainer } : {}), ref: menuContent, onCloseAutoFocus: (event) => {
                                             event.preventDefault();
                                             buttons()[selectedIndex()]?.focus({ preventScroll: true });
                                         }, children: _jsx(DropdownMenu.RadioGroup, { value: value, onValueChange: (next) => onSelect(next, 'press'), children: options.map((option) => (_jsxs(DropdownMenu.RadioItem, { value: option.value, disabled: disabled || option.disabled, className: "lab-actions-menu__item", "data-lab-corners": true, textValue: option.label, children: [_jsx("span", { className: "lab-actions-menu__leading", "aria-hidden": "true", children: _jsx(DropdownMenu.ItemIndicator, { children: _jsx(Check, { size: 18 }) }) }), option.icon && (_jsx("span", { className: "lab-segmented-icon", "data-tone": option.tone, "aria-hidden": "true", children: option.icon })), _jsx("span", { className: "lab-actions-menu__label", children: option.label }), option.badge && _jsx("span", { className: "lab-segmented-badge", children: option.badge })] }, option.value))) }) }) }) })] })] }))] }));

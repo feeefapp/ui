@@ -246,4 +246,27 @@ export declare function liftFilter(gain: number, offset: number): {
     contrast: number;
     brightness: number;
 };
+/**
+ * The material of a control's lens at `lens` (0 rest … 1 glass): clear glass (tint 0), as iOS
+ * lenses are, eased in from the bare backdrop. Saturation and the lift `gain · x + offset` go from
+ * the identity to clear glass's, the edge terms, rim and hairline from nothing to theirs. Never
+ * blurred: whatever the lens crosses stays readable. Flutter's `GlassLens` mixes the same.
+ */
+export declare function lensMaterial(lens: number, scheme: 'light' | 'dark'): {
+    saturate: number;
+    gain: number;
+    offset: number;
+    k1: number;
+    k3: number;
+    rim: {
+        w0: number;
+        w1: number;
+        p: number;
+        width: number;
+    };
+    hairline: {
+        ring: number;
+        sliver: number;
+    };
+};
 //# sourceMappingURL=material.d.ts.map

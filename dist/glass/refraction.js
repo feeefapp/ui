@@ -176,6 +176,79 @@ function sampleDisplacementMap(logicalWidth, logicalHeight, w, h, clusters, spac
     return { width: w, height: h, data, scale: 2 * largest };
 }
 /**
+ * Where a lens magnifying by `magnify` (0 none, 0.2 = 1.2×) about (`cx`, `cy`) samples the backdrop
+ * for the point (`px`, `py`), as an offset (px): the point pulled toward the centre by
+ * `1 / (1 + magnify)`. Flutter's `glass_refraction.frag` (`uMagnify`) does the same.
+ */
+export function magnifyOffset(px, py, cx, cy, magnify) {
+    const k = magnify > 0 ? 1 / (1 + magnify) - 1 : 0;
+    // + 0 keeps the centre (and no magnification) at +0, never -0.
+    return { x: (px - cx) * k + 0, y: (py - cy) * k + 0 };
+}
+/**
+ * The map of a control's lens (lens-layer.ts): one `shape` (its own box, at 0, 0) that bends at its
+ * rim (the gentle profile × `strength`) and magnifies everything inside by `magnify` about its
+ * centre. Same encoding as `displacementMap` (red/green = shift as a share of `scale / 2`, blue =
+ * the edge mask, alpha = the shape), sampled at most `GLASS_LIVE_MAP_PIXELS`. Both effects are
+ * linear in `scale`, so an owner eases the lens in by scaling `scale` alone.
+ */
+export function lensDisplacementMap(shape, magnify, strength = 1) {
+    const logicalWidth = Number.isFinite(shape.width) ? Math.max(1, shape.width) : 1;
+    const logicalHeight = Number.isFinite(shape.height) ? Math.max(1, shape.height) : 1;
+    const density = Math.min(1, Math.sqrt(GLASS_LIVE_MAP_PIXELS / logicalWidth / logicalHeight));
+    const w = Math.max(1, Math.floor(logicalWidth * density));
+    const h = Math.max(1, Math.floor(logicalHeight * density));
+    const pixelWidth = logicalWidth / w;
+    const pixelHeight = logicalHeight / h;
+    const coverageWidth = Math.max(pixelWidth, pixelHeight);
+    const box = { x: 0, y: 0, width: logicalWidth, height: logicalHeight, radius: shape.radius, cornerExponent: shape.cornerExponent };
+    const distance = prepareUnionDistance([box], 0);
+    const side = Math.min(logicalWidth, logicalHeight);
+    const band = Math.min(GLASS_BEZEL * refractionScale(side), side / 2);
+    const shift = gentleRefractionShift(side) * Math.max(0, strength);
+    const zoom = Math.max(0, magnify);
+    const cx = logicalWidth / 2;
+    const cy = logicalHeight / 2;
+    const shifts = new Float32Array(w * h * 2);
+    const data = new Uint8ClampedArray(w * h * 4);
+    let largest = 0;
+    for (let y = 0; y < h; y++)
+        for (let x = 0; x < w; x++) {
+            const px = (x + 0.5) * pixelWidth;
+            const py = (y + 0.5) * pixelHeight;
+            const d = distance(px, py);
+            const i = y * w + x;
+            data[i * 4 + 3] = Math.round(Math.min(1, Math.max(0, 0.5 - d / coverageWidth)) * 255);
+            if (d >= coverageWidth / 2)
+                continue;
+            const inside = Math.min(d, -1e-3);
+            const zoomed = magnifyOffset(px, py, cx, cy, zoom);
+            let dx = zoomed.x;
+            let dy = zoomed.y;
+            if (inside > -band) {
+                const gx = distance(px + 1, py) - distance(px - 1, py);
+                const gy = distance(px, py + 1) - distance(px, py - 1);
+                const length = Math.hypot(gx, gy) || 1;
+                const bend = refractionAt(inside, gx / length, gy / length, band);
+                dx += bend.x * shift;
+                dy += bend.y * shift;
+                const cosine = (gx * DEFAULT_GLASS_LIGHT.x + gy * DEFAULT_GLASS_LIGHT.y) / length;
+                let edge = 0;
+                for (let k = 0; k < 4; k++)
+                    edge += edgeMask(-d + ((k + 0.5) / 4 - 0.5) * coverageWidth, cosine);
+                data[i * 4 + 2] = Math.round((edge / 4) * 255);
+            }
+            shifts[i * 2] = dx;
+            shifts[i * 2 + 1] = dy;
+            largest = Math.max(largest, Math.abs(dx), Math.abs(dy));
+        }
+    for (let i = 0; i < w * h; i++) {
+        data[i * 4] = largest > 0 ? Math.round(128 + (shifts[i * 2] / largest) * 127) : 128;
+        data[i * 4 + 1] = largest > 0 ? Math.round(128 + (shifts[i * 2 + 1] / largest) * 127) : 128;
+    }
+    return { width: w, height: h, data, scale: 2 * largest };
+}
+/**
  * Encode an RGBA map without canvas readback or synchronous PNG compression. A top-down 32-bit
  * BITMAPV4HEADER carries explicit RGB/alpha masks, preserving the map's anti-aliased coverage in
  * Chromium and Firefox. The byte order is BGRA; the input remains unchanged.

@@ -65,6 +65,28 @@ export declare function liveDisplacementMap(width: number, height: number, clust
     scale: number;
 };
 /**
+ * Where a lens magnifying by `magnify` (0 none, 0.2 = 1.2×) about (`cx`, `cy`) samples the backdrop
+ * for the point (`px`, `py`), as an offset (px): the point pulled toward the centre by
+ * `1 / (1 + magnify)`. Flutter's `glass_refraction.frag` (`uMagnify`) does the same.
+ */
+export declare function magnifyOffset(px: number, py: number, cx: number, cy: number, magnify: number): {
+    x: number;
+    y: number;
+};
+/**
+ * The map of a control's lens (lens-layer.ts): one `shape` (its own box, at 0, 0) that bends at its
+ * rim (the gentle profile × `strength`) and magnifies everything inside by `magnify` about its
+ * centre. Same encoding as `displacementMap` (red/green = shift as a share of `scale / 2`, blue =
+ * the edge mask, alpha = the shape), sampled at most `GLASS_LIVE_MAP_PIXELS`. Both effects are
+ * linear in `scale`, so an owner eases the lens in by scaling `scale` alone.
+ */
+export declare function lensDisplacementMap(shape: GlassShape, magnify: number, strength?: number): {
+    width: number;
+    height: number;
+    data: Uint8ClampedArray<ArrayBuffer>;
+    scale: number;
+};
+/**
  * Encode an RGBA map without canvas readback or synchronous PNG compression. A top-down 32-bit
  * BITMAPV4HEADER carries explicit RGB/alpha masks, preserving the map's anti-aliased coverage in
  * Chromium and Firefox. The byte order is BGRA; the input remains unchanged.

@@ -7,7 +7,8 @@ export type SliderPointer = {
 /**
  * One spring clock for fill, thumb travel and the thumb's glass lens; never rerenders the owner.
  * While `pressed` the thumb turns into a lens (`lens-model.ts`): it grows by `LENS_THUMB_SCALE`,
- * stretches with its speed, shows the touch glow at the pointer (`pointer()`) and springs back on
+ * becomes real glass over the track (`GlassLensLayer`, magnifying it for liquid glass), stretches
+ * with its speed, shows the touch glow at the pointer (`pointer()`) and springs back on
  * release, on the segmented pill's springs. Reduced motion and a disabled control skip all of it.
  */
 export declare function useSliderMotion(host: RefObject<HTMLDivElement | null>, target: number, tracking: boolean, pressed: boolean, thin: boolean, disabled: boolean, 
