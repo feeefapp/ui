@@ -265,6 +265,104 @@ html[data-lab-theme]:is([data-lab-motion='reduced'], [data-lab-motion='none']) .
   transition-duration: 0ms;
 }
 
+/* Folding into a menu (data-overflow-mode='menu', selection-track.tsx): when the row has no room
+the other options fold away on the same spring as data-collapsible and the selected option, on its
+pill, gains a chevron: one capsule that opens the options as a radio menu. Never scrolls, never
+shrinks (the row fits it). Scoped to the root's own track: the hidden measuring copy keeps its
+unfolded size. */
+.lab-segmented[data-overflow-mode='menu'],
+.lab-toolbar-group:has(> .lab-segmented[data-overflow-mode='menu']) {
+  /* Its bubble keeps the control's width while it folds: the row makes room, nothing overlaps. */
+  flex-shrink: 0;
+  max-width: none;
+}
+.lab-segmented[data-overflow-mode='menu'] > .lab-segmented-scroller > .lab-segmented-track {
+  transition: column-gap var(--lab-segmented-fold-duration) var(--lab-segmented-fold-ease);
+}
+html[data-lab-theme] .lab-segmented[data-overflow-mode='menu'] > .lab-segmented-scroller > .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
+  overflow: hidden;
+  max-width: var(--lab-segmented-natural, 100vw);
+  transition-property: max-width, min-width, padding, opacity, background-color, color;
+  transition-duration: var(--lab-segmented-fold-duration), var(--lab-segmented-fold-duration),
+    var(--lab-segmented-fold-duration), 160ms, var(--lab-duration-fast), var(--lab-duration-fast);
+  transition-timing-function: var(--lab-segmented-fold-ease), var(--lab-segmented-fold-ease),
+    var(--lab-segmented-fold-ease), ease, var(--lab-ease), var(--lab-ease);
+}
+.lab-segmented[data-menu-folded] > .lab-segmented-scroller > .lab-segmented-track {
+  column-gap: 0;
+}
+html[data-lab-theme] .lab-segmented[data-menu-folded] > .lab-segmented-scroller > .lab-segmented-track > .lab-segmented-option.lab-control[data-variant]:not([data-selected]) {
+  min-width: 0;
+  max-width: 0;
+  padding-inline: 0;
+  border-width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+/* The chevron: folded away (no width) until the track folds; the measuring copy shows it. */
+.lab-segmented-chevron {
+  display: inline-flex;
+  flex: none;
+  box-sizing: border-box;
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition-property: max-width, padding, opacity;
+  transition-duration: var(--lab-segmented-fold-duration, 0ms), var(--lab-segmented-fold-duration, 0ms), 160ms;
+  transition-timing-function: var(--lab-segmented-fold-ease, ease), var(--lab-segmented-fold-ease, ease), ease;
+}
+.lab-segmented .lab-segmented-option .lab-segmented-chevron > svg,
+.lab-segmented-measure .lab-segmented-chevron > svg {
+  width: 14px;
+  height: 14px;
+}
+/* The content's own 6px gap would show beside the hidden chevron: the chevron brings its own. */
+.lab-segmented-content > .lab-segmented-chevron {
+  margin-inline-start: -6px;
+}
+.lab-segmented[data-menu-folded] .lab-segmented-option[data-selected] .lab-segmented-chevron,
+.lab-segmented-measure .lab-segmented-chevron {
+  max-width: 24px;
+  padding-inline-start: 4px;
+  opacity: 1;
+}
+.lab-segmented-measure {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+.lab-segmented-measure > .lab-segmented-track {
+  width: max-content;
+}
+/* The menu grows out of the whole capsule. */
+.lab-segmented-menu-anchor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.lab-segmented-menu .lab-segmented-icon > svg {
+  width: 16px;
+  height: 16px;
+}
+.lab-segmented-menu .lab-segmented-badge {
+  margin-inline-start: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-lab-theme] .lab-segmented[data-overflow-mode='menu'] > .lab-segmented-scroller > .lab-segmented-track,
+  html[data-lab-theme] .lab-segmented[data-overflow-mode='menu'] > .lab-segmented-scroller > .lab-segmented-track > .lab-segmented-option.lab-control[data-variant],
+  html[data-lab-theme] .lab-segmented-chevron {
+    transition-duration: 0ms;
+  }
+}
+html[data-lab-theme]:is([data-lab-motion='reduced'], [data-lab-motion='none']) :is(.lab-segmented[data-overflow-mode='menu'] > .lab-segmented-scroller > .lab-segmented-track, .lab-segmented[data-overflow-mode='menu'] > .lab-segmented-scroller > .lab-segmented-track > .lab-segmented-option.lab-control[data-variant], .lab-segmented-chevron) {
+  transition-duration: 0ms;
+}
+
 /* The pill: filled at rest; pressed or dragged it becomes a glass lens (fill → glass), swells with
 --lab-segmented-press and shows the touch glow, like a pressed GlassContainer bubble. */
 .lab-segmented-pill {

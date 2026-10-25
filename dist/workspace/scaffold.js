@@ -11,6 +11,8 @@ import { useI18n } from '../i18n.js';
 import { cn } from '../utils.js';
 import './scaffold.css';
 import { GlassScope } from '../glass/container.js';
+import { ToolbarOrientationContext } from '../toolbar.js';
+import { LayoutGroup } from '../physics/layout-group.js';
 const WorkspaceScaffoldContext = React.createContext(null);
 /** Reads the nearest Scaffold's state. Throws outside a scaffold. */
 export function useScaffold() {
@@ -74,11 +76,51 @@ export function Scaffold({ children, renderViewport, side, topSide, appBar, bott
 }
 /** Sidebar body: a scroll area with `leading` floating at the top and `trailing` at the bottom. */
 export function ScaffoldSide({ leading, children, trailing, className }) {
-    return (_jsx("aside", { className: cn('lab-workspace-side', className), "aria-label": "Workspace sidebar", children: _jsx(ScrollArea, { className: "lab-workspace-side-main", label: "Sidebar navigation content", top: leading ? _jsx("div", { className: "lab-workspace-side-leading", children: leading }) : undefined, bottom: trailing ? _jsx("div", { className: "lab-workspace-side-trailing", children: trailing }) : undefined, children: children }) }));
+    // In the rail the sidebar is one toolbar bubble wide: bottom groups stack their controls, and a
+    // layout transition carries each control from its place in the row to its place in the column.
+    const rail = React.useContext(WorkspaceScaffoldContext)?.sideMode === 'rail';
+    const trailingRef = React.useRef(null);
+    React.useLayoutEffect(() => {
+        trailingRef.current
+            ?.querySelectorAll('.lab-toolbar-group > *')
+            .forEach((control, i) => {
+            control.dataset.labLayoutId ??= `side-trailing-${i}`;
+        });
+    });
+    return (_jsx("aside", { className: cn('lab-workspace-side', className), "aria-label": "Workspace sidebar", children: _jsx(ScrollArea, { className: "lab-workspace-side-main", label: "Sidebar navigation content", top: leading ? _jsx("div", { className: "lab-workspace-side-leading", children: leading }) : undefined, bottom: trailing ? (_jsx("div", { ref: trailingRef, className: "lab-workspace-side-trailing", children: _jsx(ToolbarOrientationContext.Provider, { value: rail ? 'vertical' : 'horizontal', children: _jsx(LayoutGroup, { layoutKey: rail, animateEnter: false, children: trailing }) }) })) : undefined, children: children }) }));
 }
-/** Transparent bar for the content panel's `appBar` slot; put controls in ToolbarGroups. */
+/** Narrower than this (px), a title squeezed by the bar's other groups leaves instead of showing a
+ * sliver: its glass flows into the neighbouring bubble. Flutter: `appBarTitleMinWidth`. */
+export const APP_BAR_TITLE_MIN_WIDTH = 64;
+/** Transparent bar for the content panel's `appBar` slot; put controls in ToolbarGroups. A title
+ * squeezed below `APP_BAR_TITLE_MIN_WIDTH` hides until there is room again. */
 export function ScaffoldAppBar({ leading, children, trailing, className }) {
-    return (_jsxs(GlassScope, { as: "header", className: cn('lab-workspace-app-bar', className), children: [_jsx("div", { className: "lab-workspace-app-leading", children: leading }), _jsx("div", { className: "lab-workspace-app-title", children: children }), _jsx("div", { className: "lab-workspace-app-trailing", children: trailing })] }));
+    const title = React.useRef(null);
+    const [squeezed, setSqueezed] = React.useState(false);
+    React.useLayoutEffect(() => {
+        const slot = title.current;
+        if (!slot || typeof ResizeObserver === 'undefined')
+            return;
+        // The slot keeps its flex size while hidden (visibility only), so this never flips back.
+        const truncated = (node) => node.scrollWidth > node.clientWidth + 1;
+        const check = () => setSqueezed(slot.clientWidth < APP_BAR_TITLE_MIN_WIDTH && (truncated(slot) || [...slot.querySelectorAll('*')].some(truncated)));
+        check();
+        const observer = new ResizeObserver(check);
+        observer.observe(slot);
+        for (const child of slot.children)
+            observer.observe(child);
+        const mutations = new MutationObserver(() => {
+            for (const child of slot.children)
+                observer.observe(child);
+            check();
+        });
+        mutations.observe(slot, { childList: true });
+        return () => {
+            observer.disconnect();
+            mutations.disconnect();
+        };
+    }, []);
+    return (_jsxs(GlassScope, { as: "header", className: cn('lab-workspace-app-bar', className), children: [_jsx("div", { className: "lab-workspace-app-leading", children: leading }), _jsx("div", { ref: title, className: "lab-workspace-app-title", "data-squeezed": squeezed || undefined, "data-glass-hidden": squeezed ? '' : undefined, children: children }), _jsx("div", { className: "lab-workspace-app-trailing", children: trailing })] }));
 }
 /** Three-column bar for the `topSide` slot: start, centered brand, end. */
 export function ScaffoldTopBar({ leading, children, trailing, className }) {

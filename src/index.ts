@@ -15,6 +15,7 @@ export { motionOf, prefersReducedMotion } from './physics/motion-value'
 export { useMotion, useReducedMotion } from './physics/react'
 export {
   Button,
+  SquareSlot,
   Input,
   Textarea,
   Select,
@@ -73,7 +74,7 @@ export type {
   ActionsBarProps,
 } from './actions'
 
-export type { ButtonProps, ButtonVariant, ControlSize, ButtonAppearance } from './ui'
+export type { ButtonProps, ButtonVariant, ControlSize, ButtonAppearance, SquareSlotProps } from './ui'
 
 export { SegmentedControl } from './ui'
 export type { SegmentOption, SegmentTone } from './ui'

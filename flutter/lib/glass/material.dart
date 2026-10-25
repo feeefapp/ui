@@ -150,7 +150,10 @@ const double glassHairlineSliverInset = 0.75;
 
 /// The hairline's ring and sliver strengths (0–1 subtracted) at one tint and brightness: clear
 /// light 0.2 / 0.184, regular light 0.09 / 0.184, dark 0.349 / 0.349.
-({double ring, double sliver}) glassHairline(double tint, {required bool dark}) {
+({double ring, double sliver}) glassHairline(
+  double tint, {
+  required bool dark,
+}) {
   final t = clampGlassTint(tint);
   if (dark) return (ring: 0.349, sliver: 0.349);
   return (ring: 0.2 + (0.09 - 0.2) * t, sliver: 0.184);

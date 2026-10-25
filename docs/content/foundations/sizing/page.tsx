@@ -26,7 +26,7 @@ const ROLES: Record<string, string> = {
   '--lab-control-font-large': 'Label size of large buttons.',
   '--lab-field-height-small': 'Small text fields, selects and number fields.',
   '--lab-field-height': 'Text fields, selects and number fields.',
-  '--lab-row-height': 'Navigation items, workspace actions.',
+  '--lab-row-height': 'Workspace actions, tool-sidebar headings.',
   '--lab-menu-row-height': 'Menu and floating-panel rows.',
   '--lab-toolbar-item': 'A toolbar bubble (controls inside are 6px less).',
   '--lab-shell-gap': 'G, the one chrome gap: window, top bar, panel, sidebar items, scroll-area floats and content.',

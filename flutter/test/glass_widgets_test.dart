@@ -1,5 +1,9 @@
 import 'package:feeef_ui/feeef_ui.dart';
-import 'package:flutter/rendering.dart' show BackdropFilterLayer;
+
+import 'dart:ui' as ui;
+
+import 'package:flutter/rendering.dart'
+    show BackdropFilterLayer, RenderRepaintBoundary;
 import 'package:flutter/widgets.dart' hide RadioGroup;
 import 'package:flutter_test/flutter_test.dart';
 
@@ -11,6 +15,53 @@ Widget bubble(String id, {double width = 80}) => GlassGroup(
 );
 
 void main() {
+  for (final brightness in [Brightness.light, Brightness.dark]) {
+    testWidgets(
+      'standalone compact glass has no inset contour in $brightness',
+      (tester) async {
+        final boundary = GlobalKey();
+        await tester.pumpWidget(
+          host(
+            ThemeProvider(
+              config: const ThemeConfig(),
+              brightness: brightness,
+              child: ColoredBox(
+                color: const Color(0xff203828),
+                child: Center(
+                  child: RepaintBoundary(
+                    key: boundary,
+                    child: const GlassSurface(
+                      radius: 22,
+                      child: SizedBox(width: 160, height: 44),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.runAsync(() async {
+          final render =
+              boundary.currentContext!.findRenderObject()
+                  as RenderRepaintBoundary;
+          final image = await render.toImage();
+          final bytes = (await image.toByteData(
+            format: ui.ImageByteFormat.rawRgba,
+          ))!;
+          List<int> pixel(int y) => [
+            for (var c = 0; c < 4; c++)
+              bytes.getUint8((y * image.width + 80) * 4 + c),
+          ];
+          // Below the one-pixel outer rim the material is continuous: no second inset line.
+          expect(pixel(1), pixel(3));
+          expect(pixel(42), pixel(40));
+          image.dispose();
+        });
+      },
+    );
+  }
+
   testWidgets(
     'a container draws close bubbles as one shape and far ones apart',
     (tester) async {
@@ -61,12 +112,36 @@ void main() {
       for (final layer in tester.layers.whereType<BackdropFilterLayer>())
         layer.backdropKey,
     ];
-    // Three apart bubbles per container: the glass and its two hairline bands (ring, slivers)
-    // for each, nine backdrops per container, one key (one backdrop read) per container.
-    expect(keys, hasLength(18));
+    // Compact controls paint one rim, without separate exterior hairline bands.
+    // Three apart bubbles per container, sharing one backdrop read per container.
+    expect(keys, hasLength(6));
     expect(keys, everyElement(isNotNull));
     expect(keys.toSet(), hasLength(2));
   });
+
+  testWidgets(
+    'large glass keeps its hairline while compact toolbar glass has one rim',
+    (tester) async {
+      await tester.pumpWidget(
+        host(
+          GlassContainer(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const GlassGroup(child: SizedBox(width: 160, height: 100)),
+                const SizedBox(height: 40),
+                bubble('compact'),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      // One backdrop for each shape, plus two exterior bands only on the large panel.
+      expect(tester.layers.whereType<BackdropFilterLayer>(), hasLength(4));
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('a bubble that moves springs its glass and carries its content', (
     tester,

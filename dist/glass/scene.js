@@ -3,7 +3,7 @@ import { SPRINGS } from '../physics/spring.js';
 import { boundsOf, clampRadius, clipAxes, clipInset, clippedGlassPaths, hostFrame, memberClip, openClip, toLocalPoint, toLocalRect, toScreenPoint, translatePath, } from './geometry.js';
 import { DEFAULT_GLASS_LIGHT, glassLightToward, surfaceReflection, surfaceShade, highlightSurface } from './light.js';
 import { glassMemberRect } from './member-bounds.js';
-import { GLASS_INSTANT_ATTRIBUTE, glassChangesAtOnce, planGlassTransition, sameRect } from './transitions.js';
+import { GLASS_FOLLOW_ATTRIBUTE, GLASS_INSTANT_ATTRIBUTE, glassChangesAtOnce, planGlassTransition, sameRect } from './transitions.js';
 import { adaptiveGlassTone, backdropTone, parseCssColor } from './adaptive.js';
 import { liveDisplacementMap, rgbaBmpDataUrl, elementImagePlacement, supportsElementRefraction, supportsRefraction } from './refraction.js';
 import { DecodedRefractionMap } from './decoded-refraction-map.js';
@@ -89,6 +89,9 @@ class Shape {
     contentScale = 1;
     /** Content follows the glass only for moves of the same bubble, not while growing out of another. */
     carry = true;
+    /** Growing out of a neighbour: springs to its place even while its element is animated, so a
+     * bubble that fades in with a transition is still born out of the neighbour, not popped in place. */
+    growing = false;
     leaving = false;
     token = 0;
     constructor(rect, scale = 1) {
@@ -577,7 +580,10 @@ export class GlassScene {
             const grow = birth.kind === 'grow' && !instant;
             const shape = new Shape(grow ? birth.from : target.rect, grow || instant ? 1 : 0);
             shape.carry = !grow;
-            shape.clip = target.clip;
+            shape.growing = grow;
+            // A bubble growing out of a neighbour crosses the space between them: no clip (a slot's
+            // overflow box would cut it off at the slot's edge) until it arrives.
+            shape.clip = grow ? undefined : target.clip;
             this.shapes.set(birth.id, shape);
             if (!instant && target.member)
                 fadeIn(target.member.element);
@@ -588,6 +594,9 @@ export class GlassScene {
                 continue;
             shape.leaving = true;
             shape.layout = null;
+            // It travels into its neighbour: free of its old slot's clip.
+            if (death.kind === 'absorb')
+                shape.clip = undefined;
             this.release(shape, death.id);
             const token = ++shape.token;
             const done = () => {
@@ -607,15 +616,22 @@ export class GlassScene {
                 setTimeout(done, 900);
             }
         }
+        // Content inside resizing itself smoothly (a segmented control folding): every bubble of the
+        // row follows the layout exactly, the neighbours it pushes included, so nothing overlaps.
+        const followAll = this.host.querySelector(`[${GLASS_FOLLOW_ATTRIBUTE}]`) !== null;
         for (const [id, target] of targets) {
             const shape = this.shapes.get(id);
             shape.leaving = false;
             shape.radius = target.radius;
             shape.cornerExponent = this.cornerShape === 'round' ? 2 : undefined;
-            shape.clip = target.clip;
+            shape.clip = shape.growing ? undefined : target.clip;
             // Bubbles that animate their own size, that something else is animating right now, or that a
             // scroller moved, are followed exactly instead of sprung, so the glass never lags behind them.
-            const follow = target.member?.options.motion === 'follow' || !!target.animated || !!target.scrolled;
+            const follow = !shape.growing &&
+                (target.member?.options.motion === 'follow' ||
+                    !!target.animated ||
+                    !!target.scrolled ||
+                    followAll);
             const changed = !shape.layout || !sameRect(shape.layout, target.rect);
             shape.layout = target.rect;
             if (shape.scale.getTarget() !== 1)
@@ -625,8 +641,11 @@ export class GlassScene {
             else if (changed || !sameRect(shape.rect(), target.rect)) {
                 const token = ++shape.token;
                 void shape.animate(target.rect, false).then((arrived) => {
-                    if (arrived && shape.token === token)
+                    if (arrived && shape.token === token) {
                         shape.carry = true;
+                        shape.growing = false;
+                        shape.clip = target.clip;
+                    }
                     this.scheduleDraw();
                 });
             }

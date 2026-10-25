@@ -4,16 +4,22 @@ import 'dart:ui';
 import 'geometry.dart';
 
 /// How bubbles change when the layout changes, following Apple's glass rules: the twin of
-/// `@feeef.dev/ui/glass/transitions`.
-/// - a new bubble within `spacing` of a bubble that just left (or of a living one) grows out of it;
-/// - a bubble that leaves within `spacing` of a new or living bubble is absorbed into it;
-/// - anything farther away materializes in place or dematerializes where it was.
+/// `@feeef.dev/ui/glass/transitions`. Inside one container the glass is one material, so a bubble
+/// is never born or lost on its own while another is there.
+/// - a new bubble within `spacing` of a bubble that just left grows out of it (a split or a
+///   replacement);
+/// - otherwise a new bubble is born out of its nearest neighbour, preferring one in the same row: a
+///   droplet at the neighbour's facing edge ([glassSeed]) that stretches out to its place;
+/// - a leaving bubble is absorbed into the new bubble it overlaps (a merge), else into its nearest
+///   neighbour, preferring the same row, shrinking into that neighbour's facing edge;
+/// - only a bubble with no other bubble in the container materializes or dematerializes.
 sealed class GlassBirth {
   const GlassBirth(this.id);
   final String id;
 }
 
-/// Start at [from] (the source bubble's current rect) and spring to the target.
+/// Start at [from] (the source bubble's rect, or a droplet at its facing edge) and spring to the
+/// target.
 final class GlassGrow extends GlassBirth {
   const GlassGrow(super.id, this.source, this.from);
   final String source;
@@ -30,7 +36,8 @@ sealed class GlassDeath {
   final String id;
 }
 
-/// Keep drawing the leaving bubble while it springs into [into], then drop it.
+/// Keep drawing the leaving bubble while it springs into [into] (the bubble it merges into, or a
+/// droplet at that bubble's facing edge), then drop it.
 final class GlassAbsorb extends GlassDeath {
   const GlassAbsorb(super.id, this.target, this.into);
   final String target;
@@ -69,6 +76,51 @@ double _overlap(Rect a, Rect b) =>
   return best == null ? null : (best.$1, best.$2);
 }
 
+/// True when [a] and [b] share some height: bubbles of one row.
+bool sameGlassRow(Rect a, Rect b) =>
+    math.min(a.bottom, b.bottom) - math.max(a.top, b.top) > 0;
+
+/// Closest candidate at any distance: one in the same row first, then the smallest gap.
+(String, Rect)? _neighbour(Rect rect, Map<String, Rect> candidates) {
+  (String, Rect, bool, double)? best;
+  for (final MapEntry(key: id, value: other) in candidates.entries) {
+    final row = sameGlassRow(rect, other);
+    final gap = _gap(rect, other);
+    if (best == null ||
+        (row && !best.$3) ||
+        (row == best.$3 && gap < best.$4)) {
+      best = (id, other, row, gap);
+    }
+  }
+  return best == null ? null : (best.$1, best.$2);
+}
+
+/// The droplet a bubble is born from, or absorbed into, at [anchor]'s end facing [toward]: a round
+/// drop as tall (stacked: as wide) as the smaller of the two, tucked inside that end so it is
+/// hidden in the anchor's glass. A new bubble stretches out of its neighbour from there instead of
+/// sliding out from under it, and a leaving one shrinks back into it without a trace.
+Rect glassSeed(Rect anchor, Rect toward) {
+  final a = anchor.center;
+  final t = toward.center;
+  double clamp(double v, double lo, double hi) =>
+      math.min(math.max(v, lo), math.max(lo, hi));
+  final horizontal =
+      sameGlassRow(anchor, toward) ||
+      (t.dx - a.dx).abs() * anchor.height >= (t.dy - a.dy).abs() * anchor.width;
+  if (horizontal) {
+    final height = math.min(anchor.height, toward.height);
+    final width = math.min(math.min(height, toward.width), anchor.width);
+    final x = t.dx >= a.dx ? anchor.right - width : anchor.left;
+    final cy = clamp(t.dy, anchor.top + height / 2, anchor.bottom - height / 2);
+    return Rect.fromLTWH(x, cy - height / 2, width, height);
+  }
+  final width = math.min(anchor.width, toward.width);
+  final height = math.min(math.min(width, toward.height), anchor.height);
+  final y = t.dy >= a.dy ? anchor.bottom - height : anchor.top;
+  final cx = clamp(t.dx, anchor.left + width / 2, anchor.right - width / 2);
+  return Rect.fromLTWH(cx - width / 2, y, width, height);
+}
+
 /// Plans births and deaths between two measurements. [previous]: current visual rects of bubbles
 /// drawn before the change (including ones leaving); [next]: targets after the change.
 ({List<GlassBirth> births, List<GlassDeath> deaths}) planGlassTransition(
@@ -87,22 +139,39 @@ double _overlap(Rect a, Rect b) =>
   final births = <GlassBirth>[];
   for (final MapEntry(key: id, value: rect) in next.entries) {
     if (previous.containsKey(id)) continue;
-    // Prefer a bubble that just left (a split or a replacement), then a living neighbour.
+    // A bubble that just left right here (a split or a replacement), else the nearest neighbour
+    // that stays, else the nearest one leaving.
     final source =
-        _nearest(rect, leaving, spacing) ?? _nearest(rect, staying, spacing);
+        _nearest(rect, leaving, spacing) ??
+        _neighbour(rect, staying) ??
+        _neighbour(rect, leaving);
     births.add(
-      source != null
-          ? GlassGrow(id, source.$1, source.$2)
-          : GlassMaterialize(id),
+      source == null
+          ? GlassMaterialize(id)
+          : GlassGrow(
+              id,
+              source.$1,
+              _overlap(source.$2, rect) > 0
+                  ? source.$2
+                  : glassSeed(source.$2, rect),
+            ),
     );
   }
   final deaths = <GlassDeath>[];
   for (final MapEntry(key: id, value: rect) in leaving.entries) {
-    final target = _nearest(rect, next, spacing);
+    // In a split the parent is absorbed into the child it overlaps most while the children grow
+    // out of it, so the glass never has a gap; otherwise into its nearest neighbour.
+    final target = _nearest(rect, next, spacing) ?? _neighbour(rect, next);
     deaths.add(
-      target != null
-          ? GlassAbsorb(id, target.$1, target.$2)
-          : GlassDematerialize(id),
+      target == null
+          ? GlassDematerialize(id)
+          : GlassAbsorb(
+              id,
+              target.$1,
+              _overlap(target.$2, rect) > 0
+                  ? target.$2
+                  : glassSeed(target.$2, rect),
+            ),
     );
   }
   return (births: births, deaths: deaths);

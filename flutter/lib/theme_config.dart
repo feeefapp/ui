@@ -201,7 +201,8 @@ class Metrics {
   /// Text field heights: small 36, regular 44 (`large` is ignored).
   final MetricScale? fieldHeight;
 
-  /// Navigation rows (sidebar items): 44.
+  /// Workspace action rows and tool-sidebar headings: 44. Navigation items are regular buttons
+  /// (`controlHeight`).
   final double? rowHeight;
 
   /// A toolbar bubble's outer height: 44. Controls inside are 6 less.

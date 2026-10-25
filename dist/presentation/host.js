@@ -1,6 +1,7 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
+import { FloatingPortalScope } from '../menu/boundary.js';
 import { createPortal } from 'react-dom';
 import { cn } from '../utils.js';
 /**
@@ -33,6 +34,12 @@ function TopLayerEntry({ modal, opener }) {
  */
 export const PresentationHost = React.forwardRef(function PresentationHost({ kind, label, labelledBy, describedBy, role = 'dialog', modal = true, container, onEscape, initialFocusRef, returnFocusRef, className, style, children, }, ref) {
     const host = React.useRef(null);
+    // Floating panels opened inside render into the surface (see FloatingPortalScope).
+    const [layer, setLayer] = React.useState(null);
+    const setHost = React.useCallback((node) => {
+        host.current = node;
+        setLayer(node);
+    }, []);
     const escape = React.useRef(onEscape);
     escape.current = onEscape;
     const returnTo = React.useRef(returnFocusRef);
@@ -81,17 +88,17 @@ export const PresentationHost = React.forwardRef(function PresentationHost({ kin
     if (inline) {
         if (!container)
             return null;
-        return createPortal(_jsx("div", { ...shared, ref: host, "data-inline": "", role: role, "aria-modal": modal || undefined, tabIndex: -1, onKeyDown: (event) => {
+        return createPortal(_jsx("div", { ...shared, ref: setHost, "data-inline": "", role: role, "aria-modal": modal || undefined, tabIndex: -1, onKeyDown: (event) => {
                 if (event.key !== 'Escape' || !modal)
                     return;
                 event.stopPropagation();
                 escape.current?.();
-            }, children: children }), container);
+            }, children: _jsx(FloatingPortalScope, { element: layer, children: children }) }), container);
     }
-    return createPortal(_jsxs("dialog", { ...shared, ref: host, role: role === 'alertdialog' ? 'alertdialog' : undefined, onCancel: (event) => {
+    return createPortal(_jsxs("dialog", { ...shared, ref: setHost, role: role === 'alertdialog' ? 'alertdialog' : undefined, onCancel: (event) => {
             event.preventDefault();
             escape.current?.();
-        }, children: [_jsx(TopLayerEntry, { modal: modal, opener: opener }), children] }), document.body);
+        }, children: [_jsx(TopLayerEntry, { modal: modal, opener: opener }), _jsx(FloatingPortalScope, { element: layer, children: children })] }), document.body);
 });
 /**
  * Keeps a surface mounted while it leaves: `mounted` turns true as soon as `open` does, and false

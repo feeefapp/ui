@@ -97,8 +97,9 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
  * Apple's GlassEffectContainer. The app's ThemeConfig `glass` sets the style: `liquid` (moving
  * light, press response), `still` (fixed light, no press) or `solid` (opaque); `glassTint`,
  * `glassBlur` and `glassRefraction` set the material. Bubbles that come within `spacing` bend toward each other and
- * merge; a bubble that splits into several grows them out of itself; new and removed bubbles
- * materialize. Bubbles keep their layout, focus and semantics; only the paint moves here. Without
+ * merge; a bubble that splits into several grows them out of itself; a new bubble is born out of
+ * its nearest neighbour (same row first) and a removed one is absorbed into it, so only a lone
+ * bubble materializes. Bubbles keep their layout, focus and semantics; only the paint moves here. Without
  * JavaScript, or in forced colors, every bubble paints its own glass as before.
  */
 export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>(function GlassContainer(

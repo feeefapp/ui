@@ -53,14 +53,15 @@ html[data-lab-theme]
   .lab-control[data-surface-variant][data-control-appearance='toolbar']:not(
     [data-surface-variant='filled'],
     [aria-pressed='true'],
-    [data-state='on']
+    [data-state='on'],
+    [aria-current='page']
   ) {
   --lab-control-fill: transparent;
   --lab-control-edge: transparent;
   --lab-control-elevation: none;
 }
 html[data-lab-theme]
-  .lab-control[data-surface-variant]:is([aria-pressed='true'], [data-state='on']) {
+  .lab-control[data-surface-variant]:is([aria-pressed='true'], [data-state='on'], [aria-current='page']) {
   --lab-control-fill: var(--lab-control-selected);
   --lab-control-fill-hover: color-mix(in srgb, var(--lab-primary) 30%, var(--lab-surface));
   --lab-control-fill-pressed: color-mix(in srgb, var(--lab-primary) 36%, var(--lab-surface));

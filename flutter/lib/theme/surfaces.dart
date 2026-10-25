@@ -14,6 +14,7 @@ Color glassShadowColor(Brightness brightness) => Color.from(
 /// The web kit's floating surface paint (`.lab-glass-group`, `.lab-popover-surface`): the soft
 /// `--lab-glass-shadow` (0 8px 24px -14px), [fill], the `--lab-glass-light` inner light (a light
 /// line under the top border, a dark one over the bottom) and the 1px [line] border.
+/// Set [innerLight] to false when the caller already paints a rim on the silhouette.
 void paintFloatingSurface(
   Canvas canvas,
   Size size,
@@ -22,6 +23,7 @@ void paintFloatingSurface(
   required Color line,
   required Color edgeLow,
   required Color shadow,
+  bool innerLight = true,
 }) {
   final rect = Offset.zero & size;
   List<double> r(double v) => [v, v, v, v];
@@ -43,27 +45,30 @@ void paintFloatingSurface(
     canvas.restore();
   }
   canvas.drawPath(shape, Paint()..color = fill);
-  // --lab-glass-light: inset 0 1px 0 edge-low, inset 0 -1px 0 rgb(0 0 0 / 6%), inside the border.
-  final inner = superellipsePath(rect, r(radius), inset: 1);
-  canvas.save();
-  canvas.clipPath(inner);
-  canvas.drawPath(
-    Path.combine(
-      PathOperation.difference,
-      inner,
-      inner.shift(const Offset(0, 1)),
-    ),
-    Paint()..color = edgeLow,
-  );
-  canvas.drawPath(
-    Path.combine(
-      PathOperation.difference,
-      inner,
-      inner.shift(const Offset(0, -1)),
-    ),
-    Paint()..color = const Color.from(alpha: 0.06, red: 0, green: 0, blue: 0),
-  );
-  canvas.restore();
+  // Compact glass supplies its own rim on the outer silhouette; don't add an inset contour.
+  if (innerLight) {
+    // --lab-glass-light: inset 0 1px 0 edge-low, inset 0 -1px 0 rgb(0 0 0 / 6%), inside the border.
+    final inner = superellipsePath(rect, r(radius), inset: 1);
+    canvas.save();
+    canvas.clipPath(inner);
+    canvas.drawPath(
+      Path.combine(
+        PathOperation.difference,
+        inner,
+        inner.shift(const Offset(0, 1)),
+      ),
+      Paint()..color = edgeLow,
+    );
+    canvas.drawPath(
+      Path.combine(
+        PathOperation.difference,
+        inner,
+        inner.shift(const Offset(0, -1)),
+      ),
+      Paint()..color = const Color.from(alpha: 0.06, red: 0, green: 0, blue: 0),
+    );
+    canvas.restore();
+  }
   final border = superellipsePath(rect, r(radius), inset: 0.5);
   canvas.drawPath(
     border,

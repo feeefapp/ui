@@ -2,6 +2,8 @@
 import './system.css';
 import './primitives/control-variants.css';
 export { Button, IconButton } from './primitives/button.js';
+export { SquareSlot } from './primitives/square-slot.js';
+export type { SquareSlotProps } from './primitives/square-slot.js';
 export { Input, Textarea, Label, Image } from './primitives/fields.js';
 export { Select, Option } from './primitives/select.js';
 export { Alert, Modal, Pane } from './presentation/index.js';
@@ -9,7 +11,8 @@ export { ProBadge } from './primitives/badge.js';
 export { Box, Text, Link, Form, List, ListItem, Divider, Style, } from './primitives/layout.js';
 export type { ButtonProps, ButtonVariant, ControlSize, ButtonAppearance, } from './primitives/button.js';
 export { SegmentedControl } from './primitives/segmented.js';
-export { Toolbar, ToolbarGroup } from './toolbar.js';
+export { Toolbar, ToolbarGroup, ToolbarOrientationContext } from './toolbar.js';
+export type { ToolbarOrientation } from './toolbar.js';
 export type { SegmentOption, SegmentTone } from './primitives/segmented.js';
 export { RawInput } from './primitives/raw-input.js';
 export type { RawInputProps, InputElement, InputValidator } from './primitives/raw-input.js';

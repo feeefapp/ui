@@ -8,7 +8,16 @@ export type FloatingBoundaryProps = React.HTMLAttributes<HTMLDivElement>;
  */
 export declare const FloatingBoundary: React.ForwardRefExoticComponent<FloatingBoundaryProps & React.RefAttributes<HTMLDivElement>>;
 /**
- * The nearest `FloatingBoundary` element, or null when the app fills the window. Pass it as a
+ * Makes `element` the place floating panels render into, without adding a box: presentation
+ * surfaces (modal, sheet, drawer, pane) wrap their content in it, so a menu, select or popover
+ * opened inside a modal `<dialog>` joins it in the top layer instead of rendering behind it.
+ */
+export declare function FloatingPortalScope({ element, children }: {
+    element: HTMLElement | null;
+    children: React.ReactNode;
+}): React.JSX.Element;
+/**
+ * The nearest `FloatingBoundary` (or presentation surface) element, or null when the app fills the window. Pass it as a
  * Radix `collisionBoundary` and as the portal `container` of anything that floats.
  */
 export declare function useFloatingBoundary(): HTMLElement | null;

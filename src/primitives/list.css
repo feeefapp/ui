@@ -99,12 +99,9 @@ for row sides, headers and hairlines. */
   cursor: default;
   opacity: 0.5;
 }
+/* Leading media: a SquareSlot of --lab-list-leading-size. */
 .lab-list-row-leading {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: var(--lab-list-leading-size);
-  height: var(--lab-list-leading-size);
+  --lab-square-slot-size: var(--lab-list-leading-size);
   color: var(--lab-muted);
 }
 .lab-list-row-leading > svg {

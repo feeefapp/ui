@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { computeActionsLayout, menuHasLeading } from '../src/actions/layout.ts'
+import { computeActionsLayout, computeFitRow, menuHasLeading } from '../src/actions/layout.ts'
 
 const actions = [
   { id: 'back', width: 70, priority: 2 },
@@ -157,4 +157,38 @@ test('menus reserve the leading slot only when a row has an icon, check or loade
   assert.equal(menuHasLeading(plain, new Set(['b'])), true)
   assert.equal(menuHasLeading([...plain, { id: 'c', type: 'action', icon: 'x' }], new Set()), true)
   assert.equal(menuHasLeading([{ id: 't', type: 'toggle' }], new Set()), true)
+})
+
+test('fit row: foldable controls fold from the end until the row fits', () => {
+  const views = { id: 'views', full: 240, compact: 120, current: 240 }
+  const platform = { id: 'platform', full: 170, compact: 100, current: 170 }
+  // 50px short: folding the last one (saves 70) is enough.
+  assert.deepEqual([...computeFitRow([views, platform], -50)], ['views'])
+  // 100px short: both fold.
+  assert.deepEqual([...computeFitRow([views, platform], -100)], [])
+  // Room to spare: both unfold.
+  assert.deepEqual([...computeFitRow([views, platform], 10)].sort(), ['platform', 'views'])
+})
+
+test('fit row: the answer does not depend on which controls are folded now', () => {
+  const unfolded = [
+    { id: 'a', full: 240, compact: 120, current: 240 },
+    { id: 'b', full: 170, compact: 100, current: 170 },
+  ]
+  // Folding b frees 70px, so the free space grows by exactly that: same answer, no flip back.
+  const folded = [unfolded[0], { ...unfolded[1], current: 100 }]
+  assert.deepEqual([...computeFitRow(unfolded, -50)], ['a'])
+  assert.deepEqual([...computeFitRow(folded, 20)], ['a'])
+  // Mid-spring (b at 130px) too.
+  assert.deepEqual([...computeFitRow([unfolded[0], { ...unfolded[1], current: 130 }], -10)], ['a'])
+})
+
+test('fit row: priority decides which folds first; no room folds everything', () => {
+  const items = [
+    { id: 'a', full: 200, compact: 100, current: 100, priority: 0 },
+    { id: 'b', full: 200, compact: 100, current: 100, priority: 5 },
+  ]
+  assert.deepEqual([...computeFitRow(items, 150)], ['b'])
+  assert.deepEqual([...computeFitRow(items, -20)], [])
+  assert.deepEqual([...computeFitRow([], 100)], [])
 })

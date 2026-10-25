@@ -41,5 +41,5 @@ export default function Appear() {
 export const meta = {
   title: 'Bubbles that come and go',
   description:
-    'A new bubble farther than spacing from its neighbours materializes; bubbles that move because of it slide with their content. Removing it reverses the motion.',
+    'A new bubble is born out of its nearest neighbour in the row and stretches to its place; bubbles that move because of it slide with their content. Removing it flows its glass back into that neighbour.',
 }

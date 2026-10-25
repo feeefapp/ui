@@ -46,7 +46,10 @@ import 'material.dart';
       reach = math.max(reach, t);
       outline.add(Offset(x, y));
       ringOuter.add(
-        Offset(x + nx * glassHairlineRingWidth, y + ny * glassHairlineRingWidth),
+        Offset(
+          x + nx * glassHairlineRingWidth,
+          y + ny * glassHairlineRingWidth,
+        ),
       );
       sliverOuter.add(Offset(x + nx * t, y + ny * t));
     }

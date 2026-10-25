@@ -121,3 +121,61 @@ Web: CSS on the button (`control-variants.css`, `[data-prominent]`); Flutter: `_
   light (top) and dark (bottom), 36 / 44 / 48 pt circles and a 160×44 capsule, primary `#0088ff`.
 - Parity `components/button`: ≤ 0.66 % differing, mean Δ ≤ 1.20 (README baseline 0.21 / 0.64 %; the
   remainder is the web-only backdrop leak).
+
+## Tab bar (iOS 27 kit SVG export, light, 402 pt wide screen)
+
+- **Bar.** A capsule 290 × 62 at (21, 12), using the Regular light glass recipe (same fills, hairline and shadow as above).
+  - Search is its own 62 × 62 circle bubble, 8 pt to the right (x 319). It is a separate member of the same glass container.
+- **Selected tab at rest.**
+  - A capsule inset 4 pt on all sides: 102 × 54, radius 27, here at x 25–127.
+  - Filled `#EDEDED` blended plus-darker: it darkens what's behind by 0.071 (about 18 levels).
+  - This is a quiet grey pill, not a tinted one.
+- **Tabs.** Icon and label stack as one glyph, about 26 × 38 pt.
+  - Tab centres are 90 pt apart (76, 166, 256).
+  - The selected pill is 12 pt wider than that pitch, so it reaches into its neighbours.
+  - The selected icon and label take the accent colour.
+- **While pressing or dragging** (iOS 26 beta 6+ and iOS 27 behaviour, from the owner's reference screenshots):
+  - The pill turns into a clear glass lens, a water drop. It is a little wider than the pill and taller than the bar, sticking out above and below it.
+  - It magnifies the tabs under it by about 1.15–1.25×, with a refracting rim and slight colour fringing (dispersion 0.2 in the kit's GLASS effect).
+  - The grey fill goes away while it's a lens.
+  - On release it springs back into the grey pill on the chosen tab.
+
+### Tab bar component: exact values ("Tab Bar - iPhone", read from the owner's copy)
+
+Variants: `Minimized` True/False × `Tabs` 2–5 × `Type` Default / Search Role / Prominent Tab.
+The tab item is a separate component, "_Tab Bar Button - iPhone" (`Mode` Light/Dark × `Selected`).
+
+- **Bar** (not minimized, 402 pt screen):
+  - Auto-layout, padding 25 at the sides and 16 at the top.
+  - The tabs group and the Search bubble sit 16 apart in layout; the visible glass gap is 8.
+  - The tabs group lays out tabs with **−8 spacing** (they overlap) and 2 pt side padding.
+  - The glass BG is the group inset −4 on all sides: 62 tall for 54 pt tabs, capsule radius.
+  - BG recipe: Regular light/dark glass, as in the tables above.
+- **Tabs fill the width equally.**
+  - 3 tabs (with search): 98 wide each, 90 apart, group 282.
+  - 4 tabs (no search): 93 wide, 85 apart, group 352.
+  - Minimum tab width 72.
+- **Tab item.**
+  - 53.5 tall. Vertical layout, padding 8 at the sides, 6 top, 7 bottom, 0.5 between the glyph and the label.
+  - Glyph: SF Symbol, Semibold 18, in a 28 pt line.
+  - Label: Semibold 10, 12 pt line.
+- **Unselected ink.**
+  - Light: `#1A1A1A` plus-darker, so it darkens.
+  - Dark: `#F5F5F5` plus-lighter, so it lightens.
+- **Selected tab.**
+  - The "Selection" capsule is 4 pt wider than the tab (−2 each side), 54 tall, radius full.
+    - Light: `#EDEDED` plus-darker, about −18 levels.
+    - Dark: `#121212` plus-lighter, about +18 levels.
+  - The glyph and label are a mask over two layers:
+    - Light: white at 50%, then the tint `#0088FF` plus-darker.
+    - Dark: black at 50%, then `#0091FF` plus-lighter.
+  - So the selected glyph reads as the accent colour, and the selected label is 0.1 tighter (−0.1 letter spacing).
+- **Minimized.** One 40 × 40 tab, glyph only (centred, label gone), inside a 48 × 48 glass circle (inset 4).
+  - The bar keeps 32 pt side padding (the accessory sits between).
+  - With Search Role, the search bubble also shrinks to 40 in a 48 circle.
+- **Search bubble.** A 54 × 54 tab inside a 62 × 62 glass circle.
+  - Glyph: magnifying glass, Semibold 17, `#1A1A1A` plus-darker.
+
+Reference renders (light and dark × full, search role, minimized) were placed on the Figma page
+"Glass reference (Claude)" as `tabbar-ref@3x`. The Figma MCP Starter-plan call limit was reached
+before they could be exported here.

@@ -1,21 +1,25 @@
 import { rectGap, type GlassRect } from './geometry'
 
 /**
- * How bubbles change when the layout changes, following Apple's glass rules:
- * - a new bubble within `spacing` of a bubble that just left (or of a living one) grows out of it
- *   (one bubble splitting into several);
- * - a bubble that leaves within `spacing` of a new or living bubble is absorbed into it (several
- *   bubbles merging into one);
- * - anything farther away materializes in place or dematerializes where it was.
+ * How bubbles change when the layout changes, following Apple's glass rules: inside one container
+ * the glass is one material, so a bubble is never born or lost on its own while another is there.
+ * - a new bubble within `spacing` of a bubble that just left grows out of it (one bubble splitting
+ *   into several, or a replacement);
+ * - otherwise a new bubble is born out of its nearest neighbour, preferring one in the same row: a
+ *   droplet at the neighbour's facing edge (`glassSeed`) that stretches out to its place;
+ * - a leaving bubble is absorbed into the new bubble it overlaps (several merging into one), else
+ *   into its nearest neighbour, preferring the same row, shrinking into that neighbour's facing edge;
+ * - only a bubble with no other bubble in the container materializes in place or dematerializes.
  */
 export type GlassBirth =
-  /** Start at `from` (the source bubble's current rect) and spring to the target. */
+  /** Start at `from` (the source bubble's rect, or a droplet at its facing edge) and spring to the target. */
   | { id: string; kind: 'grow'; source: string; from: GlassRect }
   /** Start as a point at the target's centre and spring open. */
   | { id: string; kind: 'materialize' }
 
 export type GlassDeath =
-  /** Keep drawing the leaving bubble while it springs into `into`, then drop it. */
+  /** Keep drawing the leaving bubble while it springs into `into` (the bubble it merges into, or a
+   * droplet at that bubble's facing edge), then drop it. */
   | { id: string; kind: 'absorb'; target: string; into: GlassRect }
   /** Shrink to a point and drop it. */
   | { id: string; kind: 'dematerialize' }
@@ -25,6 +29,11 @@ export type GlassPlan = { births: GlassBirth[]; deaths: GlassDeath[] }
 const overlap = (a: GlassRect, b: GlassRect) =>
   Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)) *
   Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y))
+
+/** True when `a` and `b` share some height: bubbles of one row. */
+export function sameGlassRow(a: GlassRect, b: GlassRect) {
+  return Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y) > 0
+}
 
 /** Closest candidate within `spacing`, preferring the largest overlap, then the smallest gap. */
 function nearest(rect: GlassRect, candidates: ReadonlyMap<string, GlassRect>, spacing: number) {
@@ -37,6 +46,45 @@ function nearest(rect: GlassRect, candidates: ReadonlyMap<string, GlassRect>, sp
       best = { id, rect: other, overlap: shared, gap }
   }
   return best
+}
+
+/** Closest candidate at any distance: one in the same row first, then the smallest gap. */
+function neighbour(rect: GlassRect, candidates: ReadonlyMap<string, GlassRect>) {
+  let best: { id: string; rect: GlassRect; row: boolean; gap: number } | null = null
+  for (const [id, other] of candidates) {
+    const row = sameGlassRow(rect, other)
+    const gap = rectGap(rect, other)
+    if (!best || (row && !best.row) || (row === best.row && gap < best.gap)) best = { id, rect: other, row, gap }
+  }
+  return best
+}
+
+/**
+ * The droplet a bubble is born from, or absorbed into, at `anchor`'s end facing `toward`: a round
+ * drop as tall (stacked: as wide) as the smaller of the two, tucked inside that end so it is hidden
+ * in the anchor's glass. A new bubble stretches out of its neighbour from there instead of sliding
+ * out from under it, and a leaving one shrinks back into it without a trace.
+ */
+export function glassSeed(anchor: GlassRect, toward: GlassRect): GlassRect {
+  const ax = anchor.x + anchor.width / 2
+  const ay = anchor.y + anchor.height / 2
+  const tx = toward.x + toward.width / 2
+  const ty = toward.y + toward.height / 2
+  const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), Math.max(lo, hi))
+  const horizontal =
+    sameGlassRow(anchor, toward) || Math.abs(tx - ax) * anchor.height >= Math.abs(ty - ay) * anchor.width
+  if (horizontal) {
+    const height = Math.min(anchor.height, toward.height)
+    const width = Math.min(height, toward.width, anchor.width)
+    const x = tx >= ax ? anchor.x + anchor.width - width : anchor.x
+    const cy = clamp(ty, anchor.y + height / 2, anchor.y + anchor.height - height / 2)
+    return { x, y: cy - height / 2, width, height }
+  }
+  const width = Math.min(anchor.width, toward.width)
+  const height = Math.min(width, toward.height, anchor.height)
+  const y = ty >= ay ? anchor.y + anchor.height - height : anchor.y
+  const cx = clamp(tx, anchor.x + width / 2, anchor.x + anchor.width - width / 2)
+  return { x: cx - width / 2, y, width, height }
 }
 
 /**
@@ -54,16 +102,31 @@ export function planGlassTransition(
   const births: GlassBirth[] = []
   for (const [id, rect] of next) {
     if (previous.has(id)) continue
-    // Prefer a bubble that just left (a split or a replacement), then a living neighbour.
-    const source = nearest(rect, leaving, spacing) ?? nearest(rect, staying, spacing)
-    births.push(source ? { id, kind: 'grow', source: source.id, from: source.rect } : { id, kind: 'materialize' })
+    // A bubble that just left right here (a split or a replacement), else the nearest neighbour
+    // that stays, else the nearest one leaving.
+    const source = nearest(rect, leaving, spacing) ?? neighbour(rect, staying) ?? neighbour(rect, leaving)
+    if (!source) births.push({ id, kind: 'materialize' })
+    else
+      births.push({
+        id,
+        kind: 'grow',
+        source: source.id,
+        from: overlap(source.rect, rect) > 0 ? source.rect : glassSeed(source.rect, rect),
+      })
   }
   const deaths: GlassDeath[] = []
   for (const [id, rect] of leaving) {
-    // In a split the parent is absorbed into the child it overlaps most while the children
-    // grow out of it, so the glass never has a gap.
-    const target = nearest(rect, next, spacing)
-    deaths.push(target ? { id, kind: 'absorb', target: target.id, into: target.rect } : { id, kind: 'dematerialize' })
+    // In a split the parent is absorbed into the child it overlaps most while the children grow
+    // out of it, so the glass never has a gap; otherwise into its nearest neighbour.
+    const target = nearest(rect, next, spacing) ?? neighbour(rect, next)
+    if (!target) deaths.push({ id, kind: 'dematerialize' })
+    else
+      deaths.push({
+        id,
+        kind: 'absorb',
+        target: target.id,
+        into: overlap(target.rect, rect) > 0 ? target.rect : glassSeed(target.rect, rect),
+      })
   }
   return { births, deaths }
 }
@@ -84,6 +147,14 @@ export function sameRect(a: GlassRect, b: GlassRect) {
  * springs, so it rides the element's transform and leaves with it in the same frames.
  */
 export const GLASS_INSTANT_ATTRIBUTE = 'data-glass-instant'
+
+/**
+ * Put this attribute on content that animates its own size inside a bubble (a segmented control
+ * folding into its menu): while it is there, the glass of every bubble in that container follows
+ * the layout exactly instead of springing after it (like `glassMotion="follow"`), so the content
+ * never pokes out of its glass and the neighbours it pushes never overlap it.
+ */
+export const GLASS_FOLLOW_ATTRIBUTE = 'data-glass-follow'
 
 /** For this long (ms) after glass first appears, its bubbles appear in place (lazy content). */
 export const GLASS_SETTLE_MS = 300

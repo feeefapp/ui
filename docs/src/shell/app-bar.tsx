@@ -159,9 +159,9 @@ export function DocsAppBar({
             <ToolbarGroup
               label="Page title"
               className="docs-app-bar-title"
+              // Closing (Presence marks it data-glass-hidden) flows its glass back into the
+              // neighbouring bubble while the text fades.
               data-state={state}
-              // Closing takes it out of the glass too, so its bubble shrinks away with the text.
-              data-glass-hidden={state === 'closed' ? '' : undefined}
             >
               <span>{title}</span>
             </ToolbarGroup>

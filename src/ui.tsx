@@ -2,6 +2,8 @@
 import './system.css'
 import './primitives/control-variants.css'
 export { Button, IconButton } from './primitives/button'
+export { SquareSlot } from './primitives/square-slot'
+export type { SquareSlotProps } from './primitives/square-slot'
 export { Input, Textarea, Label, Image } from './primitives/fields'
 export { Select, Option } from './primitives/select'
 export { Alert, Modal, Pane } from './presentation'

@@ -163,8 +163,10 @@ lint errors outside primitives. Owner CSS may arrange controls, never replace or
 resize shared marks/input hit areas. Segmented view/mode pickers remain shared
 SegmentedControl; do not fork their radio semantics into feature buttons.
 SegmentedControl and TabView's tab bar are one engine, the internal selection track
-(`primitives/selection-track.tsx`, Flutter `selection_track.dart`): pill, lens, drag, overflow,
-keyboard and badges live there, parameterised by semantics (radio | tab), layout and sizes. Extend
+(`primitives/selection-track.tsx`, Flutter `selection_track.dart`): pill, lens, drag, overflow (scroll,
+or fold into a radio menu: `overflow="menu"`, fitted per row with the row's other foldable controls by
+`actions/fit-row.ts` + the pure `computeFitRow` in `actions/layout.ts`; Flutter folds by its own
+constraints), keyboard and badges live there, parameterised by semantics (radio | tab), layout and sizes. Extend
 it for a new selection control; never fork its selection code.
 
 Every slider/toggle uses Slider/SlideSwitch, including docs and specialized
@@ -194,11 +196,14 @@ member CSS radii remain configurable.
 Liquid glass (`src/glass`): `GlassContainer` paints ONE material for every GlassGroup, ToolbarGroup
 and Dock inside it: a backdrop clipped to the blended outline plus an SVG edge, pointer-following
 rim light and masked shadow. Bubbles keep layout, focus and semantics; the container springs their
-glass (`SPRINGS.snappy`) and plans splits, merges and materialize/dematerialize in
+glass (`SPRINGS.snappy`) and plans splits, merges, births out of the nearest neighbour (same row first; only a lone bubble materializes) and absorption into it in
 `transitions.ts`. Geometry (`geometry.ts`: superellipse SDF, smooth union with k = spacing, marching
 squares) and light (`light.ts`) are pure and tested in `tests/glass.test.ts`; keep them pure, they
 are the contract the Flutter twin ports. Bubbles that animate their own size pass
-`glassMotion="follow"`. Hide bubbles with `inert`/removal, never with opacity, filter, mask or
+`glassMotion="follow"`. Content that animates its own size inside a bubble (a segmented control folding
+into its menu) sets `data-glass-follow` (Flutter: `GlassMember.of(context)?.followLayoutFor(…)`) while
+it moves, so every bubble of that container follows its layout instead of springing after it. A bubble
+born out of a neighbour keeps springing out of it even while its element animates (`growing`). Hide bubbles with `inert`/removal, never with opacity, filter, mask or
 clip-path on a container or its ancestors (they cut the backdrop). Glass is clipped like content: a bubble inside a clipping ancestor below its container (overflow,
 clip-path, contain: paint; Flutter: any render object's `describeApproximatePaintClip`, e.g. a scroll
 view or ClipRect) paints only inside it, cut straight at the edge (`clippedGlassPaths`), and only

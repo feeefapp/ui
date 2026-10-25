@@ -77,15 +77,16 @@ function Overview() {
         <p>
           A segmented control picks one of two to five short, related options that are all visible at
           once: a view (List, Board), a mode (Home delivery, Stop desk), a period (Day, Week, Month).
-          The choice usually takes effect immediately and changes what is shown nearby. It also filters
-          a list by status (New 21, Calling 14, …): then there can be many options, each with a count,
-          and the control scrolls.
+          The choice usually takes effect immediately and changes what is shown nearby. When its row
+          runs out of room it folds into a menu, like an actions bar. It also filters a list by status
+          (New 21, Calling 14, …): then there can be many options, each with a count, and the control
+          scrolls instead (<C>overflow="scroll"</C>).
         </p>
         <Table
           head={['Need', 'Use']}
           rows={[
             ['One of 2–5 short options, applied right away', <C>SegmentedControl</C>],
-            ['A list filtered by status, with counts (8–12 statuses)', <><C>SegmentedControl</C> with <C>badge</C>s (it scrolls)</>],
+            ['A list filtered by status, with counts (8–12 statuses)', <><C>SegmentedControl</C> with <C>badge</C>s and <C>overflow="scroll"</C></>],
             ['One of many options, or long labels', <C>Select</C>],
             ['A choice inside a form, submitted with it', <C>RadioGroup</C>],
             ['Switching between whole pages or panels with their own content', 'Tabs'],
@@ -99,9 +100,10 @@ function Overview() {
           <C>options</C> is an array of <C>{'{ value, label, icon?, tone?, badge?, disabled? }'}</C>.{' '}
           <C>value</C> is typed from the options, so <C>onChange</C> receives the same string union as{' '}
           <C>value</C>. Icons are decorative and sit before the label; keep the label even when an
-          icon is shown. Options sit in one row and hug their labels; when they don’t fit they scroll
-          (see Many options). <C>equalWidth</C> fills the width with one row of equal options instead
-          (labels end in an ellipsis; it never scrolls).
+          icon is shown. Options sit in one row and hug their labels; when they don’t fit the control
+          folds into a menu, or scrolls (see When options don’t fit). <C>equalWidth</C> fills the
+          width with one row of equal options instead (labels end in an ellipsis; it never folds or
+          scrolls).
         </p>
         <p>
           The control is as tall as a regular button at every density (36px comfortable, 30px compact,
@@ -130,11 +132,32 @@ function Overview() {
         </p>
       </Section>
 
-      <Section title="Many options">
+      <Section title="When options don’t fit">
         <p>
-          A segmented control never wraps or squeezes its options. When they don’t fit the space it is
-          given, they scroll sideways inside the control’s own inset, so a glass bubble or box around it
-          stays put. The edges fade where there is more (the fade grows as content moves past the
+          A segmented control never wraps or squeezes its options. When its row has no room for all of
+          them it adapts the way an <Link to="/components/actions-bar">actions bar</Link> spills into
+          More, and <C>overflow</C> says how:
+        </p>
+        <Table
+          head={['overflow', 'What happens', 'For']}
+          rows={[
+            [<C>menu</C>, 'The other options fold into the selected one on a spring, the pill stays where it is and gains a chevron: one capsule that opens every option as a single-choice menu growing out of it. It unfolds as soon as the room is back.', 'Views and modes (the default)'],
+            [<C>scroll</C>, 'The options scroll sideways inside the control (below).', 'A status filter with many options and counts'],
+          ]}
+        />
+        <p>
+          Folding is fitted per row, not per control: every foldable control in the same row (an app
+          bar, a toolbar, a stage) is measured with its real labels and fonts, and they fold from the
+          end until the row fits, so two controls never fight over the same space and nothing flips
+          back and forth. A squeezed title in that row counts at its full width, so the controls fold
+          before the title truncates. The menu keeps radio semantics (each row is a{' '}
+          <C>menuitemradio</C> with <C>aria-checked</C>), opens on the chosen option and grows out of
+          the capsule like every kit menu. In Flutter the control folds by the width its parent gives
+          it: in a <C>Row</C> wrap it in <C>Flexible</C>.
+        </p>
+        <p>
+          With <C>overflow="scroll"</C>, options that don’t fit the space it is given scroll sideways
+          inside the control’s own inset, so a glass bubble or box around it stays put. The edges fade where there is more (the fade grows as content moves past the
           edge), and the selected option scrolls into view whenever the selection changes: a tap, an
           arrow key, a released drag or a new <C>value</C> from the owner. It stops clear of the fade.
           The pill moves with its option as the row scrolls.
@@ -222,6 +245,13 @@ function Overview() {
           selected option sits on a solid primary pill, so the state never depends on text color alone.
           Dragging is an extra: every choice is also a tap or a key press away.
         </p>
+        <p>
+          Folded into a menu, the capsule is a button named by the group and its value (“Orders view:
+          Board”) with <C>aria-haspopup="menu"</C>; the folded options leave the Tab order and the
+          accessibility tree. Left and Right (mirrored in right-to-left), Home and End still step
+          through the options without opening it; Up, Down, Enter and Space open the menu on the
+          chosen option, Escape closes it and focus returns to the capsule.
+        </p>
         <Keys
           rows={[
             ['Tab', 'Moves focus into the group, onto the selected option, and out again.'],
@@ -252,11 +282,11 @@ export default definePage({
   group: 'Actions',
   order: 2,
   summary:
-    'A single choice among short options, shown side by side, with radio semantics; counts as badges, and it scrolls when there are many.',
+    'A single choice among short options, shown side by side, with radio semantics; it folds into a menu when its row runs out of room, and a status filter scrolls.',
   importLine: "import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'",
   source: 'src/primitives/segmented.tsx',
   api: ['SegmentedControl'],
-  keywords: ['toggle group', 'button group', 'tabs', 'radio', 'switcher', 'mode', 'drag', 'liquid glass', 'pill', 'badge', 'count', 'status', 'scroll'],
+  keywords: ['toggle group', 'button group', 'tabs', 'radio', 'switcher', 'mode', 'drag', 'liquid glass', 'pill', 'badge', 'count', 'status', 'scroll', 'overflow', 'menu', 'collapse', 'fold'],
   Overview,
   examples: examplesFrom(
     import.meta.glob('./examples/*.tsx', { eager: true }),

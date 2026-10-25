@@ -4,15 +4,25 @@ import {
   useEffect,
   useLayoutEffect,
   useRef,
+  useState,
   type CSSProperties,
   type KeyboardEvent,
   type PointerEvent,
+  type ReactNode,
 } from 'react'
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
+import { Check, ChevronDown } from 'lucide-react'
 import { Button } from './button'
+import { useMeasuredActions } from '../actions/use_measured_actions'
+import { scheduleFitRows, useFitRow } from '../actions/fit-row'
+import { useActionsWidth } from '../actions/width-context'
+import { MenuSurface } from '../menu/menu-surface'
+import { useFloatingBoundary } from '../menu/boundary'
 import { cn } from '../utils'
 import { scrollEdgeOpacities } from '../scroll/metrics'
 import { revealScrollChild } from '../scroll/reveal'
 import { GLASS_GLOW_START, GLASS_PRESS_SCALE, glassGlowRadius, pressedShape } from '../glass/press'
+import { GLASS_FOLLOW_ATTRIBUTE } from '../glass/transitions'
 import { useMotionValue, useReducedMotion } from '../physics/react'
 import { SPRINGS, springTiming, type Spring } from '../physics/spring'
 import {
@@ -29,6 +39,7 @@ import {
 } from './segmented-model'
 import { lensStretch } from './lens-model'
 import type { SegmentOption } from './segmented'
+import '../actions/actions.css'
 import './lens.css'
 import './segmented.css'
 
@@ -56,6 +67,10 @@ export type SelectionLayout = 'inline' | 'stacked'
 /** The pill at rest: the primary fill with on-primary ink (a segmented control), or a light primary
  * tint with the ink colour (a tab bar). Pressed or dragged, both become the same glass lens. */
 export type SelectionPill = 'filled' | 'tinted'
+
+/** What a track does when its options don't fit: scroll them inside itself, or fold into one
+ * capsule (the selection and a chevron) that opens the options as a single-choice menu. */
+export type SelectionOverflow = 'scroll' | 'menu'
 
 /** A measured option, in the track's own (unscaled) pixels. */
 type Box = { x: number; y: number; w: number; h: number; border: number }
@@ -89,6 +104,8 @@ const COLLAPSE = springTiming(SPRINGS.snappy)
  * `semantics` makes it a radio group (`radio`, `aria-checked`) or a tab list (`tab`, `aria-selected`
  * and `aria-controls`); `layout`, `pill` and the host's CSS (sizes) make it a segmented control or
  * a tab bar. `collapsed` folds it to the selected option, icon only (a minimized tab bar).
+ * `overflow="menu"` folds it, when its row has no room (fitted with the row's other foldable
+ * controls, `useFitRow`), into the selected option plus a chevron that opens a radio menu.
  */
 export function SelectionTrack<const T extends string>({
   value,
@@ -102,6 +119,7 @@ export function SelectionTrack<const T extends string>({
   equalWidth = false,
   draggable = true,
   collapsed,
+  overflow: overflowMode = 'scroll',
   className,
 }: {
   /** The selected option's value. */
@@ -128,6 +146,9 @@ export function SelectionTrack<const T extends string>({
   /** Shows only the selected option, icon only, the others folded away on a spring. Leave it
    * undefined for a track that never folds. */
   collapsed?: boolean
+  /** When the options don't fit: `scroll` inside the track, or `menu`: fold into the selection and
+   * a chevron that opens the options as a menu (never with `equalWidth`). */
+  overflow?: SelectionOverflow
   /** Class name for the group (sizes and a background). */
   className?: string
 }) {
@@ -160,8 +181,18 @@ export function SelectionTrack<const T extends string>({
   const autoFrame = useRef(0)
   /** The value last scrolled into view. */
   const revealed = useRef<T | undefined>(undefined)
-  const live = useRef({ value, options, disabled, reduced, onSelect, equalWidth, draggable })
-  live.current = { value, options, disabled, reduced, onSelect, equalWidth, draggable }
+  const menu = overflowMode === 'menu' && !equalWidth
+  const [foldedState, setFolded] = useState(false)
+  const folded = menu && foldedState
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [menuDir, setMenuDir] = useState<'ltr' | 'rtl'>('ltr')
+  const [menuContainer, setMenuContainer] = useState<HTMLElement | null>()
+  const boundary = useFloatingBoundary()
+  const measuringRow = useRef<HTMLDivElement>(null)
+  /** Focus follows the selection onto the capsule after a key changed it while folded. */
+  const refocus = useRef(false)
+  const live = useRef({ value, options, disabled, reduced, onSelect, equalWidth, draggable, folded })
+  live.current = { value, options, disabled, reduced, onSelect, equalWidth, draggable, folded }
 
   const tab = semantics === 'tab'
   const stacked = layout === 'stacked'
@@ -234,7 +265,7 @@ export function SelectionTrack<const T extends string>({
     const style = getComputedStyle(root)
     state.corner = parseFloat(style.getPropertyValue('--lab-corner-scale')) || 1
     state.rtl = style.direction === 'rtl'
-    const overflow = !equalWidth && scroller.scrollWidth - scroller.clientWidth > 0.5
+    const overflow = !equalWidth && overflowMode !== 'menu' && scroller.scrollWidth - scroller.clientWidth > 0.5
     const changed = overflow !== state.overflow
     state.overflow = overflow
     root.toggleAttribute('data-overflow', overflow)
@@ -454,7 +485,8 @@ export function SelectionTrack<const T extends string>({
   }
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (live.current.disabled || !live.current.draggable || event.button > 0 || drag.current || !group.current) return
+    if (live.current.disabled || !live.current.draggable || live.current.folded || event.button > 0 || drag.current || !group.current)
+      return
     measure()
     const { spans, boxes, overflow } = layoutState.current
     if (!boxes.length) return
@@ -535,13 +567,31 @@ export function SelectionTrack<const T extends string>({
     if (!cancelled) commit(target)
   }
 
+  const openMenu = () => {
+    if (!group.current) return
+    setMenuDir(getComputedStyle(group.current).direction === 'rtl' ? 'rtl' : 'ltr')
+    setMenuOpen(true)
+  }
+
   const navigate = (event: KeyboardEvent<HTMLDivElement>) => {
     const rtl = !!group.current && getComputedStyle(group.current).direction === 'rtl'
     const index = enabled.findIndex((option) => option.value === value)
-    const target = selectionKeyTarget(event.key, index, enabled.length, rtl, semantics)
+    // Folded: Up and Down open the menu (a pop-up button); Left, Right, Home and End still step
+    // through the options without opening it.
+    if (folded && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
+      event.preventDefault()
+      openMenu()
+      return
+    }
+    const target = selectionKeyTarget(event.key, index, enabled.length, rtl, folded ? 'tab' : semantics)
     if (target === null) return
     event.preventDefault()
     const next = enabled[target]
+    if (folded) {
+      refocus.current = true
+      onSelect(next.value, 'key')
+      return
+    }
     onSelect(next.value, 'key')
     const position = options.findIndex((option) => option.value === next.value)
     const button = buttons()[position]
@@ -553,7 +603,95 @@ export function SelectionTrack<const T extends string>({
     })
   }
 
+  // Folding into a menu: hidden copies of the options give the unfolded and folded widths, and
+  // the row (with its other foldable controls) decides when there is no room.
+  const { measurements } = useMeasuredActions(group, measuringRow, `${optionKey}|${menu}`)
+  // Inside a Dock the parent says how much it can give (like ActionsBar); elsewhere the row decides.
+  const room = useActionsWidth()
+  useFitRow(group, menu, {
+    room,
+    widths: () => {
+      const scroller = scrollerRef.current
+      const row = measuringRow.current
+      if (!measurements || !scroller || !row) return null
+      const list = live.current.options
+      const widths = list.map((option) => measurements.widths.get(option.value) ?? 0)
+      if (!widths.length || widths.some((width) => !width)) return null
+      const style = getComputedStyle(scroller)
+      const inset = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight)
+      const gap = parseFloat(getComputedStyle(row).columnGap) || 0
+      const index = Math.max(0, list.findIndex((option) => option.value === live.current.value))
+      return {
+        full: widths.reduce((sum, width) => sum + width, 0) + gap * (widths.length - 1) + inset,
+        compact: widths[index] + measurements.overflowWidth + inset,
+      }
+    },
+    fold: (next) => {
+      setFolded(next)
+      if (!next) setMenuOpen(false)
+    },
+  })
+  useEffect(() => {
+    if (menu) scheduleFitRows()
+  }, [menu, measurements, value, room])
+  // While it folds or unfolds, the bubble around it follows its size instead of springing after it.
+  const foldedBefore = useRef(folded)
+  useLayoutEffect(() => {
+    const root = group.current
+    if (!root || foldedBefore.current === folded) return
+    foldedBefore.current = folded
+    root.setAttribute(GLASS_FOLLOW_ATTRIBUTE, '')
+    const timer = setTimeout(() => root.removeAttribute(GLASS_FOLLOW_ATTRIBUTE), COLLAPSE.duration + 50)
+    return () => {
+      clearTimeout(timer)
+      root.removeAttribute(GLASS_FOLLOW_ATTRIBUTE)
+    }
+  }, [folded])
+  useLayoutEffect(() => {
+    if (menu) setMenuContainer(group.current?.closest('dialog') ?? boundary)
+  }, [menu, boundary])
+  // The menu opens on the chosen option, like a pop-up button (Radix focuses the first one).
+  const menuContent = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!menuOpen || !folded) return
+    const frame = requestAnimationFrame(() =>
+      menuContent.current
+        ?.querySelector<HTMLElement>('[role="menuitemradio"][aria-checked="true"]')
+        ?.focus({ preventScroll: true })
+    )
+    return () => cancelAnimationFrame(frame)
+  }, [menuOpen, folded])
+  useLayoutEffect(() => {
+    if (!refocus.current) return
+    refocus.current = false
+    buttons()[selected]?.focus({ preventScroll: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected])
+
   const collapsible = collapsed !== undefined
+  // Stacked, the badge sits on the icon (or after a label with no icon). The selected option of a
+  // track that can fold into a menu carries the chevron (shown only while folded).
+  const renderContent = (option: SelectionOption<T>, chevron: boolean): ReactNode => {
+    const badgeOnIcon = stacked && !!option.icon
+    const badge = option.badge ? <span className="lab-segmented-badge">{option.badge}</span> : null
+    return (
+      <>
+        {option.icon && (
+          <span className="lab-segmented-icon" data-tone={option.tone} aria-hidden="true">
+            {option.icon}
+            {badgeOnIcon && badge}
+          </span>
+        )}
+        <span className="lab-segmented-label">{option.label}</span>
+        {!badgeOnIcon && badge}
+        {chevron && (
+          <span className="lab-segmented-chevron" aria-hidden="true">
+            <ChevronDown />
+          </span>
+        )}
+      </>
+    )
+  }
   return (
     <div
       ref={group}
@@ -563,13 +701,16 @@ export function SelectionTrack<const T extends string>({
       data-pill={pill}
       data-collapsible={collapsible || undefined}
       data-collapsed={collapsed || undefined}
+      data-overflow-mode={menu ? 'menu' : undefined}
+      data-menu-folded={folded || undefined}
       // A press here lifts the pill, not the glass bubble around the track.
       data-glass-own-press=""
-      role={tab ? 'tablist' : 'radiogroup'}
+      // Folded, the capsule is a pop-up button; the radios live in its menu.
+      role={folded ? 'group' : tab ? 'tablist' : 'radiogroup'}
       aria-label={label}
       aria-disabled={disabled || undefined}
       style={
-        collapsible
+        collapsible || menu
           ? ({
               '--lab-segmented-fold-ease': COLLAPSE.easing,
               '--lab-segmented-fold-duration': `${COLLAPSE.duration}ms`,
@@ -595,21 +736,10 @@ export function SelectionTrack<const T extends string>({
           </span>
           {options.map((option) => {
             const isSelected = option.value === value
-            // Stacked, the badge sits on the icon (or after a label with no icon).
-            const badgeOnIcon = stacked && !!option.icon
-            const badge = option.badge ? <span className="lab-segmented-badge">{option.badge}</span> : null
-            const content = (
-              <>
-                {option.icon && (
-                  <span className="lab-segmented-icon" data-tone={option.tone} aria-hidden="true">
-                    {option.icon}
-                    {badgeOnIcon && badge}
-                  </span>
-                )}
-                <span className="lab-segmented-label">{option.label}</span>
-                {!badgeOnIcon && badge}
-              </>
-            )
+            const content = renderContent(option, menu && isSelected)
+            // Folded: the selected option is the capsule that opens the menu; the rest fold away.
+            const trigger = folded && isSelected
+            const name = option.badge ? `${option.label}, ${option.badge}` : undefined
             return (
               <Button
                 key={option.value}
@@ -618,15 +748,24 @@ export function SelectionTrack<const T extends string>({
                 appearance="toolbar"
                 controlSize="regular"
                 className="lab-segmented-option"
-                role={tab ? 'tab' : 'radio'}
-                aria-checked={tab ? undefined : isSelected}
-                aria-selected={tab ? isSelected : undefined}
-                aria-controls={option.controls}
-                aria-label={option.badge ? `${option.label}, ${option.badge}` : undefined}
+                role={trigger ? undefined : tab ? 'tab' : 'radio'}
+                aria-checked={tab || trigger ? undefined : isSelected}
+                aria-selected={tab && !trigger ? isSelected : undefined}
+                aria-controls={trigger ? undefined : option.controls}
+                aria-haspopup={trigger ? 'menu' : undefined}
+                aria-expanded={trigger ? menuOpen : undefined}
+                aria-label={trigger ? `${label}: ${name ?? option.label}` : name}
                 data-selected={isSelected || undefined}
-                tabIndex={option.value === tabValue ? 0 : -1}
+                // Folding springs max-width from the option's own width, never from a far cap.
+                style={
+                  menu && measurements?.widths.get(option.value)
+                    ? ({ '--lab-segmented-natural': `${measurements.widths.get(option.value)}px` } as CSSProperties)
+                    : undefined
+                }
+                inert={folded && !isSelected ? true : undefined}
+                tabIndex={folded ? (isSelected ? 0 : -1) : option.value === tabValue ? 0 : -1}
                 disabled={disabled || option.disabled}
-                onClick={() => onSelect(option.value, 'press')}
+                onClick={() => (trigger ? openMenu() : onSelect(option.value, 'press'))}
               >
                 <span className="lab-segmented-content">{content}</span>
                 {/* The selected ink, cut to the pill's shape as it passes. */}
@@ -638,6 +777,77 @@ export function SelectionTrack<const T extends string>({
           })}
         </div>
       </div>
+      {menu && (
+        <>
+          {/* Real options, inert and hidden, keep font/zoom measurement exact (like ActionsBar). */}
+          <div className="lab-segmented-measure" aria-hidden="true" inert>
+            <div ref={measuringRow} className="lab-segmented-track">
+              {options.map((option) => (
+                <Button
+                  key={option.value}
+                  variant="ghost"
+                  appearance="toolbar"
+                  controlSize="regular"
+                  className="lab-segmented-option"
+                  tabIndex={-1}
+                  data-lab-action-id={option.value}
+                >
+                  <span className="lab-segmented-content">{renderContent(option, false)}</span>
+                </Button>
+              ))}
+              <span className="lab-segmented-chevron" data-lab-overflow-measure="">
+                <ChevronDown />
+              </span>
+            </div>
+          </div>
+          <DropdownMenu.Root modal={false} open={folded && menuOpen} onOpenChange={setMenuOpen} dir={menuDir}>
+            {/* The menu grows out of the whole capsule. */}
+            <DropdownMenu.Trigger asChild>
+              <span className="lab-segmented-menu-anchor" aria-hidden="true" tabIndex={-1} />
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal container={menuContainer}>
+              <MenuSurface asChild>
+                <DropdownMenu.Content
+                  className="lab-actions-menu lab-segmented-menu"
+                  aria-label={label}
+                  {...(menuContainer ? { collisionBoundary: menuContainer } : {})}
+                  ref={menuContent}
+                  onCloseAutoFocus={(event) => {
+                    event.preventDefault()
+                    buttons()[selectedIndex()]?.focus({ preventScroll: true })
+                  }}
+                >
+                  <DropdownMenu.RadioGroup value={value} onValueChange={(next) => onSelect(next as T, 'press')}>
+                    {options.map((option) => (
+                      <DropdownMenu.RadioItem
+                        key={option.value}
+                        value={option.value}
+                        disabled={disabled || option.disabled}
+                        className="lab-actions-menu__item"
+                        data-lab-corners
+                        textValue={option.label}
+                      >
+                        <span className="lab-actions-menu__leading" aria-hidden="true">
+                          <DropdownMenu.ItemIndicator>
+                            <Check size={18} />
+                          </DropdownMenu.ItemIndicator>
+                        </span>
+                        {option.icon && (
+                          <span className="lab-segmented-icon" data-tone={option.tone} aria-hidden="true">
+                            {option.icon}
+                          </span>
+                        )}
+                        <span className="lab-actions-menu__label">{option.label}</span>
+                        {option.badge && <span className="lab-segmented-badge">{option.badge}</span>}
+                      </DropdownMenu.RadioItem>
+                    ))}
+                  </DropdownMenu.RadioGroup>
+                </DropdownMenu.Content>
+              </MenuSurface>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
+        </>
+      )}
     </div>
   )
 }

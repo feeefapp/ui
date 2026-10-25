@@ -1,18 +1,21 @@
 import 'package:flutter/widgets.dart';
 
-import '../icons/lucide.dart';
 import '../primitives/button.dart';
+import '../primitives/square_slot.dart';
 import '../primitives/tooltip.dart';
 import '../theme.dart';
 
-/// One row of sidebar navigation: icon and label, the twin of `NavigationItem` in
-/// `@feeef.dev/ui/navigation/navigation-item`. In [compact] (rail) mode only the icon shows and
-/// the label moves into a tooltip.
+/// One row of sidebar navigation, the twin of `NavigationItem` in
+/// `@feeef.dev/ui/navigation/navigation-item`: a ghost toolbar [Button] as tall as every regular
+/// button, with the icon in a [SquareSlot] at the start, the label, and an optional [trailing]
+/// slot. In [compact] (rail) mode the item is just the icon's square and the label moves into a
+/// tooltip.
 class NavigationItem extends StatelessWidget {
   const NavigationItem({
     super.key,
     required this.label,
     required this.icon,
+    this.trailing,
     this.href,
     this.onSelect,
     this.active = false,
@@ -22,8 +25,11 @@ class NavigationItem extends StatelessWidget {
   /// Visible label; also the accessible name and the rail tooltip.
   final String label;
 
-  /// 20px icon.
+  /// 20px icon, centred in a square as tall as the item.
   final Widget icon;
+
+  /// A badge, count or chevron at the end, centred in a square like the icon. Hidden in the rail.
+  final Widget? trailing;
 
   /// The item's destination. With it the item is announced as a link to [href] (the web kit
   /// renders an `<a href>`); route on [onSelect], since Flutter has no browser navigation.
@@ -40,54 +46,55 @@ class NavigationItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeProvider.of(context);
-    final c = theme.colors;
-    final s = theme.sizes;
-    final item = ControlOverrides.merge(
-      context,
-      height: s.rowHeight,
-      radius: s.radiusControlSmall,
-      // aria-current="page": the selected fill, no edge.
-      pressedFill: c.controlSelected,
-      pressedEdge: const Color(0x00000000),
-      child: SizedBox(
-        width: compact ? s.rowHeight : double.infinity,
-        child: Semantics(
-          selected: active,
-          link: href != null,
-          linkUrl: href == null ? null : Uri.tryParse(href!),
-          child: Button(
-            variant: ButtonVariant.ghost,
-            appearance: ButtonAppearance.toolbar,
-            pressed: active ? true : null,
-            ariaLabel: label,
-            onClick: onSelect,
-            padding: compact
-                ? EdgeInsetsDirectional.zero
-                : const EdgeInsetsDirectional.symmetric(horizontal: 8),
-            gap: 8,
-            alignment: compact
-                ? AlignmentDirectional.center
-                : AlignmentDirectional.centerStart,
-            children: [
-              IconTheme.merge(
-                data: const IconThemeData(size: 20),
-                child: LucideStroke(width: 1.75, child: icon),
+    final c = ThemeProvider.of(context).colors;
+    final button = Semantics(
+      link: href != null,
+      linkUrl: href == null ? null : Uri.tryParse(href!),
+      child: Button(
+        variant: ButtonVariant.ghost,
+        appearance: ButtonAppearance.toolbar,
+        current: active,
+        ariaLabel: label,
+        onClick: onSelect,
+        alignment: compact ? null : AlignmentDirectional.centerStart,
+        children: [
+          SquareSlot(child: ExcludeSemantics(child: icon)),
+          if (!compact) ...[
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
               ),
-              if (!compact)
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    softWrap: false,
-                    overflow: TextOverflow.ellipsis,
+            ),
+            if (trailing != null)
+              SquareSlot(
+                child: IconTheme.merge(
+                  data: IconThemeData(color: c.muted),
+                  child: DefaultTextStyle.merge(
+                    style: TextStyle(
+                      color: c.muted,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                    child: trailing!,
                   ),
                 ),
-            ],
-          ),
-        ),
+              ),
+          ],
+        ],
       ),
     );
-    return Tooltip(label: label, enabled: compact, child: item);
+    // Selection is the Button's current-page state, flat like an iOS sidebar row (no edge).
+    final item = ControlOverrides.merge(
+      context,
+      pressedEdge: const Color(0x00000000),
+      child: button,
+    );
+    if (!compact) return item;
+    // The rail item is just its square, centred in the rail, with the label in a tooltip.
+    return Center(
+      child: Tooltip(label: label, child: item),
+    );
   }
 }

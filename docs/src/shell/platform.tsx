@@ -2,7 +2,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { Check, ChevronDown, ExternalLink } from 'lucide-react'
 import versions from 'virtual:feeef-versions'
 import { Button } from '@feeef.dev/ui/primitives/button'
-import { MenuSurface } from '@feeef.dev/ui/menu'
+import { MenuSurface, useFloatingBoundary } from '@feeef.dev/ui/menu'
 import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 import '@feeef.dev/ui/actions/actions.css'
 import { useDocsSettings, type DocsSettings } from '../settings'
@@ -39,6 +39,8 @@ const label = (version: string) => `v${version}`
  */
 export function VersionMenu() {
   const unreleased = versions.ahead > 0
+  // In a modal surface (the phone drawer, the Customize panel inside it) the menu renders there.
+  const layer = useFloatingBoundary()
   return (
     <DropdownMenu.Root modal={false}>
       <DropdownMenu.Trigger asChild>
@@ -53,9 +55,13 @@ export function VersionMenu() {
           <ChevronDown size={16} aria-hidden="true" />
         </Button>
       </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
+      <DropdownMenu.Portal container={layer ?? undefined}>
         <MenuSurface asChild>
-          <DropdownMenu.Content className="lab-actions-menu docs-version-menu" aria-label="Versions">
+          <DropdownMenu.Content
+            className="lab-actions-menu docs-version-menu"
+            aria-label="Versions"
+            collisionBoundary={layer ?? undefined}
+          >
             <DropdownMenu.Label className="lab-menu__label">These docs</DropdownMenu.Label>
             <DropdownMenu.Item className={item} disabled>
               <Check size={18} aria-hidden="true" />

@@ -42,6 +42,7 @@ class _OrderStatusTabsState extends State<OrderStatusTabs> {
                 Flexible(
                   child: SegmentedControl<String>(
                     label: 'Order status',
+                    overflow: .scroll,
                     value: _status,
                     onChange: (value) => setState(() => _status = value),
                     options: [

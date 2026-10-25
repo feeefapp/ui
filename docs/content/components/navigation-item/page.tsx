@@ -11,6 +11,7 @@ const controls = {
   compact: { type: 'boolean', label: 'Compact (rail)', default: false },
   active: { type: 'boolean', default: true },
   link: { type: 'boolean', label: 'As link (href)', default: false },
+  count: { type: 'boolean', label: 'Trailing count', default: false },
 } as const
 
 function Overview() {
@@ -32,6 +33,7 @@ function Overview() {
               icon={<Truck />}
               active={v.active}
               href={v.link ? '/deliveries' : undefined}
+              trailing={v.count ? '12' : undefined}
             />
             <NavigationItem compact={v.compact} label="Products" icon={<Package />} />
           </nav>
@@ -45,6 +47,7 @@ function Overview() {
               compact: v.compact ? true : '__FALSE__',
               active: v.active,
               href: v.link ? '/deliveries' : undefined,
+              trailing: v.count ? '12' : undefined,
               onSelect: v.link ? undefined : '__SELECT__',
             }
           )
@@ -57,9 +60,13 @@ function Overview() {
       <Section title="When to use it">
         <p>
           Use <C>NavigationItem</C> for the rows of a sidebar or drawer: top-level destinations in a
-          workspace, usually inside <C>ScaffoldSide</C>. Each item is a quiet ghost button with a 20px
-          icon and a label, one row tall (44px, 32px in compact density), filling the sidebar's width. The
-          current destination gets the selected fill.
+          workspace, usually inside <C>ScaffoldSide</C>. Each item is a quiet ghost toolbar{' '}
+          <C>Button</C>, exactly as tall as a regular button (<C>--lab-control-height</C>: 36px, 30px in
+          compact density), filling the sidebar's width. The 20px icon sits centred in a square{' '}
+          <C>SquareSlot</C> as tall as the item, then the label, then an optional trailing square for a
+          count, badge or chevron. In the rail the item is just the icon's square. The current destination
+          gets the Button's selected fill, flat (no edge). On touch screens it keeps its size and reaches a
+          44px target, like every button.
         </p>
         <Table
           head={['Prop', 'Effect']}
@@ -67,7 +74,8 @@ function Overview() {
             [<C>href</C>, 'Renders an <a>, so the browser can open it in a new tab. Without href it is a <button>.'],
             [<C>onSelect</C>, 'Click handler for both forms: route client-side, close a drawer.'],
             [<C>active</C>, 'Paints the selected state and sets aria-current="page".'],
-            [<C>compact</C>, 'Required. Icon-only rail mode: the label is visually hidden and shown in a tooltip.'],
+            [<C>trailing</C>, 'A count, badge or chevron in a square at the end. Hidden in the rail, where it stays in the accessible name.'],
+            [<C>compact</C>, 'Required. Icon-only rail mode: the item is the icon square; the label is visually hidden and shown in a tooltip.'],
           ]}
         />
       </Section>
@@ -122,16 +130,33 @@ function Overview() {
           dontItems={[
             'Use navigation items for actions like “New order”; use a button in the dock.',
             'Show a rail without tooltips (keep compact on the items).',
-            'Add badges or second lines inside the label; it truncates to one line.',
+            'Put badges or counts inside the label (use trailing) or add second lines; the label truncates to one line.',
             'Mix icons from different sets in one sidebar.',
           ]}
         />
       </Section>
 
+      <Section title="Square slots">
+        <p>
+          The icon and trailing squares are <C>SquareSlot</C>, the kit's one leading/trailing slot: a
+          square as tall as its row with the content centred. Inside a <C>Button</C> it is the button's
+          height and replaces the padding at the end it sits on; <C>ListRow</C> uses it for its leading
+          media. Use it for your own rows instead of sizing an icon box by hand.
+        </p>
+        <Code
+          code={`<Button variant="ghost">
+  <SquareSlot aria-hidden="true"><Inbox /></SquareSlot>
+  Inbox
+  <SquareSlot>4</SquareSlot>
+</Button>`}
+        />
+      </Section>
+
       <Section title="Accessibility">
         <p>
-          Put the items in a <C>{'<nav aria-label="…">'}</C>. The label is always the accessible name, also
-          in rail mode where it is only visually hidden; the icon is <C>aria-hidden</C>. The active item has{' '}
+          Put the items in a <C>{'<nav aria-label="…">'}</C>. The label (and any trailing text) is always
+          the accessible name, also in rail mode where it is only visually hidden; the icon is{' '}
+          <C>aria-hidden</C>. The active item has{' '}
           <C>aria-current="page"</C>. The rail tooltip appears on hover and keyboard focus.
         </p>
         <Keys
@@ -155,8 +180,8 @@ export default definePage({
   summary: 'A sidebar destination with an icon and a label that collapses to an icon with a tooltip in a rail.',
   importLine: "import { NavigationItem } from '@feeef.dev/ui/navigation/navigation-item'",
   source: 'src/navigation/navigation-item.tsx',
-  api: ['NavigationItem'],
-  keywords: ['sidebar', 'nav', 'menu item', 'rail', 'link', 'aria-current'],
+  api: ['NavigationItem', 'SquareSlot'],
+  keywords: ['sidebar', 'nav', 'menu item', 'rail', 'link', 'aria-current', 'badge', 'count', 'square slot'],
   Overview,
   examples: examplesFrom(
     import.meta.glob('./examples/*.tsx', { eager: true }),

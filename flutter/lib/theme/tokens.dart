@@ -363,7 +363,8 @@ class SizeTokens {
   double get fieldHeightSmall =>
       metrics.fieldHeight?.small ?? _pick(36, 30, 26);
 
-  /// `--lab-row-height`: navigation rows and list-like controls.
+  /// `--lab-row-height`: workspace action rows and tool-sidebar headings (navigation items are
+  /// regular buttons, [controlHeight]).
   double get rowHeight => metrics.rowHeight ?? _pick(44, 32, 26);
 
   /// `--lab-menu-row-height`: menu and floating-panel rows.

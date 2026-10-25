@@ -18,7 +18,7 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
    the default, and confirms.
 3. **Related tools travel together.** One `ToolbarGroup` (bubble) per purpose: navigation/identity,
    title, page views, tools, page actions. Controls inside use `appearance="toolbar"`. When space runs
-   out, overflow into a menu (`ActionsBar`), don't shrink or wrap.
+   out, overflow into a menu (`ActionsBar`; a `SegmentedControl` folds into its own), don't shrink or wrap.
    Two levels at most: a surface, then the bubbles on it, never a bubble inside a bubble. Content on a
    surface stays flat (a calendar heading is a plain row); bubbles on one surface share height and
    line up with its content. Example: `TemporalDialog` (top bar · calendars · action bar).
@@ -57,7 +57,7 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
 | The one main action | `Button variant="filled"` | two filled buttons side by side |
 | Icon-only action | `IconButton` with `aria-label` | an unlabeled icon in a `<div>` |
 | Navigate with button looks | `Button asChild` + your router link | `onClick={() => navigate()}` on a button |
-| Switch views or modes (2–5), or filter a list by status (counts as `badge`; many scroll) | `SegmentedControl`, in a glass bubble when it floats, on a plain box in content | tabs drawn from buttons |
+| Switch views or modes (2–5), or filter a list by status (counts as `badge`; many take `overflow="scroll"`) | `SegmentedControl`, in a glass bubble when it floats, on a plain box in content; it folds into a menu when its row runs out of room | tabs drawn from buttons |
 | Pick one of a few, all visible | `RadioGroup` | a select with 3 options |
 | Pick one of many | `Select` | a long radio list |
 | Independent on/off in a form | `Checkbox` | a switch that only applies on Save |
@@ -73,6 +73,8 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
 | Going deeper and coming back | `NavigationStack` + `NavigationPage` | swapping content with no back or swipe |
 | Many items from one list | `SplitView` (stack on phones) | a modal per item |
 | Rows that open, choose or show values | `ListSection` + `ListRow` | hand-made `<div>` rows |
+| Sidebar destinations | `NavigationItem` (a regular-height button; icon and count in square slots) | list rows or hand-made links |
+| An icon, count or chevron at the start or end of your own row or button | `SquareSlot` | a hand-sized icon box |
 | Things that move because of the person | `LayoutGroup` (`data-lab-layout-id`) | teleporting cards |
 | 2–5 top-level places on a phone | `TabView` (each tab its own stack) | a segmented control as app navigation |
 | Quick per-row actions | `ListRow` `leadingActions`/`trailingActions` (also offered elsewhere) | swipe as the only way |
@@ -137,3 +139,9 @@ opacity animate; layout switches once at rest. Gestures never replace a visible 
   popovers never leave it.
 - Empty, loading and error states each offer a next step.
 - Keyboard: Tab order follows the reading order, focus is visible and returns after dialogs.
+
+Flutter compact glass (shorter side up to 72px) has one rim on its outer silhouette.
+Do not stack a dark exterior hairline or an inset border on toolbar bubbles. Large
+panels retain their hairline and solid/high-contrast surfaces retain their outline.
+The native refraction shader and painted clip must share the clamped continuous-corner
+distance, including its fade to circular capsules, so the material has one silhouette.

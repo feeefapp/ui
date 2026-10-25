@@ -140,6 +140,9 @@
 .lab-workspace-app-trailing {
   margin-inline-start: auto;
 }
+.lab-workspace-app-title[data-squeezed] {
+  visibility: hidden;
+}
 .lab-workspace-app-title > .lab-toolbar-group {
   width: fit-content;
   max-width: 100%;

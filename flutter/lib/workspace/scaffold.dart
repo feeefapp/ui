@@ -8,6 +8,7 @@ import '../brand/pixel_shader.dart';
 import '../brand/pixel_noise.dart' show TextureDensity, TextureVariant;
 import '../brand/pixel_texture.dart';
 import '../glass/container.dart';
+import '../glass/member.dart' show GlassHidden;
 import '../icons/lucide.dart';
 import '../physics/layout_group.dart';
 import '../primitives/button.dart';
@@ -844,8 +845,13 @@ class ScaffoldSide extends StatelessWidget {
   }
 }
 
+/// Narrower than this, a title squeezed by the bar's other groups leaves instead of showing a
+/// sliver: its glass flows into the neighbouring bubble. Web: `APP_BAR_TITLE_MIN_WIDTH`.
+const double appBarTitleMinWidth = 64;
+
 /// Transparent bar for the content panel's `appBar` slot; put controls in ToolbarGroups. The
-/// title takes its own width and [trailing] sits at the end. The twin of `ScaffoldAppBar`.
+/// title takes its own width and [trailing] sits at the end; given less than [appBarTitleMinWidth]
+/// it hides until there is room again. The twin of `ScaffoldAppBar`.
 class ScaffoldAppBar extends StatelessWidget {
   const ScaffoldAppBar({super.key, this.leading, this.child, this.trailing});
 
@@ -869,9 +875,20 @@ class ScaffoldAppBar extends StatelessWidget {
         children: [
           ?leading,
           Expanded(
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: child ?? const SizedBox.shrink(),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final squeezed = constraints.maxWidth < appBarTitleMinWidth;
+                return Offstage(
+                  offstage: squeezed,
+                  child: GlassHidden(
+                    hidden: squeezed,
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: child ?? const SizedBox.shrink(),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           ?trailing,

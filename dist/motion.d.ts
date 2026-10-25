@@ -36,7 +36,9 @@ export declare function Presence({ open, exitMs, render, }: {
     open: boolean;
     /** How long the closing frame stays mounted, in milliseconds. 0 under reduced motion. */
     exitMs?: number;
-    /** Draws the content. Put the state on `data-state` so CSS can animate open and closed. */
+    /** Draws the content. Put the state on `data-state` so CSS can animate open and closed. While
+     * closing, the frozen element also gets `data-glass-hidden`: glass bubbles in it leave the glass
+     * (absorbed into their nearest neighbour) while their content fades. */
     render: (state: PresenceState) => React.ReactNode;
 }): React.JSX.Element | null;
 /**

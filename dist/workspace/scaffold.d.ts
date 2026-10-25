@@ -81,7 +81,11 @@ type ThreeSlots = {
 };
 /** Sidebar body: a scroll area with `leading` floating at the top and `trailing` at the bottom. */
 export declare function ScaffoldSide({ leading, children, trailing, className }: ThreeSlots): React.JSX.Element;
-/** Transparent bar for the content panel's `appBar` slot; put controls in ToolbarGroups. */
+/** Narrower than this (px), a title squeezed by the bar's other groups leaves instead of showing a
+ * sliver: its glass flows into the neighbouring bubble. Flutter: `appBarTitleMinWidth`. */
+export declare const APP_BAR_TITLE_MIN_WIDTH = 64;
+/** Transparent bar for the content panel's `appBar` slot; put controls in ToolbarGroups. A title
+ * squeezed below `APP_BAR_TITLE_MIN_WIDTH` hides until there is room again. */
 export declare function ScaffoldAppBar({ leading, children, trailing, className }: ThreeSlots): React.JSX.Element;
 /** Three-column bar for the `topSide` slot: start, centered brand, end. */
 export declare function ScaffoldTopBar({ leading, children, trailing, className }: ThreeSlots): React.JSX.Element;

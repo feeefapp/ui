@@ -12,7 +12,7 @@ import {
   unionLoops,
   type GlassShape,
 } from '../src/glass/geometry.ts'
-import { planGlassTransition, sameRect } from '../src/glass/transitions.ts'
+import { glassSeed, planGlassTransition, sameGlassRow, sameRect } from '../src/glass/transitions.ts'
 import { DEFAULT_GLASS_LIGHT, glassLightToward } from '../src/glass/light.ts'
 
 const pill = (x: number, width = 80, y = 0): GlassShape => ({ x, y, width, height: 46, radius: 23 })
@@ -135,16 +135,56 @@ test('merging: leaving bubbles are absorbed into the new one', () => {
   )
 })
 
-test('far bubbles materialize and dematerialize instead of morphing', () => {
-  const plan = planGlassTransition(map([['old', pill(0)]]), map([['new', pill(400)]]), 8)
-  assert.deepEqual(plan.births, [{ id: 'new', kind: 'materialize' }])
-  assert.deepEqual(plan.deaths, [{ id: 'old', kind: 'dematerialize' }])
+test('a lone bubble materializes and dematerializes: nothing else is in the container', () => {
+  const born = planGlassTransition(map([]), map([['new', pill(400)]]), 8)
+  assert.deepEqual(born.births, [{ id: 'new', kind: 'materialize' }])
+  const gone = planGlassTransition(map([['old', pill(0)]]), map([]), 8)
+  assert.deepEqual(gone.deaths, [{ id: 'old', kind: 'dematerialize' }])
 })
 
-test('a new bubble next to a living one grows out of it', () => {
-  const plan = planGlassTransition(map([['a', pill(0)]]), map([['a', pill(0)], ['b', pill(84)]]), 8)
-  assert.deepEqual(plan.births.map((b) => [b.kind, b.kind === 'grow' ? b.source : '']), [['grow', 'a']])
-  assert.deepEqual(plan.deaths, [])
+test('a far bubble is born out of its nearest neighbour and absorbed back into it', () => {
+  // A title bubble appearing 120px right of the brand bubble: a drop tucked in the brand's right end.
+  const brand = pill(0, 120)
+  const plan = planGlassTransition(map([['brand', brand]]), map([['brand', brand], ['title', pill(240, 100)]]), 8)
+  assert.equal(plan.births.length, 1)
+  const birth = plan.births[0]
+  assert.equal(birth.kind, 'grow')
+  if (birth.kind !== 'grow') return
+  assert.equal(birth.source, 'brand')
+  assert.deepEqual(birth.from, { x: 120 - 46, y: 0, width: 46, height: 46 })
+  const back = planGlassTransition(map([['brand', brand], ['title', pill(240, 100)]]), map([['brand', brand]]), 8)
+  assert.deepEqual(back.deaths, [{ id: 'title', kind: 'absorb', target: 'brand', into: birth.from }])
+})
+
+test('a far replacement grows out of the bubble that left', () => {
+  const plan = planGlassTransition(map([['old', pill(0)]]), map([['new', pill(400)]]), 8)
+  assert.deepEqual(plan.births.map((b) => [b.id, b.kind, b.kind === 'grow' ? b.source : null]), [['new', 'grow', 'old']])
+  assert.deepEqual(plan.deaths.map((d) => [d.id, d.kind, d.kind === 'absorb' ? d.target : null]), [['old', 'absorb', 'new']])
+})
+
+test('births and deaths prefer a neighbour in the same row over a closer one in another', () => {
+  // `below` is 4px under the new bubble; `side` is 200px away in its row.
+  const previous = map([['side', pill(0)], ['below', pill(300, 80, 50)]])
+  const next = map([...previous, ['new', pill(300)]])
+  const plan = planGlassTransition(previous, next, 2)
+  assert.deepEqual(plan.births.map((b) => (b.kind === 'grow' ? b.source : b.kind)), ['side'])
+  const back = planGlassTransition(next, previous, 2)
+  assert.deepEqual(back.deaths.map((d) => (d.kind === 'absorb' ? d.target : d.kind)), ['side'])
+})
+
+test('a new bubble prefers a living neighbour over one that is leaving far away', () => {
+  const plan = planGlassTransition(map([['stay', pill(500)], ['gone', pill(0)]]), map([['stay', pill(500)], ['new', pill(200)]]), 8)
+  assert.deepEqual(plan.births.map((b) => (b.kind === 'grow' ? b.source : b.kind)), ['stay'])
+})
+
+test('glassSeed tucks a drop inside the anchor end facing the other bubble', () => {
+  const anchor = { x: 100, y: 0, width: 120, height: 44 }
+  // To the left, taller: a drop as tall as the anchor, inside its left end.
+  assert.deepEqual(glassSeed(anchor, { x: 0, y: -10, width: 60, height: 64 }), { x: 100, y: 0, width: 44, height: 44 })
+  // Below: a drop as wide as the smaller bubble, inside the bottom edge.
+  assert.deepEqual(glassSeed(anchor, { x: 150, y: 200, width: 40, height: 40 }), { x: 150, y: 4, width: 40, height: 40 })
+  assert.ok(sameGlassRow(anchor, { x: 0, y: 40, width: 10, height: 10 }))
+  assert.ok(!sameGlassRow(anchor, { x: 0, y: 44, width: 10, height: 10 }))
 })
 
 test('sameRect tolerates sub-pixel noise', () => {

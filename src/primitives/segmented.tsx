@@ -1,7 +1,9 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { SelectionTrack } from './selection-track'
+import { SelectionTrack, type SelectionOverflow } from './selection-track'
+
+export type { SelectionOverflow } from './selection-track'
 
 /** A status colour for an option's icon. */
 export type SegmentTone = 'success' | 'warning' | 'danger'
@@ -30,9 +32,14 @@ export type SegmentOption<T extends string> = {
  * press another option and drag: the pill comes to you). Radio semantics: one Tab stop, arrow keys
  * move and select. Options can carry a count (`badge`).
  *
- * Options that don't fit scroll sideways inside the control (never wrap or squeeze): its edges fade
- * where there is more, the selection scrolls into view whenever it changes, and a pill dragged near
- * an edge scrolls on. On touch a swipe scrolls; a drag that starts on the pill moves the pill.
+ * When its row has no room for every option it folds, like an actions bar spills into More: the
+ * other options fold into the selected one, which gains a chevron and opens them as a single-choice
+ * menu (`overflow="menu"`, the default). Every foldable control in the row is fitted together,
+ * folding from the end, and unfolds as soon as the room is back. A status filter with many options
+ * takes `overflow="scroll"` instead: options that don't fit scroll sideways inside the control
+ * (never wrap or squeeze), its edges fade where there is more, the selection scrolls into view
+ * whenever it changes, and a pill dragged near an edge scrolls on. On touch a swipe scrolls; a drag
+ * that starts on the pill moves the pill.
  *
  * It paints no container: put it in glass (`ToolbarGroup`), on a box of your own (a surface-token
  * background; the root already has the capsule radius) or leave it bare. `TabView`'s tab bar is the
@@ -45,6 +52,7 @@ export function SegmentedControl<const T extends string>({
   label,
   disabled = false,
   equalWidth = false,
+  overflow = 'menu',
   className,
 }: {
   /** The selected option's value. */
@@ -60,6 +68,10 @@ export function SegmentedControl<const T extends string>({
   /** Fills the available width with one row of equal options whose labels end in an ellipsis (it
    * never scrolls). */
   equalWidth?: boolean
+  /** When the row has no room for every option: `menu` folds the control into the selected option
+   * and a chevron that opens the options as a radio menu; `scroll` scrolls them inside the control
+   * (a status filter with many options). Ignored with `equalWidth`. */
+  overflow?: SelectionOverflow
   /** Class name for the group (a background here fills the capsule behind the options). */
   className?: string
 }) {
@@ -72,6 +84,7 @@ export function SegmentedControl<const T extends string>({
       label={label}
       disabled={disabled}
       equalWidth={equalWidth}
+      overflow={overflow}
       className={className}
     />
   )

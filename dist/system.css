@@ -326,20 +326,22 @@ html[data-lab-theme] .lab-control[data-variant='destructive'] {
   color: var(--lab-danger);
 }
 /* Borderless secondary commands share a toolbar's group material. A primary
-action remains prominent even when it is placed in that same toolbar, and a toggle that is on keeps
-its selected fill. */
+action remains prominent even when it is placed in that same toolbar, and a selected control (a toggle
+that is on, the current page) keeps its selected fill. */
 html[data-lab-theme]
   .lab-control[data-control-appearance='toolbar']:not([data-variant='primary']):not(
     [data-variant='filled'],
     [data-variant='destructive'],
     [aria-pressed='true'],
-    [data-state='on']
+    [data-state='on'],
+    [aria-current='page']
   ) {
   --lab-control-fill: transparent;
   --lab-control-edge: transparent;
   --lab-control-elevation: none;
 }
-html[data-lab-theme] .lab-control[data-variant]:is([aria-pressed='true'], [data-state='on']) {
+/* Selected: a toggle that is on, or the current page (a navigation item, a link button). */
+html[data-lab-theme] .lab-control[data-variant]:is([aria-pressed='true'], [data-state='on'], [aria-current='page']) {
   --lab-control-fill: var(--lab-control-selected);
   --lab-control-fill-hover: color-mix(in srgb, var(--lab-primary) 30%, var(--lab-surface));
   --lab-control-fill-pressed: color-mix(in srgb, var(--lab-primary) 36%, var(--lab-surface));
@@ -729,7 +731,7 @@ html[data-lab-glass='solid'] .lab-light-edge::after {
     forced-color-adjust: auto;
   }
   html[data-lab-theme] .lab-control:is([data-variant='primary'], [data-variant='filled']),
-  html[data-lab-theme] .lab-control[data-variant]:is([aria-pressed='true'], [data-state='on']) {
+  html[data-lab-theme] .lab-control[data-variant]:is([aria-pressed='true'], [data-state='on'], [aria-current='page']) {
     border-color: Highlight;
     background: Highlight;
     color: HighlightText;

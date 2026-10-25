@@ -8,6 +8,7 @@ import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
 import { SlideSwitch, Slider } from '@feeef.dev/ui/primitives/slider'
 import { useTheme, type ThemeMode } from '@feeef.dev/ui/theme'
 import { PROFILES, THEME_DEFAULTS, type Density, type GlassStyle, type Motion, type Palette } from '@feeef.dev/ui/theme-config'
+import { useFloatingBoundary } from '@feeef.dev/ui/menu'
 import { useDocsSettings, type DocsSettings } from '../settings'
 import { PlatformSwitch, VersionMenu } from './platform'
 
@@ -166,6 +167,8 @@ function ColorPicker() {
  */
 export function Customize() {
   const { settings, update, reset } = useDocsSettings()
+  // Inside the phone drawer (a modal dialog) the panel must render in the drawer, not behind it.
+  const layer = useFloatingBoundary()
   const { mode, setMode } = useTheme()
   return (
     <Popover.Root>
@@ -180,13 +183,14 @@ export function Customize() {
           <PaletteIcon size={20} />
         </IconButton>
       </Popover.Trigger>
-      <Popover.Portal>
+      <Popover.Portal container={layer ?? undefined}>
         <PopoverSurface asChild>
           <Popover.Content
             className="docs-customize"
             align="end"
             sideOffset={8}
             collisionPadding={12}
+            collisionBoundary={layer ?? undefined}
             dir="ltr"
             lang="en"
           >

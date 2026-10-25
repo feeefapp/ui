@@ -15,6 +15,7 @@ import {
   swipeRelease,
   type SwipeSides,
 } from './list-model'
+import { SquareSlot } from './square-slot'
 import { cn } from '../utils'
 import './list.css'
 
@@ -398,7 +399,7 @@ export const ListRow = React.forwardRef<HTMLButtonElement, ListRowProps>(functio
 
   const body = (
     <>
-      {leading && <span className="lab-list-row-leading">{leading}</span>}
+      {leading && <SquareSlot className="lab-list-row-leading">{leading}</SquareSlot>}
       <span className="lab-list-row-text">
         <span className="lab-list-row-title">{title}</span>
         {subtitle && <span className="lab-list-row-subtitle">{subtitle}</span>}

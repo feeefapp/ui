@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../motion.dart';
 import 'container.dart';
 
 /// Joins the nearest [GlassContainer] with [child], so the container paints its glass (the twin of
@@ -28,8 +29,9 @@ class GlassMemberBox extends StatefulWidget {
   /// Corner radius of the bubble's glass.
   final double radius;
 
-  /// Leaves the container's glass (it dematerializes) while the content keeps its place: the web
-  /// kit's `data-glass-hidden`, for a bar title that fades in and out.
+  /// Leaves the container's glass (absorbed into its nearest neighbour) while the content keeps its place: the web
+  /// kit's `data-glass-hidden`, for a bar title that fades in and out. A bubble inside a closing
+  /// [Presence] leaves the glass the same way, so its glass flows away while its content fades.
   final bool hidden;
 
   /// Paints the bubble on its own (no container).
@@ -81,7 +83,10 @@ class _GlassMemberBoxState extends State<GlassMemberBox> {
         context.dependOnInheritedWidgetOfExactType<_InsideBubble>() != null;
     final container = _nested ? null : GlassMember.of(context);
     _inContainer = container != null;
-    final registry = widget.hidden ? null : container;
+    final closing = Presence.stateOf(context) == PresenceState.closed;
+    final registry = widget.hidden || closing || GlassHidden.of(context)
+        ? null
+        : container;
     final id = widget.glassId ?? _autoId;
     if (!force && registry == _registry && id == _id) return;
     _handle?.unregister();
@@ -142,4 +147,20 @@ class _GlassMemberBoxState extends State<GlassMemberBox> {
     if (_nested) return KeyedSubtree(key: _box, child: content);
     return KeyedSubtree(key: _box, child: widget.standalone(content));
   }
+}
+
+/// Takes every bubble below it out of the container's glass (absorbed into its nearest neighbour)
+/// while [hidden], their content keeping its place: the web kit's `data-glass-hidden` on an
+/// ancestor. A [ScaffoldAppBar] uses it for a title squeezed out of room.
+class GlassHidden extends InheritedWidget {
+  const GlassHidden({super.key, required this.hidden, required super.child});
+  final bool hidden;
+
+  /// Whether a [GlassHidden] above [context] hides its bubbles.
+  static bool of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<GlassHidden>()?.hidden ??
+      false;
+
+  @override
+  bool updateShouldNotify(GlassHidden old) => old.hidden != hidden;
 }

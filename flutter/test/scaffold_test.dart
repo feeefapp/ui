@@ -52,6 +52,36 @@ Future<void> settle(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('a title squeezed below its minimum width hides', (tester) async {
+    Widget bar(double width) => WidgetsApp(
+      color: const Color(0xFF000000),
+      builder: (context, _) => ThemeProvider(
+        child: Center(
+          child: SizedBox(
+            width: width,
+            child: const ScaffoldAppBar(
+              trailing: SizedBox(width: 300, height: 44),
+              child: ToolbarGroup(
+                label: 'Page title',
+                children: [Text('Theming')],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpWidget(bar(600));
+    expect(find.text('Theming'), findsOneWidget);
+    await tester.pumpWidget(bar(340));
+    expect(
+      find.text('Theming'),
+      findsNothing,
+      reason: 'offstage, not a sliver',
+    );
+    await tester.pumpWidget(bar(600));
+    expect(find.text('Theming'), findsOneWidget);
+  });
+
   testWidgets(
     'a back button bubble and Select bubbles in the app bar are 44 tall and top-aligned',
     (tester) async {

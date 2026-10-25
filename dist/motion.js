@@ -84,7 +84,7 @@ export function Presence({ open, exitMs = 160, render, }) {
     return _jsx(_Fragment, { children: open ? live : React.isValidElement(node) ? withState(node, state) : node });
 }
 function withState(node, state) {
-    return React.cloneElement(node, { 'data-state': state });
+    return React.cloneElement(node, { 'data-state': state, 'data-glass-hidden': state === 'closed' ? '' : undefined });
 }
 /**
  * Cross-fades between keyed icons in one fixed-size cell, so play/pause,

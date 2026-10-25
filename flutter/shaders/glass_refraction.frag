@@ -40,9 +40,21 @@ out vec4 fragColor;
 
 float boxDistance(vec2 p, vec4 rect, float radius) {
   vec2 hs = rect.zw * 0.5;
-  float r = min(radius, min(hs.x, hs.y));
+  float halfSide = min(hs.x, hs.y);
+  float r = clamp(radius, 0.0, max(halfSide, 0.0));
   vec2 q = abs(p - (rect.xy + hs)) - hs + r;
-  return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+  // Match glass/geometry.dart and brand/geometry.dart. A circular SDF here puts
+  // the refracted edge inside the continuous-corner clip, drawing a second rim.
+  float fill = halfSide > 0.0 ? r / halfSide : 1.0;
+  float smoothing = 1.0 - smoothstep(0.75, 1.0, fill);
+  float exponent = exp2(1.0 + smoothing * 0.5);
+  vec2 outside = max(q, 0.0);
+  float high = max(outside.x, outside.y);
+  float low = min(outside.x, outside.y);
+  float norm = high > 0.0
+    ? high * pow(1.0 + pow(low / high, exponent), 1.0 / exponent)
+    : 0.0;
+  return norm + min(max(q.x, q.y), 0.0) - r;
 }
 
 float smoothMin(float a, float b, float k) {

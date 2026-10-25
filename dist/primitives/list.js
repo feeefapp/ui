@@ -8,6 +8,7 @@ import { animateLayoutFrom, snapshotLayout } from '../physics/layout-group.js';
 import { MotionValue } from '../physics/motion-value.js';
 import { SPRINGS, rubberBand, rubberBandClamp } from '../physics/spring.js';
 import { reorderLanding, reorderShifts, reorderTarget, swipeIsFull, swipeRelease, } from './list-model.js';
+import { SquareSlot } from './square-slot.js';
 import { cn } from '../utils.js';
 import './list.css';
 const Reorder = React.createContext({ enabled: false });
@@ -282,7 +283,7 @@ export const ListRow = React.forwardRef(function ListRow({ title, subtitle, lead
         void settle(side === 'leading' ? width : -width);
         requestAnimationFrame(() => item.current?.querySelector(`.lab-list-actions[data-side="${side}"] button`)?.focus());
     };
-    const body = (_jsxs(_Fragment, { children: [leading && _jsx("span", { className: "lab-list-row-leading", children: leading }), _jsxs("span", { className: "lab-list-row-text", children: [_jsx("span", { className: "lab-list-row-title", children: title }), subtitle && _jsx("span", { className: "lab-list-row-subtitle", children: subtitle })] }), trailing && _jsx("span", { className: "lab-list-row-trailing", children: trailing }), chevron && _jsx(ChevronRight, { className: "lab-list-row-chevron lab-dir-flip", "aria-hidden": "true" })] }));
+    const body = (_jsxs(_Fragment, { children: [leading && _jsx(SquareSlot, { className: "lab-list-row-leading", children: leading }), _jsxs("span", { className: "lab-list-row-text", children: [_jsx("span", { className: "lab-list-row-title", children: title }), subtitle && _jsx("span", { className: "lab-list-row-subtitle", children: subtitle })] }), trailing && _jsx("span", { className: "lab-list-row-trailing", children: trailing }), chevron && _jsx(ChevronRight, { className: "lab-list-row-chevron lab-dir-flip", "aria-hidden": "true" })] }));
     const common = {
         'className': cn('lab-list-row', className),
         'data-selected': selected || undefined,

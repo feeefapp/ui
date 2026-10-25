@@ -15,6 +15,7 @@ import '../theme/css_text.dart';
 import '../theme/surfaces.dart';
 import 'lens.dart';
 import 'lens_model.dart';
+import 'square_slot.dart';
 import 'touch_target.dart';
 
 /// Emphasis. Use filled for primary actions (the twin of `ButtonVariant` in the web kit).
@@ -128,6 +129,7 @@ class Button extends StatefulWidget {
     this.loading = false,
     this.disabled = false,
     this.pressed,
+    this.current = false,
     this.onClick,
     this.ariaLabel,
     this.focusNode,
@@ -159,6 +161,10 @@ class Button extends StatefulWidget {
 
   /// Toggle state (`aria-pressed` / `data-state="on"`): paints the selected surface.
   final bool? pressed;
+
+  /// The current page (`aria-current="page"`): paints the selected surface like [pressed] and is
+  /// announced as selected, not as a toggle (a navigation item, a link button).
+  final bool current;
 
   final VoidCallback? onClick;
 
@@ -381,7 +387,8 @@ class _ButtonState extends State<Button> {
       );
       ink = overrides.ink ?? ink;
     }
-    if (widget.pressed == true) {
+    final selected = widget.pressed == true || widget.current;
+    if (selected) {
       final fill = overrides?.pressedFill;
       paint = VariantPaint(
         fill: fill ?? c.controlSelected,
@@ -426,6 +433,11 @@ class _ButtonState extends State<Button> {
       _ => s.controlPadding,
     };
 
+    final slotStart =
+        widget.children.isNotEmpty && widget.children.first is SquareSlot;
+    final slotEnd =
+        widget.children.isNotEmpty && widget.children.last is SquareSlot;
+
     // Text labels give way when the button's width is bounded (a dock, a toolbar, a narrow
     // phone) and end in an ellipsis; icons keep their size. Loose flex shrink-wraps when the
     // width is unbounded, so nothing changes where the label fits.
@@ -446,7 +458,7 @@ class _ButtonState extends State<Button> {
       radius: radius,
       raised: raised && !(interactive && _down),
       texture: widget.variant == ButtonVariant.filled ? ink : null,
-      prominent: prominent && widget.pressed != true,
+      prominent: prominent && !selected,
       shadow: c.glassShadowColor,
       pressedInset: interactive && _down,
       highlight: c.controlHighlight,
@@ -467,12 +479,13 @@ class _ButtonState extends State<Button> {
           glowRadius: _glowRadius.get,
           opacity: _glowOpacity.get,
           child: Padding(
-            // CSS boxes are border-box with a 1px border: it adds to the padding.
+            // CSS boxes are border-box with a 1px border: it adds to the padding. A SquareSlot
+            // at either end replaces that side's padding and border (square-slot.css).
             padding: icon
                 ? EdgeInsetsDirectional.zero
                 : EdgeInsetsDirectional.only(
-                    start: (widget.padding?.start ?? padX) + 1,
-                    end: (widget.padding?.end ?? padX) + 1,
+                    start: slotStart ? 0 : (widget.padding?.start ?? padX) + 1,
+                    end: slotEnd ? 0 : (widget.padding?.end ?? padX) + 1,
                   ),
             child: Align(
               alignment: widget.alignment ?? Alignment.center,
@@ -496,7 +509,15 @@ class _ButtonState extends State<Button> {
                   // Icons in controls use a 1.75 stroke (`.lab-control[data-variant] svg.lucide`).
                   child: LucideStroke(
                     width: 1.75,
-                    child: CssBaseline(lineHeight: lineHeight, child: content),
+                    // Square slots are the button's height with an icon button's icon size.
+                    child: SquareSlotScope(
+                      size: height,
+                      iconSize: size == ControlSize.small ? 18 : 20,
+                      child: CssBaseline(
+                        lineHeight: lineHeight,
+                        child: content,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -533,6 +554,7 @@ class _ButtonState extends State<Button> {
       button: true,
       enabled: interactive,
       toggled: widget.pressed,
+      selected: widget.current ? true : null,
       label: widget.ariaLabel,
       child: FocusableActionDetector(
         focusNode: widget.focusNode,
@@ -804,7 +826,8 @@ class _SurfacePainter extends CustomPainter {
     );
     canvas.drawPath(
       slivers,
-      Paint()..color = const Color.from(alpha: 0.098, red: 0, green: 0, blue: 0),
+      Paint()
+        ..color = const Color.from(alpha: 0.098, red: 0, green: 0, blue: 0),
     );
   }
 
@@ -840,7 +863,11 @@ class _SurfacePainter extends CustomPainter {
     final outside = Path()..addRect(rect.inflate(24));
     // A CSS inset shadow: paint outside the padding box grown by -spread, moved by offset.
     void insetShadow(Offset offset, double spread, double sigma, Color color) {
-      final hole = superellipsePath(rect, radii, inset: 1 + spread).shift(offset);
+      final hole = superellipsePath(
+        rect,
+        radii,
+        inset: 1 + spread,
+      ).shift(offset);
       canvas.drawPath(
         Path.combine(PathOperation.difference, outside, hole),
         Paint()

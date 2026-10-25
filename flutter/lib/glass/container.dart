@@ -32,7 +32,8 @@ const _spring = Springs.snappy;
 /// Draws ONE glass material for every bubble inside it (GlassGroup, ToolbarGroup, Dock, …), like
 /// Apple's GlassEffectContainer: the twin of `GlassContainer` in `@feeef.dev/ui/glass`. Bubbles
 /// that come within [spacing] bend toward each other and merge; a bubble that splits grows its
-/// parts out of itself; new and removed bubbles materialize. Bubbles keep their layout, focus and
+/// parts out of itself; a new bubble is born out of its nearest neighbour (same row first) and a
+/// removed one is absorbed into it, so only a lone bubble materializes. Bubbles keep their layout, focus and
 /// semantics; only the paint moves here. The theme's `glass` sets the style; `glassTint`,
 /// `glassBlur` and `glassRefraction` set the material. More contrast (MediaQuery) makes it solid.
 class GlassContainer extends StatefulWidget {
@@ -190,6 +191,16 @@ class GlassMemberRegistry {
     _scene._members[id] = _Member(key, radius, union, motion);
     _scene._requestMeasure();
     return GlassMemberHandle._(_scene, id);
+  }
+
+  /// For [duration], every bubble's glass follows its layout exactly instead of springing after
+  /// it: call it when content inside a bubble starts animating its own size (a segmented control
+  /// folding into its menu), so it never pokes out of its glass and the neighbours it pushes never
+  /// overlap it. The twin of the web kit's `data-glass-follow`.
+  void followLayoutFor(Duration duration) {
+    final now = SchedulerBinding.instance.currentSystemFrameTimeStamp;
+    _scene._followUntil = now + duration;
+    _scene._requestMeasure();
   }
 }
 
@@ -492,9 +503,11 @@ class _GlassLayers extends StatelessWidget {
                       ),
               ),
             ),
-          // iOS 27's hairline outside each cluster: the backdrop minus a constant (plus-darker),
-          // clipped to the ring band and the side slivers (glassHairline, hairlineBands).
-          for (final path in scene.paths)
+          // Large panels keep the exterior hairline. Compact floating controls already have
+          // a rim on this silhouette: a dark ring outside it reads as a second capsule.
+          for (final path in scene.paths.where(
+            (path) => glassSize(_smallestSide(path)) == GlassSize.large,
+          ))
             for (final sliver in const [false, true])
               Positioned.fill(
                 child: ClipPath(
@@ -600,8 +613,7 @@ class _GlassPainter extends CustomPainter {
   /// ancestor, draws them live. Returns false when the caller must draw them live.
   bool _cachedShadows(Canvas canvas, List<GlassPath> paths, Rect region) {
     final c = material.colors;
-    final key =
-        '${scene._key}|${c.glassShadowColor.toARGB32()}|$dpr';
+    final key = '${scene._key}|${c.glassShadowColor.toARGB32()}|$dpr';
     final still = key == scene._shadowKey;
     scene._shadowKey = key;
     final cached = scene._shadowImage;
@@ -694,7 +706,11 @@ class _GlassPainter extends CustomPainter {
       if (material.rim) {
         // A layer of white inside the outline (clipped above), lit at both ends of the light
         // axis by the edge normal: glassRim / rimLayer, drawn as a band of vertices.
-        final rim = _rimVertices(p.path, scene.lightFor(p.bounds), material.rimLight);
+        final rim = _rimVertices(
+          p.path,
+          scene.lightFor(p.bounds),
+          material.rimLight,
+        );
         if (rim != null) {
           canvas.drawVertices(rim, BlendMode.dst, Paint());
           rim.dispose();
@@ -793,6 +809,9 @@ class _Shape {
 
   /// Content follows the glass only for moves of the same bubble, not while growing out of another.
   bool carry = true;
+
+  /// Growing out of a neighbour: springs to its place even when its bubble follows its layout.
+  bool growing = false;
   bool leaving = false;
   int token = 0;
 
@@ -913,6 +932,9 @@ class _GlassScene extends ChangeNotifier {
     _members.remove(id);
     _requestMeasure();
   }
+
+  /// Until when every bubble follows its layout instead of springing (frame time).
+  Duration? _followUntil;
 
   void _requestMeasure() {
     if (_measureQueued || _disposed) return;
@@ -1062,6 +1084,9 @@ class _GlassScene extends ChangeNotifier {
         !_measured ||
         (now - first).inMilliseconds < 300;
     var dirty = false;
+    // Content resizing itself smoothly inside a bubble (a segmented control folding): every bubble
+    // follows the layout exactly, the neighbours it pushes included (`followLayoutFor`).
+    final followAll = _followUntil != null && now < _followUntil!;
     final previous = {
       for (final MapEntry(key: id, value: s) in _shapes.entries) id: s.rect(),
     };
@@ -1075,7 +1100,10 @@ class _GlassScene extends ChangeNotifier {
         grow || instant ? 1 : 0,
       );
       shape.carry = !grow;
-      shape.clip = target.$4.clip;
+      shape.growing = grow;
+      // A bubble growing out of a neighbour crosses the space between them: no clip (a slot's
+      // clip would cut it off at the slot's edge) until it arrives.
+      shape.clip = grow ? null : target.$4.clip;
       _shapes[birth.id] = shape;
       _watch(birth.id, shape);
       dirty = true;
@@ -1085,6 +1113,8 @@ class _GlassScene extends ChangeNotifier {
       if (shape == null || shape.leaving) continue;
       shape.leaving = true;
       shape.layout = null;
+      // It travels into its neighbour: free of its old slot's clip.
+      if (death is GlassAbsorb) shape.clip = null;
       _contents[death.id]?.value = (Offset.zero, 1);
       dirty = true;
       final token = ++shape.token;
@@ -1121,13 +1151,17 @@ class _GlassScene extends ChangeNotifier {
         shape.radius = target.$2;
         dirty = true;
       }
-      if (shape.clip != target.$4.clip) {
-        shape.clip = target.$4.clip;
+      final clip = shape.growing ? null : target.$4.clip;
+      if (shape.clip != clip) {
+        shape.clip = clip;
         dirty = true;
       }
       // Bubbles moved by a scroll view ride with it exactly, like content.
       final follow =
-          target.$3?.motion == GlassMotion.follow || target.$4.scrolled;
+          !shape.growing &&
+          (target.$3?.motion == GlassMotion.follow ||
+              target.$4.scrolled ||
+              followAll);
       final changed =
           shape.layout == null || !sameRect(shape.layout!, target.$1);
       shape.layout = target.$1;
@@ -1142,7 +1176,11 @@ class _GlassScene extends ChangeNotifier {
       } else if (changed || !sameRect(shape.rect(), target.$1)) {
         final token = ++shape.token;
         shape.animate(target.$1).then((arrived) {
-          if (arrived && shape.token == token) shape.carry = true;
+          if (arrived && shape.token == token) {
+            shape.carry = true;
+            shape.growing = false;
+            shape.clip = target.$4.clip;
+          }
           _changed();
         });
       }
@@ -1345,8 +1383,7 @@ ui.Vertices? _rimVertices(Path outline, Offset light, GlassRim rim) {
     for (var i = 0; i <= count; i++) {
       final tangent = metric.getTangentForOffset(metric.length * i / count);
       if (tangent == null) continue;
-      final normal =
-          Offset(tangent.vector.dy, -tangent.vector.dx) * outward;
+      final normal = Offset(tangent.vector.dy, -tangent.vector.dx) * outward;
       final cosine = normal.dx * light.dx + normal.dy * light.dy;
       for (final depth in depths) {
         final d = depth * rim.width;

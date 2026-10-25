@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { FloatingPortalScope } from '../menu/boundary'
 import { createPortal } from 'react-dom'
 import { cn } from '../utils'
 
@@ -75,6 +76,12 @@ export const PresentationHost = React.forwardRef<HTMLElement, PresentationHostPr
   ref
 ) {
   const host = React.useRef<HTMLElement | null>(null)
+  // Floating panels opened inside render into the surface (see FloatingPortalScope).
+  const [layer, setLayer] = React.useState<HTMLElement | null>(null)
+  const setHost = React.useCallback((node: HTMLElement | null) => {
+    host.current = node
+    setLayer(node)
+  }, [])
   const escape = React.useRef(onEscape)
   escape.current = onEscape
   const returnTo = React.useRef(returnFocusRef)
@@ -120,7 +127,7 @@ export const PresentationHost = React.forwardRef<HTMLElement, PresentationHostPr
     return createPortal(
       <div
         {...shared}
-        ref={host as React.Ref<HTMLDivElement>}
+        ref={setHost}
         data-inline=""
         role={role}
         aria-modal={modal || undefined}
@@ -131,7 +138,7 @@ export const PresentationHost = React.forwardRef<HTMLElement, PresentationHostPr
           escape.current?.()
         }}
       >
-        {children}
+        <FloatingPortalScope element={layer}>{children}</FloatingPortalScope>
       </div>,
       container
     )
@@ -139,7 +146,7 @@ export const PresentationHost = React.forwardRef<HTMLElement, PresentationHostPr
   return createPortal(
     <dialog
       {...shared}
-      ref={host as React.Ref<HTMLDialogElement>}
+      ref={setHost}
       role={role === 'alertdialog' ? 'alertdialog' : undefined}
       onCancel={(event) => {
         event.preventDefault()
@@ -147,7 +154,7 @@ export const PresentationHost = React.forwardRef<HTMLElement, PresentationHostPr
       }}
     >
       <TopLayerEntry modal={modal} opener={opener} />
-      {children}
+      <FloatingPortalScope element={layer}>{children}</FloatingPortalScope>
     </dialog>,
     document.body
   )

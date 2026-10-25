@@ -12,6 +12,7 @@ import '../theme.dart';
 import '../theme/surfaces.dart';
 import '../theme/color_mix.dart';
 import 'list_model.dart';
+import 'square_slot.dart';
 
 /// A group of rows on one rounded card, with an optional header above and footer below: the
 /// inset-grouped list of iOS Settings and Mail, the twin of `ListSection` in
@@ -652,15 +653,13 @@ class _ListRowState extends State<ListRow> {
       spacing: 14,
       children: [
         if (widget.leading != null)
-          SizedBox.square(
-            dimension: 32,
-            child: Center(
-              child: IconTheme.merge(
-                data: IconThemeData(size: 22, color: c.muted),
-                child: DefaultTextStyle.merge(
-                  style: TextStyle(color: c.muted),
-                  child: widget.leading!,
-                ),
+          SquareSlot(
+            size: 32,
+            child: IconTheme.merge(
+              data: IconThemeData(size: 22, color: c.muted),
+              child: DefaultTextStyle.merge(
+                style: TextStyle(color: c.muted),
+                child: widget.leading!,
               ),
             ),
           ),

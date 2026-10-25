@@ -295,6 +295,17 @@ html[data-lab-theme] .docs-app-bar-brand.lab-toolbar-group {
   font-size: 11px;
   line-height: 16px;
 }
+/* A narrow bar (a sidebar beside a small window) drops the "next" tag first: the segmented
+controls beside it fold into menus on their own (overflow="menu"), the tag is just extra. The trigger
+keeps saying it in its accessible name. */
+.docs-app-bar {
+  container: docs-app-bar / inline-size;
+}
+@container docs-app-bar (max-width: 520px) {
+  .docs-version-trigger .docs-version-next {
+    display: none;
+  }
+}
 .docs-version-name {
   display: flex;
   flex: 1;

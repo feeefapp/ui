@@ -391,51 +391,307 @@
   "height": 43.900000000000006,
   "radius": 21.200000000000003
  },
- "plan": {
-  "births": [
-   {
-    "id": "left",
-    "kind": "grow",
-    "source": "pair",
-    "from": {
+ "plans": [
+  {
+   "name": "split",
+   "previous": {
+    "pair": {
      "x": 0,
      "y": 0,
      "width": 120,
      "height": 44
-    }
-   },
-   {
-    "id": "right",
-    "kind": "grow",
-    "source": "pair",
-    "from": {
-     "x": 0,
+    },
+    "far": {
+     "x": 400,
      "y": 0,
-     "width": 120,
+     "width": 44,
      "height": 44
     }
    },
-   {
-    "id": "new",
-    "kind": "materialize"
-   }
-  ],
-  "deaths": [
-   {
-    "id": "pair",
-    "kind": "absorb",
-    "target": "left",
-    "into": {
+   "next": {
+    "left": {
      "x": 0,
      "y": 0,
      "width": 56,
      "height": 44
+    },
+    "right": {
+     "x": 64,
+     "y": 0,
+     "width": 56,
+     "height": 44
+    },
+    "new": {
+     "x": 250,
+     "y": 0,
+     "width": 44,
+     "height": 44
     }
    },
-   {
-    "id": "far",
-    "kind": "dematerialize"
-   }
-  ]
- }
+   "spacing": 12,
+   "births": [
+    {
+     "id": "left",
+     "kind": "grow",
+     "source": "pair",
+     "from": {
+      "x": 0,
+      "y": 0,
+      "width": 120,
+      "height": 44
+     }
+    },
+    {
+     "id": "right",
+     "kind": "grow",
+     "source": "pair",
+     "from": {
+      "x": 0,
+      "y": 0,
+      "width": 120,
+      "height": 44
+     }
+    },
+    {
+     "id": "new",
+     "kind": "grow",
+     "source": "far",
+     "from": {
+      "x": 400,
+      "y": 0,
+      "width": 44,
+      "height": 44
+     }
+    }
+   ],
+   "deaths": [
+    {
+     "id": "pair",
+     "kind": "absorb",
+     "target": "left",
+     "into": {
+      "x": 0,
+      "y": 0,
+      "width": 56,
+      "height": 44
+     }
+    },
+    {
+     "id": "far",
+     "kind": "absorb",
+     "target": "new",
+     "into": {
+      "x": 250,
+      "y": 0,
+      "width": 44,
+      "height": 44
+     }
+    }
+   ]
+  },
+  {
+   "name": "title appears",
+   "previous": {
+    "brand": {
+     "x": 8,
+     "y": 8,
+     "width": 150,
+     "height": 44
+    },
+    "tools": {
+     "x": 900,
+     "y": 8,
+     "width": 44,
+     "height": 44
+    }
+   },
+   "next": {
+    "brand": {
+     "x": 8,
+     "y": 8,
+     "width": 150,
+     "height": 44
+    },
+    "tools": {
+     "x": 900,
+     "y": 8,
+     "width": 44,
+     "height": 44
+    },
+    "title": {
+     "x": 166,
+     "y": 8,
+     "width": 120,
+     "height": 44
+    }
+   },
+   "spacing": 8,
+   "births": [
+    {
+     "id": "title",
+     "kind": "grow",
+     "source": "brand",
+     "from": {
+      "x": 114,
+      "y": 8,
+      "width": 44,
+      "height": 44
+     }
+    }
+   ],
+   "deaths": []
+  },
+  {
+   "name": "title leaves",
+   "previous": {
+    "brand": {
+     "x": 8,
+     "y": 8,
+     "width": 150,
+     "height": 44
+    },
+    "title": {
+     "x": 166,
+     "y": 8,
+     "width": 120,
+     "height": 44
+    }
+   },
+   "next": {
+    "brand": {
+     "x": 8,
+     "y": 8,
+     "width": 150,
+     "height": 44
+    }
+   },
+   "spacing": 8,
+   "births": [],
+   "deaths": [
+    {
+     "id": "title",
+     "kind": "absorb",
+     "target": "brand",
+     "into": {
+      "x": 114,
+      "y": 8,
+      "width": 44,
+      "height": 44
+     }
+    }
+   ]
+  },
+  {
+   "name": "same row first",
+   "previous": {
+    "side": {
+     "x": 0,
+     "y": 0,
+     "width": 80,
+     "height": 46
+    },
+    "below": {
+     "x": 300,
+     "y": 50,
+     "width": 80,
+     "height": 46
+    }
+   },
+   "next": {
+    "side": {
+     "x": 0,
+     "y": 0,
+     "width": 80,
+     "height": 46
+    },
+    "below": {
+     "x": 300,
+     "y": 50,
+     "width": 80,
+     "height": 46
+    },
+    "new": {
+     "x": 300,
+     "y": 0,
+     "width": 80,
+     "height": 46
+    }
+   },
+   "spacing": 2,
+   "births": [
+    {
+     "id": "new",
+     "kind": "grow",
+     "source": "side",
+     "from": {
+      "x": 34,
+      "y": 0,
+      "width": 46,
+      "height": 46
+     }
+    }
+   ],
+   "deaths": []
+  },
+  {
+   "name": "stacked",
+   "previous": {
+    "top": {
+     "x": 0,
+     "y": 0,
+     "width": 200,
+     "height": 44
+    }
+   },
+   "next": {
+    "top": {
+     "x": 0,
+     "y": 0,
+     "width": 200,
+     "height": 44
+    },
+    "under": {
+     "x": 40,
+     "y": 200,
+     "width": 60,
+     "height": 40
+    }
+   },
+   "spacing": 8,
+   "births": [
+    {
+     "id": "under",
+     "kind": "grow",
+     "source": "top",
+     "from": {
+      "x": 40,
+      "y": 4,
+      "width": 60,
+      "height": 40
+     }
+    }
+   ],
+   "deaths": []
+  },
+  {
+   "name": "lone",
+   "previous": {},
+   "next": {
+    "only": {
+     "x": 10,
+     "y": 10,
+     "width": 44,
+     "height": 44
+    }
+   },
+   "spacing": 8,
+   "births": [
+    {
+     "id": "only",
+     "kind": "materialize"
+    }
+   ],
+   "deaths": []
+  }
+ ]
 }

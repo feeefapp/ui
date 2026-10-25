@@ -261,12 +261,49 @@ export function ScaffoldSide({ leading, children, trailing, className }: ThreeSl
     </aside>
   )
 }
-/** Transparent bar for the content panel's `appBar` slot; put controls in ToolbarGroups. */
+/** Narrower than this (px), a title squeezed by the bar's other groups leaves instead of showing a
+ * sliver: its glass flows into the neighbouring bubble. Flutter: `appBarTitleMinWidth`. */
+export const APP_BAR_TITLE_MIN_WIDTH = 64
+
+/** Transparent bar for the content panel's `appBar` slot; put controls in ToolbarGroups. A title
+ * squeezed below `APP_BAR_TITLE_MIN_WIDTH` hides until there is room again. */
 export function ScaffoldAppBar({ leading, children, trailing, className }: ThreeSlots) {
+  const title = React.useRef<HTMLDivElement>(null)
+  const [squeezed, setSqueezed] = React.useState(false)
+  React.useLayoutEffect(() => {
+    const slot = title.current
+    if (!slot || typeof ResizeObserver === 'undefined') return
+    // The slot keeps its flex size while hidden (visibility only), so this never flips back.
+    const truncated = (node: Element) => node.scrollWidth > node.clientWidth + 1
+    const check = () =>
+      setSqueezed(
+        slot.clientWidth < APP_BAR_TITLE_MIN_WIDTH && (truncated(slot) || [...slot.querySelectorAll('*')].some(truncated))
+      )
+    check()
+    const observer = new ResizeObserver(check)
+    observer.observe(slot)
+    for (const child of slot.children) observer.observe(child)
+    const mutations = new MutationObserver(() => {
+      for (const child of slot.children) observer.observe(child)
+      check()
+    })
+    mutations.observe(slot, { childList: true })
+    return () => {
+      observer.disconnect()
+      mutations.disconnect()
+    }
+  }, [])
   return (
     <GlassScope as="header" className={cn('lab-workspace-app-bar', className)}>
       <div className="lab-workspace-app-leading">{leading}</div>
-      <div className="lab-workspace-app-title">{children}</div>
+      <div
+        ref={title}
+        className="lab-workspace-app-title"
+        data-squeezed={squeezed || undefined}
+        data-glass-hidden={squeezed ? '' : undefined}
+      >
+        {children}
+      </div>
       <div className="lab-workspace-app-trailing">{trailing}</div>
     </GlassScope>
   )

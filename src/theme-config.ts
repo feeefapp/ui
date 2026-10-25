@@ -96,7 +96,7 @@ export interface Metrics {
   controlFont?: MetricScale
   /** Text field heights: small 36, regular 44 (`--lab-field-height-small`, `--lab-field-height`; `large` is ignored). */
   fieldHeight?: MetricScale
-  /** Navigation rows (sidebar items): 44 (`--lab-row-height`). */
+  /** Workspace action rows and tool-sidebar headings: 44 (`--lab-row-height`). Navigation items are regular buttons (`controlHeight`). */
   rowHeight?: number
   /** A toolbar bubble's outer height: 44; controls inside are 6px less (`--lab-toolbar-item`). */
   toolbarItem?: number

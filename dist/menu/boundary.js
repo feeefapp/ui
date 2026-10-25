@@ -22,7 +22,15 @@ export const FloatingBoundary = React.forwardRef(({ className, children, ...prop
 });
 FloatingBoundary.displayName = 'FloatingBoundary';
 /**
- * The nearest `FloatingBoundary` element, or null when the app fills the window. Pass it as a
+ * Makes `element` the place floating panels render into, without adding a box: presentation
+ * surfaces (modal, sheet, drawer, pane) wrap their content in it, so a menu, select or popover
+ * opened inside a modal `<dialog>` joins it in the top layer instead of rendering behind it.
+ */
+export function FloatingPortalScope({ element, children }) {
+    return _jsx(BoundaryContext.Provider, { value: element, children: children });
+}
+/**
+ * The nearest `FloatingBoundary` (or presentation surface) element, or null when the app fills the window. Pass it as a
  * Radix `collisionBoundary` and as the portal `container` of anything that floats.
  */
 export function useFloatingBoundary() {

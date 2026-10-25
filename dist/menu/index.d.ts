@@ -1,7 +1,7 @@
 /** Menus: the Liquid Glass menu bubble, its morph and the app bounds every floating panel respects. */
 export { MenuSurface, MENU_COLLISION_PADDING } from './menu-surface.js';
 export type { MenuSurfaceProps } from './menu-surface.js';
-export { FloatingBoundary, useFloatingBoundary } from './boundary.js';
+export { FloatingBoundary, FloatingPortalScope, useFloatingBoundary } from './boundary.js';
 export { physicalMenuSide, sidePanelFallback } from './placement.js';
 export type { MenuSide, PlacementRect } from './placement.js';
 export type { FloatingBoundaryProps } from './boundary.js';

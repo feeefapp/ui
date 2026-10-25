@@ -10,7 +10,7 @@
   background: color-mix(in srgb, var(--lab-primary) 3%, var(--lab-ground));
 }
 .nav-demo-side[data-compact='true'] {
-  width: calc(var(--lab-row-height) + 22px);
+  width: calc(var(--lab-control-height) + 22px);
 }
 .nav-demo-side-heading {
   margin: 8px 8px 4px;

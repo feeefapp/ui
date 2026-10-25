@@ -13,6 +13,12 @@ export declare function Toolbar({ label, leading, trailing, className, ...props 
     /** End content; keeps its size. */
     trailing?: ReactNode;
 }): import("react").JSX.Element;
+export type ToolbarOrientation = 'horizontal' | 'vertical';
+/**
+ * The orientation ToolbarGroups take when they don't set one. A collapsed sidebar (the scaffold's
+ * rail) provides `vertical`, so its bottom groups stack their controls in a column that fits.
+ */
+export declare const ToolbarOrientationContext: import("react").Context<ToolbarOrientation>;
 /**
  * One glass pill for related toolbar controls (`role="group"`). Children use
  * `appearance="toolbar"` and the default `regular` size, which the group sets to fill its
@@ -26,5 +32,7 @@ export declare const ToolbarGroup: import("react").ForwardRefExoticComponent<Omi
 } & import("react").RefAttributes<HTMLElement>, "ref">, "as"> & {
     /** Accessible name of the group. */
     label: string;
+    /** Lay the controls out in a row or a column. Default: the surrounding ToolbarOrientationContext. */
+    orientation?: ToolbarOrientation;
 } & import("react").RefAttributes<HTMLElement>>;
 //# sourceMappingURL=toolbar.d.ts.map

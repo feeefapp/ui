@@ -37,7 +37,7 @@ class _RailState extends State<Rail> {
             label: 'Store',
             child: Container(
               // `.nav-demo-side[data-compact='true']`: one rail button wide.
-              width: _compact ? s.rowHeight + 22 : 260,
+              width: _compact ? s.controlHeight + 22 : 260,
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: Color.lerp(c.ground, c.primary, 0.03),

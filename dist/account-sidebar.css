@@ -119,7 +119,6 @@ entirely on small screens). */
   background: var(--lab-ground);
   border-radius: calc(16px * var(--lab-corner-scale, 1));
 }
-.lab-account-sidebar[data-collapsed='true'] .lab-navigation-label,
 .lab-account-sidebar[data-collapsed='true'] .lab-account-group-label {
   position: absolute;
   width: 1px;

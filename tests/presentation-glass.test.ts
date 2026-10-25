@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict'
 import { test, type TestContext } from 'node:test'
 import { GlassScene } from '../src/glass/scene.ts'
-import { GLASS_INSTANT_ATTRIBUTE, GLASS_SETTLE_MS, glassChangesAtOnce } from '../src/glass/transitions.ts'
+import {
+  GLASS_FOLLOW_ATTRIBUTE,
+  GLASS_INSTANT_ATTRIBUTE,
+  GLASS_SETTLE_MS,
+  glassChangesAtOnce,
+  glassSeed,
+} from '../src/glass/transitions.ts'
 import { POP_MOTION, popPlan, slidePlan } from '../src/presentation/motion.ts'
 
 test('glass changes at once with reduced motion, on a moving surface, before and just after it is first shown', () => {
@@ -56,7 +62,10 @@ test('the pane slides on one spring with the scrim on the same timing, from wher
 })
 
 /** A scene over fake elements: measure() runs for real, frames and paint are stubbed. */
-function fakeScene(t: TestContext, options: { instant: boolean; shownAt: number | null; rendered?: boolean }) {
+function fakeScene(
+  t: TestContext,
+  options: { instant: boolean; shownAt: number | null; rendered?: boolean; animated?: boolean; followAll?: boolean }
+) {
   const globals = ['window', 'getComputedStyle'] as const
   const previous = globals.map((key) => Object.getOwnPropertyDescriptor(globalThis, key))
   Object.defineProperty(globalThis, 'window', { configurable: true, value: { innerWidth: 1280, innerHeight: 800 } })
@@ -75,13 +84,14 @@ function fakeScene(t: TestContext, options: { instant: boolean; shownAt: number 
       return this.rendered ? [{}] : []
     },
     closest: (selector: string) => (options.instant && selector === `[${GLASS_INSTANT_ATTRIBUTE}]` ? {} : null),
+    querySelector: (selector: string) => (options.followAll && selector === `[${GLASS_FOLLOW_ATTRIBUTE}]` ? {} : null),
   }
   const scene = Object.assign(Object.create(GlassScene.prototype), {
     disposed: false, cornerShape: 'round', spacing: 8, reduceMotion: false, shownAt: options.shownAt,
     members: new Map(), shapes: new Map(), scrolled: new Set(), host,
     frame: () => ({ left: 0, top: 0, scaleX: 1, scaleY: 1 }),
     clipOf: () => ({ scrolled: false }),
-    animatedBetween: () => false,
+    animatedBetween: () => !!options.animated,
     scheduleDraw() {},
     requestSampleWhileScrolling() {},
   })
@@ -117,6 +127,25 @@ test('settled glass still materializes a new bubble (the contrast)', (t) => {
   assert.equal(shape.scale.getTarget(), 1)
   assert.ok(shape.scale.isAnimating(), 'it grows in')
   for (const value of shape.values()) value.stop()
+})
+
+test('a bubble that fades in with a transition is still born out of its neighbour', (t) => {
+  // The docs title bubble: its element animates (opacity and translate) as it appears, which would
+  // otherwise make the glass follow it and pop in at full size.
+  for (const options of [{ animated: true }, { followAll: true }]) {
+    const { scene, member } = fakeScene(t, { instant: false, shownAt: -10_000, ...options })
+    const brand = { x: 8, y: 8, width: 150, height: 44 }
+    const title = { x: 166, y: 8, width: 120, height: 44 }
+    scene.members.set('brand', member(brand))
+    scene.measure()
+    scene.members.set('title', member(title))
+    scene.measure()
+    const shape = scene.shapes.get('title')
+    assert.deepEqual(shape.rect(), glassSeed(brand, title), 'starts as a drop inside the brand bubble')
+    assert.ok(shape.x.isAnimating() || shape.width.isAnimating(), 'and springs out to its place')
+    assert.equal(shape.growing, true)
+    for (const s of scene.shapes.values()) for (const value of s.values()) value.stop()
+  }
 })
 
 test('glass measured inside a closed dialog does not grow in once the dialog shows', (t) => {

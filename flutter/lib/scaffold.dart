@@ -215,14 +215,16 @@ class _GlassGroupPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final compactGlass = rim && glassSize(size.shortestSide) == GlassSize.small;
     paintFloatingSurface(
       canvas,
       size,
       radius,
       fill: fill,
-      line: line,
+      line: compactGlass ? const Color(0x00000000) : line,
       edgeLow: edgeLow,
       shadow: shadow,
+      innerLight: !compactGlass,
     );
     if (rim) {
       paintLightEdge(canvas, size, radius, light: edgeLight, low: edgeLow);

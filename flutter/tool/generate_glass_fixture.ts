@@ -115,11 +115,25 @@ const motion = {
   rubberBand: [[0, 100], [10, 100], [-40, 100], [500, 48], [3, 0]].map(([o, d]) => [o, d, rubberBand(o, d)]),
   stretch: [[0, 0], [20, -8], [-300, 120]].map(([dx, dy]) => [dx, dy, glassStretch(dx, dy)]),
   pressed: pressedShape({ x: 10, y: 10, width: 100, height: 40, radius: 20 }, 1.06, 6, -3),
-  plan: (() => {
+  // Births and deaths: a split next to a far newcomer, a title bubble born out of the brand and
+  // absorbed back, a same-row neighbour beating a closer one below, and a lone bubble.
+  plans: (() => {
     const r = (x: number, y: number, width: number, height: number) => ({ x, y, width, height })
-    const previous = new Map([['pair', r(0, 0, 120, 44)], ['far', r(400, 0, 44, 44)]])
-    const next = new Map([['left', r(0, 0, 56, 44)], ['right', r(64, 0, 56, 44)], ['new', r(250, 0, 44, 44)]])
-    return planGlassTransition(previous, next, 12)
+    const cases: [string, [string, ReturnType<typeof r>][], [string, ReturnType<typeof r>][], number][] = [
+      ['split', [['pair', r(0, 0, 120, 44)], ['far', r(400, 0, 44, 44)]], [['left', r(0, 0, 56, 44)], ['right', r(64, 0, 56, 44)], ['new', r(250, 0, 44, 44)]], 12],
+      ['title appears', [['brand', r(8, 8, 150, 44)], ['tools', r(900, 8, 44, 44)]], [['brand', r(8, 8, 150, 44)], ['tools', r(900, 8, 44, 44)], ['title', r(166, 8, 120, 44)]], 8],
+      ['title leaves', [['brand', r(8, 8, 150, 44)], ['title', r(166, 8, 120, 44)]], [['brand', r(8, 8, 150, 44)]], 8],
+      ['same row first', [['side', r(0, 0, 80, 46)], ['below', r(300, 50, 80, 46)]], [['side', r(0, 0, 80, 46)], ['below', r(300, 50, 80, 46)], ['new', r(300, 0, 80, 46)]], 2],
+      ['stacked', [['top', r(0, 0, 200, 44)]], [['top', r(0, 0, 200, 44)], ['under', r(40, 200, 60, 40)]], 8],
+      ['lone', [], [['only', r(10, 10, 44, 44)]], 8],
+    ]
+    return cases.map(([name, previous, next, spacing]) => ({
+      name,
+      previous: Object.fromEntries(previous),
+      next: Object.fromEntries(next),
+      spacing,
+      ...planGlassTransition(new Map(previous), new Map(next), spacing),
+    }))
   })(),
 }
 writeFileSync(new URL('../test/fixtures/motion.json', import.meta.url), JSON.stringify(motion, null, 1) + '\n')

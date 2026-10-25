@@ -14,6 +14,11 @@ function Overview() {
       <SplitMerge />
       <p>These examples use the clear reference material: a 1px curved rim, the kit’s clamped continuous corners and the measured lens. Each example supplies its background separately so Firefox refracts it too. The <a href="/foundations/glass-reflections">Glass reflections controls</a> let you tune these same component parameters.</p>
 
+      <Section title="Flutter floating controls">
+        <p>Compact Flutter glass (up to 72px on its shorter side) uses one reflective rim on the outer silhouette. Toolbar groups and standalone bubbles omit the separate dark hairline and inset border so floating controls do not look like nested capsules. Larger panels keep their exterior hairline; solid and high-contrast surfaces keep their outline.</p>
+        <p>The native refraction shader uses the same clamped continuous-corner distance as the painted outline, including the transition to round capsules. Keep these shapes aligned: circular shader corners beneath a continuous-corner clip produce a second visible contour.</p>
+      </Section>
+
       <Section title="One material for a row of bubbles">
         <p>
           A <C>GlassContainer</C> draws the glass of every bubble inside it as one material, like Apple's
@@ -26,7 +31,8 @@ function Overview() {
             ['Two bubbles move closer than spacing', 'Their outlines bend toward each other and join below half of it'],
             ['One bubble is replaced by several nearby', 'The new bubbles grow out of the old one and break apart'],
             ['Several bubbles are replaced by one nearby', 'They flow into it'],
-            ['A bubble appears or leaves far from others', 'It materializes from a point, or shrinks away'],
+            ['A bubble appears or leaves farther away', 'It is born out of the nearest bubble (one in its row first) and stretches to its place, or flows back into it'],
+            ['A bubble appears or leaves with no other bubble in the container', 'It materializes from a point, or shrinks away'],
             ['A bubble moves because the layout changed', 'Its glass and content spring to the new place'],
             ['A bubble becomes inert (ToolbarSearch opening over its neighbours)', 'It is absorbed into the nearest bubble and grows back out when it returns'],
           ]}
@@ -69,7 +75,7 @@ function Overview() {
         <Callout title="Keep the backdrop visible">
           Don't put <C>filter</C>, <C>opacity</C>, <C>mask</C> or <C>clip-path</C> on the container or its
           ancestors: the blur would stop seeing the page behind it. Fade bubbles out by making them{' '}
-          <C>inert</C>, setting <C>data-glass-hidden</C> or removing them; the container dematerializes them.
+          <C>inert</C>, setting <C>data-glass-hidden</C> or removing them; the container absorbs their glass into the nearest bubble.
         </Callout>
       </Section>
 

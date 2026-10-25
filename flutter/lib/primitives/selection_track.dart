@@ -7,10 +7,16 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import '../actions/actions_bar.dart' show ActionsWidthProvider;
 import '../brand/geometry.dart';
 import '../glass/container.dart';
 import '../glass/geometry.dart';
 import '../glass/press.dart';
+import '../icons/lucide.dart';
+import '../layout/size_reporter.dart';
+import '../menu/anchored_panel.dart';
+import '../menu/menu_surface.dart';
+import '../scaffold.dart' show GlassGroup;
 import '../physics/motion_value.dart';
 import '../physics/spring.dart';
 import '../scroll/metrics.dart' show scrollEdgeOpacities;
@@ -42,6 +48,17 @@ enum SelectionLayout { inline, stacked }
 /// The pill at rest: the primary fill with on-primary ink (a segmented control), or a light primary
 /// tint with the ink colour (a tab bar). Pressed or dragged, both become the same glass lens.
 enum SelectionPill { filled, tinted }
+
+/// What a track does when its options don't fit: scroll them inside itself, or fold into one
+/// capsule (the selection and a chevron) that opens the options as a single-choice menu.
+enum SelectionOverflow { scroll, menu }
+
+/// The chevron a folded track adds after the selected option: 4px gap + a 14px icon
+/// (`.lab-segmented-chevron`).
+const double _chevronWidth = 18;
+
+/// How far past its room a track must be before it folds, and inside it before it unfolds.
+const double _foldHysteresis = 1;
 
 /// A host's option sizes (a tab bar; the web kit sets them in the host's CSS). Without them a
 /// track is a segmented control: the theme's control height, inset, padding and type.
@@ -126,6 +143,7 @@ class SelectionTrack<T> extends StatefulWidget {
     this.equalWidth = false,
     this.draggable = true,
     this.collapsed = false,
+    this.overflow = SelectionOverflow.scroll,
   });
 
   /// The selected option's value.
@@ -165,6 +183,12 @@ class SelectionTrack<T> extends StatefulWidget {
   /// Shows only the selected option, icon only, as a circle; the others fold away on a spring.
   /// Needs [sizes].
   final bool collapsed;
+
+  /// When the options don't fit the width the track is given: [SelectionOverflow.scroll] inside
+  /// it, or [SelectionOverflow.menu]: the other options fold into the selected one, which gains a
+  /// chevron and opens them as a radio menu (never with [equalWidth]). It folds by the width its
+  /// parent gives it: in a [Row] wrap it in [Flexible].
+  final SelectionOverflow overflow;
 
   @override
   State<SelectionTrack<T>> createState() => _SelectionTrackState<T>();
@@ -243,6 +267,16 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
   _Drag? _drag;
   bool _dragging = false;
 
+  // Folding into a menu: each option's own width (measured offstage), whether the track is folded
+  // now (decided at layout from the width it is given) and the menu.
+  List<double>? _natural;
+  final _reported = <int, double>{};
+  bool _folded = false;
+  bool _menuOpen = false;
+
+  bool get _menu =>
+      widget.overflow == SelectionOverflow.menu && !widget.equalWidth;
+
   FocusNode _node(int index) => _nodes.putIfAbsent(index, FocusNode.new);
   GlobalKey _key(int index) => _keys.putIfAbsent(index, GlobalKey.new);
 
@@ -277,6 +311,10 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
   void didUpdateWidget(SelectionTrack<T> old) {
     super.didUpdateWidget(old);
     if (old.value != widget.value) _queueMeasure(follow: true);
+    if (old.options.length != widget.options.length) {
+      _reported.clear();
+      _natural = null;
+    }
     // Stops a drag the host no longer allows (a tab bar that minimizes).
     if (!widget.draggable && old.draggable && (_drag?.active ?? false)) {
       _onEnd(null, cancelled: true);
@@ -499,7 +537,7 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
   }
 
   void _onDown(PointerDownEvent event) {
-    if (widget.disabled || _drag != null) return;
+    if (widget.disabled || _drag != null || _folded) return;
     _measure();
     final at = _local(event.position);
     if (_boxes.isEmpty || at == null) return;
@@ -625,6 +663,12 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
       LogicalKeyboardKey.end => 'End',
       _ => null,
     };
+    // Folded: Up and Down open the menu (a pop-up button); Left, Right, Home and End still step
+    // through the options without opening it.
+    if (_folded && (key == 'ArrowDown' || key == 'ArrowUp')) {
+      _openMenu();
+      return KeyEventResult.handled;
+    }
     final enabled = _enabled;
     final target = key == null
         ? null
@@ -633,7 +677,7 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
             enabled.indexWhere((i) => widget.options[i].value == widget.value),
             enabled.length,
             Directionality.of(context) == TextDirection.rtl,
-            widget.semantics,
+            _folded ? SelectionSemantics.tab : widget.semantics,
           );
     if (target == null) return KeyEventResult.ignored;
     final next = enabled[target];
@@ -642,14 +686,155 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
     return KeyEventResult.handled;
   }
 
+  void _openMenu() {
+    if (!_folded || widget.disabled) return;
+    setState(() => _menuOpen = true);
+  }
+
+  /// Closes the menu and puts focus back on the capsule, like Radix.
+  void _closeMenu() {
+    if (!_menuOpen) return;
+    setState(() => _menuOpen = false);
+    if (_selected >= 0) _node(_selected).requestFocus();
+  }
+
+  /// Collects the offstage options' widths; one rebuild when any changed.
+  void _report(int index, double width) {
+    _reported[index] = width;
+    if (_reported.length < widget.options.length) return;
+    final next = [
+      for (var i = 0; i < widget.options.length; i++) _reported[i] ?? 0,
+    ];
+    final old = _natural;
+    if (old != null &&
+        old.length == next.length &&
+        [for (var i = 0; i < next.length; i++) (old[i] - next[i]).abs() < 0.5]
+            .every((same) => same)) {
+      return;
+    }
+    if (mounted) setState(() => _natural = next);
+  }
+
+  /// The unfolded width: every option, the gaps between them and the inset around them.
+  double? _fullWidth(double inset, double gap) {
+    final natural = _natural;
+    if (natural == null || natural.length != widget.options.length) return null;
+    return natural.fold<double>(0, (sum, w) => sum + w) +
+        gap * math.max(0, natural.length - 1) +
+        2 * inset;
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (!_menu) {
+      _folded = false;
+      return _buildTrack(context, folded: false);
+    }
+    final s = ThemeProvider.of(context).sizes;
+    final inset = widget.sizes?.inset ?? s.segmentedInset;
+    final gap = widget.sizes?.gap ?? inset;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final full = _fullWidth(inset, gap);
+        // The room the parent can give: a Dock says so (its actions slot, like an ActionsBar's),
+        // since it hugs its content; elsewhere the width this track is given. A pixel of
+        // hysteresis either way, so it never flaps at the edge.
+        final room = math.min(
+          constraints.maxWidth,
+          ActionsWidthProvider.maybeOf(context) ?? double.infinity,
+        );
+        final folded =
+            full != null &&
+            full > room + (_folded ? -_foldHysteresis : _foldHysteresis);
+        if (folded != _folded) {
+          // While it folds or unfolds, the bubbles around it follow their layout instead of
+          // springing after it.
+          final glass = GlassMember.of(context);
+          SchedulerBinding.instance.addPostFrameCallback(
+            (_) => glass?.followLayoutFor(const Duration(milliseconds: 450)),
+          );
+        }
+        _folded = folded;
+        if (!folded && _menuOpen) {
+          SchedulerBinding.instance.addPostFrameCallback((_) {
+            if (mounted && !_folded) setState(() => _menuOpen = false);
+          });
+        }
+        return AnchoredPanel(
+          open: _menuOpen && folded,
+          onDismiss: _closeMenu,
+          cover: true,
+          // In a toolbar the menu lines up with the capsule's edge on its side of the bounds.
+          align: context.findAncestorWidgetOfExactType<GlassGroup>() != null
+              ? null
+              : PanelAlign.center,
+          panel: (context) => _SelectionMenu<T>(
+            label: widget.label,
+            options: widget.options,
+            selected: _selected,
+            disabled: widget.disabled,
+            onPick: (index) {
+              _closeMenu();
+              widget.onSelect(
+                widget.options[index].value,
+                SelectionSource.press,
+              );
+            },
+            onClose: _closeMenu,
+          ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              _buildTrack(context, folded: folded),
+              // Real option contents, laid out but never painted: their own widths.
+              Positioned(
+                left: 0,
+                top: 0,
+                child: Offstage(child: _measureRow(context)),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// The options as they are unfolded, offstage, each reporting its width.
+  Widget _measureRow(BuildContext context) {
+    final theme = ThemeProvider.of(context);
+    final s = theme.sizes;
+    final c = theme.colors;
+    final sizes = widget.sizes;
+    final padding = sizes?.padding ?? s.controlPadding;
+    final fontSize = sizes?.fontSize ?? (s.density == Density.thin ? 12 : 13);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < widget.options.length; i++)
+          SizeReporter(
+            onSize: (size) => _report(i, size.width),
+            child: Padding(
+              padding: EdgeInsetsDirectional.symmetric(horizontal: padding + 1),
+              child: _inlineContent(
+                widget.options[i],
+                fontSize: fontSize,
+                ink: c.muted,
+                fill: false,
+                radiusScale: s.radiusScale,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildTrack(BuildContext context, {required bool folded}) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
     final s = theme.sizes;
     final enabled = _enabled;
     final selected = _selected;
-    final tabIndex = enabled.contains(selected)
+    final tabIndex = enabled.contains(selected) || (folded && selected >= 0)
         ? selected
         : (enabled.isEmpty ? -1 : enabled.first);
     // A segmented control is a regular button tall (a host's control height inside one); on touch
@@ -688,6 +873,13 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
         layout: widget.layout,
         sizes: sizes,
         collapsed: collapsed,
+        foldable: _menu,
+        menuFolded: folded,
+        menuOpen: _menuOpen,
+        naturalWidth: _natural != null && i < _natural!.length
+            ? _natural![i]
+            : null,
+        groupLabel: widget.label,
         height: optionHeight,
         touchTarget: touch,
         padding: sizes?.padding ?? s.controlPadding,
@@ -695,8 +887,10 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
         // 13px semibold, iOS; 12px in the thin density (a host's sizes set their own).
         fontSize: sizes?.fontSize ?? (s.density == Density.thin ? 12 : 13),
         lineHeight: sizes?.lineHeight,
-        onSelect: () =>
-            widget.onSelect(widget.options[i].value, SelectionSource.press),
+        // Folded, the selected option is the capsule that opens the menu.
+        onSelect: () => folded && i == selected
+            ? _openMenu()
+            : widget.onSelect(widget.options[i].value, SelectionSource.press),
         fill: widget.equalWidth,
         radiusScale: s.radiusScale,
         ink: _InkClip(this, i, s.radiusScale),
@@ -709,10 +903,13 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
     final tab = widget.semantics == SelectionSemantics.tab;
     final row = Row(
       mainAxisSize: widget.equalWidth ? MainAxisSize.max : MainAxisSize.min,
-      spacing: gap,
+      // A track that folds springs the gaps away with the options it folds.
+      spacing: _menu ? 0 : gap,
       children: [
-        for (var i = 0; i < widget.options.length; i++)
+        for (var i = 0; i < widget.options.length; i++) ...[
+          if (_menu && i > 0) _FoldGap(gap: gap, folded: folded),
           widget.equalWidth ? Expanded(child: segment(i)) : segment(i),
+        ],
       ],
     );
     final track = _OnLayout(
@@ -739,7 +936,28 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
             : row,
       ),
     );
-    final Widget body = widget.equalWidth
+    // A track that folds into a menu never scrolls: its row fits it. Until its options' widths
+    // are known (the first frame) it lays them out at their own size, clipped and unpainted.
+    final Widget body = _menu
+        ? Padding(
+            padding: EdgeInsets.all(inset),
+            child: Opacity(
+              opacity: _natural == null ? 0 : 1,
+              // Unpainted for a frame, but already there for assistive tech.
+              alwaysIncludeSemantics: true,
+              child: ClipRect(
+                clipBehavior: _natural == null ? Clip.hardEdge : Clip.none,
+                child: OverflowBox(
+                  fit: OverflowBoxFit.deferToChild,
+                  alignment: AlignmentDirectional.centerStart,
+                  minWidth: 0,
+                  maxWidth: double.infinity,
+                  child: track,
+                ),
+              ),
+            ),
+          )
+        : widget.equalWidth
         ? Padding(padding: EdgeInsets.all(inset), child: track)
         // One row that scrolls inside the track when it doesn't fit: the clip reaches
         // segmentedBleed above and below (a pressed pill swells and casts a shadow) and the edges
@@ -802,8 +1020,9 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
         ),
       ),
     );
-    // A radio group names the whole control; a tab list sits on its row of tabs (above).
-    return tab
+    // A radio group names the whole control; a tab list sits on its row of tabs (above). Folded,
+    // the capsule is a pop-up button and the radios live in its menu.
+    return tab || folded
         ? focus
         : Semantics(
             container: true,
@@ -1198,6 +1417,11 @@ class _Segment<T> extends StatefulWidget {
     required this.layout,
     required this.sizes,
     required this.collapsed,
+    this.foldable = false,
+    this.menuFolded = false,
+    this.menuOpen = false,
+    this.naturalWidth,
+    this.groupLabel = '',
     required this.height,
     required this.touchTarget,
     required this.padding,
@@ -1216,6 +1440,13 @@ class _Segment<T> extends StatefulWidget {
   final SegmentOption<T> option;
   final int index;
   final bool selected, disabled, tabbable, dragging, collapsed;
+
+  /// In a track that folds into a menu: [menuFolded] folds the other options away and gives the
+  /// selected one a chevron (it opens the menu, [menuOpen]); [naturalWidth] is the option's own
+  /// width, which the fold springs from; [groupLabel] names the capsule.
+  final bool foldable, menuFolded, menuOpen;
+  final double? naturalWidth;
+  final String groupLabel;
 
   /// The selected fill the option paints itself (the pill isn't placed yet), or null.
   final Color? fallback;
@@ -1253,6 +1484,7 @@ double _line(double fontSize) => fontSize <= 12 ? 16 : 18;
 /// and label. The pill paints the selection behind it; the option only tints for hover and press
 /// when it isn't selected.
 class _SegmentState<T> extends State<_Segment<T>> {
+  final _semanticsKey = GlobalKey();
   bool _hovered = false;
   bool _down = false;
   bool _focusVisible = false;
@@ -1264,6 +1496,17 @@ class _SegmentState<T> extends State<_Segment<T>> {
 
   ({double min, double max, double pad}) get _target {
     final sizes = widget.sizes;
+    if (widget.foldable && sizes == null) {
+      final natural = widget.naturalWidth ?? double.infinity;
+      if (widget.menuFolded && !widget.selected) {
+        return (min: 0, max: 0, pad: 0);
+      }
+      return (
+        min: 0,
+        max: natural + (widget.menuFolded ? _chevronWidth : 0),
+        pad: widget.padding,
+      );
+    }
     if (sizes == null) {
       return (min: 0, max: double.infinity, pad: widget.padding);
     }
@@ -1290,9 +1533,13 @@ class _SegmentState<T> extends State<_Segment<T>> {
   @override
   void didUpdateWidget(_Segment<T> old) {
     super.didUpdateWidget(old);
-    if (widget.sizes == null) return;
+    if (widget.sizes == null && !widget.foldable) return;
     final t = _target;
-    final instant = reducedMotionOf(context) || old.sizes != widget.sizes;
+    // Jumps the first time the option's own width is known (from "no limit"), springs after.
+    final instant =
+        reducedMotionOf(context) ||
+        old.sizes != widget.sizes ||
+        (widget.foldable && old.naturalWidth == null);
     _min.animateTo(t.min, spring: Springs.snappy, instant: instant);
     _max.animateTo(t.max, spring: Springs.snappy, instant: instant);
     _pad.animateTo(t.pad, spring: Springs.snappy, instant: instant);
@@ -1310,47 +1557,13 @@ class _SegmentState<T> extends State<_Segment<T>> {
   }
 
   /// A segment's content in [ink], the icon in its [tone] when it has one.
-  Widget _inline(Color ink, {Color? tone}) => IconTheme.merge(
-    data: IconThemeData(size: 16, color: ink),
-    child: DefaultTextStyle.merge(
-      style: TextStyle(
-        fontSize: widget.fontSize,
-        height: _line(widget.fontSize) / widget.fontSize,
-        leadingDistribution: TextLeadingDistribution.even,
-        fontWeight: FontWeight.w600,
-        color: ink,
-      ),
-      maxLines: 1,
-      softWrap: false,
-      child: CssBaseline(
-        lineHeight: _line(widget.fontSize),
-        child: Row(
-          mainAxisSize: widget.fill ? MainAxisSize.max : MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          spacing: 6,
-          children: [
-            if (widget.option.icon case final icon?)
-              tone == null
-                  ? icon
-                  : IconTheme.merge(
-                      data: IconThemeData(color: tone),
-                      child: icon,
-                    ),
-            if (widget.fill)
-              Flexible(
-                child: Text(
-                  widget.option.label,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              )
-            else
-              Text(widget.option.label),
-            if (widget.option.badge case final badge?)
-              _Badge(text: badge, ink: ink, radiusScale: widget.radiusScale),
-          ],
-        ),
-      ),
-    ),
+  Widget _inline(Color ink, {Color? tone}) => _inlineContent(
+    widget.option,
+    fontSize: widget.fontSize,
+    ink: ink,
+    tone: tone,
+    fill: widget.fill,
+    radiusScale: widget.radiusScale,
   );
 
   /// A tab's content: the icon (22px in a 24px box, its badge on the corner, cut out of the
@@ -1437,13 +1650,23 @@ class _SegmentState<T> extends State<_Segment<T>> {
             ? c.controlHover
             : transparent);
     final stacked = widget.layout == SelectionLayout.stacked;
-    final sized = widget.sizes != null;
+    final sized = widget.sizes != null || widget.foldable;
     // Options are border-box buttons with a 1px border.
     final pad = sized ? math.max(0.0, _pad.get()) : widget.padding;
     final padding = EdgeInsetsDirectional.symmetric(horizontal: pad + 1);
-    final content = stacked
+    Widget content = stacked
         ? _stacked(c.muted, tone: tone)
         : _inline(c.muted, tone: tone);
+    // The selected option of a track that folds carries the chevron, shown only while folded.
+    if (widget.foldable && widget.selected) {
+      content = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          content,
+          _FoldChevron(open: widget.menuFolded, color: c.muted),
+        ],
+      );
+    }
     // The selected ink, cut to the pill's shape as it passes (the badge keeps its alpha, so it
     // turns into a pill of the selected ink; a tab's badge is cut out and keeps its colours).
     Widget body = _InkOverlay(
@@ -1465,18 +1688,43 @@ class _SegmentState<T> extends State<_Segment<T>> {
           child: OverflowBox(
             fit: OverflowBoxFit.deferToChild,
             minWidth: 0,
-            maxWidth: math.max(maxWidth, 24 + (pad + 1) * 2),
+            // A folding segment's content keeps its own width and is clipped as it folds.
+            maxWidth: widget.foldable
+                ? double.infinity
+                : math.max(maxWidth, 24 + (pad + 1) * 2),
             child: body,
           ),
         ),
       );
     }
-    final folded = widget.collapsed && !widget.selected;
+    final folded = (widget.collapsed || widget.menuFolded) && !widget.selected;
     final tab = widget.semantics == SelectionSemantics.tab;
     final label = badge == null
         ? widget.option.label
         : '${widget.option.label}, $badge';
-    return Semantics(
+    // Folded, the selected option is a pop-up button named by the group and its value.
+    final trigger = widget.menuFolded && widget.selected;
+    if (trigger) {
+      return Semantics(
+        key: _semanticsKey,
+        button: true,
+        expanded: widget.menuOpen,
+        label: '${widget.groupLabel}: $label',
+        enabled: !widget.disabled,
+        onTap: widget.disabled ? null : widget.onSelect,
+        excludeSemantics: true,
+        child: _interactive(
+          context,
+          folded: false,
+          fill: fill,
+          sized: sized,
+          body: body,
+        ),
+      );
+    }
+    final node = Semantics(
+      // Keeps the option's state when it moves in and out of the exclusion below.
+      key: _semanticsKey,
       role: tab ? ui.SemanticsRole.tab : null,
       selected: tab ? widget.selected : null,
       button: tab ? true : null,
@@ -1486,62 +1734,80 @@ class _SegmentState<T> extends State<_Segment<T>> {
       label: label,
       enabled: !widget.disabled,
       excludeSemantics: true,
-      // Only the selected option is a Tab stop; arrows reach the others (radio group and tab list
-      // pattern).
-      child: ExcludeFocusTraversal(
-        excluding: !widget.tabbable,
-        child: FocusableActionDetector(
-          focusNode: widget.focusNode,
-          enabled: !widget.disabled,
-          descendantsAreFocusable: false,
-          mouseCursor: widget.disabled
-              ? SystemMouseCursors.forbidden
-              : SystemMouseCursors.click,
-          onShowHoverHighlight: (value) => setState(() => _hovered = value),
-          onShowFocusHighlight: (value) =>
-              setState(() => _focusVisible = value),
-          actions: {
-            ActivateIntent: CallbackAction<ActivateIntent>(
-              onInvoke: (_) => widget.onSelect(),
-            ),
-          },
-          child: IgnorePointer(
-            // A folded option takes no pointer.
-            ignoring: folded,
-            child: TouchTarget(
-              minSize: widget.touchTarget,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTapDown: widget.disabled
-                    ? null
-                    : (_) => setState(() => _down = true),
-                onTapUp: widget.disabled
-                    ? null
-                    : (_) => setState(() => _down = false),
-                onTapCancel: widget.disabled
-                    ? null
-                    : () => setState(() => _down = false),
-                onTap: widget.disabled ? null : widget.onSelect,
-                child: AnimatedOpacity(
-                  opacity: widget.disabled ? 0.42 : (folded ? 0 : 1),
-                  duration: Duration(milliseconds: folded || sized ? 160 : 140),
-                  child: TweenAnimationBuilder<Color?>(
-                    tween: PaintColorTween(end: fill),
-                    duration: const Duration(milliseconds: 140),
-                    curve: const Cubic(0.2, 0.8, 0.2, 1),
-                    builder: (context, color, child) => FocusRing(
-                      visible: _focusVisible,
-                      radius: widget.radius,
-                      child: DecoratedBox(
-                        decoration: ShapeDecoration(
-                          color: color,
-                          shape: SuperellipseBorder(radius: widget.radius),
-                        ),
-                        child: child,
+      child: _interactive(
+        context,
+        folded: folded,
+        fill: fill,
+        sized: sized,
+        body: body,
+      ),
+    );
+    // Folded into the menu, the other options leave the accessibility tree.
+    return widget.menuFolded ? ExcludeSemantics(child: node) : node;
+  }
+
+  /// Focus, hover, press and the option's own paint around [body].
+  Widget _interactive(
+    BuildContext context, {
+    required bool folded,
+    required Color fill,
+    required bool sized,
+    required Widget body,
+  }) {
+    // Only the selected option is a Tab stop; arrows reach the others (radio group and tab list
+    // pattern).
+    return ExcludeFocusTraversal(
+      excluding: !widget.tabbable,
+      child: FocusableActionDetector(
+        focusNode: widget.focusNode,
+        enabled: !widget.disabled,
+        descendantsAreFocusable: false,
+        mouseCursor: widget.disabled
+            ? SystemMouseCursors.forbidden
+            : SystemMouseCursors.click,
+        onShowHoverHighlight: (value) => setState(() => _hovered = value),
+        onShowFocusHighlight: (value) => setState(() => _focusVisible = value),
+        actions: {
+          ActivateIntent: CallbackAction<ActivateIntent>(
+            onInvoke: (_) => widget.onSelect(),
+          ),
+        },
+        child: IgnorePointer(
+          // A folded option takes no pointer.
+          ignoring: folded,
+          child: TouchTarget(
+            minSize: widget.touchTarget,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapDown: widget.disabled
+                  ? null
+                  : (_) => setState(() => _down = true),
+              onTapUp: widget.disabled
+                  ? null
+                  : (_) => setState(() => _down = false),
+              onTapCancel: widget.disabled
+                  ? null
+                  : () => setState(() => _down = false),
+              onTap: widget.disabled ? null : widget.onSelect,
+              child: AnimatedOpacity(
+                opacity: widget.disabled ? 0.42 : (folded ? 0 : 1),
+                duration: Duration(milliseconds: folded || sized ? 160 : 140),
+                child: TweenAnimationBuilder<Color?>(
+                  tween: PaintColorTween(end: fill),
+                  duration: const Duration(milliseconds: 140),
+                  curve: const Cubic(0.2, 0.8, 0.2, 1),
+                  builder: (context, color, child) => FocusRing(
+                    visible: _focusVisible,
+                    radius: widget.radius,
+                    child: DecoratedBox(
+                      decoration: ShapeDecoration(
+                        color: color,
+                        shape: SuperellipseBorder(radius: widget.radius),
                       ),
+                      child: child,
                     ),
-                    child: SizedBox(height: widget.height, child: body),
                   ),
+                  child: SizedBox(height: widget.height, child: body),
                 ),
               ),
             ),
@@ -1647,4 +1913,287 @@ class _SuperellipseClip extends CustomClipper<Path> {
       superellipsePath(Offset.zero & size, [radius, radius, radius, radius]);
   @override
   bool shouldReclip(_SuperellipseClip old) => old.radius != radius;
+}
+
+/// A segment's content (`.lab-segmented-content`): the icon (in its [tone] when it has one), the
+/// label and the badge in [ink], 13px semibold on an 18px line.
+Widget _inlineContent<T>(
+  SegmentOption<T> option, {
+  required double fontSize,
+  required Color ink,
+  Color? tone,
+  required bool fill,
+  required double radiusScale,
+}) => IconTheme.merge(
+  data: IconThemeData(size: 16, color: ink),
+  child: DefaultTextStyle.merge(
+    style: TextStyle(
+      fontSize: fontSize,
+      height: _line(fontSize) / fontSize,
+      leadingDistribution: TextLeadingDistribution.even,
+      fontWeight: FontWeight.w600,
+      color: ink,
+    ),
+    maxLines: 1,
+    softWrap: false,
+    child: CssBaseline(
+      lineHeight: _line(fontSize),
+      child: Row(
+        mainAxisSize: fill ? MainAxisSize.max : MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        spacing: 6,
+        children: [
+          if (option.icon case final icon?)
+            tone == null
+                ? icon
+                : IconTheme.merge(
+                    data: IconThemeData(color: tone),
+                    child: icon,
+                  ),
+          if (fill)
+            Flexible(child: Text(option.label, overflow: TextOverflow.ellipsis))
+          else
+            Text(option.label),
+          if (option.badge case final badge?)
+            _Badge(text: badge, ink: ink, radiusScale: radiusScale),
+        ],
+      ),
+    ),
+  ),
+);
+
+/// Springs a value toward 0 or 1 on the snappy spring (jumps under reduced motion), rebuilding
+/// with it: the gap and chevron of a track that folds (`springTiming(SPRINGS.snappy)` in CSS).
+abstract class _FoldState<W extends StatefulWidget> extends State<W> {
+  late final MotionValue _t;
+  void Function()? _off;
+
+  bool get target;
+
+  @override
+  void initState() {
+    super.initState();
+    _t = MotionValue(target ? 1 : 0, 0.002);
+    _off = _t.subscribe((_) => setState(() {}));
+  }
+
+  @override
+  void didUpdateWidget(W old) {
+    super.didUpdateWidget(old);
+    _t.animateTo(
+      target ? 1 : 0,
+      spring: Springs.snappy,
+      instant: reducedMotionOf(context),
+    );
+  }
+
+  @override
+  void dispose() {
+    _off?.call();
+    _t.stop();
+    super.dispose();
+  }
+
+  double get t => _t.get().clamp(0.0, 1.0);
+}
+
+/// The gap between two options of a track that folds: it springs away with the options.
+class _FoldGap extends StatefulWidget {
+  const _FoldGap({required this.gap, required this.folded});
+  final double gap;
+  final bool folded;
+
+  @override
+  State<_FoldGap> createState() => _FoldGapState();
+}
+
+class _FoldGapState extends _FoldState<_FoldGap> {
+  @override
+  bool get target => !widget.folded;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(width: widget.gap * t);
+}
+
+/// The chevron after the selected option of a folded track (`.lab-segmented-chevron`): 4px gap
+/// and a 14px chevron, growing from nothing as the track folds.
+class _FoldChevron extends StatefulWidget {
+  const _FoldChevron({required this.open, required this.color});
+  final bool open;
+  final Color color;
+
+  @override
+  State<_FoldChevron> createState() => _FoldChevronState();
+}
+
+class _FoldChevronState extends _FoldState<_FoldChevron> {
+  @override
+  bool get target => widget.open;
+
+  @override
+  Widget build(BuildContext context) => ClipRect(
+    child: SizedBox(
+      width: _chevronWidth * t,
+      child: OverflowBox(
+        alignment: AlignmentDirectional.centerStart,
+        minWidth: _chevronWidth,
+        maxWidth: _chevronWidth,
+        child: Opacity(
+          opacity: t,
+          child: Padding(
+            padding: const EdgeInsetsDirectional.only(start: 4),
+            child: LucideChevronDown(size: 14, color: widget.color),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/// The options of a folded track as a menu (`.lab-actions-menu` on a [MenuSurface], Radix
+/// `DropdownMenu.RadioGroup` on the web): one radio row each with a check before the chosen one,
+/// the option's icon, label and badge. Opens on the chosen option; Up and Down move (skipping
+/// disabled ones), Home and End jump, Enter and Space choose, Escape closes.
+class _SelectionMenu<T> extends StatefulWidget {
+  const _SelectionMenu({
+    required this.label,
+    required this.options,
+    required this.selected,
+    required this.disabled,
+    required this.onPick,
+    required this.onClose,
+  });
+  final String label;
+  final List<SegmentOption<T>> options;
+  final int selected;
+  final bool disabled;
+  final ValueChanged<int> onPick;
+  final VoidCallback onClose;
+
+  @override
+  State<_SelectionMenu<T>> createState() => _SelectionMenuState<T>();
+}
+
+class _SelectionMenuState<T> extends State<_SelectionMenu<T>> {
+  late int _highlight = widget.selected;
+  final _scope = FocusScopeNode(debugLabel: 'Segmented menu');
+
+  bool _enabled(int i) => !widget.disabled && !widget.options[i].disabled;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _scope.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scope.dispose();
+    super.dispose();
+  }
+
+  void _move(int delta) {
+    final n = widget.options.length;
+    var next = _highlight;
+    for (var i = 0; i < n; i++) {
+      next = (next + delta + n) % n;
+      if (_enabled(next)) break;
+    }
+    setState(() => _highlight = next);
+  }
+
+  void _jump(bool first) {
+    final order = [for (var i = 0; i < widget.options.length; i++) i];
+    for (final i in first ? order : order.reversed) {
+      if (_enabled(i)) return setState(() => _highlight = i);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ThemeProvider.of(context);
+    return FocusScope(
+      node: _scope,
+      onKeyEvent: (_, event) {
+        if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+          return KeyEventResult.ignored;
+        }
+        final key = event.logicalKey;
+        if (key == LogicalKeyboardKey.escape) {
+          widget.onClose();
+        } else if (key == LogicalKeyboardKey.arrowDown) {
+          _move(1);
+        } else if (key == LogicalKeyboardKey.arrowUp) {
+          _move(-1);
+        } else if (key == LogicalKeyboardKey.home) {
+          _jump(true);
+        } else if (key == LogicalKeyboardKey.end) {
+          _jump(false);
+        } else if ((key == LogicalKeyboardKey.enter ||
+                key == LogicalKeyboardKey.space) &&
+            _highlight >= 0 &&
+            _enabled(_highlight)) {
+          widget.onPick(_highlight);
+        } else {
+          return KeyEventResult.ignored;
+        }
+        return KeyEventResult.handled;
+      },
+      child: MenuSurface(
+        label: widget.label,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < widget.options.length; i++)
+              Builder(
+                builder: (context) {
+                  final option = widget.options[i];
+                  final badge = option.badge;
+                  return Semantics(
+                    inMutuallyExclusiveGroup: true,
+                    checked: i == widget.selected,
+                    enabled: _enabled(i),
+                    label: badge == null
+                        ? option.label
+                        : '${option.label}, $badge',
+                    onTap: _enabled(i) ? () => widget.onPick(i) : null,
+                    excludeSemantics: true,
+                    child: MenuRow(
+                      leading: i == widget.selected
+                          ? const LucideCheck(size: 18)
+                          : const SizedBox.shrink(),
+                      label: Row(
+                        spacing: 12,
+                        children: [
+                          if (option.icon case final icon?)
+                            IconTheme.merge(
+                              data: const IconThemeData(size: 16),
+                              child: icon,
+                            ),
+                          Flexible(child: Text(option.label)),
+                        ],
+                      ),
+                      trailing: badge == null
+                          ? null
+                          : _Badge(
+                              text: badge,
+                              ink: theme.colors.ink,
+                              radiusScale: theme.sizes.radiusScale,
+                            ),
+                      highlighted: i == _highlight,
+                      enabled: _enabled(i),
+                      onHover: () => setState(() => _highlight = i),
+                      onTap: () => widget.onPick(i),
+                    ),
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }

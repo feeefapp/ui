@@ -1,3 +1,5 @@
+import 'dart:ui' show CheckedState;
+
 import 'package:feeef_ui/feeef_ui.dart';
 import 'package:flutter/foundation.dart'
     show debugDefaultTargetPlatformOverride;
@@ -104,6 +106,7 @@ class _StatusesState extends State<_Statuses> {
   Widget build(BuildContext context) {
     final control = SegmentedControl<String>(
       label: 'Order status',
+      overflow: SelectionOverflow.scroll,
       value: value,
       onChange: (next) {
         widget.changes.add(next);
@@ -360,6 +363,147 @@ void main() {
       expect(SchedulerBinding.instance.hasScheduledFrame, isFalse);
     },
   );
+
+  group('folding into a menu', () {
+    // An Overlay for the menu; it keeps its first entries, so the width changes through this.
+    final foldWidth = ValueNotifier<double>(360);
+    Widget bar(
+      List<String> changes, {
+      TextDirection direction = TextDirection.ltr,
+    }) => Directionality(
+      textDirection: direction,
+      child: Overlay(
+        initialEntries: [
+          OverlayEntry(
+            builder: (context) => Center(
+              child: ValueListenableBuilder<double>(
+                valueListenable: foldWidth,
+                builder: (context, width, _) => SizedBox(
+                  width: width,
+                  child: GlassScope(
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: ToolbarGroup(
+                            label: 'Orders view',
+                            children: [
+                              Flexible(child: _Harness(changes: changes)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    double controlWidth(WidgetTester tester) =>
+        tester.getSize(find.byType(SegmentedControl<String>)).width;
+
+    testWidgets(
+      'it folds when the width runs out and unfolds when it is back',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        foldWidth.value = 360;
+        await tester.pumpWidget(host(bar([])));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        expect(find.semantics.byLabel('Orders view: List'), findsNothing);
+        final unfolded = controlWidth(tester);
+
+        foldWidth.value = 120;
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: 'no overflow folding');
+        expect(controlWidth(tester), lessThan(unfolded));
+        expect(controlWidth(tester), lessThanOrEqualTo(120));
+        // One capsule: the selection is a pop-up button; the other options are gone.
+        expect(find.semantics.byLabel('Orders view: List'), findsOne);
+        expect(find.semantics.byLabel('Board'), findsNothing);
+
+        foldWidth.value = 360;
+        await tester.pumpAndSettle();
+        expect(find.semantics.byLabel('Orders view: List'), findsNothing);
+        expect(controlWidth(tester), closeTo(unfolded, 0.5));
+        handle.dispose();
+      },
+    );
+
+    testWidgets('the capsule opens a radio menu that chooses', (tester) async {
+      final handle = tester.ensureSemantics();
+      final changes = <String>[];
+      foldWidth.value = 120;
+      await tester.pumpWidget(host(bar(changes)));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('List').first);
+      await tester.pumpAndSettle();
+      // Radio semantics in the menu: checked on the chosen option only.
+      final board = find.semantics.byLabel('Board').evaluate().single;
+      expect(board.flagsCollection.isInMutuallyExclusiveGroup, isTrue);
+      expect(board.flagsCollection.isChecked, CheckedState.isFalse);
+      final list = find.semantics.byLabel('List').evaluate().single;
+      expect(list.flagsCollection.isChecked, CheckedState.isTrue);
+      await tester.tap(find.text('Grid').last);
+      await tester.pumpAndSettle();
+      expect(changes, ['grid']);
+      expect(
+        find.semantics.byLabel('Board'),
+        findsNothing,
+        reason: 'the menu closed',
+      );
+      expect(find.semantics.byLabel('Orders view: Grid'), findsOne);
+      handle.dispose();
+    });
+
+    testWidgets('keys: Up and Down open the menu, Left and Right step', (
+      tester,
+    ) async {
+      final changes = <String>[];
+      foldWidth.value = 120;
+      await tester.pumpWidget(host(bar(changes)));
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+      expect(changes, ['board'], reason: 'steps without opening');
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      expect(find.text('Grid'), findsNWidgets(2), reason: 'the menu is open');
+      // Opens on the chosen option: one more Down is Grid.
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(changes, ['board', 'grid']);
+      // Escape closes without choosing.
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(changes, ['board', 'grid']);
+      expect(find.text('Grid'), findsOneWidget, reason: 'the menu closed');
+    });
+
+    testWidgets('right-to-left: Left steps forward', (tester) async {
+      final changes = <String>[];
+      foldWidth.value = 120;
+      await tester.pumpWidget(
+        host(
+          bar(changes, direction: TextDirection.rtl),
+          direction: TextDirection.rtl,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      await tester.pumpAndSettle();
+      expect(changes, ['board']);
+    });
+  });
 
   group('badges', () {
     testWidgets('a badge is part of the option\'s accessible name', (

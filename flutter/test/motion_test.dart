@@ -70,31 +70,62 @@ void main() {
   });
 
   test(
-    'a split grows its children out of the parent; far bubbles materialize',
+    'births and deaths match the web plan (neighbours, droplets, splits)',
     () {
-      const r = Rect.fromLTWH;
-      final plan = planGlassTransition(
-        {'pair': r(0, 0, 120, 44), 'far': r(400, 0, 44, 44)},
-        {
-          'left': r(0, 0, 56, 44),
-          'right': r(64, 0, 56, 44),
-          'new': r(250, 0, 44, 44),
-        },
-        12,
-      );
-      final expected = fixture['plan'];
-      expect(plan.births.length, (expected['births'] as List).length);
-      for (var i = 0; i < plan.births.length; i++) {
-        final b = expected['births'][i];
-        expect(plan.births[i].id, b['id']);
-        expect(plan.births[i] is GlassGrow ? 'grow' : 'materialize', b['kind']);
+      Rect rect(dynamic r) =>
+          Rect.fromLTWH(n(r['x']), n(r['y']), n(r['width']), n(r['height']));
+      void expectRect(Rect actual, dynamic r, String why) {
+        expect(actual.left, closeTo(n(r['x']), 1e-9), reason: why);
+        expect(actual.top, closeTo(n(r['y']), 1e-9), reason: why);
+        expect(actual.width, closeTo(n(r['width']), 1e-9), reason: why);
+        expect(actual.height, closeTo(n(r['height']), 1e-9), reason: why);
       }
-      for (var i = 0; i < plan.deaths.length; i++) {
-        final d = expected['deaths'][i];
-        expect(plan.deaths[i].id, d['id']);
-        final death = plan.deaths[i];
-        expect(death is GlassAbsorb ? 'absorb' : 'dematerialize', d['kind']);
-        if (death is GlassAbsorb) expect(death.target, d['target']);
+
+      for (final c in fixture['plans'] as List) {
+        final name = c['name'] as String;
+        final plan = planGlassTransition(
+          {
+            for (final e in (c['previous'] as Map).entries)
+              e.key as String: rect(e.value),
+          },
+          {
+            for (final e in (c['next'] as Map).entries)
+              e.key as String: rect(e.value),
+          },
+          n(c['spacing']),
+        );
+        final births = c['births'] as List;
+        expect(plan.births.length, births.length, reason: name);
+        for (var i = 0; i < births.length; i++) {
+          final b = births[i];
+          final birth = plan.births[i];
+          expect(birth.id, b['id'], reason: name);
+          expect(
+            birth is GlassGrow ? 'grow' : 'materialize',
+            b['kind'],
+            reason: name,
+          );
+          if (birth is GlassGrow) {
+            expect(birth.source, b['source'], reason: name);
+            expectRect(birth.from, b['from'], name);
+          }
+        }
+        final deaths = c['deaths'] as List;
+        expect(plan.deaths.length, deaths.length, reason: name);
+        for (var i = 0; i < deaths.length; i++) {
+          final d = deaths[i];
+          final death = plan.deaths[i];
+          expect(death.id, d['id'], reason: name);
+          expect(
+            death is GlassAbsorb ? 'absorb' : 'dematerialize',
+            d['kind'],
+            reason: name,
+          );
+          if (death is GlassAbsorb) {
+            expect(death.target, d['target'], reason: name);
+            expectRect(death.into, d['into'], name);
+          }
+        }
       }
     },
   );

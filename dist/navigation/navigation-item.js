@@ -1,17 +1,20 @@
 import { jsx as _jsx, Fragment as _Fragment, jsxs as _jsxs } from "react/jsx-runtime";
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { Button } from '../ui.js';
+import { SquareSlot } from '../primitives/square-slot.js';
 import { useFloatingBoundary } from '../menu/boundary.js';
 import './navigation-item.css';
 /**
- * One row of sidebar navigation: icon and label, a link with `href` or a button without. In
- * `compact` (rail) mode only the icon shows and the label moves into a tooltip. Needs a Radix
- * Tooltip.Provider above it in compact mode.
+ * One row of sidebar navigation: a ghost toolbar `Button` as tall as every regular button, with
+ * the icon in a square `SquareSlot` at the start, the label, and an optional trailing slot. A link
+ * with `href`, a button without. In `compact` (rail) mode the item is just the icon's square and the
+ * label moves into a tooltip. Needs a Radix Tooltip.Provider above it in compact mode.
  */
-export function NavigationItem({ label, icon, href, onSelect, active, compact, }) {
+export function NavigationItem({ label, icon, trailing, href, onSelect, active, compact, }) {
     const boundary = useFloatingBoundary();
-    const content = (_jsxs(_Fragment, { children: [_jsx("span", { className: "lab-navigation-icon", "aria-hidden": "true", children: icon }), _jsx("span", { className: "lab-navigation-label", children: label })] }));
-    const item = href ? (_jsx(Button, { asChild: true, variant: "ghost", appearance: "toolbar", className: "lab-navigation-item", "data-compact": compact, children: _jsx("a", { href: href, "aria-current": active ? 'page' : undefined, onClick: onSelect, children: content }) })) : (_jsx(Button, { variant: "ghost", appearance: "toolbar", className: "lab-navigation-item", "data-compact": compact, "aria-current": active ? 'page' : undefined, onClick: onSelect, children: content }));
+    const content = (_jsxs(_Fragment, { children: [_jsx(SquareSlot, { "aria-hidden": "true", children: icon }), compact ? (_jsxs("span", { className: "lab-sr-only", children: [label, trailing != null && _jsxs(_Fragment, { children: [" ", trailing] })] })) : (_jsxs(_Fragment, { children: [_jsx("span", { className: "lab-control-label", children: label }), trailing != null && _jsx(SquareSlot, { children: trailing })] }))] }));
+    const current = active ? 'page' : undefined;
+    const item = href ? (_jsx(Button, { asChild: true, variant: "ghost", appearance: "toolbar", className: "lab-navigation-item", "data-compact": compact, children: _jsx("a", { href: href, "aria-current": current, onClick: onSelect, children: content }) })) : (_jsx(Button, { variant: "ghost", appearance: "toolbar", className: "lab-navigation-item", "data-compact": compact, "aria-current": current, onClick: onSelect, children: content }));
     // Only the rail shows a tooltip, so a full-width item works without a Tooltip.Provider.
     if (!compact)
         return item;

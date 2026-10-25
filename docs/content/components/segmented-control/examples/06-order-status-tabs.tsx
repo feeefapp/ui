@@ -26,6 +26,7 @@ export default function OrderStatusTabs() {
         <ToolbarGroup label="Order status">
           <SegmentedControl
             label="Order status"
+            overflow="scroll"
             value={status}
             onChange={setStatus}
             options={STATUSES.map((s) => ({ value: s.value, label: s.label, badge: String(s.count) }))}

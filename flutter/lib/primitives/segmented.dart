@@ -3,6 +3,8 @@ import 'package:flutter/widgets.dart';
 import 'segmented_model.dart' show SelectionSemantics;
 import 'selection_track.dart';
 
+export 'selection_track.dart' show SelectionOverflow;
+
 /// A status colour for an option's icon.
 enum SegmentTone { success, warning, danger }
 
@@ -45,11 +47,14 @@ class SegmentOption<T> {
 /// select (mirrored in right-to-left), Home and End jump to the ends. Options can carry a count
 /// ([SegmentOption.badge]).
 ///
-/// Options that don't fit scroll sideways inside the control (never wrap or squeeze): its edges
-/// fade where there is more, the selection scrolls into view whenever it changes, and a pill
+/// When the width it is given has no room for every option it folds, like an actions bar spills
+/// into More: the other options fold into the selected one, which gains a chevron and opens them
+/// as a single-choice menu ([overflow] [SelectionOverflow.menu], the default), and it unfolds as
+/// soon as the room is back. A status filter with many options takes [SelectionOverflow.scroll]
+/// instead: options that don't fit scroll sideways inside the control (never wrap or squeeze), its
+/// edges fade where there is more, the selection scrolls into view whenever it changes, and a pill
 /// dragged near an edge scrolls on. On touch a swipe scrolls; a drag that starts on the pill moves
-/// the pill. It needs a bounded width to scroll: in a [Row] (a [ToolbarGroup]'s too) wrap it in
-/// [Flexible].
+/// the pill. Both need a bounded width: in a [Row] (a [ToolbarGroup]'s too) wrap it in [Flexible].
 ///
 /// It paints no container: put it in glass ([ToolbarGroup]), on a box of your own (a
 /// `DecoratedBox` with `colors.surfaceSoft` and `SuperellipseBorder(radius: sizes.radiusControl)`)
@@ -63,6 +68,7 @@ class SegmentedControl<T> extends StatelessWidget {
     required this.label,
     this.disabled = false,
     this.equalWidth = false,
+    this.overflow = SelectionOverflow.menu,
   });
 
   /// The selected option's value.
@@ -85,6 +91,12 @@ class SegmentedControl<T> extends StatelessWidget {
   /// never scrolls).
   final bool equalWidth;
 
+  /// When the width it is given has no room for every option: [SelectionOverflow.menu] folds it
+  /// into the selected option and a chevron that opens the options as a radio menu;
+  /// [SelectionOverflow.scroll] scrolls them inside the control (a status filter with many
+  /// options). Ignored with [equalWidth].
+  final SelectionOverflow overflow;
+
   @override
   Widget build(BuildContext context) => SelectionTrack<T>(
     semantics: SelectionSemantics.radio,
@@ -94,5 +106,6 @@ class SegmentedControl<T> extends StatelessWidget {
     label: label,
     disabled: disabled,
     equalWidth: equalWidth,
+    overflow: overflow,
   );
 }
