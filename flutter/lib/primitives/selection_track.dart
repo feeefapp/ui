@@ -45,9 +45,15 @@ enum SelectionSource { press, drag, key }
 /// over the label with the badge on the icon (a tab).
 enum SelectionLayout { inline, stacked }
 
-/// The pill at rest: the primary fill with on-primary ink (a segmented control), or a light primary
-/// tint with the ink colour (a tab bar). Pressed or dragged, both become the same glass lens.
-enum SelectionPill { filled, tinted }
+/// The pill at rest: the primary fill with on-primary ink (a segmented control), or iOS 27's quiet
+/// pill (a tab bar): the ink at 7 % over what is under it, with the selected glyph and label in the
+/// primary colour. Pressed or dragged, both become the same glass lens (a water drop that
+/// magnifies, [lensMagnify]); inside it the ink is the ink colour (filled) or the primary (quiet).
+enum SelectionPill { filled, quiet }
+
+/// How much the pressed or dragged pill (a water drop) magnifies the options under it (the web
+/// kit's `LENS_MAGNIFY`).
+const double lensMagnify = 0.18;
 
 /// What a track does when its options don't fit: scroll them inside itself, or fold into one
 /// capsule (the selection and a chevron) that opens the options as a single-choice menu.
@@ -74,6 +80,11 @@ class SelectionTrackSizes {
     this.minWidth = 0,
     this.maxWidth = double.infinity,
     this.direction = Axis.vertical,
+    this.overlap = 0,
+    this.paddingTop = 0,
+    this.paddingBottom = 0,
+    this.iconLine = 24,
+    this.contentGap,
   });
 
   /// An option's height (the pill's).
@@ -94,6 +105,19 @@ class SelectionTrackSizes {
   /// Stacked options: the icon over the label ([Axis.vertical]) or beside it (a wide tab bar).
   final Axis direction;
 
+  /// How far each option reaches over the one before it (equal-width tracks; iOS 27 tabs overlap
+  /// by 8pt: a negative `margin-inline-start`).
+  final double overlap;
+
+  /// An option's top and bottom padding: its content centres in the height between them.
+  final double paddingTop, paddingBottom;
+
+  /// The height of the line the icon sits in (22px icon, 24px wide).
+  final double iconLine;
+
+  /// Between the icon and the label; null: 2 stacked, 8 beside.
+  final double? contentGap;
+
   @override
   bool operator ==(Object other) =>
       other is SelectionTrackSizes &&
@@ -105,7 +129,12 @@ class SelectionTrackSizes {
       other.lineHeight == lineHeight &&
       other.minWidth == minWidth &&
       other.maxWidth == maxWidth &&
-      other.direction == direction;
+      other.direction == direction &&
+      other.overlap == overlap &&
+      other.paddingTop == paddingTop &&
+      other.paddingBottom == paddingBottom &&
+      other.iconLine == iconLine &&
+      other.contentGap == contentGap;
 
   @override
   int get hashCode => Object.hash(
@@ -118,7 +147,42 @@ class SelectionTrackSizes {
     minWidth,
     maxWidth,
     direction,
+    overlap,
+    paddingTop,
+    paddingBottom,
+    iconLine,
+    contentGap,
   );
+}
+
+/// A host folding the track into its selected option frame by frame (a minimizing tab bar): the
+/// twin of the CSS a tab view writes on its track while minimizing. At [progress] p the other
+/// options fade at `1 - 2.2p`, every label at `1 - 2p` and the pill at `1 - p`; the selected icon
+/// moves by [icon] and its plain ink turns to the primary by p; from p ≥ 0.5 the other options
+/// take no pointer. The host moves the track itself.
+class SelectionMinimize extends ChangeNotifier {
+  double _progress = 0;
+  Offset _icon = Offset.zero;
+
+  /// 0 the full track … 1 only the selected icon.
+  double get progress => _progress;
+
+  /// Where the selected icon is moved (the host's geometry, already scaled by the progress).
+  Offset get icon => _icon;
+
+  void set(double progress, Offset icon) {
+    if (progress == _progress && icon == _icon) return;
+    _progress = progress;
+    _icon = icon;
+    notifyListeners();
+  }
+
+  ({Rect option, Offset icon})? Function(RenderBox ancestor)? _measure;
+
+  /// The selected option's box in [ancestor]'s coordinates and how far its icon's centre is from
+  /// the option's centre; null before the track is laid out.
+  ({Rect option, Offset icon})? measure(RenderBox ancestor) =>
+      _measure?.call(ancestor);
 }
 
 /// One row of options and one moving pill: measuring, the pill and its glass lens with the touch
@@ -126,8 +190,8 @@ class SelectionTrackSizes {
 /// reveal, keyboard roving, right-to-left, badges, tones, reduced motion and solid glass.
 ///
 /// [semantics] makes it a radio group or a tab list; [layout], [pill] and [sizes] make it a
-/// segmented control or a tab bar. [collapsed] folds it to the selected option, icon only (a
-/// minimized tab bar). It needs a bounded width to scroll.
+/// segmented control or a tab bar. A host's [minimize] folds it toward the selected option (a
+/// minimizing tab bar). It needs a bounded width to scroll.
 class SelectionTrack<T> extends StatefulWidget {
   const SelectionTrack({
     super.key,
@@ -142,7 +206,7 @@ class SelectionTrack<T> extends StatefulWidget {
     this.disabled = false,
     this.equalWidth = false,
     this.draggable = true,
-    this.collapsed = false,
+    this.minimize,
     this.overflow = SelectionOverflow.scroll,
   });
 
@@ -180,9 +244,8 @@ class SelectionTrack<T> extends StatefulWidget {
   /// False: taps select but never pick up the pill.
   final bool draggable;
 
-  /// Shows only the selected option, icon only, as a circle; the others fold away on a spring.
-  /// Needs [sizes].
-  final bool collapsed;
+  /// A host's minimize progress (a tab bar shrinking to its selected tab), or null.
+  final SelectionMinimize? minimize;
 
   /// When the options don't fit the width the track is given: [SelectionOverflow.scroll] inside
   /// it, or [SelectionOverflow.menu]: the other options fold into the selected one, which gains a
@@ -239,6 +302,7 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
     with SingleTickerProviderStateMixin {
   final _nodes = <int, FocusNode>{};
   final _keys = <int, GlobalKey>{};
+  final _iconKeys = <int, GlobalKey>{};
   final _trackKey = GlobalKey();
   final _motion = _PillMotion();
   final _scroll = ScrollController();
@@ -279,6 +343,38 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
 
   FocusNode _node(int index) => _nodes.putIfAbsent(index, FocusNode.new);
   GlobalKey _key(int index) => _keys.putIfAbsent(index, GlobalKey.new);
+  GlobalKey _iconKey(int index) => _iconKeys.putIfAbsent(index, GlobalKey.new);
+
+  /// [SelectionMinimize.measure]: the selected option and its icon's offset to the option's
+  /// centre, in [ancestor]'s pixels.
+  ({Rect option, Offset icon})? _measureMinimize(RenderBox ancestor) {
+    Rect? rect(GlobalKey? key) {
+      final box = key?.currentContext?.findRenderObject() as RenderBox?;
+      if (box == null || !box.attached || !box.hasSize) return null;
+      return MatrixUtils.transformRect(
+        box.getTransformTo(ancestor),
+        Offset.zero & box.size,
+      );
+    }
+
+    final option = rect(_keys[_selected]);
+    if (option == null) return null;
+    final icon = rect(_iconKeys[_selected]);
+    return (
+      option: option,
+      icon: icon == null ? Offset.zero : option.center - icon.center,
+    );
+  }
+
+  void _attachMinimize(SelectionMinimize? minimize) {
+    minimize?._measure = _measureMinimize;
+    minimize?.addListener(_motion.changed);
+  }
+
+  void _detachMinimize(SelectionMinimize? minimize) {
+    if (minimize?._measure == _measureMinimize) minimize?._measure = null;
+    minimize?.removeListener(_motion.changed);
+  }
 
   bool get _reduced => reducedMotionOf(context);
   int get _selected =>
@@ -299,6 +395,7 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
     ]) {
       _unsubscribe.add(value.subscribe((_) => _motion.changed()));
     }
+    _attachMinimize(widget.minimize);
     // While dragged, the width follows the centre: one segment's width to the next.
     _unsubscribe.add(
       center.subscribe((c) {
@@ -311,6 +408,10 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
   void didUpdateWidget(SelectionTrack<T> old) {
     super.didUpdateWidget(old);
     if (old.value != widget.value) _queueMeasure(follow: true);
+    if (old.minimize != widget.minimize) {
+      _detachMinimize(old.minimize);
+      _attachMinimize(widget.minimize);
+    }
     if (old.options.length != widget.options.length) {
       _reported.clear();
       _natural = null;
@@ -323,6 +424,7 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
 
   @override
   void dispose() {
+    _detachMinimize(widget.minimize);
     for (final off in _unsubscribe) {
       off();
     }
@@ -850,11 +952,12 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
     final touch = overrides?.touchTarget ?? s.touchTarget;
     final optionHeight = height - 2 * inset;
     final solid = glassStyleOf(context) == GlassStyle.solid;
-    final tinted = widget.pill == SelectionPill.tinted;
-    // The pill's rest paint and the selected ink.
-    final pillFill = tinted ? mixSrgb(c.primary, 0.16, transparent) : c.primary;
-    final pillInk = tinted ? c.ink : c.onPrimary;
-    final collapsed = widget.collapsed;
+    final quiet = widget.pill == SelectionPill.quiet;
+    // The pill's rest paint, the selected ink, and the ink inside the drop (its fill is gone, the
+    // glass is clear).
+    final pillFill = quiet ? mixSrgb(c.ink, 0.07, transparent) : c.primary;
+    final pillInk = quiet ? c.primary : c.onPrimary;
+    final lensInk = quiet ? c.primary : c.ink;
     _queueMeasure();
 
     Widget segment(int i) => KeyedSubtree(
@@ -872,7 +975,8 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
         semantics: widget.semantics,
         layout: widget.layout,
         sizes: sizes,
-        collapsed: collapsed,
+        minimize: widget.minimize,
+        iconKey: _iconKey(i),
         foldable: _menu,
         menuFolded: folded,
         menuOpen: _menuOpen,
@@ -895,23 +999,34 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
         radiusScale: s.radiusScale,
         ink: _InkClip(this, i, s.radiusScale),
         inkColor: pillInk,
-        inkOpacity: () => solid ? 1 : 1 - lens.get().clamp(0.0, 1.0),
+        lensInkColor: lensInk,
+        lens: () => solid ? 0 : lens.get(),
         motion: _motion,
       ),
     );
     // The track: the options and, painted behind them, the pill.
     final tab = widget.semantics == SelectionSemantics.tab;
-    final row = Row(
-      mainAxisSize: widget.equalWidth ? MainAxisSize.max : MainAxisSize.min,
-      // A track that folds springs the gaps away with the options it folds.
-      spacing: _menu ? 0 : gap,
-      children: [
-        for (var i = 0; i < widget.options.length; i++) ...[
-          if (_menu && i > 0) _FoldGap(gap: gap, folded: folded),
-          widget.equalWidth ? Expanded(child: segment(i)) : segment(i),
-        ],
-      ],
-    );
+    final Widget row = widget.equalWidth
+        // Equal options sharing the width (CSS `flex: 1 1 0`), overlapping by the host's overlap.
+        ? _EqualRow(
+            spacing: gap - (sizes?.overlap ?? 0),
+            minChildWidth: sizes?.minWidth ?? 0,
+            textDirection: Directionality.of(context),
+            children: [
+              for (var i = 0; i < widget.options.length; i++) segment(i),
+            ],
+          )
+        : Row(
+            mainAxisSize: MainAxisSize.min,
+            // A track that folds springs the gaps away with the options it folds.
+            spacing: _menu ? 0 : gap,
+            children: [
+              for (var i = 0; i < widget.options.length; i++) ...[
+                if (_menu && i > 0) _FoldGap(gap: gap, folded: folded),
+                segment(i),
+              ],
+            ],
+          );
     final track = _OnLayout(
       onLayout: _queueMeasure,
       child: CustomPaint(
@@ -1134,6 +1249,169 @@ class _PillDragRecognizer extends OneSequenceGestureRecognizer {
 }
 
 /// Calls [onLayout] whenever the track lays out (a resize, new labels, another density).
+/// Equal options sharing the track's width (CSS `flex: 1 1 0`), [spacing] apart; a negative
+/// spacing overlaps them, later options on top (iOS 27 tabs). Given a bounded width it fills it
+/// (`width: 100%`); unbounded, it takes the options' summed natural widths, shared equally. No
+/// option is narrower than [minChildWidth].
+class _EqualRow extends MultiChildRenderObjectWidget {
+  const _EqualRow({
+    required this.spacing,
+    required this.minChildWidth,
+    required this.textDirection,
+    required super.children,
+  });
+  final double spacing, minChildWidth;
+  final TextDirection textDirection;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderEqualRow(spacing, minChildWidth, textDirection);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderEqualRow renderObject) {
+    renderObject
+      ..spacing = spacing
+      ..minChildWidth = minChildWidth
+      ..textDirection = textDirection;
+  }
+}
+
+class _EqualRowParentData extends ContainerBoxParentData<RenderBox> {}
+
+class _RenderEqualRow extends RenderBox
+    with
+        ContainerRenderObjectMixin<RenderBox, _EqualRowParentData>,
+        RenderBoxContainerDefaultsMixin<RenderBox, _EqualRowParentData> {
+  _RenderEqualRow(this._spacing, this._minChildWidth, this._textDirection);
+
+  double _spacing;
+  set spacing(double value) {
+    if (value == _spacing) return;
+    _spacing = value;
+    markNeedsLayout();
+  }
+
+  double _minChildWidth;
+  set minChildWidth(double value) {
+    if (value == _minChildWidth) return;
+    _minChildWidth = value;
+    markNeedsLayout();
+  }
+
+  TextDirection _textDirection;
+  set textDirection(TextDirection value) {
+    if (value == _textDirection) return;
+    _textDirection = value;
+    markNeedsLayout();
+  }
+
+  @override
+  void setupParentData(RenderBox child) {
+    if (child.parentData is! _EqualRowParentData) {
+      child.parentData = _EqualRowParentData();
+    }
+  }
+
+  double _sum(double Function(RenderBox child) width) {
+    var total = 0.0;
+    var child = firstChild;
+    while (child != null) {
+      total += math.max(_minChildWidth, width(child));
+      child = childAfter(child);
+    }
+    return math.max(0, total + _spacing * math.max(0, childCount - 1));
+  }
+
+  double _tallest(double Function(RenderBox child) height) {
+    var tallest = 0.0;
+    var child = firstChild;
+    while (child != null) {
+      tallest = math.max(tallest, height(child));
+      child = childAfter(child);
+    }
+    return tallest;
+  }
+
+  double _each(double width) => childCount == 0
+      ? 0
+      : math.max(
+          _minChildWidth,
+          (width - _spacing * (childCount - 1)) / childCount,
+        );
+
+  @override
+  double computeMinIntrinsicWidth(double height) =>
+      _sum((child) => child.getMinIntrinsicWidth(height));
+
+  @override
+  double computeMaxIntrinsicWidth(double height) =>
+      _sum((child) => child.getMaxIntrinsicWidth(height));
+
+  @override
+  double computeMinIntrinsicHeight(double width) =>
+      _tallest((child) => child.getMinIntrinsicHeight(_each(width)));
+
+  @override
+  double computeMaxIntrinsicHeight(double width) =>
+      _tallest((child) => child.getMaxIntrinsicHeight(_each(width)));
+
+  double _width(BoxConstraints constraints) => constraints.constrainWidth(
+    constraints.hasBoundedWidth
+        ? constraints.maxWidth
+        : computeMaxIntrinsicWidth(double.infinity),
+  );
+
+  BoxConstraints _childConstraints(BoxConstraints constraints, double each) =>
+      BoxConstraints(
+        minWidth: each,
+        maxWidth: each,
+        maxHeight: constraints.maxHeight,
+      );
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) {
+    final width = _width(constraints);
+    final inner = _childConstraints(constraints, _each(width));
+    final height = _tallest((child) => child.getDryLayout(inner).height);
+    return constraints.constrain(Size(width, height));
+  }
+
+  @override
+  void performLayout() {
+    final width = _width(constraints);
+    final each = _each(width);
+    final inner = _childConstraints(constraints, each);
+    var child = firstChild;
+    var height = 0.0;
+    while (child != null) {
+      child.layout(inner, parentUsesSize: true);
+      height = math.max(height, child.size.height);
+      child = childAfter(child);
+    }
+    size = constraints.constrain(Size(width, height));
+    child = firstChild;
+    var i = 0;
+    final rtl = _textDirection == TextDirection.rtl;
+    while (child != null) {
+      final x = i * (each + _spacing);
+      (child.parentData! as _EqualRowParentData).offset = Offset(
+        rtl ? size.width - x - each : x,
+        (size.height - child.size.height) / 2,
+      );
+      child = childAfter(child);
+      i++;
+    }
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) =>
+      defaultPaint(context, offset);
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) =>
+      defaultHitTestChildren(result, position: position);
+}
+
 class _OnLayout extends SingleChildRenderObjectWidget {
   const _OnLayout({required this.onLayout, required super.child});
   final VoidCallback onLayout;
@@ -1159,49 +1437,53 @@ class _RenderOnLayout extends RenderProxyBox {
   }
 }
 
-/// The selected ink of option [index]: cut to the pill's shape as it passes.
+/// The selected ink of option [index]: the pill (the drop) in the option's own pixels.
 class _InkClip {
   _InkClip(this.state, this.index, this.radiusScale);
   final _SelectionTrackState<dynamic> state;
   final int index;
   final double radiusScale;
 
-  RRect clip(Size size) {
+  /// The pill over this option, or [Rect.zero] when there is none; null before placement, when
+  /// only the selected option shows its ink (whole).
+  Rect? drop() {
     final boxes = state._boxes;
-    if (state._placed && state._selected < 0) return RRect.zero;
+    if (state._placed && state._selected < 0) return Rect.zero;
     if (!state._placed || index >= boxes.length) {
-      // Before placement only the selected option shows its ink (whole).
-      return index == state._selected
-          ? RRect.fromRectXY(Offset.zero & size, 0, 0)
-          : RRect.zero;
+      return index == state._selected ? null : Rect.zero;
     }
-    final pill = state._pill.shift(-boxes[index].topLeft);
-    final radius = math.min(pill.width, pill.height) / 2 * radiusScale;
-    final cut = pill.intersect(Offset.zero & size);
-    if (cut.width <= 0 || cut.height <= 0) return RRect.zero;
-    return RRect.fromRectAndRadius(cut, Radius.circular(radius));
+    return state._pill.shift(-boxes[index].topLeft);
   }
+
+  /// The drop's corner radius.
+  double radius(Rect drop) =>
+      math.min(drop.width, drop.height) / 2 * radiusScale;
 }
 
-/// Paints its child, then paints it again in [color] inside [ink]'s clip: the selected ink of an
-/// option (the web kit's `.lab-segmented-ink` copy), without a second copy of the label in the
-/// tree. [_InkHole]s below it (a tab's badge) are cut out of the ink, so they keep their own paint.
+/// Paints its child, then paints it again in the selected ink inside [ink]'s drop: the selected
+/// ink of an option (the web kit's `.lab-segmented-ink` copy), without a second copy of the label
+/// in the tree. Pressed or dragged ([lens] > 0) the drop magnifies: the ink copy scales by
+/// `1 + lensMagnify × lens` around the drop's centre, still cut to the drop, its colour turns from
+/// [color] to [lensColor], and the plain child is cut out under the drop (an elliptical hole the
+/// drop's size). [_InkHole]s below it (a tab's badge) are drawn over the copy in their own paint,
+/// magnified with it.
 class _InkOverlay extends SingleChildRenderObjectWidget {
   const _InkOverlay({
     required this.ink,
     required this.color,
-    required this.opacity,
+    required this.lensColor,
+    required this.lens,
     required this.repaint,
     required super.child,
   });
   final _InkClip ink;
-  final Color color;
-  final double Function() opacity;
+  final Color color, lensColor;
+  final double Function() lens;
   final Listenable repaint;
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
-      _RenderInkOverlay(ink, color, opacity, repaint);
+      _RenderInkOverlay(ink, color, lensColor, lens, repaint);
 
   @override
   void updateRenderObject(
@@ -1211,23 +1493,37 @@ class _InkOverlay extends SingleChildRenderObjectWidget {
     renderObject
       ..ink = ink
       ..color = color
-      ..opacity = opacity
+      ..lensColor = lensColor
+      ..lens = lens
       ..repaint = repaint;
   }
 }
 
 class _RenderInkOverlay extends RenderProxyBox {
-  _RenderInkOverlay(this.ink, this._color, this.opacity, this._repaint);
+  _RenderInkOverlay(
+    this.ink,
+    this._color,
+    this._lensColor,
+    this.lens,
+    this._repaint,
+  );
   _InkClip ink;
-  double Function() opacity;
+  double Function() lens;
 
-  /// Boxes cut out of the ink ([_InkHole]), with their corner radius.
+  /// Boxes drawn over the ink in their own paint ([_InkHole]).
   final holes = <_RenderInkHole>{};
 
   Color _color;
   set color(Color value) {
     if (value == _color) return;
     _color = value;
+    markNeedsPaint();
+  }
+
+  Color _lensColor;
+  set lensColor(Color value) {
+    if (value == _lensColor) return;
+    _lensColor = value;
     markNeedsPaint();
   }
 
@@ -1260,64 +1556,96 @@ class _RenderInkOverlay extends RenderProxyBox {
   void paint(PaintingContext context, Offset offset) {
     final child = this.child;
     if (child == null) return;
-    context.paintChild(child, offset);
-    final alpha = opacity().clamp(0.0, 1.0);
-    final clip = ink.clip(size);
-    if (alpha <= 0 || clip.width <= 0 || clip.height <= 0) return;
+    final bounds = Offset.zero & size;
+    final drop = ink.drop();
+    final amount = lens().clamp(0.0, 1.0);
+    final zoom = 1 + lensMagnify * amount;
+    // The plain content, cut out where the drop magnifies it.
+    final crosses =
+        drop != null &&
+        amount > 0.01 &&
+        drop.left < size.width &&
+        drop.right > 0;
+    if (crosses) {
+      context.pushClipPath(
+        true,
+        offset,
+        bounds,
+        Path()
+          ..fillType = PathFillType.evenOdd
+          ..addRect(bounds.inflate(drop.height))
+          ..addOval(drop),
+        (context, offset) => context.paintChild(child, offset),
+      );
+    } else {
+      context.paintChild(child, offset);
+    }
+
+    // Where the ink shows (final pixels) and the scale around the drop's centre.
+    final RRect clip;
+    final Offset centre;
+    if (drop == null) {
+      clip = RRect.fromRectXY(bounds, 0, 0);
+      centre = bounds.center;
+    } else {
+      centre = drop.center;
+      final scaled = Rect.fromLTRB(
+        centre.dx + (bounds.left - centre.dx) * zoom,
+        centre.dy + (bounds.top - centre.dy) * zoom,
+        centre.dx + (bounds.right - centre.dx) * zoom,
+        centre.dy + (bounds.bottom - centre.dy) * zoom,
+      );
+      final cut = drop.intersect(scaled);
+      if (cut.width <= 0 || cut.height <= 0) return;
+      clip = RRect.fromRectAndRadius(cut, Radius.circular(ink.radius(drop)));
+    }
+    final inkColor = Color.lerp(_color, _lensColor, amount)!;
+    final transform = Matrix4.identity()
+      ..translateByDouble(centre.dx, centre.dy, 0, 1)
+      ..scaleByDouble(zoom, zoom, 1, 1)
+      ..translateByDouble(-centre.dx, -centre.dy, 0, 1);
+
+    final live = [
+      for (final hole in holes)
+        if (hole.attached && hole.hasSize) hole,
+    ];
     void paintInk(PaintingContext context, Offset offset) {
       context.pushColorFilter(
         offset,
-        ColorFilter.mode(
-          _color.withValues(alpha: _color.a * alpha),
-          BlendMode.srcIn,
-        ),
+        ColorFilter.mode(inkColor, BlendMode.srcIn),
         (context, offset) => context.paintChild(child, offset),
       );
+      // The badges show in the copy in their own colours, magnified with it.
+      for (final hole in live) {
+        context.pushTransform(
+          true,
+          offset,
+          hole.getTransformTo(this),
+          (context, offset) => context.paintChild(hole, offset),
+        );
+      }
     }
 
-    // Each hole in its own shape (the badge's superellipse), so no ink shows at its corners.
-    final cut = [
-      for (final hole in holes)
-        if (hole.attached && hole.hasSize)
-          superellipsePath(
-            MatrixUtils.transformRect(
-              hole.getTransformTo(this),
-              Offset.zero & hole.size,
-            ),
-            [hole.radius, hole.radius, hole.radius, hole.radius],
-          ),
-    ];
-    if (cut.isEmpty) {
-      context.pushClipRRect(true, offset, Offset.zero & size, clip, paintInk);
-      return;
-    }
-    var path = Path()..addRRect(clip);
-    for (final hole in cut) {
-      path = Path.combine(PathOperation.difference, path, hole);
-    }
-    context.pushClipPath(true, offset, Offset.zero & size, path, paintInk);
+    context.pushClipRRect(true, offset, bounds, clip, (context, offset) {
+      if (zoom == 1) {
+        paintInk(context, offset);
+      } else {
+        context.pushTransform(true, offset, transform, paintInk);
+      }
+    });
   }
 }
 
-/// Cuts its child out of the selected ink of the option around it ([_InkOverlay]): a tab's badge
-/// keeps its own colours as the pill passes, like the web kit's badge drawn above the ink.
+/// Draws its child in its own paint over the selected ink of the option around it ([_InkOverlay]):
+/// a tab's badge keeps its colours as the pill passes, like the web kit's badge drawn above the ink.
 class _InkHole extends SingleChildRenderObjectWidget {
-  const _InkHole({required this.radius, required super.child});
-  final double radius;
+  const _InkHole({required super.child});
 
   @override
-  RenderObject createRenderObject(BuildContext context) =>
-      _RenderInkHole(radius);
-
-  @override
-  void updateRenderObject(BuildContext context, _RenderInkHole renderObject) {
-    renderObject.radius = radius;
-  }
+  RenderObject createRenderObject(BuildContext context) => _RenderInkHole();
 }
 
 class _RenderInkHole extends RenderProxyBox {
-  _RenderInkHole(this.radius);
-  double radius;
   _RenderInkOverlay? _overlay;
 
   @override
@@ -1339,7 +1667,7 @@ class _RenderInkHole extends RenderProxyBox {
   }
 }
 
-/// The pill: [fill] at rest (the primary, or its light tint on a tab bar); pressed or dragged it
+/// The pill: [fill] at rest (the primary, or the quiet 7 % ink on a tab bar); pressed or dragged it
 /// becomes a glass lens (fill → glass, [LensPaint]), swells and shows the touch glow, like a pressed
 /// GlassContainer bubble. Solid styles keep the fill.
 class _PillPainter extends CustomPainter {
@@ -1367,7 +1695,10 @@ class _PillPainter extends CustomPainter {
     final radius = math.min(base, math.min(rect.width, rect.height) / 2);
     final shape = superellipsePath(rect, [radius, radius, radius, radius]);
     final lens = solid ? 0.0 : state.lens.get().clamp(0.0, 1.0);
-    final alpha = disabled ? 0.42 : 1.0;
+    // A minimizing host fades the pill out as the track folds to the selected icon.
+    final fade = 1 - (state.widget.minimize?.progress ?? 0).clamp(0.0, 1.0);
+    if (fade <= 0) return;
+    final alpha = (disabled ? 0.42 : 1.0) * fade;
     if (alpha < 1) {
       canvas.saveLayer(
         null,
@@ -1416,7 +1747,8 @@ class _Segment<T> extends StatefulWidget {
     required this.semantics,
     required this.layout,
     required this.sizes,
-    required this.collapsed,
+    required this.minimize,
+    required this.iconKey,
     this.foldable = false,
     this.menuFolded = false,
     this.menuOpen = false,
@@ -1431,7 +1763,8 @@ class _Segment<T> extends StatefulWidget {
     required this.onSelect,
     required this.ink,
     required this.inkColor,
-    required this.inkOpacity,
+    required this.lensInkColor,
+    required this.lens,
     required this.motion,
     required this.radiusScale,
     this.fill = false,
@@ -1439,7 +1772,13 @@ class _Segment<T> extends StatefulWidget {
 
   final SegmentOption<T> option;
   final int index;
-  final bool selected, disabled, tabbable, dragging, collapsed;
+  final bool selected, disabled, tabbable, dragging;
+
+  /// A host folding the track toward the selected option ([SelectionMinimize]), or null.
+  final SelectionMinimize? minimize;
+
+  /// On the icon's box: the track measures the selected icon for a minimizing host.
+  final GlobalKey iconKey;
 
   /// In a track that folds into a menu: [menuFolded] folds the other options away and gives the
   /// selected one a chevron (it opens the menu, [menuOpen]); [naturalWidth] is the option's own
@@ -1453,7 +1792,7 @@ class _Segment<T> extends StatefulWidget {
   final SelectionSemantics semantics;
   final SelectionLayout layout;
 
-  /// A host's sizes (a tab bar): the option's width range and folding.
+  /// A host's sizes (a tab bar): the option's width range, padding and type.
   final SelectionTrackSizes? sizes;
 
   /// Takes the width it is given and centres (and ellipsizes) its content.
@@ -1468,8 +1807,12 @@ class _Segment<T> extends StatefulWidget {
   final double touchTarget;
   final VoidCallback onSelect;
   final _InkClip ink;
-  final Color inkColor;
-  final double Function() inkOpacity;
+
+  /// The selected ink at rest and inside the drop.
+  final Color inkColor, lensInkColor;
+
+  /// 0 the pill at rest … 1 a glass drop (0 for solid glass).
+  final double Function() lens;
   final Listenable motion;
 
   @override
@@ -1489,8 +1832,8 @@ class _SegmentState<T> extends State<_Segment<T>> {
   bool _down = false;
   bool _focusVisible = false;
 
-  // A sized option (a tab) springs its width range and padding as the track folds and unfolds
-  // (`springTiming(SPRINGS.snappy)` in CSS).
+  // An option of a track that folds into a menu springs its width and padding as the track folds
+  // and unfolds (`springTiming(SPRINGS.snappy)` in CSS).
   late final MotionValue _min, _max, _pad;
   final _unsubscribe = <void Function()>[];
 
@@ -1510,11 +1853,6 @@ class _SegmentState<T> extends State<_Segment<T>> {
     if (sizes == null) {
       return (min: 0, max: double.infinity, pad: widget.padding);
     }
-    if (widget.collapsed) {
-      return widget.selected
-          ? (min: widget.height, max: widget.height, pad: 0)
-          : (min: 0, max: 0, pad: 0);
-    }
     return (min: sizes.minWidth, max: sizes.maxWidth, pad: widget.padding);
   }
 
@@ -1533,7 +1871,7 @@ class _SegmentState<T> extends State<_Segment<T>> {
   @override
   void didUpdateWidget(_Segment<T> old) {
     super.didUpdateWidget(old);
-    if (widget.sizes == null && !widget.foldable) return;
+    if (!widget.foldable) return;
     final t = _target;
     // Jumps the first time the option's own width is known (from "no limit"), springs after.
     final instant =
@@ -1566,21 +1904,27 @@ class _SegmentState<T> extends State<_Segment<T>> {
     radiusScale: widget.radiusScale,
   );
 
-  /// A tab's content: the icon (22px in a 24px box, its badge on the corner, cut out of the
-  /// selected ink) over or beside the label, which hides while the track is folded.
+  /// A tab's content: the icon (22px in a 24px-wide line, its badge on the corner, cut out of the
+  /// selected ink) over or beside the label. A minimizing host fades the label and moves the
+  /// selected icon to the option's centre.
   Widget _stacked(Color ink, {Color? tone}) {
     final sizes = widget.sizes;
     final direction = sizes?.direction ?? Axis.vertical;
     final lineHeight = widget.lineHeight ?? _line(widget.fontSize);
     final badge = widget.option.badge;
     final icon = widget.option.icon;
+    final minimize = widget.minimize;
+    // A minimizing host fades the labels at `1 - 2p`: in the text colour, not an Opacity layer
+    // (the option paints its content twice, plain and selected ink, and a layer can only be in one
+    // place).
+    final fade = (1 - 2 * (minimize?.progress ?? 0)).clamp(0.0, 1.0);
     final label = DefaultTextStyle.merge(
       style: TextStyle(
         fontSize: widget.fontSize,
         height: lineHeight / widget.fontSize,
         leadingDistribution: TextLeadingDistribution.even,
         fontWeight: FontWeight.w600,
-        color: ink,
+        color: ink.withValues(alpha: ink.a * fade),
       ),
       maxLines: 1,
       softWrap: false,
@@ -1592,33 +1936,39 @@ class _SegmentState<T> extends State<_Segment<T>> {
     );
     final children = [
       if (icon != null)
-        SizedBox.square(
-          dimension: 24,
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              IconTheme.merge(
-                data: IconThemeData(size: 22, color: tone ?? ink),
-                child: icon,
-              ),
-              if (badge != null)
-                PositionedDirectional(
-                  top: -5,
-                  start: 14,
-                  child: _InkHole(
-                    radius: 9 * widget.radiusScale,
-                    child: _IconBadge(
-                      text: badge,
-                      radiusScale: widget.radiusScale,
+        SizedBox(
+          key: widget.iconKey,
+          width: 24,
+          height: sizes?.iconLine ?? 24,
+          // A minimizing host moves the selected icon (and its badge) to the option's centre.
+          child: Transform.translate(
+            offset: minimize != null && widget.selected
+                ? minimize.icon
+                : Offset.zero,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                IconTheme.merge(
+                  data: IconThemeData(size: 22, color: tone ?? ink),
+                  child: icon,
+                ),
+                if (badge != null)
+                  PositionedDirectional(
+                    top: -5,
+                    start: 14,
+                    child: _InkHole(
+                      child: _IconBadge(
+                        text: badge,
+                        radiusScale: widget.radiusScale,
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
-      if (!widget.collapsed)
-        direction == Axis.horizontal ? Flexible(child: label) : label,
+      direction == Axis.horizontal ? Flexible(child: label) : label,
       if (icon == null && badge != null)
         _Badge(text: badge, ink: ink, radiusScale: widget.radiusScale),
     ];
@@ -1626,13 +1976,22 @@ class _SegmentState<T> extends State<_Segment<T>> {
       direction: direction,
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
-      spacing: direction == Axis.horizontal ? 8 : 2,
+      spacing: sizes?.contentGap ?? (direction == Axis.horizontal ? 8 : 2),
       children: children,
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final minimize = widget.minimize;
+    if (minimize == null) return _build(context);
+    return ListenableBuilder(
+      listenable: minimize,
+      builder: (context, _) => _build(context),
+    );
+  }
+
+  Widget _build(BuildContext context) {
     final c = ThemeProvider.of(context).colors;
     final tone = switch (widget.option.tone) {
       SegmentTone.success => c.success,
@@ -1650,15 +2009,23 @@ class _SegmentState<T> extends State<_Segment<T>> {
             ? c.controlHover
             : transparent);
     final stacked = widget.layout == SelectionLayout.stacked;
-    final sized = widget.sizes != null || widget.foldable;
+    final sizes = widget.sizes;
+    final foldable = widget.foldable;
+    // A minimizing host: the selected glyph turns to the primary, the others fade and, past
+    // halfway, take no pointer.
+    final p = (widget.minimize?.progress ?? 0).clamp(0.0, 1.0);
+    final minimized = widget.minimize != null && !widget.selected && p >= 0.5;
     // Options are border-box buttons with a 1px border.
-    final pad = sized ? math.max(0.0, _pad.get()) : widget.padding;
+    final pad = foldable ? math.max(0.0, _pad.get()) : widget.padding;
     final padding = EdgeInsetsDirectional.symmetric(horizontal: pad + 1);
+    final ink = widget.selected && p > 0
+        ? Color.lerp(c.muted, c.primary, p)!
+        : c.muted;
     Widget content = stacked
-        ? _stacked(c.muted, tone: tone)
-        : _inline(c.muted, tone: tone);
+        ? _stacked(ink, tone: tone)
+        : _inline(ink, tone: tone);
     // The selected option of a track that folds carries the chevron, shown only while folded.
-    if (widget.foldable && widget.selected) {
+    if (foldable && widget.selected) {
       content = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1667,18 +2034,31 @@ class _SegmentState<T> extends State<_Segment<T>> {
         ],
       );
     }
+    // A host's top and bottom padding: the content centres between them (and may overflow both
+    // equally, like a button's content).
+    final shift = (sizes?.paddingTop ?? 0) - (sizes?.paddingBottom ?? 0);
+    if (sizes != null && !foldable) {
+      content = Padding(
+        padding: EdgeInsets.only(
+          top: math.max(0, shift),
+          bottom: math.max(0, -shift),
+        ),
+        child: Center(child: content),
+      );
+    }
     // The selected ink, cut to the pill's shape as it passes (the badge keeps its alpha, so it
     // turns into a pill of the selected ink; a tab's badge is cut out and keeps its colours).
     Widget body = _InkOverlay(
       ink: widget.ink,
       color: widget.inkColor,
-      opacity: widget.inkOpacity,
+      lensColor: widget.lensInkColor,
+      lens: widget.lens,
       repaint: widget.motion,
       child: Padding(padding: padding, child: content),
     );
-    if (sized) {
-      // A width range that springs as the track folds: the content keeps its own width (never
-      // narrower than the icon) and is clipped to the option.
+    if (foldable) {
+      // A width range that springs as the track folds: the content keeps its own width and is
+      // clipped to the option.
       final maxWidth = math.max(0.0, _max.get());
       final minWidth = math.min(maxWidth, math.max(0.0, _min.get()));
       body = ConstrainedBox(
@@ -1688,16 +2068,23 @@ class _SegmentState<T> extends State<_Segment<T>> {
           child: OverflowBox(
             fit: OverflowBoxFit.deferToChild,
             minWidth: 0,
-            // A folding segment's content keeps its own width and is clipped as it folds.
-            maxWidth: widget.foldable
-                ? double.infinity
-                : math.max(maxWidth, 24 + (pad + 1) * 2),
+            maxWidth: double.infinity,
             child: body,
           ),
         ),
       );
+    } else if (sizes != null) {
+      // A host's width range; the content centres in the option (never narrower than the icon).
+      body = ConstrainedBox(
+        constraints: BoxConstraints(
+          minWidth: math.min(sizes.minWidth, sizes.maxWidth),
+          maxWidth: math.max(sizes.maxWidth, 24 + (pad + 1) * 2),
+        ),
+        child: body,
+      );
     }
-    final folded = (widget.collapsed || widget.menuFolded) && !widget.selected;
+    final sized = sizes != null || foldable;
+    final folded = widget.menuFolded && !widget.selected;
     final tab = widget.semantics == SelectionSemantics.tab;
     final label = badge == null
         ? widget.option.label
@@ -1722,6 +2109,17 @@ class _SegmentState<T> extends State<_Segment<T>> {
         ),
       );
     }
+    Widget option = _interactive(
+      context,
+      folded: folded,
+      inert: minimized,
+      fill: fill,
+      sized: sized,
+      body: body,
+    );
+    if (widget.minimize != null && !widget.selected) {
+      option = Opacity(opacity: (1 - 2.2 * p).clamp(0.0, 1.0), child: option);
+    }
     final node = Semantics(
       // Keeps the option's state when it moves in and out of the exclusion below.
       key: _semanticsKey,
@@ -1734,13 +2132,7 @@ class _SegmentState<T> extends State<_Segment<T>> {
       label: label,
       enabled: !widget.disabled,
       excludeSemantics: true,
-      child: _interactive(
-        context,
-        folded: folded,
-        fill: fill,
-        sized: sized,
-        body: body,
-      ),
+      child: option,
     );
     // Folded into the menu, the other options leave the accessibility tree.
     return widget.menuFolded ? ExcludeSemantics(child: node) : node;
@@ -1750,6 +2142,7 @@ class _SegmentState<T> extends State<_Segment<T>> {
   Widget _interactive(
     BuildContext context, {
     required bool folded,
+    bool inert = false,
     required Color fill,
     required bool sized,
     required Widget body,
@@ -1773,8 +2166,8 @@ class _SegmentState<T> extends State<_Segment<T>> {
           ),
         },
         child: IgnorePointer(
-          // A folded option takes no pointer.
-          ignoring: folded,
+          // A folded option, or one a minimizing host has hidden, takes no pointer.
+          ignoring: folded || inert,
           child: TouchTarget(
             minSize: widget.touchTarget,
             child: GestureDetector(

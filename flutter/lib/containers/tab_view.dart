@@ -1,6 +1,7 @@
+import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' show SemanticsRole;
 
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import '../scroll/scroll_area.dart';
@@ -15,6 +16,7 @@ import '../primitives/selection_track.dart';
 import '../scaffold.dart';
 import '../theme.dart';
 import '../theme/tokens.dart';
+import 'tab_view_minimize.dart';
 
 /// One top-level destination of a [TabView].
 @immutable
@@ -105,22 +107,44 @@ class TabView extends StatefulWidget {
 
 class _TabViewState extends State<TabView> {
   late final Set<String> _visited = {widget.value};
+
+  /// Past halfway minimized: a press on the bar only brings it back and the pill can't be dragged.
   bool _minimized = false;
 
   /// `--lab-tab-chrome`: the full chrome's measured height (64 before the first layout).
   double _chrome = 64;
-  final _last = Expando<double>('tab scroll top');
   final _panelKeys = <String, GlobalKey>{};
 
   /// A switched-to panel fades in quickly; it never slides (tabs are siblings, not depth).
   final _fade = MotionValue(1, 0.004);
   final _opacity = ValueNotifier<double>(1);
-  void Function()? _unsubscribe;
+  final _unsubscribe = <void Function()>[];
+
+  // Minimizing is one progress value, 0 (full bar, accessory above) to 1 (the selected tab as a
+  // bubble with the accessory beside it). Scrolling moves it directly, so the morph follows the
+  // finger and reverses with it; when scrolling stops it settles on the nearer end. Every frame
+  // places the pieces from boxes measured at rest (tab_view_minimize.dart) and asks the chrome's
+  // glass container to re-measure, so the material tracks the bubbles exactly.
+  final _progress = MotionValue(0, 0.001);
+  final _minimize = SelectionMinimize();
+  final _frame = ValueNotifier<MinimizeFrame?>(null);
+  MinimizeBoxes? _boxes;
+  GlassMemberRegistry? _glass;
+  Timer? _idle;
+
+  /// With reduced motion, the scroll position's progress: the bar shows only its nearer end.
+  double _reducedProgress = 0;
+  final _chromeKey = GlobalKey();
+  final _barKey = GlobalKey();
+  final _trackKey = GlobalKey();
+  final _accessoryKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
-    _unsubscribe = _fade.subscribe((v) => _opacity.value = v);
+    _unsubscribe
+      ..add(_fade.subscribe((v) => _opacity.value = v))
+      ..add(_progress.subscribe(_paint));
   }
 
   @override
@@ -136,13 +160,23 @@ class _TabViewState extends State<TabView> {
         _fade.animateTo(1, spring: const Spring(duration: 0.22, bounce: 0));
       }
     }
+    if ((old.accessory == null) != (widget.accessory == null)) _boxes = null;
+    if (widget.minimize == TabMinimize.never && _progress.get() > 0) {
+      _settle(0);
+    }
   }
 
   @override
   void dispose() {
-    _unsubscribe?.call();
+    for (final off in _unsubscribe) {
+      off();
+    }
+    _idle?.cancel();
     _fade.stop();
+    _progress.stop();
     _opacity.dispose();
+    _frame.dispose();
+    _minimize.dispose();
     super.dispose();
   }
 
@@ -150,24 +184,92 @@ class _TabViewState extends State<TabView> {
     if (next != _minimized) setState(() => _minimized = next);
   }
 
-  /// Shrink while the person reads down; come back when they scroll up or reach the top.
+  /// The boxes of the full chrome, in its own pixels (measured on the first minimizing frame,
+  /// while the layout is still the full bar's).
+  MinimizeBoxes? _measure() {
+    final chrome = _chromeKey.currentContext?.findRenderObject() as RenderBox?;
+    if (chrome == null || !chrome.attached || !chrome.hasSize) return null;
+    Rect? local(GlobalKey key) {
+      final box = key.currentContext?.findRenderObject() as RenderBox?;
+      if (box == null || !box.attached || !box.hasSize) return null;
+      return MatrixUtils.transformRect(
+        box.getTransformTo(chrome),
+        Offset.zero & box.size,
+      );
+    }
+
+    final bar = local(_barKey);
+    final track = local(_trackKey);
+    final selected = _minimize.measure(chrome);
+    if (bar == null || track == null || selected == null) return null;
+    return MinimizeBoxes(
+      chrome: Offset.zero & chrome.size,
+      bar: bar,
+      track: track.width,
+      option: selected.option,
+      icon: selected.icon,
+      accessory: local(_accessoryKey),
+      gap: ThemeProvider.of(context).sizes.toolbarGap,
+      rtl: Directionality.of(context) == TextDirection.rtl,
+    );
+  }
+
+  void _paint(double p) {
+    if (!mounted) return;
+    if (p <= 0) {
+      _boxes = null;
+      _minimize.set(0, Offset.zero);
+      _frame.value = null;
+      _glass?.requestMeasure();
+      return;
+    }
+    final at = _boxes ??= _measure();
+    if (at == null) return;
+    final frame = minimizeGeometry(at, p);
+    _minimize.set(p, frame.icon);
+    _frame.value = frame;
+    _glass?.requestMeasure();
+  }
+
+  /// Springs to one end (a tap on the small bar, a tab change, scrolling stopped halfway).
+  void _settle(int to) {
+    _idle?.cancel();
+    _reducedProgress = to.toDouble();
+    _setMinimized(to == 1);
+    if (reducedMotionOf(context)) {
+      _progress.stop();
+      _progress.set(to.toDouble());
+      return;
+    }
+    _progress.animateTo(to.toDouble(), spring: Springs.snappy);
+  }
+
+  /// Scrolling the visible tab drives the progress: down shrinks, up (or reaching the top)
+  /// restores.
   bool _onScroll(String id, ScrollUpdateNotification n) {
     if (widget.minimize != TabMinimize.scroll || id != widget.value) {
       return false;
     }
     if (n.metrics.axis != Axis.vertical) return false;
-    final key = n.context;
-    if (key == null) return false;
+    final delta = n.scrollDelta ?? 0;
     final top = n.metrics.pixels;
-    final previous = _last[key] ?? 0;
-    _last[key] = top;
-    if (top < 24) {
-      _setMinimized(false);
-    } else if (top - previous > 6) {
-      _setMinimized(true);
-    } else if (previous - top > 10) {
-      _setMinimized(false);
+    if (reducedMotionOf(context)) {
+      // Reduced motion: the bar jumps between its ends, never showing a frame between them.
+      _reducedProgress = minimizeProgress(_reducedProgress, delta, top);
+      final end = _reducedProgress >= 0.5 ? 1 : 0;
+      if (end != _progress.get()) _settle(end);
+      return false;
     }
+    final next = minimizeProgress(_progress.get(), delta, top);
+    _progress.stop();
+    _progress.set(next);
+    _setMinimized(next >= 0.5);
+    _idle?.cancel();
+    _idle = Timer(const Duration(milliseconds: 140), () {
+      if (!mounted) return;
+      final p = _progress.get();
+      if (p > 0 && p < 1) _settle(p >= 0.5 ? 1 : 0);
+    });
     return false;
   }
 
@@ -217,12 +319,12 @@ class _TabViewState extends State<TabView> {
       widget.onChange(id);
       return;
     }
-    // A tap on the small bar only brings it back.
+    // A press on the small bar only brings it back.
     if (_minimized && source == SelectionSource.press) {
-      _setMinimized(false);
+      _settle(0);
       return;
     }
-    _setMinimized(false);
+    _settle(0);
     if (id == widget.value) {
       _reselect(id);
     } else {
@@ -239,103 +341,131 @@ class _TabViewState extends State<TabView> {
     final inset = theme.sizes.toolbarInset;
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Wide (container ≥ 600px): icon and label in one row.
+        // Wide (container ≥ 600px): icon and label in one row, the bar as wide as its tabs.
         final wide = constraints.maxWidth >= 600;
-        final tabHeight = wide ? 44.0 : 52.0;
         final chromeWidth = math.max(0.0, constraints.maxWidth - inset * 2);
         final panels = [
           for (final tab in widget.tabs)
             if (_visited.contains(tab.id)) _panel(tab),
         ];
-
-        // The tabs: a selection track (`.lab-tab-track`) with tab semantics, stacked options and
-        // a tinted pill, 4px inset, tabs 2px apart, 68–120px wide (wide: a row, up to 180px).
-        // Minimized it folds to the selected tab. Never wider than the chrome, so it scrolls
-        // when the tabs don't fit.
-        final bar = GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          excludeFromSemantics: true,
-          onTap: _minimized ? () => _setMinimized(false) : null,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: chromeWidth),
-            child: GlassGroup(
-              glassId: 'tabs',
-              radius: 30 * scale,
-              child: SelectionTrack<String>(
-                semantics: SelectionSemantics.tab,
-                layout: SelectionLayout.stacked,
-                pill: SelectionPill.tinted,
-                sizes: wide ? _wideTabs : _tabs,
-                label: widget.label,
-                value: widget.value,
-                onSelect: _select,
-                draggable: !_minimized,
-                collapsed: _minimized,
-                options: [
-                  for (final tab in widget.tabs)
-                    SegmentOption(
-                      value: tab.id,
-                      label: tab.label,
-                      icon: tab.icon,
-                      badge: tab.badge,
-                    ),
-                ],
-              ),
-            ),
+        final track = KeyedSubtree(
+          key: _trackKey,
+          child: SelectionTrack<String>(
+            semantics: SelectionSemantics.tab,
+            layout: SelectionLayout.stacked,
+            pill: SelectionPill.quiet,
+            equalWidth: true,
+            sizes: wide ? _wideTabs : _tabs,
+            label: widget.label,
+            value: widget.value,
+            onSelect: _select,
+            draggable: !_minimized,
+            minimize: _minimize,
+            options: [
+              for (final tab in widget.tabs)
+                SegmentOption(
+                  value: tab.id,
+                  label: tab.label,
+                  icon: tab.icon,
+                  badge: tab.badge,
+                ),
+            ],
           ),
         );
+        final accessory = widget.accessory;
+        final gap = theme.sizes.toolbarGap;
 
-        Widget? accessory;
-        if (widget.accessory != null) {
-          // min-height 52 (border-box), stretched to the bar's height when beside it.
-          final minHeight = _minimized ? tabHeight + 10 : 52.0;
-          accessory = GlassGroup(
-            glassId: 'accessory',
-            radius: 26 * scale,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: minHeight - 10),
-              child: Align(
-                alignment: AlignmentDirectional.centerStart,
-                widthFactor: 1,
-                child: widget.accessory,
+        final chrome = ValueListenableBuilder<MinimizeFrame?>(
+          valueListenable: _frame,
+          builder: (context, frame, _) {
+            final at = frame == null ? null : _boxes;
+            // iOS 27's bar: a 62pt capsule (+ the 1px border) as wide as the chrome allows, 90pt
+            // a tab; wide, as wide as its tabs. Minimizing, it clips the tabs (held at their
+            // resting width) and moves them so the selected one ends centred in the circle.
+            final barHeight = frame?.bar.height ?? 0;
+            final radius = frame == null
+                ? 31 * scale
+                : math.min(31 * scale, barHeight / 2);
+            Widget bar = GlassGroup(
+              glassId: 'tabs',
+              glassMotion: GlassMotion.follow,
+              radius: radius,
+              child: ClipRRect(
+                clipBehavior: frame == null ? Clip.none : Clip.antiAlias,
+                borderRadius: BorderRadius.circular(math.max(0, radius - 1)),
+                child: OverflowBox(
+                  alignment: Alignment.topLeft,
+                  fit: OverflowBoxFit.deferToChild,
+                  minWidth: at?.track,
+                  maxWidth: at?.track,
+                  maxHeight: at == null ? null : double.infinity,
+                  child: Transform.translate(
+                    offset: frame?.trackShift ?? Offset.zero,
+                    child: track,
+                  ),
+                ),
               ),
-            ),
-          );
-          accessory = SizedBox(
-            width: _minimized ? null : math.min(chromeWidth, 420),
-            child: accessory,
-          );
-        }
-
-        // One Flex for both layouts, so minimizing never remounts the bar (its glass and tab
-        // springs keep running): a column (accessory above the bar), or a row in reversed reading
-        // order where the current tab leads and the accessory fills the rest.
-        final rtl = Directionality.of(context) == TextDirection.rtl;
-        final chrome = GlassBar(
-          child: GlassScope(
-            child: Flex(
-              direction: _minimized ? Axis.horizontal : Axis.vertical,
-              mainAxisSize: _minimized ? MainAxisSize.max : MainAxisSize.min,
-              // Reversed, "end" is the reading start: a lone bar still leads.
-              mainAxisAlignment: _minimized
-                  ? MainAxisAlignment.end
-                  : MainAxisAlignment.start,
-              textDirection: _minimized
-                  ? (rtl ? TextDirection.ltr : TextDirection.rtl)
-                  : null,
-              spacing: ThemeProvider.of(context).sizes.toolbarGap,
+            );
+            bar = wide
+                ? ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: chromeWidth),
+                    child: IntrinsicWidth(child: bar),
+                  )
+                : SizedBox(
+                    width: math.min(
+                      chromeWidth,
+                      widget.tabs.length * 90.0 + 16,
+                    ),
+                    child: bar,
+                  );
+            bar = GestureDetector(
+              key: _barKey,
+              behavior: HitTestBehavior.opaque,
+              excludeFromSemantics: true,
+              onTap: _minimized ? () => _settle(0) : null,
+              child: bar,
+            );
+            return Column(
+              key: _chromeKey,
+              mainAxisSize: MainAxisSize.min,
+              spacing: gap,
               children: [
                 if (accessory != null)
-                  Flexible(
-                    flex: _minimized ? 1 : 0,
-                    fit: FlexFit.tight,
-                    child: accessory,
+                  _Placed(
+                    rest: at?.accessory,
+                    to: frame?.accessory,
+                    looseHeight: true,
+                    child: KeyedSubtree(
+                      key: _accessoryKey,
+                      child: SizedBox(
+                        width: frame == null
+                            ? math.min(chromeWidth, 420)
+                            : null,
+                        child: GlassGroup(
+                          glassId: 'accessory',
+                          glassMotion: GlassMotion.follow,
+                          radius: 26 * scale,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          // min-height 52 (border-box).
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(minHeight: 42),
+                            child: Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              widthFactor: 1,
+                              child: accessory,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                bar,
+                _Placed(rest: at?.bar, to: frame?.bar, child: bar),
               ],
-            ),
-          ),
+            );
+          },
         );
 
         return DecoratedBox(
@@ -345,7 +475,8 @@ class _TabViewState extends State<TabView> {
               fit: StackFit.expand,
               children: [
                 ...panels,
-                // A floating bar: --lab-toolbar-inset (the shell gap G by default) from the panel.
+                // A floating bar: --lab-toolbar-inset (the shell gap G by default) from the panel,
+                // the accessory --lab-toolbar-gap above it.
                 Positioned(
                   left: inset,
                   right: inset,
@@ -354,17 +485,22 @@ class _TabViewState extends State<TabView> {
                     onSize: (size) {
                       // Measured only while full: shrinking the reserve would clamp scroll
                       // positions and read as a scroll up, expanding the bar again.
-                      if (!mounted || _minimized || size.height == _chrome) {
+                      if (!mounted ||
+                          _progress.get() > 0 ||
+                          size.height == _chrome) {
                         return;
                       }
                       setState(() => _chrome = size.height);
                     },
-                    child: Align(
-                      alignment: _minimized
-                          ? AlignmentDirectional.centerStart
-                          : Alignment.center,
-                      heightFactor: 1,
-                      child: chrome,
+                    child: GlassBar(
+                      child: GlassScope(
+                        child: Builder(
+                          builder: (context) {
+                            _glass = GlassMember.of(context);
+                            return chrome;
+                          },
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -413,28 +549,131 @@ class _TabViewState extends State<TabView> {
   }
 }
 
-/// `.lab-tab-track`: 52px tabs, 68–120px wide, 10px sides, 11px / 13px labels under the icon.
+/// `.lab-tab-track` (iOS 27): 54pt tabs in a 4pt inset sharing the bar equally, overlapping by
+/// 8pt, at least 72 wide; padding 6 / 8 / 7, the glyph in a 28pt line over a Semibold 10 / 12
+/// label, 0.5pt apart.
 const _tabs = SelectionTrackSizes(
-  height: 52,
+  height: 54,
   inset: 4,
-  gap: 2,
-  padding: 10,
-  minWidth: 68,
-  maxWidth: 120,
-  fontSize: 11,
-  lineHeight: 13,
+  gap: 0,
+  overlap: 8,
+  padding: 8,
+  paddingTop: 6,
+  paddingBottom: 7,
+  minWidth: 72,
+  fontSize: 10,
+  lineHeight: 12,
+  iconLine: 28,
+  contentGap: 0.5,
 );
 
-/// Wide (`@container lab-tab-view (min-width: 600px)`): 44px tabs up to 180px, 16px sides, 14px /
-/// 17px labels beside the icon.
+/// Wide (`@container lab-tab-view (min-width: 600px)`): 44px tabs, 16px sides, 14px / 17px labels
+/// beside the icon, 8px apart.
 const _wideTabs = SelectionTrackSizes(
   height: 44,
   inset: 4,
-  gap: 2,
+  gap: 0,
+  overlap: 8,
   padding: 16,
-  minWidth: 68,
-  maxWidth: 180,
   fontSize: 14,
   lineHeight: 17,
+  iconLine: 28,
+  contentGap: 8,
   direction: Axis.horizontal,
 );
+
+/// A piece of the chrome placed by the minimize geometry: at rest ([rest] null) it lays out as its
+/// child; minimizing, it keeps the size it had at rest (so the chrome keeps its height) and draws
+/// its child in [to] (relative to the chrome, like [rest]), the child's height its own when
+/// [looseHeight].
+class _Placed extends SingleChildRenderObjectWidget {
+  const _Placed({
+    required this.rest,
+    required this.to,
+    this.looseHeight = false,
+    required super.child,
+  });
+  final Rect? rest, to;
+  final bool looseHeight;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderPlaced(rest, to, looseHeight);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderPlaced renderObject) {
+    renderObject
+      ..rest = rest
+      ..to = to
+      ..looseHeight = looseHeight;
+  }
+}
+
+class _RenderPlaced extends RenderShiftedBox {
+  _RenderPlaced(this._rest, this._to, this._looseHeight) : super(null);
+
+  Rect? _rest;
+  set rest(Rect? value) {
+    if (value == _rest) return;
+    _rest = value;
+    markNeedsLayout();
+  }
+
+  Rect? _to;
+  set to(Rect? value) {
+    if (value == _to) return;
+    _to = value;
+    markNeedsLayout();
+  }
+
+  bool _looseHeight;
+  set looseHeight(bool value) {
+    if (value == _looseHeight) return;
+    _looseHeight = value;
+    markNeedsLayout();
+  }
+
+  bool get _placing => _rest != null && _to != null;
+
+  /// Placed, the child is hit where it is drawn, outside this box's resting bounds too.
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+    if (!_placing) return super.hitTest(result, position: position);
+    if (!hitTestChildren(result, position: position)) return false;
+    result.add(BoxHitTestEntry(this, position));
+    return true;
+  }
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) => _placing
+      ? constraints.constrain(_rest!.size)
+      : child?.getDryLayout(constraints) ?? constraints.smallest;
+
+  @override
+  void performLayout() {
+    final child = this.child;
+    if (child == null) {
+      size = constraints.smallest;
+      return;
+    }
+    final data = child.parentData! as BoxParentData;
+    if (!_placing) {
+      child.layout(constraints, parentUsesSize: true);
+      size = child.size;
+      data.offset = Offset.zero;
+      return;
+    }
+    final to = _to!;
+    child.layout(
+      BoxConstraints(
+        minWidth: to.width,
+        maxWidth: to.width,
+        minHeight: _looseHeight ? 0 : to.height,
+        maxHeight: _looseHeight ? double.infinity : to.height,
+      ),
+      parentUsesSize: true,
+    );
+    size = constraints.constrain(_rest!.size);
+    data.offset = to.topLeft - _rest!.topLeft;
+  }
+}

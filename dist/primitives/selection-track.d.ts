@@ -22,10 +22,12 @@ export type SelectionSource = 'press' | 'drag' | 'key';
 export type SelectionLayout = 'inline' | 'stacked';
 /** The pill at rest: the primary fill with on-primary ink (a segmented control), or a light primary
  * tint with the ink colour (a tab bar). Pressed or dragged, both become the same glass lens. */
-export type SelectionPill = 'filled' | 'tinted';
+export type SelectionPill = 'filled' | 'quiet';
 /** What a track does when its options don't fit: scroll them inside itself, or fold into one
  * capsule (the selection and a chevron) that opens the options as a single-choice menu. */
 export type SelectionOverflow = 'scroll' | 'menu';
+/** How much the pressed or dragged pill (a water drop) magnifies the options under it. */
+export declare const LENS_MAGNIFY = 0.18;
 /**
  * One row of options and one moving pill: measuring, the pill and its glass lens with the touch
  * glow, drag with rubber band and momentum snap, auto-scroll, one-row overflow with edge fades and
@@ -33,11 +35,11 @@ export type SelectionOverflow = 'scroll' | 'menu';
  *
  * `semantics` makes it a radio group (`radio`, `aria-checked`) or a tab list (`tab`, `aria-selected`
  * and `aria-controls`); `layout`, `pill` and the host's CSS (sizes) make it a segmented control or
- * a tab bar. `collapsed` folds it to the selected option, icon only (a minimized tab bar).
+ * a tab bar.
  * `overflow="menu"` folds it, when its row has no room (fitted with the row's other foldable
  * controls, `useFitRow`), into the selected option plus a chevron that opens a radio menu.
  */
-export declare function SelectionTrack<const T extends string>({ value, onSelect, options, label, semantics, layout, pill, disabled, equalWidth, draggable, collapsed, overflow: overflowMode, className, }: {
+export declare function SelectionTrack<const T extends string>({ value, onSelect, options, label, semantics, layout, pill, disabled, equalWidth, draggable, overflow: overflowMode, className, }: {
     /** The selected option's value. */
     value: T;
     /** Called with the chosen value and what chose it: on every press, when a dragged pill is
@@ -59,9 +61,6 @@ export declare function SelectionTrack<const T extends string>({ value, onSelect
     equalWidth?: boolean;
     /** False: presses select but never pick up the pill. */
     draggable?: boolean;
-    /** Shows only the selected option, icon only, the others folded away on a spring. Leave it
-     * undefined for a track that never folds. */
-    collapsed?: boolean;
     /** When the options don't fit: `scroll` inside the track, or `menu`: fold into the selection and
      * a chevron that opens the options as a menu (never with `equalWidth`). */
     overflow?: SelectionOverflow;

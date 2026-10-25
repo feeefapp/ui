@@ -21,6 +21,8 @@ import { lensStretch } from './lens-model.js';
 import '../actions/actions.css';
 import './lens.css';
 import './segmented.css';
+/** How much the pressed or dragged pill (a water drop) magnifies the options under it. */
+export const LENS_MAGNIFY = 0.18;
 const COLLAPSE = springTiming(SPRINGS.snappy);
 /**
  * One row of options and one moving pill: measuring, the pill and its glass lens with the touch
@@ -29,11 +31,11 @@ const COLLAPSE = springTiming(SPRINGS.snappy);
  *
  * `semantics` makes it a radio group (`radio`, `aria-checked`) or a tab list (`tab`, `aria-selected`
  * and `aria-controls`); `layout`, `pill` and the host's CSS (sizes) make it a segmented control or
- * a tab bar. `collapsed` folds it to the selected option, icon only (a minimized tab bar).
+ * a tab bar.
  * `overflow="menu"` folds it, when its row has no room (fitted with the row's other foldable
  * controls, `useFitRow`), into the selected option plus a chevron that opens a radio menu.
  */
-export function SelectionTrack({ value, onSelect, options, label, semantics = 'radio', layout = 'inline', pill = 'filled', disabled = false, equalWidth = false, draggable = true, collapsed, overflow: overflowMode = 'scroll', className, }) {
+export function SelectionTrack({ value, onSelect, options, label, semantics = 'radio', layout = 'inline', pill = 'filled', disabled = false, equalWidth = false, draggable = true, overflow: overflowMode = 'scroll', className, }) {
     const group = useRef(null);
     const scrollerRef = useRef(null);
     const trackRef = useRef(null);
@@ -170,19 +172,35 @@ export function SelectionTrack({ value, onSelect, options, label, semantics = 'r
         el.style.setProperty('--lab-lens-glow-r', `${Math.max(1, glowRadius.get())}px`);
         el.style.setProperty('--lab-lens-glow', String(Math.max(0, Math.min(1, glowOpacity.get()))));
         // Selected ink shows exactly where the pill is, so a label turns over as the pill crosses it.
+        // Pressed or dragged, the pill is a water drop that magnifies what is under it: the ink copy
+        // scales up around the drop's centre (its clip mapped back so it still fills the drop), and
+        // the plain content underneath is cut out where the drop is.
+        const lensAmount = Math.max(0, Math.min(1, lens.get()));
+        const zoom = 1 + LENS_MAGNIFY * lensAmount;
         const radius = (Math.min(shape.width, shape.height) / 2) * corner;
         buttons().forEach((button, i) => {
             const box = boxes[i];
             if (!box)
                 return;
             const b = box.border;
-            const inset = [
-                shape.y - (box.y + b),
-                box.x + box.w - b - (shape.x + shape.width),
-                box.y + box.h - b - (shape.y + shape.height),
-                shape.x - (box.x + b),
-            ].map((v) => `${Math.max(0, v)}px`);
-            button.style.setProperty('--lab-segmented-clip', `inset(${inset.join(' ')} round ${radius}px)`);
+            const innerW = box.w - 2 * b;
+            const innerH = box.h - 2 * b;
+            // The drop in the option's padding box, then where the scaled ink copy must be cut.
+            const local = { x: shape.x - (box.x + b), y: shape.y - (box.y + b), w: shape.width, h: shape.height };
+            const ox = local.x + local.w / 2;
+            const oy = local.y + local.h / 2;
+            const cut = { x: ox + (local.x - ox) / zoom, y: oy + (local.y - oy) / zoom, w: local.w / zoom, h: local.h / zoom };
+            const inset = [cut.y, innerW - (cut.x + cut.w), innerH - (cut.y + cut.h), cut.x].map((v) => `${Math.max(0, v)}px`);
+            button.style.setProperty('--lab-segmented-clip', `inset(${inset.join(' ')} round ${radius / zoom}px)`);
+            button.style.setProperty('--lab-segmented-lens-at', `${ox}px ${oy}px`);
+            button.style.setProperty('--lab-segmented-zoom', String(zoom));
+            const plain = button.firstElementChild;
+            if (!plain)
+                return;
+            const crosses = lensAmount > 0.01 && local.x < innerW && local.x + local.w > 0;
+            plain.style.maskImage = crosses
+                ? `radial-gradient(ellipse ${local.w / 2}px ${local.h / 2}px at ${ox - plain.offsetLeft}px ${oy - plain.offsetTop}px, transparent 94%, #000 100%)`
+                : '';
         });
     };
     useLayoutEffect(() => {
@@ -558,7 +576,6 @@ export function SelectionTrack({ value, onSelect, options, label, semantics = 'r
         buttons()[selected]?.focus({ preventScroll: true });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selected]);
-    const collapsible = collapsed !== undefined;
     // Stacked, the badge sits on the icon (or after a label with no icon). The selected option of a
     // track that can fold into a menu carries the chevron (shown only while folded).
     const renderContent = (option, chevron) => {
@@ -566,9 +583,9 @@ export function SelectionTrack({ value, onSelect, options, label, semantics = 'r
         const badge = option.badge ? _jsx("span", { className: "lab-segmented-badge", children: option.badge }) : null;
         return (_jsxs(_Fragment, { children: [option.icon && (_jsxs("span", { className: "lab-segmented-icon", "data-tone": option.tone, "aria-hidden": "true", children: [option.icon, badgeOnIcon && badge] })), _jsx("span", { className: "lab-segmented-label", children: option.label }), !badgeOnIcon && badge, chevron && (_jsx("span", { className: "lab-segmented-chevron", "aria-hidden": "true", children: _jsx(ChevronDown, {}) }))] }));
     };
-    return (_jsxs("div", { ref: group, className: cn('lab-segmented', className), "data-equal-width": equalWidth || undefined, "data-layout": layout, "data-pill": pill, "data-collapsible": collapsible || undefined, "data-collapsed": collapsed || undefined, "data-overflow-mode": menu ? 'menu' : undefined, "data-menu-folded": folded || undefined, "data-glass-own-press": "", 
+    return (_jsxs("div", { ref: group, className: cn('lab-segmented', className), "data-equal-width": equalWidth || undefined, "data-layout": layout, "data-pill": pill, "data-overflow-mode": menu ? 'menu' : undefined, "data-menu-folded": folded || undefined, "data-glass-own-press": "", 
         // Folded, the capsule is a pop-up button; the radios live in its menu.
-        role: folded ? 'group' : tab ? 'tablist' : 'radiogroup', "aria-label": label, "aria-disabled": disabled || undefined, style: collapsible || menu
+        role: folded ? 'group' : tab ? 'tablist' : 'radiogroup', "aria-label": label, "aria-disabled": disabled || undefined, style: menu
             ? {
                 '--lab-segmented-fold-ease': COLLAPSE.easing,
                 '--lab-segmented-fold-duration': `${COLLAPSE.duration}ms`,

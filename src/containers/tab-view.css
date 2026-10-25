@@ -68,6 +68,11 @@ pill gives way to the tinted icon. Minimized, the hidden tabs take no pointer. *
   flex: none;
   max-width: none;
 }
+/* The geometry measures the tabs from the bar's left edge, so they stay anchored there in RTL too
+(flex-end in an RTL row keeps their left edge put and lets them overflow to the right). */
+.lab-tab-chrome[data-minimizing] .lab-tab-bar:dir(rtl) {
+  justify-content: flex-end;
+}
 .lab-tab-chrome[data-minimizing] .lab-segmented-option:not([data-selected]) {
   opacity: calc(1 - var(--lab-tab-minimize) * 2.2);
 }

@@ -48,14 +48,6 @@
 .lab-tab-chrome > :not(.lab-glass-material) {
   pointer-events: auto;
 }
-.lab-tab-chrome[data-minimized] {
-  flex-direction: row;
-  align-items: stretch;
-}
-/* Minimized, the current tab leads and the accessory fills the rest of the row. */
-.lab-tab-chrome[data-minimized] > .lab-tab-bar {
-  order: -1;
-}
 html[data-lab-theme] .lab-tab-accessory.lab-glass-group {
   display: flex;
   align-items: center;
@@ -64,43 +56,97 @@ html[data-lab-theme] .lab-tab-accessory.lab-glass-group {
   padding: 4px 8px;
   border-radius: calc(26px * var(--lab-corner-scale, 1));
 }
-.lab-tab-chrome[data-minimized] .lab-tab-accessory {
-  flex: 1 1 0%;
-  width: auto;
-  min-width: 0;
+/* Minimizing (tab-view.tsx, tab-view-minimize.ts): the script places the bar and the accessory for
+the scroll progress --lab-tab-minimize (0 full, 1 minimized); the bar clips to its shrinking width,
+the other tabs and the labels fade early, the selected icon slides to the centre of its tab and the
+pill gives way to the tinted icon. Minimized, the hidden tabs take no pointer. */
+.lab-tab-chrome[data-minimizing] .lab-tab-bar {
+  overflow: hidden;
+}
+/* The tabs hold the width the script gives them (their resting width): the bar clips them. */
+.lab-tab-chrome[data-minimizing] .lab-tab-bar > .lab-tab-track {
+  flex: none;
+  max-width: none;
+}
+/* The geometry measures the tabs from the bar's left edge, so they stay anchored there in RTL too
+(flex-end in an RTL row keeps their left edge put and lets them overflow to the right). */
+.lab-tab-chrome[data-minimizing] .lab-tab-bar:dir(rtl) {
+  justify-content: flex-end;
+}
+.lab-tab-chrome[data-minimizing] .lab-segmented-option:not([data-selected]) {
+  opacity: calc(1 - var(--lab-tab-minimize) * 2.2);
+}
+.lab-tab-chrome[data-minimizing] .lab-segmented-label {
+  opacity: calc(1 - var(--lab-tab-minimize) * 2);
+}
+.lab-tab-chrome[data-minimizing] .lab-segmented-option[data-selected] .lab-segmented-icon {
+  translate: var(--lab-tab-icon-x) var(--lab-tab-icon-y);
+}
+.lab-tab-chrome[data-minimizing] .lab-segmented-pill {
+  opacity: calc(1 - var(--lab-tab-minimize));
+}
+.lab-tab-chrome[data-minimizing] .lab-segmented-option[data-selected] .lab-segmented-content:not(.lab-segmented-ink) {
+  color: color-mix(in srgb, var(--lab-primary) calc(var(--lab-tab-minimize) * 100%), currentColor);
+}
+.lab-tab-chrome[data-minimized] .lab-segmented-option:not([data-selected]) {
+  visibility: hidden;
+  pointer-events: none;
 }
 
+/* iOS 27's tab bar (FIGMA-27.md): a 62pt capsule as wide as the chrome allows (90pt a tab, like
+Figma's bars), tabs sharing its width equally and overlapping by 8pt. */
 html[data-lab-theme] .lab-tab-bar.lab-glass-group {
   display: flex;
   flex: none;
+  width: min(100%, calc(var(--lab-tab-count, 4) * 90px + 16px));
   max-width: 100%;
   padding: 0;
-  border-radius: calc(30px * var(--lab-corner-scale, 1));
+  border-radius: calc(31px * var(--lab-corner-scale, 1));
+}
+.lab-tab-bar > .lab-tab-track {
+  flex: 1 1 auto;
 }
 
-/* The bar's tabs: a selection track (segmented.css) with tab semantics, stacked options and a tinted
-pill. The track owns the 4px inset (so a scrolling bar fades at the glass edge); tabs sit 2px apart,
-52px tall, 68–120px wide, 11px labels. Minimized it folds to the selected tab (data-collapsed). */
+/* The bar's tabs: a selection track (segmented.css) with tab semantics, stacked options, equal
+widths and the quiet pill. 54pt tabs in a 4pt inset; glyph in a 28pt line over a Semibold 10
+label (12pt line), 6pt above and 7pt below, 8pt at the sides. Minimized it becomes one 40pt tab
+in a 48pt circle (tab-view-minimize.ts). */
 .lab-tab-track {
   --lab-segmented-inset: 4px;
-  --lab-segmented-gap: 2px;
-  --lab-segmented-option: 52px;
+  --lab-segmented-gap: 0px;
+  --lab-segmented-option: 54px;
   --lab-segmented-size: calc(var(--lab-segmented-option) + 2 * var(--lab-segmented-inset));
 }
 html[data-lab-theme] .lab-tab-track .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
-  flex: none;
-  min-width: 68px;
-  max-width: 120px;
-  padding: 0 10px;
-  font: 600 11px/13px var(--lab-font);
+  min-width: 72px;
+  padding: 6px 8px 7px;
+  font: 600 10px/12px var(--lab-font);
 }
+html[data-lab-theme] .lab-tab-track .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] + .lab-segmented-option {
+  margin-inline-start: -8px;
+}
+.lab-tab-track[data-layout='stacked'] .lab-segmented-content {
+  gap: 0.5px;
+}
+.lab-tab-track[data-layout='stacked'] .lab-segmented-icon {
+  height: 28px;
+  align-items: center;
+}
+.lab-tab-track[data-layout='stacked'] .lab-segmented-icon > svg {
+  width: 22px;
+  height: 22px;
+}
+
 /* Wide: icon and label in one row, 44px tall, 14px labels. */
 @container lab-tab-view (min-width: 600px) {
+  html[data-lab-theme] .lab-tab-bar.lab-glass-group {
+    width: auto;
+  }
   .lab-tab-track {
     --lab-segmented-option: 44px;
   }
   html[data-lab-theme] .lab-tab-track .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
-    max-width: 180px;
+    min-width: 0;
     padding: 0 16px;
     font-size: 14px;
     line-height: 17px;

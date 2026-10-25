@@ -187,11 +187,17 @@ class GlassMemberRegistry {
     required double Function() radius,
     String? union,
     GlassMotion motion = GlassMotion.spring,
+    bool singleRim = false,
   }) {
-    _scene._members[id] = _Member(key, radius, union, motion);
+    _scene._members[id] = _Member(key, radius, union, motion, singleRim);
     _scene._requestMeasure();
     return GlassMemberHandle._(_scene, id);
   }
+
+  /// Re-measures every bubble after this frame's layout: call it on each frame a host moves its
+  /// bubbles itself (a minimizing tab bar), so `follow` bubbles track them exactly. The twin of the
+  /// web kit's `requestMeasure()`.
+  void requestMeasure() => _scene._requestMeasure();
 
   /// For [duration], every bubble's glass follows its layout exactly instead of springing after
   /// it: call it when content inside a bubble starts animating its own size (a segmented control
@@ -506,7 +512,9 @@ class _GlassLayers extends StatelessWidget {
           // Large panels keep the exterior hairline. Compact floating controls already have
           // a rim on this silhouette: a dark ring outside it reads as a second capsule.
           for (final path in scene.paths.where(
-            (path) => glassSize(_smallestSide(path)) == GlassSize.large,
+            (path) =>
+                !scene.singleRim(path) &&
+                glassSize(_smallestSide(path)) == GlassSize.large,
           ))
             for (final sliver in const [false, true])
               Positioned.fill(
@@ -781,11 +789,12 @@ class _ShadowImage {
 }
 
 class _Member {
-  _Member(this.key, this.radius, this.union, this.motion);
+  _Member(this.key, this.radius, this.union, this.motion, this.singleRim);
   final GlobalKey key;
   final double Function() radius;
   final String? union;
   final GlassMotion motion;
+  final bool singleRim;
 }
 
 /// One bubble's glass: an animated rect, its corner radius and, while alive, its content offset.
@@ -802,6 +811,7 @@ class _Shape {
   final stretchX = MotionValue(0, 0.05);
   final stretchY = MotionValue(0, 0.05);
   double radius = 0;
+  bool singleRim = false;
   Rect? layout;
 
   /// The visible part of the container this bubble may paint in (null: unclipped).
@@ -900,6 +910,10 @@ class _GlassScene extends ChangeNotifier {
   final _pendingContent = <String, (Offset, double)>{};
   final _unsubscribe = <String, List<void Function()>>{};
   List<GlassPath> paths = const [];
+  Map<GlassShape, bool> _singleRims = {};
+
+  bool singleRim(GlassPath path) =>
+      path.shapes.every((shape) => _singleRims[shape] == true);
   String _key = '';
   bool _measured = false;
   bool _measureQueued = false;
@@ -1147,6 +1161,18 @@ class _GlassScene extends ChangeNotifier {
     for (final MapEntry(key: id, value: target) in targets.entries) {
       final shape = _shapes[id]!;
       shape.leaving = false;
+      final singleRim =
+          target.$3?.singleRim ??
+          _members.values
+              .where(
+                (member) =>
+                    member.union != null && 'union:${member.union}' == id,
+              )
+              .every((member) => member.singleRim);
+      if (shape.singleRim != singleRim) {
+        shape.singleRim = singleRim;
+        dirty = true;
+      }
       if (shape.radius != target.$2) {
         shape.radius = target.$2;
         dirty = true;
@@ -1195,9 +1221,13 @@ class _GlassScene extends ChangeNotifier {
     ];
     final clips = <Rect?>[for (final shape in _shapes.values) shape.clip];
     final key =
-        '$spacing|${visuals.map((v) => '${v.x.toStringAsFixed(1)},${v.y.toStringAsFixed(1)},${v.width.toStringAsFixed(1)},${v.height.toStringAsFixed(1)},${v.radius.toStringAsFixed(1)}').join(';')}|${clips.map((c) => c == null ? '' : '${c.left.toStringAsFixed(1)},${c.top.toStringAsFixed(1)},${c.right.toStringAsFixed(1)},${c.bottom.toStringAsFixed(1)}').join(';')}';
+        '${_shapes.values.map((s) => s.singleRim).join(',')}|$spacing|${visuals.map((v) => '${v.x.toStringAsFixed(1)},${v.y.toStringAsFixed(1)},${v.width.toStringAsFixed(1)},${v.height.toStringAsFixed(1)},${v.radius.toStringAsFixed(1)}').join(';')}|${clips.map((c) => c == null ? '' : '${c.left.toStringAsFixed(1)},${c.top.toStringAsFixed(1)},${c.right.toStringAsFixed(1)},${c.bottom.toStringAsFixed(1)}').join(';')}';
     if (key != _key) {
       _key = key;
+      _singleRims = {
+        for (final (index, shape) in _shapes.values.indexed)
+          visuals[index]: shape.singleRim,
+      };
       paths = clippedGlassPaths(visuals, clips, spacing);
     }
     // Content rides with its glass (centre to centre) while the bubble moves.
