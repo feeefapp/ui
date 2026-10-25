@@ -23,7 +23,7 @@ export function Modal(props) {
         return null;
     return _jsx(ModalPresentation, { ...shown, open: props.open, onOpenChange: props.onOpenChange, onExited: exited });
 }
-function ModalPresentation({ open, onOpenChange, label, title, trailing, showClose = true, header, dock, children, fill = false, wide = false, dismissible = true, edgeGap, contentPadding = 16, initialFocusRef, returnFocusRef, container, className, onExited, }) {
+function ModalPresentation({ open, onOpenChange, label, title, leading, trailing, showClose = true, header, dock, children, fill = false, wide = false, dismissible = true, edgeGap, contentPadding = 16, initialFocusRef, returnFocusRef, container, className, onExited, }) {
     const { t } = useI18n();
     const surface = React.useRef(null);
     const scrim = React.useRef(null);
@@ -37,8 +37,8 @@ function ModalPresentation({ open, onOpenChange, label, title, trailing, showClo
         if (dismissible)
             close();
     };
-    const top = header !== undefined ? (header) : (_jsx(PresentationHeader, { title: title, titleId: titleId, trailing: trailing, onClose: showClose ? close : undefined, closeLabel: t('lab.composer.closeLabel', { label }) }));
-    const labelledBy = header === undefined && title != null ? titleId : undefined;
+    const top = header !== undefined ? (header) : (_jsx(PresentationHeader, { title: title, leading: leading, titleId: titleId, trailing: trailing, onClose: showClose ? close : undefined, closeLabel: t('lab.composer.closeLabel', { label }) }));
+    const labelledBy = header === undefined && leading == null && title != null ? titleId : undefined;
     return (_jsxs(PresentationHost, { kind: "modal", label: label, labelledBy: labelledBy, container: container, initialFocusRef: initialFocusRef, returnFocusRef: returnFocusRef, onEscape: dismiss, children: [_jsx("div", { ref: scrim, className: "lab-presentation-scrim", "aria-hidden": "true", onClick: dismiss }), _jsx("div", { ref: surface, className: cn('lab-modal', wide && 'lab-modal--wide', className), "data-fill": fill || undefined, children: _jsx(PresentationBody, { label: label, top: top, bottom: dock, fill: fill, edgeGap: edgeGap, contentPadding: contentPadding, children: children }) })] }));
 }
 //# sourceMappingURL=modal.js.map

@@ -51,7 +51,7 @@ function DesktopPane(props) {
         return null;
     return _jsx(PanePresentation, { ...shown, open: props.open, onOpenChange: props.onOpenChange, onExited: exited });
 }
-function PanePresentation({ open, onOpenChange, label, title, trailing, showClose = true, header, dock, children, width = 420, side = 'end', modal = true, dismissible = true, edgeGap, contentPadding = 16, initialFocusRef, returnFocusRef, container, className, onExited, }) {
+function PanePresentation({ open, onOpenChange, label, title, leading, trailing, showClose = true, header, dock, children, width = 420, side = 'end', modal = true, dismissible = true, edgeGap, contentPadding = 16, initialFocusRef, returnFocusRef, container, className, onExited, }) {
     const { t } = useI18n();
     const frame = React.useRef(null);
     const scrim = React.useRef(null);
@@ -71,8 +71,8 @@ function PanePresentation({ open, onOpenChange, label, title, trailing, showClos
             close();
     };
     const closeLabel = t('lab.composer.closeLabel', { label });
-    const top = header !== undefined ? (header) : (_jsx(PresentationHeader, { title: title, titleId: titleId, trailing: trailing }));
-    const labelledBy = header === undefined && title != null ? titleId : undefined;
+    const top = header !== undefined ? (header) : (_jsx(PresentationHeader, { title: title, leading: leading, titleId: titleId, trailing: trailing }));
+    const labelledBy = header === undefined && leading == null && title != null ? titleId : undefined;
     return (_jsxs(PresentationHost, { kind: "pane", label: label, labelledBy: labelledBy, modal: modal, container: container, initialFocusRef: initialFocusRef, returnFocusRef: returnFocusRef, onEscape: dismiss, children: [modal && _jsx("div", { ref: scrim, className: "lab-presentation-scrim", "aria-hidden": "true", onClick: dismiss }), _jsxs("div", { ref: frame, className: "lab-pane-frame", "data-side": side, style: { '--lab-pane-width': `${width}px` }, onKeyDown: (event) => {
                     // A non-modal pane is not a modal dialog: Escape reaches it only through this frame.
                     if (!modal && event.key === 'Escape') {

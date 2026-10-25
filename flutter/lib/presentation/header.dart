@@ -17,6 +17,7 @@ class PresentationHeader extends StatelessWidget {
   const PresentationHeader({
     super.key,
     this.title,
+    this.leading,
     this.trailing = const [],
     this.onClose,
     this.closeLabel,
@@ -25,6 +26,10 @@ class PresentationHeader extends StatelessWidget {
 
   /// The title, in a glass bubble at the start.
   final Widget? title;
+
+  /// Custom content at the start instead of the title bubble (a search field, a back button with
+  /// a heading).
+  final Widget? leading;
 
   /// More bubbles before the close bubble: a Reset, a Done, a view switch.
   final List<Widget> trailing;
@@ -42,8 +47,12 @@ class PresentationHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final title = this.title;
+    final leading = this.leading;
     final onClose = this.onClose;
-    if (title == null && trailing.isEmpty && onClose == null) {
+    if (title == null &&
+        leading == null &&
+        trailing.isEmpty &&
+        onClose == null) {
       return const SizedBox.shrink();
     }
     final i18n = I18n.of(context);
@@ -55,14 +64,16 @@ class PresentationHeader extends StatelessWidget {
           Expanded(
             child: Align(
               alignment: AlignmentDirectional.centerStart,
-              child: title == null
-                  ? const SizedBox.shrink()
-                  : ToolbarGroup(
-                      label: i18n.t('lab.presentation.title'),
-                      children: [
-                        Flexible(child: PresentationTitle(child: title)),
-                      ],
-                    ),
+              child:
+                  leading ??
+                  (title == null
+                      ? const SizedBox.shrink()
+                      : ToolbarGroup(
+                          label: i18n.t('lab.presentation.title'),
+                          children: [
+                            Flexible(child: PresentationTitle(child: title)),
+                          ],
+                        )),
             ),
           ),
           ...trailing,

@@ -96,6 +96,7 @@ function SheetPresentation({
   dismissible = true,
   grabber,
   title,
+  leading,
   trailing,
   showClose = true,
   header,
@@ -444,6 +445,7 @@ function SheetPresentation({
     ) : (
       <PresentationHeader
         title={title}
+        leading={leading}
         titleId={titleId}
         trailing={trailing}
         onClose={showClose ? () => open && onOpenChange(false) : undefined}
@@ -456,7 +458,7 @@ function SheetPresentation({
       ref={host}
       kind="sheet"
       label={label}
-      labelledBy={header === undefined && title != null ? titleId : undefined}
+      labelledBy={header === undefined && leading == null && title != null ? titleId : undefined}
       modal={modal}
       container={container}
       initialFocusRef={initialFocusRef ?? panel}

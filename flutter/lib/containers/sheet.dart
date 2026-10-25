@@ -108,6 +108,7 @@ class Sheet extends StatefulWidget {
     this.onOpenChange,
     required this.label,
     this.title,
+    this.leading,
     this.trailing = const [],
     this.showClose = true,
     this.header,
@@ -141,6 +142,10 @@ class Sheet extends StatefulWidget {
 
   /// Visible title in the floating header's title bubble.
   final Widget? title;
+
+  /// Custom content at the start instead of the title bubble (a search field, a back button with
+  /// a heading). The close bubble stays.
+  final Widget? leading;
 
   /// More header bubbles before the close bubble (a Reset, a Done).
   final List<Widget> trailing;
@@ -812,6 +817,7 @@ class _SheetState extends State<Sheet> {
         widget.header ??
         PresentationHeader(
           title: widget.title,
+          leading: widget.leading,
           trailing: widget.trailing,
           onClose: widget.showClose ? _close : null,
           closeLabel: I18n.of(context)

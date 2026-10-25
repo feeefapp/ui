@@ -6,6 +6,8 @@ export type PresentationChromeProps = {
     label: string;
     /** Visible title in the floating header's title bubble. */
     title?: React.ReactNode;
+    /** Custom content at the header's start instead of the title bubble: a search field, a back button with a heading. The close bubble stays. */
+    leading?: React.ReactNode;
     /** More header bubbles before the close bubble (a Reset, a Done, a view switch). */
     trailing?: React.ReactNode;
     /** Shows the close bubble at the end of the header. Default true; set false when a visible Cancel exists. */

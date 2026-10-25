@@ -37,6 +37,7 @@ class Pane extends StatelessWidget {
     this.onOpenChange,
     required this.label,
     this.title,
+    this.leading,
     this.trailing = const [],
     this.showClose = true,
     this.header,
@@ -66,6 +67,10 @@ class Pane extends StatelessWidget {
 
   /// Visible title in the floating header's title bubble.
   final Widget? title;
+
+  /// Custom content at the start instead of the title bubble (a search field, a back button with
+  /// a heading). The close bubble stays.
+  final Widget? leading;
 
   /// More header bubbles (a Save, an Edit, a view switch).
   final List<Widget> trailing;
@@ -130,6 +135,7 @@ class Pane extends StatelessWidget {
           onOpenChange: onOpenChange,
           label: label,
           title: title,
+          leading: leading,
           trailing: trailing,
           showClose: showClose,
           header: header,
@@ -267,7 +273,11 @@ class _DesktopPaneState extends State<_DesktopPane>
 
     final header =
         pane.header ??
-        PresentationHeader(title: pane.title, trailing: pane.trailing);
+        PresentationHeader(
+          title: pane.title,
+          leading: pane.leading,
+          trailing: pane.trailing,
+        );
     // At most 60% of the area it presents over (`--lab-pane-max-share`).
     final surface = Builder(
       builder: (context) {

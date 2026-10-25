@@ -12,6 +12,8 @@ import './presentation.css'
 export type PresentationHeaderProps = {
   /** The title, in a glass bubble at the start. Omit for no title bubble. */
   title?: React.ReactNode
+  /** Custom content at the start instead of the title bubble (a search field, a back button with a heading). */
+  leading?: React.ReactNode
   /** Id for the title heading, so the surface can be labelled by it. */
   titleId?: string
   /** More bubbles before the close bubble: a Reset, a Done, a view switch. */
@@ -33,6 +35,7 @@ export type PresentationHeaderProps = {
  */
 export function PresentationHeader({
   title,
+  leading,
   titleId,
   trailing,
   onClose,
@@ -41,18 +44,18 @@ export function PresentationHeader({
   className,
 }: PresentationHeaderProps) {
   const { t } = useI18n()
-  if (title == null && trailing == null && !onClose) return null
+  if (title == null && leading == null && trailing == null && !onClose) return null
   const close = closeLabel ?? t('lab.common.close')
   return (
     <GlassScope as="header" className={cn('lab-presentation-header', className)}>
       <div className="lab-presentation-header-start">
-        {title != null && (
+        {leading ?? (title != null && (
           <ToolbarGroup label={t('lab.presentation.title')} className="lab-presentation-header-title">
             <h2 id={titleId} className="lab-presentation-title">
               {title}
             </h2>
           </ToolbarGroup>
-        )}
+        ))}
       </div>
       {trailing}
       {onClose && <CloseBubble label={close} disabled={closeDisabled} onClose={onClose} />}

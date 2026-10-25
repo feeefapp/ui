@@ -28,7 +28,7 @@ export function Sheet(props) {
         return null;
     return _jsx(SheetPresentation, { ...props, onExited: exited });
 }
-function SheetPresentation({ open, onOpenChange, label, children, detents = DEFAULT_DETENTS, detent: controlledDetent, defaultDetent, onDetentChange, dismissible = true, grabber, title, trailing, showClose = true, header, dock, modal = true, regular = 'dialog', regularBreakpoint = 720, container, recede = true, contentPadding, initialFocusRef, returnFocusRef, className, onExited, }) {
+function SheetPresentation({ open, onOpenChange, label, children, detents = DEFAULT_DETENTS, detent: controlledDetent, defaultDetent, onDetentChange, dismissible = true, grabber, title, leading, trailing, showClose = true, header, dock, modal = true, regular = 'dialog', regularBreakpoint = 720, container, recede = true, contentPadding, initialFocusRef, returnFocusRef, className, onExited, }) {
     const { t } = useI18n();
     const host = React.useRef(null);
     const panel = React.useRef(null);
@@ -377,8 +377,8 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
         if (dismissible)
             onOpenChange(false);
     };
-    const top = header !== undefined ? (header) : (_jsx(PresentationHeader, { title: title, titleId: titleId, trailing: trailing, onClose: showClose ? () => open && onOpenChange(false) : undefined, closeLabel: t('lab.composer.closeLabel', { label }) }));
-    return (_jsxs(PresentationHost, { ref: host, kind: "sheet", label: label, labelledBy: header === undefined && title != null ? titleId : undefined, modal: modal, container: container, initialFocusRef: initialFocusRef ?? panel, returnFocusRef: returnFocusRef, onEscape: requestClose, children: [modal && _jsx("div", { ref: scrim, className: "lab-sheet-scrim", "aria-hidden": "true", onClick: requestClose }), _jsx("div", { ref: probe, className: "lab-sheet-safe-probe", "aria-hidden": "true" }), _jsxs("div", { ref: panel, className: cn('lab-sheet', className), "data-presentation": presentation, "data-ready": metrics ? '' : undefined, tabIndex: -1, children: [showGrabber && (_jsx("div", { ref: grabRow, className: "lab-sheet-grabber-row", "data-lab-sheet-handle": "", children: _jsx("button", { type: "button", className: "lab-sheet-grabber", "aria-label": t('lab.sheet.grabber'), onClick: () => cycle(1), onKeyDown: (event) => {
+    const top = header !== undefined ? (header) : (_jsx(PresentationHeader, { title: title, leading: leading, titleId: titleId, trailing: trailing, onClose: showClose ? () => open && onOpenChange(false) : undefined, closeLabel: t('lab.composer.closeLabel', { label }) }));
+    return (_jsxs(PresentationHost, { ref: host, kind: "sheet", label: label, labelledBy: header === undefined && leading == null && title != null ? titleId : undefined, modal: modal, container: container, initialFocusRef: initialFocusRef ?? panel, returnFocusRef: returnFocusRef, onEscape: requestClose, children: [modal && _jsx("div", { ref: scrim, className: "lab-sheet-scrim", "aria-hidden": "true", onClick: requestClose }), _jsx("div", { ref: probe, className: "lab-sheet-safe-probe", "aria-hidden": "true" }), _jsxs("div", { ref: panel, className: cn('lab-sheet', className), "data-presentation": presentation, "data-ready": metrics ? '' : undefined, tabIndex: -1, children: [showGrabber && (_jsx("div", { ref: grabRow, className: "lab-sheet-grabber-row", "data-lab-sheet-handle": "", children: _jsx("button", { type: "button", className: "lab-sheet-grabber", "aria-label": t('lab.sheet.grabber'), onClick: () => cycle(1), onKeyDown: (event) => {
                                 if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
                                     event.preventDefault();
                                     cycle(event.key === 'ArrowUp' ? 1 : -1);

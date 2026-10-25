@@ -3,6 +3,8 @@ import './presentation.css';
 export type PresentationHeaderProps = {
     /** The title, in a glass bubble at the start. Omit for no title bubble. */
     title?: React.ReactNode;
+    /** Custom content at the start instead of the title bubble (a search field, a back button with a heading). */
+    leading?: React.ReactNode;
     /** Id for the title heading, so the surface can be labelled by it. */
     titleId?: string;
     /** More bubbles before the close bubble: a Reset, a Done, a view switch. */
@@ -21,7 +23,7 @@ export type PresentationHeaderProps = {
  * merge and share light. Put it in a `PresentationBody` `top` slot; it renders nothing when it has
  * nothing to show.
  */
-export declare function PresentationHeader({ title, titleId, trailing, onClose, closeLabel, closeDisabled, className, }: PresentationHeaderProps): React.JSX.Element | null;
+export declare function PresentationHeader({ title, leading, titleId, trailing, onClose, closeLabel, closeDisabled, className, }: PresentationHeaderProps): React.JSX.Element | null;
 /** The close bubble: one glass group holding the close button. Kit-internal (header and Pane). */
 export declare function CloseBubble({ label, disabled, onClose, className, }: {
     label: string;

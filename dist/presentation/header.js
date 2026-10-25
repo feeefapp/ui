@@ -13,12 +13,12 @@ import './presentation.css';
  * merge and share light. Put it in a `PresentationBody` `top` slot; it renders nothing when it has
  * nothing to show.
  */
-export function PresentationHeader({ title, titleId, trailing, onClose, closeLabel, closeDisabled = false, className, }) {
+export function PresentationHeader({ title, leading, titleId, trailing, onClose, closeLabel, closeDisabled = false, className, }) {
     const { t } = useI18n();
-    if (title == null && trailing == null && !onClose)
+    if (title == null && leading == null && trailing == null && !onClose)
         return null;
     const close = closeLabel ?? t('lab.common.close');
-    return (_jsxs(GlassScope, { as: "header", className: cn('lab-presentation-header', className), children: [_jsx("div", { className: "lab-presentation-header-start", children: title != null && (_jsx(ToolbarGroup, { label: t('lab.presentation.title'), className: "lab-presentation-header-title", children: _jsx("h2", { id: titleId, className: "lab-presentation-title", children: title }) })) }), trailing, onClose && _jsx(CloseBubble, { label: close, disabled: closeDisabled, onClose: onClose })] }));
+    return (_jsxs(GlassScope, { as: "header", className: cn('lab-presentation-header', className), children: [_jsx("div", { className: "lab-presentation-header-start", children: leading ?? (title != null && (_jsx(ToolbarGroup, { label: t('lab.presentation.title'), className: "lab-presentation-header-title", children: _jsx("h2", { id: titleId, className: "lab-presentation-title", children: title }) }))) }), trailing, onClose && _jsx(CloseBubble, { label: close, disabled: closeDisabled, onClose: onClose })] }));
 }
 /** The close bubble: one glass group holding the close button. Kit-internal (header and Pane). */
 export function CloseBubble({ label, disabled = false, onClose, className, }) {

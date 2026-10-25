@@ -443,6 +443,28 @@ void main() {
       expect(tester.getSize(find.byType(ScrollArea)).height, 720 - 2);
     });
 
+    testWidgets(
+      'leading replaces the title bubble and keeps the close bubble',
+      (tester) async {
+        _size(tester, const Size(1000, 900));
+        await tester.pumpWidget(
+          _overlay(
+            (_) => Modal(
+              label: 'Choose a voice',
+              title: const Text('Hidden title'),
+              leading: const SizedBox(width: 200, child: Text('Search voices')),
+              child: const SizedBox(height: 100, child: Text('Body')),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Search voices'), findsOneWidget);
+        expect(find.text('Hidden title'), findsNothing);
+        expect(find.byType(PresentationTitle), findsNothing);
+        expect(find.byType(CloseBubble), findsOneWidget);
+      },
+    );
+
     testWidgets('returnFocus wins over the opener after closing', (
       tester,
     ) async {

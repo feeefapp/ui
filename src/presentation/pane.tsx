@@ -97,6 +97,7 @@ function PanePresentation({
   onOpenChange,
   label,
   title,
+  leading,
   trailing,
   showClose = true,
   header,
@@ -136,9 +137,9 @@ function PanePresentation({
     header !== undefined ? (
       header
     ) : (
-      <PresentationHeader title={title} titleId={titleId} trailing={trailing} />
+      <PresentationHeader title={title} leading={leading} titleId={titleId} trailing={trailing} />
     )
-  const labelledBy = header === undefined && title != null ? titleId : undefined
+  const labelledBy = header === undefined && leading == null && title != null ? titleId : undefined
   return (
     <PresentationHost
       kind="pane"

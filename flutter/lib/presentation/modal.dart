@@ -23,6 +23,7 @@ class Modal extends StatefulWidget {
     this.onOpenChange,
     required this.label,
     this.title,
+    this.leading,
     this.trailing = const [],
     this.showClose = true,
     this.header,
@@ -50,6 +51,10 @@ class Modal extends StatefulWidget {
 
   /// Visible title in the floating header's title bubble.
   final Widget? title;
+
+  /// Custom content at the start instead of the title bubble (a search field, a back button with
+  /// a heading). The close bubble stays.
+  final Widget? leading;
 
   /// More header bubbles before the close bubble.
   final List<Widget> trailing;
@@ -156,6 +161,7 @@ class _ModalState extends State<Modal> with PresentationStateMixin<Modal> {
         shown.header ??
         PresentationHeader(
           title: shown.title,
+          leading: shown.leading,
           trailing: shown.trailing,
           onClose: shown.showClose ? close : null,
           closeLabel: I18n.of(context)
