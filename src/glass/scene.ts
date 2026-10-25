@@ -201,6 +201,8 @@ export class GlassScene {
   private mutations: MutationObserver | null = null
   private pointer: { x: number; y: number } | null = null
   private cache = { key: '', paths: [] as GlassClusterPath[] }
+  /** The backdrop pieces drawn for `cache.paths` (see `backdropPaths`). */
+  private piecePaths: GlassClusterPath[] = []
   /** Scrollers inside the container that scrolled since the last measure: their bubbles follow exactly. */
   private scrolled = new Set<Element>()
   private uid: string
@@ -466,7 +468,18 @@ export class GlassScene {
 
   /** A surface around this container came to rest (a dialog finished opening): measure again. */
   private onSettled = (event: Event) => {
-    if (event.target instanceof Node && event.target.contains(this.host)) this.requestMeasure()
+    if (!(event.target instanceof Node) || !event.target.contains(this.host)) return
+    // Growth that started while the surface rode its transform ends here: an unchanged layout
+    // starts no spring whose arrival would end it, and a growing bubble draws as part of its
+    // neighbour. The measure below restores its slot's clip.
+    for (const shape of this.shapes.values()) {
+      if (!shape.growing || !shape.layout || shape.leaving) continue
+      ++shape.token
+      shape.set(shape.layout)
+      shape.carry = true
+      shape.growing = false
+    }
+    this.requestMeasure()
   }
 
   requestMeasure() {
@@ -645,8 +658,17 @@ export class GlassScene {
       const changed = !shape.layout || !sameRect(shape.layout, target.rect)
       shape.layout = target.rect
       if (shape.scale.getTarget() !== 1) void shape.scale.animateTo(1, { spring: SPRING, instant })
-      if (follow || instant) shape.set(target.rect)
-      else if (changed || !sameRect(shape.rect(), target.rect)) {
+      if (follow || instant) {
+        shape.set(target.rect)
+        // A jump ends any growth in progress (its spring's arrival would have): the bubble is its
+        // own shape again, back in its slot's clip, not a bridge out of its neighbour.
+        if (instant && shape.growing) {
+          ++shape.token
+          shape.carry = true
+          shape.growing = false
+          shape.clip = target.clip
+        }
+      } else if (changed || !sameRect(shape.rect(), target.rect)) {
         const token = ++shape.token
         void shape.animate(target.rect, false).then((arrived) => {
           if (arrived && shape.token === token) {
@@ -785,7 +807,10 @@ export class GlassScene {
     const key = `${this.cornerShape}|${this.spacing}|${placed.map((v) => `${v.x.toFixed(1)},${v.y.toFixed(1)},${v.width.toFixed(1)},${v.height.toFixed(1)},${v.radius.toFixed(1)}`).join(';')}|${clips.map((c) => (c ? `${c.x.toFixed(1)},${c.y.toFixed(1)},${c.width.toFixed(1)},${c.height.toFixed(1)}` : '')).join(';')}`
     if (key !== this.cache.key) this.cache = { key, paths: clippedGlassPaths(placed, clips, this.spacing) }
     const paths = this.cache.paths
-    this.syncBackdrops(paths)
+    this.piecePaths = backdropPaths(paths)
+    this.syncBackdrops(this.piecePaths)
+    // The hairlines follow the clusters' outlines, joined or not.
+    this.syncHairlines(paths)
 
     const lights = paths.map((p) => this.lightFor(p.bounds, frame))
     const glow = this.glow
@@ -817,7 +842,6 @@ export class GlassScene {
       this.pieces.push(piece)
     }
     while (this.pieces.length > paths.length) this.pieces.pop()!.remove()
-    this.syncHairlines(paths)
     paths.forEach((path, i) => {
       const { x, y, width, height } = path.bounds
       const piece = this.pieces[i]
@@ -843,9 +867,13 @@ export class GlassScene {
         const r = clampRadius(path.shapes[0])
         setStyleIfChanged(style, 'borderRadius', `${cssCornerRadius(r, path.shapes[0].width, path.shapes[0].height, this.cornerFit)}px`)
         setStyleIfChanged(style, 'clipPath', clipInset(path.bounds, path.clip))
+        setPropertyIfChanged(style, 'mask', '')
       } else {
+        // A merged outline masks rather than clips: inside an overflow-clip ancestor (a dialog's
+        // scroll area) Chromium ignores clip-path on a backdrop-filter and blurs the whole box.
         setStyleIfChanged(style, 'borderRadius', '')
-        setStyleIfChanged(style, 'clipPath', `path("${translatePath(path.visible, -x, -y)}")`)
+        setStyleIfChanged(style, 'clipPath', '')
+        setPropertyIfChanged(style, 'mask', outlineMask(translatePath(path.visible, -x, -y), width, height))
       }
     })
   }
@@ -956,7 +984,7 @@ export class GlassScene {
       this.filterHost = node('svg', { 'width': 0, 'height': 0, 'aria-hidden': 'true', 'class': 'lab-glass-filters' }) as SVGSVGElement
       this.backdrop.parentElement?.append(this.filterHost)
     }
-    this.cache.paths.forEach((path, i) => {
+    this.piecePaths.forEach((path, i) => {
       const piece = this.pieces[i]
       if (!piece) return
       const { x, y, width, height } = path.bounds
@@ -1136,6 +1164,29 @@ function isScroller(element: Element) {
     scrollers.set(element, scroller)
   }
   return scroller
+}
+
+/**
+ * The backdrop pieces for the clusters: a cluster whose shapes are not joined (as many outlines
+ * as shapes) blurs per shape, each cut by its CSS corner radius. Inside an overflow-clip ancestor
+ * (a dialog's scroll area) Chromium blurs a clipped or masked piece's whole bounding box; only a
+ * border radius cuts its backdrop. Joined outlines keep one masked piece.
+ */
+function backdropPaths(paths: GlassClusterPath[]): GlassClusterPath[] {
+  return paths.flatMap((path) => {
+    if (path.shapes.length < 2 || (path.d.match(/M/g)?.length ?? 0) < path.shapes.length) return [path]
+    return path.shapes.map((shape) => ({
+      ...path,
+      shapes: [shape],
+      bounds: { x: shape.x, y: shape.y, width: shape.width, height: shape.height },
+    }))
+  })
+}
+
+/** A CSS mask of `d` (an outline in a `width` × `height` box) as an inline SVG image. */
+function outlineMask(d: string, width: number, height: number) {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'><path d='${d}'/></svg>`
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}") 0 0 / 100% 100% no-repeat`
 }
 
 function setAttributeIfChanged(element: Element, name: string, value: string) {

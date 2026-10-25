@@ -27,6 +27,8 @@ export declare class GlassScene {
     private mutations;
     private pointer;
     private cache;
+    /** The backdrop pieces drawn for `cache.paths` (see `backdropPaths`). */
+    private piecePaths;
     /** Scrollers inside the container that scrolled since the last measure: their bubbles follow exactly. */
     private scrolled;
     private uid;
