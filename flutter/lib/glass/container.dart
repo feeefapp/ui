@@ -460,6 +460,13 @@ double _smallestSide(GlassPath path) => path.shapes
     .map((s) => math.min(s.width, s.height))
     .fold(double.infinity, math.min);
 
+/// The side that picks [path]'s material: a toolbar's glass (single rim) stays control-sized
+/// however wide its label makes it, so a wide rail never takes the panel's veil and light edge.
+double _materialSide(_GlassScene scene, GlassPath path) {
+  final side = _smallestSide(path);
+  return scene.singleRim(path) ? math.min(side, glassSmallSide) : side;
+}
+
 /// Shadow, backdrop, edge, light and glow, behind the bubbles.
 class _GlassLayers extends StatelessWidget {
   const _GlassLayers({required this.scene, required this.material});
@@ -495,15 +502,15 @@ class _GlassLayers extends StatelessWidget {
                         path: path,
                         spacing: scene.spacing,
                         backdropKey: scene.backdropKey,
-                        blur: material.blurFor(_smallestSide(path)),
+                        blur: material.blurFor(_materialSide(scene, path)),
                         colour: glassBackdropMatrix(
-                          material.materialFor(_smallestSide(path)),
+                          material.materialFor(_materialSide(scene, path)),
                         ),
-                        edge: material.edgeFor(_smallestSide(path)),
+                        edge: material.edgeFor(_materialSide(scene, path)),
                         light: scene.lightFor(path.bounds),
                       )
                     : BackdropFilter(
-                        filter: material.backdropFor(_smallestSide(path)),
+                        filter: material.backdropFor(_materialSide(scene, path)),
                         backdropGroupKey: scene.backdropKey,
                         child: const SizedBox.expand(),
                       ),
@@ -694,7 +701,7 @@ class _GlassPainter extends CustomPainter {
       scissor(p);
       canvas.drawPath(
         p.path,
-        Paint()..color = material.fillFor(_smallestSide(p)),
+        Paint()..color = material.fillFor(_materialSide(scene, p)),
       );
       canvas.restore();
     }

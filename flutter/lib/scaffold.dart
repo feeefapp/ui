@@ -154,7 +154,9 @@ class _GlassSurfaceState extends State<GlassSurface> {
   Widget _material(BuildContext context) {
     final radius = widget.radius;
     final child = widget.child;
-    final size = glassSize(_side);
+    // A toolbar's glass (single rim) stays control-sized however wide its label makes it.
+    final side = widget.singleRim ? math.min(_side, glassSmallSide) : _side;
+    final size = glassSize(side);
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
     final style = glassStyleOf(context);
@@ -184,7 +186,7 @@ class _GlassSurfaceState extends State<GlassSurface> {
       size: size,
     );
     final colour = ColorFilter.matrix(glassBackdropMatrix(material));
-    final blur = glassBlur(_side);
+    final blur = glassBlur(side);
     return Stack(
       clipBehavior: Clip.none,
       children: [
