@@ -4,7 +4,7 @@ import * as React from 'react'
 import { motionOf } from '../physics/motion-value'
 import { SPRINGS, springTiming, type Spring } from '../physics/spring'
 import type { Motion } from '../theme-config'
-import { GLASS_INSTANT_ATTRIBUTE } from '../glass/transitions'
+import { GLASS_INSTANT_ATTRIBUTE, settleGlass } from '../glass/transitions'
 
 /**
  * How centred dialogs (Alert, Modal) come and go, like iOS alerts: they open with a spring from
@@ -188,7 +188,7 @@ export function useSurfaceMotion(
     const { surface: tracks, scrim: dimTrack } = planner.current(open, motionOf(), now, element)
     const properties = [...new Set(tracks.map((track) => track.property))]
     const rest = () => {
-      element.removeAttribute(GLASS_INSTANT_ATTRIBUTE)
+      settleGlass(element)
       element.style.willChange = ''
     }
 

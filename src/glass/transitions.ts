@@ -149,6 +149,18 @@ export function sameRect(a: GlassRect, b: GlassRect) {
 export const GLASS_INSTANT_ATTRIBUTE = 'data-glass-instant'
 
 /**
+ * Fired (bubbling) on an element that stops moving as one piece. A transform on an ancestor of a
+ * container never reaches its observers, so the glass inside measures its resting layout now.
+ */
+export const GLASS_SETTLED_EVENT = 'lab-glass-settled'
+
+/** Ends an element's `GLASS_INSTANT_ATTRIBUTE` ride and has the glass inside it measure again. */
+export function settleGlass(element: HTMLElement) {
+  element.removeAttribute(GLASS_INSTANT_ATTRIBUTE)
+  element.dispatchEvent(new Event(GLASS_SETTLED_EVENT, { bubbles: true }))
+}
+
+/**
  * Put this attribute on content that animates its own size inside a bubble (a segmented control
  * folding into its menu): while it is there, the glass of every bubble in that container follows
  * the layout exactly instead of springing after it (like `glassMotion="follow"`), so the content

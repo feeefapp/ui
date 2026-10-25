@@ -3,7 +3,7 @@ import { SPRINGS } from '../physics/spring.js';
 import { boundsOf, clampRadius, clipAxes, clipInset, clippedGlassPaths, hostFrame, memberClip, openClip, toLocalPoint, toLocalRect, toScreenPoint, translatePath, } from './geometry.js';
 import { DEFAULT_GLASS_LIGHT, glassLightToward, surfaceReflection, surfaceShade, highlightSurface } from './light.js';
 import { glassMemberRect } from './member-bounds.js';
-import { GLASS_FOLLOW_ATTRIBUTE, GLASS_INSTANT_ATTRIBUTE, glassChangesAtOnce, planGlassTransition, sameRect } from './transitions.js';
+import { GLASS_FOLLOW_ATTRIBUTE, GLASS_INSTANT_ATTRIBUTE, GLASS_SETTLED_EVENT, glassChangesAtOnce, planGlassTransition, sameRect } from './transitions.js';
 import { adaptiveGlassTone, backdropTone, parseCssColor } from './adaptive.js';
 import { liveDisplacementMap, rgbaBmpDataUrl, elementImagePlacement, supportsElementRefraction, supportsRefraction } from './refraction.js';
 import { DecodedRefractionMap } from './decoded-refraction-map.js';
@@ -250,6 +250,7 @@ export class GlassScene {
             this.mutations.observe(host, { subtree: true, attributes: true, attributeFilter: ['inert', 'hidden', 'data-glass-hidden'] });
         }
         host.addEventListener('pointerdown', this.onPressStart, { passive: true });
+        host.ownerDocument?.addEventListener(GLASS_SETTLED_EVENT, this.onSettled);
         window.addEventListener('scroll', this.onScroll, { passive: true, capture: true });
         // Content can change behind still glass (a photo loads, a tab switches, the theme flips): the
         // page-wide watch re-reads the backdrop on those changes, only while this glass is on screen.
@@ -441,6 +442,11 @@ export class GlassScene {
             this.requestMeasure();
         };
     }
+    /** A surface around this container came to rest (a dialog finished opening): measure again. */
+    onSettled = (event) => {
+        if (event.target instanceof Node && event.target.contains(this.host))
+            this.requestMeasure();
+    };
     requestMeasure() {
         if (this.disposed || this.measureQueued)
             return;
@@ -457,6 +463,7 @@ export class GlassScene {
     }
     dispose() {
         this.host.removeEventListener('pointerdown', this.onPressStart);
+        this.host.ownerDocument?.removeEventListener(GLASS_SETTLED_EVENT, this.onSettled);
         window.removeEventListener('scroll', this.onScroll, { capture: true });
         this.unwatchBackdrop?.();
         this.unwatchBackdrop = null;

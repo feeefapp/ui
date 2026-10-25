@@ -21,7 +21,7 @@ import {
 } from './geometry'
 import { DEFAULT_GLASS_LIGHT, glassLightToward, surfaceReflection, surfaceShade, highlightSurface, type GlassLight } from './light'
 import { glassMemberRect } from './member-bounds'
-import { GLASS_FOLLOW_ATTRIBUTE, GLASS_INSTANT_ATTRIBUTE, glassChangesAtOnce, planGlassTransition, sameRect } from './transitions'
+import { GLASS_FOLLOW_ATTRIBUTE, GLASS_INSTANT_ATTRIBUTE, GLASS_SETTLED_EVENT, glassChangesAtOnce, planGlassTransition, sameRect } from './transitions'
 import { adaptiveGlassTone, backdropTone, parseCssColor, type BackdropSample, type GlassTone } from './adaptive'
 import { liveDisplacementMap, rgbaBmpDataUrl, elementImagePlacement, supportsElementRefraction, supportsRefraction } from './refraction'
 import { DecodedRefractionMap } from './decoded-refraction-map'
@@ -275,6 +275,7 @@ export class GlassScene {
       this.mutations.observe(host, { subtree: true, attributes: true, attributeFilter: ['inert', 'hidden', 'data-glass-hidden'] })
     }
     host.addEventListener('pointerdown', this.onPressStart, { passive: true })
+    host.ownerDocument?.addEventListener(GLASS_SETTLED_EVENT, this.onSettled)
     window.addEventListener('scroll', this.onScroll, { passive: true, capture: true })
     // Content can change behind still glass (a photo loads, a tab switches, the theme flips): the
     // page-wide watch re-reads the backdrop on those changes, only while this glass is on screen.
@@ -463,6 +464,11 @@ export class GlassScene {
     }
   }
 
+  /** A surface around this container came to rest (a dialog finished opening): measure again. */
+  private onSettled = (event: Event) => {
+    if (event.target instanceof Node && event.target.contains(this.host)) this.requestMeasure()
+  }
+
   requestMeasure() {
     if (this.disposed || this.measureQueued) return
     this.measureQueued = true
@@ -479,6 +485,7 @@ export class GlassScene {
 
   dispose() {
     this.host.removeEventListener('pointerdown', this.onPressStart)
+    this.host.ownerDocument?.removeEventListener(GLASS_SETTLED_EVENT, this.onSettled)
     window.removeEventListener('scroll', this.onScroll, { capture: true })
     this.unwatchBackdrop?.()
     this.unwatchBackdrop = null

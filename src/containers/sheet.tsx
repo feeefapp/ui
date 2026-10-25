@@ -19,7 +19,7 @@ import {
   type SheetDetent,
 } from './sheet-model'
 import { cn } from '../utils'
-import { GLASS_INSTANT_ATTRIBUTE } from '../glass/transitions'
+import { GLASS_INSTANT_ATTRIBUTE, settleGlass } from '../glass/transitions'
 import { POP_MOTION } from '../presentation/motion'
 import '../presentation/presentation.css'
 import './sheet.css'
@@ -185,7 +185,12 @@ function SheetPresentation({
     paintRecede(v)
   }
   /** While the panel moves, its glass rides it as is (no springs of its own) and leaves with it. */
-  const riding = (on: boolean) => panel.current?.toggleAttribute(GLASS_INSTANT_ATTRIBUTE, on)
+  const riding = (on: boolean) => {
+    const el = panel.current
+    if (!el) return
+    if (on) el.setAttribute(GLASS_INSTANT_ATTRIBUTE, '')
+    else settleGlass(el)
+  }
   /** Switches to transform-only motion: the panel is tall enough for any position, nothing reflows. */
   const beginMotion = () => {
     const el = panel.current

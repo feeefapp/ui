@@ -99,6 +99,8 @@ export declare class GlassScene {
     private onPressMove;
     private onPressEnd;
     register(id: string, element: HTMLElement, options: GlassMemberOptions): () => void;
+    /** A surface around this container came to rest (a dialog finished opening): measure again. */
+    private onSettled;
     requestMeasure(): void;
     setPointer(point: {
         x: number;

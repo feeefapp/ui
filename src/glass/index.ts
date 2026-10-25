@@ -22,7 +22,7 @@ export type { GlassRect, GlassShape } from './geometry'
 export { DEFAULT_GLASS_LIGHT, glassLightToward } from './light'
 export type { GlassLight } from './light'
 export { GLASS_MAX_SIDE, GLASS_MAX_SPAN, glassMemberRect } from './member-bounds'
-export { GLASS_FOLLOW_ATTRIBUTE, GLASS_INSTANT_ATTRIBUTE, GLASS_SETTLE_MS, glassChangesAtOnce, glassSeed, planGlassTransition, sameGlassRow } from './transitions'
+export { GLASS_FOLLOW_ATTRIBUTE, GLASS_INSTANT_ATTRIBUTE, GLASS_SETTLED_EVENT, GLASS_SETTLE_MS, settleGlass, glassChangesAtOnce, glassSeed, planGlassTransition, sameGlassRow } from './transitions'
 export type { GlassBirth, GlassDeath, GlassPlan } from './transitions'
 export {
   GLASS_BEZEL,

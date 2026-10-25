@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { motionOf } from '../physics/motion-value.js';
 import { SPRINGS, springTiming } from '../physics/spring.js';
-import { GLASS_INSTANT_ATTRIBUTE } from '../glass/transitions.js';
+import { GLASS_INSTANT_ATTRIBUTE, settleGlass } from '../glass/transitions.js';
 /**
  * How centred dialogs (Alert, Modal) come and go, like iOS alerts: they open with a spring from
  * a little larger than their size while fading in, and close with a fade only (no scale on exit).
@@ -157,7 +157,7 @@ export function useSurfaceMotion(open, surface, scrim, onExited, plan) {
         const { surface: tracks, scrim: dimTrack } = planner.current(open, motionOf(), now, element);
         const properties = [...new Set(tracks.map((track) => track.property))];
         const rest = () => {
-            element.removeAttribute(GLASS_INSTANT_ATTRIBUTE);
+            settleGlass(element);
             element.style.willChange = '';
         };
         // The end state, inline: what shows once the animations end (and at once without them).

@@ -11,7 +11,7 @@ import { motionFade } from '../theme-config.js';
 import { SPRINGS, projectMomentum, rubberBand } from '../physics/spring.js';
 import { detentHeights, dragHeight, releaseTarget, sheetDim, sheetRecede, } from './sheet-model.js';
 import { cn } from '../utils.js';
-import { GLASS_INSTANT_ATTRIBUTE } from '../glass/transitions.js';
+import { GLASS_INSTANT_ATTRIBUTE, settleGlass } from '../glass/transitions.js';
 import { POP_MOTION } from '../presentation/motion.js';
 import '../presentation/presentation.css';
 import './sheet.css';
@@ -93,7 +93,15 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
         paintRecede(v);
     };
     /** While the panel moves, its glass rides it as is (no springs of its own) and leaves with it. */
-    const riding = (on) => panel.current?.toggleAttribute(GLASS_INSTANT_ATTRIBUTE, on);
+    const riding = (on) => {
+        const el = panel.current;
+        if (!el)
+            return;
+        if (on)
+            el.setAttribute(GLASS_INSTANT_ATTRIBUTE, '');
+        else
+            settleGlass(el);
+    };
     /** Switches to transform-only motion: the panel is tall enough for any position, nothing reflows. */
     const beginMotion = () => {
         const el = panel.current;
