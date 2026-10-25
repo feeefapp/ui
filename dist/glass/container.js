@@ -19,7 +19,7 @@ function useRootValue(attributes, read, fallback) {
 /** The app's glass style (ThemeConfig `glass`, on `<html data-lab-glass>`), live. */
 export function useGlassStyle() {
     const value = useRootValue(['data-lab-glass'], (root) => root.getAttribute('data-lab-glass') ?? '', 'liquid');
-    return value === 'still' || value === 'solid' ? value : 'liquid';
+    return value === 'transparent' || value === 'solid' ? value : 'liquid';
 }
 /**
  * The app's glass material options (ThemeConfig `glassTint`, `glassBlur`, `glassRefraction`, on
@@ -36,7 +36,7 @@ export function useGlassOptions() {
 /**
  * Draws ONE glass material for every bubble inside it (GlassGroup, ToolbarGroup, Dock, …), like
  * Apple's GlassEffectContainer. The app's ThemeConfig `glass` sets the style: `liquid` (moving
- * light, press response), `still` (fixed light, no press) or `solid` (opaque); `glassTint`,
+ * light, press response, the bend), `transparent` (fixed light, no press, unbent) or `solid` (opaque); `glassTint`,
  * `glassBlur` and `glassRefraction` set the material. Bubbles that come within `spacing` bend toward each other and
  * merge; a bubble that splits into several grows them out of itself; a new bubble is born out of
  * its nearest neighbour (same row first) and a removed one is absorbed into it, so only a lone
@@ -117,7 +117,8 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
         current.refractionProfile = refractionProfile;
         current.refractionStrength = Number.isFinite(refractionStrength) ? Math.min(10, Math.max(0, refractionStrength)) : 1;
         current.backdropSource = backdropSource;
-        current.refraction = options.refraction;
+        // The bend is part of the liquid effect: transparent glass stays unbent.
+        current.refraction = options.refraction && liquid;
         current.requestMeasure();
     });
     React.useEffect(() => {

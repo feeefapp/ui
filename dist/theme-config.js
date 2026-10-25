@@ -23,12 +23,12 @@ export const THEME_DEFAULTS = {
  * `{ ...PROFILES.balanced, palette: 'mono' }`. The kit still checks what the browser supports
  * (refraction, blur; `glassCapabilities()`), so a profile never needs a per-browser variant.
  * - `quality`: liquid glass with refraction and blur, full motion.
- * - `balanced`: still glass without refraction or blur, full motion.
+ * - `balanced`: transparent glass (no liquid effect) without refraction or blur, full motion.
  * - `performance`: opaque chrome and no motion at all, for slow devices and dense tools.
  */
 export const PROFILES = {
     quality: { glass: 'liquid', glassRefraction: true, glassBlur: true, motion: 'full' },
-    balanced: { glass: 'still', glassRefraction: false, glassBlur: false, motion: 'full' },
+    balanced: { glass: 'transparent', glassRefraction: false, glassBlur: false, motion: 'full' },
     performance: { glass: 'solid', glassRefraction: false, glassBlur: false, motion: 'none' },
 };
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;

@@ -32,8 +32,12 @@ class GlassRefraction extends StatefulWidget {
     this.edge = (k1: 0, k3: 0),
     this.light = const Offset(-0.7071067811865476, -0.7071067811865476),
     this.strength = 1,
+    this.magnify = 0,
     this.backdropKey,
   });
+
+  /// Magnification beyond 1 about the first shape's centre (0 none, 0.2 = 1.2×): a lens.
+  final double magnify;
 
   /// Lens strength, a share of the measured shift (ThemeConfig `glassRefractionStrength`).
   final double strength;
@@ -139,6 +143,7 @@ class _GlassRefractionState extends State<GlassRefraction> {
       edge: widget.edge,
       light: widget.light,
       strength: widget.strength,
+      magnify: widget.magnify,
       dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
       backdropKey: widget.backdropKey,
     );
@@ -155,12 +160,13 @@ class _RefractionBackdrop extends LeafRenderObjectWidget {
     required this.edge,
     required this.light,
     required this.strength,
+    required this.magnify,
     required this.dpr,
     required this.backdropKey,
   });
   final ui.FragmentProgram program;
   final GlassPath path;
-  final double spacing, blur, strength, dpr;
+  final double spacing, blur, strength, magnify, dpr;
   final List<double> colour;
   final ({double k1, double k3}) edge;
   final Offset light;
@@ -287,6 +293,7 @@ class _RenderRefraction extends RenderBox {
     set(config.light.dy);
     set(config.edge.k1);
     set(config.edge.k3);
+    set(config.magnify);
     // Two passes, never one composed filter: blur and colour first (sharing the container's
     // backdrop read), then the bend alone, which reads that result. Under a composed filter
     // Impeller may crop the shader's input to the clip and count FlutterFragCoord from the

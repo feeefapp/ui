@@ -10,6 +10,15 @@ import '../physics/spring.dart';
 /// segmented pill swells by [glassPressScale].
 const double lensThumbScale = 1.4;
 
+/// How far a liquid pill lens (segmented control, tab bar) lifts out past its pill on every side,
+/// as a share of the pill's height: a 54 pt tab pill becomes a ~70 pt drop that sticks out of its
+/// 62 pt bar and reaches into the neighbouring tabs, as iOS 27's (Figma tab bar notes).
+const double lensPillLift = 0.15;
+
+/// How much a liquid lens enlarges what it covers (the web kit's `LENS_MAGNIFY`): iOS 27 magnifies
+/// about 1.15–1.25×.
+const double lensMagnify = 0.18;
+
 /// The lens stretches by the distance the pointer covers in this many seconds (rubber-banded).
 const double lensStretchTime = 0.1;
 

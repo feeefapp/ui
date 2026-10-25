@@ -16,6 +16,7 @@ import '../theme/surfaces.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
 import 'button.dart' show ControlSize;
+import '../glass/lens_glass.dart';
 import 'lens.dart';
 import 'lens_model.dart';
 import 'slider_core.dart';
@@ -1002,8 +1003,9 @@ class _ShapeClipper extends CustomClipper<Path> {
 }
 
 /// The thumb: surface (ink in dark), superellipse corners (45 % on the thick slider, a capsule
-/// on the switch and the thin slider), soft shadows. Pressed or dragged it turns into a glass lens
-/// ([LensPaint]): the rest paint and shadows fade out as the glass fades in ([lens]).
+/// on the switch and the thin slider), soft shadows. Pressed or dragged it turns into real glass
+/// ([GlassLens], over the track it bends): the rest paint and shadows fade out as the glass fades
+/// in ([lens]).
 class _Thumb extends StatelessWidget {
   const _Thumb({
     required this.radius,
@@ -1025,30 +1027,40 @@ class _Thumb extends StatelessWidget {
   final Widget? child;
 
   @override
-  Widget build(BuildContext context) => CustomPaint(
-    painter: _ThumbPainter(
-      fill: fill,
-      radius: radius,
-      shadows: thin
-          ? const [(0, 1, 4, 0.18)]
-          : const [(0, 1, 2, 0.20), (0, 3, 8, 0.12)],
-      lens: lens.clamp(0.0, 1.0),
-      lensPaint: lensPaint,
-      glowAt: glowAt,
-      glowRadius: glowRadius,
-      glowOpacity: glowOpacity,
-    ),
-    child: child == null
-        ? null
-        : Center(
-            child: IconTheme.merge(
-              data: IconThemeData(color: ink),
-              child: DefaultTextStyle.merge(
-                style: TextStyle(color: ink),
-                child: child!,
-              ),
+  Widget build(BuildContext context) => Stack(
+    fit: StackFit.expand,
+    clipBehavior: Clip.none,
+    children: [
+      CustomPaint(
+        painter: _ThumbPainter(
+          fill: fill,
+          radius: radius,
+          shadows: thin
+              ? const [(0, 1, 4, 0.18)]
+              : const [(0, 1, 2, 0.20), (0, 3, 8, 0.12)],
+          lens: lens.clamp(0.0, 1.0),
+          lensPaint: lensPaint,
+        ),
+      ),
+      GlassLens.fill(
+        radius: radius,
+        lens: lens,
+        magnify: lensMagnify,
+        glowAt: glowAt,
+        glowRadius: glowRadius,
+        glowOpacity: glowOpacity,
+      ),
+      if (child != null)
+        Center(
+          child: IconTheme.merge(
+            data: IconThemeData(color: ink),
+            child: DefaultTextStyle.merge(
+              style: TextStyle(color: ink),
+              child: child!,
             ),
           ),
+        ),
+    ],
   );
 }
 
@@ -1059,14 +1071,10 @@ class _ThumbPainter extends CustomPainter {
     required this.shadows,
     required this.lens,
     required this.lensPaint,
-    required this.glowAt,
-    required this.glowRadius,
-    required this.glowOpacity,
   });
   final Color fill;
-  final double radius, lens, glowRadius, glowOpacity;
+  final double radius, lens;
   final LensPaint lensPaint;
-  final Offset glowAt;
 
   /// CSS box-shadows as (x, y, blur, black alpha); sigma = blur / 2.
   final List<(double, double, double, double)> shadows;
@@ -1094,15 +1102,6 @@ class _ThumbPainter extends CustomPainter {
         Paint()..color = fill.withValues(alpha: fill.a * rest),
       );
     }
-    lensPaint.paint(
-      canvas,
-      rect,
-      r,
-      lens: lens,
-      glowAt: glowAt,
-      glowRadius: glowRadius,
-      glowOpacity: glowOpacity,
-    );
   }
 
   @override
@@ -1111,10 +1110,7 @@ class _ThumbPainter extends CustomPainter {
       old.radius != radius ||
       old.shadows != shadows ||
       old.lens != lens ||
-      old.lensPaint != lensPaint ||
-      old.glowAt != glowAt ||
-      old.glowRadius != glowRadius ||
-      old.glowOpacity != glowOpacity;
+      old.lensPaint != lensPaint;
 }
 
 class _Marks extends StatelessWidget {

@@ -34,7 +34,7 @@ function savedTheme(saved: unknown): DocsSettings['theme'] {
   const value = saved as Record<string, unknown>
   for (const key of Object.keys(DEFAULTS.theme) as (keyof typeof DEFAULTS.theme)[])
     if (typeof value[key] === typeof DEFAULTS.theme[key]) (theme as Record<string, unknown>)[key] = value[key]
-  if (!['liquid', 'still', 'solid'].includes(theme.glass)) theme.glass = DEFAULTS.theme.glass
+  if (!['liquid', 'transparent', 'solid'].includes(theme.glass)) theme.glass = DEFAULTS.theme.glass
   if (!['full', 'reduced', 'none'].includes(theme.motion)) theme.motion = DEFAULTS.theme.motion
   if (typeof value.primary === 'string') theme.primary = value.primary
   return theme

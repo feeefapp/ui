@@ -10,8 +10,9 @@ enum Palette { lab, mono }
 /// Size scale for controls, rows, spacing and sidebars.
 enum Density { comfortable, compact, thin }
 
-/// How floating glass behaves: moving liquid glass, still glass, or opaque surfaces.
-enum GlassStyle { liquid, still, solid }
+/// What floating glass is: clear glass with the liquid effect, clear glass without it, or opaque
+/// surfaces.
+enum GlassStyle { liquid, transparent, solid }
 
 /// How much the kit animates: everything, the reduced-motion paths, or nothing at all.
 enum Motion { full, reduced, none }
@@ -55,9 +56,11 @@ class ThemeConfig {
   /// Corner scale: `1` is the Lab's rounding, `0` square. Clamped to 0–1.5.
   final double radius;
 
-  /// Floating glass: `liquid` (default) moves, lights up toward the pointer and responds to
-  /// presses; `still` keeps the material and its morphs with a fixed light and no press response;
-  /// `solid` paints opaque chrome for dense tools.
+  /// Floating glass: `liquid` (default) is clear glass with the liquid effect: it bends what is
+  /// behind its rim, lights up toward the pointer, responds to presses, and a pressed control's
+  /// lens lifts out bigger and magnifies what it covers. `transparent` is the same clear glass and
+  /// morphs without that effect: no bend, a fixed light, no press response, plain lenses. `solid`
+  /// paints opaque chrome for dense tools.
   final GlassStyle glass;
 
   /// The Liquid Glass slider, `0` clear … `1` tinted: how much of the theme surface veils what is
@@ -168,9 +171,9 @@ abstract final class ThemeProfiles {
     motion: Motion.full,
   );
 
-  /// Still glass without refraction or blur, full motion.
+  /// Transparent glass (no liquid effect) without refraction or blur, full motion.
   static const balanced = ThemeConfig(
-    glass: GlassStyle.still,
+    glass: GlassStyle.transparent,
     glassRefraction: false,
     glassBlur: false,
     motion: Motion.full,

@@ -33,6 +33,9 @@ uniform vec4 uBlendB;
 // Toward the light (unit, y down) and the edge terms k1, k3.
 uniform vec2 uLight;
 uniform vec2 uEdge;
+// A lens's magnification beyond 1 (0 none, 0.2 = 1.2x), about the first shape's centre: a lifted
+// control lens enlarges what it covers (iOS 27's tab and segmented lens).
+uniform float uMagnify;
 
 uniform sampler2D uTexture;
 
@@ -111,6 +114,10 @@ void main() {
         edge = (1.0 - depth * depth * depth) * (0.2 + 0.8 * min(c, 1.0));
       }
     }
+  }
+  if (d < 0.0 && uMagnify > 0.0) {
+    vec2 centre = uRect0.xy + uRect0.zw * 0.5;
+    offset += (centre + (p - centre) / (1.0 + uMagnify) - p) * uDpr;
   }
   vec2 uv = (frag + offset) / uSize;
 #ifdef IMPELLER_TARGET_OPENGLES

@@ -165,7 +165,7 @@ test('motion maps to data-lab-motion; unknown values fall back to full', () => {
 test('profiles are plain partial configs that spread and override', () => {
   assert.deepEqual(Object.keys(PROFILES), ['quality', 'balanced', 'performance'])
   assert.deepEqual(PROFILES.quality, { glass: 'liquid', glassRefraction: true, glassBlur: true, motion: 'full' })
-  assert.deepEqual(PROFILES.balanced, { glass: 'still', glassRefraction: false, glassBlur: false, motion: 'full' })
+  assert.deepEqual(PROFILES.balanced, { glass: 'transparent', glassRefraction: false, glassBlur: false, motion: 'full' })
   assert.deepEqual(PROFILES.performance, { glass: 'solid', glassRefraction: false, glassBlur: false, motion: 'none' })
   const attributes = themeAttributes({ ...PROFILES.performance, palette: 'mono', motion: 'reduced' })
   assert.equal(attributes['data-lab-palette'], 'mono')

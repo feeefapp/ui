@@ -550,7 +550,7 @@ answers with glass of its own (a segmented control). Still and solid glass don't
       color var(--lab-duration-fast) var(--lab-ease),
       scale var(--lab-spring-snappy);
   }
-  html[data-lab-theme]:not([data-lab-glass='still'], [data-lab-glass='solid'])
+  html[data-lab-theme]:not([data-lab-glass='transparent'], [data-lab-glass='solid'])
     .lab-control[data-press='glass']:active:not(
       :disabled,
       [data-disabled],
@@ -585,7 +585,7 @@ answers with glass of its own (a segmented control). Still and solid glass don't
       opacity var(--lab-spring-smooth),
       --lab-press-glow-r 0s var(--lab-spring-smooth-duration);
   }
-  html[data-lab-theme]:not([data-lab-glass='still'], [data-lab-glass='solid'])
+  html[data-lab-theme]:not([data-lab-glass='transparent'], [data-lab-glass='solid'])
     .lab-control[data-press='glass']:active:not(
       :disabled,
       [data-disabled],

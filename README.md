@@ -75,7 +75,7 @@ export const theme: ThemeConfig = { palette: 'mono', density: 'compact', radius:
 | Option | Values | What it drives |
 |---|---|---|
 | `palette` | `lab` (default, Feeef green), `mono` (black and white; only danger/warning keep a hue) | every color token in `theme-tokens.css`: surfaces, ink, primary, focus, brand logo strokes, pixel tones, `--lab-success`, `--lab-warning` |
-| `glass` | `liquid` (default), `still`, `solid` | `data-lab-glass`: GlassContainer pointer light and press response (liquid only; still keeps a fixed light), opaque chrome (solid) |
+| `glass` | `liquid` (default), `transparent`, `solid` | `data-lab-glass`: clear glass with the liquid effect (bend, pointer light, press response, lenses that lift and magnify), clear glass without it (`transparent`: unbent, fixed light, plain lenses), or opaque chrome (`solid`) |
 | `glassTint` | number `0` clear … `1` tinted, `0.5` default | `--lab-glass-tint`: the Liquid Glass slider. 0 = clear glass (no veil, brightness lift), 1 = iOS 27's regular material (veil 52 % light, 5 % dark plus a lift), 0.5 = halfway. Every glass has iOS 27's faint shadow and outer hairline. Curve: `glassMaterial()` in `glass/material.ts` |
 | `glassBlur` | `false` (default), `true` | `data-lab-glass-blur`: the measured backdrop blur (2.9px → 5.2px by size); off = no blur |
 | `glassRefraction` | `true` (default), `false` | `data-lab-glass-refraction`: bend the backdrop at glass edges (SVG displacement map built when glass settles; Chromium only, other browsers show the same glass unbent) |
@@ -85,7 +85,7 @@ export const theme: ThemeConfig = { palette: 'mono', density: 'compact', radius:
 | `radius` | number, `1` default, `0` square, max `1.5` | `--lab-radius-scale`, which multiplies every radius token and component radius (circles such as radios stay round) |
 
 Profiles are plain partial configs: `PROFILES.quality` (liquid, refraction, blur, full motion),
-`PROFILES.balanced` (still, no refraction or blur, full motion) and `PROFILES.performance` (solid, no
+`PROFILES.balanced` (transparent, no refraction or blur, full motion) and `PROFILES.performance` (solid, no
 motion). Spread one and override anything: `{ ...PROFILES.balanced, palette: 'mono' }` (Flutter:
 `ThemeProfiles.balanced.copyWith(palette: .mono)`). `glassCapabilities()` reports what the browser
 supports (refraction, element refraction, backdrop blur).

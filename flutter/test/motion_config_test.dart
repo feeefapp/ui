@@ -79,7 +79,7 @@ void main() {
     expect(ThemeProfiles.quality.glassRefraction, isTrue);
     expect(ThemeProfiles.quality.glassBlur, isTrue);
     expect(ThemeProfiles.quality.motion, Motion.full);
-    expect(ThemeProfiles.balanced.glass, GlassStyle.still);
+    expect(ThemeProfiles.balanced.glass, GlassStyle.transparent);
     expect(ThemeProfiles.balanced.glassRefraction, isFalse);
     expect(ThemeProfiles.balanced.glassBlur, isFalse);
     expect(ThemeProfiles.balanced.motion, Motion.full);
@@ -89,7 +89,7 @@ void main() {
     expect(ThemeProfiles.performance.motion, Motion.none);
     final mono = ThemeProfiles.balanced.copyWith(palette: Palette.mono);
     expect(mono.palette, Palette.mono);
-    expect(mono.glass, GlassStyle.still);
+    expect(mono.glass, GlassStyle.transparent);
     expect(ThemeConfig.defaults.motion, Motion.full);
   });
 

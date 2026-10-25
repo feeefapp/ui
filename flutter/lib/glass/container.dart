@@ -353,7 +353,8 @@ class _GlassContainerState extends State<GlassContainer> {
       style: style,
       tint: theme.colors.glassTint,
       blur: theme.config.glassBlur,
-      refraction: theme.config.glassRefraction,
+      // The bend is part of the liquid effect: transparent glass stays unbent.
+      refraction: theme.config.glassRefraction && liquid,
       refractionStrength: theme.config.refractionStrength,
       highlight: theme.config.highlight,
       highlightWidth: theme.config.highlightWidth,
@@ -738,7 +739,7 @@ class _GlassPainter extends CustomPainter {
       if (material.rim) {
         // A layer of white inside the outline (clipped above), lit at both ends of the light
         // axis by the edge normal: glassRim / rimLayer, drawn as a band of vertices.
-        final rim = _rimVertices(
+        final rim = glassRimVertices(
           p.path,
           scene.lightFor(p.bounds),
           material.rimLight,
@@ -1425,7 +1426,7 @@ class GlassBar extends StatelessWidget {
 /// The rim as a triangle band along [outline]: at each sample along the outline the alpha of
 /// `rimLayer` at depth 0, ⅔ of the rim's width and its full width, by the outward normal there
 /// against [light]. Clipped to the outline by the caller, so nothing paints outside.
-ui.Vertices? _rimVertices(Path outline, Offset light, GlassRim rim) {
+ui.Vertices? glassRimVertices(Path outline, Offset light, GlassRim rim) {
   const step = 1.5;
   final positions = <Offset>[];
   final colors = <Color>[];

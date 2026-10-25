@@ -31,8 +31,9 @@ export interface ThemeConfig {
     /** Corner scale: `1` (default) is the Lab's rounding, `0.5` half, `0` square. Clamped to 0–1.5. */
     radius?: number;
     /**
-     * Floating glass: `liquid` (default) moves, lights up toward the pointer and responds to presses;
-     * `still` keeps the same material and its morphs with a fixed light and no press response;
+     * Floating glass: `liquid` (default) is clear glass with the liquid effect: it bends what is
+     * behind its rim, lights up toward the pointer and responds to presses; `transparent` is the
+     * same clear glass and morphs without that effect (no bend, a fixed light, no press response);
      * `solid` paints chrome on opaque surfaces (like reduced transparency) for dense tools.
      */
     glass?: GlassStyle;
@@ -128,8 +129,8 @@ export interface Metrics {
 export type Palette = 'lab' | 'mono';
 /** Size scale for controls, rows, spacing and sidebars. */
 export type Density = 'comfortable' | 'compact' | 'thin';
-/** How floating glass behaves: moving liquid glass, still glass, or opaque surfaces. */
-export type GlassStyle = 'liquid' | 'still' | 'solid';
+/** What floating glass is: clear glass with the liquid effect, clear glass without it, or opaque surfaces. */
+export type GlassStyle = 'liquid' | 'transparent' | 'solid';
 /** How much the kit animates: everything, the reduced-motion paths, or nothing at all. */
 export type Motion = 'full' | 'reduced' | 'none';
 /**
@@ -147,7 +148,7 @@ export declare const THEME_DEFAULTS: Required<Omit<ThemeConfig, 'primary' | 'met
  * `{ ...PROFILES.balanced, palette: 'mono' }`. The kit still checks what the browser supports
  * (refraction, blur; `glassCapabilities()`), so a profile never needs a per-browser variant.
  * - `quality`: liquid glass with refraction and blur, full motion.
- * - `balanced`: still glass without refraction or blur, full motion.
+ * - `balanced`: transparent glass (no liquid effect) without refraction or blur, full motion.
  * - `performance`: opaque chrome and no motion at all, for slow devices and dense tools.
  */
 export declare const PROFILES: {
@@ -158,7 +159,7 @@ export declare const PROFILES: {
         motion: "full";
     };
     balanced: {
-        glass: "still";
+        glass: "transparent";
         glassRefraction: false;
         glassBlur: false;
         motion: "full";

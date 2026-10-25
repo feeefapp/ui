@@ -257,7 +257,7 @@ export function Customize() {
                 onChange={(glass) => update({ theme: { glass } })}
                 options={[
                   { value: 'liquid', label: 'Liquid' },
-                  { value: 'still', label: 'Still' },
+                  { value: 'transparent', label: 'Transparent' },
                   { value: 'solid', label: 'Solid' },
                 ]}
               />

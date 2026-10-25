@@ -26,6 +26,7 @@ import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
 import '../theme/surfaces.dart';
 import 'button.dart' show ControlOverrides;
+import '../glass/lens_glass.dart';
 import 'lens.dart';
 import 'lens_model.dart';
 import 'segmented.dart' show SegmentOption, SegmentTone;
@@ -50,10 +51,6 @@ enum SelectionLayout { inline, stacked }
 /// primary colour. Pressed or dragged, both become the same glass lens (a water drop that
 /// magnifies, [lensMagnify]); inside it the ink is the ink colour (filled) or the primary (quiet).
 enum SelectionPill { filled, quiet }
-
-/// How much the pressed or dragged pill (a water drop) magnifies the options under it (the web
-/// kit's `LENS_MAGNIFY`).
-const double lensMagnify = 0.18;
 
 /// What a track does when its options don't fit: scroll them inside itself, or fold into one
 /// capsule (the selection and a chevron) that opens the options as a single-choice menu.
@@ -300,6 +297,35 @@ class _PillMotion extends ChangeNotifier {
 
 class _SelectionTrackState<T> extends State<SelectionTrack<T>>
     with SingleTickerProviderStateMixin {
+  /// The pill's corner radius: the options' capsule, swollen with the press.
+  double _pillRadius(double radiusScale) {
+    final rect = _pill;
+    final base = _boxes.first.height / 2 * radiusScale * press.get();
+    return math.min(base, math.min(rect.width, rect.height) / 2);
+  }
+
+  /// The glass over the pill while it is pressed or dragged.
+  Widget _lensGlass() {
+    if (!_placed || _boxes.isEmpty || _selected < 0) {
+      return const SizedBox.shrink();
+    }
+    final t = lens.get().clamp(0.0, 1.0);
+    final liquid = GlassLens.liquidOf(context);
+    // A liquid lens lifts out of its pill: bigger on every side, over the track's edges.
+    final lift = liquid ? _pill.height * lensPillLift * t : 0.0;
+    final rect = _pill.inflate(lift);
+    final fade = 1 - (widget.minimize?.progress ?? 0).clamp(0.0, 1.0);
+    return GlassLens(
+      rect: rect,
+      radius: _pillRadius(ThemeProvider.of(context).sizes.radiusScale) + lift,
+      lens: t * fade,
+      glowAt: _glowAt - rect.topLeft,
+      glowRadius: glowRadius.get(),
+      glowOpacity: glowOpacity.get(),
+      magnify: liquid ? lensMagnify : 0,
+    );
+  }
+
   final _nodes = <int, FocusNode>{};
   final _keys = <int, GlobalKey>{};
   final _iconKeys = <int, GlobalKey>{};
@@ -1039,16 +1065,33 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
           solid: solid,
           disabled: widget.disabled,
         ),
-        child: tab
-            // A tab list holds only its tabs (no scroll or focus nodes between them).
-            ? Semantics(
-                container: true,
-                role: ui.SemanticsRole.tabBar,
-                label: widget.label,
-                explicitChildNodes: true,
-                child: row,
-              )
-            : row,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            tab
+                // A tab list holds only its tabs (no scroll or focus nodes between them).
+                ? Semantics(
+                    container: true,
+                    role: ui.SemanticsRole.tabBar,
+                    label: widget.label,
+                    explicitChildNodes: true,
+                    child: row,
+                  )
+                : row,
+            // Pressed or dragged, the pill is real glass over the labels it slides across.
+            if (!solid)
+              Positioned.fill(
+                child: ExcludeSemantics(
+                  child: IgnorePointer(
+                    child: ListenableBuilder(
+                      listenable: _motion,
+                      builder: (context, _) => _lensGlass(),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
     // A track that folds into a menu never scrolls: its row fits it. Until its options' widths
@@ -1473,17 +1516,23 @@ class _InkOverlay extends SingleChildRenderObjectWidget {
     required this.color,
     required this.lensColor,
     required this.lens,
+    required this.magnify,
     required this.repaint,
     required super.child,
   });
   final _InkClip ink;
   final Color color, lensColor;
   final double Function() lens;
+
+  /// Whether the copy magnifies itself: only for liquid glass the lens can't bend (Skia, refraction
+  /// off). Where [GlassLens] magnifies for real the options are never enlarged twice, and
+  /// transparent glass doesn't magnify at all.
+  final bool magnify;
   final Listenable repaint;
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
-      _RenderInkOverlay(ink, color, lensColor, lens, repaint);
+      _RenderInkOverlay(ink, color, lensColor, lens, magnify, repaint);
 
   @override
   void updateRenderObject(
@@ -1495,6 +1544,7 @@ class _InkOverlay extends SingleChildRenderObjectWidget {
       ..color = color
       ..lensColor = lensColor
       ..lens = lens
+      ..magnify = magnify
       ..repaint = repaint;
   }
 }
@@ -1505,10 +1555,18 @@ class _RenderInkOverlay extends RenderProxyBox {
     this._color,
     this._lensColor,
     this.lens,
+    this._magnify,
     this._repaint,
   );
   _InkClip ink;
   double Function() lens;
+
+  bool _magnify;
+  set magnify(bool value) {
+    if (value == _magnify) return;
+    _magnify = value;
+    markNeedsPaint();
+  }
 
   /// Boxes drawn over the ink in their own paint ([_InkHole]).
   final holes = <_RenderInkHole>{};
@@ -1559,9 +1617,10 @@ class _RenderInkOverlay extends RenderProxyBox {
     final bounds = Offset.zero & size;
     final drop = ink.drop();
     final amount = lens().clamp(0.0, 1.0);
-    final zoom = 1 + lensMagnify * amount;
+    final zoom = _magnify ? 1 + lensMagnify * amount : 1.0;
     // The plain content, cut out where the drop magnifies it.
     final crosses =
+        zoom > 1 &&
         drop != null &&
         amount > 0.01 &&
         drop.left < size.width &&
@@ -1667,9 +1726,9 @@ class _RenderInkHole extends RenderProxyBox {
   }
 }
 
-/// The pill: [fill] at rest (the primary, or the quiet 7 % ink on a tab bar); pressed or dragged it
-/// becomes a glass lens (fill → glass, [LensPaint]), swells and shows the touch glow, like a pressed
-/// GlassContainer bubble. Solid styles keep the fill.
+/// The pill under the labels: [fill] at rest (the primary, or the quiet 7 % ink on a tab bar),
+/// fading out while pressed or dragged as the glass over the labels fades in ([GlassLens], laid by
+/// the track), with the lens's shadow. Solid styles keep the fill.
 class _PillPainter extends CustomPainter {
   _PillPainter({
     required this.state,
@@ -1690,9 +1749,7 @@ class _PillPainter extends CustomPainter {
     if (!state._placed || state._boxes.isEmpty || state._selected < 0) return;
     final rect = state._pill;
     if (rect.width <= 0 || rect.height <= 0) return;
-    final base =
-        state._boxes.first.height / 2 * radiusScale * state.press.get();
-    final radius = math.min(base, math.min(rect.width, rect.height) / 2);
+    final radius = state._pillRadius(radiusScale);
     final shape = superellipsePath(rect, [radius, radius, radius, radius]);
     final lens = solid ? 0.0 : state.lens.get().clamp(0.0, 1.0);
     // A minimizing host fades the pill out as the track folds to the selected icon.
@@ -1712,15 +1769,6 @@ class _PillPainter extends CustomPainter {
         Paint()..color = fill.withValues(alpha: fill.a * (1 - lens)),
       );
     }
-    lensPaint.paint(
-      canvas,
-      rect,
-      radius,
-      lens: lens,
-      glowAt: state._glowAt,
-      glowRadius: state.glowRadius.get(),
-      glowOpacity: state.glowOpacity.get(),
-    );
     if (alpha < 1) canvas.restore();
   }
 
@@ -2053,6 +2101,8 @@ class _SegmentState<T> extends State<_Segment<T>> {
       color: widget.inkColor,
       lensColor: widget.lensInkColor,
       lens: widget.lens,
+      // Only liquid lenses magnify; the glass does it where it can, this copy elsewhere.
+      magnify: GlassLens.liquidOf(context) && !GlassLens.magnifiesOf(context),
       repaint: widget.motion,
       child: Padding(padding: padding, child: content),
     );

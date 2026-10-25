@@ -35,6 +35,7 @@ void main() {
           shape.radius, ...List.filled(7, 0.0),
           ...List.filled(8, 0.0), // blends
           1, 0, 0, -1, // light, edge: white minus edge mask
+          0, // magnify: none
         ];
         for (var i = 0; i < uniforms.length; i++) {
           shader.setFloat(i, uniforms[i]);
