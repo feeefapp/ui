@@ -138,6 +138,7 @@ function Overview() {
       </Section>
 
       <Section title="Guidelines">
+        <p>In Flutter, ToolbarGroup keeps one reflective rim in either orientation, including wide vertical rails with text controls. A control label does not add the exterior hairline used by larger panels.</p>
         <DoDont
           doItems={[
             'Group controls by what they act on: navigation, view, document actions.',

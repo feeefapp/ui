@@ -143,6 +143,48 @@ void main() {
     },
   );
 
+  testWidgets(
+    'wide vertical toolbar keeps one rim before and after its width changes',
+    (tester) async {
+      late StateSetter update;
+      var width = 90.0;
+      await tester.pumpWidget(
+        host(
+          GlassContainer(
+            child: StatefulBuilder(
+              builder: (context, set) {
+                update = set;
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: 40,
+                  children: [
+                    const GlassGroup(child: SizedBox(width: 160, height: 180)),
+                    ToolbarGroup(
+                      label: 'Zoom',
+                      axis: Axis.vertical,
+                      children: [SizedBox(width: width, height: 180)],
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      // The panel keeps its two exterior bands. The wide control rail has only its backdrop.
+      expect(tester.layers.whereType<BackdropFilterLayer>(), hasLength(4));
+      update(() => width = 120);
+      for (var i = 0; i < 30; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      expect(tester.layers.whereType<BackdropFilterLayer>(), hasLength(4));
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+    },
+  );
+
   testWidgets('a bubble that moves springs its glass and carries its content', (
     tester,
   ) async {

@@ -145,3 +145,7 @@ Do not stack a dark exterior hairline or an inset border on toolbar bubbles. Lar
 panels retain their hairline and solid/high-contrast surfaces retain their outline.
 The native refraction shader and painted clip must share the clamped continuous-corner
 distance, including its fade to circular capsules, so the material has one silhouette.
+
+Flutter ToolbarGroup opts into a single reflective rim at every width and orientation.
+A wide label in a vertical rail must not add the exterior panel hairline; the shared
+GlassGroup singleRim flag follows that member through merges and motion.

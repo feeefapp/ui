@@ -24,6 +24,7 @@ class GlassGroup extends StatefulWidget {
     this.glassUnion,
     this.glassMotion = GlassMotion.spring,
     this.glassHidden = false,
+    this.singleRim = false,
     this.radius,
     this.padding = EdgeInsets.zero,
     this.as = SurfaceTag.div,
@@ -51,6 +52,10 @@ class GlassGroup extends StatefulWidget {
 
   /// Leaves the container's glass while keeping its place (`data-glass-hidden`).
   final bool glassHidden;
+
+  /// One reflective rim even when a control label makes the group wide.
+  /// ToolbarGroup supplies this automatically.
+  final bool singleRim;
 
   /// Corner radius; defaults to the theme's glass radius (32, 27 on screens up to 720px wide).
   final double? radius;
@@ -83,7 +88,12 @@ class _GlassGroupState extends State<GlassGroup> {
       motion: widget.glassMotion,
       hidden: widget.glassHidden,
       radius: radius,
-      standalone: (child) => GlassSurface(radius: radius, child: child),
+      singleRim: widget.singleRim,
+      standalone: (child) => GlassSurface(
+        radius: radius,
+        singleRim: widget.singleRim,
+        child: child,
+      ),
       // The CSS border stays in the layout even when the container paints the glass.
       child: Padding(
         padding: const EdgeInsets.all(1),
@@ -111,10 +121,18 @@ enum SurfaceTag { div, header, aside, nav, section, footer }
 /// control-sized or panel-sized glass from its shorter side, like the web scene. [GlassGroup]
 /// uses it for a lone bubble; use it for any floating glass surface (a composer card, a rail).
 class GlassSurface extends StatefulWidget {
-  const GlassSurface({super.key, required this.radius, required this.child});
+  const GlassSurface({
+    super.key,
+    required this.radius,
+    this.singleRim = false,
+    required this.child,
+  });
 
   /// Corner radius (the kit's continuous corners).
   final double radius;
+
+  /// A toolbar uses one reflective rim regardless of its label width.
+  final bool singleRim;
   final Widget child;
 
   @override
@@ -153,6 +171,7 @@ class _GlassSurfaceState extends State<GlassSurface> {
         shadow: glassShadowColor(theme.brightness),
         radius: radius,
         rim: translucent,
+        singleRim: widget.singleRim,
       ),
       child: child,
     );
@@ -208,14 +227,16 @@ class _GlassGroupPainter extends CustomPainter {
     required this.shadow,
     required this.radius,
     required this.rim,
+    required this.singleRim,
   });
   final Color fill, line, edgeLight, edgeLow, shadow;
   final double radius;
-  final bool rim;
+  final bool rim, singleRim;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final compactGlass = rim && glassSize(size.shortestSide) == GlassSize.small;
+    final compactGlass =
+        rim && (singleRim || glassSize(size.shortestSide) == GlassSize.small);
     paintFloatingSurface(
       canvas,
       size,
@@ -237,6 +258,7 @@ class _GlassGroupPainter extends CustomPainter {
       old.line != line ||
       old.radius != radius ||
       old.rim != rim ||
+      old.singleRim != singleRim ||
       old.edgeLight != edgeLight ||
       old.shadow != shadow;
 }

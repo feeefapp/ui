@@ -16,6 +16,7 @@ class GlassMemberBox extends StatefulWidget {
     required this.radius,
     required this.standalone,
     this.hidden = false,
+    this.singleRim = false,
     required this.child,
   });
 
@@ -33,6 +34,9 @@ class GlassMemberBox extends StatefulWidget {
   /// kit's `data-glass-hidden`, for a bar title that fades in and out. A bubble inside a closing
   /// [Presence] leaves the glass the same way, so its glass flows away while its content fades.
   final bool hidden;
+
+  /// Keeps control surfaces to one rim independently of their label width.
+  final bool singleRim;
 
   /// Paints the bubble on its own (no container).
   final Widget Function(Widget child) standalone;
@@ -74,7 +78,8 @@ class _GlassMemberBoxState extends State<GlassMemberBox> {
       force:
           old.union != widget.union ||
           old.motion != widget.motion ||
-          old.hidden != widget.hidden,
+          old.hidden != widget.hidden ||
+          old.singleRim != widget.singleRim,
     );
   }
 
@@ -98,6 +103,7 @@ class _GlassMemberBoxState extends State<GlassMemberBox> {
         id,
         _box,
         radius: () => widget.radius,
+        singleRim: widget.singleRim,
         union: widget.union,
         motion: widget.motion,
       );

@@ -113,6 +113,7 @@ class ToolbarGroup extends StatelessWidget {
       explicitChildNodes: true,
       label: label,
       child: GlassGroup(
+        singleRim: true,
         glassId: glassId,
         glassUnion: glassUnion,
         glassHidden: glassHidden,
