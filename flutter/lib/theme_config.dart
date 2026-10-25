@@ -33,6 +33,10 @@ class ThemeConfig {
     this.glassTint = 0.5,
     this.glassBlur = false,
     this.glassRefraction = true,
+    this.glassRefractionStrength = 1,
+    this.glassHighlight = 1,
+    this.glassHighlightWidth = 1,
+    this.glassBarBoost = true,
     this.motion = Motion.full,
     this.metrics = const Metrics(),
   });
@@ -69,6 +73,25 @@ class ThemeConfig {
   /// (a fragment shader as backdrop filter); Skia and Flutter web show the same glass unbent.
   final bool glassRefraction;
 
+  /// How far the glass bends what is behind it, as a share of the measured lens: `1` (default)
+  /// is iOS 27's gentle lens, `0` none, above `1` a stronger lens that can fold the backdrop at the
+  /// rim. Clamped to 0–10. Needs [glassRefraction] (and Impeller).
+  final double glassRefractionStrength;
+
+  /// The light along the glass's rim, as a share of the measured rim: `1` (default) as iOS, `0`
+  /// none, above `1` brighter. Clamped to 0–10.
+  final double glassHighlight;
+
+  /// The width of that rim light, as a share of the measured width (about 1 px): `1` (default).
+  /// Clamped to 0–10.
+  final double glassHighlightWidth;
+
+  /// Glass bars over scrolling content (a scroll area's app bar and dock, a tab bar) keep their
+  /// labels legible with at least the bar tint and the measured blur, whatever [glassTint] and
+  /// [glassBlur] say, as iOS bars do (`GlassBar`). Default true; false lets bars follow the theme
+  /// like any other glass.
+  final bool glassBarBoost;
+
   /// Motion: `full` (default) animates; `reduced` behaves as if the platform asked to disable
   /// animations (springs jump, transitions become instant or short fades, glass light stays
   /// still); `none` also stops every ambient loop (pixel textures, shaders, loaders). The
@@ -86,6 +109,14 @@ class ThemeConfig {
   /// [glassTint] clamped to 0–1; not finite → 0.5 (`glassTintDefault`).
   double get tint => glassTint.isFinite ? glassTint.clamp(0.0, 1.0) : 0.5;
 
+  static double _share(double value) =>
+      value.isFinite ? value.clamp(0.0, 10.0) : 1;
+
+  /// [glassRefractionStrength], [glassHighlight] and [glassHighlightWidth] clamped to 0–10.
+  double get refractionStrength => _share(glassRefractionStrength);
+  double get highlight => _share(glassHighlight);
+  double get highlightWidth => _share(glassHighlightWidth);
+
   /// Same look with the given options replaced. Callers that only change density (or one glass
   /// switch) use this so a new [ThemeConfig] field cannot be dropped by a hand-written clone.
   ThemeConfig copyWith({
@@ -97,6 +128,10 @@ class ThemeConfig {
     double? glassTint,
     bool? glassBlur,
     bool? glassRefraction,
+    double? glassRefractionStrength,
+    double? glassHighlight,
+    double? glassHighlightWidth,
+    bool? glassBarBoost,
     Motion? motion,
     Metrics? metrics,
   }) => ThemeConfig(
@@ -109,6 +144,11 @@ class ThemeConfig {
     glassTint: glassTint ?? this.glassTint,
     glassBlur: glassBlur ?? this.glassBlur,
     glassRefraction: glassRefraction ?? this.glassRefraction,
+    glassRefractionStrength:
+        glassRefractionStrength ?? this.glassRefractionStrength,
+    glassHighlight: glassHighlight ?? this.glassHighlight,
+    glassHighlightWidth: glassHighlightWidth ?? this.glassHighlightWidth,
+    glassBarBoost: glassBarBoost ?? this.glassBarBoost,
     motion: motion ?? this.motion,
     metrics: metrics ?? this.metrics,
   );

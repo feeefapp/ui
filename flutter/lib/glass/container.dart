@@ -354,6 +354,9 @@ class _GlassContainerState extends State<GlassContainer> {
       tint: theme.colors.glassTint,
       blur: theme.config.glassBlur,
       refraction: theme.config.glassRefraction,
+      refractionStrength: theme.config.refractionStrength,
+      highlight: theme.config.highlight,
+      highlightWidth: theme.config.highlightWidth,
       highContrast: glassHighContrastOf(context),
       brightness: theme.brightness,
     );
@@ -391,6 +394,9 @@ class _GlassMaterial {
     required this.tint,
     required this.blur,
     required this.refraction,
+    required this.refractionStrength,
+    required this.highlight,
+    required this.highlightWidth,
     required this.highContrast,
     required this.brightness,
   });
@@ -398,6 +404,9 @@ class _GlassMaterial {
   final GlassStyle style;
   final double tint;
   final bool blur, refraction, highContrast;
+
+  /// ThemeConfig's lens strength, rim light strength and rim light width (shares of the measured).
+  final double refractionStrength, highlight, highlightWidth;
   final Brightness brightness;
 
   /// Every glass but solid reads the backdrop (saturation and lift, then blur and bend if on).
@@ -439,16 +448,25 @@ class _GlassMaterial {
   /// The edge terms (veil thinning, dark clear light) for that cluster.
   ({double k1, double k3}) edgeFor(double side) {
     final s = fillFor(side);
-    return glassEdgeTerms(
+    final terms = glassEdgeTerms(
       tint,
       dark: dark,
       material: materialFor(side),
       surface: 0.2126 * s.r + 0.7152 * s.g + 0.0722 * s.b,
     );
+    return (k1: terms.k1 * highlight, k3: terms.k3 * highlight);
   }
 
-  /// The rim at this tint and brightness.
-  GlassRim get rimLight => glassRim(tint, dark: dark);
+  /// The rim at this tint and brightness, at the theme's highlight strength and width.
+  GlassRim get rimLight {
+    final rim = glassRim(tint, dark: dark);
+    return (
+      w0: rim.w0 * highlight,
+      w1: rim.w1 * highlight,
+      p: rim.p,
+      width: rim.width * highlightWidth,
+    );
+  }
 
   /// The hairline's strengths at this tint and brightness.
   ({double ring, double sliver}) get hairline =>
@@ -503,6 +521,7 @@ class _GlassLayers extends StatelessWidget {
                         spacing: scene.spacing,
                         backdropKey: scene.backdropKey,
                         blur: material.blurFor(_materialSide(scene, path)),
+                        strength: material.refractionStrength,
                         colour: glassBackdropMatrix(
                           material.materialFor(_materialSide(scene, path)),
                         ),
@@ -765,6 +784,8 @@ class _GlassPainter extends CustomPainter {
       old.material.tint != material.tint ||
       old.material.highContrast != material.highContrast ||
       old.material.rim != material.rim ||
+      old.material.highlight != material.highlight ||
+      old.material.highlightWidth != material.highlightWidth ||
       old.material.colors != material.colors ||
       old.dpr != dpr;
 }
@@ -1390,7 +1411,10 @@ class GlassBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final config = theme.config;
-    if (config.tint >= glassBarTint && config.glassBlur) return child;
+    if (!config.glassBarBoost ||
+        (config.tint >= glassBarTint && config.glassBlur)) {
+      return child;
+    }
     return ThemeProvider(
       config: config.copyWith(
         glassTint: math.max(config.tint, glassBarTint),

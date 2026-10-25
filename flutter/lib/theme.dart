@@ -57,6 +57,10 @@ class ThemeData {
       other.config.tint == config.tint &&
       other.config.glassBlur == config.glassBlur &&
       other.config.glassRefraction == config.glassRefraction &&
+      other.config.refractionStrength == config.refractionStrength &&
+      other.config.highlight == config.highlight &&
+      other.config.highlightWidth == config.highlightWidth &&
+      other.config.glassBarBoost == config.glassBarBoost &&
       other.config.motion == config.motion &&
       other.config.metrics == config.metrics;
 
@@ -72,6 +76,10 @@ class ThemeData {
     config.tint,
     config.glassBlur,
     config.glassRefraction,
+    config.refractionStrength,
+    config.highlight,
+    config.highlightWidth,
+    config.glassBarBoost,
     config.motion,
     config.metrics,
   );

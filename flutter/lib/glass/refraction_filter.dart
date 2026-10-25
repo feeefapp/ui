@@ -31,8 +31,12 @@ class GlassRefraction extends StatefulWidget {
     required this.colour,
     this.edge = (k1: 0, k3: 0),
     this.light = const Offset(-0.7071067811865476, -0.7071067811865476),
+    this.strength = 1,
     this.backdropKey,
   });
+
+  /// Lens strength, a share of the measured shift (ThemeConfig `glassRefractionStrength`).
+  final double strength;
 
   /// Shared by every cluster of one container: the engine reads the backdrop once for all of
   /// them (they never overlap, and nothing paints between them).
@@ -134,6 +138,7 @@ class _GlassRefractionState extends State<GlassRefraction> {
       colour: widget.colour,
       edge: widget.edge,
       light: widget.light,
+      strength: widget.strength,
       dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
       backdropKey: widget.backdropKey,
     );
@@ -149,12 +154,13 @@ class _RefractionBackdrop extends LeafRenderObjectWidget {
     required this.colour,
     required this.edge,
     required this.light,
+    required this.strength,
     required this.dpr,
     required this.backdropKey,
   });
   final ui.FragmentProgram program;
   final GlassPath path;
-  final double spacing, blur, dpr;
+  final double spacing, blur, strength, dpr;
   final List<double> colour;
   final ({double k1, double k3}) edge;
   final Offset light;
@@ -262,7 +268,7 @@ class _RenderRefraction extends RenderBox {
     set(config.dpr);
     set(bezel);
     // The gentle lens (iOS 27): no mirrored band at the rim.
-    set(gentleRefractionShift(side));
+    set(gentleRefractionShift(side) * config.strength);
     set(shapes.length.toDouble());
     for (var i = 0; i < GlassRefraction.maxShapes; i++) {
       final s = i < shapes.length ? shapes[i] : null;
