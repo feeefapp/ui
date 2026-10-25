@@ -27,17 +27,7 @@ void main() {
                 Transform.translate(offset: Offset(value, 0), child: child),
             child: RepaintBoundary(
               child: GlassScope(
-                child: ToolbarGroup(
-                  label: 'Navigation',
-                  children: [
-                    IconButton(
-                      appearance: ButtonAppearance.toolbar,
-                      ariaLabel: 'Back',
-                      onClick: () {},
-                      icon: const LucideChevronLeft(),
-                    ),
-                  ],
-                ),
+                child: GlassGroup(child: SizedBox(width: 200, height: 120)),
               ),
             ),
           ),
@@ -55,4 +45,34 @@ void main() {
     },
     skip: !GlassRefraction.supported,
   );
+
+  testWidgets('control-sized glass keeps its painted rim and never refracts', (
+    tester,
+  ) async {
+    await tester.runAsync(() async {
+      GlassRefraction.debugProgram = await ui.FragmentProgram.fromAsset(
+        'shaders/glass_refraction.frag',
+      );
+    });
+    await tester.pumpWidget(
+      host(
+        GlassScope(
+          child: ToolbarGroup(
+            label: 'Navigation',
+            children: [
+              IconButton(
+                appearance: ButtonAppearance.toolbar,
+                ariaLabel: 'Back',
+                onClick: () {},
+                icon: const LucideChevronLeft(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final root = tester.element(find.byType(GlassScope));
+    expect(GlassRefraction.debugOriginsOf(root), isEmpty);
+  }, skip: !GlassRefraction.supported);
 }
