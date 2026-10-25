@@ -11,6 +11,8 @@ export type MinimizeBox = { x: number; y: number; width: number; height: number 
 export type MinimizeBoxes = {
   chrome: MinimizeBox
   bar: MinimizeBox
+  /** The tabs' resting width: held while minimizing, the bar clips them. */
+  track: number
   /** The selected tab. */
   option: MinimizeBox
   /** How far the selected tab's icon is from the tab's centre (it moves there as the label goes). */
@@ -22,10 +24,10 @@ export type MinimizeBoxes = {
 }
 
 export type MinimizeFrame = {
-  bar: { x: number; y: number; width: number }
+  bar: { x: number; y: number; width: number; height: number }
   accessory: { x: number; y: number; width: number } | null
   /** Moves the tabs so the selected one ends centred in the round bubble. */
-  trackShift: number
+  trackShift: { x: number; y: number }
   /** Moves the selected icon to the centre of its tab. */
   icon: { dx: number; dy: number }
 }
@@ -34,6 +36,9 @@ export type MinimizeFrame = {
 export const MINIMIZE_DISTANCE = 56
 /** Scrolling back up restores it over a shorter distance, so the bar returns readily. */
 export const RESTORE_DISTANCE = 40
+/** The minimized bubble's diameter (iOS 27: a 40pt tab in a 48pt glass circle), centred on the
+ * line the full bar sat on. */
+export const MINIMIZED_SIZE = 48
 /** Within this distance of the top the bar can't be more minimized than the scroll position allows. */
 export const MINIMIZE_TOP = 24
 
@@ -57,10 +62,16 @@ export function minimizeProgress(progress: number, delta: number, top: number) {
 /** Where the pieces sit at progress `t`. */
 export function minimizeGeometry(at: MinimizeBoxes, t: number): MinimizeFrame {
   const p = clamp01(t)
-  const round = at.bar.height
+  const round = Math.min(at.bar.height, MINIMIZED_SIZE)
   const barEnd = at.rtl ? at.chrome.width - round : 0
   const shrink = early(p)
-  const bar = { x: lerp(at.bar.x, barEnd, shrink), y: at.bar.y, width: lerp(at.bar.width, round, shrink) }
+  const height = lerp(at.bar.height, round, shrink)
+  const bar = {
+    x: lerp(at.bar.x, barEnd, shrink),
+    y: at.bar.y + (at.bar.height - height) / 2,
+    width: lerp(at.bar.width, round, shrink),
+    height,
+  }
   let accessory: MinimizeFrame['accessory'] = null
   if (at.accessory) {
     const a = at.accessory
@@ -81,10 +92,11 @@ export function minimizeGeometry(at: MinimizeBoxes, t: number): MinimizeFrame {
     }
   }
   const optionCentre = at.option.x - at.bar.x + at.option.width / 2
+  const optionMiddle = at.option.y - at.bar.y + at.option.height / 2
   return {
     bar,
     accessory,
-    trackShift: (round / 2 - optionCentre) * shrink,
+    trackShift: { x: (round / 2 - optionCentre) * shrink, y: (round / 2 - optionMiddle) * shrink },
     icon: { dx: at.icon.dx * p, dy: at.icon.dy * p },
   }
 }

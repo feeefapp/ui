@@ -63,6 +63,11 @@ pill gives way to the tinted icon. Minimized, the hidden tabs take no pointer. *
 .lab-tab-chrome[data-minimizing] .lab-tab-bar {
   overflow: hidden;
 }
+/* The tabs hold the width the script gives them (their resting width): the bar clips them. */
+.lab-tab-chrome[data-minimizing] .lab-tab-bar > .lab-tab-track {
+  flex: none;
+  max-width: none;
+}
 .lab-tab-chrome[data-minimizing] .lab-segmented-option:not([data-selected]) {
   opacity: calc(1 - var(--lab-tab-minimize) * 2.2);
 }
@@ -83,37 +88,60 @@ pill gives way to the tinted icon. Minimized, the hidden tabs take no pointer. *
   pointer-events: none;
 }
 
+/* iOS 27's tab bar (FIGMA-27.md): a 62pt capsule as wide as the chrome allows (90pt a tab, like
+Figma's bars), tabs sharing its width equally and overlapping by 8pt. */
 html[data-lab-theme] .lab-tab-bar.lab-glass-group {
   display: flex;
   flex: none;
+  width: min(100%, calc(var(--lab-tab-count, 4) * 90px + 16px));
   max-width: 100%;
   padding: 0;
-  border-radius: calc(30px * var(--lab-corner-scale, 1));
+  border-radius: calc(31px * var(--lab-corner-scale, 1));
+}
+.lab-tab-bar > .lab-tab-track {
+  flex: 1 1 auto;
 }
 
-/* The bar's tabs: a selection track (segmented.css) with tab semantics, stacked options and a tinted
-pill. The track owns the 4px inset (so a scrolling bar fades at the glass edge); tabs sit 2px apart,
-52px tall, 68–120px wide, 11px labels. Minimized it folds to the selected tab (data-collapsed). */
+/* The bar's tabs: a selection track (segmented.css) with tab semantics, stacked options, equal
+widths and the quiet pill. 54pt tabs in a 4pt inset; glyph in a 28pt line over a Semibold 10
+label (12pt line), 6pt above and 7pt below, 8pt at the sides. Minimized it becomes one 40pt tab
+in a 48pt circle (tab-view-minimize.ts). */
 .lab-tab-track {
   --lab-segmented-inset: 4px;
-  --lab-segmented-gap: 2px;
-  --lab-segmented-option: 52px;
+  --lab-segmented-gap: 0px;
+  --lab-segmented-option: 54px;
   --lab-segmented-size: calc(var(--lab-segmented-option) + 2 * var(--lab-segmented-inset));
 }
 html[data-lab-theme] .lab-tab-track .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
-  flex: none;
-  min-width: 68px;
-  max-width: 120px;
-  padding: 0 10px;
-  font: 600 11px/13px var(--lab-font);
+  min-width: 72px;
+  padding: 6px 8px 7px;
+  font: 600 10px/12px var(--lab-font);
 }
+html[data-lab-theme] .lab-tab-track .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] + .lab-segmented-option {
+  margin-inline-start: -8px;
+}
+.lab-tab-track[data-layout='stacked'] .lab-segmented-content {
+  gap: 0.5px;
+}
+.lab-tab-track[data-layout='stacked'] .lab-segmented-icon {
+  height: 28px;
+  align-items: center;
+}
+.lab-tab-track[data-layout='stacked'] .lab-segmented-icon > svg {
+  width: 22px;
+  height: 22px;
+}
+
 /* Wide: icon and label in one row, 44px tall, 14px labels. */
 @container lab-tab-view (min-width: 600px) {
+  html[data-lab-theme] .lab-tab-bar.lab-glass-group {
+    width: auto;
+  }
   .lab-tab-track {
     --lab-segmented-option: 44px;
   }
   html[data-lab-theme] .lab-tab-track .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
-    max-width: 180px;
+    min-width: 0;
     padding: 0 16px;
     font-size: 14px;
     line-height: 17px;

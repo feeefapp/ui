@@ -119,6 +119,7 @@ export function TabView({
     return {
       chrome: { x: 0, y: 0, width: c.width, height: c.height },
       bar: local(bar),
+      track: bar.querySelector('.lab-segmented')?.getBoundingClientRect().width ?? local(bar).width,
       option: o,
       icon: { dx: o.x + o.width / 2 - (i.x + i.width / 2), dy: o.y + o.height / 2 - (i.y + i.height / 2) },
       accessory: accessoryEl ? local(accessoryEl) : null,
@@ -132,14 +133,19 @@ export function TabView({
     const bar = el.querySelector<HTMLElement>('.lab-tab-bar')
     const accessoryEl = el.querySelector<HTMLElement>('.lab-tab-accessory')
     const track = el.querySelector<HTMLElement>('.lab-segmented-track')
+    const scroller = el.querySelector<HTMLElement>('.lab-segmented')
     if (!bar) return
     const pieces = [bar, accessoryEl].filter(Boolean) as HTMLElement[]
     if (p <= 0) {
       el.style.height = ''
       el.removeAttribute('data-minimizing')
       for (const name of ['--lab-tab-minimize', '--lab-tab-icon-x', '--lab-tab-icon-y']) el.style.removeProperty(name)
-      for (const piece of pieces) for (const key of ['position', 'left', 'top', 'width', 'margin'] as const) piece.style[key] = ''
-      if (track) track.style.transform = ''
+      for (const piece of pieces) for (const key of ['position', 'left', 'top', 'width', 'height', 'margin'] as const) piece.style[key] = ''
+      if (track) {
+        track.style.transform = ''
+        track.style.width = ''
+      }
+      if (scroller) scroller.style.width = ''
       boxes.current = null
       glass.current?.requestMeasure()
       return
@@ -152,16 +158,20 @@ export function TabView({
     el.style.setProperty('--lab-tab-minimize', String(p))
     el.style.setProperty('--lab-tab-icon-x', `${g.icon.dx}px`)
     el.style.setProperty('--lab-tab-icon-y', `${g.icon.dy}px`)
-    const place = (piece: HTMLElement, box: { x: number; y: number; width: number }) => {
+    const place = (piece: HTMLElement, box: { x: number; y: number; width: number; height?: number }) => {
       piece.style.position = 'absolute'
       piece.style.margin = '0'
       piece.style.left = `${box.x}px`
       piece.style.top = `${box.y}px`
       piece.style.width = `${box.width}px`
+      if (box.height !== undefined) piece.style.height = `${box.height}px`
     }
     place(bar, g.bar)
     if (accessoryEl && g.accessory) place(accessoryEl, g.accessory)
-    if (track) track.style.transform = `translateX(${g.trackShift}px)`
+    // The tabs keep their resting widths (equal-width tabs would otherwise shrink with the bar):
+    // the bar clips them as it narrows.
+    if (scroller) scroller.style.width = `${at.track}px`
+    if (track) track.style.transform = `translate(${g.trackShift.x}px, ${g.trackShift.y}px)`
     glass.current?.requestMeasure()
   }
   React.useEffect(() => progress.subscribe(paint), [])
@@ -288,6 +298,7 @@ export function TabView({
           )}
           <GlassGroup
             glassId="tabs"
+            style={{ '--lab-tab-count': tabs.length } as React.CSSProperties}
             glassMotion="follow"
             className="lab-tab-bar"
             data-lab-tab-piece=""
@@ -296,7 +307,8 @@ export function TabView({
             <SelectionTrack
               semantics="tab"
               layout="stacked"
-              pill="tinted"
+              pill="quiet"
+              equalWidth
               className="lab-tab-track"
               label={label}
               value={value}
