@@ -537,13 +537,9 @@ class _GlassLayers extends StatelessWidget {
                       ),
               ),
             ),
-          // Large panels keep the exterior hairline. Compact floating controls already have
-          // a rim on this silhouette: a dark ring outside it reads as a second capsule.
-          for (final path in scene.paths.where(
-            (path) =>
-                !scene.singleRim(path) &&
-                glassSize(_smallestSide(path)) == GlassSize.large,
-          ))
+          // The dark hairline iOS 27 draws outside every glass shape, small or large (the web
+          // kit's GLASS_HAIRLINE): it is what defines the edge over light content.
+          for (final path in scene.paths)
             for (final sliver in const [false, true])
               Positioned.fill(
                 child: ClipPath(

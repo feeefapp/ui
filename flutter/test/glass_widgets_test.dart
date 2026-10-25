@@ -112,15 +112,15 @@ void main() {
       for (final layer in tester.layers.whereType<BackdropFilterLayer>())
         layer.backdropKey,
     ];
-    // Compact controls paint one rim, without separate exterior hairline bands.
-    // Three apart bubbles per container, sharing one backdrop read per container.
-    expect(keys, hasLength(6));
+    // Three apart bubbles per container, each with its backdrop and its two hairline bands
+    // (ring and slivers), all sharing one backdrop read per container.
+    expect(keys, hasLength(18));
     expect(keys, everyElement(isNotNull));
     expect(keys.toSet(), hasLength(2));
   });
 
   testWidgets(
-    'large glass keeps its hairline while compact toolbar glass has one rim',
+    'large and compact glass both draw the exterior hairline',
     (tester) async {
       await tester.pumpWidget(
         host(
@@ -137,8 +137,8 @@ void main() {
         ),
       );
       await tester.pump();
-      // One backdrop for each shape, plus two exterior bands only on the large panel.
-      expect(tester.layers.whereType<BackdropFilterLayer>(), hasLength(4));
+      // One backdrop for each shape, plus its two exterior bands (ring and slivers).
+      expect(tester.layers.whereType<BackdropFilterLayer>(), hasLength(6));
       expect(tester.takeException(), isNull);
     },
   );
@@ -172,13 +172,13 @@ void main() {
         ),
       );
       await tester.pump();
-      // The panel keeps its two exterior bands. The wide control rail has only its backdrop.
-      expect(tester.layers.whereType<BackdropFilterLayer>(), hasLength(4));
+      // Each shape: its backdrop and the two exterior hairline bands, nothing more.
+      expect(tester.layers.whereType<BackdropFilterLayer>(), hasLength(6));
       update(() => width = 120);
       for (var i = 0; i < 30; i++) {
         await tester.pump(const Duration(milliseconds: 50));
       }
-      expect(tester.layers.whereType<BackdropFilterLayer>(), hasLength(4));
+      expect(tester.layers.whereType<BackdropFilterLayer>(), hasLength(6));
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump(const Duration(seconds: 1));
