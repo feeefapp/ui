@@ -28,6 +28,7 @@ class ThemeData {
              config.palette,
              brightness,
              glassTint: config.tint,
+             primary: config.primary,
            ),
        sizes = SizeTokens.of(config);
 
@@ -49,6 +50,7 @@ class ThemeData {
       other.brightness == brightness &&
       other.colors.backdropTone == colors.backdropTone &&
       other.config.palette == config.palette &&
+      other.config.primary == config.primary &&
       other.config.density == config.density &&
       other.config.radius == config.radius &&
       other.config.glass == config.glass &&
@@ -63,6 +65,7 @@ class ThemeData {
     brightness,
     colors.backdropTone,
     config.palette,
+    config.primary,
     config.density,
     config.radius,
     config.glass,

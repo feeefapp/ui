@@ -166,6 +166,7 @@ class ColorTokens {
     Palette palette,
     Brightness brightness, {
     double glassTint = glassTintDefault,
+    Color? primary,
   }) {
     final tint = clampGlassTint(glassTint);
     final dark = brightness == Brightness.dark;
@@ -220,7 +221,7 @@ class ColorTokens {
       glassVeilLarge: shared.veilLarge,
       glassTint: tint,
     );
-    return switch ((palette, dark)) {
+    final base = switch ((palette, dark)) {
       (Palette.lab, false) => make(
         ground: 0xf3f6ef,
         pixelInk: 0x86e672,
@@ -282,6 +283,49 @@ class ColorTokens {
         warning: 0xc9b48a,
       ),
     };
+    return primary == null ? base : base._seeded(primary, palette, dark);
+  }
+
+  /// [primary] as the seed (theme-tokens.css `data-lab-primary`): every colour derives from it in
+  /// oklab, so any hue keeps the Lab's balance. `mono` keeps its greys; danger, success and
+  /// warning keep meaning what they mean.
+  ColorTokens _seeded(Color primary, Palette palette, bool dark) {
+    final seed = primary.withValues(alpha: 1);
+    final lifted = mixSrgb(seed, 0.7, white(1));
+    final shown = dark ? lifted : seed;
+    final lab = palette == Palette.lab;
+    Color tone(double share, int grey) => mixOklab(seed, share, hex(grey));
+    return ColorTokens._(
+      ground: !lab
+          ? ground
+          : tone(dark ? 0.12 : 0.05, dark ? 0x0d0d0d : 0xf5f5f3),
+      pixelInk: dark || !lab ? shown : mixOklab(seed, 0.82, white(1)),
+      surface: !lab
+          ? surface
+          : tone(dark ? 0.14 : 0.02, dark ? 0x1d1d1d : 0xfdfdfc),
+      surfaceSoft: !lab
+          ? surfaceSoft
+          : tone(dark ? 0.12 : 0.09, dark ? 0x161616 : 0xeeeeec),
+      line: !lab ? line : tone(dark ? 0.22 : 0.14, dark ? 0x383838 : 0xdcdcda),
+      ink: !lab ? ink : tone(dark ? 0.08 : 0.14, dark ? 0xf0f0f0 : 0x161616),
+      muted: !lab ? muted : tone(0.18, dark ? 0xb0b0b0 : 0x676767),
+      focus: dark ? lifted : mixOklab(seed, lab ? 0.55 : 0.7, black(1)),
+      primary: shown,
+      onPrimary: readableTextOn(shown),
+      accent: dark || !lab ? shown : mixOklab(seed, 0.82, white(1)),
+      success: success,
+      warning: warning,
+      danger: danger,
+      onDanger: onDanger,
+      glassEdgeLight: glassEdgeLight,
+      glassEdgeLow: glassEdgeLow,
+      glassShadowAlpha: _shadow,
+      glassGlow: glassGlow,
+      controlHighlight: controlHighlight,
+      glassVeil: _veil,
+      glassVeilLarge: _veilLarge,
+      glassTint: glassTint,
+    );
   }
 }
 

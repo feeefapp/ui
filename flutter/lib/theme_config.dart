@@ -2,6 +2,8 @@
 /// once and passes it to `FeeefTheme`; components never branch on it.
 library;
 
+import 'dart:ui' show Color;
+
 /// Color palette: `lab` (Feeef green) or `mono` (black and white).
 enum Palette { lab, mono }
 
@@ -24,6 +26,7 @@ Duration motionFade(Motion motion, Duration fade) =>
 class ThemeConfig {
   const ThemeConfig({
     this.palette = Palette.lab,
+    this.primary,
     this.density = Density.comfortable,
     this.radius = 1,
     this.glass = GlassStyle.liquid,
@@ -36,6 +39,11 @@ class ThemeConfig {
 
   /// `lab` (default): Feeef green. `mono`: black and white; color only where it means something.
   final Palette palette;
+
+  /// Primary colour (opaque). Primary actions, focus, brand and pixel tints follow it in light and
+  /// dark mode; with `lab` the neutral surfaces are tinted toward it too, with `mono` they stay
+  /// grey. Text on primary picks black or white for contrast. Null: the palette's own.
+  final Color? primary;
 
   /// `comfortable` (default), `compact` (denser desktop chrome) or `thin` (smaller still).
   final Density density;
@@ -82,6 +90,7 @@ class ThemeConfig {
   /// switch) use this so a new [ThemeConfig] field cannot be dropped by a hand-written clone.
   ThemeConfig copyWith({
     Palette? palette,
+    Object? primary = _keep,
     Density? density,
     double? radius,
     GlassStyle? glass,
@@ -92,6 +101,8 @@ class ThemeConfig {
     Metrics? metrics,
   }) => ThemeConfig(
     palette: palette ?? this.palette,
+    // Pass null to go back to the palette's own colour.
+    primary: identical(primary, _keep) ? this.primary : primary as Color?,
     density: density ?? this.density,
     radius: radius ?? this.radius,
     glass: glass ?? this.glass,
@@ -102,6 +113,8 @@ class ThemeConfig {
     metrics: metrics ?? this.metrics,
   );
 }
+
+const Object _keep = Object();
 
 /// Ready-made looks, the twin of the web kit's `PROFILES`. Each is a plain [ThemeConfig]; change
 /// anything with `copyWith`: `ThemeProfiles.balanced.copyWith(palette: Palette.mono)`. The kit still
