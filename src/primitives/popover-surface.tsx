@@ -1,27 +1,35 @@
 import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { cn } from '../utils'
-import { PixelTexture } from '../pixel-art'
+import { GlassContainer } from '../glass/container'
+import { useGlassMember } from '../glass/member'
 import './popover-surface.css'
 
 export type PopoverSurfaceProps = React.HTMLAttributes<HTMLDivElement> & {
   /** Decorate the actual Radix/content host without adding a positioning wrapper. */
   asChild?: boolean
-  /** Seed for the decorative pixel grain, so neighbouring surfaces don't look identical. */
-  seed?: string
+}
+
+/** The popover's one glass shape: it fills the surface, behind its content. */
+function PopoverGlassShape() {
+  const element = React.useRef<HTMLDivElement | null>(null)
+  const member = useGlassMember(element)
+  return <div ref={element} className="lab-popover-glass__shape" data-glass-member={member ? '' : undefined} />
 }
 
 /**
- * The shared opaque material for popovers (pickers, editors, settings panels): surface, border,
- * group corners and a faint animated pixel grain. Paint only; the owner (usually Radix) keeps
- * positioning and interaction. Menus (a trigger that opens a list of choices) use `MenuSurface`.
+ * The shared material for popovers (pickers, editors, settings panels, the model ladder): one glass
+ * shape in the thick menu material (GlassContainer `material="menu"`: hairline, rim light and lens,
+ * veiled enough to carry text over anything), drawn behind the content. Paint only; the owner
+ * (usually Radix) keeps positioning and interaction. Menus (a trigger that opens a list of choices)
+ * use `MenuSurface`.
  */
 export const PopoverSurface = React.forwardRef<HTMLDivElement, PopoverSurfaceProps>(
-  ({ asChild = false, seed = 'lab-popover', className, children, ...props }, ref) => {
-    const decoration = (
-      <div className="lab-popover-decoration" aria-hidden="true">
-        <PixelTexture variant="grain" density="sparse" seed={seed} animated />
-      </div>
+  ({ asChild = false, className, children, ...props }, ref) => {
+    const glass = (
+      <GlassContainer className="lab-popover-glass" material="menu" interactive={false} adaptive={false} aria-hidden="true">
+        <PopoverGlassShape />
+      </GlassContainer>
     )
     const shared = {
       ...props,
@@ -39,7 +47,7 @@ export const PopoverSurface = React.forwardRef<HTMLDivElement, PopoverSurfacePro
             child,
             undefined,
             <>
-              {decoration}
+              {glass}
               {child.props.children}
             </>
           )}
@@ -48,7 +56,7 @@ export const PopoverSurface = React.forwardRef<HTMLDivElement, PopoverSurfacePro
     }
     return (
       <div {...shared}>
-        {decoration}
+        {glass}
         {children}
       </div>
     )

@@ -3,6 +3,9 @@ import 'dart:math' as math;
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
+import '../glass/container.dart' show GlassContainer;
+import '../glass/material.dart' show GlassKind;
+import '../glass/member.dart' show GlassMemberBox;
 import '../i18n/i18n.dart';
 import '../icons/lucide.dart';
 import '../layout/size_reporter.dart';
@@ -10,8 +13,6 @@ import '../primitives/button.dart';
 import '../scroll/metrics.dart';
 import '../scroll/scroll_area.dart';
 import '../theme.dart';
-import '../theme/light_edge.dart';
-import '../theme/surfaces.dart';
 
 const _edgeGap = 12.0;
 const _contentPadding = 12.0;
@@ -65,56 +66,55 @@ class _PromptSettingsPanelState extends State<PromptSettingsPanel> {
     );
     final width = math.min(360.0, screen.width - 24);
     const radius = 22.0;
-    return CustomPaint(
-      painter: _PanelPainter(
+    // The same glass as the kit's popovers: the thick menu material, carrying text over anything.
+    return GlassContainer(
+      material: GlassKind.menu,
+      interactive: false,
+      adaptive: false,
+      child: GlassMemberBox(
         radius: radius,
-        fill: c.surface,
-        line: c.line,
-        edgeLight: c.glassEdgeLight,
-        edgeLow: c.glassEdgeLow,
-        shadow: glassShadowColor(theme.brightness),
-      ),
-      foregroundPainter: _RimPainter(radius, c.glassEdgeLight, c.glassEdgeLow),
-      child: ClipPath(
-        clipper: _Clipper(radius),
-        child: SizedBox(
-          width: width,
-          height: height,
-          child: Padding(
-            padding: const EdgeInsets.all(1),
-            child: ScrollArea(
-              label: t('lab.imgcomposer.outputSettings'),
-              edgeGap: _edgeGap,
-              contentPadding: _contentPadding,
-              surface: c.surface,
-              radius: radius,
-              top: SizeReporter(
-                onSize: (size) {
-                  if (mounted && size.height != _header) {
-                    setState(() => _header = size.height);
-                  }
-                },
-                child: _Header(
-                  title: t('lab.imgcomposer.outputSettings'),
-                  closeLabel: t('lab.imgcomposer.closeSettings'),
-                  onClose: widget.onClose,
-                ),
-              ),
-              // The scroll area stretches its child to the viewport: measure the controls'
-              // own height so the panel can shrink to them.
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: SizeReporter(
+        standalone: (child) => child,
+        child: ClipPath(
+          clipper: _Clipper(radius),
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: Padding(
+              padding: const EdgeInsets.all(1),
+              child: ScrollArea(
+                label: t('lab.imgcomposer.outputSettings'),
+                edgeGap: _edgeGap,
+                contentPadding: _contentPadding,
+                surface: c.surface,
+                radius: radius,
+                top: SizeReporter(
                   onSize: (size) {
-                    if (mounted && size.height != _content) {
-                      setState(() => _content = size.height);
+                    if (mounted && size.height != _header) {
+                      setState(() => _header = size.height);
                     }
                   },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    spacing: 14,
-                    children: widget.children,
+                  child: _Header(
+                    title: t('lab.imgcomposer.outputSettings'),
+                    closeLabel: t('lab.imgcomposer.closeSettings'),
+                    onClose: widget.onClose,
+                  ),
+                ),
+                // The scroll area stretches its child to the viewport: measure the controls'
+                // own height so the panel can shrink to them.
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: SizeReporter(
+                    onSize: (size) {
+                      if (mounted && size.height != _content) {
+                        setState(() => _content = size.height);
+                      }
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      spacing: 14,
+                      children: widget.children,
+                    ),
                   ),
                 ),
               ),
@@ -180,47 +180,4 @@ class _Clipper extends CustomClipper<Path> {
       superellipsePath(Offset.zero & size, [radius, radius, radius, radius]);
   @override
   bool shouldReclip(_Clipper old) => old.radius != radius;
-}
-
-/// `.lab-pc-panel.lab-light-edge`: opaque surface, line border, glass light and shadow, rim.
-class _PanelPainter extends CustomPainter {
-  _PanelPainter({
-    required this.radius,
-    required this.fill,
-    required this.line,
-    required this.edgeLight,
-    required this.edgeLow,
-    required this.shadow,
-  });
-  final double radius;
-  final Color fill, line, edgeLight, edgeLow, shadow;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    paintFloatingSurface(
-      canvas,
-      size,
-      radius,
-      fill: fill,
-      line: line,
-      edgeLow: edgeLow,
-      shadow: shadow,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_PanelPainter old) =>
-      old.radius != radius || old.fill != fill || old.line != line;
-}
-
-class _RimPainter extends CustomPainter {
-  _RimPainter(this.radius, this.light, this.low);
-  final double radius;
-  final Color light, low;
-  @override
-  void paint(Canvas canvas, Size size) =>
-      paintLightEdge(canvas, size, radius, light: light, low: low);
-  @override
-  bool shouldRepaint(_RimPainter old) =>
-      old.radius != radius || old.light != light || old.low != low;
 }

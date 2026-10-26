@@ -20,9 +20,10 @@ function Overview() {
         <p>
           <C>PopoverSurface</C> is the material of the kit’s popovers: panels that hold a form or a
           picker next to their trigger, like the date picker, the filter editors and the image
-          settings. Use it when you build your own popover, so it looks like the rest of the app: an
-          opaque surface, a hairline border, group corners, a soft shadow and a faint animated pixel
-          grain. A list of commands or choices is a menu: use{' '}
+          settings, and the model ladder. Use it when you build your own popover, so it looks like the
+          rest of the app: one glass shape in the thick menu material (the menus’ glass: hairline,
+          rim light and lens, veiled enough to carry text over anything), group corners and a soft
+          shadow. A list of commands or choices is a menu: use{' '}
           <Link to="/components/menu">MenuSurface</Link>, the glass bubble that grows out of its
           button.
         </p>
@@ -62,7 +63,6 @@ import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
           head={['Prop', 'Effect']}
           rows={[
             [<C>asChild</C>, 'Decorate the child element instead of rendering a div. Use it for every Radix content part.'],
-            [<C>seed</C>, 'Changes the pixel grain pattern, so two surfaces open at once don’t look identical.'],
             ['Any div attribute', <>Without <C>asChild</C>, the surface renders a <C>div</C> and passes attributes such as <C>style</C>, <C>role</C> and <C>aria-label</C> through.</>],
           ]}
         />
@@ -125,7 +125,7 @@ export default definePage({
   title: 'Popover surface',
   group: 'Containment',
   order: 2,
-  summary: 'The opaque material for popovers (forms and pickers next to their trigger). Wrap a Radix Popover content with asChild.',
+  summary: 'The glass material for popovers (forms and pickers next to their trigger). Wrap a Radix Popover content with asChild.',
   importLine: "import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'",
   source: 'src/primitives/popover-surface.tsx',
   api: ['PopoverSurface'],

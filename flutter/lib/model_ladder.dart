@@ -21,7 +21,6 @@ import 'primitives/slider.dart';
 import 'scroll/scroll_area.dart';
 import 'theme.dart';
 import 'theme/color_mix.dart';
-import 'theme/light_edge.dart';
 import 'theme/surfaces.dart';
 import 'theme/tokens.dart';
 import 'toolbar_search.dart';
@@ -221,7 +220,6 @@ class _ModelLadderState extends State<ModelLadder>
   }
 
   Widget _popover(BuildContext context, LadderCopy copy, int safe) {
-    final theme = ThemeProvider.of(context);
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final onTop = widget.side == PanelSide.top;
     final originX = switch ((widget.align, rtl)) {
@@ -289,16 +287,7 @@ class _ModelLadderState extends State<ModelLadder>
                   120.0,
                   math.min(440.0, constraints.maxHeight),
                 ),
-                child: CustomPaint(
-                  foregroundPainter: glassStyleOf(context) == GlassStyle.solid
-                      ? null
-                      : _RimPainter(
-                          theme.sizes.radiusGroup,
-                          theme.colors.glassEdgeLight,
-                          theme.colors.glassEdgeLow,
-                        ),
-                  child: PopoverSurface(seed: 'lab-ladder', child: card),
-                ),
+                child: PopoverSurface(child: card),
               ),
             ),
           ),
@@ -306,19 +295,6 @@ class _ModelLadderState extends State<ModelLadder>
       ),
     );
   }
-}
-
-/// The card's `.lab-light-edge` ring, drawn on the popover's border when the card sits in one.
-class _RimPainter extends CustomPainter {
-  _RimPainter(this.radius, this.light, this.low);
-  final double radius;
-  final Color light, low;
-  @override
-  void paint(Canvas canvas, Size size) =>
-      paintLightEdge(canvas, size, radius, light: light, low: low);
-  @override
-  bool shouldRepaint(_RimPainter old) =>
-      old.radius != radius || old.light != light || old.low != low;
 }
 
 /// Tells a card it sits in the ladder popover: no own paint, first focus on the slider.
@@ -949,8 +925,6 @@ class _CardFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeProvider.of(context);
-    final c = theme.colors;
     final scope = context.dependOnInheritedWidgetOfExactType<_PopoverScope>();
     final screen = MediaQuery.sizeOf(context).height;
     final content = list
@@ -962,54 +936,9 @@ class _CardFrame extends StatelessWidget {
           )
         : Padding(padding: const EdgeInsets.all(12), child: child);
     if (scope != null) return content;
-    return CustomPaint(
-      painter: _CardPainter(
-        fill: c.surface,
-        line: c.line,
-        edgeLow: c.glassEdgeLow,
-        edgeLight: c.glassEdgeLight,
-        shadow: glassShadowColor(theme.brightness),
-        rim: glassStyleOf(context) != GlassStyle.solid,
-      ),
-      child: Padding(padding: const EdgeInsets.all(1), child: content),
-    );
+    // On its own the card is the same glass as the popover it usually sits in.
+    return PopoverSurface(child: content);
   }
-}
-
-class _CardPainter extends CustomPainter {
-  _CardPainter({
-    required this.fill,
-    required this.line,
-    required this.edgeLow,
-    required this.edgeLight,
-    required this.shadow,
-    required this.rim,
-  });
-  final Color fill, line, edgeLow, edgeLight, shadow;
-  final bool rim;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    paintFloatingSurface(
-      canvas,
-      size,
-      26,
-      fill: fill,
-      line: line,
-      edgeLow: edgeLow,
-      shadow: shadow,
-    );
-    if (rim) paintLightEdge(canvas, size, 26, light: edgeLight, low: edgeLow);
-  }
-
-  @override
-  bool shouldRepaint(_CardPainter old) =>
-      old.fill != fill ||
-      old.line != line ||
-      old.edgeLow != edgeLow ||
-      old.edgeLight != edgeLight ||
-      old.shadow != shadow ||
-      old.rim != rim;
 }
 
 /// A rectangle at the true proportions, fitted inside a square so every ratio lines up.

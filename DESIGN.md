@@ -9,9 +9,11 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
 
 ## Principles
 
-1. **Content first; chrome floats.** Content sits on opaque surfaces (the scaffold panel, cards,
-   dialogs). Tools float over it in glass groups (app bar, docks), one `GlassContainer` per floating row so
-   neighbouring bubbles merge, split and share light; `ScrollArea` reserves their space
+1. **Content first; chrome floats.** Content sits on opaque surfaces (the scaffold panel, content
+   cards, dialogs). Tools float over it in glass groups (app bar, docks), one `GlassContainer` per floating
+   row so neighbouring bubbles merge, split and share light. Floating cards are glass too: menus and
+   popovers (`PopoverSurface`: the model ladder, pickers, filter editors) use the thick `menu`
+   material, and number fields are glass bubbles; `ScrollArea` reserves their space
    and fades content under them. Never stack fixed header bars. Remove chrome before adding it.
 2. **One primary action per view.** One `filled` button per view or dialog, at the end of the reading
    direction. Supporting actions `tonal`, cancel/secondary `text`. Destructive is `destructive`, never

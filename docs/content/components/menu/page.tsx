@@ -49,7 +49,7 @@ function Overview() {
           <Link to="/components/select">Select</Link>, the language switcher and the prompt
           composer’s add menu all use it. For a panel that holds a form or a picker (a delivery note,
           a date), use <Link to="/components/popover-surface">PopoverSurface</Link> instead: popovers
-          sit beside their trigger on an opaque surface and don’t morph.
+          sit beside their trigger in the same thick glass and don’t morph.
         </p>
       </Section>
 
