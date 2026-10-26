@@ -18,7 +18,8 @@ switch is iOS's too: a --lab-switch-width × --lab-switch-height track with the 
   --lab-slider-thumb-radius: calc(var(--lab-slider-thumb-height) / 2);
   --lab-slider-inset: calc(var(--lab-slider-thumb-width) / 2 + 3px);
   --lab-slider-track-height: var(--lab-slider-size);
-  --lab-slider-fill-cap: calc(var(--lab-slider-size) / 2);
+  /* The fill reaches 3px past the thumb's far edge, so it wraps the thumb at every value, 0% included. */
+  --lab-slider-fill-cap: var(--lab-slider-inset);
   --lab-slider-dot-size: 6px;
 }
 .lab-slider[data-control-size='small'],

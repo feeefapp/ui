@@ -426,7 +426,8 @@ class _SliderControlState extends State<_SliderControl>
       thumbRadius: thumbHeight / 2,
       trackHeight: height,
       inset: thumbWidth / 2 + 3,
-      fillCap: size / 2,
+      // The fill reaches 3px past the thumb's far edge: it wraps the thumb at every value.
+      fillCap: thumbWidth / 2 + 3,
       dot: 6,
     );
   }
