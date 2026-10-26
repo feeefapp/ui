@@ -1,9 +1,13 @@
+import 'dart:math' as math;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
+import '../glass/container.dart' show GlassBar, GlassScope;
 import '../icons/lucide.dart';
+import '../scaffold.dart' show GlassGroup;
 import '../theme.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
@@ -365,9 +369,13 @@ class _NumberFieldState extends State<NumberField>
         : null;
     final editing = _editing != null;
     final active = !widget.disabled && !editing;
+    // The field is a glass bubble: the container paints the material, states only tint it.
+    const clear = Color(0x00000000);
     final fill = _dragging
-        ? paint.pressed
-        : ((_hovered || _focusVisible) && active ? paint.hover : paint.fill);
+        ? mixSrgb(c.ink, 0.10, clear)
+        : ((_hovered || _focusVisible) && active
+              ? mixSrgb(c.ink, 0.06, clear)
+              : clear);
     final showSteppers =
         (_hovered || _focusVisible || theme.coarsePointer(context)) &&
         !_dragging;
@@ -496,13 +504,12 @@ class _NumberFieldState extends State<NumberField>
     Widget field = CustomPaint(
       painter: ControlSurfacePainter(
         fill: fill,
-        edge: invalid ? c.danger : (editing ? c.focus : paint.edge),
+        // The glass draws the outline; the edge only marks editing and errors.
+        edge: invalid ? c.danger : (editing ? c.focus : clear),
         // Editing reads as a field: its own edge thickens inward, no outer ring.
         edgeWidth: editing ? FocusRingStyle.of(context).width : 1,
         radius: radius,
-        raised:
-            widget.variant == ControlVariant.elevated ||
-            widget.variant == ControlVariant.filled,
+        raised: false,
         highlight: c.controlHighlight,
         depth: theme.brightness == Brightness.dark ? 0.18 : 0.08,
         focus: _focusVisible && !editing ? FocusRingStyle.of(context) : null,
@@ -520,12 +527,25 @@ class _NumberFieldState extends State<NumberField>
                     widthFactor: fraction,
                     child: Opacity(
                       opacity: editing ? 0.35 : 1,
-                      child: ColoredBox(
-                        color: mixSrgb(
-                          c.primary,
-                          0.32,
-                          const Color(0x00000000),
-                        ),
+                      // A capsule cap at the value, like the Slider's fill; short fills shrink it.
+                      child: LayoutBuilder(
+                        builder: (context, box) {
+                          final cap = Radius.circular(
+                            math.min(radius, box.maxWidth / 2),
+                          );
+                          return DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadiusDirectional.horizontal(
+                                end: cap,
+                              ),
+                              color: mixSrgb(
+                                c.primary,
+                                0.32,
+                                const Color(0x00000000),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -552,6 +572,12 @@ class _NumberFieldState extends State<NumberField>
       ),
     );
 
+    // A glass bubble whose text sits on whatever is behind it: the bars' legibility floor.
+    field = GlassBar(
+      child: GlassScope(
+        child: GlassGroup(radius: radius, child: field),
+      ),
+    );
     field = Opacity(opacity: widget.disabled ? 0.5 : 1, child: field);
     field = Semantics(
       slider: bounded && !editing,

@@ -3,6 +3,8 @@
 import * as React from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '../utils'
+import { GlassBar, GlassScope } from '../glass/container'
+import { useGlassMember } from '../glass/member'
 import { useI18n } from '../i18n'
 import { IconButton } from './button'
 import { RawInput, type InputElement } from './raw-input'
@@ -266,7 +268,11 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(fu
   const description =
     [describedBy, (message || supportingText) && feedbackId].filter(Boolean).join(' ') || undefined
   return (
-    <div
+    // The field is a glass bubble: its own container (or a member of the row's, inside one). Its text
+    // sits on whatever is behind it, so it takes the bars' legibility floor (tint and blur).
+    <GlassBar>
+    <GlassScope
+      cornerShape="round"
       className={cn('lab-number-field-container', containerClassName)}
       data-invalid={message ? '' : undefined}
       onBlur={(event) => {
@@ -275,8 +281,8 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(fu
         if (validationMode !== 'submit') reveal(latest.current)
       }}
     >
-      <div
-        ref={host}
+      <GlassMemberDiv
+        hostRef={host}
         id={id}
         className={cn('lab-number-field lab-control', className)}
         data-surface-variant={variant}
@@ -365,7 +371,7 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(fu
             <ChevronRight size={16} className="lab-dir-flip" />
           </IconButton>
         )}
-      </div>
+      </GlassMemberDiv>
       {(name || validator || error != null) && (
         // Invisible, not `type="hidden"`: hidden inputs skip constraint validation, and this one
         // carries the validator's verdict so an invalid value blocks the form like any field.
@@ -393,6 +399,16 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(fu
           {message || supportingText}
         </span>
       </div>
-    </div>
+    </GlassScope>
+    </GlassBar>
   )
 })
+
+/** The field's own element, a member of the enclosing glass container (the field's GlassScope). */
+function GlassMemberDiv({
+  hostRef,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & { hostRef: React.RefObject<HTMLDivElement | null> }) {
+  const member = useGlassMember(hostRef)
+  return <div {...props} ref={hostRef} data-glass-member={member ? '' : undefined} />
+}

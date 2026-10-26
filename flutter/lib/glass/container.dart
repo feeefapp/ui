@@ -1588,6 +1588,10 @@ class _GlassScene extends ChangeNotifier {
     for (final id in [..._shapes.keys]) {
       _drop(id);
     }
+    // The press glow's springs too: a container removed mid-press must not keep the frame loop.
+    glow?.radius.stop();
+    glow?.opacity.stop();
+    glow = null;
     for (final content in _contents.values) {
       content.dispose();
     }
