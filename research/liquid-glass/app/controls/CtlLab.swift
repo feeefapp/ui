@@ -7,7 +7,7 @@
 // Scene = query string, from the first launch argument, then from `Documents/scene.txt` (polled,
 // like LGLab). After `settle` seconds the app writes `Documents/frames.json` and acknowledges the
 // scene in `Documents/shown.txt`.
-//   scene   buttons | type | toolbar | controls | search | list | alert | smenu | umenu | uikit | blank
+//   scene   buttons | type | toolbar | controls | lens | search | list | alert | smenu | umenu | uikit | blank
 //   scheme  light | dark       bg=RRGGBB (flat background)
 //   buttons: style=glass|glassProminent|borderedProminent|bordered
 //   alert:   n=1|2|3           umenu: open=content|bar|none  delay=<s>  close=<s>
@@ -189,6 +189,88 @@ struct ControlsScene: View {
         }
         .padding(.leading, 40).padding(.top, 80)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+// Press lenses: stock segmented picker, slider, toggle and tab bar over a backdrop that shows
+// magnification and bending. pattern=stripes (1 pt black lines every 6 pt) | flat | cycle.
+// cycle: the backdrop steps through LENS_CYCLE every `step` s while the controls stay pressed, with
+// the image's index drawn as 4 bits (black = 1) in squares at (14 + 12i, 104) pt, so one held press
+// in a screen recording yields every image. Fringes are 0.5 + 0.4 cos(2π c / period + 2πk / 3)
+// with c the device-pixel centre along the axis.
+let LENS_CYCLE: [String] = ["flat:ffffff", "flat:000000", "flat:808080",
+    "x:96:0", "x:96:1", "x:96:2", "x:24:0", "x:24:1", "x:24:2",
+    "y:96:0", "y:96:1", "y:96:2", "y:24:0", "y:24:1", "y:24:2", "stripes"]
+
+struct StripeBackdrop: View {
+    let spec: Spec
+    var body: some View {
+        if spec.string("pattern", "stripes") == "cycle" {
+            TimelineView(.periodic(from: .now, by: spec.number("step", 0.6))) { context in
+                let step = spec.number("step", 0.6)
+                let index = Int(context.date.timeIntervalSinceReferenceDate / step) % LENS_CYCLE.count
+                ZStack(alignment: .topLeading) {
+                    Canvas { ctx, size in draw(LENS_CYCLE[index], ctx, size) }
+                    Color.white.frame(width: 60, height: 20).offset(x: 6, y: 94)
+                    ForEach(0..<4) { bit in
+                        (index >> bit & 1 == 1 ? Color.black : Color.white).frame(width: 8, height: 8)
+                            .offset(x: 10 + 12 * CGFloat(bit), y: 100)
+                    }
+                }
+                .ignoresSafeArea()
+            }
+        } else {
+            Canvas { ctx, size in draw(spec.string("pattern", "stripes"), ctx, size) }.ignoresSafeArea()
+        }
+    }
+
+    func draw(_ image: String, _ ctx: GraphicsContext, _ size: CGSize) {
+        let parts = image.split(separator: ":").map(String.init)
+        switch parts[0] {
+        case "flat":
+            ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(hexColor(parts.count > 1 ? parts[1] : spec.string("bg", "ffffff"))))
+        case "x", "y":
+            let period = Double(parts[1]) ?? 96, k = Double(parts[2]) ?? 0
+            let px = 1.0 / 3.0
+            let n = Int(((parts[0] == "x" ? size.width : size.height) * 3).rounded(.up))
+            for i in 0..<n {
+                let v = 0.5 + 0.4 * cos(2 * Double.pi * (Double(i) + 0.5) / period + 2 * Double.pi * k / 3)
+                let r = parts[0] == "x" ? CGRect(x: Double(i) * px, y: 0, width: px + 0.01, height: size.height)
+                                        : CGRect(x: 0, y: Double(i) * px, width: size.width, height: px + 0.01)
+                ctx.fill(Path(r), with: .color(Color(.sRGB, white: v, opacity: 1)))
+            }
+        default:
+            ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(hexColor(spec.string("bg", "ffffff"))))
+            let ink = hexColor(spec.string("ink", "000000"))
+            var x: CGFloat = 0
+            while x < size.width { ctx.fill(Path(CGRect(x: x, y: 0, width: 1, height: size.height)), with: .color(ink)); x += 6 }
+        }
+    }
+}
+
+struct LensScene: View {
+    let spec: Spec
+    @State private var pick = 0
+    @State private var on = true
+    @State private var value = 0.5
+    @State private var tab = 0
+    var body: some View {
+        TabView(selection: $tab) {
+            ForEach(0..<4) { i in
+                Tab(["Home", "Inbox", "Products", "Settings"][i], systemImage: ["house", "tray", "cube", "gearshape"][i], value: i) {
+                    ZStack(alignment: .topLeading) {
+                        StripeBackdrop(spec: spec)
+                        VStack(alignment: .leading, spacing: 48) {
+                            Picker("", selection: $pick) { Text("One").tag(0); Text("Two").tag(1); Text("Three").tag(2) }
+                                .pickerStyle(.segmented).frame(width: 300).report("segmented")
+                            Slider(value: $value).frame(width: 300).report("slider")
+                            Toggle("", isOn: $on).labelsHidden().report("toggle")
+                        }
+                        .padding(.leading, 51).padding(.top, 120)
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -380,6 +462,7 @@ struct RootView: View {
             case "type": TypeScene()
             case "toolbar": ToolbarScene(spec: spec)
             case "controls": ControlsScene(spec: spec)
+            case "lens": LensScene(spec: spec)
             case "search": SearchScene(spec: spec)
             case "list": ListScene()
             case "alert": AlertScene(spec: spec)

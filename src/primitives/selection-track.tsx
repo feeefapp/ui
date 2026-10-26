@@ -21,7 +21,7 @@ import { useFloatingBoundary } from '../menu/boundary'
 import { cn } from '../utils'
 import { scrollEdgeOpacities } from '../scroll/metrics'
 import { revealScrollChild } from '../scroll/reveal'
-import { GLASS_GLOW_START, GLASS_PRESS_SCALE, glassGlowRadius, pressedShape } from '../glass/press'
+import { GLASS_PRESS_SCALE, pressedShape } from '../glass/press'
 import { GLASS_FOLLOW_ATTRIBUTE } from '../glass/transitions'
 import { useMotionValue, useReducedMotion } from '../physics/react'
 import { SPRINGS, springTiming, type Spring } from '../physics/spring'
@@ -37,8 +37,8 @@ import {
   type SegmentSpan,
   type SelectionSemantics,
 } from './segmented-model'
-import { LENS_MAGNIFY, lensInkZoom, lensPillShape, lensStretch } from './lens-model'
-import { GlassLensLayer, lensMagnifies, lensMode } from '../glass/lens-layer'
+import { lensInkZoom, lensPillShape, lensStretch } from './lens-model'
+import { GlassLensLayer, lensMode } from '../glass/lens-layer'
 import type { SegmentOption } from './segmented'
 import '../actions/actions.css'
 import './lens.css'
@@ -100,8 +100,7 @@ type Drag = {
 const COLLAPSE = springTiming(SPRINGS.snappy)
 
 /**
- * One row of options and one moving pill: measuring, the pill and its glass lens with the touch
- * glow, drag with rubber band and momentum snap, auto-scroll, one-row overflow with edge fades and
+ * One row of options and one moving pill: measuring, the pill and its glass lens, drag with rubber band and momentum snap, auto-scroll, one-row overflow with edge fades and
  * reveal, keyboard roving, right-to-left, badges, tones, reduced motion and solid glass.
  *
  * `semantics` makes it a radio group (`radio`, `aria-checked`) or a tab list (`tab`, `aria-selected`
@@ -158,15 +157,13 @@ export function SelectionTrack<const T extends string>({
   const lensRef = useRef<HTMLSpanElement>(null)
   const lensLayer = useRef<GlassLensLayer | null>(null)
   const reduced = useReducedMotion()
-  // Pill: centre, width and top; press response: swell, stretch, lens (0 filled … 1 glass), glow.
+  // Pill: centre, width and top; press response: swell, stretch, lens (0 filled … 1 glass).
   const center = useMotionValue(0, 0.05)
   const width = useMotionValue(0, 0.05)
   const top = useMotionValue(0, 0.05)
   const press = useMotionValue(1, 0.0005)
   const stretch = useMotionValue(0, 0.05)
   const lens = useMotionValue(0, 0.002)
-  const glowRadius = useMotionValue(GLASS_GLOW_START, 0.5)
-  const glowOpacity = useMotionValue(0, 0.005)
   const layoutState = useRef({
     boxes: [] as Box[],
     spans: [] as SegmentSpan[],
@@ -176,7 +173,6 @@ export function SelectionTrack<const T extends string>({
     overflow: false,
     rtl: false,
   })
-  const glowAt = useRef({ x: 0, y: 0 })
   const drag = useRef<Drag | null>(null)
   const suppressClick = useRef(false)
   const autoFrame = useRef(0)
@@ -295,29 +291,25 @@ export function SelectionTrack<const T extends string>({
     const lensAmount = Math.max(0, Math.min(1, lens.get()))
     el.style.setProperty('--lab-lens', String(lensAmount))
     const radius = (Math.min(shape.width, shape.height) / 2) * corner
-    // Pressed or dragged, the pill is real glass over the options (a liquid one lifts out of the
-    // pill, past the track, and magnifies what it covers).
+    // Pressed or dragged, the pill is real glass over the options; a liquid one lifts out of the
+    // pill (from its rest size: the lift is iOS's whole growth), past the track.
     const mode = lensMode()
     const liquid = mode === 'liquid'
-    const glass = lensPillShape(shape, radius, lensAmount, liquid)
+    const rest = pressedShape({ x: center.get() - w / 2, y: top.get(), width: w, height, radius: 0 }, 1, stretch.get(), 0)
+    const glass = lensPillShape(rest, (Math.min(rest.width, rest.height) / 2) * corner, lensAmount, liquid)
     const lensEl = lensRef.current
     if (lensEl) {
       lensEl.style.transform = `translate(${glass.x}px, ${glass.y}px)`
       lensEl.style.width = `${glass.width}px`
       lensEl.style.height = `${glass.height}px`
       lensEl.style.borderRadius = `${glass.radius}px`
-      lensLayer.current?.update(lensAmount, liquid ? LENS_MAGNIFY : 0, glass)
+      lensLayer.current?.update(lensAmount, glass)
     }
-    el.style.setProperty('--lab-lens-glow-x', `${glowAt.current.x - glass.x}px`)
-    el.style.setProperty('--lab-lens-glow-y', `${glowAt.current.y - glass.y}px`)
-    el.style.setProperty('--lab-lens-glow-r', `${Math.max(1, glowRadius.get())}px`)
-    el.style.setProperty('--lab-lens-glow', String(Math.max(0, Math.min(1, glowOpacity.get()))))
     // Selected ink shows exactly where the pill is, so a label turns over as the pill crosses it.
-    // Where liquid glass can't bend (lensInkZoom), the ink copy stands in for its magnifier: it
-    // scales up around the drop's centre (its clip mapped back so it still fills the drop) and
-    // the plain content underneath is cut out where the drop is. Glass that magnifies for real
-    // leaves the copy at 1, so nothing is enlarged twice.
-    const zoom = lensInkZoom(lensAmount, liquid, liquid && lensMagnifies())
+    // Under a tab bar's lens the selected item grows (lensInkZoom, as iOS's): the ink copy scales
+    // up around the drop's centre (its clip mapped back so it still fills the drop) and the plain
+    // content underneath is cut out where the drop is. Segmented labels never grow.
+    const zoom = lensInkZoom(mode === 'off' ? 0 : lensAmount, el.dataset.pill === 'quiet')
     buttons().forEach((button, i) => {
       const box = boxes[i]
       if (!box) return
@@ -345,7 +337,7 @@ export function SelectionTrack<const T extends string>({
   useLayoutEffect(() => {
     const el = lensRef.current
     if (!el) return
-    const layer = new GlassLensLayer(el)
+    const layer = new GlassLensLayer(el, 'pill')
     lensLayer.current = layer
     return () => {
       layer.dispose()
@@ -354,7 +346,7 @@ export function SelectionTrack<const T extends string>({
   }, [])
 
   useLayoutEffect(() => {
-    const values = [center, width, top, press, stretch, lens, glowRadius, glowOpacity]
+    const values = [center, width, top, press, stretch, lens]
     const off = values.map((motion) => motion.subscribe(paint))
     // While dragged, the width follows the centre: one option's width to the next.
     off.push(
@@ -437,22 +429,17 @@ export function SelectionTrack<const T extends string>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const pressIn = (point: { x: number; y: number }) => {
+  const pressIn = () => {
     if (live.current.reduced) return
     group.current?.setAttribute('data-pressed', '')
-    glowAt.current = point
     void press.animateTo(GLASS_PRESS_SCALE, { spring: SPRINGS.snappy })
     void lens.animateTo(1, { spring: SPRINGS.snappy })
-    glowRadius.set(GLASS_GLOW_START)
-    glowOpacity.set(1)
-    void glowRadius.animateTo(glassGlowRadius(width.get()), { spring: SPRINGS.smooth })
   }
   const pressOut = () => {
     group.current?.removeAttribute('data-pressed')
     void press.animateTo(1, { spring: SPRINGS.bouncy })
     void stretch.animateTo(0, { spring: SPRINGS.bouncy })
     void lens.animateTo(0, { spring: SPRINGS.snappy })
-    void glowOpacity.animateTo(0, { spring: SPRINGS.smooth })
   }
 
   /** Reports a released choice; if the owner keeps the old value, the pill goes back to it. */
@@ -489,7 +476,6 @@ export function SelectionTrack<const T extends string>({
       }
       return
     }
-    glowAt.current = point
     const target = segmentedDragCenter(point.x, d.grab, spans)
     if (d.catching || auto) {
       void center.animateTo(target, { spring: SPRINGS.interactive })
@@ -551,7 +537,7 @@ export function SelectionTrack<const T extends string>({
       catching: !onPill,
       index,
     }
-    if (onPill) pressIn(point)
+    if (onPill) pressIn()
     const move = (e: globalThis.PointerEvent) => onPointerMove(e)
     const up = (e: globalThis.PointerEvent) => onPointerEnd(e, false)
     const cancel = (e: globalThis.PointerEvent) => onPointerEnd(e, true)
@@ -577,7 +563,7 @@ export function SelectionTrack<const T extends string>({
       if (Math.abs(dx) < (d.touch ? SEGMENTED_SLOP.touch : SEGMENTED_SLOP.mouse) || Math.abs(dx) < Math.abs(dy)) return
       d.active = true
       group.current.setAttribute('data-dragging', '')
-      if (!d.onPill) pressIn(local(event.clientX, event.clientY))
+      if (!d.onPill) pressIn()
       autoScroll()
     }
     event.preventDefault()
@@ -812,9 +798,7 @@ export function SelectionTrack<const T extends string>({
             )
           })}
           {/* The pill's glass, above the options it bends. */}
-          <span ref={lensRef} className="lab-lens lab-segmented-lens" aria-hidden="true" data-hidden="">
-            <span className="lab-lens-glow" />
-          </span>
+          <span ref={lensRef} className="lab-lens lab-segmented-lens" aria-hidden="true" data-hidden="" />
         </div>
       </div>
       {menu && (

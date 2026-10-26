@@ -22,5 +22,9 @@ export default defineConfig({
       { find: /^@feeef\.dev\/ui\/primitives\/(.*)$/, replacement: `${kit}/primitives/$1${ext}` },
     ],
   },
-  build: { outDir: process.env.OUT_DIR ?? 'dist', emptyOutDir: true },
+  build: {
+    outDir: process.env.OUT_DIR ?? 'dist',
+    emptyOutDir: true,
+    rollupOptions: { input: ['index.html', 'lens.html'].map((page) => fileURLToPath(new URL(page, import.meta.url))) },
+  },
 })

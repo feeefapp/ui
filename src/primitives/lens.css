@@ -1,12 +1,11 @@
 /* A control's glass lens: the moving part of a segmented control, a tab bar, a switch or a slider
-turns into real glass while pressed or dragged (glass/lens-layer.ts writes its backdrop filter and
-material; Flutter's GlassLens is the twin). .lab-lens is the glass: the backdrop at clear glass's
-tint, never blurred (bent and magnified for liquid glass where the browser can), the rim light
-(::after) and the exterior hairline (its shadows); .lab-lens-glow inside it is the touch glow. The
-owner places the lens above what it bends and writes --lab-lens (0 rest … 1 glass), --lab-lens-glow
-(0 … 1) and the glow's centre and radius (--lab-lens-glow-x, -y, -r) on an ancestor. Owners keep
-their rest paint where the lens is off: reduced transparency, more contrast, forced colours and
-glass: 'solid'. */
+turns into glass while pressed or dragged, as iOS 26.2 draws it (research/liquid-glass/
+LENS-MEASURED.md; glass/lens-layer.ts writes the bend and the material, Flutter's GlassLens is the
+twin). .lab-lens is the glass: clear, never blurred, lifted or magnified, with the measured veil
+and shade (its background), the rim light and its shadow (its shadows); no touch glow, as on iOS.
+The owner places the lens above what it bends and writes --lab-lens (0 rest … 1 glass) on an
+ancestor. Owners keep their rest paint where the lens is off: reduced transparency, more contrast,
+forced colours and glass: 'solid'. */
 .lab-lens {
   position: absolute;
   inset: 0;
@@ -14,57 +13,32 @@ glass: 'solid'. */
   border-radius: inherit;
   corner-shape: inherit;
   pointer-events: none;
-  /* iOS 27's hairline outside every glass (material.ts GLASS_HAIRLINE): a 0.5 px ring and the
-  slivers where the shape, moved 1.25 px sideways and shrunk by 0.75 px, passes its own outline. */
+  /* Over the backdrop: white at --lab-lens-veil, then black from --lab-lens-shade-top at the top
+  edge to --lab-lens-shade-middle by half the height (material.ts LENS_MATERIAL). */
+  background:
+    linear-gradient(
+      rgb(0 0 0 / var(--lab-lens-shade-top, 0)),
+      rgb(0 0 0 / var(--lab-lens-shade-middle, 0)) 50%
+    ),
+    linear-gradient(rgb(255 255 255 / var(--lab-lens-veil, 0)) 0 0);
+  /* The thumb's dark top line (--lab-lens-line), then the rim light, white along the inner edge by
+  side: its outermost third (--lab-lens-rim-edge-*) and its 1 px (--lab-lens-rim-*), as inset
+  shadows (a masked rim layer would make Chromium sample the backdrop at low resolution). Then
+  material.ts LENS_SHADOW. */
   box-shadow:
-    0 0 0 0.5px rgb(0 0 0 / var(--lab-lens-ring, 0)),
-    -1.25px 0 0 -0.75px rgb(0 0 0 / var(--lab-lens-sliver, 0)),
-    1.25px 0 0 -0.75px rgb(0 0 0 / var(--lab-lens-sliver, 0));
+    inset 0 0.34px rgb(0 0 0 / var(--lab-lens-line, 0)),
+    inset 0 0.34px rgb(255 255 255 / var(--lab-lens-rim-edge-top, 0)),
+    inset 0 -0.34px rgb(255 255 255 / var(--lab-lens-rim-edge-bottom, 0)),
+    inset 0.34px 0 rgb(255 255 255 / var(--lab-lens-rim-edge-side, 0)),
+    inset -0.34px 0 rgb(255 255 255 / var(--lab-lens-rim-edge-side, 0)),
+    inset 0 1px rgb(255 255 255 / var(--lab-lens-rim-top, 0)),
+    inset 0 -1px rgb(255 255 255 / var(--lab-lens-rim-bottom, 0)),
+    inset 1px 0 rgb(255 255 255 / var(--lab-lens-rim-side, 0)),
+    inset -1px 0 rgb(255 255 255 / var(--lab-lens-rim-side, 0)),
+    0 6px 11px rgb(0 0 0 / var(--lab-lens-shadow, 0));
 }
 .lab-lens[data-hidden] {
   visibility: hidden;
-}
-/* The rim light (material.ts glassRim at the clear tint): white along the inner edge, lit where the
-edge faces the light axis (top left and bottom right), w0 where it runs across it. */
-.lab-lens::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  box-sizing: border-box;
-  padding: var(--lab-lens-rim-width, 1px);
-  border-radius: inherit;
-  corner-shape: inherit;
-  background: conic-gradient(
-    rgb(255 255 255 / var(--lab-lens-rim-mid, 0)),
-    rgb(255 255 255 / var(--lab-lens-rim-base, 0)) 45deg,
-    rgb(255 255 255 / var(--lab-lens-rim-mid, 0)) 90deg,
-    rgb(255 255 255 / var(--lab-lens-rim-peak, 0)) 135deg,
-    rgb(255 255 255 / var(--lab-lens-rim-mid, 0)) 180deg,
-    rgb(255 255 255 / var(--lab-lens-rim-base, 0)) 225deg,
-    rgb(255 255 255 / var(--lab-lens-rim-mid, 0)) 270deg,
-    rgb(255 255 255 / var(--lab-lens-rim-peak, 0)) 315deg,
-    rgb(255 255 255 / var(--lab-lens-rim-mid, 0))
-  );
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-}
-.lab-lens > .lab-lens-glow {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  corner-shape: inherit;
-  background: radial-gradient(
-    circle var(--lab-lens-glow-r, 8px) at var(--lab-lens-glow-x, 50%) var(--lab-lens-glow-y, 50%),
-    var(--lab-glass-glow),
-    transparent
-  );
-  opacity: calc(var(--lab-lens-glow, 0) * var(--lab-lens, 0));
 }
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
   .lab-lens {
