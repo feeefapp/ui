@@ -24,7 +24,7 @@ void main() {
     expect(contentPressScale, n(c['contentPressScale']));
     expect(lensPillLiftX, n(c['lensPillLiftX']));
     expect(lensPillLiftY, n(c['lensPillLiftY']));
-    expect(lensTabScale, n(c['lensTabScale']));
+    expect(lensLabelScale, n(c['lensLabelScale']));
   });
   test('lensPillShape lifts a liquid pill from its rest size', () {
     // iOS 26.2: the 96 × 28 segment pill becomes a 120 × 44 lens, centred.
@@ -40,12 +40,11 @@ void main() {
     expect(plain.rect, rest);
     expect(plain.radius, 14);
   });
-  test('lensInkZoom grows only a tab bar\'s item', () {
-    expect(lensInkZoom(1, true), closeTo(lensTabScale, 1e-12));
-    expect(lensInkZoom(0.5, true), closeTo(1.1, 1e-12));
-    expect(lensInkZoom(0, true), 1);
-    expect(lensInkZoom(1, false), 1);
-    expect(lensInkZoom(2, true), closeTo(lensTabScale, 1e-12));
+  test('lensInkZoom grows the selected option under the lens', () {
+    expect(lensInkZoom(0), 1);
+    expect(lensInkZoom(1), closeTo(lensLabelScale, 1e-12));
+    expect(lensInkZoom(0.5), closeTo(1.1, 1e-12));
+    expect(lensInkZoom(2), closeTo(lensLabelScale, 1e-12));
   });
   test('lensBend reproduces the web kit\'s measured profiles', () {
     // research/liquid-glass/LENS-MEASURED.md §2, src/glass/refraction.ts lensBend.

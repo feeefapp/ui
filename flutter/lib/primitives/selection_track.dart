@@ -46,13 +46,6 @@ enum SelectionSource { press, drag, key }
 /// over the label with the badge on the icon (a tab).
 enum SelectionLayout { inline, stacked }
 
-/// The pill at rest: the primary fill with on-primary ink (a segmented control), or iOS 27's quiet
-/// pill (a tab bar): the ink at 7 % over what is under it, with the selected glyph and label in the
-/// primary colour. Pressed or dragged, both become the same clear glass lens ([GlassLens]); inside
-/// it the ink is the ink colour (filled) or the primary (quiet), and a quiet pill's selected item
-/// grows by [lensTabScale] (iOS's tab bar). Segmented labels never grow.
-enum SelectionPill { filled, quiet }
-
 /// What a track does when its options don't fit: scroll them inside itself, or fold into one
 /// capsule (the selection and a chevron) that opens the options as a single-choice menu.
 enum SelectionOverflow { scroll, menu }
@@ -198,7 +191,6 @@ class SelectionTrack<T> extends StatefulWidget {
     required this.label,
     this.semantics = SelectionSemantics.radio,
     this.layout = SelectionLayout.inline,
-    this.pill = SelectionPill.filled,
     this.sizes,
     this.disabled = false,
     this.equalWidth = false,
@@ -225,9 +217,6 @@ class SelectionTrack<T> extends StatefulWidget {
 
   /// Inline icon, label, badge; or the icon (badge on it) over the label.
   final SelectionLayout layout;
-
-  /// The pill's rest paint.
-  final SelectionPill pill;
 
   /// A host's option sizes; null for a segmented control's.
   final SelectionTrackSizes? sizes;
@@ -323,7 +312,8 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
     );
     final fade = 1 - (widget.minimize?.progress ?? 0).clamp(0.0, 1.0);
     return GlassLens(
-      kind: LensKind.pill,
+      // The switch thumb's lens: the selection is that thumb, sliding between options.
+      kind: LensKind.switchThumb,
       rect: glass.rect,
       radius: glass.radius,
       lens: t * fade,
@@ -960,12 +950,12 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
     final touch = overrides?.touchTarget ?? s.touchTarget;
     final optionHeight = height - 2 * inset;
     final solid = glassStyleOf(context) == GlassStyle.solid;
-    final quiet = widget.pill == SelectionPill.quiet;
-    // The pill's rest paint, the selected ink, and the ink inside the drop (its fill is gone, the
-    // glass is clear).
-    final pillFill = quiet ? mixSrgb(c.ink, 0.07, transparent) : c.primary;
-    final pillInk = quiet ? c.primary : c.onPrimary;
-    final lensInk = quiet ? c.primary : c.ink;
+    // The pill is the switch thumb: the surface (the ink in dark appearance) with the other one as
+    // its ink; inside the drop (its fill gone, the glass clear) the ink is the ink colour.
+    final dark = ThemeProvider.of(context).brightness == Brightness.dark;
+    final pillFill = dark ? c.ink : c.surface;
+    final pillInk = dark ? c.surface : c.ink;
+    final lensInk = c.ink;
     _queueMeasure();
 
     Widget segment(int i) => KeyedSubtree(
@@ -1009,7 +999,6 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
         inkColor: pillInk,
         lensInkColor: lensInk,
         lens: () => solid ? 0 : lens.get(),
-        zoomInk: quiet,
         motion: _motion,
       ),
     );
@@ -1487,9 +1476,9 @@ class _InkClip {
 
 /// Paints its child, then paints it again in the selected ink inside [ink]'s drop: the selected
 /// ink of an option (the web kit's `.lab-segmented-ink` copy), without a second copy of the label
-/// in the tree. Pressed or dragged ([lens] > 0) its colour turns from [color] to [lensColor]; a tab
-/// bar's ([zoom]) ink copy also grows by [lensInkZoom] around the drop's centre, still cut to the
-/// drop, and the plain child is cut out under the drop (an elliptical hole the drop's size).
+/// in the tree. Pressed or dragged ([lens] > 0) its colour turns from [color] to [lensColor], the
+/// ink copy grows by [lensInkZoom] around the drop's centre, still cut to the drop, and the plain
+/// child is cut out under the drop (an elliptical hole the drop's size).
 /// [_InkHole]s below it (a tab's badge) are drawn over the copy in their own paint, scaled with it.
 class _InkOverlay extends SingleChildRenderObjectWidget {
   const _InkOverlay({
@@ -1497,7 +1486,6 @@ class _InkOverlay extends SingleChildRenderObjectWidget {
     required this.color,
     required this.lensColor,
     required this.lens,
-    required this.zoom,
     required this.repaint,
     required super.child,
   });
@@ -1505,14 +1493,11 @@ class _InkOverlay extends SingleChildRenderObjectWidget {
   final Color color, lensColor;
   final double Function() lens;
 
-  /// Whether the selected item grows under the lens: a tab bar's quiet pill ([lensTabScale]),
-  /// never a segmented control's.
-  final bool zoom;
   final Listenable repaint;
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
-      _RenderInkOverlay(ink, color, lensColor, lens, zoom, repaint);
+      _RenderInkOverlay(ink, color, lensColor, lens, repaint);
 
   @override
   void updateRenderObject(
@@ -1524,7 +1509,6 @@ class _InkOverlay extends SingleChildRenderObjectWidget {
       ..color = color
       ..lensColor = lensColor
       ..lens = lens
-      ..zoom = zoom
       ..repaint = repaint;
   }
 }
@@ -1535,18 +1519,10 @@ class _RenderInkOverlay extends RenderProxyBox {
     this._color,
     this._lensColor,
     this.lens,
-    this._zoom,
     this._repaint,
   );
   _InkClip ink;
   double Function() lens;
-
-  bool _zoom;
-  set zoom(bool value) {
-    if (value == _zoom) return;
-    _zoom = value;
-    markNeedsPaint();
-  }
 
   /// Boxes drawn over the ink in their own paint ([_InkHole]).
   final holes = <_RenderInkHole>{};
@@ -1597,7 +1573,7 @@ class _RenderInkOverlay extends RenderProxyBox {
     final bounds = Offset.zero & size;
     final drop = ink.drop();
     final amount = lens().clamp(0.0, 1.0);
-    final zoom = lensInkZoom(amount, _zoom);
+    final zoom = lensInkZoom(amount);
     // The plain content, cut out where the drop shows it grown.
     final crosses =
         zoom > 1 &&
@@ -1706,9 +1682,10 @@ class _RenderInkHole extends RenderProxyBox {
   }
 }
 
-/// The pill under the labels: [fill] at rest (the primary, or the quiet 7 % ink on a tab bar),
-/// fading out while pressed or dragged as the glass over the labels fades in ([GlassLens], laid by
-/// the track, which casts its own shadow). Solid styles keep the fill.
+/// The pill under the labels: the switch thumb at rest ([fill], the surface or the ink in dark
+/// appearance, with the thumb's soft shadows), fading out while pressed or dragged as the glass
+/// over the labels fades in ([GlassLens], laid by the track, which casts its own shadow). Solid
+/// styles keep the fill.
 class _PillPainter extends CustomPainter {
   _PillPainter({
     required this.state,
@@ -1741,6 +1718,23 @@ class _PillPainter extends CustomPainter {
       );
     }
     if (lens < 0.999) {
+      // The switch thumb's rest shadows (slider.dart): CSS (x, y, blur, black alpha).
+      for (final (x, y, blur, a) in const [
+        (0.0, 1.0, 2.0, 0.20),
+        (0.0, 3.0, 8.0, 0.12),
+      ]) {
+        canvas.drawPath(
+          shape.shift(Offset(x, y)),
+          Paint()
+            ..color = Color.from(
+              alpha: a * (1 - lens),
+              red: 0,
+              green: 0,
+              blue: 0,
+            )
+            ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur / 2),
+        );
+      }
       canvas.drawPath(
         shape,
         Paint()..color = fill.withValues(alpha: fill.a * (1 - lens)),
@@ -1789,7 +1783,6 @@ class _Segment<T> extends StatefulWidget {
     required this.inkColor,
     required this.lensInkColor,
     required this.lens,
-    required this.zoomInk,
     required this.motion,
     required this.radiusScale,
     this.fill = false,
@@ -1839,8 +1832,6 @@ class _Segment<T> extends StatefulWidget {
   /// 0 the pill at rest … 1 a glass drop (0 for solid glass).
   final double Function() lens;
 
-  /// The selected item grows under the lens ([lensInkZoom]): a tab bar's quiet pill.
-  final bool zoomInk;
   final Listenable motion;
 
   @override
@@ -2082,7 +2073,6 @@ class _SegmentState<T> extends State<_Segment<T>> {
       lensColor: widget.lensInkColor,
       lens: widget.lens,
       // A tab bar's selected item grows under the lens (lens() is 0 where none shows).
-      zoom: widget.zoomInk,
       repaint: widget.motion,
       child: Padding(padding: padding, child: content),
     );

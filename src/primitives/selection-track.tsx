@@ -65,11 +65,6 @@ export type SelectionSource = 'press' | 'drag' | 'key'
  * the label with the badge on the icon (a tab). */
 export type SelectionLayout = 'inline' | 'stacked'
 
-/** The pill at rest: the primary fill with on-primary ink (a segmented control), or a light primary
- * tint with the ink colour (a tab bar). Pressed or dragged, both become the same glass lens
- * (`GlassLensLayer`, laid over the options it slides across). */
-export type SelectionPill = 'filled' | 'quiet'
-
 /** What a track does when its options don't fit: scroll them inside itself, or fold into one
  * capsule (the selection and a chevron) that opens the options as a single-choice menu. */
 export type SelectionOverflow = 'scroll' | 'menu'
@@ -116,7 +111,6 @@ export function SelectionTrack<const T extends string>({
   label,
   semantics = 'radio',
   layout = 'inline',
-  pill = 'filled',
   disabled = false,
   equalWidth = false,
   draggable = true,
@@ -136,8 +130,6 @@ export function SelectionTrack<const T extends string>({
   semantics?: SelectionSemantics
   /** `inline` icon, label, badge; `stacked` icon (badge on it) over the label. */
   layout?: SelectionLayout
-  /** The pill's rest paint. */
-  pill?: SelectionPill
   /** Disables every option. */
   disabled?: boolean
   /** Fills the width with equal options that ellipsize (never scrolls). */
@@ -306,10 +298,10 @@ export function SelectionTrack<const T extends string>({
       lensLayer.current?.update(lensAmount, glass)
     }
     // Selected ink shows exactly where the pill is, so a label turns over as the pill crosses it.
-    // Under a tab bar's lens the selected item grows (lensInkZoom, as iOS's): the ink copy scales
-    // up around the drop's centre (its clip mapped back so it still fills the drop) and the plain
-    // content underneath is cut out where the drop is. Segmented labels never grow.
-    const zoom = lensInkZoom(mode === 'off' ? 0 : lensAmount, el.dataset.pill === 'quiet')
+    // Under the lens the selected option grows (lensInkZoom, like iOS's tab item): the ink copy
+    // scales up around the drop's centre (its clip mapped back so it still fills the drop) and the
+    // plain content underneath is cut out where the drop is.
+    const zoom = lensInkZoom(mode === 'off' ? 0 : lensAmount)
     buttons().forEach((button, i) => {
       const box = boxes[i]
       if (!box) return
@@ -337,7 +329,8 @@ export function SelectionTrack<const T extends string>({
   useLayoutEffect(() => {
     const el = lensRef.current
     if (!el) return
-    const layer = new GlassLensLayer(el, 'pill')
+    // The switch thumb's lens: the selection is that thumb, sliding between options.
+    const layer = new GlassLensLayer(el, 'switch')
     lensLayer.current = layer
     return () => {
       layer.dispose()
@@ -724,7 +717,6 @@ export function SelectionTrack<const T extends string>({
       className={cn('lab-segmented', className)}
       data-equal-width={equalWidth || undefined}
       data-layout={layout}
-      data-pill={pill}
       data-overflow-mode={menu ? 'menu' : undefined}
       data-menu-folded={folded || undefined}
       // A press here lifts the pill, not the glass bubble around the track.

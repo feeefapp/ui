@@ -7,7 +7,7 @@ background set on it (a box) has the right shape. Root > scroller (the inset; sc
 options don't fit, data-overflow) > track (options and pill). Motion, the pill's geometry,
 data-overflow and the edge fades are written by selection-track.tsx; the selected option carries
 data-selected (aria-checked for a radio, aria-selected for a tab). Variants: data-layout
-(inline | stacked), data-pill (filled | tinted), data-overflow-mode / data-menu-folded. */
+(inline | stacked), data-overflow-mode / data-menu-folded. */
 .lab-segmented {
   --lab-segmented-size: var(--lab-control-height);
   --lab-segmented-option: calc(var(--lab-segmented-size) - 2 * var(--lab-segmented-inset));
@@ -15,10 +15,11 @@ data-selected (aria-checked for a radio, aria-selected for a tab). Variants: dat
   /* SEGMENTED_FADE and SEGMENTED_BLEED (segmented-model.ts). */
   --lab-segmented-fade: 24px;
   --lab-segmented-bleed: 8px;
-  /* The pill's rest paint and the selected ink: filled (a segmented control) or quiet (a tab bar).
-  --lab-segmented-lens-ink: the ink inside the pill while it is a clear glass drop. */
-  --lab-segmented-pill-fill: var(--lab-primary);
-  --lab-segmented-pill-ink: var(--lab-on-primary);
+  /* The pill is the switch thumb (slider.css --lab-slider-thumb-paint): a light capsule with ink
+  text, the surface in light appearance and the ink in dark, with the thumb's rest shadow. Pressed
+  it is the switch's lens; --lab-segmented-lens-ink is the ink inside the clear glass. */
+  --lab-segmented-pill-fill: var(--lab-surface);
+  --lab-segmented-pill-ink: var(--lab-ink);
   --lab-segmented-lens-ink: var(--lab-ink);
   --lab-lens: 0;
   --lab-lens-glow: 0;
@@ -36,13 +37,9 @@ data-selected (aria-checked for a radio, aria-selected for a tab). Variants: dat
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
-/* iOS 27's tab bar: a quiet pill that only darkens (light) or lightens (dark) what is under it by
-about 7% (Figma: #EDEDED plus-darker / #121212 plus-lighter), with the selected glyph and label in
-the accent colour, also while the pill is a glass drop. */
-.lab-segmented[data-pill='quiet'] {
-  --lab-segmented-pill-fill: color-mix(in srgb, var(--lab-ink) 7%, transparent);
-  --lab-segmented-pill-ink: var(--lab-primary);
-  --lab-segmented-lens-ink: var(--lab-primary);
+html[data-lab-theme='dark'] .lab-segmented {
+  --lab-segmented-pill-fill: var(--lab-ink);
+  --lab-segmented-pill-ink: var(--lab-surface);
 }
 .lab-segmented[data-equal-width] {
   display: flex;
@@ -150,9 +147,8 @@ html[data-lab-theme] .lab-segmented[data-dragging] .lab-segmented-track > .lab-s
   /* At rest the pill's ink; as a drop, the lens ink (its fill is gone, the glass is clear). */
   color: color-mix(in srgb, var(--lab-segmented-pill-ink) calc((1 - var(--lab-lens)) * 100%), var(--lab-segmented-lens-ink));
   clip-path: var(--lab-segmented-clip);
-  /* Where liquid glass can't bend, the copy stands in for its magnifier (lens-model.ts
-  lensInkZoom): scaled around the drop's centre, the clip set in the scaled space so it still
-  matches the drop. Glass that magnifies for real leaves it at 1. */
+  /* Under the lens the selected option grows (lens-model.ts lensInkZoom): scaled around the
+  drop's centre, the clip set in the scaled space so it still matches the drop. */
   transform-origin: var(--lab-segmented-lens-at, 50% 50%);
   scale: var(--lab-segmented-zoom, 1);
   pointer-events: none;
@@ -351,6 +347,10 @@ options (.lab-segmented-lens, glass/lens-layer.ts, which casts the shadow) and i
   pointer-events: none;
   border-radius: calc(var(--lab-segmented-option) / 2 * var(--lab-capsule-scale, 1) * var(--lab-segmented-press, 1));
   corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
+  /* The switch thumb's rest shadow, fading out under the lens (which casts its own). */
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / calc(20% * (1 - var(--lab-lens, 0)))),
+    0 3px 8px rgb(0 0 0 / calc(12% * (1 - var(--lab-lens, 0))));
   will-change: transform;
 }
 .lab-segmented-pill[data-hidden] {

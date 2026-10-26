@@ -20,10 +20,6 @@ export type SelectionSource = 'press' | 'drag' | 'key';
 /** How an option lays out its content: icon, label and badge in a row (a segment), or the icon over
  * the label with the badge on the icon (a tab). */
 export type SelectionLayout = 'inline' | 'stacked';
-/** The pill at rest: the primary fill with on-primary ink (a segmented control), or a light primary
- * tint with the ink colour (a tab bar). Pressed or dragged, both become the same glass lens
- * (`GlassLensLayer`, laid over the options it slides across). */
-export type SelectionPill = 'filled' | 'quiet';
 /** What a track does when its options don't fit: scroll them inside itself, or fold into one
  * capsule (the selection and a chevron) that opens the options as a single-choice menu. */
 export type SelectionOverflow = 'scroll' | 'menu';
@@ -37,7 +33,7 @@ export type SelectionOverflow = 'scroll' | 'menu';
  * `overflow="menu"` folds it, when its row has no room (fitted with the row's other foldable
  * controls, `useFitRow`), into the selected option plus a chevron that opens a radio menu.
  */
-export declare function SelectionTrack<const T extends string>({ value, onSelect, options, label, semantics, layout, pill, disabled, equalWidth, draggable, overflow: overflowMode, className, }: {
+export declare function SelectionTrack<const T extends string>({ value, onSelect, options, label, semantics, layout, disabled, equalWidth, draggable, overflow: overflowMode, className, }: {
     /** The selected option's value. */
     value: T;
     /** Called with the chosen value and what chose it: on every press, when a dragged pill is
@@ -51,8 +47,6 @@ export declare function SelectionTrack<const T extends string>({ value, onSelect
     semantics?: SelectionSemantics;
     /** `inline` icon, label, badge; `stacked` icon (badge on it) over the label. */
     layout?: SelectionLayout;
-    /** The pill's rest paint. */
-    pill?: SelectionPill;
     /** Disables every option. */
     disabled?: boolean;
     /** Fills the width with equal options that ellipsize (never scrolls). */

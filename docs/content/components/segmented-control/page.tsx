@@ -198,15 +198,16 @@ function Overview() {
 
       <Section title="Motion and dragging">
         <p>
-          Choosing an option slides the filled pill there, changing its width on the way, on the{' '}
-          <C>snappy</C> spring; a new choice mid-flight picks up the pill where it is, at its speed.
-          Press the pill and it lifts into a glass lens, as iOS 26.2 draws it (measured from held stock
-          controls), and stretches along a quick drag. The lens is clear glass laid over the options:
-          never blurred, brightened or magnified, so the labels it crosses keep their size and stay
-          readable; a little darker along its top, an even rim light and a soft shadow, with no touch
-          glow. With <C>liquid</C> glass it grows past the track (12px each side, 8px above and below:
-          a 96 × 28 pill becomes 120 × 44) and bends what it covers outward along its rim, so lines
-          crowd toward the edge with a faint rainbow, where the browser can (Chromium).{' '}
+          The selection is the <Link to="/components/switch">switch</Link>’s thumb: a light capsule
+          (the surface in light appearance, the ink in dark) with ink text and the thumb’s soft shadow.
+          Choosing an option slides it there, changing its width on the way, on the{' '}
+          <C>snappy</C> spring; a new choice mid-flight picks it up where it is, at its speed.
+          Press it and it turns into the switch’s glass lens and stretches along a quick drag: clear
+          glass laid over the options, never blurred or brightened, with the switch’s veil, shade,
+          rim and edge lines and a soft shadow, and the selected label grows 1.2× under it. With{' '}
+          <C>liquid</C> glass it grows past the track (12px each side, 8px above and below: a 96 × 28
+          pill becomes 120 × 44) and bends what it covers like the switch’s lens, where the browser
+          can (Chromium).{' '}
           <C>transparent</C> glass keeps a plain clear lens the size of the pill. Drag it and it follows the pointer,
           kept on the track with a slight rubber band at the ends; release it and it settles on the
           nearest option (a flick carries on to the next) on the <C>release</C> spring, keeping the

@@ -23,10 +23,11 @@ const double lensPillLiftX = 12;
 /// by the same): a 54 px tab pill becomes a ~72 px lens that sticks out of its bar.
 const double lensPillLiftY = 8;
 
-/// How much a tab bar's selected item (icon and label) grows under the lens: iOS 26.2's goes from
-/// 26.7 to 32 pt wide (LENS-MEASURED.md §4). Segmented labels and the backdrop never grow: iOS
-/// lenses don't magnify.
-const double lensTabScale = 1.2;
+/// How much the selected option (a tab's icon and label, a segment's label) grows under the lens,
+/// like iOS 26.2's tab item (26.7 → 32 pt wide, LENS-MEASURED.md §4): the selection reads as one
+/// switch-thumb lens over every track. The backdrop itself never grows. The web kit's
+/// `LENS_LABEL_SCALE`.
+const double lensLabelScale = 1.2;
 
 /// The glass a pill [rect] at rest (corner [radius]) turns into at [lens] (0 rest … 1 glass):
 /// liquid glass lifts it out by [lensPillLiftX] / [lensPillLiftY] (corners grow with it),
@@ -52,10 +53,10 @@ const double lensTabScale = 1.2;
   );
 }
 
-/// The scale of a tab bar's selected item under the lens ([lensTabScale] eased in by [lens]); 1
-/// for a segmented control ([tab] false). The twin of the web kit's `lensInkZoom`.
-double lensInkZoom(double lens, bool tab) =>
-    tab && lens.isFinite ? 1 + (lensTabScale - 1) * lens.clamp(0.0, 1.0) : 1;
+/// The scale of the selected option under the lens: [lensLabelScale] eased in by [lens]. The twin
+/// of the web kit's `lensInkZoom`.
+double lensInkZoom(double lens) =>
+    lens.isFinite ? 1 + (lensLabelScale - 1) * lens.clamp(0.0, 1.0) : 1;
 
 /// The lens stretches by the distance the pointer covers in this many seconds (rubber-banded).
 const double lensStretchTime = 0.1;

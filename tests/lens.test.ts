@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import {
   LENS_PILL_LIFT,
-  LENS_TAB_SCALE,
+  LENS_LABEL_SCALE,
   LENS_THUMB_SCALE,
   SWITCH_OVERDRAG,
   lensInkZoom,
@@ -76,11 +76,11 @@ test('a thumb lens is iOS 26.2\'s 57 × 37 over its 37 × 24 thumb', () => {
   assert.ok(Math.abs(37 * LENS_THUMB_SCALE - 57) < 0.5 && Math.abs(24 * LENS_THUMB_SCALE - 37) < 0.5)
 })
 
-test('only a tab bar\'s item grows under the lens', () => {
-  assert.equal(lensInkZoom(1, true), LENS_TAB_SCALE)
-  assert.equal(lensInkZoom(0.5, true), 1 + (LENS_TAB_SCALE - 1) / 2)
-  assert.equal(lensInkZoom(1, false), 1, 'segmented labels keep their size')
-  assert.equal(lensInkZoom(2, true), LENS_TAB_SCALE, 'clamped')
+test('the selected option grows under the lens, eased in', () => {
+  assert.equal(lensInkZoom(0), 1, 'at rest')
+  assert.equal(lensInkZoom(1), LENS_LABEL_SCALE)
+  assert.equal(lensInkZoom(0.5), 1 + (LENS_LABEL_SCALE - 1) / 2)
+  assert.equal(lensInkZoom(2), LENS_LABEL_SCALE, 'clamped')
 })
 
 test('the bend follows the measured iOS profiles', () => {

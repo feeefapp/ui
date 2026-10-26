@@ -3,7 +3,7 @@ import {
   CONTENT_PRESS_SCALE,
   LENS_PILL_LIFT,
   LENS_STRETCH_TIME,
-  LENS_TAB_SCALE,
+  LENS_LABEL_SCALE,
   LENS_THUMB_SCALE,
   SWITCH_DECELERATION,
   SWITCH_OVERDRAG,
@@ -37,7 +37,7 @@ export function lensFixture() {
       contentPressScale: CONTENT_PRESS_SCALE,
       lensPillLiftX: LENS_PILL_LIFT.x,
       lensPillLiftY: LENS_PILL_LIFT.y,
-      lensTabScale: LENS_TAB_SCALE,
+      lensLabelScale: LENS_LABEL_SCALE,
     },
     stretch: VELOCITIES.map((v) => [v, round(lensStretch(v))]),
     dragPosition: TRAVELS.flatMap((travel) =>

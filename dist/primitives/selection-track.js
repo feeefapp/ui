@@ -33,7 +33,7 @@ const COLLAPSE = springTiming(SPRINGS.snappy);
  * `overflow="menu"` folds it, when its row has no room (fitted with the row's other foldable
  * controls, `useFitRow`), into the selected option plus a chevron that opens a radio menu.
  */
-export function SelectionTrack({ value, onSelect, options, label, semantics = 'radio', layout = 'inline', pill = 'filled', disabled = false, equalWidth = false, draggable = true, overflow: overflowMode = 'scroll', className, }) {
+export function SelectionTrack({ value, onSelect, options, label, semantics = 'radio', layout = 'inline', disabled = false, equalWidth = false, draggable = true, overflow: overflowMode = 'scroll', className, }) {
     const group = useRef(null);
     const scrollerRef = useRef(null);
     const trackRef = useRef(null);
@@ -181,10 +181,10 @@ export function SelectionTrack({ value, onSelect, options, label, semantics = 'r
             lensLayer.current?.update(lensAmount, glass);
         }
         // Selected ink shows exactly where the pill is, so a label turns over as the pill crosses it.
-        // Under a tab bar's lens the selected item grows (lensInkZoom, as iOS's): the ink copy scales
-        // up around the drop's centre (its clip mapped back so it still fills the drop) and the plain
-        // content underneath is cut out where the drop is. Segmented labels never grow.
-        const zoom = lensInkZoom(mode === 'off' ? 0 : lensAmount, el.dataset.pill === 'quiet');
+        // Under the lens the selected option grows (lensInkZoom, like iOS's tab item): the ink copy
+        // scales up around the drop's centre (its clip mapped back so it still fills the drop) and the
+        // plain content underneath is cut out where the drop is.
+        const zoom = lensInkZoom(mode === 'off' ? 0 : lensAmount);
         buttons().forEach((button, i) => {
             const box = boxes[i];
             if (!box)
@@ -214,7 +214,8 @@ export function SelectionTrack({ value, onSelect, options, label, semantics = 'r
         const el = lensRef.current;
         if (!el)
             return;
-        const layer = new GlassLensLayer(el, 'pill');
+        // The switch thumb's lens: the selection is that thumb, sliding between options.
+        const layer = new GlassLensLayer(el, 'switch');
         lensLayer.current = layer;
         return () => {
             layer.dispose();
@@ -595,7 +596,7 @@ export function SelectionTrack({ value, onSelect, options, label, semantics = 'r
         const badge = option.badge ? _jsx("span", { className: "lab-segmented-badge", children: option.badge }) : null;
         return (_jsxs(_Fragment, { children: [option.icon && (_jsxs("span", { className: "lab-segmented-icon", "data-tone": option.tone, "aria-hidden": "true", children: [option.icon, badgeOnIcon && badge] })), _jsx("span", { className: "lab-segmented-label", children: option.label }), !badgeOnIcon && badge, chevron && (_jsx("span", { className: "lab-segmented-chevron", "aria-hidden": "true", children: _jsx(ChevronDown, {}) }))] }));
     };
-    return (_jsxs("div", { ref: group, className: cn('lab-segmented', className), "data-equal-width": equalWidth || undefined, "data-layout": layout, "data-pill": pill, "data-overflow-mode": menu ? 'menu' : undefined, "data-menu-folded": folded || undefined, "data-glass-own-press": "", 
+    return (_jsxs("div", { ref: group, className: cn('lab-segmented', className), "data-equal-width": equalWidth || undefined, "data-layout": layout, "data-overflow-mode": menu ? 'menu' : undefined, "data-menu-folded": folded || undefined, "data-glass-own-press": "", 
         // Folded, the capsule is a pop-up button; the radios live in its menu.
         role: folded ? 'group' : tab ? 'tablist' : 'radiogroup', "aria-label": label, "aria-disabled": disabled || undefined, style: menu
             ? {

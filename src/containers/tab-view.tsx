@@ -307,7 +307,6 @@ export function TabView({
             <SelectionTrack
               semantics="tab"
               layout="stacked"
-              pill="quiet"
               equalWidth
               className="lab-tab-track"
               label={label}

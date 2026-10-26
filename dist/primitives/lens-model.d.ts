@@ -18,10 +18,11 @@ export declare const LENS_PILL_LIFT: {
     readonly x: 12;
     readonly y: 8;
 };
-/** How much a tab bar's selected item (icon and label) grows under the lens: iOS 26.2's goes from
- * 26.7 to 32 pt wide (LENS-MEASURED.md §4). Segmented labels and the backdrop never grow: iOS
- * lenses don't magnify. Flutter's `lensTabScale` matches. */
-export declare const LENS_TAB_SCALE = 1.2;
+/** How much the selected option (a tab's icon and label, a segment's label) grows under the lens,
+ * like iOS 26.2's tab item (26.7 → 32 pt wide, LENS-MEASURED.md §4): the selection reads as one
+ * switch-thumb lens over every track. The backdrop itself never grows. Flutter's
+ * `lensLabelScale` matches. */
+export declare const LENS_LABEL_SCALE = 1.2;
 /**
  * The glass a pill turns into at `lens` (0 rest … 1 glass): liquid glass lifts it out by
  * `LENS_PILL_LIFT` (corners grow with it), transparent glass keeps the pill's own box. `radius` is
@@ -33,9 +34,8 @@ export declare function lensPillShape(pill: {
     width: number;
     height: number;
 }, radius: number, lens: number, liquid: boolean): GlassShape;
-/** The scale of a tab bar's selected item under the lens (`LENS_TAB_SCALE` eased in); 1 for a
- * segmented control and wherever no lens shows. */
-export declare function lensInkZoom(lens: number, tab: boolean): number;
+/** The scale of the selected option under the lens: `LENS_LABEL_SCALE` eased in with it. */
+export declare function lensInkZoom(lens: number): number;
 /** The lens stretches by the distance the pointer covers in this many seconds (rubber-banded). */
 export declare const LENS_STRETCH_TIME = 0.1;
 /** How far (px) a switch thumb can be pulled past either end, with rubber-band resistance. */

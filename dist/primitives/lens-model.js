@@ -16,10 +16,11 @@ export const LENS_THUMB_SCALE = 1.54;
  * 96 × 28 segment pill becomes a 120 × 44 lens and a 54 px tab pill a ~72 px one, sticking out of
  * its bar (LENS-MEASURED.md §1). Flutter's `lensPillLift` matches. */
 export const LENS_PILL_LIFT = { x: 12, y: 8 };
-/** How much a tab bar's selected item (icon and label) grows under the lens: iOS 26.2's goes from
- * 26.7 to 32 pt wide (LENS-MEASURED.md §4). Segmented labels and the backdrop never grow: iOS
- * lenses don't magnify. Flutter's `lensTabScale` matches. */
-export const LENS_TAB_SCALE = 1.2;
+/** How much the selected option (a tab's icon and label, a segment's label) grows under the lens,
+ * like iOS 26.2's tab item (26.7 → 32 pt wide, LENS-MEASURED.md §4): the selection reads as one
+ * switch-thumb lens over every track. The backdrop itself never grows. Flutter's
+ * `lensLabelScale` matches. */
+export const LENS_LABEL_SCALE = 1.2;
 /**
  * The glass a pill turns into at `lens` (0 rest … 1 glass): liquid glass lifts it out by
  * `LENS_PILL_LIFT` (corners grow with it), transparent glass keeps the pill's own box. `radius` is
@@ -37,10 +38,9 @@ export function lensPillShape(pill, radius, lens, liquid) {
         radius: Math.min(radius, pill.width / 2, pill.height / 2) + y,
     };
 }
-/** The scale of a tab bar's selected item under the lens (`LENS_TAB_SCALE` eased in); 1 for a
- * segmented control and wherever no lens shows. */
-export function lensInkZoom(lens, tab) {
-    return tab ? 1 + (LENS_TAB_SCALE - 1) * clampLens(lens) : 1;
+/** The scale of the selected option under the lens: `LENS_LABEL_SCALE` eased in with it. */
+export function lensInkZoom(lens) {
+    return 1 + (LENS_LABEL_SCALE - 1) * clampLens(lens);
 }
 function clampLens(lens) {
     return Number.isFinite(lens) ? Math.max(0, Math.min(1, lens)) : 0;

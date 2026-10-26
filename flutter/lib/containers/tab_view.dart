@@ -353,7 +353,6 @@ class _TabViewState extends State<TabView> {
           child: SelectionTrack<String>(
             semantics: SelectionSemantics.tab,
             layout: SelectionLayout.stacked,
-            pill: SelectionPill.quiet,
             equalWidth: true,
             sizes: wide ? _wideTabs : _tabs,
             label: widget.label,
