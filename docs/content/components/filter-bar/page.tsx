@@ -137,6 +137,10 @@ function Overview() {
           bounds and that the end is not before the start; your <C>validate</C> runs after that and can block
           Apply with a message.
         </p>
+        <p>
+          A temporal chip names the preset its value equals (“Last 7 days”); any other value is written as
+          dates in the kit’s locale (“Oct 9, 2026 – Oct 18, 2026”), never as raw ISO.
+        </p>
       </Section>
 
       <Section title="Natural-language filters">

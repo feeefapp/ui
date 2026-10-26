@@ -6,6 +6,7 @@ import {
   readTemporalForm,
   type TemporalType,
 } from '../src/filters/temporal.ts'
+import { temporalSummary } from '../src/filters/temporal-format.ts'
 
 test('temporal editors reject impossible dates and invalid clock times', () => {
   assert.equal(validateTemporal({ type: 'date' }, '2024-02-29'), null)
@@ -60,5 +61,44 @@ test('all six temporal presets generate valid local wall-clock values across mon
   assert.equal(
     temporalPresets('date', now).find((p) => p.label === 'Yesterday')?.value,
     '2025-12-31'
+  )
+})
+test('temporal summaries name the matching preset, else format the value in the locale', () => {
+  const now = new Date(2026, 9, 26, 10, 0)
+  const week = { from: '2026-10-20', to: '2026-10-26' }
+  assert.equal(temporalSummary({ type: 'dateRange' }, week, 'en-US', now), 'Last 7 days')
+  assert.equal(temporalSummary({ type: 'dateRange' }, { ...week }, 'en-US', now), 'Last 7 days')
+  assert.equal(
+    temporalSummary({ type: 'dateRange' }, { from: '2026-10-09', to: '2026-10-18' }, 'en-US', now),
+    'Oct 9, 2026 – Oct 18, 2026'
+  )
+  assert.equal(
+    temporalSummary({ type: 'dateRange' }, { from: '', to: '2026-10-18' }, 'en-US', now),
+    'Any – Oct 18, 2026'
+  )
+  assert.equal(temporalSummary({ type: 'dateRange' }, null, 'en-US', now), 'Any')
+  assert.equal(temporalSummary({ type: 'dateRange' }, { from: '', to: '' }, 'en-US', now), 'Any')
+  assert.equal(temporalSummary({ type: 'date' }, '2026-10-26', 'fr-FR', now), 'Today')
+  assert.equal(temporalSummary({ type: 'date' }, '2026-10-01', 'fr-FR', now), '1 oct. 2026')
+})
+test('temporal summaries use the config presets over the defaults and skip presets the rules hide', () => {
+  const now = new Date(2026, 9, 26, 10, 0)
+  const presets = [{ label: 'Business hours', value: { from: '08:00', to: '18:00' } }]
+  assert.equal(
+    temporalSummary({ type: 'timeRange', presets }, { from: '08:00', to: '18:00' }, 'en-US', now),
+    'Business hours'
+  )
+  assert.equal(
+    temporalSummary({ type: 'timeRange', presets }, { from: '09:00', to: '12:00' }, 'en-US', now),
+    '09:00 – 12:00'
+  )
+  assert.equal(
+    temporalSummary(
+      { type: 'dateRange', min: '2026-10-22' },
+      { from: '2026-10-20', to: '2026-10-26' },
+      'en-US',
+      now
+    ),
+    'Oct 20, 2026 – Oct 26, 2026'
   )
 })

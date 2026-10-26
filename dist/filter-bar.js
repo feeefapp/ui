@@ -14,14 +14,18 @@ import { ScrollArea } from './scroll/index.js';
 import { Dock } from './dock/index.js';
 import { TemporalFilterEditor } from './filters/temporal-editor.js';
 import { TemporalDialog } from './filters/temporal-dialog.js';
+import { temporalSummary } from './filters/temporal-format.js';
+import { useI18n } from './i18n.js';
 import { isTemporalType, isTemporalRange, validateTemporal, readTemporalForm, } from './filters/temporal.js';
 import './filter-bar.css';
 import { GlassScope } from './glass/container.js';
-function summary(option, value) {
+function summary(option, value, locale) {
     if (value == null)
         return 'Any';
     if (option.type === 'custom' && option.formatValue)
         return option.formatValue(value);
+    if (isTemporalType(option.type) && typeof value !== 'boolean')
+        return temporalSummary(option, value, locale);
     if (typeof value === 'object')
         return `${value.from || 'Any date'} → ${value.to || 'Any date'}`;
     if (option.type === 'enum')
@@ -36,6 +40,7 @@ function summary(option, value) {
  */
 export function FilterBar({ label, options, value, onChange, values: controlledValues, onValuesChange, pinned: controlledPins, onPinnedChange, onNaturalFilter, onBack, trailing, }) {
     const formId = useId();
+    const i18n = useI18n();
     const host = useRef(null), search = useRef(null);
     const enumSearch = useRef(null);
     const naturalInput = useRef(null);
@@ -144,7 +149,7 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
                                                                                         ? 'On / off'
                                                                                         : option.type === 'enum'
                                                                                             ? 'Choose a value'
-                                                                                            : 'Open editor') })] }), _jsx("span", { className: "lab-filter-row-value", children: summary(option, read(option)) })] }), _jsx(IconButton, { variant: "text", controlSize: "regular", "aria-label": `${pins.includes(option.id) ? 'Unpin' : 'Pin'} ${option.label}`, "aria-pressed": pins.includes(option.id), onClick: () => pins.includes(option.id)
+                                                                                            : 'Open editor') })] }), _jsx("span", { className: "lab-filter-row-value", children: summary(option, read(option), i18n.locale) })] }), _jsx(IconButton, { variant: "text", controlSize: "regular", "aria-label": `${pins.includes(option.id) ? 'Unpin' : 'Pin'} ${option.label}`, "aria-pressed": pins.includes(option.id), onClick: () => pins.includes(option.id)
                                                                     ? setPins(pins.filter((id) => id !== option.id))
                                                                     : pin(option.id), children: pins.includes(option.id) ? _jsx(PinOff, {}) : _jsx(Pin, {}) })] }, option.id))), !options.some((option) => `${option.label} ${option.description || ''} ${option.keywords?.join(' ') || ''}`
                                                         .toLowerCase()
@@ -186,7 +191,7 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
                                                             .map((option) => option.label)
                                                             .join(', ')}.` })] }) }) }) }) })] }))] }), !!pins.length && (_jsx("div", { className: "lab-filter-pins", role: "group", "aria-label": "Pinned filters", children: options
                     .filter((option) => pins.includes(option.id))
-                    .map((option) => (_jsxs(ToolbarGroup, { label: `${option.label} filter`, children: [_jsxs(Button, { variant: "text", appearance: "toolbar", controlSize: "regular", "aria-label": `Edit ${option.label} filter`, onClick: (event) => edit(option, event.currentTarget), children: [option.label, _jsx("span", { className: "lab-filter-chip-value", children: summary(option, read(option)) })] }), _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "regular", "aria-label": `Clear ${option.label} value`, disabled: read(option) == null, onClick: (event) => {
+                    .map((option) => (_jsxs(ToolbarGroup, { label: `${option.label} filter`, children: [_jsxs(Button, { variant: "text", appearance: "toolbar", controlSize: "regular", "aria-label": `Edit ${option.label} filter`, onClick: (event) => edit(option, event.currentTarget), children: [option.label, _jsx("span", { className: "lab-filter-chip-value", children: summary(option, read(option), i18n.locale) })] }), _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "regular", "aria-label": `Clear ${option.label} value`, disabled: read(option) == null, onClick: (event) => {
                                 event.currentTarget.parentElement
                                     ?.querySelector('button')
                                     ?.focus({ preventScroll: true });

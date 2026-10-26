@@ -24,6 +24,8 @@ import { ScrollArea } from './scroll'
 import { Dock } from './dock'
 import { TemporalFilterEditor } from './filters/temporal-editor'
 import { TemporalDialog } from './filters/temporal-dialog'
+import { temporalSummary } from './filters/temporal-format'
+import { useI18n } from './i18n'
 import {
   isTemporalType,
   isTemporalRange,
@@ -98,9 +100,11 @@ export type FilterBarProps = {
   /** Content at the end of the bar, usually a ToolbarGroup of view actions. */
   trailing?: ReactNode
 }
-function summary(option: FilterOption, value: FilterValue) {
+function summary(option: FilterOption, value: FilterValue, locale: string) {
   if (value == null) return 'Any'
   if (option.type === 'custom' && option.formatValue) return option.formatValue(value)
+  if (isTemporalType(option.type) && typeof value !== 'boolean')
+    return temporalSummary(option as FilterOption & TemporalConfig, value, locale)
   if (typeof value === 'object') return `${value.from || 'Any date'} → ${value.to || 'Any date'}`
   if (option.type === 'enum')
     return option.choices.find((choice) => choice.value === value)?.label || 'Any'
@@ -125,6 +129,7 @@ export function FilterBar({
   trailing,
 }: FilterBarProps) {
   const formId = useId()
+  const i18n = useI18n()
   const host = useRef<HTMLDivElement>(null),
     search = useRef<HTMLInputElement>(null)
   const enumSearch = useRef<HTMLInputElement>(null)
@@ -345,7 +350,7 @@ export function FilterBar({
                               </small>
                             </span>
                             <span className="lab-filter-row-value">
-                              {summary(option, read(option))}
+                              {summary(option, read(option), i18n.locale)}
                             </span>
                           </Button>
                           <IconButton
@@ -496,7 +501,9 @@ export function FilterBar({
                   onClick={(event) => edit(option, event.currentTarget)}
                 >
                   {option.label}
-                  <span className="lab-filter-chip-value">{summary(option, read(option))}</span>
+                  <span className="lab-filter-chip-value">
+                    {summary(option, read(option), i18n.locale)}
+                  </span>
                 </Button>
                 <IconButton
                   variant="text"
