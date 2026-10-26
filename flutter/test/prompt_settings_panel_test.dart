@@ -17,6 +17,9 @@ void main() {
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 50));
     }
-    expect(tester.getSize(find.byType(PromptSettingsPanel)).height, lessThan(200));
+    expect(
+      tester.getSize(find.byType(PromptSettingsPanel)).height,
+      lessThan(200),
+    );
   });
 }

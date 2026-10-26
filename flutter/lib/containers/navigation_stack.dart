@@ -1462,14 +1462,16 @@ class _NavigationPageState extends State<NavigationPage> {
             // Hidden titles leave the bar's shared glass but keep their place, as on the web.
             glassHidden: !titleShown,
             children: [
-              if (display == TitleDisplay.inline)
-                Focus(
-                  focusNode: _titleNode,
-                  skipTraversal: true,
-                  child: Semantics(header: true, child: heading),
-                )
-              else
-                ExcludeSemantics(child: heading),
+              // A long title ellipsizes beside the back button and actions.
+              Flexible(
+                child: display == TitleDisplay.inline
+                    ? Focus(
+                        focusNode: _titleNode,
+                        skipTraversal: true,
+                        child: Semantics(header: true, child: heading),
+                      )
+                    : ExcludeSemantics(child: heading),
+              ),
             ],
           ),
         ),

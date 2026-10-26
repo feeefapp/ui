@@ -30,6 +30,13 @@ class _DockContentSwapState extends State<DockContentSwap>
   _Phase _phase = _Phase.idle;
   late final _clock = AnimationController(vsync: this);
 
+  /// Holds the content's focus nodes, so a swap can tell whether focus is inside it.
+  final _region = FocusNode(
+    debugLabel: 'DockContentSwap',
+    skipTraversal: true,
+    canRequestFocus: false,
+  );
+
   @override
   void didUpdateWidget(DockContentSwap old) {
     super.didUpdateWidget(old);
@@ -44,11 +51,11 @@ class _DockContentSwapState extends State<DockContentSwap>
       _phase = _Phase.idle;
       return;
     }
-    // Focus inside the outgoing content moves to the dock before the content goes inert.
+    // Focus inside the outgoing content moves to the dock before the content goes inert. Asked
+    // through the focus tree: the focused widget may be leaving the element tree (a dialog's
+    // button that just closed it), where ancestor lookups are unsafe.
     final focus = FocusManager.instance.primaryFocus;
-    if (focus?.context != null &&
-        focus!.context!.findAncestorStateOfType<_DockContentSwapState>() ==
-            this) {
+    if (focus != null && focus.ancestors.contains(_region)) {
       focus.unfocus(disposition: UnfocusDisposition.previouslyFocusedChild);
     }
     _phase = _Phase.out;
@@ -74,6 +81,7 @@ class _DockContentSwapState extends State<DockContentSwap>
   @override
   void dispose() {
     _clock.dispose();
+    _region.dispose();
     super.dispose();
   }
 
@@ -101,6 +109,9 @@ class _DockContentSwapState extends State<DockContentSwap>
         ),
       );
     },
-    child: KeyedSubtree(key: ValueKey(_shownKey), child: _shown),
+    child: Focus(
+      focusNode: _region,
+      child: KeyedSubtree(key: ValueKey(_shownKey), child: _shown),
+    ),
   );
 }

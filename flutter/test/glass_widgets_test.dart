@@ -119,29 +119,28 @@ void main() {
     expect(keys.toSet(), hasLength(2));
   });
 
-  testWidgets(
-    'large and compact glass both draw the exterior hairline',
-    (tester) async {
-      await tester.pumpWidget(
-        host(
-          GlassContainer(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const GlassGroup(child: SizedBox(width: 160, height: 100)),
-                const SizedBox(height: 40),
-                bubble('compact'),
-              ],
-            ),
+  testWidgets('large and compact glass both draw the exterior hairline', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        GlassContainer(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const GlassGroup(child: SizedBox(width: 160, height: 100)),
+              const SizedBox(height: 40),
+              bubble('compact'),
+            ],
           ),
         ),
-      );
-      await tester.pump();
-      // One backdrop for each shape, plus its two exterior bands (ring and slivers).
-      expect(tester.layers.whereType<BackdropFilterLayer>(), hasLength(6));
-      expect(tester.takeException(), isNull);
-    },
-  );
+      ),
+    );
+    await tester.pump();
+    // One backdrop for each shape, plus its two exterior bands (ring and slivers).
+    expect(tester.layers.whereType<BackdropFilterLayer>(), hasLength(6));
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'wide vertical toolbar keeps one rim before and after its width changes',

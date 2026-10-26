@@ -195,27 +195,24 @@ void main() {
     expect(light.backdropTone, Brightness.light);
   });
 
-  test(
-    'the glass tint scales the veil, from clear to regular; the shadow stays faint',
-    () {
-      ColorTokens at(double tint, Brightness b) =>
-          ColorTokens.resolve(Palette.lab, b, glassTint: tint);
-      final clear = at(0, Brightness.light);
-      expect(clear.glassFill.a, 0);
-      // iOS 27 casts the faint shadow under clear glass too.
-      expect(clear.glassShadowColor.a, closeTo(0.02, 1e-3));
-      final regular = at(1, Brightness.light);
-      expect(regular.glassFill.a, closeTo(0.52, 1e-3));
-      expect(regular.glassFillLarge.a, closeTo(0.52, 1e-3));
-      expect(regular.glassShadowColor.a, closeTo(0.02, 1e-3));
-      expect(at(1, Brightness.dark).glassFill.a, closeTo(0.05, 1e-3));
-      expect(at(1, Brightness.dark).glassShadowColor.a, closeTo(0.04, 1e-3));
-      // Out of range clamps; the backdrop tokens keep the tint.
-      expect(at(7, Brightness.light).glassFill.a, closeTo(0.52, 1e-3));
-      expect(
-        at(0.2, Brightness.light).backdrop(Brightness.dark).glassFill.a,
-        closeTo(0.01, 1e-3),
-      );
-    },
-  );
+  test('the glass tint scales the veil, from clear to regular; the shadow stays faint', () {
+    ColorTokens at(double tint, Brightness b) =>
+        ColorTokens.resolve(Palette.lab, b, glassTint: tint);
+    final clear = at(0, Brightness.light);
+    expect(clear.glassFill.a, 0);
+    // iOS 27 casts the faint shadow under clear glass too.
+    expect(clear.glassShadowColor.a, closeTo(0.02, 1e-3));
+    final regular = at(1, Brightness.light);
+    expect(regular.glassFill.a, closeTo(0.52, 1e-3));
+    expect(regular.glassFillLarge.a, closeTo(0.52, 1e-3));
+    expect(regular.glassShadowColor.a, closeTo(0.02, 1e-3));
+    expect(at(1, Brightness.dark).glassFill.a, closeTo(0.05, 1e-3));
+    expect(at(1, Brightness.dark).glassShadowColor.a, closeTo(0.04, 1e-3));
+    // Out of range clamps; the backdrop tokens keep the tint.
+    expect(at(7, Brightness.light).glassFill.a, closeTo(0.52, 1e-3));
+    expect(
+      at(0.2, Brightness.light).backdrop(Brightness.dark).glassFill.a,
+      closeTo(0.01, 1e-3),
+    );
+  });
 }
