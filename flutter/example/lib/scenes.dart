@@ -321,7 +321,6 @@ final Map<String, List<Widget> Function()> scenes = {
               width: 200,
               height: 120,
               child: PopoverSurface(
-                seed: 'lab-popover-2',
                 child: SizedBox.expand(),
               ),
             ),

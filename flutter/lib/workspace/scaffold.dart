@@ -310,10 +310,7 @@ class _ScaffoldWidgetState extends State<Scaffold> {
             const Positioned.fill(
               child: IgnorePointer(
                 child: ExcludeSemantics(
-                  child: Opacity(
-                    opacity: 0.18,
-                    child: PixelShader(density: 0.8, speed: 0.18),
-                  ),
+                  child: PixelShader(density: 0.8, speed: 0.18, opacity: 0.18),
                 ),
               ),
             ),
