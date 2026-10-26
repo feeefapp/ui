@@ -25,7 +25,9 @@ export function useSliderMotion(
   thin: boolean,
   disabled: boolean,
   /** Lets a dragged switch thumb rubber-band past its ends instead of clamping to 0–1. */
-  overshoot = false
+  overshoot = false,
+  /** The thumb's lens: a slider's or a switch's (they bend and edge differently on iOS). */
+  lens: 'thumb' | 'switch' = 'thumb'
 ) {
   const simulation = useRef({
     position: target,
@@ -52,7 +54,7 @@ export function useSliderMotion(
     const state = simulation.current
     let alive = true
     const lensEl = host.current?.querySelector<HTMLElement>(':scope > .lab-slider-thumb > .lab-lens')
-    const lensLayer = lensEl ? new GlassLensLayer(lensEl, 'thumb', true) : null
+    const lensLayer = lensEl ? new GlassLensLayer(lensEl, lens, true) : null
     /**
      * The thumb's travel (px) and inset (the edge-to-centre distance at either end), the track's
      * height and direction. Every read of a frame happens here, before paint writes anything.
@@ -167,7 +169,7 @@ export function useSliderMotion(
       state.time = 0
       media.removeEventListener('change', changed)
     }
-  }, [host])
+  }, [host, lens])
   useLayoutEffect(() => {
     goal.current = {
       ...goal.current,

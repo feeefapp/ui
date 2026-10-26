@@ -1,5 +1,5 @@
 import { lensMaterial } from './material.js';
-import { LENS_DISPERSION, lensDisplacementMap, rgbaBmpDataUrl, supportsRefraction } from './refraction.js';
+import { LENS_DISPERSION, LENS_SOFT, lensDisplacementMap, rgbaBmpDataUrl, supportsRefraction } from './refraction.js';
 const SVG = 'http://www.w3.org/2000/svg';
 const PLAIN_QUERY = '(prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active)';
 let plainQuery;
@@ -127,6 +127,7 @@ export class GlassLensLayer {
         setProperty(style, '--lab-lens-rim-edge-bottom', material.rimEdge.bottom.toFixed(4));
         setProperty(style, '--lab-lens-line', material.line.inner.toFixed(4));
         setProperty(style, '--lab-lens-line-outer', material.line.outer.toFixed(4));
+        setProperty(style, '--lab-lens-line-bottom', material.line.bottom.toFixed(4));
         setProperty(style, '--lab-lens-shadow', material.shadow.toFixed(4));
         const radius = Math.min(size.radius, size.width / 2, size.height / 2);
         const value = mode === 'liquid' && lensBends() ? this.refraction(size.width, size.height, radius, t) : null;
@@ -160,6 +161,17 @@ export class GlassLensLayer {
                 return node('feColorMatrix', { in: input, type: 'matrix', values: [...rows, '0 0 0 1 0'].join('  '), result });
             };
             filter.append(node('feImage', { result: 'map', preserveAspectRatio: 'none', x: 0, y: 0 }), bend('red'), bend('green'), bend('blue'), channel('red', 0, 'r'), channel('green', 1, 'g'), channel('blue', 2, 'b'), node('feComposite', { in: 'r', in2: 'g', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'rg' }), node('feComposite', { in: 'rg', in2: 'b', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'bent' }), 
+            // A slider thumb softens its edge band: the backdrop blurred, then bent like the rest (its band
+            // magnifies, so blurring after the bend would soften nothing), where the map's blue says so.
+            ...(this.kind === 'thumb'
+                ? [
+                    node('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: LENS_SOFT.blur, edgeMode: 'duplicate', result: 'blurred' }),
+                    node('feDisplacementMap', { 'in': 'blurred', 'in2': 'map', 'xChannelSelector': 'R', 'yChannelSelector': 'G', 'scale': 0, 'result': 'bentBlurred', 'data-lens-soft': '' }),
+                    node('feColorMatrix', { in: 'map', type: 'matrix', values: '0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 1 0 0', result: 'band' }),
+                    node('feComposite', { in: 'bentBlurred', in2: 'band', operator: 'in', result: 'soft' }),
+                    node('feComposite', { in: 'soft', in2: 'bent', operator: 'over', result: 'bent' }),
+                ]
+                : []), 
             // Chromium ignores clip-path on an SVG backdrop filter: the map's alpha cuts the shape.
             node('feComposite', { in: 'bent', in2: 'map', operator: 'in' }));
             filterHost.append(filter);
@@ -179,6 +191,9 @@ export class GlassLensLayer {
         setAttribute(red, 'scale', (map.scale * t * (1 - LENS_DISPERSION)).toFixed(2));
         setAttribute(green, 'scale', (map.scale * t).toFixed(2));
         setAttribute(blue, 'scale', (map.scale * t * (1 + LENS_DISPERSION)).toFixed(2));
+        const soft = filter.querySelector('[data-lens-soft]');
+        if (soft)
+            setAttribute(soft, 'scale', (map.scale * t).toFixed(2));
         return `url(#${this.id})`;
     }
     hide() {

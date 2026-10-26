@@ -55,16 +55,20 @@ double gentleRefractionShift(double side, [double bezel = glassBezel]) {
   );
 }
 
-/// A control lens's kind: a pill (segmented control, tab bar) or a thumb (slider, switch).
-enum LensKind { pill, thumb }
+/// A control lens's kind: a pill (segmented control, tab bar), a slider's thumb or a switch's
+/// thumb (they bend and edge differently on iOS 26.2).
+enum LensKind { pill, thumb, switchThumb }
 
 /// How iOS 26.2's control lenses bend what is behind them, measured with phase-shifted fringes
 /// under held stock controls (`research/liquid-glass/LENS-MEASURED.md` §2), the twin of the web
 /// kit's `LENS_BEND`. The pill: an inward rim of [lensPillRim] px over its outer
 /// [lensPillRimWidth] px, then outward (it shows the backdrop from outside its edge, so lines
 /// crowd toward the rim), rising to [lensPillPeak] px at [lensPillAt] px deep, then fading as
-/// `exp(-(d - at) / decay)`. The thumb: inward, [lensThumbPeak] px over its outer [lensThumbAt]
-/// px, then `peak · (1 - (d - at) / reach)^power`. Same in light and dark.
+/// `exp(-(d - at) / decay)`. The slider thumb: inward, [lensThumbPeak] px over its outer
+/// [lensThumbAt] px, then `peak · (1 - (d - at) / reach)^power`, its outer [lensThumbSoft] px
+/// softened ([lensSoftBlur], [lensSoftWeight]). The switch thumb: the pill's profile at
+/// [lensSwitchScale] (outward, 2.9 px at 5 px deep) with the pill's lean, and its whole middle
+/// zoomed out ([lensSwitchZoomX], [lensSwitchZoomY]). All the same in light and dark.
 const double lensPillRim = 6;
 const double lensPillRimWidth = 0.6;
 const double lensPillPeak = 4.3;
@@ -79,6 +83,24 @@ const double lensThumbAt = 1;
 const double lensThumbReach = 6.5;
 const double lensThumbPower = 2.2;
 
+/// How deep (px) the slider thumb's soft band reaches: [lensSoftWeight] falls from 1 at the rim
+/// to 0 here.
+const double lensThumbSoft = 5;
+
+/// The slider thumb's soft edge: iOS 26.2 blurs the band it bends (fringe contrast 0.45 of the
+/// middle at its rim, back to full about 5 px in). The backdrop blurred by this standard deviation
+/// (px), then bent like the rest, mixed over the sharp bend by [lensSoftWeight]. The web kit's
+/// `LENS_SOFT`.
+const double lensSoftBlur = 2;
+
+/// The switch thumb's bend is the pill's ([lensBend]) times this.
+const double lensSwitchScale = 0.67;
+
+/// The switch thumb's middle is zoomed out: a point shows the backdrop this × its offset from the
+/// centre further out, per axis (it looks about 13 % smaller across).
+const double lensSwitchZoomX = 0.04;
+const double lensSwitchZoomY = 0;
+
 /// Colour split of a lens's bend: red bends this much less than green and blue this much more
 /// (the web kit's `LENS_DISPERSION`), the rainbow along its rim.
 const double lensDispersion = 0.06;
@@ -92,13 +114,32 @@ double lensBend(LensKind kind, double d) {
     final t = 1 - (d - lensThumbAt) / lensThumbReach;
     return t > 0 ? lensThumbPeak * math.pow(t, lensThumbPower) : 0;
   }
-  if (d < lensPillRimWidth) return lensPillRim * (1 - d / lensPillRimWidth);
+  final scale = kind == LensKind.switchThumb ? lensSwitchScale : 1.0;
+  if (d < lensPillRimWidth) {
+    return scale * lensPillRim * (1 - d / lensPillRimWidth);
+  }
   if (d < lensPillAt) {
-    return -lensPillPeak *
+    return -scale *
+        lensPillPeak *
         math.min(
           1.0,
           (d - lensPillRimWidth) / (lensPillAt - 1 - lensPillRimWidth),
         );
   }
-  return -lensPillPeak * math.exp(-(d - lensPillAt) / lensPillDecay);
+  return -scale * lensPillPeak * math.exp(-(d - lensPillAt) / lensPillDecay);
 }
+
+/// How much of the softened (blurred, then bent) backdrop shows at depth [d] px inside a [kind]
+/// lens: `max(0, 1 - d / lensThumbSoft)` for the slider thumb, 0 otherwise. The web kit's lens map
+/// blue channel.
+double lensSoftWeight(LensKind kind, double d) {
+  if (kind != LensKind.thumb || !(d >= 0)) return 0;
+  return math.max(0.0, 1 - d / lensThumbSoft);
+}
+
+/// The switch thumb's zoom-out at ([dx], [dy]) px from its centre: the extra shift (px, outward
+/// positive) of the sample along each axis. Zero for other kinds.
+({double x, double y}) lensZoom(LensKind kind, double dx, double dy) =>
+    kind == LensKind.switchThumb
+    ? (x: dx * lensSwitchZoomX, y: dy * lensSwitchZoomY)
+    : (x: 0, y: 0);

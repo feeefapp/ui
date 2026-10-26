@@ -204,8 +204,8 @@ export function liftFilter(gain, offset) {
  * - `rim`: white along the inner edge, by side (`top`, `side`, `bottom`), per colour scheme: `band`
  *   over 1 px and `edge` over its outermost third (iOS's is brightest at the outline and fades in
  *   about 1 px). The pill's is even all round, the thumb's lit at its sides.
- * - `line`: black along the thumb's top edge, `inner` over its inner 1 px and `outer` over 0.5 px
- *   outside it: a dark line that shows on light backdrops.
+ * - `line`: black along a thumb's top edge, `inner` over its inner 1 px and `outer` over 0.5 px
+ *   outside it, and `bottom` along its bottom edge: a dark line that shows on light backdrops.
  * - `shadow`: black at `alpha` under it, `dy` px down, blurred by `blur` (CSS blur radius, px).
  * There is no hairline: iOS draws none around control lenses.
  */
@@ -217,7 +217,7 @@ export const LENS_MATERIAL = {
             light: { band: { top: 0.27, side: 0.27, bottom: 0.27 }, edge: { top: 0.45, side: 0.45, bottom: 0.45 } },
             dark: { band: { top: 0.2, side: 0.2, bottom: 0.2 }, edge: { top: 1, side: 1, bottom: 1 } },
         },
-        line: { light: { inner: 0, outer: 0 }, dark: { inner: 0, outer: 0 } },
+        line: { light: { inner: 0, outer: 0, bottom: 0 }, dark: { inner: 0, outer: 0, bottom: 0 } },
     },
     thumb: {
         veil: 0.09,
@@ -226,7 +226,18 @@ export const LENS_MATERIAL = {
             light: { band: { top: 0, side: 0.25, bottom: 0.08 }, edge: { top: 0, side: 0.3, bottom: 0.1 } },
             dark: { band: { top: 0, side: 0.15, bottom: 0.15 }, edge: { top: 0, side: 0.18, bottom: 0.18 } },
         },
-        line: { light: { inner: 0.35, outer: 0.23 }, dark: { inner: 0.24, outer: 0.31 } },
+        line: { light: { inner: 0.35, outer: 0.23, bottom: 0 }, dark: { inner: 0.24, outer: 0.31, bottom: 0 } },
+    },
+    // The switch thumb: the slider thumb's veil and shade, a dark line along its top and bottom edges
+    // with the rim light over it (on white 0.4–0.55, on black 0.3–0.5 at those edges).
+    switch: {
+        veil: 0.09,
+        shade: { top: 0.14, middle: 0.04 },
+        rim: {
+            light: { band: { top: 0.2, side: 0.2, bottom: 0.3 }, edge: { top: 0.25, side: 0.25, bottom: 0.45 } },
+            dark: { band: { top: 0.2, side: 0.2, bottom: 0.3 }, edge: { top: 0.25, side: 0.25, bottom: 0.45 } },
+        },
+        line: { light: { inner: 0.55, outer: 0, bottom: 0.6 }, dark: { inner: 0.5, outer: 0, bottom: 0.6 } },
     },
 };
 /** The shadow every control lens casts (LENS-MEASURED.md §3): 0.89 on white just under its bottom
@@ -242,7 +253,7 @@ export function lensMaterial(kind, lens, scheme) {
         shade: { top: m.shade.top * t, middle: m.shade.middle * t },
         rim: { top: rim.band.top * t, side: rim.band.side * t, bottom: rim.band.bottom * t },
         rimEdge: { top: rim.edge.top * t, side: rim.edge.side * t, bottom: rim.edge.bottom * t },
-        line: { inner: m.line[scheme].inner * t, outer: m.line[scheme].outer * t },
+        line: { inner: m.line[scheme].inner * t, outer: m.line[scheme].outer * t, bottom: m.line[scheme].bottom * t },
         shadow: LENS_SHADOW.alpha * t,
     };
 }

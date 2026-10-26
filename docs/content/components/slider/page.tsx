@@ -91,7 +91,8 @@ function Overview() {
           released. The lens is clear glass over the track: never blurred, brightened or magnified, a
           faint white veil, a little darker along its top, a rim light on its sides, a dark line on its
           top edge and a soft shadow, with no touch glow. With <C>liquid</C> glass it also bends the
-          track inward over its outer 7px, where the browser can bend a backdrop (Chromium);{' '}
+          track inward over its outer 7px and softens that band, where the browser can bend a backdrop
+          (Chromium);{' '}
           <C>transparent</C> glass keeps it unbent. Reduced motion turns it off; reduced transparency,
           more contrast and the <C>solid</C> glass style keep a solid thumb.
         </p>

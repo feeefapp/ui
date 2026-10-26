@@ -210,7 +210,7 @@ function SliderControl({
     switchMode && position !== null && !inert
       ? position
       : sliderFraction(displayPosition, range.min, range.max)
-  useSliderMotion(host, fraction, tracking, pressed, trackStyle === 'thin', inert, switchMode)
+  useSliderMotion(host, fraction, tracking, pressed, trackStyle === 'thin', inert, switchMode, switchMode ? 'switch' : 'thumb')
   /** How far (px) the switch thumb travels from off to on. */
   const travel = (el: HTMLElement) => {
     const inset =

@@ -193,8 +193,8 @@ function sampleDisplacementMap(
   return { width: w, height: h, data, scale: 2 * largest }
 }
 
-/** A control lens's kind: a pill (segmented control, tab bar) or a thumb (slider, switch). */
-export type LensKind = 'pill' | 'thumb'
+/** A control lens's kind: a pill (segmented control, tab bar), a slider thumb or a switch thumb. */
+export type LensKind = 'pill' | 'thumb' | 'switch'
 
 /**
  * How iOS 26.2's control lenses bend what is behind them, measured with phase-shifted fringes under
@@ -205,14 +205,25 @@ export type LensKind = 'pill' | 'thumb'
  *   `exp(-(d - 5) / 10.5)`, leaning away from the centre (`radial`: the direction is the outline's
  *   normal plus `radial` × the offset from the centre over the half size), so lines bow along its
  *   top and bottom. The flat middle neither bends nor magnifies.
- * - thumb: inward, 7.1 px over the outer 1 px, then `7.1 · (1 - (d - 1) / 6.5)^2.2` to nothing at
- *   7.5 px.
- * Both are the same in light and dark appearance.
+ * - thumb (slider): inward, 7.1 px over the outer 1 px, then `7.1 · (1 - (d - 1) / 6.5)^2.2` to
+ *   nothing at 7.5 px; its outer `soft` px are softened (`LENS_SOFT`).
+ * - switch: the pill's profile at `scale` (outward, 2.9 px at 5 px deep), and its whole middle zoomed
+ *   out (`zoom`: it shows the backdrop `zoom` × the offset from the centre further out, so it looks
+ *   about 13 % smaller across).
+ * All are the same in light and dark appearance.
  */
 export const LENS_BEND = {
   pill: { rim: 6, rimWidth: 0.6, peak: 4.3, at: 5, decay: 10.5, radial: 1.5 },
-  thumb: { peak: 7.1, at: 1, reach: 6.5, power: 2.2 },
+  thumb: { peak: 7.1, at: 1, reach: 6.5, power: 2.2, soft: 5 },
+  switch: { scale: 0.67, zoom: { x: 0.04, y: 0 } },
 } as const
+
+/**
+ * The slider thumb's soft edge: iOS 26.2 blurs the band it bends (fringe contrast 0.45 of the middle
+ * at its rim, back to full about 5 px in). A blur of `blur` px (standard deviation) mixed in by the
+ * map's blue channel, `1 - d / soft`.
+ */
+export const LENS_SOFT = { blur: 2 } as const
 
 /** Colour split of a control lens's bend: red bends this much less than green and blue this much
  * more (iOS 26.2: 0.94 and 1.05 across the pill's strongest band), the rainbow along its rim. */
@@ -230,17 +241,19 @@ export function lensBend(kind: LensKind, d: number) {
     const t = 1 - (d - at) / reach
     return t > 0 ? peak * t ** power : 0
   }
+  const scale = kind === 'switch' ? LENS_BEND.switch.scale : 1
   const { rim, rimWidth, peak, at, decay } = LENS_BEND.pill
-  if (d < rimWidth) return rim * (1 - d / rimWidth)
-  if (d < at) return -peak * Math.min(1, (d - rimWidth) / (at - 1 - rimWidth))
-  return -peak * Math.exp(-(d - at) / decay)
+  if (d < rimWidth) return scale * rim * (1 - d / rimWidth)
+  if (d < at) return -scale * peak * Math.min(1, (d - rimWidth) / (at - 1 - rimWidth))
+  return -scale * peak * Math.exp(-(d - at) / decay)
 }
 
 /**
  * The map of a control's lens (lens-layer.ts): one `shape` (its own box, at 0, 0) bending by
- * `lensBend` along its outline's normal. Same encoding as `displacementMap` (red/green = shift as a
- * share of `scale / 2`, alpha = the shape), sampled at most `LENS_MAP_PIXELS`. The bend is
- * linear in `scale`, so an owner eases the lens in by scaling `scale` alone.
+ * `lensBend` along its outline's normal (a switch also zooms out). Same encoding as
+ * `displacementMap` (red/green = shift as a share of `scale / 2`, alpha = the shape, blue = how much
+ * of the softened copy shows: the thumb's `LENS_SOFT` band), sampled at most `LENS_MAP_PIXELS`. The
+ * bend is linear in `scale`, so an owner eases the lens in by scaling `scale` alone.
  */
 export function lensDisplacementMap(shape: GlassShape, kind: LensKind) {
   const logicalWidth = Number.isFinite(shape.width) ? Math.max(1, shape.width) : 1
@@ -266,18 +279,27 @@ export function lensDisplacementMap(shape: GlassShape, kind: LensKind) {
     const i = y * w + x
     data[i * 4 + 3] = Math.round(Math.min(1, Math.max(0, 0.5 - d / coverageWidth)) * 255)
     if (d >= coverageWidth / 2) continue
+    if (kind === 'thumb') data[i * 4 + 2] = Math.round(Math.max(0, 1 + d / LENS_BEND.thumb.soft) * 255)
+    const offsetX = px - logicalWidth / 2
+    const offsetY = py - logicalHeight / 2
+    // A switch's middle is zoomed out: it shows the backdrop from further out.
+    if (kind === 'switch') {
+      shifts[i * 2] = offsetX * LENS_BEND.switch.zoom.x
+      shifts[i * 2 + 1] = offsetY * LENS_BEND.switch.zoom.y
+    }
     const bend = Math.max(-limit, Math.min(limit, lensBend(kind, Math.max(0, -d))))
-    if (!bend) continue
-    const gx = distance(px + 1, py) - distance(px - 1, py)
-    const gy = distance(px, py + 1) - distance(px, py - 1)
-    const g = Math.hypot(gx, gy) || 1
-    const lean = kind === 'pill' ? LENS_BEND.pill.radial : 0
-    const nx = gx / g + (lean * (px - logicalWidth / 2)) / (logicalWidth / 2)
-    const ny = gy / g + (lean * (py - logicalHeight / 2)) / (logicalHeight / 2)
-    const length = Math.hypot(nx, ny) || 1
-    // Positive bends sample inward: against the outward direction.
-    shifts[i * 2] = (-nx / length) * bend
-    shifts[i * 2 + 1] = (-ny / length) * bend
+    if (bend) {
+      const gx = distance(px + 1, py) - distance(px - 1, py)
+      const gy = distance(px, py + 1) - distance(px, py - 1)
+      const g = Math.hypot(gx, gy) || 1
+      const lean = kind === 'thumb' ? 0 : LENS_BEND.pill.radial
+      const nx = gx / g + (lean * offsetX) / (logicalWidth / 2)
+      const ny = gy / g + (lean * offsetY) / (logicalHeight / 2)
+      const length = Math.hypot(nx, ny) || 1
+      // Positive bends sample inward: against the outward direction.
+      shifts[i * 2] += (-nx / length) * bend
+      shifts[i * 2 + 1] += (-ny / length) * bend
+    }
     largest = Math.max(largest, Math.abs(shifts[i * 2]), Math.abs(shifts[i * 2 + 1]))
   }
   for (let i = 0; i < w * h; i++) {

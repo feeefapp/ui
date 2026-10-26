@@ -688,6 +688,10 @@ class _SliderControlState extends State<_SliderControl>
                       ink: dark ? c.surface : c.ink,
                       thin: _thin,
                       lens: solid ? 0 : _motion.lens,
+                      // A switch's thumb bends and edges differently from a slider's on iOS.
+                      kind: widget.switchMode
+                          ? LensKind.switchThumb
+                          : LensKind.thumb,
                       child: widget.renderThumb?.call(state),
                     ),
                   ),
@@ -996,11 +1000,15 @@ class _Thumb extends StatelessWidget {
     required this.ink,
     required this.thin,
     required this.lens,
+    required this.kind,
     this.child,
   });
   final double radius, lens;
   final Color fill, ink;
   final bool thin;
+
+  /// The lens it turns into: a slider's thumb or a switch's.
+  final LensKind kind;
   final Widget? child;
 
   @override
@@ -1018,7 +1026,7 @@ class _Thumb extends StatelessWidget {
           lens: lens.clamp(0.0, 1.0),
         ),
       ),
-      GlassLens.fill(kind: LensKind.thumb, radius: radius, lens: lens),
+      GlassLens.fill(kind: kind, radius: radius, lens: lens),
       if (child != null)
         Center(
           child: IconTheme.merge(

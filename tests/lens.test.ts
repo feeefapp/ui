@@ -15,7 +15,7 @@ import {
 } from '../src/primitives/lens-model.ts'
 import { GLASS_STRETCH_LIMIT } from '../src/glass/press.ts'
 import { LENS_MATERIAL, LENS_SHADOW, lensMaterial } from '../src/glass/material.ts'
-import { lensBend, lensDisplacementMap } from '../src/glass/refraction.ts'
+import { LENS_BEND, lensBend, lensDisplacementMap } from '../src/glass/refraction.ts'
 import { lensFixture } from '../flutter/tool/lens_fixture.ts'
 
 test('the lens stretches with speed, signed and bounded', () => {
@@ -126,7 +126,7 @@ test('the lens map bends by lensBend and leans the pill away from its centre', (
 
 test('the lens material: clear, a shade from the top, the measured rim and shadow', () => {
   for (const scheme of ['light', 'dark'] as const) {
-    for (const kind of ['pill', 'thumb'] as const) {
+    for (const kind of ['pill', 'thumb', 'switch'] as const) {
       const rest = lensMaterial(kind, 0, scheme)
       assert.equal(rest.veil, 0)
       assert.equal(rest.shade.top, 0)
@@ -141,4 +141,31 @@ test('the lens material: clear, a shade from the top, the measured rim and shado
   }
   assert.equal(LENS_MATERIAL.pill.veil, 0, 'the pill never veils: black stays black')
   assert.ok(lensMaterial('pill', 1, 'dark').rimEdge.top > lensMaterial('pill', 1, 'light').rimEdge.top, 'dark appearance lights the rim more')
+})
+
+test('a switch bends like the pill at two thirds and zooms its middle out', () => {
+  // LENS-MEASURED.md §2: the Toggle's lens peaks at about 2.9 px outward, 5 px in.
+  assert.ok(Math.abs(lensBend('switch', 5) + 2.9) < 0.1)
+  assert.ok(lensBend('switch', 0.2) > 0, 'an inward rim')
+  const map = lensDisplacementMap({ x: 0, y: 0, width: 57, height: 37, radius: 18.5 }, 'switch')
+  const density = map.width / 57
+  const dx = (x: number, y: number) => ((map.data[(Math.floor(y * density) * map.width + Math.floor(x * density)) * 4] - 128) / 127) * (map.scale / 2)
+  // Across the middle it shows the backdrop from further out, growing with the offset.
+  assert.ok(dx(48, 18.5) > dx(38, 18.5) && dx(38, 18.5) > 0)
+  assert.ok(dx(9, 18.5) < 0)
+  assert.ok(Math.abs(dx(28.5, 18.5)) < 0.1, 'the centre stays')
+  assert.ok(LENS_BEND.switch.zoom.x > 0)
+})
+
+test('only a slider thumb softens its edge band', () => {
+  const blue = (kind: 'pill' | 'thumb' | 'switch', x: number) => {
+    const map = lensDisplacementMap({ x: 0, y: 0, width: 57, height: 37, radius: 18.5 }, kind)
+    const density = map.width / 57
+    return map.data[(Math.floor(18.5 * density) * map.width + Math.floor(x * density)) * 4 + 2]
+  }
+  assert.ok(blue('thumb', 0.5) > 200, 'full at the rim')
+  assert.ok(blue('thumb', 3) > 0 && blue('thumb', 3) < blue('thumb', 0.5))
+  assert.equal(blue('thumb', LENS_BEND.thumb.soft + 1), 0, 'sharp past the band')
+  assert.equal(blue('pill', 0.5), 0)
+  assert.equal(blue('switch', 0.5), 0)
 })

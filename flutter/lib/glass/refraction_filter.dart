@@ -307,6 +307,7 @@ class _RenderRefraction extends RenderBox {
       null => 0,
       LensKind.pill => 1,
       LensKind.thumb => 2,
+      LensKind.switchThumb => 3,
     });
     // Two passes, never one composed filter: blur and colour first (sharing the container's
     // backdrop read), then the bend alone, which reads that result. Under a composed filter

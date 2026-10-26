@@ -76,23 +76,30 @@ void main() {
     },
   );
 
-  test('lens mode bends by the measured pill and thumb profiles', () async {
+  test('lens mode bends by the measured pill, thumb and switch profiles', () async {
     final program = await ui.FragmentProgram.fromAsset(
       'shaders/glass_refraction.frag',
     );
     const width = 120, height = 44;
-    // Every channel = 2 · x, so a pixel's value / 2 is the backdrop column it shows.
-    final sourceRecorder = ui.PictureRecorder();
-    final canvas = ui.Canvas(sourceRecorder);
-    for (var x = 0; x < width; x++) {
-      final v = 2 * x;
-      canvas.drawRect(
-        ui.Rect.fromLTWH(x.toDouble(), 0, 1, height.toDouble()),
-        ui.Paint()..color = ui.Color.fromARGB(255, v, v, v),
-      );
+    // Every channel = 2 · x, so a pixel's value / 2 is the backdrop column it shows (a blur of a
+    // linear ramp leaves it unchanged, so the thumb's soft band reads the same).
+    Future<ui.Image> backdrop(int Function(int x) value) async {
+      final recorder = ui.PictureRecorder();
+      final canvas = ui.Canvas(recorder);
+      for (var x = 0; x < width; x++) {
+        final v = value(x);
+        canvas.drawRect(
+          ui.Rect.fromLTWH(x.toDouble(), 0, 1, height.toDouble()),
+          ui.Paint()..color = ui.Color.fromARGB(255, v, v, v),
+        );
+      }
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(width, height);
+      picture.dispose();
+      return image;
     }
-    final sourcePicture = sourceRecorder.endRecording();
-    final source = await sourcePicture.toImage(width, height);
+
+    var source = await backdrop((x) => 2 * x);
 
     Future<double Function(int x, int y)> render(LensKind kind) async {
       final shader = program.fragmentShader();
@@ -104,7 +111,11 @@ void main() {
         height / 2, ...List.filled(7, 0.0), // a capsule
         ...List.filled(8, 0.0), // blends
         0, -1, 0, 0, // light, no edge terms
-        kind == LensKind.pill ? 1 : 2,
+        switch (kind) {
+          LensKind.pill => 1,
+          LensKind.thumb => 2,
+          LensKind.switchThumb => 3,
+        },
       ];
       for (var i = 0; i < uniforms.length; i++) {
         shader.setFloat(i, uniforms[i]);
@@ -140,7 +151,41 @@ void main() {
       closeTo(2.5 + lensBend(LensKind.thumb, 2.5), 1),
     );
     expect(thumb(width ~/ 2, height ~/ 2), closeTo(60.5, 1));
+    final switchThumb = await render(LensKind.switchThumb);
+    // Two thirds of the pill's outward bend, plus the zoom-out: 4 % of the offset from the centre.
+    expect(
+      switchThumb(10, height ~/ 2),
+      closeTo(
+        10.5 +
+            lensBend(LensKind.switchThumb, 10.5) +
+            lensZoom(LensKind.switchThumb, 10.5 - width / 2, 0).x,
+        1,
+      ),
+    );
+    // In the flat part the bend is two thirds of the pill's there; the rest is the zoom-out.
+    for (final x in [30, 90]) {
+      expect(
+        switchThumb(x, height ~/ 2) - x,
+        closeTo(
+          lensSwitchScale * (pill(x, height ~/ 2) - x - 0.5) +
+              0.5 +
+              lensZoom(LensKind.switchThumb, x + 0.5 - width / 2, 0).x,
+          0.75,
+        ),
+        reason: 'x $x',
+      );
+    }
+    expect(switchThumb(width ~/ 2, height ~/ 2), closeTo(60.5, 1));
     source.dispose();
-    sourcePicture.dispose();
+
+    // Black and white stripes 4 px wide: the slider thumb's band shows them blurred (grey), its
+    // middle stays sharp.
+    source = await backdrop((x) => (x ~/ 4).isOdd ? 254 : 0);
+    final softThumb = await render(LensKind.thumb);
+    // 1.5 px deep: the sharp bend lands on a white stripe; 70 % of it is the blurred copy.
+    expect(softThumb(1, height ~/ 2) * 2, inInclusiveRange(60, 230));
+    final middle = softThumb(width ~/ 2, height ~/ 2) * 2;
+    expect(middle < 10 || middle > 244, isTrue, reason: 'middle $middle');
+    source.dispose();
   });
 }

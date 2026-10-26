@@ -256,8 +256,8 @@ export declare function liftFilter(gain: number, offset: number): {
  * - `rim`: white along the inner edge, by side (`top`, `side`, `bottom`), per colour scheme: `band`
  *   over 1 px and `edge` over its outermost third (iOS's is brightest at the outline and fades in
  *   about 1 px). The pill's is even all round, the thumb's lit at its sides.
- * - `line`: black along the thumb's top edge, `inner` over its inner 1 px and `outer` over 0.5 px
- *   outside it: a dark line that shows on light backdrops.
+ * - `line`: black along a thumb's top edge, `inner` over its inner 1 px and `outer` over 0.5 px
+ *   outside it, and `bottom` along its bottom edge: a dark line that shows on light backdrops.
  * - `shadow`: black at `alpha` under it, `dy` px down, blurred by `blur` (CSS blur radius, px).
  * There is no hairline: iOS draws none around control lenses.
  */
@@ -298,10 +298,12 @@ export declare const LENS_MATERIAL: {
             readonly light: {
                 readonly inner: 0;
                 readonly outer: 0;
+                readonly bottom: 0;
             };
             readonly dark: {
                 readonly inner: 0;
                 readonly outer: 0;
+                readonly bottom: 0;
             };
         };
     };
@@ -341,10 +343,57 @@ export declare const LENS_MATERIAL: {
             readonly light: {
                 readonly inner: 0.35;
                 readonly outer: 0.23;
+                readonly bottom: 0;
             };
             readonly dark: {
                 readonly inner: 0.24;
                 readonly outer: 0.31;
+                readonly bottom: 0;
+            };
+        };
+    };
+    readonly switch: {
+        readonly veil: 0.09;
+        readonly shade: {
+            readonly top: 0.14;
+            readonly middle: 0.04;
+        };
+        readonly rim: {
+            readonly light: {
+                readonly band: {
+                    readonly top: 0.2;
+                    readonly side: 0.2;
+                    readonly bottom: 0.3;
+                };
+                readonly edge: {
+                    readonly top: 0.25;
+                    readonly side: 0.25;
+                    readonly bottom: 0.45;
+                };
+            };
+            readonly dark: {
+                readonly band: {
+                    readonly top: 0.2;
+                    readonly side: 0.2;
+                    readonly bottom: 0.3;
+                };
+                readonly edge: {
+                    readonly top: 0.25;
+                    readonly side: 0.25;
+                    readonly bottom: 0.45;
+                };
+            };
+        };
+        readonly line: {
+            readonly light: {
+                readonly inner: 0.55;
+                readonly outer: 0;
+                readonly bottom: 0.6;
+            };
+            readonly dark: {
+                readonly inner: 0.5;
+                readonly outer: 0;
+                readonly bottom: 0.6;
             };
         };
     };
@@ -357,7 +406,7 @@ export declare const LENS_SHADOW: {
     readonly alpha: 0.13;
 };
 /** A `kind` lens's material at `lens` (0 rest … 1 glass): every alpha eased in with it. */
-export declare function lensMaterial(kind: 'pill' | 'thumb', lens: number, scheme: 'light' | 'dark'): {
+export declare function lensMaterial(kind: 'pill' | 'thumb' | 'switch', lens: number, scheme: 'light' | 'dark'): {
     veil: number;
     shade: {
         top: number;
@@ -376,6 +425,7 @@ export declare function lensMaterial(kind: 'pill' | 'thumb', lens: number, schem
     line: {
         inner: number;
         outer: number;
+        bottom: number;
     };
     shadow: number;
 };

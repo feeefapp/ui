@@ -86,7 +86,7 @@ function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', v
     const fraction = switchMode && position !== null && !inert
         ? position
         : sliderFraction(displayPosition, range.min, range.max);
-    useSliderMotion(host, fraction, tracking, pressed, trackStyle === 'thin', inert, switchMode);
+    useSliderMotion(host, fraction, tracking, pressed, trackStyle === 'thin', inert, switchMode, switchMode ? 'switch' : 'thumb');
     /** How far (px) the switch thumb travels from off to on. */
     const travel = (el) => {
         const inset = Number.parseFloat(getComputedStyle(el).getPropertyValue('--lab-slider-inset')) ||

@@ -14,7 +14,7 @@ import 'refraction_filter.dart';
 /// or a tab bar, pressed or dragged, as iOS 26.2 draws it (`research/liquid-glass/
 /// LENS-MEASURED.md`), the twin of the web kit's `GlassLensLayer` and `lens.css`. Clear: never
 /// blurred, lifted, saturated or magnified; over the backdrop the measured veil and shade, the rim
-/// light, the thumb's dark top line and the shadow ([lensMaterial]), with no hairline and no touch
+/// light, a thumb's dark lines and the shadow ([lensMaterial]), with no hairline and no touch
 /// glow. Liquid glass also bends what is behind it by the measured profile of its [kind]
 /// ([lensBend], with the colour split [lensDispersion]) on Impeller with the theme's refraction
 /// on; transparent glass keeps the clear lens unbent. [lens] (0 rest … 1 glass) eases every part
@@ -48,7 +48,7 @@ class GlassLens extends StatelessWidget {
     ),
   );
 
-  /// A pill (segmented control, tab bar) or a thumb (slider, switch): its bend and material.
+  /// A pill (segmented control, tab bar), a slider thumb or a switch thumb: its bend and material.
   final LensKind kind;
   final Rect rect;
   final double radius;
@@ -89,11 +89,7 @@ class GlassLens extends StatelessWidget {
     final dark = ThemeProvider.of(context).brightness == Brightness.dark;
     final r = math.min(radius, math.min(rect.width, rect.height) / 2);
     final outline = superellipsePath(Offset.zero & rect.size, [r, r, r, r]);
-    final material = lensMaterial(
-      pill: kind == LensKind.pill,
-      lens: t,
-      dark: dark,
-    );
+    final material = lensMaterial(kind: kind, lens: t, dark: dark);
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -155,8 +151,8 @@ class _PathClip extends CustomClipper<Path> {
 }
 
 /// The lens's material over the backdrop (the web kit's `.lab-lens` background and box shadows):
-/// the shadow outside, the veil and the shade inside, the rim light by side and the thumb's dark
-/// top line.
+/// the shadow outside, the veil and the shade inside, the rim light by side and a thumb's dark
+/// top and bottom lines.
 class _LensPainter extends CustomPainter {
   _LensPainter({required this.outline, required this.material});
   final Path outline;
@@ -235,7 +231,7 @@ class _LensPainter extends CustomPainter {
       );
     }
     // The rim (CSS paints the last inset shadow first): 1 px bands, then the outermost third,
-    // then the thumb's dark line inside its top edge.
+    // then a thumb's dark lines inside its bottom and top edges.
     void rim(Offset by, Color colour, double alpha) {
       if (alpha > 0.001) fill(band(by), colour, alpha);
     }
@@ -248,6 +244,7 @@ class _LensPainter extends CustomPainter {
     rim(const Offset(_edge, 0), _white, m.edge.side);
     rim(const Offset(0, -_edge), _white, m.edge.bottom);
     rim(const Offset(0, _edge), _white, m.edge.top);
+    rim(const Offset(0, -1), _black, m.line.bottom);
     rim(const Offset(0, 1), _black, m.line.inner);
     canvas.restore();
   }

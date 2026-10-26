@@ -7,5 +7,7 @@ import { type RefObject } from 'react';
  */
 export declare function useSliderMotion(host: RefObject<HTMLDivElement | null>, target: number, tracking: boolean, pressed: boolean, thin: boolean, disabled: boolean, 
 /** Lets a dragged switch thumb rubber-band past its ends instead of clamping to 0–1. */
-overshoot?: boolean): void;
+overshoot?: boolean, 
+/** The thumb's lens: a slider's or a switch's (they bend and edge differently on iOS). */
+lens?: 'thumb' | 'switch'): void;
 //# sourceMappingURL=slider-motion.d.ts.map

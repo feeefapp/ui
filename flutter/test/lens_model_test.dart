@@ -66,30 +66,73 @@ void main() {
     expect(lensBend(LensKind.thumb, 7.5), 0);
     expect(lensBend(LensKind.pill, -1), 0);
   });
+  test(
+    'the switch thumb bends like a smaller pill and zooms its middle out',
+    () {
+      // The pill's profile × 0.67: inward at the rim, outward peaking at 2.9 px 5 px in.
+      expect(lensBend(LensKind.switchThumb, 5), closeTo(-2.881, 1e-3));
+      expect(lensBend(LensKind.switchThumb, 0.2), greaterThan(0));
+      expect(lensBend(LensKind.switchThumb, 0.2), closeTo(0.67 * 4, 1e-9));
+      for (final d in [0.1, 2.0, 5.0, 12.0]) {
+        expect(
+          lensBend(LensKind.switchThumb, d),
+          closeTo(lensBend(LensKind.pill, d) * lensSwitchScale, 1e-12),
+        );
+      }
+      // The zoom grows with the offset from the centre, along x only; nothing at the centre.
+      expect(lensZoom(LensKind.switchThumb, 0, 0), (x: 0.0, y: 0.0));
+      expect(lensZoom(LensKind.switchThumb, 10, 8).x, closeTo(0.4, 1e-12));
+      expect(lensZoom(LensKind.switchThumb, 20, 8).x, closeTo(0.8, 1e-12));
+      expect(lensZoom(LensKind.switchThumb, -20, 8).x, closeTo(-0.8, 1e-12));
+      expect(lensZoom(LensKind.switchThumb, 20, 8).y, 0);
+      expect(lensZoom(LensKind.pill, 20, 8), (x: 0.0, y: 0.0));
+      expect(lensZoom(LensKind.thumb, 20, 8), (x: 0.0, y: 0.0));
+    },
+  );
+  test('only the slider thumb softens its band', () {
+    expect(lensSoftBlur, 2);
+    expect(lensSoftWeight(LensKind.thumb, 0), 1);
+    expect(lensSoftWeight(LensKind.thumb, 1), closeTo(0.8, 1e-12));
+    expect(lensSoftWeight(LensKind.thumb, 2.5), closeTo(0.5, 1e-12));
+    expect(lensSoftWeight(LensKind.thumb, 5), 0);
+    expect(lensSoftWeight(LensKind.thumb, 8), 0);
+    expect(lensSoftWeight(LensKind.thumb, -1), 0);
+    expect(lensSoftWeight(LensKind.pill, 0), 0);
+    expect(lensSoftWeight(LensKind.switchThumb, 0), 0);
+  });
   test('lensMaterial eases the measured material in', () {
-    final pill = lensMaterial(pill: true, lens: 1, dark: false);
+    final pill = lensMaterial(kind: LensKind.pill, lens: 1, dark: false);
     expect(pill.veil, 0);
     expect(pill.shade, (top: 0.105, middle: 0.035));
     expect(pill.band, (top: 0.27, side: 0.27, bottom: 0.27));
     expect(pill.edge, (top: 0.45, side: 0.45, bottom: 0.45));
     expect(pill.shadow, lensShadowAlpha);
-    final pillDark = lensMaterial(pill: true, lens: 1, dark: true);
+    final pillDark = lensMaterial(kind: LensKind.pill, lens: 1, dark: true);
     expect(pillDark.band, (top: 0.2, side: 0.2, bottom: 0.2));
     expect(pillDark.edge, (top: 1.0, side: 1.0, bottom: 1.0));
-    final thumb = lensMaterial(pill: false, lens: 1, dark: false);
+    final thumb = lensMaterial(kind: LensKind.thumb, lens: 1, dark: false);
     expect(thumb.veil, 0.09);
     expect(thumb.shade, (top: 0.14, middle: 0.04));
     expect(thumb.band, (top: 0.0, side: 0.25, bottom: 0.08));
     expect(thumb.edge, (top: 0.0, side: 0.3, bottom: 0.1));
-    expect(thumb.line, (inner: 0.35, outer: 0.23));
-    final thumbDark = lensMaterial(pill: false, lens: 1, dark: true);
+    expect(thumb.line, (inner: 0.35, outer: 0.23, bottom: 0.0));
+    final thumbDark = lensMaterial(kind: LensKind.thumb, lens: 1, dark: true);
     expect(thumbDark.band, (top: 0.0, side: 0.15, bottom: 0.15));
     expect(thumbDark.edge, (top: 0.0, side: 0.18, bottom: 0.18));
-    expect(thumbDark.line, (inner: 0.24, outer: 0.31));
-    final half = lensMaterial(pill: false, lens: 0.5, dark: false);
+    expect(thumbDark.line, (inner: 0.24, outer: 0.31, bottom: 0.0));
+    expect(pill.line, (inner: 0.0, outer: 0.0, bottom: 0.0));
+    for (final dark in [false, true]) {
+      final s = lensMaterial(kind: LensKind.switchThumb, lens: 1, dark: dark);
+      expect(s.veil, 0.09);
+      expect(s.shade, (top: 0.14, middle: 0.04));
+      expect(s.band, (top: 0.2, side: 0.2, bottom: 0.3));
+      expect(s.edge, (top: 0.25, side: 0.25, bottom: 0.45));
+      expect(s.line, (inner: dark ? 0.5 : 0.55, outer: 0.0, bottom: 0.6));
+    }
+    final half = lensMaterial(kind: LensKind.thumb, lens: 0.5, dark: false);
     expect(half.veil, closeTo(0.045, 1e-12));
     expect(half.shadow, closeTo(0.065, 1e-12));
-    expect(lensMaterial(pill: true, lens: 0, dark: false).shadow, 0);
+    expect(lensMaterial(kind: LensKind.pill, lens: 0, dark: false).shadow, 0);
   });
   test('lensStretch', () {
     for (final v in fixture['stretch'] as List) {

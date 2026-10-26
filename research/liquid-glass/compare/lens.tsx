@@ -2,7 +2,7 @@
  * The web twin of CtlLab's `scene=lens&pattern=cycle` (app/controls/CtlLab.swift): the same backdrop
  * images (?bg=<LENS_CYCLE index>) under the kit's control lenses, held at full lens where iOS 26.2
  * draws them: the segmented pill (96 × 28 at 53, 184 → lensPillShape) and the slider thumb
- * (37 × 24 centred at 201, 276.5 → LENS_THUMB_SCALE). ?theme=light|dark, ?glass=liquid|transparent.
+ * (37 × 24 centred at 201, 276.5 → LENS_THUMB_SCALE) and the switch thumb (centred at 92, 354). ?theme=light|dark, ?glass=liquid|transparent.
  * tools/lens_kit.mjs screenshots every image at 3x for tools/measure_lens.py.
  */
 import { GlassLensLayer } from '../../../src/glass/lens-layer'
@@ -51,7 +51,7 @@ backdrop.src = canvas.toDataURL('image/png')
 await backdrop.decode()
 document.body.append(backdrop)
 
-function lens(kind: 'pill' | 'thumb', shape: { x: number; y: number; width: number; height: number; radius: number }) {
+function lens(kind: 'pill' | 'thumb' | 'switch', shape: { x: number; y: number; width: number; height: number; radius: number }) {
   const el = document.createElement('span')
   el.className = 'lab-lens'
   // inset first: the shorthand would reset left and top.
@@ -69,4 +69,6 @@ const pill = lensPillShape({ x: 53, y: 184, width: 96, height: 28 }, 14, 1, quer
 lens('pill', pill)
 const tw = 37 * LENS_THUMB_SCALE, th = 24 * LENS_THUMB_SCALE
 lens('thumb', { x: 201 - tw / 2, y: 276.5 - th / 2, width: tw, height: th, radius: th / 2 })
+// The switch thumb (on): 37 × 24 centred at (92, 354), the Toggle's held lens.
+lens('switch', { x: 92 - tw / 2, y: 354 - th / 2, width: tw, height: th, radius: th / 2 })
 document.documentElement.setAttribute('data-ready', '')

@@ -33,10 +33,12 @@ uniform vec4 uBlendB;
 // Toward the light (unit, y down) and the edge terms k1, k3.
 uniform vec2 uLight;
 uniform vec2 uEdge;
-// 0: container glass (the bezel profile above). 1 or 2: a control lens over the first shape, a
-// pill (segmented control, tab bar) or a thumb (slider, switch), bent by the profile measured on
-// iOS 26.2 (glass/refraction.dart lensBend, LENS-MEASURED.md §2) eased in by uShift (0 … 1), with
-// the colour split lensDispersion; uBezel and the edge terms are unused.
+// 0: container glass (the bezel profile above). 1, 2 or 3: a control lens over the first shape, a
+// pill (segmented control, tab bar), a slider thumb or a switch thumb, bent by the profile
+// measured on iOS 26.2 (glass/refraction.dart lensBend, LENS-MEASURED.md §2) eased in by uShift
+// (0 … 1), with the colour split lensDispersion; uBezel and the edge terms are unused. The slider
+// thumb also softens its band (lensSoftBlur, lensSoftWeight) and the switch thumb zooms its middle
+// out (lensSwitchZoomX/Y).
 uniform float uLens;
 
 uniform sampler2D uTexture;
@@ -95,16 +97,17 @@ float unionDistance(vec2 p) {
   return d;
 }
 
-// The measured lens bend (px, positive inward) at depth d px: glass/refraction.dart lensBend.
-float lensBend(bool thumb, float d) {
+// The measured lens bend (px, positive inward) at depth d px: glass/refraction.dart lensBend. The
+// switch thumb's is the pill's at `scale` (lensSwitchScale 0.67).
+float lensBend(bool thumb, float scale, float d) {
   if (thumb) {
     if (d <= 1.0) return 7.1;
     float t = 1.0 - (d - 1.0) / 6.5;
     return t > 0.0 ? 7.1 * pow(t, 2.2) : 0.0;
   }
-  if (d < 0.6) return 6.0 * (1.0 - d / 0.6);
-  if (d < 5.0) return -4.3 * min(1.0, (d - 0.6) / (5.0 - 1.0 - 0.6));
-  return -4.3 * exp(-(d - 5.0) / 10.5);
+  if (d < 0.6) return scale * 6.0 * (1.0 - d / 0.6);
+  if (d < 5.0) return -scale * 4.3 * min(1.0, (d - 0.6) / (5.0 - 1.0 - 0.6));
+  return -scale * 4.3 * exp(-(d - 5.0) / 10.5);
 }
 
 vec4 sampleAt(vec2 frag) {
@@ -115,33 +118,66 @@ vec4 sampleAt(vec2 frag) {
   return texture(uTexture, clamp(uv, vec2(0.0), vec2(1.0)));
 }
 
-// A control lens: the measured bend along the outline's normal (the pill's leaning away from the
-// centre), red bending 6 % less and blue 6 % more than green. No colour change: the lens's
-// material is painted over it.
+// The backdrop blurred (standard deviation `sigma`, physical px) around `frag`: 13 taps on a
+// diamond (|i| + |j| <= 2) spaced 1.2 sigma apart, weights exp(-(i² + j²) / 2) — about a Gaussian
+// of `sigma`.
+vec4 blurredAt(vec2 frag, float sigma) {
+  float s = 1.2 * sigma;
+  vec4 sum = sampleAt(frag);
+  float total = 1.0;
+  const float w1 = 0.60653066; // exp(-0.5)
+  const float wd = 0.36787944; // exp(-1)
+  const float w2 = 0.13533528; // exp(-2)
+  sum += w1 * (sampleAt(frag + vec2(s, 0.0)) + sampleAt(frag - vec2(s, 0.0)) +
+    sampleAt(frag + vec2(0.0, s)) + sampleAt(frag - vec2(0.0, s)));
+  sum += wd * (sampleAt(frag + vec2(s, s)) + sampleAt(frag + vec2(-s, s)) +
+    sampleAt(frag + vec2(s, -s)) + sampleAt(frag - vec2(s, s)));
+  sum += w2 * (sampleAt(frag + vec2(2.0 * s, 0.0)) + sampleAt(frag - vec2(2.0 * s, 0.0)) +
+    sampleAt(frag + vec2(0.0, 2.0 * s)) + sampleAt(frag - vec2(0.0, 2.0 * s)));
+  total += 4.0 * (w1 + wd + w2);
+  return sum / total;
+}
+
+// A control lens: the measured bend along the outline's normal (the pill's and the switch's
+// leaning away from the centre; the switch's middle zoomed out), red bending 6 % less and blue
+// 6 % more than green. The slider thumb's band mixes in the backdrop blurred, then bent (blurring
+// after the bend would soften nothing: the band magnifies). No colour change: the lens's material
+// is painted over it.
 vec4 lens(vec2 frag, vec2 p) {
   float d = boxDistance(p, uRect0, uRadiusA.x);
   if (d >= 0.0 || uShift <= 0.0) return sampleAt(frag);
-  bool thumb = uLens > 1.5;
+  bool thumb = uLens > 1.5 && uLens < 2.5;
+  bool switchThumb = uLens > 2.5;
+  vec2 hs = uRect0.zw * 0.5;
+  vec2 fromCentre = p - (uRect0.xy + hs);
+  // The switch shows the backdrop further out the further from its centre (lensSwitchZoomX/Y).
+  vec2 shift = switchThumb ? fromCentre * vec2(0.04, 0.0) : vec2(0.0);
   vec2 e = vec2(0.5, 0.0);
   vec2 n = vec2(
     boxDistance(p + e.xy, uRect0, uRadiusA.x) - boxDistance(p - e.xy, uRect0, uRadiusA.x),
     boxDistance(p + e.yx, uRect0, uRadiusA.x) - boxDistance(p - e.yx, uRect0, uRadiusA.x)
   );
   float len = length(n);
-  if (len < 1e-5) return sampleAt(frag);
-  vec2 dir = n / len;
-  vec2 hs = uRect0.zw * 0.5;
-  if (!thumb) dir += 1.5 * (p - (uRect0.xy + hs)) / max(hs, vec2(1e-5));
-  float dirLen = length(dir);
-  if (dirLen < 1e-5) return sampleAt(frag);
-  // A small lens can't bend further than half its shorter side.
-  float limit = min(hs.x, hs.y);
-  float bend = clamp(lensBend(thumb, -d), -limit, limit) * uShift;
-  vec2 offset = -dir / dirLen * bend * uDpr;
+  if (len > 1e-5) {
+    vec2 dir = n / len;
+    if (!thumb) dir += 1.5 * fromCentre / max(hs, vec2(1e-5));
+    float dirLen = length(dir);
+    if (dirLen > 1e-5) {
+      // A small lens can't bend further than half its shorter side.
+      float limit = min(hs.x, hs.y);
+      float bend = clamp(lensBend(thumb, switchThumb ? 0.67 : 1.0, -d), -limit, limit);
+      shift += -dir / dirLen * bend;
+    }
+  }
+  vec2 offset = shift * uShift * uDpr;
   vec4 r = sampleAt(frag + offset * 0.94);
   vec4 g = sampleAt(frag + offset);
   vec4 b = sampleAt(frag + offset * 1.06);
-  return vec4(r.r, g.g, b.b, g.a);
+  vec4 sharp = vec4(r.r, g.g, b.b, g.a);
+  // lensSoftWeight: 1 at the rim to 0 at lensThumbSoft (5 px) deep; blur lensSoftBlur (2 px).
+  float soft = thumb ? max(0.0, 1.0 + d / 5.0) : 0.0;
+  if (soft <= 0.0) return sharp;
+  return mix(sharp, blurredAt(frag + offset, 2.0 * uDpr), soft);
 }
 
 void main() {

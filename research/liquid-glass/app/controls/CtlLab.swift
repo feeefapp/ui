@@ -195,12 +195,13 @@ struct ControlsScene: View {
 // Press lenses: stock segmented picker, slider, toggle and tab bar over a backdrop that shows
 // magnification and bending. pattern=stripes (1 pt black lines every 6 pt) | flat | cycle.
 // cycle: the backdrop steps through LENS_CYCLE every `step` s while the controls stay pressed, with
-// the image's index drawn as 4 bits (black = 1) in squares at (14 + 12i, 104) pt, so one held press
+// the image's index drawn as 5 bits (black = 1) in squares at (14 + 12i, 104) pt, so one held press
 // in a screen recording yields every image. Fringes are 0.5 + 0.4 cos(2π c / period + 2πk / 3)
 // with c the device-pixel centre along the axis.
 let LENS_CYCLE: [String] = ["flat:ffffff", "flat:000000", "flat:808080",
     "x:96:0", "x:96:1", "x:96:2", "x:24:0", "x:24:1", "x:24:2",
-    "y:96:0", "y:96:1", "y:96:2", "y:24:0", "y:24:1", "y:24:2", "stripes"]
+    "y:96:0", "y:96:1", "y:96:2", "y:24:0", "y:24:1", "y:24:2", "stripes",
+    "flat:cc6666", "flat:66cc66", "flat:6666cc", "flat:e0a040", "flat:40a0e0", "hue"]
 
 struct StripeBackdrop: View {
     let spec: Spec
@@ -211,8 +212,8 @@ struct StripeBackdrop: View {
                 let index = Int(context.date.timeIntervalSinceReferenceDate / step) % LENS_CYCLE.count
                 ZStack(alignment: .topLeading) {
                     Canvas { ctx, size in draw(LENS_CYCLE[index], ctx, size) }
-                    Color.white.frame(width: 60, height: 20).offset(x: 6, y: 94)
-                    ForEach(0..<4) { bit in
+                    Color.white.frame(width: 72, height: 20).offset(x: 6, y: 94)
+                    ForEach(0..<5) { bit in
                         (index >> bit & 1 == 1 ? Color.black : Color.white).frame(width: 8, height: 8)
                             .offset(x: 10 + 12 * CGFloat(bit), y: 100)
                     }
@@ -238,6 +239,14 @@ struct StripeBackdrop: View {
                 let r = parts[0] == "x" ? CGRect(x: Double(i) * px, y: 0, width: px + 0.01, height: size.height)
                                         : CGRect(x: 0, y: Double(i) * px, width: size.width, height: px + 0.01)
                 ctx.fill(Path(r), with: .color(Color(.sRGB, white: v, opacity: 1)))
+            }
+        case "hue":
+            // Vertical bars 6 pt wide stepping through the hue circle at full saturation, value 0.85.
+            var x: CGFloat = 0, i = 0
+            while x < size.width {
+                ctx.fill(Path(CGRect(x: x, y: 0, width: 6, height: size.height)),
+                         with: .color(Color(hue: Double(i % 12) / 12, saturation: 1, brightness: 0.85)))
+                x += 6; i += 1
             }
         default:
             ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(hexColor(spec.string("bg", "ffffff"))))
