@@ -415,14 +415,17 @@ class _SliderControlState extends State<_SliderControl>
         dot: 3,
       );
     }
+    // A capsule thumb 3px inside the track, as much wider than tall as the switch's thumb.
+    final thumbHeight = size - 6;
+    final thumbWidth = thumbHeight + s.thumbWidth - s.thumbHeight;
     return _Geometry(
       size: size,
       height: height,
-      thumbWidth: size - 6,
-      thumbHeight: size - 6,
-      thumbRadius: (size - 6) * 0.45,
+      thumbWidth: thumbWidth,
+      thumbHeight: thumbHeight,
+      thumbRadius: thumbHeight / 2,
       trackHeight: height,
-      inset: size / 2,
+      inset: thumbWidth / 2 + 3,
       fillCap: size / 2,
       dot: 6,
     );
