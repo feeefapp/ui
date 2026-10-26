@@ -401,7 +401,7 @@ Path clusterPath(List<GlassShape> shapes, double spacing, [double cell = 2]) {
 
 /// One cluster of blended bubbles and its outline.
 class GlassPath {
-  const GlassPath(this.shapes, this.bounds, this.path, [this.clip]);
+  GlassPath(this.shapes, this.bounds, this.path, [this.clip]);
   final List<GlassShape> shapes;
   final Rect bounds;
   final Path path;
@@ -411,12 +411,13 @@ class GlassPath {
   /// The outline itself stays whole, so the cut is a straight edge, like CSS overflow clip.
   final Rect? clip;
 
-  /// The outline cut to [clip]: what the backdrop and the glow are clipped to.
-  Path get visiblePath {
+  /// The outline cut to [clip]: what the backdrop and the glow are clipped to. Built once: the
+  /// backdrop clip and the glow read it on every frame.
+  late final Path visiblePath = () {
     final clip = this.clip;
     if (clip == null || _covers(clip, path.getBounds())) return path;
     return Path.combine(PathOperation.intersect, path, Path()..addRect(clip));
-  }
+  }();
 }
 
 /// The visible part of the container a bubble may paint in: the intersection of the clips of the

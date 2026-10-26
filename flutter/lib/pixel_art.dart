@@ -224,15 +224,12 @@ class _PixelArtworkState extends State<PixelArtwork>
         painter: _ArtworkPainter(art, pixelToneColor(theme, widget.tone)),
       ),
     );
+    // The breath only changes the layer's opacity: nothing rebuilds, lays out or repaints.
     final animatedArt = widget.animated
-        ? AnimatedBuilder(
-            animation: _breath,
-            builder: (context, child) => Opacity(
-              opacity: _breath.isAnimating
-                  ? _breathe(_breath.value, 0.85, 1)
-                  : 1,
-              child: child,
-            ),
+        ? FadeTransition(
+            opacity: _breath.isAnimating
+                ? _breath.drive(const _Breathe(0.85, 1))
+                : kAlwaysCompleteAnimation,
             child: painted,
           )
         : painted;
@@ -245,6 +242,14 @@ class _PixelArtworkState extends State<PixelArtwork>
             child: ExcludeSemantics(child: animatedArt),
           );
   }
+}
+
+/// [_breathe] as an animatable, for an opacity driven straight by its controller.
+class _Breathe extends Animatable<double> {
+  const _Breathe(this.edge, this.middle);
+  final double edge, middle;
+  @override
+  double transform(double t) => _breathe(t, edge, middle);
 }
 
 /// A two-stop `ease-in-out` keyframe loop: [edge] at 0% and 100%, [middle] at 50%.
@@ -362,21 +367,18 @@ class _PixelTextureState extends State<PixelTexture>
     return IgnorePointer(
       child: ExcludeSemantics(
         child: SizedBox.expand(
-          // The SVG clips its sliced view box to the box. The pulse repaints only this layer.
+          // The SVG clips its sliced view box to the box. The pulse repaints only this layer,
+          // straight from its clock (nothing rebuilds or lays out).
           child: RepaintBoundary(
             child: ClipRect(
-              child: AnimatedBuilder(
-                animation: _pulse,
-                builder: (context, _) => CustomPaint(
-                  painter: _TexturePainter(
-                    color: color,
-                    opacity: _pulse.isAnimating
-                        ? _breathe(_pulse.value, 1, 0.55) * widget.opacity
-                        : widget.opacity,
-                    variant: widget.variant,
-                    seed: widget.seed,
-                    density: widget.density,
-                  ),
+              child: CustomPaint(
+                painter: _TexturePainter(
+                  color: color,
+                  opacity: widget.opacity,
+                  pulse: _pulse,
+                  variant: widget.variant,
+                  seed: widget.seed,
+                  density: widget.density,
                 ),
               ),
             ),
@@ -391,12 +393,16 @@ class _TexturePainter extends CustomPainter {
   _TexturePainter({
     required this.color,
     required this.opacity,
+    required this.pulse,
     required this.variant,
     required this.seed,
     required this.density,
-  });
+  }) : super(repaint: pulse);
   final Color color;
   final double opacity;
+
+  /// The pulse (opacity 1 → 0.55 → 1); full strength while it is stopped.
+  final AnimationController pulse;
   final TextureVariant variant;
   final String seed;
   final TextureDensity density;
@@ -406,7 +412,9 @@ class _TexturePainter extends CustomPainter {
     canvas,
     Offset.zero & size,
     color: color,
-    opacity: opacity,
+    opacity: pulse.isAnimating
+        ? _breathe(pulse.value, 1, 0.55) * opacity
+        : opacity,
     variant: variant,
     seed: seed,
     density: density,
@@ -416,6 +424,7 @@ class _TexturePainter extends CustomPainter {
   bool shouldRepaint(_TexturePainter old) =>
       old.color != color ||
       old.opacity != opacity ||
+      old.pulse != pulse ||
       old.variant != variant ||
       old.seed != seed ||
       old.density != density;

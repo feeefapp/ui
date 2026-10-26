@@ -78,17 +78,16 @@ class _PixelLoaderState extends State<PixelLoader>
         IconTheme.of(context).color ??
         DefaultTextStyle.of(context).style.color!;
     final still = reducedMotionOf(context);
-    final loader = SizedBox.square(
-      dimension: widget.size,
-      child: AnimatedBuilder(
-        animation: _clock,
-        builder: (context, _) => CustomPaint(
+    // The wave repaints every frame straight from the clock, in its own layer: nothing rebuilds
+    // or lays out, and the page around it never repaints.
+    final loader = RepaintBoundary(
+      child: SizedBox.square(
+        dimension: widget.size,
+        child: CustomPaint(
           painter: _LoaderPainter(
             color: color,
             progress: widget.progress,
-            elapsed: still
-                ? null
-                : (_clock.lastElapsedDuration ?? Duration.zero),
+            clock: still ? null : _clock,
           ),
         ),
       ),
@@ -111,12 +110,13 @@ double pixelLoaderCell(int index, double progress) =>
     (progress * 9 - _loaderOrder.indexOf(index)).clamp(0.0, 1.0);
 
 class _LoaderPainter extends CustomPainter {
-  _LoaderPainter({required this.color, required this.elapsed, this.progress});
+  _LoaderPainter({required this.color, required this.clock, this.progress})
+    : super(repaint: clock);
   final Color color;
   final double? progress;
 
-  /// Time since the loader appeared; null under reduced motion.
-  final Duration? elapsed;
+  /// The wave's clock (time since the loader appeared); null under reduced motion.
+  final AnimationController? clock;
 
   /// `lab-pixel-loading`: 0%, 70%, 100% → (22%, 0.7); 35% → (100%, 1), ease-in-out per segment.
   static (double, double) _frame(double t) {
@@ -137,6 +137,9 @@ class _LoaderPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // A 3 × 3 grid with 2px gaps.
     final cell = (size.width - 4) / 3;
+    final elapsed = clock == null
+        ? null
+        : (clock!.lastElapsedDuration ?? Duration.zero);
     for (var index = 0; index < 9; index++) {
       final col = index % 3, row = index ~/ 3;
       double opacity, scale;
@@ -148,7 +151,7 @@ class _LoaderPainter extends CustomPainter {
         (opacity, scale) = (0.7, 1);
       } else {
         final delay = col * 110 + row * 80;
-        final ms = elapsed!.inMicroseconds / 1000 - delay;
+        final ms = elapsed.inMicroseconds / 1000 - delay;
         // Before its first cycle a square shows its resting style.
         (opacity, scale) = ms < 0 ? (0.25, 1) : _frame((ms % 1200) / 1200);
       }
@@ -168,5 +171,5 @@ class _LoaderPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_LoaderPainter old) =>
-      old.elapsed != elapsed || old.color != color || old.progress != progress;
+      old.clock != clock || old.color != color || old.progress != progress;
 }

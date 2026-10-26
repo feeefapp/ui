@@ -12,6 +12,7 @@ class ScrollGradientOverlay extends StatelessWidget {
   const ScrollGradientOverlay({
     super.key,
     required this.controller,
+    this.metrics,
     this.topHeight = 100,
     this.bottomHeight = 160,
     this.density = 0.8,
@@ -21,6 +22,10 @@ class ScrollGradientOverlay extends StatelessWidget {
   });
 
   final ScrollController controller;
+
+  /// Notifies when the scroll view's size or content changes (its [ScrollMetricsNotification]s).
+  /// The washes sit in their own layer, so they repaint on these and on scrolling only.
+  final Listenable? metrics;
 
   /// Wash heights in px, capped at 40% of the viewport.
   final double topHeight, bottomHeight;
@@ -45,6 +50,7 @@ class ScrollGradientOverlay extends StatelessWidget {
         size: Size.infinite,
         painter: _WashPainter(
           controller: controller,
+          metrics: metrics,
           top: topHeight,
           bottom: bottomHeight,
           density: density.clamp(0.0, 1.0),
@@ -81,14 +87,20 @@ List<Path?> _cellPaths(int columns, int rows, double cw, double ch) =>
 class _WashPainter extends CustomPainter {
   _WashPainter({
     required this.controller,
+    required this.metrics,
     required this.top,
     required this.bottom,
     required this.density,
     required this.fadeZone,
     required this.color,
     required this.radius,
-  }) : super(repaint: controller);
+  }) : super(
+         repaint: metrics == null
+             ? controller
+             : Listenable.merge([controller, metrics]),
+       );
   final ScrollController controller;
+  final Listenable? metrics;
   final double top, bottom, density, fadeZone, radius;
   final Color color;
 
@@ -143,5 +155,6 @@ class _WashPainter extends CustomPainter {
       old.density != density ||
       old.color != color ||
       old.radius != radius ||
-      old.controller != controller;
+      old.controller != controller ||
+      old.metrics != metrics;
 }

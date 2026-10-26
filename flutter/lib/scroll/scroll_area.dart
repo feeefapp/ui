@@ -88,6 +88,9 @@ class _ScrollAreaState extends State<ScrollArea> {
   ScrollController get _controller => widget.controller ?? _own;
   double _top = 0, _bottom = 0;
 
+  /// Ticks when the scroll view's size or content changes, so the washes follow it.
+  final _metrics = _Tick();
+
   // Pull to refresh: the pull (px), whether a refresh runs, and the touch that may become a pull.
   final _pull = MotionValue(0, 0.1);
   final _pullDistance = ValueNotifier<double>(0);
@@ -122,6 +125,7 @@ class _ScrollAreaState extends State<ScrollArea> {
     _unsubscribePull();
     _pull.stop();
     _pullDistance.dispose();
+    _metrics.dispose();
     _own.dispose();
     super.dispose();
   }
@@ -304,37 +308,44 @@ class _ScrollAreaState extends State<ScrollArea> {
             }
           : null,
       child: LayoutBuilder(
-        builder: (context, constraints) => SingleChildScrollView(
-          controller: _controller,
-          physics: refreshable ? PullScrollPhysics(_gate) : null,
-          child: ConstrainedBox(
-            // min-height: 100% of the viewport, padding included.
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                padding,
-                topReserve + safe.top,
-                padding,
-                bottomReserve + extra + safe.bottom,
-              ),
-              // Nested areas start from zero (.lab-scroll-content > * resets it).
-              child: ScrollRevealPadding(
-                // scroll-padding: what revealScrollChild keeps clear.
-                padding: EdgeInsets.only(
-                  top: topReserve + safe.top,
-                  bottom: bottomReserve + extra + safe.bottom,
-                ),
-                child: ScrollExtraBottom(
-                  value: 0,
-                  child: ScrollTopReserve(
-                    value: topReserve + safe.top,
-                    child: widget.child,
+        builder: (context, constraints) =>
+            NotificationListener<ScrollMetricsNotification>(
+              onNotification: (_) {
+                _metrics.tick();
+                return false;
+              },
+              child: SingleChildScrollView(
+                controller: _controller,
+                physics: refreshable ? PullScrollPhysics(_gate) : null,
+                child: ConstrainedBox(
+                  // min-height: 100% of the viewport, padding included.
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      padding,
+                      topReserve + safe.top,
+                      padding,
+                      bottomReserve + extra + safe.bottom,
+                    ),
+                    // Nested areas start from zero (.lab-scroll-content > * resets it).
+                    child: ScrollRevealPadding(
+                      // scroll-padding: what revealScrollChild keeps clear.
+                      padding: EdgeInsets.only(
+                        top: topReserve + safe.top,
+                        bottom: bottomReserve + extra + safe.bottom,
+                      ),
+                      child: ScrollExtraBottom(
+                        value: 0,
+                        child: ScrollTopReserve(
+                          value: topReserve + safe.top,
+                          child: widget.child,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ),
       ),
     );
     if (refreshable) {
@@ -361,6 +372,7 @@ class _ScrollAreaState extends State<ScrollArea> {
         if (widget.gradient)
           ScrollGradientOverlay(
             controller: _controller,
+            metrics: _metrics,
             topHeight:
                 widget.topFadeHeight ??
                 (_top + gap * 2).clamp(100, double.infinity),
@@ -441,4 +453,8 @@ class ScrollTopReserve extends InheritedWidget {
 
   @override
   bool updateShouldNotify(ScrollTopReserve old) => old.value != value;
+}
+
+class _Tick extends ChangeNotifier {
+  void tick() => notifyListeners();
 }

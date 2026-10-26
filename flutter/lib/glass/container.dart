@@ -648,69 +648,84 @@ class _GlassBackdropsState extends State<_GlassBackdrops> {
             ),
           ),
         // The dark hairline iOS 27 draws outside every glass shape, small or large (the web
-        // kit's GLASS_HAIRLINE): it is what defines the edge over light content. Natively it
-        // subtracts from the backdrop, exactly; the web paints it black at its strength in the
-        // painter, like the web kit, instead of two more backdrop reads per cluster.
-        if (!kIsWeb)
-          for (final (index, _) in scene.paths.indexed)
-            for (final sliver in const [false, true])
-              Positioned.fill(
-                child: ClipPath(
-                  clipper: _HairlineClipper(scene, index, sliver: sliver),
-                  child: BackdropFilter(
-                    filter: ColorFilter.matrix(
-                      subtractMatrix(
-                        sliver
-                            ? material.hairline.sliver
-                            : material.hairline.ring,
-                      ),
+        // kit's GLASS_HAIRLINE): it is what defines the edge over light content. It subtracts
+        // from the backdrop, exactly; ring and slivers share one backdrop read when they are
+        // equally strong (always in dark mode).
+        for (final (index, _) in scene.paths.indexed)
+          for (final band
+              in material.hairline.ring == material.hairline.sliver
+                  ? const [_Band.both]
+                  : const [_Band.ring, _Band.sliver])
+            Positioned.fill(
+              child: ClipPath(
+                clipper: _HairlineClipper(scene, index, band: band),
+                child: BackdropFilter(
+                  filter: ColorFilter.matrix(
+                    subtractMatrix(
+                      band == _Band.sliver
+                          ? material.hairline.sliver
+                          : material.hairline.ring,
                     ),
-                    backdropGroupKey: scene.backdropKey,
-                    child: const SizedBox.expand(),
                   ),
+                  backdropGroupKey: scene.backdropKey,
+                  child: const SizedBox.expand(),
                 ),
               ),
+            ),
       ],
     );
   }
 }
 
-/// Cluster [index]'s hairline band (the ring, or with [sliver] the side slivers), cut to its
+/// Cluster [index]'s hairline [band] (the ring, the side slivers or both), cut to its
 /// clip, cached per outline.
 class _HairlineClipper extends CustomClipper<Path> {
-  _HairlineClipper(this.scene, this.index, {required this.sliver})
+  _HairlineClipper(this.scene, this.index, {required this.band})
     : super(reclip: scene);
   final _GlassScene scene;
   final int index;
-  final bool sliver;
+  final _Band band;
 
   @override
   Path getClip(Size size) {
     if (index < 0 || index >= scene.paths.length) return Path();
     final bands = _hairlinePaths(scene.paths[index], scene.spacing);
-    return sliver ? bands.sliver : bands.ring;
+    return switch (band) {
+      _Band.ring => bands.ring,
+      _Band.sliver => bands.sliver,
+      _Band.both => bands.both,
+    };
   }
 
   @override
   bool shouldReclip(_HairlineClipper old) =>
-      old.index != index || old.sliver != sliver || old.scene != scene;
+      old.index != index || old.band != band || old.scene != scene;
 }
 
-/// A cluster's hairline bands as paths, cut to its clip, built once per outline.
-final _hairlines = Expando<({Path ring, Path sliver})>();
+/// Which hairline band a backdrop clips to: the ring, the slivers, or both at once.
+enum _Band { ring, sliver, both }
 
-({Path ring, Path sliver}) _hairlinePaths(GlassPath path, double spacing) =>
-    _hairlines[path] ??= () {
-      final bands = hairlineBands(path.shapes, spacing);
-      final clip = path.clip;
-      Path cut(Path band) => clip == null
-          ? band
-          : Path.combine(PathOperation.intersect, band, Path()..addRect(clip));
-      return (
-        ring: cut(bandPath(bands.ring)),
-        sliver: cut(bandPath(bands.sliver)),
-      );
-    }();
+/// A cluster's hairline bands as paths, cut to its clip, built once per outline.
+final _hairlines = Expando<_HairlinePaths>();
+
+_HairlinePaths _hairlinePaths(GlassPath path, double spacing) =>
+    _hairlines[path] ??= _HairlinePaths(path, spacing);
+
+class _HairlinePaths {
+  _HairlinePaths(GlassPath path, double spacing) {
+    final bands = hairlineBands(path.shapes, spacing);
+    final clip = path.clip;
+    Path cut(Path band) => clip == null
+        ? band
+        : Path.combine(PathOperation.intersect, band, Path()..addRect(clip));
+    ring = cut(bandPath(bands.ring));
+    sliver = cut(bandPath(bands.sliver));
+  }
+  late final Path ring, sliver;
+
+  /// Ring and slivers as one area, built only when asked for.
+  late final Path both = Path.combine(PathOperation.union, ring, sliver);
+}
 
 /// The outline of cluster [index], cut to its clip, read while painting: a scroll moves the
 /// glass on the same frame as its bubbles.
@@ -850,15 +865,35 @@ class _GlassPainter extends CustomPainter {
             ? glassMenuShadow.blur * 3 + glassMenuShadow.dy
             : glassShadowBlur * 3 + glassShadowDy,
       );
-      shape = (
-        all: all,
-        region: region,
-        outside: Path.combine(
+      // Outside the glass: the region with every outline cut out. A cluster's outline is
+      // disjoint simple loops (a hole is a loop inside a loop), so while clusters don't overlap
+      // (they only can across scroll clips) even-odd filling is exactly the difference, without
+      // a path operation on every change.
+      var disjoint = true;
+      for (var i = 0; i < paths.length && disjoint; i++) {
+        for (var j = i + 1; j < paths.length; j++) {
+          if (paths[i].bounds.overlaps(paths[j].bounds)) {
+            disjoint = false;
+            break;
+          }
+        }
+      }
+      final Path outside;
+      if (disjoint) {
+        outside = Path()
+          ..fillType = PathFillType.evenOdd
+          ..addRect(region);
+        for (final p in paths) {
+          outside.addPath(p.path, Offset.zero);
+        }
+      } else {
+        outside = Path.combine(
           PathOperation.difference,
           Path()..addRect(region),
           all,
-        ),
-      );
+        );
+      }
+      shape = (all: all, region: region, outside: outside);
       scene._paintGeometry = (paths: paths, menu: menu, shape: shape);
     }
     // Glass in a scroll view or clip is cut straight at its edge, shadow included.
@@ -871,34 +906,6 @@ class _GlassPainter extends CustomPainter {
     canvas.clipPath(shape.outside);
     if (!_cachedShadows(canvas, paths, shape.region)) _shadows(canvas, paths);
     canvas.restore();
-    if (kIsWeb && material.rim) {
-      // The hairline outside every cluster, black at its strength like the web kit (natively it
-      // subtracts from the backdrop; see _GlassBackdrops).
-      final strength = material.hairline;
-      for (final p in paths) {
-        final bands = _hairlinePaths(p, scene.spacing);
-        canvas.drawPath(
-          bands.ring,
-          Paint()
-            ..color = Color.from(
-              alpha: strength.ring,
-              red: 0,
-              green: 0,
-              blue: 0,
-            ),
-        );
-        canvas.drawPath(
-          bands.sliver,
-          Paint()
-            ..color = Color.from(
-              alpha: strength.sliver,
-              red: 0,
-              green: 0,
-              blue: 0,
-            ),
-        );
-      }
-    }
     for (final p in paths) {
       scissor(p);
       canvas.drawPath(
