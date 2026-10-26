@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
+import '../performance.dart';
 import '../theme.dart';
 
 const _bayer = [
@@ -67,9 +68,10 @@ const _bayer = [
 /// 18 fps, presses send ripples through it, and reduced motion draws one still frame. Like the
 /// web canvas, it lays its cells out at CSS resolution (at most 1200px wide) and scales them up.
 ///
-/// It only asks for a frame when a step is due (18 a second, not every display frame), and draws
-/// its cells straight into its own layer in a few batched calls: the field never makes the page
-/// around it repaint, and on the web it never reads pixels back from the GPU.
+/// It only asks for a frame when a step is due (18 a second, not every display frame) and paints
+/// in its own layer, so the page around it never repaints. The field is computed per pixel by a
+/// fragment shader (`shaders/pixel_field.frag`); until that has loaded, the same cells are drawn
+/// on the CPU in a few batched calls.
 class PixelShader extends StatefulWidget {
   const PixelShader({
     super.key,
@@ -103,18 +105,34 @@ class _PixelShaderState extends State<PixelShader> {
   final _clock = ValueNotifier<int>(0);
   Size _size = Size.zero;
 
+  /// The GPU field once its program has loaded; until then (and where it can't load) the cells
+  /// are drawn on the CPU.
+  ui.FragmentShader? _shader;
+
+  static Future<ui.FragmentProgram>? _program;
+
   @override
   void initState() {
     super.initState();
     GestureBinding.instance.pointerRouter.addGlobalRoute(_onPointer);
+    (_program ??= ui.FragmentProgram.fromAsset(
+          'packages/feeef_ui/shaders/pixel_field.frag',
+        ))
+        .then((program) {
+          if (mounted) setState(() => _shader = program.fragmentShader());
+        })
+        .catchError((Object _) {});
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Still under reduced motion, and paused where tickers are (an offstage route or tab).
+    // Also still on devices that keep ambient decoration still (PerformanceTier.light).
     final run =
-        !reducedMotionOf(context) && TickerMode.valuesOf(context).enabled;
+        !reducedMotionOf(context) &&
+        performanceOf(context).ambientMotion &&
+        TickerMode.valuesOf(context).enabled;
     if (!run) {
       _timer?.cancel();
       _timer = null;
@@ -132,6 +150,7 @@ class _PixelShaderState extends State<PixelShader> {
     GestureBinding.instance.pointerRouter.removeGlobalRoute(_onPointer);
     _timer?.cancel();
     _clock.dispose();
+    _shader?.dispose();
     super.dispose();
   }
 
@@ -173,6 +192,7 @@ class _PixelShaderState extends State<PixelShader> {
                 alpha: ink.a * widget.opacity.clamp(0.0, 1.0),
               ),
               density: widget.density,
+              shader: _shader,
             ),
           ),
         );
@@ -191,10 +211,12 @@ class _ShaderPainter extends CustomPainter {
     required this.state,
     required this.ink,
     required this.density,
+    required this.shader,
   }) : super(repaint: repaint);
   final _PixelShaderState state;
   final Color ink;
   final double density;
+  final ui.FragmentShader? shader;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -203,6 +225,33 @@ class _ShaderPainter extends CustomPainter {
     final width = math.max(1, (size.width * scale).round());
     final height = math.max(1, (size.height * scale).round());
     final time = state._time;
+    final gpu = shader;
+    if (gpu != null) {
+      // The same field computed per pixel on the GPU (shaders/pixel_field.frag).
+      var i = 0;
+      void set(double value) => gpu.setFloat(i++, value);
+      set(size.width);
+      set(size.height);
+      set(width.toDouble());
+      set(height.toDouble());
+      set(time);
+      set(math.min(1.35, density));
+      set(ink.r);
+      set(ink.g);
+      set(ink.b);
+      set(ink.a);
+      final ripples = state._ripples;
+      set(ripples.length.toDouble());
+      for (var r = 0; r < 8; r++) {
+        final ripple = r < ripples.length ? ripples[r] : null;
+        set(ripple?.x ?? 0);
+        set(ripple?.y ?? 0);
+        set(ripple?.time ?? 0);
+        set(0);
+      }
+      canvas.drawRect(Offset.zero & size, Paint()..shader = gpu);
+      return;
+    }
     const step = 4;
     final columns = (width + step - 1) ~/ step;
     // The wave's crest only depends on the column.
@@ -266,5 +315,5 @@ class _ShaderPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ShaderPainter old) =>
-      old.ink != ink || old.density != density;
+      old.ink != ink || old.density != density || old.shader != shader;
 }

@@ -17,6 +17,12 @@ enum GlassStyle { liquid, transparent, solid }
 /// How much the kit animates: everything, the reduced-motion paths, or nothing at all.
 enum Motion { full, reduced, none }
 
+/// How much the kit's effects may cost: `auto` picks from the platform and device
+/// (`resolvePerformance`), or an app fixes one tier. `full`: bubbles merge and split, the light
+/// follows the pointer. `balanced`: the same look, but bubbles never merge. `light`: also a fixed
+/// light and a still pixel field.
+enum Performance { auto, full, balanced, light }
+
 /// How long the short crossfade that replaces a movement under reduced motion lasts: [fade]
 /// under `reduced`, nothing under `none`, which animates nothing at all. Every reduced-motion
 /// crossfade takes its length from here (web: `motionFade()`).
@@ -39,6 +45,7 @@ class ThemeConfig {
     this.glassHighlightWidth = 1,
     this.glassBarBoost = true,
     this.motion = Motion.full,
+    this.performance = Performance.auto,
     this.metrics = const Metrics(),
   });
 
@@ -101,6 +108,11 @@ class ThemeConfig {
   /// platform's own setting still applies when it is stricter ([motionOf]).
   final Motion motion;
 
+  /// How much the effects may cost (`Performance`). Default `auto`: native devices get everything
+  /// (unless they have fewer than 4 cores); the web keeps the full look but never merges bubbles,
+  /// and steps down further on weak devices. `performanceOf(context)` gives the tier in use.
+  final Performance performance;
+
   /// Control, toolbar, list and focus sizes that replace the density's (`Metrics`). Each set value
   /// applies to every density; unset ones keep the density's own.
   final Metrics metrics;
@@ -136,6 +148,7 @@ class ThemeConfig {
     double? glassHighlightWidth,
     bool? glassBarBoost,
     Motion? motion,
+    Performance? performance,
     Metrics? metrics,
   }) => ThemeConfig(
     palette: palette ?? this.palette,
@@ -153,6 +166,7 @@ class ThemeConfig {
     glassHighlightWidth: glassHighlightWidth ?? this.glassHighlightWidth,
     glassBarBoost: glassBarBoost ?? this.glassBarBoost,
     motion: motion ?? this.motion,
+    performance: performance ?? this.performance,
     metrics: metrics ?? this.metrics,
   );
 }
@@ -185,6 +199,7 @@ abstract final class ThemeProfiles {
     glassRefraction: false,
     glassBlur: false,
     motion: Motion.none,
+    performance: Performance.light,
   );
 }
 

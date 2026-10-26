@@ -23,9 +23,11 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-  # Glass refraction on Impeller (glass/refraction_filter.dart).
+  # Glass refraction on Impeller (glass/refraction_filter.dart) and the ambient pixel field
+  # (brand/pixel_shader.dart).
   shaders:
     - shaders/glass_refraction.frag
+    - shaders/pixel_field.frag
   # The kit's fonts: IBM Plex Sans Arabic (Arabic and Latin) and Outfit (brand), both SIL OFL 1.1.
   fonts:
     - family: IBM Plex Sans Arabic

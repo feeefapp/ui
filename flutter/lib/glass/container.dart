@@ -9,6 +9,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart' show superellipsePath;
+import '../performance.dart';
 import '../physics/motion_value.dart';
 import '../physics/spring.dart';
 import '../theme.dart';
@@ -383,12 +384,16 @@ class _GlassContainerState extends State<GlassContainer> {
     final reduced = reducedMotionOf(context);
     final style = glassStyleOf(context);
     final liquid = style == GlassStyle.liquid;
+    // The device's effects tier: below `full` bubbles never merge (each keeps its own shape and
+    // appears or leaves on its own), and `light` holds the light still.
+    final tier = performanceOf(context);
     _scene
-      ..spacing = math.max(0, widget.spacing)
+      ..spacing = tier.merge ? math.max(0, widget.spacing) : 0
       ..reduceMotion = reduced
       ..instant = GlassInstant.of(context)
       ..viewport = MediaQuery.maybeSizeOf(context) ?? Size.zero
-      ..followPointer = widget.light == GlassLightMode.pointer && liquid
+      ..followPointer =
+          widget.light == GlassLightMode.pointer && liquid && tier.pointerLight
       ..interactive = widget.interactive && liquid;
     _scene._requestMeasure();
     final menu = widget.material == GlassKind.menu;
