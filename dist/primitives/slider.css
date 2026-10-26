@@ -5,17 +5,18 @@
   initial-value: 22px;
 }
 /* Geometry comes from the metric tokens, so every density and ThemeConfig `metrics` fit. The thick
-slider is the control height (the track is the surface, a square thumb inside it); the thin slider is
+slider is the control height (the track is the surface, a capsule thumb inside it 3px from its edges,
+as much wider than tall as the switch's thumb); the thin slider is
 iOS's: a --lab-slider-track rail and a --lab-thumb-width × --lab-thumb-height capsule thumb. The
 switch is iOS's too: a --lab-switch-width × --lab-switch-height track with the same thumb inset 2px.
 --lab-slider-inset is the distance from the edge to the thumb's centre at either end. */
 .lab-slider,
 .lab-slider-marks {
   --lab-slider-size: var(--lab-control-height);
-  --lab-slider-inset: calc(var(--lab-slider-size) / 2);
-  --lab-slider-thumb-width: calc(var(--lab-slider-size) - 6px);
   --lab-slider-thumb-height: calc(var(--lab-slider-size) - 6px);
-  --lab-slider-thumb-radius: calc(var(--lab-slider-thumb-height) * 0.45);
+  --lab-slider-thumb-width: calc(var(--lab-slider-thumb-height) + var(--lab-thumb-width) - var(--lab-thumb-height));
+  --lab-slider-thumb-radius: calc(var(--lab-slider-thumb-height) / 2);
+  --lab-slider-inset: calc(var(--lab-slider-thumb-width) / 2 + 3px);
   --lab-slider-track-height: var(--lab-slider-size);
   --lab-slider-fill-cap: calc(var(--lab-slider-size) / 2);
   --lab-slider-dot-size: 6px;
