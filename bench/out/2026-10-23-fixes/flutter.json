@@ -1,0 +1,502 @@
+{
+  "label": "fixes",
+  "theme": "default",
+  "date": "2026-10-23T17:23:00.926087Z",
+  "device": "macos Version 26.4.1 (Build 25E253)",
+  "window": "1280×752 @2.0x",
+  "mode": "profile",
+  "reps": 3,
+  "note": "Build = UI thread, raster = raster thread, per frame (ms). missed = build or raster > 16.7 ms. Each window includes a 400 ms tail. Idle = 3 s with nothing moving: ideally 0 frames.",
+  "pages": {
+    "harness/providers": {
+      "idle": {
+        "frames": 0.0,
+        "build": {
+          "p50": null,
+          "p95": null,
+          "max": null
+        },
+        "raster": {
+          "p50": null,
+          "p95": null,
+          "max": null
+        },
+        "missed": 0.0,
+        "missed33": 0.0,
+        "buildTotalMs": 0.0,
+        "rasterTotalMs": 0.0
+      }
+    },
+    "components/glass-container": {
+      "idle": {
+        "frames": 0.0,
+        "build": {
+          "p50": null,
+          "p95": null,
+          "max": null
+        },
+        "raster": {
+          "p50": null,
+          "p95": null,
+          "max": null
+        },
+        "missed": 0.0,
+        "missed33": 0.0,
+        "buildTotalMs": 0.0,
+        "rasterTotalMs": 0.0
+      },
+      "scroll": {
+        "frames": 40.0,
+        "build": {
+          "p50": 0.36,
+          "p95": 37.02,
+          "max": 39.25
+        },
+        "raster": {
+          "p50": 8.71,
+          "p95": 174.73,
+          "max": 201.62
+        },
+        "missed": 10.0,
+        "missed33": 9.0,
+        "buildTotalMs": 236.26,
+        "rasterTotalMs": 1103.36
+      },
+      "pointer": {
+        "frames": 47.0,
+        "build": {
+          "p50": 8.84,
+          "p95": 86.38,
+          "max": 107.68
+        },
+        "raster": {
+          "p50": 13.43,
+          "p95": 121.94,
+          "max": 134.82
+        },
+        "missed": 22.0,
+        "missed33": 11.0,
+        "buildTotalMs": 903.8,
+        "rasterTotalMs": 1476.56
+      },
+      "drag": {
+        "frames": 63.0,
+        "build": {
+          "p50": 11.29,
+          "p95": 43.27,
+          "max": 75.61
+        },
+        "raster": {
+          "p50": 20.52,
+          "p95": 69.15,
+          "max": 159.98
+        },
+        "missed": 34.0,
+        "missed33": 24.0,
+        "buildTotalMs": 1048.57,
+        "rasterTotalMs": 1854.77
+      },
+      "split": {
+        "frames": 47.0,
+        "build": {
+          "p50": 21.53,
+          "p95": 91.86,
+          "max": 128.26
+        },
+        "raster": {
+          "p50": 21.47,
+          "p95": 125.95,
+          "max": 242.4
+        },
+        "missed": 28.0,
+        "missed33": 19.0,
+        "buildTotalMs": 1452.5,
+        "rasterTotalMs": 1699.45
+      }
+    },
+    "components/actions-bar": {
+      "idle": {
+        "frames": 0.0,
+        "build": {
+          "p50": 559.49,
+          "p95": 559.49,
+          "max": 559.49
+        },
+        "raster": {
+          "p50": 655.94,
+          "p95": 655.94,
+          "max": 655.94
+        },
+        "missed": 0.0,
+        "missed33": 0.0,
+        "buildTotalMs": 0.0,
+        "rasterTotalMs": 0.0
+      },
+      "scroll": {
+        "frames": 53.0,
+        "build": {
+          "p50": 0.36,
+          "p95": 4.99,
+          "max": 12.71
+        },
+        "raster": {
+          "p50": 3.76,
+          "p95": 13.34,
+          "max": 18.67
+        },
+        "missed": 1.0,
+        "missed33": 0.0,
+        "buildTotalMs": 62.53,
+        "rasterTotalMs": 249.85
+      },
+      "pointer": {
+        "frames": 71.0,
+        "build": {
+          "p50": 3.22,
+          "p95": 15.28,
+          "max": 48.72
+        },
+        "raster": {
+          "p50": 5.09,
+          "p95": 32.49,
+          "max": 47.37
+        },
+        "missed": 11.0,
+        "missed33": 5.0,
+        "buildTotalMs": 411.8,
+        "rasterTotalMs": 735.98
+      },
+      "menu": {
+        "frames": 82.0,
+        "build": {
+          "p50": 7.9,
+          "p95": 45.46,
+          "max": 115.63
+        },
+        "raster": {
+          "p50": 8.63,
+          "p95": 53.37,
+          "max": 77.47
+        },
+        "missed": 26.0,
+        "missed33": 14.0,
+        "buildTotalMs": 1246.6,
+        "rasterTotalMs": 1230.73
+      },
+      "idleByExample": {
+        "components/actions-bar/01-in-a-dock": {
+          "frames": 0.0,
+          "buildTotalMs": 0.0,
+          "rasterTotalMs": 0.0
+        },
+        "components/actions-bar/02-priority": {
+          "frames": 0.0,
+          "buildTotalMs": 0.0,
+          "rasterTotalMs": 0.0
+        },
+        "components/actions-bar/03-groups-toggles": {
+          "frames": 0.0,
+          "buildTotalMs": 0.0,
+          "rasterTotalMs": 0.0
+        },
+        "components/actions-bar/04-async": {
+          "frames": 0.0,
+          "buildTotalMs": 0.0,
+          "rasterTotalMs": 0.0
+        },
+        "components/actions-bar/05-width-provider": {
+          "frames": 0.0,
+          "buildTotalMs": 0.0,
+          "rasterTotalMs": 0.0
+        },
+        "components/actions-bar/06-menus-at-both-ends": {
+          "frames": 0.0,
+          "buildTotalMs": 0.0,
+          "rasterTotalMs": 0.0
+        }
+      }
+    },
+    "components/segmented-control": {
+      "idle": {
+        "frames": 0.0,
+        "build": {
+          "p50": null,
+          "p95": null,
+          "max": null
+        },
+        "raster": {
+          "p50": null,
+          "p95": null,
+          "max": null
+        },
+        "missed": 0.0,
+        "missed33": 0.0,
+        "buildTotalMs": 0.0,
+        "rasterTotalMs": 0.0
+      },
+      "scroll": {
+        "frames": 50.0,
+        "build": {
+          "p50": 0.4,
+          "p95": 4.6,
+          "max": 8.4
+        },
+        "raster": {
+          "p50": 5.63,
+          "p95": 28.24,
+          "max": 48.58
+        },
+        "missed": 6.0,
+        "missed33": 1.0,
+        "buildTotalMs": 63.09,
+        "rasterTotalMs": 447.22
+      },
+      "pointer": {
+        "frames": 81.0,
+        "build": {
+          "p50": 2.4,
+          "p95": 10.58,
+          "max": 38.8
+        },
+        "raster": {
+          "p50": 4.85,
+          "p95": 30.33,
+          "max": 49.75
+        },
+        "missed": 10.0,
+        "missed33": 2.0,
+        "buildTotalMs": 337.14,
+        "rasterTotalMs": 659.34
+      },
+      "drag": {
+        "frames": 65.0,
+        "build": {
+          "p50": 8.32,
+          "p95": 78.32,
+          "max": 102.44
+        },
+        "raster": {
+          "p50": 21.88,
+          "p95": 82.91,
+          "max": 147.83
+        },
+        "missed": 25.0,
+        "missed33": 16.0,
+        "buildTotalMs": 1372.38,
+        "rasterTotalMs": 2019.09
+      }
+    },
+    "components/toolbar": {
+      "idle": {
+        "frames": 0.0,
+        "build": {
+          "p50": null,
+          "p95": null,
+          "max": null
+        },
+        "raster": {
+          "p50": null,
+          "p95": null,
+          "max": null
+        },
+        "missed": 0.0,
+        "missed33": 0.0,
+        "buildTotalMs": 0.0,
+        "rasterTotalMs": 0.0
+      },
+      "scroll": {
+        "frames": 55.0,
+        "build": {
+          "p50": 0.35,
+          "p95": 11.43,
+          "max": 19.43
+        },
+        "raster": {
+          "p50": 6.47,
+          "p95": 16.64,
+          "max": 134.58
+        },
+        "missed": 3.0,
+        "missed33": 1.0,
+        "buildTotalMs": 96.96,
+        "rasterTotalMs": 510.03
+      },
+      "pointer": {
+        "frames": 72.0,
+        "build": {
+          "p50": 6.86,
+          "p95": 46.84,
+          "max": 78.81
+        },
+        "raster": {
+          "p50": 7.4,
+          "p95": 47.8,
+          "max": 79.11
+        },
+        "missed": 16.0,
+        "missed33": 10.0,
+        "buildTotalMs": 903.34,
+        "rasterTotalMs": 903.3
+      }
+    },
+    "components/switch": {
+      "idle": {
+        "frames": 0.0,
+        "build": {
+          "p50": null,
+          "p95": null,
+          "max": null
+        },
+        "raster": {
+          "p50": null,
+          "p95": null,
+          "max": null
+        },
+        "missed": 0.0,
+        "missed33": 0.0,
+        "buildTotalMs": 0.0,
+        "rasterTotalMs": 0.0
+      },
+      "scroll": {
+        "frames": 55.0,
+        "build": {
+          "p50": 0.31,
+          "p95": 1.55,
+          "max": 4.05
+        },
+        "raster": {
+          "p50": 8.71,
+          "p95": 30.56,
+          "max": 62.71
+        },
+        "missed": 5.0,
+        "missed33": 1.0,
+        "buildTotalMs": 28.54,
+        "rasterTotalMs": 601.86
+      },
+      "drag": {
+        "frames": 67.0,
+        "build": {
+          "p50": 3.72,
+          "p95": 31.48,
+          "max": 101.93
+        },
+        "raster": {
+          "p50": 13.58,
+          "p95": 62.13,
+          "max": 221.77
+        },
+        "missed": 25.0,
+        "missed33": 11.0,
+        "buildTotalMs": 647.66,
+        "rasterTotalMs": 1505.71
+      }
+    },
+    "guidelines/patterns": {
+      "idle": {
+        "frames": 0.0,
+        "build": {
+          "p50": null,
+          "p95": null,
+          "max": null
+        },
+        "raster": {
+          "p50": null,
+          "p95": null,
+          "max": null
+        },
+        "missed": 0.0,
+        "missed33": 0.0,
+        "buildTotalMs": 0.0,
+        "rasterTotalMs": 0.0
+      },
+      "scroll": {
+        "frames": 77.0,
+        "build": {
+          "p50": 9.94,
+          "p95": 98.15,
+          "max": 522.42
+        },
+        "raster": {
+          "p50": 9.81,
+          "p95": 114.29,
+          "max": 363.66
+        },
+        "missed": 35.0,
+        "missed33": 14.0,
+        "buildTotalMs": 2043.08,
+        "rasterTotalMs": 2199.44
+      },
+      "pointer": {
+        "frames": 41.0,
+        "build": {
+          "p50": 16.74,
+          "p95": 139.6,
+          "max": 257.21
+        },
+        "raster": {
+          "p50": 18.1,
+          "p95": 107.6,
+          "max": 263.7
+        },
+        "missed": 28.0,
+        "missed33": 17.0,
+        "buildTotalMs": 1399.96,
+        "rasterTotalMs": 1591.99
+      },
+      "drag": {
+        "frames": 117.0,
+        "build": {
+          "p50": 40.12,
+          "p95": 233.97,
+          "max": 665.07
+        },
+        "raster": {
+          "p50": 39.97,
+          "p95": 296.71,
+          "max": 701.74
+        },
+        "missed": 87.0,
+        "missed33": 74.0,
+        "buildTotalMs": 9115.22,
+        "rasterTotalMs": 9634.49
+      }
+    },
+    "baseline/text": {
+      "idle": {
+        "frames": 0.0,
+        "build": {
+          "p50": null,
+          "p95": null,
+          "max": null
+        },
+        "raster": {
+          "p50": null,
+          "p95": null,
+          "max": null
+        },
+        "missed": 0.0,
+        "missed33": 0.0,
+        "buildTotalMs": 0.0,
+        "rasterTotalMs": 0.0
+      },
+      "scroll": {
+        "frames": 47.0,
+        "build": {
+          "p50": 0.98,
+          "p95": 2.55,
+          "max": 5.72
+        },
+        "raster": {
+          "p50": 2.42,
+          "p95": 8.21,
+          "max": 28.86
+        },
+        "missed": 2.0,
+        "missed33": 0.0,
+        "buildTotalMs": 60.25,
+        "rasterTotalMs": 165.61
+      }
+    }
+  }
+}

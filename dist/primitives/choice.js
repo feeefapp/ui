@@ -14,7 +14,7 @@ function Choice({ kind, forwardedRef, label, description, error, controlSize = '
             node.current.setCustomValidity(error || '');
         }
     }, [kind, indeterminate, error]);
-    return (_jsxs("label", { className: cn('lab-choice', containerClassName), "data-kind": kind, "data-control-size": controlSize, "data-disabled": props.disabled || undefined, "data-invalid": Boolean(error) || undefined, children: [_jsx("input", { ...props, type: kind, id: id, ref: (el) => {
+    return (_jsxs("label", { className: cn('lab-choice', containerClassName), "data-kind": kind, "data-control-size": controlSize, "data-disabled": props.disabled || undefined, "data-invalid": Boolean(error) || undefined, "data-bare": label || description || error ? undefined : '', children: [_jsx("input", { ...props, type: kind, id: id, ref: (el) => {
                     node.current = el;
                     if (el)
                         el.indeterminate = kind === 'checkbox' && indeterminate;
@@ -29,12 +29,17 @@ function Choice({ kind, forwardedRef, label, description, error, controlSize = '
                     onChange?.(event);
                 } }), _jsx("span", { className: "lab-choice-mark", "aria-hidden": "true", children: kind === 'checkbox' ? (_jsxs(_Fragment, { children: [_jsx(Check, { className: "lab-choice-check", size: 14, strokeWidth: 2.5 }), _jsx(Minus, { className: "lab-choice-mixed", size: 14, strokeWidth: 2.5 })] })) : (_jsx("span", { className: "lab-choice-dot" })) }), (label || description || error) && (_jsxs("span", { className: "lab-choice-copy", children: [label && (_jsxs("span", { id: `${id}-label`, children: [label, props.required && kind === 'checkbox' && _jsx("span", { "aria-hidden": "true", children: " *" })] })), description && _jsx("small", { id: `${id}-description`, children: description }), error && (_jsx("small", { id: `${id}-error`, className: "lab-choice-error", "aria-live": "polite", children: error }))] }))] }));
 }
-export const LabCheckbox = React.forwardRef((props, ref) => (_jsx(Choice, { ...props, kind: "checkbox", forwardedRef: ref })));
-LabCheckbox.displayName = 'LabCheckbox';
-export const LabRadio = React.forwardRef((props, ref) => (_jsx(Choice, { ...props, kind: "radio", forwardedRef: ref })));
-LabRadio.displayName = 'LabRadio';
-/** Native radios own keyboard navigation, form submission and reset; fieldset owns the group label. */
-export const LabRadioGroup = React.forwardRef(({ label, options, value, defaultValue, onValueChange, name, form, required, error, description, controlSize, className, 'aria-describedby': describedBy, ...props }, ref) => {
+/** A native checkbox with a label, description, error and indeterminate state. */
+export const Checkbox = React.forwardRef((props, ref) => (_jsx(Choice, { ...props, kind: "checkbox", forwardedRef: ref })));
+Checkbox.displayName = 'Checkbox';
+/** A single native radio with a label and description. Prefer `RadioGroup`, which names and labels the set. */
+export const Radio = React.forwardRef((props, ref) => (_jsx(Choice, { ...props, kind: "radio", forwardedRef: ref })));
+Radio.displayName = 'Radio';
+/**
+ * A labelled set of mutually exclusive choices. Native radios own keyboard navigation, form
+ * submission and reset; the `<fieldset>` and `<legend>` own the group label.
+ */
+export const RadioGroup = React.forwardRef(({ label, options, value, defaultValue, onValueChange, name, form, required, error, description, controlSize, className, 'aria-describedby': describedBy, ...props }, ref) => {
     const id = React.useId();
     const group = React.useRef(null);
     React.useLayoutEffect(() => {
@@ -50,10 +55,10 @@ export const LabRadioGroup = React.forwardRef(({ label, options, value, defaultV
                 ref.current = el;
         }, form: form, className: cn('lab-radio-group', className), "aria-invalid": error ? true : props['aria-invalid'], "aria-describedby": [describedBy, description && `${id}-description`, error && `${id}-error`]
             .filter(Boolean)
-            .join(' ') || undefined, children: [_jsxs("legend", { children: [label, required && _jsx("span", { "aria-hidden": "true", children: " *" })] }), description && _jsx("p", { id: `${id}-description`, children: description }), _jsx("div", { className: "lab-radio-group-options", children: options.map((option) => (_jsx(LabRadio, { label: option.label, description: option.description, value: option.value, name: name || id, form: form, checked: value === undefined ? undefined : value === option.value, defaultChecked: value === undefined ? defaultValue === option.value : undefined, disabled: props.disabled || option.disabled, required: required, controlSize: controlSize, "aria-describedby": error ? `${id}-error` : undefined, "aria-invalid": error ? true : undefined, onCheckedChange: (checked) => {
+            .join(' ') || undefined, children: [_jsxs("legend", { children: [label, required && _jsx("span", { "aria-hidden": "true", children: " *" })] }), description && _jsx("p", { id: `${id}-description`, children: description }), _jsx("div", { className: "lab-radio-group-options", children: options.map((option) => (_jsx(Radio, { label: option.label, description: option.description, value: option.value, name: name || id, form: form, checked: value === undefined ? undefined : value === option.value, defaultChecked: value === undefined ? defaultValue === option.value : undefined, disabled: props.disabled || option.disabled, required: required, controlSize: controlSize, "aria-describedby": error ? `${id}-error` : undefined, "aria-invalid": error ? true : undefined, onCheckedChange: (checked) => {
                         if (checked)
                             onValueChange?.(option.value);
                     } }, option.value))) }), error && (_jsx("p", { id: `${id}-error`, className: "lab-choice-error", "aria-live": "polite", children: error }))] }));
 });
-LabRadioGroup.displayName = 'LabRadioGroup';
+RadioGroup.displayName = 'RadioGroup';
 //# sourceMappingURL=choice.js.map

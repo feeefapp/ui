@@ -2,15 +2,25 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { forwardRef, useRef, useLayoutEffect, useState, useImperativeHandle, } from 'react';
 import { cn } from '../utils.js';
-import { LabScrollGradientOverlay } from './gradient-overlay.js';
+import { GlassBar } from '../glass/container.js';
+import { ScrollGradientOverlay } from './gradient-overlay.js';
 import { scrollContentReserve } from './metrics.js';
+import { useShellGap } from './shell-gap.js';
+import { PullRefreshIndicator, usePullToRefresh } from './pull-refresh.js';
 import './scroll.css';
-/** Full-bleed scroll viewport with local floating chrome, measured spacers and edge washes. */
-export const LabScrollArea = forwardRef(function LabScrollArea({ children, top, bottom, label, edgeGap = 12, contentPadding = 24, gradient = true, topFadeHeight, bottomFadeHeight, viewportProps, className, style, ...props }, ref) {
+/**
+ * Full-bleed scroll viewport with local floating chrome, measured spacers and edge washes. Fills its
+ * parent, which must have a bounded height. The forwarded ref points at the scrolling element.
+ */
+export const ScrollArea = forwardRef(function ScrollArea({ children, top, bottom, label, edgeGap: edgeGapProp, sideGap, contentPadding: contentPaddingProp, gradient = true, topFadeHeight, bottomFadeHeight, viewportProps, onRefresh, refreshController, className, style, ...props }, ref) {
+    const root = useRef(null);
     const viewport = useRef(null);
+    const shellGap = useShellGap(root);
+    const edgeGap = edgeGapProp ?? shellGap, contentPadding = contentPaddingProp ?? shellGap;
     const topRef = useRef(null), bottomRef = useRef(null);
     const [heights, setHeights] = useState({ top: 0, bottom: 0 });
     useImperativeHandle(ref, () => viewport.current, []);
+    const refresh = usePullToRefresh(viewport, onRefresh, refreshController);
     useLayoutEffect(() => {
         const measure = () => {
             const next = {
@@ -27,12 +37,13 @@ export const LabScrollArea = forwardRef(function LabScrollArea({ children, top, 
         measure();
         return () => resize.disconnect();
     }, [Boolean(top), Boolean(bottom)]);
-    return (_jsxs("div", { ...props, className: cn('lab-scroll-area', className), style: {
+    return (_jsxs("div", { ...props, ref: root, className: cn('lab-scroll-area', className), style: {
             ...style,
             '--lab-scroll-gap': `${Math.max(0, edgeGap)}px`,
+            ...(sideGap === undefined ? {} : { '--lab-scroll-side-gap': `${Math.max(0, sideGap)}px` }),
             '--lab-scroll-padding': `${Math.max(0, contentPadding)}px`,
             '--lab-scroll-top-reserve': `${scrollContentReserve(heights.top, edgeGap, contentPadding)}px`,
             '--lab-scroll-bottom-reserve': `${scrollContentReserve(heights.bottom, edgeGap, contentPadding)}px`,
-        }, children: [top && (_jsx("div", { ref: topRef, className: "lab-scroll-float lab-scroll-float--top", children: top })), _jsx("div", { ...viewportProps, ref: viewport, className: cn('lab-scroll-viewport', viewportProps?.className), role: viewportProps?.role ?? 'region', "aria-label": viewportProps?.['aria-label'] ?? label, tabIndex: viewportProps?.tabIndex ?? 0, children: _jsx("div", { className: "lab-scroll-content", children: children }) }), gradient && (_jsx(LabScrollGradientOverlay, { viewport: viewport, topHeight: topFadeHeight ?? Math.max(100, heights.top + edgeGap * 2), bottomHeight: bottomFadeHeight ?? Math.max(140, heights.bottom + edgeGap * 2) })), bottom && (_jsx("div", { ref: bottomRef, className: "lab-scroll-float lab-scroll-float--bottom", children: bottom }))] }));
+        }, children: [top && (_jsx("div", { ref: topRef, className: "lab-scroll-float lab-scroll-float--top", children: _jsx(GlassBar, { children: top }) })), _jsx("div", { ...viewportProps, ref: viewport, className: cn('lab-scroll-viewport', viewportProps?.className), role: viewportProps?.role ?? 'region', "aria-label": viewportProps?.['aria-label'] ?? label, tabIndex: viewportProps?.tabIndex ?? 0, children: _jsx("div", { className: "lab-scroll-content", children: children }) }), gradient && (_jsx(ScrollGradientOverlay, { viewport: viewport, topHeight: topFadeHeight ?? Math.max(100, heights.top + edgeGap * 2), bottomHeight: bottomFadeHeight ?? Math.max(140, heights.bottom + edgeGap * 2) })), onRefresh && _jsx(PullRefreshIndicator, { pull: refresh.pull, state: refresh.state }), bottom && (_jsx("div", { ref: bottomRef, className: "lab-scroll-float lab-scroll-float--bottom", children: _jsx(GlassBar, { children: bottom }) }))] }));
 });
 //# sourceMappingURL=scroll-area.js.map

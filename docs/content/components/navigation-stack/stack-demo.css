@@ -1,0 +1,60 @@
+/* Product gallery used by the zoom example. */
+.stack-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.stack-demo-card {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--lab-ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.stack-demo-art {
+  display: block;
+  aspect-ratio: 4 / 5;
+  border-radius: calc(18px * var(--lab-corner-scale, 1));
+}
+.stack-demo-card:focus-visible {
+  outline: none;
+}
+.stack-demo-card:focus-visible .stack-demo-art {
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
+}
+.stack-demo-card-name {
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 500;
+}
+.stack-demo-card-price {
+  color: var(--lab-muted);
+  font-size: 13px;
+  line-height: 21px;
+}
+/* Full bleed: the hero pulls itself up under the floating bar by the area's measured reserve. */
+.stack-demo-hero {
+  height: 420px;
+  margin-top: calc(-1 * var(--lab-scroll-top-reserve, 0px));
+}
+.stack-demo-body {
+  padding: 20px 16px 0;
+}
+.stack-demo-body h2 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 600;
+}
+.stack-demo-body p {
+  margin: 0 0 20px;
+  color: var(--lab-muted);
+  font-size: 15px;
+  line-height: 23px;
+}

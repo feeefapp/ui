@@ -1,92 +1,91 @@
-import { useRef, type ReactNode, type KeyboardEvent } from 'react'
-import { LabButton } from './button'
-import { cn } from '../utils'
-import { revealScrollChild } from '../scroll/reveal'
-import './segmented.css'
+'use client'
 
-export type LabSegmentOption<T extends string> = {
+import type { ReactNode } from 'react'
+import { SelectionTrack, type SelectionOverflow } from './selection-track'
+
+export type { SelectionOverflow } from './selection-track'
+
+/** A status colour for an option's icon. */
+export type SegmentTone = 'success' | 'warning' | 'danger'
+
+/** One choice of a segmented control. */
+export type SegmentOption<T extends string> = {
+  /** Value reported to `onChange`. */
   value: T
+  /** Visible text and accessible name. */
   label: string
+  /** Decorative icon before the label. */
   icon?: ReactNode
+  /** Colours the icon (only the icon) with a status token while the option isn't selected; the
+   * selected option's icon takes the pill's ink. Never the only cue: keep it in the label too. */
+  tone?: SegmentTone
+  /** A short count or tag after the label ("21"), on a small neutral pill in tabular figures. It is
+   * part of the option's accessible name ("New, 21"). */
+  badge?: string
+  /** Skipped by the keyboard and not clickable. */
   disabled?: boolean
 }
-export function LabSegmentedControl<const T extends string>({
+
+/**
+ * A single choice among short options, shown side by side in one row. A filled pill marks the
+ * selection and slides to the next one; press it and it becomes a glass lens you can drag (or
+ * press another option and drag: the pill comes to you). Radio semantics: one Tab stop, arrow keys
+ * move and select. Options can carry a count (`badge`).
+ *
+ * When its row has no room for every option it folds, like an actions bar spills into More: the
+ * other options fold into the selected one, which gains a chevron and opens them as a single-choice
+ * menu (`overflow="menu"`, the default). Every foldable control in the row is fitted together,
+ * folding from the end, and unfolds as soon as the room is back. A status filter with many options
+ * takes `overflow="scroll"` instead: options that don't fit scroll sideways inside the control
+ * (never wrap or squeeze), its edges fade where there is more, the selection scrolls into view
+ * whenever it changes, and a pill dragged near an edge scrolls on. On touch a swipe scrolls; a drag
+ * that starts on the pill moves the pill.
+ *
+ * It paints no container: put it in glass (`ToolbarGroup`), on a box of your own (a surface-token
+ * background; the root already has the capsule radius) or leave it bare. `TabView`'s tab bar is the
+ * same control with tab semantics.
+ */
+export function SegmentedControl<const T extends string>({
   value,
   onChange,
   options,
   label,
   disabled = false,
+  equalWidth = false,
+  overflow = 'menu',
   className,
-  appearance = 'grouped',
 }: {
+  /** The selected option's value. */
   value: T
+  /** Called with the chosen value on a click or tap, when a dragged pill is released on another option, and on every arrow, Home or End key press. */
   onChange(value: NoInfer<T>): void
-  options: readonly LabSegmentOption<T>[]
+  /** Choices, in display order. */
+  options: readonly SegmentOption<T>[]
+  /** Accessible name of the radio group. */
   label: string
+  /** Disables every option. */
   disabled?: boolean
+  /** Fills the available width with one row of equal options whose labels end in an ellipsis (it
+   * never scrolls). */
+  equalWidth?: boolean
+  /** When the row has no room for every option: `menu` folds the control into the selected option
+   * and a chevron that opens the options as a radio menu; `scroll` scrolls them inside the control
+   * (a status filter with many options). Ignored with `equalWidth`. */
+  overflow?: SelectionOverflow
+  /** Class name for the group (a background here fills the capsule behind the options). */
   className?: string
-  appearance?: 'grouped' | 'plain'
 }) {
-  const group = useRef<HTMLDivElement>(null)
-  const enabled = options.filter((option) => !disabled && !option.disabled)
-  const tabValue = enabled.some((option) => option.value === value) ? value : enabled[0]?.value
-  const navigate = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (
-      !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key) ||
-      !enabled.length
-    )
-      return
-    event.preventDefault()
-    const rtl = group.current && getComputedStyle(group.current).direction === 'rtl'
-    const index = enabled.findIndex((option) => option.value === value)
-    const horizontal = event.key === 'ArrowLeft' || event.key === 'ArrowRight'
-    const delta =
-      (event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1) *
-      (horizontal && rtl ? -1 : 1)
-    const next =
-      event.key === 'Home'
-        ? enabled[0]
-        : event.key === 'End'
-          ? enabled[enabled.length - 1]
-          : enabled[(Math.max(0, index) + delta + enabled.length) % enabled.length]
-    onChange(next.value)
-    const position = options.findIndex((option) => option.value === next.value)
-    const button = group.current?.querySelectorAll<HTMLButtonElement>('button')[position]
-    button?.focus({ preventScroll: true })
-    revealScrollChild(group.current, button, { block: false })
-    revealScrollChild(group.current?.closest<HTMLElement>('.lab-scroll-viewport'), button, {
-      inline: false,
-    })
-  }
   return (
-    <div
-      ref={group}
-      className={cn('lab-segmented', appearance === 'grouped' && 'lab-light-edge', className)}
-      data-appearance={appearance}
-      role="radiogroup"
-      aria-label={label}
-      aria-disabled={disabled || undefined}
-      onKeyDown={navigate}
-      data-lab-corners
-    >
-      {options.map((option) => (
-        <LabButton
-          key={option.value}
-          variant="ghost"
-          appearance="toolbar"
-          controlSize="regular"
-          className="lab-segmented-option"
-          role="radio"
-          aria-checked={option.value === value}
-          tabIndex={option.value === tabValue ? 0 : -1}
-          disabled={disabled || option.disabled}
-          data-state={option.value === value ? 'on' : 'off'}
-          onClick={() => onChange(option.value)}
-        >
-          {option.icon && <span aria-hidden="true">{option.icon}</span>}
-          {option.label}
-        </LabButton>
-      ))}
-    </div>
+    <SelectionTrack
+      semantics="radio"
+      value={value}
+      onSelect={(next) => onChange(next)}
+      options={options}
+      label={label}
+      disabled={disabled}
+      equalWidth={equalWidth}
+      overflow={overflow}
+      className={className}
+    />
   )
 }

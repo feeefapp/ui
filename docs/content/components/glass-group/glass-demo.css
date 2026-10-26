@@ -1,0 +1,79 @@
+/* Backdrops for the Glass group page: glass only reads as glass over content. */
+.glass-demo-backdrop {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 220px;
+  padding: 24px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-panel);
+  background:
+    radial-gradient(circle at 20% 30%, color-mix(in srgb, var(--lab-primary) 45%, transparent) 0 18%, transparent 19%),
+    radial-gradient(circle at 75% 65%, color-mix(in srgb, var(--lab-accent) 50%, transparent) 0 22%, transparent 23%),
+    repeating-linear-gradient(45deg, var(--lab-surface) 0 14px, var(--lab-surface-soft) 14px 28px);
+}
+.glass-demo-group-content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+}
+.glass-demo-panel {
+  display: grid;
+  gap: 4px;
+  padding: 16px 18px;
+  max-width: 240px;
+}
+.glass-demo-panel p,
+.glass-demo-surface p {
+  margin: 0;
+  color: var(--lab-muted);
+  font-size: 13px;
+}
+.glass-demo-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+.glass-demo-surface {
+  display: grid;
+  gap: 4px;
+  padding: 16px 18px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-panel);
+  background: var(--lab-surface);
+}
+.glass-demo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: min(100%, 520px);
+  padding: 4px 4px 4px 16px;
+  box-sizing: border-box;
+}
+/* The floating layer covers the viewport; the app positions the surface inside it. */
+.glass-demo-notice {
+  position: absolute;
+  inset-inline: 0;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 6px 6px 16px;
+  font-size: 13px;
+}
+.lab-scaffold.glass-demo-provider {
+  min-height: 0;
+}
+.glass-demo-status {
+  margin: 0;
+  color: var(--lab-muted);
+  font-size: 13px;
+}

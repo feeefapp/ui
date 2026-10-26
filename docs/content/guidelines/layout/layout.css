@@ -1,0 +1,255 @@
+/* Demo content for the Layout guideline. Layout only; every color, radius and size is a kit token. */
+.gl-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-inline: 8px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.gl-side-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding-inline-start: 4px;
+}
+.gl-side-brand[data-rail] {
+  flex-direction: column;
+  justify-content: center;
+  padding: 0;
+}
+.gl-side-nav {
+  display: grid;
+  gap: 2px;
+}
+.gl-bar-title > span {
+  overflow: hidden;
+  max-width: 220px;
+  padding-inline: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gl-bar-title {
+  transition:
+    opacity 180ms var(--lab-ease),
+    translate 220ms var(--lab-ease);
+}
+.gl-bar-title[data-state='closed'] {
+  opacity: 0;
+  translate: 0 6px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gl-bar-title {
+    transition: none;
+  }
+}
+.gl-dock-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-inline: 8px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* Page content inside the scaffold's content panel. */
+.gl-page {
+  display: grid;
+  width: 100%;
+  gap: 16px;
+  align-items: start;
+}
+.gl-page[data-inspector] {
+  grid-template-columns: minmax(0, 1fr) 280px;
+}
+.gl-main {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.gl-page-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 4px;
+  font-size: 26px;
+  line-height: 31px;
+}
+.gl-page-header p,
+.gl-muted {
+  margin: 0;
+  color: var(--lab-muted);
+  font-size: 14px;
+}
+.gl-card,
+.gl-inspector {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-small);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface);
+  font-size: 14px;
+}
+.gl-card h4,
+.gl-inspector h4 {
+  margin: 0;
+  font-size: 15px;
+}
+.gl-card p {
+  margin: 0;
+}
+.gl-inspector {
+  position: sticky;
+  top: 0;
+}
+.gl-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-block: 8px;
+  border-top: 1px solid var(--lab-line);
+}
+.gl-line > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.gl-line small {
+  color: var(--lab-muted);
+  font-size: 13px;
+}
+.gl-facts {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  font-size: 14px;
+}
+.gl-facts > div {
+  display: grid;
+  gap: 2px;
+}
+.gl-facts dt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--lab-muted);
+  font-size: 13px;
+}
+.gl-facts dd {
+  margin: 0;
+}
+.gl-ground-marker {
+  position: absolute;
+  inset-block-end: 6px;
+  inset-inline-start: 6px;
+  z-index: 5;
+}
+
+/* Responsive demo controls. */
+.gl-resize {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  margin-block: 20px;
+}
+.gl-resize-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  font-size: 14px;
+}
+.gl-resize-head output {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.gl-resize-state {
+  margin: 0;
+  color: var(--lab-muted);
+  font-size: 14px;
+}
+
+/* Small bounded boxes for the Do / Don't pairs. */
+.gl-mini {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 230px;
+  overflow: hidden;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-small);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface);
+  font-size: 13px;
+}
+.gl-mini[data-stack] {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+.gl-mini-rows {
+  display: grid;
+  gap: 6px;
+}
+.gl-mini-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-small);
+  background: var(--lab-surface);
+}
+.gl-mini-row > span {
+  display: grid;
+  min-width: 0;
+}
+.gl-mini-row small {
+  color: var(--lab-muted);
+}
+.gl-mini-title {
+  padding-inline: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.gl-mini-scroll {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-height: 0;
+  overflow: hidden;
+  padding: 8px;
+}
+/* The mistakes: bars painted edge to edge. They exist only to show what not to build. */
+.gl-painted-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--lab-line);
+  background: var(--lab-surface-soft);
+}
+.gl-painted-bar > div {
+  display: flex;
+  gap: 4px;
+}
+.gl-grow {
+  flex: 1;
+  min-width: 120px;
+}
+.gl-dock-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+}

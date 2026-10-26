@@ -4,10 +4,13 @@
  * Web port of marchant `tools/ai/widgets/model_ladder_selector.dart`.
  */
 export type LadderStop = {
+  /** Shows a Free or Pro tag. Display only; the owner enforces access. */
   access?: 'free' | 'pro'
+  /** Stable model id sent to the API. */
   modelId: string
   /** Tier word shown large, e.g. "Fast", "Pro". Replaced by a positional tier when it copies the name or id. */
   label: string
+  /** Human model name shown under the tier. */
   modelName: string
   /** Optional one-liner shown in the model list. */
   description?: string | null
@@ -16,7 +19,7 @@ export type LadderStop = {
 }
 
 /** A ladder as the Lab API serves it (Cloud collection, or a priced catalog fallback). */
-export type LabLadder = {
+export type Ladder = {
   id: string
   name: string
   source: 'cloud' | 'catalog'
@@ -98,8 +101,6 @@ export const formatUsd = (value: number) =>
       : value < 0.1
         ? `$${value.toFixed(3)}`
         : `$${value.toFixed(2)}`
-export const reducedMotion = () =>
-  typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 export const FIRE_CELL = 5
 export const FIRE_PALETTE = ['#3b0a04', '#a32008', '#ff4d0a', '#ff9a1f', '#ffd54a', '#fff6c4']

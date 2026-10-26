@@ -1,0 +1,109 @@
+{
+ "model": "At depth t (pt, inward from the outline) and angle a between the edge normal and the light axis\n(top-left \u2194 bottom-right), with x the backdrop and M(x) the interior result of the material:",
+ "fits": {
+  "ios/clear-light": {
+   "params": {
+    "w0": 0.031,
+    "w1": 0.625,
+    "p": 1.127,
+    "wt": 1.102,
+    "k0": 0.205,
+    "k1": -0.192,
+    "kt": 0.224
+   },
+   "rms_255": 5.46,
+   "n": 672
+  },
+  "ios/clear-dark": {
+   "params": {
+    "w0": -0.007,
+    "w1": 0.099,
+    "p": 1.337,
+    "wt": 1.167,
+    "k0": -0.171,
+    "k1": -1.348,
+    "kt": 1.278
+   },
+   "rms_255": 8.93,
+   "n": 670
+  },
+  "ios/regular-light": {
+   "params": {
+    "w0": 0.049,
+    "w1": 0.81,
+    "p": 0.876,
+    "wt": 0.977,
+    "k0": 0.111,
+    "k1": 0.74,
+    "kt": 0.54
+   },
+   "rms_255": 6.05,
+   "n": 782
+  },
+  "ios/regular-dark": {
+   "params": {
+    "w0": 0.003,
+    "w1": 0.159,
+    "p": 1.008,
+    "wt": 1.172,
+    "k0": 0.216,
+    "k1": 0.357,
+    "kt": 0.647
+   },
+   "rms_255": 5.03,
+   "n": 882
+  },
+  "kit/clear-light": {
+   "params": {
+    "w0": 0.135,
+    "w1": 0.255,
+    "p": 1.723,
+    "wt": 0.922,
+    "k0": 0.172,
+    "k1": -0.456,
+    "kt": 0.5
+   },
+   "rms_255": 2.03,
+   "n": 840
+  },
+  "kit/clear-dark": {
+   "params": {
+    "w0": 0.062,
+    "w1": 0.063,
+    "p": 1.366,
+    "wt": 0.92,
+    "k0": 0.268,
+    "k1": -0.06,
+    "kt": 0.347
+   },
+   "rms_255": 1.09,
+   "n": 840
+  },
+  "kit/regular-light": {
+   "params": {
+    "w0": 0.143,
+    "w1": 0.249,
+    "p": 2.476,
+    "wt": 0.931,
+    "k0": 0.023,
+    "k1": 0.003,
+    "kt": 0.423
+   },
+   "rms_255": 1.25,
+   "n": 714
+  },
+  "kit/regular-dark": {
+   "params": {
+    "w0": 0.078,
+    "w1": 0.062,
+    "p": 1.525,
+    "wt": 0.918,
+    "k0": 0.068,
+    "k1": 0.019,
+    "kt": 0.369
+   },
+   "rms_255": 1.45,
+   "n": 1008
+  }
+ }
+}

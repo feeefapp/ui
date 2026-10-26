@@ -24,7 +24,7 @@ html[data-lab-theme] .lab-control.lab-ladder-trigger[data-variant] {
   padding-inline-start: 5px;
   padding-inline-end: 12px;
   border: 1px solid transparent;
-  border-radius: 18px;
+  border-radius: calc(18px * var(--lab-corner-scale, 1));
   corner-shape: superellipse(1.5);
   background: transparent;
   color: var(--ladder-ink);
@@ -39,8 +39,8 @@ html[data-lab-theme] .lab-control.lab-ladder-trigger[data-state='open'] {
   border-color: color-mix(in srgb, var(--ladder-primary) 30%, var(--ladder-line));
 }
 .lab-ladder-trigger:focus-visible {
-  outline: 2px solid var(--lab-focus, var(--ladder-primary));
-  outline-offset: 2px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
 }
 .lab-ladder-trigger:disabled {
   opacity: 0.5;
@@ -52,7 +52,7 @@ html[data-lab-theme] .lab-control.lab-ladder-trigger[data-state='open'] {
   width: 32px;
   height: 32px;
   flex: none;
-  border-radius: 12px;
+  border-radius: calc(12px * var(--lab-corner-scale, 1));
   background: color-mix(in srgb, var(--ladder-primary) 18%, var(--ladder-surface));
   color: var(--ladder-ink);
 }
@@ -64,14 +64,15 @@ html[data-lab-theme] .lab-control.lab-ladder-trigger[data-state='open'] {
   display: grid;
   min-width: 0;
   text-align: start;
-  line-height: 1.15;
 }
 .lab-ladder-trigger-text b {
   font-size: 13px;
   font-weight: 500;
+  line-height: 15px;
 }
 .lab-ladder-trigger-text small {
   font-size: 10px;
+  line-height: 12px;
   color: var(--ladder-muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -84,7 +85,8 @@ html[data-lab-theme] .lab-control.lab-ladder-trigger--icon[data-variant] {
   min-height: 40px;
   padding: 0;
   justify-content: center;
-  border-radius: 14px;
+  border-radius: calc(14px * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
 }
 .lab-ladder-trigger--icon .lab-ladder-trigger-icon {
   background: transparent;
@@ -114,7 +116,7 @@ html[data-lab-theme] .lab-control.lab-ladder-trigger--icon[data-variant] {
   gap: 0;
   padding: 12px;
   border: 1px solid var(--ladder-line);
-  border-radius: 26px;
+  border-radius: calc(26px * var(--lab-corner-scale, 1));
   corner-shape: superellipse(1.5);
   background: var(--ladder-surface);
   box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
@@ -141,7 +143,8 @@ html[data-lab-theme] .lab-control.lab-ladder-title[data-variant] {
   min-height: var(--lab-control-height);
   padding: 2px 6px;
   border: 0;
-  border-radius: 10px;
+  border-radius: calc(10px * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
   background: transparent;
   color: inherit;
   font: inherit;
@@ -157,8 +160,8 @@ html[data-lab-theme] .lab-control.lab-ladder-title[data-variant] {
 .lab-ladder-title:focus-visible,
 .lab-ladder-reset:focus-visible,
 .lab-ladder-option:focus-visible {
-  outline: 2px solid var(--lab-focus, var(--ladder-primary));
-  outline-offset: 1px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
 }
 html[data-lab-theme] .lab-control.lab-ladder-title[data-variant] > svg {
   flex: none;
@@ -228,7 +231,8 @@ html[data-lab-theme] .lab-control.lab-ladder-reset[data-variant] {
   opacity: 0.3;
   cursor: default;
 }
-.lab-ladder-price {
+/* Two classes: `.lab-app p { margin: 0 }` (system.css) would otherwise drop the inset. */
+.lab-ladder-card .lab-ladder-price {
   margin-block: 4px 0;
   margin-inline-start: 34px;
   margin-inline-end: 0;
@@ -267,7 +271,7 @@ html[data-lab-theme] .lab-control.lab-ladder-reset[data-variant] {
 }
 
 /* Track ------------------------------------------------------------------------------------ */
-/* Geometry and interaction are shared with LabSlider. */
+/* Geometry and interaction are shared with Slider. */
 .lab-ladder-track {
   margin-top: 14px;
 }
@@ -370,7 +374,8 @@ html[data-lab-theme] .lab-control.lab-ladder-option[data-variant] {
   min-height: var(--lab-control-height);
   padding: 9px 10px;
   border: 0;
-  border-radius: 14px;
+  border-radius: calc(14px * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
   background: transparent;
   color: inherit;
   font: inherit;
@@ -396,7 +401,7 @@ html[data-lab-theme] .lab-control.lab-ladder-option[aria-selected='true'] {
 .lab-ladder-option small {
   font-size: 11px;
   color: var(--ladder-muted);
-  line-height: 1.35;
+  line-height: 15px;
 }
 .lab-ladder-option > svg {
   flex: none;
@@ -406,7 +411,7 @@ html[data-lab-theme] .lab-control.lab-ladder-option[aria-selected='true'] {
   flex: none;
   align-self: center;
 }
-.lab-ladder-empty {
+.lab-ladder-options .lab-ladder-empty {
   margin: 8px 4px;
   font-size: 12px;
   color: var(--ladder-muted);
@@ -475,42 +480,26 @@ html[data-lab-theme] .lab-control.lab-ladder-option[aria-selected='true'] {
 .lab-ladder-shape-options.lab-segmented {
   width: max-content;
   max-width: none;
-  flex-wrap: nowrap;
 }
-html[data-lab-theme] .lab-ladder-shape-options > .lab-segmented-option {
+/* Shape tiles: the segmented pill marks the chosen one (it takes the tile's size). Out-specifies the
+kit's `.lab-segmented-track > .lab-segmented-option.lab-control[data-variant]`. */
+html[data-lab-theme] .lab-ladder-shape-options.lab-segmented .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
   flex: none;
-  display: grid;
-  justify-items: center;
-  align-content: center;
-  gap: 5px;
   width: 52px;
   min-width: 52px;
   height: 58px;
   min-height: 58px;
   padding: 4px;
   border: 1px solid var(--ladder-line);
-  border-radius: 15px;
-  background: transparent;
+  border-radius: calc(15px * var(--lab-corner-scale, 1));
   color: var(--ladder-ink);
   font: inherit;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
-  cursor: pointer;
-  transition:
-    border-color 140ms,
-    background 140ms,
-    transform 140ms var(--ladder-ease);
 }
-html[data-lab-theme] .lab-ladder-shape-options > .lab-segmented-option:hover {
-  border-color: color-mix(in srgb, var(--ladder-primary) 45%, var(--ladder-line));
-}
-html[data-lab-theme] .lab-ladder-shape-options > .lab-segmented-option[data-state='on'] {
-  border-color: var(--ladder-primary);
-  background: color-mix(in srgb, var(--ladder-primary) 18%, transparent);
-}
-.lab-ladder-shape-options > .lab-segmented-option:focus-visible {
-  outline: 2px solid var(--lab-focus, var(--ladder-primary));
-  outline-offset: 1px;
+.lab-ladder-shape-options .lab-segmented-content {
+  flex-direction: column;
+  gap: 5px;
 }
 .lab-ladder-shape-options i {
   display: block;
@@ -531,9 +520,28 @@ html[data-lab-theme] .lab-ladder-shape-options > .lab-segmented-option[data-stat
   color: var(--lab-muted);
   font-size: 11px;
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 17px;
 }
 .lab-model-access[data-access='free'] {
   background: var(--lab-surface-soft);
   color: var(--lab-ink);
+}
+
+/* Compact trigger: a toolbar button one control tall (brain, tier, chevron), for composer rows. */
+.lab-ladder-compact-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html[data-lab-theme] .lab-control.lab-ladder-compact[data-variant] {
+  min-width: 0;
+  max-width: 100%;
+}
+html[data-lab-theme] .lab-control.lab-ladder-compact[data-state='open'] {
+  background: var(--lab-control-fill-hover);
+}
+html[data-lab-theme] .lab-control.lab-ladder-compact[data-variant] > svg.lab-ladder-compact-chevron {
+  width: 14px;
+  height: 14px;
+  color: var(--lab-muted);
 }

@@ -2,11 +2,9 @@
 
 import * as React from 'react'
 import './motion.css'
+import { prefersReducedMotion } from './physics/motion-value'
 
 export type PresenceState = 'open' | 'closed'
-
-const reducedMotion = () =>
-  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 /**
  * Keeps an element mounted while it animates out. `state` drives `data-state`
@@ -23,7 +21,7 @@ export function usePresence(open: boolean, exitMs = 200) {
     }
     if (!mounted) return
     setState('closed')
-    const timer = window.setTimeout(() => setMounted(false), reducedMotion() ? 0 : exitMs)
+    const timer = window.setTimeout(() => setMounted(false), prefersReducedMotion() ? 0 : exitMs)
     return () => clearTimeout(timer)
   }, [open])
   return { mounted, state }
@@ -40,12 +38,14 @@ export function useLatched<T>(value: T, hold: boolean) {
  * Label that swaps between known values without changing width: every option
  * is laid out in the same grid cell and only the active one is visible.
  */
-export function LabStableText({
+export function StableText({
   value,
   options,
   className,
 }: {
+  /** The label to show now. */
   value: string
+  /** Every label this slot can show; the widest one sets the width. */
   options: string[]
   className?: string
 }) {
@@ -65,20 +65,40 @@ export function LabStableText({
  * Animates its own height to follow its content, so content that appears,
  * disappears or grows (results, errors, previews) eases instead of jumping.
  */
-export function LabAutoHeight({
+export function AutoHeight({
   children,
   className,
   as: Component = 'div',
   ...props
-}: React.HTMLAttributes<HTMLElement> & { as?: 'div' | 'section' }) {
+}: React.HTMLAttributes<HTMLElement> & {
+  /** Element to render as the outer box. */
+  as?: 'div' | 'section'
+}) {
   const inner = React.useRef<HTMLDivElement>(null)
   const [height, setHeight] = React.useState<number | null>(null)
   React.useLayoutEffect(() => {
     const element = inner.current
     if (!element || typeof ResizeObserver === 'undefined') return
-    const observer = new ResizeObserver(() => setHeight(element.offsetHeight))
+    // The height goes on the outer box: under `box-sizing: border-box` it has to include that
+    // box's own border and padding, or a bordered AutoHeight ends short of its content.
+    const measure = () => {
+      const outer = element.parentElement
+      let frame = 0
+      if (outer) {
+        const css = getComputedStyle(outer)
+        if (css.boxSizing === 'border-box') {
+          frame =
+            parseFloat(css.borderTopWidth) +
+            parseFloat(css.borderBottomWidth) +
+            parseFloat(css.paddingTop) +
+            parseFloat(css.paddingBottom)
+        }
+      }
+      setHeight(element.offsetHeight + (frame || 0))
+    }
+    const observer = new ResizeObserver(measure)
     observer.observe(element)
-    setHeight(element.offsetHeight)
+    measure()
     return () => observer.disconnect()
   }, [])
   return (
@@ -95,13 +115,18 @@ export function LabAutoHeight({
 }
 
 /** Mounts `render` while open and through its exit, with the last open output frozen. */
-export function LabPresence({
+export function Presence({
   open,
   exitMs = 160,
   render,
 }: {
+  /** Whether the content should be shown. */
   open: boolean
+  /** How long the closing frame stays mounted, in milliseconds. 0 under reduced motion. */
   exitMs?: number
+  /** Draws the content. Put the state on `data-state` so CSS can animate open and closed. While
+   * closing, the frozen element also gets `data-glass-hidden`: glass bubbles in it leave the glass
+   * (absorbed into their nearest neighbour) while their content fades. */
   render: (state: PresenceState) => React.ReactNode
 }) {
   const { mounted, state } = usePresence(open, exitMs)
@@ -111,19 +136,21 @@ export function LabPresence({
   return <>{open ? live : React.isValidElement(node) ? withState(node, state) : node}</>
 }
 function withState(node: React.ReactElement<any>, state: PresenceState) {
-  return React.cloneElement(node, { 'data-state': state })
+  return React.cloneElement(node, { 'data-state': state, 'data-glass-hidden': state === 'closed' ? '' : undefined })
 }
 
 /**
  * Cross-fades between keyed icons in one fixed-size cell, so play/pause,
  * mic/stop and similar swaps animate without moving surrounding layout.
  */
-export function LabSwap({
+export function Swap({
   swapKey,
   children,
   className,
 }: {
+  /** Identity of the current child; changing it cross-fades the old child out and the new one in. */
   swapKey: string
+  /** The icon to show. Decorative: the cell is `aria-hidden`, so label the control around it. */
   children: React.ReactNode
   className?: string
 }) {
@@ -144,7 +171,7 @@ export function LabSwap({
         timers.current.delete(timer)
         setLeaving((old) => old.filter((item) => item !== last))
       },
-      reducedMotion() ? 0 : 220
+      prefersReducedMotion() ? 0 : 220
     )
     timers.current.add(timer)
   }, [swapKey])

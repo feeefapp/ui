@@ -4,10 +4,13 @@
  * Web port of marchant `tools/ai/widgets/model_ladder_selector.dart`.
  */
 export type LadderStop = {
+    /** Shows a Free or Pro tag. Display only; the owner enforces access. */
     access?: 'free' | 'pro';
+    /** Stable model id sent to the API. */
     modelId: string;
     /** Tier word shown large, e.g. "Fast", "Pro". Replaced by a positional tier when it copies the name or id. */
     label: string;
+    /** Human model name shown under the tier. */
     modelName: string;
     /** Optional one-liner shown in the model list. */
     description?: string | null;
@@ -15,7 +18,7 @@ export type LadderStop = {
     priceUsd?: number | null;
 };
 /** A ladder as the Lab API serves it (Cloud collection, or a priced catalog fallback). */
-export type LabLadder = {
+export type Ladder = {
     id: string;
     name: string;
     source: 'cloud' | 'catalog';
@@ -58,7 +61,6 @@ export declare const middleIndex: (count: number) => number;
 export declare const heatAt: (position: number, count: number) => number;
 /** USD with enough precision for cents-level AI prices. */
 export declare const formatUsd: (value: number) => string;
-export declare const reducedMotion: () => boolean;
 export declare const FIRE_CELL = 5;
 export declare const FIRE_PALETTE: string[];
 /** Cheap deterministic noise in [0, 1) for one cell and frame. */

@@ -1,2 +1,2 @@
-export { LabDock } from './dock'
-export type { LabDockProps } from './dock'
+export { Dock } from './dock'
+export type { DockProps } from './dock'

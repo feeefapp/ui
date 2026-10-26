@@ -2,7 +2,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 8px;
+  /* Bubbles and pinned chips sit --lab-toolbar-gap (the shell gap G by default) apart. */
+  gap: var(--lab-toolbar-gap);
   width: 100%;
   min-width: 0;
   pointer-events: none;
@@ -18,7 +19,7 @@
 .lab-filter-trailing {
   margin-inline-start: auto;
   display: flex;
-  gap: 8px;
+  gap: var(--lab-toolbar-gap);
 }
 .lab-filter-panel {
   width: min(300px, calc(100vw - 24px));
@@ -61,13 +62,14 @@ html[data-lab-theme] .lab-control.lab-filter-row-main {
   display: flex;
   flex: 1;
   min-width: 0;
-  min-height: var(--lab-control-compact);
+  min-height: var(--lab-menu-row-height);
   height: auto;
   padding: 8px;
   gap: 10px;
   justify-content: start;
   text-align: start;
   border-radius: var(--lab-radius-small);
+  corner-shape: superellipse(1.5);
 }
 .lab-filter-row-main > span:not(.lab-filter-row-value) {
   display: grid;
@@ -99,7 +101,7 @@ html[data-lab-theme] .lab-control.lab-filter-row-main {
 .lab-filter-pins {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--lab-toolbar-gap);
   min-width: 0;
   max-width: 100%;
 }
@@ -116,7 +118,7 @@ html[data-lab-theme] .lab-control.lab-filter-row-main {
 html[data-lab-theme] .lab-control.lab-filter-choice {
   width: 100%;
   justify-content: space-between;
-  min-height: var(--lab-control-compact);
+  min-height: var(--lab-menu-row-height);
   text-align: start;
 }
 .lab-filter-options .lab-control[aria-pressed='true'] {
@@ -152,50 +154,17 @@ html[data-lab-theme] .lab-filter-editor-dialog {
 .lab-filter-demo-results[data-grid='true'] {
   grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
 }
-.lab-temporal-editor {
-  display: grid;
-  gap: 16px;
-}
-.lab-temporal-presets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.lab-temporal-fields {
-  display: grid;
-  gap: 16px;
-  min-width: 0;
-}
-.lab-temporal-editor small {
-  color: var(--lab-muted);
-  font-size: 11px;
-  line-height: 1.5;
-}
 .lab-filter-error {
   color: var(--lab-danger);
   font-size: 12px;
 }
-.lab-filter-value-menu:has(.lab-temporal-editor) {
-  width: min(360px, calc(100vw - 24px));
-  height: min(360px, var(--radix-popover-content-available-height, 360px));
-}
 @media (max-width: 599px) {
-  html[data-lab-theme] .lab-dialog.lab-filter-editor-dialog {
-    width: calc(100vw - 16px);
-    max-width: calc(100vw - 16px);
-    max-height: calc(100dvh - 16px);
+  html[data-lab-theme] .lab-modal.lab-filter-editor-dialog {
+    inline-size: calc(100% - 2 * var(--lab-shell-gap, 8px));
+    max-block-size: calc(100% - 2 * var(--lab-shell-gap, 8px));
   }
   .lab-filter-editor-dialog .lab-dock {
     max-width: 100%;
-  }
-}
-
-.lab-temporal-editor {
-  container-type: inline-size;
-}
-@container (min-width:400px) {
-  .lab-temporal-fields[data-range='true'] {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 .lab-temporal-demo-title {

@@ -18,13 +18,17 @@
   grid-area: 1 / 1;
   align-self: start;
   box-sizing: border-box;
-  width: var(--lab-search-width, calc(var(--lab-toolbar-control-size) + 6px));
+  width: var(--lab-search-width, calc(var(--lab-toolbar-control) + 6px));
   z-index: 1;
   isolation: isolate;
 }
 
-.lab-toolbar-search-surface:has(input:focus-visible) { outline: 2px solid var(--lab-focus); outline-offset: 2px; }
+/* Typing in it is a field: the bubble's own edge takes the focus colour, no ring outside. */
+.lab-toolbar-search-surface:has(input:focus-visible) { border-color: var(--lab-focus); }
 .lab-toolbar-search-glyph { display: grid; place-items: center; }
+/* The glyphs sit in a span, out of reach of the kit's `.lab-control > svg` size: give them the icon
+   button's 20px instead of lucide's 24px default. */
+html[data-lab-theme] .lab-toolbar-search-glyph > svg { width: 20px; height: 20px; }
 .lab-toolbar-search-glyph > svg { grid-area: 1 / 1; transition: opacity 160ms ease, transform 300ms var(--lab-ease); }
 .lab-toolbar-search-glyph > svg:last-child { opacity: 0; transform: rotate(-45deg) scale(.75); }
 .lab-toolbar-search-glyph[data-expanded='true'] > svg:first-child { opacity: 0; transform: rotate(45deg) scale(.75); }
@@ -42,7 +46,7 @@ html[data-lab-theme] .lab-toolbar-search input.lab-toolbar-search-input {
   flex: 1;
   min-width: 0;
   width: 100%;
-  height: var(--lab-toolbar-control-size);
+  height: var(--lab-toolbar-control);
   padding-inline: var(--lab-space-1);
   border: 0;
   border-radius: 0;
@@ -59,7 +63,7 @@ html[data-lab-theme] .lab-toolbar-search input.lab-toolbar-search-input {
   grid-area: 1 / 1;
   display: flex;
   min-width: 0;
-  margin-inline-start: calc(var(--lab-search-compact-width, 46px) + var(--lab-space-2));
+  margin-inline-start: calc(var(--lab-search-compact-width, var(--lab-toolbar-item)) + var(--lab-space-2));
   opacity: var(--lab-search-controls-opacity, 1);
   pointer-events: auto;
 }

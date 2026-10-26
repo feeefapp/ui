@@ -11,48 +11,81 @@ import {
   type CSSProperties,
 } from 'react'
 import { cn } from '../utils'
-import { LabScrollGradientOverlay } from './gradient-overlay'
+import { GlassBar } from '../glass/container'
+import { ScrollGradientOverlay } from './gradient-overlay'
 import { scrollContentReserve } from './metrics'
+import { useShellGap } from './shell-gap'
+import { PullRefreshIndicator, usePullToRefresh, type RefreshController } from './pull-refresh'
 import './scroll.css'
 
-export type LabScrollAreaProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
+export type ScrollAreaProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
+  /** The scrolling content. */
   children: ReactNode
+  /** Chrome floating over the top edge (toolbar, filter bar). Its height is reserved as top padding. */
   top?: ReactNode
+  /** Chrome floating over the bottom edge (usually a Dock). Its height is reserved as bottom padding. */
   bottom?: ReactNode
+  /** Accessible name of the scroll region. */
   label: string
+  /** Space in px between a float and the area's edges; also added above and below it in the reservation. Default: the shell gap G (`--lab-shell-gap`, 8). */
   edgeGap?: number
+  /** Space in px between a float and the area's sides, when it differs from `edgeGap` (a scaffold's app bar uses `--lab-toolbar-inset`). */
+  sideGap?: number
+  /** Content padding in px: inline sides, and top/bottom when no float is present. Default: the shell gap G (`--lab-shell-gap`, 8); cards bring their own inner padding. */
   contentPadding?: number
+  /** Paints the dithered edge washes that fade content under the floats. */
   gradient?: boolean
+  /** Top wash height in px. Defaults to the top float's height plus two edge gaps, at least 100. */
   topFadeHeight?: number
+  /** Bottom wash height in px. Defaults to the bottom float's height plus two edge gaps, at least 140. */
   bottomFadeHeight?: number
   /** Attributes/events for the actual scroll viewport; the forwarded ref points here too. */
   viewportProps?: HTMLAttributes<HTMLDivElement>
+  /**
+   * Turns on pull to refresh: on a touch screen, pulling down at the top past the threshold runs
+   * it, and the content stays open over a loader until the promise settles. A mouse never pulls,
+   * so also offer a Refresh button (`refreshController`).
+   */
+  onRefresh?: () => Promise<unknown>
+  /** Runs `onRefresh` from code with the same loader and announcements, for a Refresh button. */
+  refreshController?: RefreshController
 }
 
-/** Full-bleed scroll viewport with local floating chrome, measured spacers and edge washes. */
-export const LabScrollArea = forwardRef<HTMLDivElement, LabScrollAreaProps>(function LabScrollArea(
+/**
+ * Full-bleed scroll viewport with local floating chrome, measured spacers and edge washes. Fills its
+ * parent, which must have a bounded height. The forwarded ref points at the scrolling element.
+ */
+export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function ScrollArea(
   {
     children,
     top,
     bottom,
     label,
-    edgeGap = 12,
-    contentPadding = 24,
+    edgeGap: edgeGapProp,
+    sideGap,
+    contentPadding: contentPaddingProp,
     gradient = true,
     topFadeHeight,
     bottomFadeHeight,
     viewportProps,
+    onRefresh,
+    refreshController,
     className,
     style,
     ...props
   },
   ref
 ) {
+  const root = useRef<HTMLDivElement>(null)
   const viewport = useRef<HTMLDivElement>(null)
+  const shellGap = useShellGap(root)
+  const edgeGap = edgeGapProp ?? shellGap,
+    contentPadding = contentPaddingProp ?? shellGap
   const topRef = useRef<HTMLDivElement>(null),
     bottomRef = useRef<HTMLDivElement>(null)
   const [heights, setHeights] = useState({ top: 0, bottom: 0 })
   useImperativeHandle(ref, () => viewport.current!, [])
+  const refresh = usePullToRefresh(viewport, onRefresh, refreshController)
   useLayoutEffect(() => {
     const measure = () => {
       const next = {
@@ -69,14 +102,17 @@ export const LabScrollArea = forwardRef<HTMLDivElement, LabScrollAreaProps>(func
     measure()
     return () => resize.disconnect()
   }, [Boolean(top), Boolean(bottom)])
+
   return (
     <div
       {...props}
+      ref={root}
       className={cn('lab-scroll-area', className)}
       style={
         {
           ...style,
           '--lab-scroll-gap': `${Math.max(0, edgeGap)}px`,
+          ...(sideGap === undefined ? {} : { '--lab-scroll-side-gap': `${Math.max(0, sideGap)}px` }),
           '--lab-scroll-padding': `${Math.max(0, contentPadding)}px`,
           '--lab-scroll-top-reserve': `${scrollContentReserve(heights.top, edgeGap, contentPadding)}px`,
           '--lab-scroll-bottom-reserve': `${scrollContentReserve(heights.bottom, edgeGap, contentPadding)}px`,
@@ -85,7 +121,7 @@ export const LabScrollArea = forwardRef<HTMLDivElement, LabScrollAreaProps>(func
     >
       {top && (
         <div ref={topRef} className="lab-scroll-float lab-scroll-float--top">
-          {top}
+          <GlassBar>{top}</GlassBar>
         </div>
       )}
       <div
@@ -99,15 +135,17 @@ export const LabScrollArea = forwardRef<HTMLDivElement, LabScrollAreaProps>(func
         <div className="lab-scroll-content">{children}</div>
       </div>
       {gradient && (
-        <LabScrollGradientOverlay
+        <ScrollGradientOverlay
           viewport={viewport}
           topHeight={topFadeHeight ?? Math.max(100, heights.top + edgeGap * 2)}
           bottomHeight={bottomFadeHeight ?? Math.max(140, heights.bottom + edgeGap * 2)}
         />
       )}
+      {/* Over the washes, under the floats. */}
+      {onRefresh && <PullRefreshIndicator pull={refresh.pull} state={refresh.state} />}
       {bottom && (
         <div ref={bottomRef} className="lab-scroll-float lab-scroll-float--bottom">
-          {bottom}
+          <GlassBar>{bottom}</GlassBar>
         </div>
       )}
     </div>

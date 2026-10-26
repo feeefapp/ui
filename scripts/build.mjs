@@ -43,6 +43,9 @@ for (const file of walk(dist).filter((f) => /\.(js|d\.ts)$/.test(f))) {
   const next = text.replace(
     /((?:import|export)[^'"]*?from\s*|import\s*\(\s*|import\s+)(['"])(\.[^'"]+)\2/g,
     (_, lead, quote, spec) => `${lead}${quote}${specify(file, spec)}${quote}`,
+  ).replace(
+    /new URL\((['"])(\.[^'"]+)\.ts\1,\s*import\.meta\.url\)/g,
+    (_, quote, spec) => `new URL(${quote}${spec}.js${quote}, import.meta.url)`,
   )
   if (next !== text) writeFileSync(file, next)
 }

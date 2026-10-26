@@ -3,7 +3,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useLayoutEffect, useRef, useState } from 'react';
 import './workspace.css';
 /** Bounded Lab canvas with measured floating chrome and a 12px edge inset. */
-export function LabImageWorkspace({ top, bottom, board }) {
+export function ImageWorkspace({ top, bottom, board }) {
     const header = useRef(null), composer = useRef(null);
     const [insets, setInsets] = useState({ top: 80, bottom: 120, left: 12, right: 12 });
     useLayoutEffect(() => {

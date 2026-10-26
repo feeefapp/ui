@@ -1,22 +1,21 @@
 'use client'
 
-import { LabComposerCard, LabComposerHint as AnimatedHint } from '../composer/composer'
-import { LabPopoverSurface } from '../ui'
-import { LabButton, LabRawInput } from '../ui'
-import { useLabI18n } from '../i18n'
-import { useLabServices } from '../services'
 import {
-  useEffect,
-  useRef,
-  useState,
-  type ClipboardEvent,
-  type KeyboardEvent,
-  type ReactNode,
-} from 'react'
+  ComposerAttachment,
+  ComposerAttachments,
+  ComposerBar,
+  ComposerField,
+  ComposerSend,
+} from '../composer/composer'
+import { PopoverSurface, Button, IconButton } from '../ui'
+import { MenuSurface } from '../menu/menu-surface'
+import { useFloatingBoundary } from '../menu/boundary'
+import { useI18n } from '../i18n'
+import { useServices } from '../services'
+import { useRef, useState, useEffect, type ClipboardEvent, type KeyboardEvent, type ReactNode } from 'react'
 import * as Popover from '@radix-ui/react-popover'
 import * as Menu from '@radix-ui/react-dropdown-menu'
 import {
-  ArrowUp,
   Brush,
   ClipboardPaste,
   History,
@@ -27,9 +26,7 @@ import {
   Sparkle,
   Upload,
   WandSparkles,
-  X,
 } from 'lucide-react'
-import { useComposerLayout } from '../composer/composer'
 import { PromptSettingsPanel } from './prompt-settings-panel'
 import './prompt-composer.css'
 
@@ -38,11 +35,13 @@ export type ComposerTemplate = { id: string; name: string; prompt: string; descr
 export type RecentImage = { id: string; thumbUrl: string; prompt: string }
 
 /**
- * The image studio composer, after marchant `image_gen_view` `_buildComposer`: an attachment
- * row above a glass card that is one compact line until you type, then grows upward with its
- * controls on a second row. Model ladder, AI enhance, output settings and send are icon controls.
+ * The image studio composer, built from the composer parts (`ComposerBar`): a round + bubble with
+ * the add menu, and a glass capsule holding the reference thumbnails (the first is marked "Main"),
+ * the prompt and send. Empty and idle it is one calm line with the AI ideas button beside send;
+ * with text or focus, a second row shows the model ladder and the output settings chip, and the
+ * AI button turns into "Improve my prompt".
  */
-export function PromptComposer({
+export function ImagePromptComposer({
   prompt,
   onPrompt,
   placeholder,
@@ -75,70 +74,101 @@ export function PromptComposer({
   submitDisabled,
   submitting,
   submitLabel,
+  onStop,
+  stopLabel,
   caption,
   above,
   onKeyDown,
 }: {
+  /** The prompt text (controlled). */
   prompt: string
+  /** Called with the new text on every edit. */
   onPrompt(value: string): void
+  /** Animated hint shown while the prompt is empty. */
   placeholder: string
+  /** Maximum prompt length in characters. */
   maxLength: number
+  /** Attached reference images, shown as thumbnails inside the capsule. The first is the main image. */
   references: ComposerReference[]
-  /** `null` when the selected model takes no image input. */
+  /** `null` when the selected model takes no image input. `max` is shown as "1 of 3". */
   referenceLimit: { max: number; formats: string[] } | null
+  /** Called with files from upload, paste, clipboard or drop. The owner validates type and count. */
   onAddFiles(files: File[]): void
+  /** Called when a reference's × badge is pressed. */
   onRemoveReference(id: string): void
+  /** The user's earlier images for the "From your images" submenu (first 12). Empty hides it. */
   recent: RecentImage[]
+  /** Called with the id of a recent image picked as a reference. */
   onUseRecent(id: string): void
+  /** Called with the photo chosen from "Edit a photo…". */
   onEditPhoto(file: File): void
+  /** Prompt ideas for the + menu (first 10). Empty hides the submenu. */
   templates: ComposerTemplate[]
+  /** Label of the ideas submenu. Defaults to the localized "Start from an idea". */
   templatesLabel?: string
+  /** Called with the idea the user picked. */
   onTemplate(template: ComposerTemplate): void
   /** Image makes one picture; Poster builds a tall landing-page image from the brief. */
   mode: 'image' | 'poster'
-  /** The poster template in use, shown as a chip above the card. */
+  /** The poster template in use, shown as a wide tile before the references. */
   templateName?: string | null
+  /** Shows the template tile's × badge. */
   onClearTemplate?(): void
   /** Replaces the template submenu with one entry that opens a full template browser. */
   onBrowseTemplates?(): void
-  ladder(variant: 'icon' | 'chip'): ReactNode
+  /** The model control on the second row, usually `<ModelLadder variant="compact" … />`. */
+  ladder: ReactNode
+  /** Content of the output settings popover (shape, resolution, format). */
   settings: ReactNode
+  /** Short summary of the current settings ("1:1"), shown on the settings chip. */
   settingsLabel: string
+  /** Disables the settings chip and closes its popover. */
   settingsDisabled?: boolean
-  /** When set, the settings button toggles a panel the page owns instead of a popover. */
+  /** When set, the settings chip toggles a panel the page owns instead of a popover. */
   onSettings?(): void
+  /** Pressed state of the settings chip when `onSettings` is set. */
   settingsActive?: boolean
   /** What attached images are called in the + menu ("References", "Product photos"). */
   referenceNoun?: string
-  /** Overrides the wand's label (posters suggest details instead of rewriting the prompt). */
+  /** Overrides the AI button's label (posters suggest details instead of rewriting the prompt). */
   wandLabel?: string
+  /** The AI request in flight, or `''` when idle. Shows a loader on the AI button. */
   enhancing: '' | 'enhance' | 'ideas'
-  /** Improve the prompt, or suggest ideas when it is empty. */
+  /** Improve the prompt, or suggest ideas when it is empty. Omit to hide the AI button. */
   onEnhance?(mode: 'enhance' | 'ideas'): void
+  /** Called by send and by Enter (Shift+Enter breaks the line). */
   onSubmit(): void
+  /** Disables sending. */
   submitDisabled: boolean
+  /** A generation is being sent: send shows the loader. */
   submitting: boolean
+  /** Accessible name of send, such as "Create image". */
   submitLabel: string
+  /** While submitting, send becomes a stop button that calls this. */
+  onStop?(): void
+  /** Accessible name of send while it stops. Defaults to the localized "Stop". */
+  stopLabel?: string
+  /** Small text under the composer, such as price or allowance. */
   caption: ReactNode
-  /** Suggestion cards shown right above the card (AI proposals, conflicts). */
+  /** Suggestion cards shown right above the composer (AI proposals, conflicts). */
   above?: ReactNode
+  /** Runs before the built-in Enter handling; call `preventDefault()` to skip it. */
   onKeyDown?(event: KeyboardEvent): void
 }) {
-  const { t } = useLabI18n()
-  const resolvedTemplatesLabel = templatesLabel ?? t('lab.imgcomposer.startFromIdea')
-  const resolvedReferenceNoun = referenceNoun ?? t('lab.imgcomposer.references')
-  const { readClipboard } = useLabServices()
+  const { t } = useI18n()
+  const ideasLabel = templatesLabel ?? t('lab.imgcomposer.startFromIdea')
+  const noun = referenceNoun ?? t('lab.imgcomposer.references')
+  const { readClipboard } = useServices()
   const upload = useRef<HTMLInputElement>(null)
   const photo = useRef<HTMLInputElement>(null)
   const root = useRef<HTMLElement>(null)
+  const field = useRef<HTMLTextAreaElement>(null)
   const settingsPanel = useRef<HTMLDivElement>(null)
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [dragging, setDragging] = useState(false)
-  const [focused, setFocused] = useState(false)
-  // Focus changes emphasis; text overflow or an explicit newline changes layout.
-  const { card, layout, field, expanded } = useComposerLayout(prompt)
-  const updatePortal = () => setPortalContainer(root.current?.closest('dialog') ?? null)
+  const boundary = useFloatingBoundary()
+  const updatePortal = () => setPortalContainer(root.current?.closest('dialog') ?? boundary)
   useEffect(() => {
     if (settingsDisabled) setSettingsOpen(false)
   }, [settingsDisabled])
@@ -164,168 +194,226 @@ export function PromptComposer({
       field.current?.focus()
     }
   }
-  const keyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    onKeyDown?.(event)
-    if (event.defaultPrevented) return
-    // Enter sends, Shift+Enter breaks the line, like a chat.
-    if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
-      event.preventDefault()
-      if (!submitDisabled && !submitting) onSubmit()
-    }
-  }
   const canReference = !!referenceLimit
   const full = !!referenceLimit && references.length >= referenceLimit.max
   const wandMode = prompt.trim() ? 'enhance' : 'ideas'
 
   const wand = onEnhance ? (
-    <LabButton
-      type="button"
+    <IconButton
       variant="ghost"
       appearance="toolbar"
-      controlSize="icon"
-      className="lab-pc-icon lab-pc-wand"
+      controlSize="small"
+      className="lab-pc-wand"
       aria-label={
-        wandLabel ??
-        (wandMode === 'enhance'
-          ? t('lab.imgcomposer.improvePrompt')
-          : t('lab.imgcomposer.suggestIdeas'))
+        wandLabel ?? (wandMode === 'enhance' ? t('lab.imgcomposer.improvePrompt') : t('lab.imgcomposer.suggestIdeas'))
       }
       title={
-        wandLabel ??
-        (wandMode === 'enhance'
-          ? t('lab.imgcomposer.improvePromptAi')
-          : t('lab.imgcomposer.suggestThree'))
+        wandLabel ?? (wandMode === 'enhance' ? t('lab.imgcomposer.improvePromptAi') : t('lab.imgcomposer.suggestThree'))
       }
-      disabled={!!enhancing}
       loading={!!enhancing}
       onClick={() => onEnhance?.(wandMode)}
     >
-      {!enhancing &&
-        (wandMode === 'enhance' ? (
-          <WandSparkles size={18} strokeWidth={1.6} />
-        ) : (
-          <Lightbulb size={18} strokeWidth={1.6} />
-        ))}
-    </LabButton>
+      {wandMode === 'enhance' ? <WandSparkles aria-hidden="true" /> : <Lightbulb aria-hidden="true" />}
+    </IconButton>
   ) : null
-  const settingsControl = (chip: boolean) =>
-    onSettings ? (
-      <LabButton
-        type="button"
-        variant={chip ? 'secondary' : 'ghost'}
-        appearance={chip ? 'default' : 'toolbar'}
-        controlSize={chip ? 'regular' : 'icon'}
-        className={chip ? 'lab-pc-chip' : 'lab-pc-icon'}
-        aria-label={t('lab.imgcomposer.settingsWith', { label: settingsLabel })}
-        title={settingsLabel}
-        aria-pressed={!!settingsActive}
-        disabled={settingsDisabled}
-        onClick={onSettings}
-      >
-        <SlidersHorizontal size={chip ? 15 : 18} strokeWidth={1.6} />
-        {chip && <span>{settingsLabel}</span>}
-      </LabButton>
-    ) : (
-      <Popover.Root
-        open={settingsOpen}
-        onOpenChange={(next) => {
-          if (next) updatePortal()
-          setSettingsOpen(next)
-        }}
-      >
-        <Popover.Trigger asChild disabled={settingsDisabled}>
-          <LabButton
-            type="button"
-            variant={chip ? 'secondary' : 'ghost'}
-            appearance={chip ? 'default' : 'toolbar'}
-            controlSize={chip ? 'regular' : 'icon'}
-            className={chip ? 'lab-pc-chip' : 'lab-pc-icon'}
-            aria-label={t('lab.imgcomposer.outputWith', { label: settingsLabel })}
-            title={t('lab.imgcomposer.shapeResolutionFormat')}
-          >
-            <SlidersHorizontal size={chip ? 15 : 18} strokeWidth={1.6} />
-            {chip && <span>{settingsLabel}</span>}
-          </LabButton>
-        </Popover.Trigger>
-        <Popover.Portal container={portalContainer}>
-          <LabPopoverSurface asChild>
-            <Popover.Content
-              className="lab-pc-popover"
-              side="top"
-              align={chip ? 'start' : 'end'}
-              sideOffset={8}
-              collisionPadding={12}
-              collisionBoundary={portalContainer ?? undefined}
-              aria-label={t('lab.imgcomposer.outputSettings')}
-              onOpenAutoFocus={(event) => {
-                event.preventDefault()
-                requestAnimationFrame(() => {
-                  const target =
-                    settingsPanel.current?.querySelector<HTMLElement>(
-                      '.lab-scroll-content :is(input, button, textarea, [tabindex="0"])'
-                    ) ?? settingsPanel.current?.querySelector<HTMLElement>('button')
-                  target?.focus({ preventScroll: true })
-                })
-              }}
-            >
-              <PromptSettingsPanel ref={settingsPanel} onClose={() => setSettingsOpen(false)}>
-                {settings}
-              </PromptSettingsPanel>
-            </Popover.Content>
-          </LabPopoverSurface>
-        </Popover.Portal>
-      </Popover.Root>
-    )
-  const send = (
-    <LabButton
+
+  const settingsChip = (props: Record<string, unknown>) => (
+    <Button
       type="button"
-      variant="filled"
-      controlSize="icon"
-      className="lab-pc-send"
-      aria-label={submitLabel}
-      title={submitLabel}
-      disabled={submitDisabled || submitting}
-      loading={submitting}
-      onClick={onSubmit}
+      variant="ghost"
+      appearance="toolbar"
+      controlSize="small"
+      className="lab-pc-chip"
+      title={t('lab.imgcomposer.shapeResolutionFormat')}
+      disabled={settingsDisabled}
+      {...props}
     >
-      {!submitting && <ArrowUp size={20} strokeWidth={2} aria-hidden="true" />}
-    </LabButton>
+      <SlidersHorizontal aria-hidden="true" />
+      <span>{settingsLabel}</span>
+    </Button>
   )
-  const input = (
-    <div className="lab-pc-field">
-      {!prompt && <AnimatedHint text={placeholder} />}
-      <LabRawInput
-        className="lab-textarea"
-        multiline
-        autoResize={false}
-        ref={field}
-        id="lab-img-prompt"
-        dir="auto"
-        rows={1}
-        value={prompt}
-        maxLength={maxLength}
-        aria-label={
-          mode === 'poster'
-            ? t('lab.imgcomposer.describeProductOffer')
-            : t('lab.imgcomposer.describeImage')
-        }
-        onChange={(e) => onPrompt(e.target.value)}
-        onPaste={pasteFiles}
-        onKeyDown={keyDown}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-      />
-    </div>
+  const settingsControl = onSettings ? (
+    settingsChip({
+      'aria-label': t('lab.imgcomposer.settingsWith', { label: settingsLabel }),
+      'aria-pressed': !!settingsActive,
+      'onClick': onSettings,
+    })
+  ) : (
+    <Popover.Root
+      open={settingsOpen}
+      onOpenChange={(next) => {
+        if (next) updatePortal()
+        setSettingsOpen(next)
+      }}
+    >
+      <Popover.Trigger asChild disabled={settingsDisabled}>
+        {settingsChip({ 'aria-label': t('lab.imgcomposer.outputWith', { label: settingsLabel }) })}
+      </Popover.Trigger>
+      <Popover.Portal container={portalContainer}>
+        <PopoverSurface asChild>
+          <Popover.Content
+            className="lab-pc-popover"
+            side="top"
+            align="start"
+            sideOffset={8}
+            collisionPadding={12}
+            collisionBoundary={portalContainer ?? undefined}
+            aria-label={t('lab.imgcomposer.outputSettings')}
+            onOpenAutoFocus={(event) => {
+              event.preventDefault()
+              requestAnimationFrame(() => {
+                const target =
+                  settingsPanel.current?.querySelector<HTMLElement>(
+                    '.lab-scroll-content :is(input, button, textarea, [tabindex="0"])'
+                  ) ?? settingsPanel.current?.querySelector<HTMLElement>('button')
+                target?.focus({ preventScroll: true })
+              })
+            }}
+          >
+            <PromptSettingsPanel ref={settingsPanel} onClose={() => setSettingsOpen(false)}>
+              {settings}
+            </PromptSettingsPanel>
+          </Popover.Content>
+        </PopoverSurface>
+      </Popover.Portal>
+    </Popover.Root>
   )
+
+  const addMenu = (
+    <Menu.Root modal={false} onOpenChange={(next) => next && updatePortal()}>
+      <Menu.Trigger asChild>
+        <IconButton variant="ghost" appearance="toolbar" aria-label={t('lab.imgcomposer.add')} title={t('lab.imgcomposer.addImages')}>
+          <Plus aria-hidden="true" />
+        </IconButton>
+      </Menu.Trigger>
+      <Menu.Portal container={portalContainer}>
+        <MenuSurface asChild>
+          <Menu.Content
+            className="lab-pc-menu"
+            side="top"
+            align="start"
+            {...(portalContainer ? { collisionBoundary: portalContainer } : {})}
+          >
+            <Menu.Label className="lab-pc-menu-label">
+              {canReference
+                ? t('lab.imgcomposer.upTo', { noun, max: referenceLimit!.max })
+                : t('lab.imgcomposer.modelNoReference')}
+            </Menu.Label>
+            <Menu.Item className="lab-pc-menu-item" disabled={!canReference || full} onSelect={() => upload.current?.click()}>
+              <Upload size={15} /> {t('lab.imgcomposer.uploadImages')}
+            </Menu.Item>
+            <Menu.Item
+              className="lab-pc-menu-item"
+              disabled={!canReference || full}
+              onSelect={() => void pasteFromClipboard()}
+            >
+              <ClipboardPaste size={15} /> {t('lab.imgcomposer.pasteClipboard')}
+            </Menu.Item>
+            <Menu.Separator className="lab-pc-menu-sep" />
+            {recent.length > 0 && (
+              <Menu.Sub>
+                <Menu.SubTrigger className="lab-pc-menu-item" disabled={!canReference || full}>
+                  <History size={15} /> {t('lab.imgcomposer.fromYourImages')}
+                </Menu.SubTrigger>
+                <Menu.Portal container={portalContainer}>
+                  <MenuSurface asChild cover={false}>
+                    <Menu.SubContent
+                      className="lab-pc-menu lab-pc-recent"
+                      {...(portalContainer ? { collisionBoundary: portalContainer } : {})}
+                    >
+                      {recent.slice(0, 12).map((image) => (
+                        <Menu.Item
+                          key={image.id}
+                          className="lab-pc-recent-item"
+                          onSelect={() => onUseRecent(image.id)}
+                          aria-label={image.prompt || t('lab.imgcomposer.generatedImage')}
+                        >
+                          <img src={image.thumbUrl} alt="" loading="lazy" />
+                        </Menu.Item>
+                      ))}
+                    </Menu.SubContent>
+                  </MenuSurface>
+                </Menu.Portal>
+              </Menu.Sub>
+            )}
+            {onBrowseTemplates ? (
+              <Menu.Item className="lab-pc-menu-item" onSelect={onBrowseTemplates}>
+                <LayoutTemplate size={15} /> {ideasLabel}…
+              </Menu.Item>
+            ) : (
+              templates.length > 0 && (
+                <Menu.Sub>
+                  <Menu.SubTrigger className="lab-pc-menu-item">
+                    <Sparkle size={15} /> {ideasLabel}
+                  </Menu.SubTrigger>
+                  <Menu.Portal container={portalContainer}>
+                    <MenuSurface asChild cover={false}>
+                      <Menu.SubContent
+                        className="lab-pc-menu lab-pc-idea-menu"
+                        {...(portalContainer ? { collisionBoundary: portalContainer } : {})}
+                      >
+                        {templates.slice(0, 10).map((template) => (
+                          <Menu.Item
+                            key={template.id}
+                            className="lab-pc-menu-item lab-pc-idea"
+                            onSelect={() => onTemplate(template)}
+                          >
+                            <b>{template.name}</b>
+                            <small>{template.description || template.prompt}</small>
+                          </Menu.Item>
+                        ))}
+                      </Menu.SubContent>
+                    </MenuSurface>
+                  </Menu.Portal>
+                </Menu.Sub>
+              )
+            )}
+            <Menu.Separator className="lab-pc-menu-sep" />
+            <Menu.Item className="lab-pc-menu-item" onSelect={() => photo.current?.click()}>
+              <Brush size={15} /> {t('lab.imgcomposer.editPhoto')}
+            </Menu.Item>
+          </Menu.Content>
+        </MenuSurface>
+      </Menu.Portal>
+    </Menu.Root>
+  )
+
+  const attachments =
+    references.length > 0 || templateName ? (
+      <ComposerAttachments
+        label={t('lab.imgcomposer.referenceImages')}
+        count={references.length}
+        max={referenceLimit?.max}
+      >
+        {templateName && (
+          <ComposerAttachment
+            key="template"
+            id="template"
+            icon={<Sparkle aria-hidden="true" />}
+            title={templateName}
+            label={templateName}
+            onRemove={onClearTemplate}
+            removeLabel={t('lab.imgcomposer.removeTemplate')}
+          />
+        )}
+        {references.map((ref, index) => (
+          <ComposerAttachment
+            key={ref.id}
+            id={ref.id}
+            src={ref.url}
+            label={ref.name}
+            badge={index === 0 ? t('lab.imgcomposer.main') : undefined}
+            onRemove={() => onRemoveReference(ref.id)}
+          />
+        ))}
+      </ComposerAttachments>
+    ) : null
 
   return (
     <section
       ref={root}
-      className="lab-pc"
-      aria-label={
-        mode === 'poster' ? t('lab.imgcomposer.posterComposer') : t('lab.imgcomposer.composer')
-      }
-      data-dragging={dragging}
+      className="lab-composer lab-pc"
+      aria-label={mode === 'poster' ? t('lab.imgcomposer.posterComposer') : t('lab.imgcomposer.composer')}
       onDragOver={(e) => {
         if (!e.dataTransfer.types.includes('Files')) return
         e.preventDefault()
@@ -339,203 +427,69 @@ export function PromptComposer({
         onAddFiles(Array.from(e.dataTransfer.files))
       }}
     >
-      <div className="lab-pc-attachments" hidden={!references.length && !templateName}>
-        <input
-          ref={upload}
-          type="file"
-          hidden
-          multiple
-          accept={referenceLimit?.formats.join(',') || 'image/png,image/jpeg,image/webp'}
-          onChange={(e) => {
-            onAddFiles(Array.from(e.target.files ?? []))
-            e.target.value = ''
-          }}
-        />
-        <input
-          ref={photo}
-          type="file"
-          hidden
-          accept="image/png,image/jpeg,image/webp"
-          onChange={(e) => {
-            const file = e.target.files?.[0]
-            e.target.value = ''
-            if (file) onEditPhoto(file)
-          }}
-        />
-        {templateName && (
-          <span className="lab-pc-template-chip">
-            <Sparkle size={13} /> {templateName}
-            {onClearTemplate && (
-              <LabButton
-                type="button"
-                variant="ghost"
-                appearance="toolbar"
-                controlSize="icon"
-                aria-label={t('lab.imgcomposer.removeTemplate')}
-                onClick={onClearTemplate}
-              >
-                <X size={20} />
-              </LabButton>
-            )}
-          </span>
-        )}
-        <div className="lab-pc-strip" role="list" aria-label={t('lab.imgcomposer.referenceImages')}>
-          {references.map((ref, index) => (
-            <span key={ref.id} role="listitem" className="lab-pc-ref" data-primary={index === 0}>
-              <img src={ref.url} alt="" />
-              <span className="lab-pc-ref-name">
-                {index === 0 ? t('lab.imgcomposer.mainImage') : ref.name}
-              </span>
-              <LabButton
-                type="button"
-                variant="ghost"
-                appearance="toolbar"
-                controlSize="icon"
-                aria-label={t('lab.composer.removeItem', { name: ref.name })}
-                onClick={() => onRemoveReference(ref.id)}
-              >
-                <X size={20} />
-              </LabButton>
-            </span>
-          ))}
-        </div>
-      </div>
-
+      <input
+        ref={upload}
+        type="file"
+        hidden
+        multiple
+        accept={referenceLimit?.formats.join(',') || 'image/png,image/jpeg,image/webp'}
+        onChange={(e) => {
+          onAddFiles(Array.from(e.target.files ?? []))
+          e.target.value = ''
+        }}
+      />
+      <input
+        ref={photo}
+        type="file"
+        hidden
+        accept="image/png,image/jpeg,image/webp"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          e.target.value = ''
+          if (file) onEditPhoto(file)
+        }}
+      />
       {above}
-
-      {/* One grid in both states, so the field never remounts and keeps focus and caret. */}
-      <LabComposerCard ref={card}
-className="lab-pc-card lab-light-edge"
-data-focused={focused}
-onMouseDown={(e) => {
-          if (focused && (e.target as HTMLElement).closest('button')) e.preventDefault()
-        }} expanded={expanded} layoutRef={layout} layoutClassName="lab-pc-layout">
-          <span className="lab-pc-slot lab-pc-slot--add">
-            <Menu.Root modal={false} onOpenChange={(next) => next && updatePortal()}>
-              <Menu.Trigger asChild>
-                <LabButton
-                  type="button"
-                  variant="ghost"
-                  appearance="toolbar"
-                  controlSize="icon"
-                  className="lab-pc-icon"
-                  aria-label={t('lab.imgcomposer.add')}
-                  title={t('lab.imgcomposer.addImages')}
-                >
-                  <Plus size={18} strokeWidth={1.7} />
-                </LabButton>
-              </Menu.Trigger>
-              <Menu.Portal container={portalContainer}>
-                <LabPopoverSurface asChild>
-                  <Menu.Content
-                    className="lab-pc-menu"
-                    side="top"
-                    align="start"
-                    sideOffset={8}
-                    collisionPadding={12}
-                    collisionBoundary={portalContainer ?? undefined}
-                  >
-                    <Menu.Label className="lab-pc-menu-label">
-                      {canReference
-                        ? `${resolvedReferenceNoun} · up to ${referenceLimit!.max}`
-                        : t('lab.imgcomposer.modelNoReference')}
-                    </Menu.Label>
-                    <Menu.Item
-                      className="lab-pc-menu-item"
-                      disabled={!canReference || full}
-                      onSelect={() => upload.current?.click()}
-                    >
-                      <Upload size={15} /> Upload images
-                    </Menu.Item>
-                    <Menu.Item
-                      className="lab-pc-menu-item"
-                      disabled={!canReference || full}
-                      onSelect={() => void pasteFromClipboard()}
-                    >
-                      <ClipboardPaste size={15} /> Paste from clipboard
-                    </Menu.Item>
-                    <Menu.Separator className="lab-pc-menu-sep" />
-                    {recent.length > 0 && (
-                      <Menu.Sub>
-                        <Menu.SubTrigger
-                          className="lab-pc-menu-item"
-                          disabled={!canReference || full}
-                        >
-                          <History size={15} /> From your images
-                        </Menu.SubTrigger>
-                        <Menu.Portal container={portalContainer}>
-                          <LabPopoverSurface asChild>
-                            <Menu.SubContent
-                              className="lab-pc-menu lab-pc-recent"
-                              sideOffset={6}
-                              collisionPadding={12}
-                              collisionBoundary={portalContainer ?? undefined}
-                            >
-                              {recent.slice(0, 12).map((image) => (
-                                <Menu.Item
-                                  key={image.id}
-                                  className="lab-pc-recent-item"
-                                  onSelect={() => onUseRecent(image.id)}
-                                  aria-label={image.prompt || t('lab.imgcomposer.generatedImage')}
-                                >
-                                  <img src={image.thumbUrl} alt="" loading="lazy" />
-                                </Menu.Item>
-                              ))}
-                            </Menu.SubContent>
-                          </LabPopoverSurface>
-                        </Menu.Portal>
-                      </Menu.Sub>
-                    )}
-                    {onBrowseTemplates ? (
-                      <Menu.Item className="lab-pc-menu-item" onSelect={onBrowseTemplates}>
-                        <LayoutTemplate size={15} /> {resolvedTemplatesLabel}…
-                      </Menu.Item>
-                    ) : (
-                      templates.length > 0 && (
-                        <Menu.Sub>
-                          <Menu.SubTrigger className="lab-pc-menu-item">
-                            <Sparkle size={15} /> {resolvedTemplatesLabel}
-                          </Menu.SubTrigger>
-                          <Menu.Portal container={portalContainer}>
-                            <LabPopoverSurface asChild>
-                              <Menu.SubContent
-                                className="lab-pc-menu lab-pc-idea-menu"
-                                sideOffset={6}
-                                collisionPadding={12}
-                                collisionBoundary={portalContainer ?? undefined}
-                              >
-                                {templates.slice(0, 10).map((template) => (
-                                  <Menu.Item
-                                    key={template.id}
-                                    className="lab-pc-menu-item lab-pc-idea"
-                                    onSelect={() => onTemplate(template)}
-                                  >
-                                    <b>{template.name}</b>
-                                    <small>{template.description || template.prompt}</small>
-                                  </Menu.Item>
-                                ))}
-                              </Menu.SubContent>
-                            </LabPopoverSurface>
-                          </Menu.Portal>
-                        </Menu.Sub>
-                      )
-                    )}
-                    <Menu.Separator className="lab-pc-menu-sep" />
-                    <Menu.Item className="lab-pc-menu-item" onSelect={() => photo.current?.click()}>
-                      <Brush size={15} /> Edit a photo…
-                    </Menu.Item>
-                  </Menu.Content>
-                </LabPopoverSurface>
-              </Menu.Portal>
-            </Menu.Root>
-          </span>
-          <span className="lab-pc-slot lab-pc-slot--ladder">{ladder('icon')}</span>
-          {input}
-          <span className="lab-pc-slot lab-pc-slot--settings">{settingsControl(false)}</span>
-          <span className="lab-pc-slot lab-pc-slot--wand">{wand}</span>
-          <span className="lab-pc-slot lab-pc-slot--send">{send}</span>
-        </LabComposerCard>
-      <p className="lab-pc-caption">{caption}</p>
+      <ComposerBar
+        leading={addMenu}
+        attachments={attachments}
+        hasText={!!prompt}
+        dropActive={dragging}
+        field={
+          <ComposerField
+            ref={field}
+            id="lab-img-prompt"
+            value={prompt}
+            onValueChange={onPrompt}
+            label={mode === 'poster' ? t('lab.imgcomposer.describeProductOffer') : t('lab.imgcomposer.describeImage')}
+            placeholder={placeholder}
+            maxLength={maxLength}
+            onPaste={pasteFiles}
+            onKeyDown={onKeyDown}
+            onSubmit={() => {
+              if (!submitDisabled && !submitting) onSubmit()
+            }}
+          />
+        }
+        tools={
+          <>
+            {ladder}
+            {settingsControl}
+          </>
+        }
+        actions={wand}
+        send={
+          <ComposerSend
+            label={submitLabel}
+            ready={!submitDisabled}
+            submitting={submitting}
+            onSend={onSubmit}
+            onStop={onStop}
+            stopLabel={stopLabel}
+          />
+        }
+      />
+      {caption != null && caption !== false && caption !== '' && <p className="lab-composer-caption">{caption}</p>}
     </section>
   )
 }

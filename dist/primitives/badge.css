@@ -1,0 +1,17 @@
+/* Base badge shape. Zero specificity so a host's own .lab-badge rules still win. */
+:where(.lab-badge) {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: 3px;
+  padding: 1px 4px;
+  border: 1px solid color-mix(in srgb, var(--lab-primary) 22%, var(--lab-surface));
+  border-radius: calc(5px * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
+  background: color-mix(in srgb, var(--lab-primary) 8%, var(--lab-surface));
+  color: var(--lab-focus);
+  font: 500 9px/14px var(--lab-font, inherit);
+  letter-spacing: 0.025em;
+  vertical-align: middle;
+  white-space: nowrap;
+}

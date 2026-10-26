@@ -1,103 +1,117 @@
 /** Stable public facade; implementations remain independently reusable. */
 import './system.css'
 import './primitives/control-variants.css'
-export { LabSwitch, LabSwitchIndicator } from './primitives/switch'
-export { LabButton, LabIconButton } from './primitives/button'
-export { LabInput, LabTextarea, LabLabel, LabImage } from './primitives/fields'
-export { LabSelect, LabOption } from './primitives/select'
-export { LabModal } from './primitives/modal'
-export { LabProBadge } from './primitives/badge'
+export { Button, IconButton } from './primitives/button'
+export { SquareSlot } from './primitives/square-slot'
+export type { SquareSlotProps } from './primitives/square-slot'
+export { Input, Textarea, Label, Image } from './primitives/fields'
+export { Select, Option } from './primitives/select'
+export { Alert, Modal, Pane } from './presentation'
+export { ProBadge } from './primitives/badge'
 export {
-  LabBox,
-  LabText,
-  LabLink,
-  LabForm,
-  LabList,
-  LabListItem,
-  LabDivider,
-  LabStyle,
+  Box,
+  Text,
+  Link,
+  Form,
+  List,
+  ListItem,
+  Divider,
+  Style,
 } from './primitives/layout'
 
 export type {
-  LabButtonProps,
-  LabButtonVariant,
-  LabControlSize,
-  LabButtonAppearance,
+  ButtonProps,
+  ButtonVariant,
+  ControlSize,
+  ButtonAppearance,
 } from './primitives/button'
 
-export { LabSegmentedControl } from './primitives/segmented'
-export { LabToolbar, LabToolbarGroup } from './toolbar'
-export type { LabSegmentOption } from './primitives/segmented'
+export { SegmentedControl } from './primitives/segmented'
+export { Toolbar, ToolbarGroup, ToolbarOrientationContext } from './toolbar'
+export type { ToolbarOrientation } from './toolbar'
+export type { SegmentOption, SegmentTone } from './primitives/segmented'
 
-export { LabRawInput } from './primitives/raw-input'
-export type { LabRawInputProps, LabInputElement, LabInputValidator } from './primitives/raw-input'
-export { LabTextField } from './primitives/text-field'
-export type { LabTextFieldProps } from './primitives/text-field'
+export { RawInput } from './primitives/raw-input'
+export type { RawInputProps, InputElement, InputValidator } from './primitives/raw-input'
+export { TextField } from './primitives/text-field'
+export type { TextFieldProps } from './primitives/text-field'
 
-export type { LabControlVariant } from './primitives/control-variants'
-export type { LabSelectProps } from './primitives/select'
+export type { ControlVariant } from './primitives/control-variants'
+export type { SelectProps } from './primitives/select'
 
-export { LabFieldShell } from './primitives/field-shell'
+export { FieldShell } from './primitives/field-shell'
 export type {
-  LabFieldShellProps,
-  LabFieldDecorationProps,
-  LabFieldControlState,
+  FieldShellProps,
+  FieldDecorationProps,
+  FieldControlState,
 } from './primitives/field-shell'
 
-export { LabPopoverSurface } from './primitives/popover-surface'
-export type { LabPopoverSurfaceProps } from './primitives/popover-surface'
+export { PopoverSurface } from './primitives/popover-surface'
+export type { PopoverSurfaceProps } from './primitives/popover-surface'
 
-export type { LabIconButtonProps } from './primitives/button'
+export type { IconButtonProps } from './primitives/button'
 
 export {
-  LabScaffold,
-  LabScaffoldSide,
-  LabScaffoldAppBar,
-  LabScaffoldTopBar,
-  LabScaffoldToggleButton,
-  useLabScaffold,
+  Scaffold,
+  ScaffoldSide,
+  ScaffoldAppBar,
+  ScaffoldTopBar,
+  ScaffoldToggleButton,
+  useScaffold,
 } from './workspace/scaffold'
-export type { LabScaffoldProps, LabScaffoldState, LabScaffoldSideMode } from './workspace/scaffold'
+export type { ScaffoldProps, ScaffoldState, ScaffoldSideMode } from './workspace/scaffold'
 
-export { LabFilterBar } from './filter-bar'
-export type { LabFilterBarProps, LabFilterOption, LabFilterValue } from './filter-bar'
+export { FilterBar } from './filter-bar'
+export type { FilterBarProps, FilterOption, FilterValue } from './filter-bar'
 
-export { LabSlider, LabSlideSwitch, LabSlideSwitchIndicator } from './primitives/slider'
+export { Slider, SlideSwitch, SlideSwitchIndicator } from './primitives/slider'
+export { NumberField } from './primitives/number-field'
+export type { NumberFieldProps, NumberValidator } from './primitives/number-field'
+export { parseNumberExpression } from './primitives/number-field-core'
 export type {
-  LabSliderProps,
-  LabSliderState,
-  LabSliderMark,
-  LabSlideSwitchProps,
+  SliderProps,
+  SliderState,
+  SliderMark,
+  SlideSwitchProps,
 } from './primitives/slider'
 
-export { LabTemporalFilterEditor } from './filters/temporal-editor'
+export {
+  TemporalFilterEditor,
+  TemporalBody,
+  TemporalEdges,
+  TemporalPresets,
+  useTemporalEditor,
+  type TemporalEditorOptions,
+  type TemporalEditorState,
+} from './filters/temporal-editor'
+export { TemporalDialog } from './filters/temporal-dialog'
 export { temporalPresets, validateTemporal } from './filters/temporal'
 export type {
-  LabTemporalType,
-  LabTemporalValue,
-  LabTemporalPreset,
-  LabTemporalConfig,
+  TemporalType,
+  TemporalValue,
+  TemporalPreset,
+  TemporalConfig,
 } from './filters/temporal'
 
-export { LabCheckbox, LabRadio, LabRadioGroup } from './primitives/choice'
+export { Checkbox, Radio, RadioGroup } from './primitives/choice'
 export type {
-  LabCheckboxProps,
-  LabRadioProps,
-  LabRadioGroupProps,
-  LabRadioOption,
+  CheckboxProps,
+  RadioProps,
+  RadioGroupProps,
+  RadioOption,
 } from './primitives/choice'
 
 export {
-  LabTemporalField,
-  LabDateField,
-  LabTimeField,
-  LabDateTimeField,
-  LabDateRangeField,
-  LabTimeRangeField,
-  LabDateTimeRangeField,
+  TemporalField,
+  DateField,
+  TimeField,
+  DateTimeField,
+  DateRangeField,
+  TimeRangeField,
+  DateTimeRangeField,
 } from './primitives/temporal-field'
 export type {
-  LabTemporalFieldProps,
-  LabTemporalSingleFieldProps,
-  LabTemporalRangeFieldProps,
+  TemporalFieldProps,
+  TemporalSingleFieldProps,
+  TemporalRangeFieldProps,
 } from './primitives/temporal-field'

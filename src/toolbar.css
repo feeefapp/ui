@@ -2,7 +2,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--lab-toolbar-gap);
   inline-size: 100%;
   min-inline-size: 0;
   container: lab-toolbar / inline-size;
@@ -19,31 +19,68 @@
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 8px;
+  gap: var(--lab-toolbar-gap);
   min-inline-size: 0;
 }
 .lab-toolbar-group {
   inline-size: fit-content;
   max-inline-size: 100%;
-  /* Follows density (40px comfortable); the pill radius follows the theme's radius scale. */
-  --lab-toolbar-control-size: var(--lab-control-compact);
-  --lab-control-height: var(--lab-toolbar-control-size);
-  --lab-glass-radius: calc((var(--lab-toolbar-control-size) + 6px) / 2 * var(--lab-radius-scale, 1));
+  /* A capsule bubble --lab-toolbar-item tall (44px comfortable, iOS's bar item); its regular
+  controls fill it less the 2px padding and 1px border a side (--lab-toolbar-control). The bubble is
+  the touch target, so its controls don't grow on touch screens; the bubble itself does. */
+  --lab-control-height: var(--lab-toolbar-control);
+  --lab-glass-radius: calc((var(--lab-toolbar-control) + 6px) / 2 * var(--lab-capsule-scale, 1));
   display: flex;
   align-items: center;
   gap: 0;
   min-inline-size: 0;
-  min-block-size: calc(var(--lab-toolbar-control-size) + 6px);
+  min-block-size: calc(var(--lab-toolbar-control) + 6px);
   padding: 2px;
   pointer-events: auto;
+}
+.lab-toolbar-group[data-orientation='vertical'] {
+  flex-direction: column;
+  inline-size: auto;
+  min-block-size: 0;
+  min-inline-size: calc(var(--lab-toolbar-control) + 6px);
 }
 .lab-toolbar-group > .lab-control[data-variant] {
   border-radius: calc(var(--lab-glass-radius) - 2px);
 }
 
-@media (pointer: coarse), (max-width: 600px) {
+@media (pointer: coarse) {
   .lab-toolbar-group {
-    --lab-toolbar-control-size: 44px;
+    --lab-toolbar-control: calc(max(var(--lab-toolbar-item), var(--lab-control-touch-target)) - 6px);
+  }
+  html[data-lab-theme] .lab-toolbar-group .lab-control[data-variant] {
+    height: max(var(--lab-control-size), var(--lab-toolbar-control));
+    min-height: max(var(--lab-control-size), var(--lab-toolbar-control));
+    min-width: var(--lab-toolbar-control);
+  }
+  html[data-lab-theme] .lab-toolbar-group .lab-control[data-control-size='icon'] {
+    width: max(var(--lab-control-size), var(--lab-toolbar-control));
+  }
+}
+
+/* Field-like controls (Select, TextField) take the bubble's control height like buttons do: a
+regular one fills it, a small one keeps its size, and touch growth stops at the bubble (the bubble
+is the target), so a bubble holding a field is as tall as one holding a button. */
+html[data-lab-theme] .lab-toolbar-group .lab-select[data-surface-variant][data-control-size] {
+  border-radius: calc(var(--lab-glass-radius) - 2px);
+}
+html[data-lab-theme] .lab-toolbar-group .lab-text-field {
+  --lab-text-field-height: var(--lab-toolbar-control);
+}
+html[data-lab-theme] .lab-toolbar-group .lab-text-field[data-control-size='small'] {
+  --lab-text-field-height: min(var(--lab-field-height-small), var(--lab-toolbar-control));
+}
+@media (pointer: coarse) {
+  html[data-lab-theme] .lab-toolbar-group .lab-select[data-surface-variant][data-control-size] {
+    height: var(--lab-toolbar-control);
+    min-height: var(--lab-toolbar-control);
+  }
+  html[data-lab-theme] .lab-toolbar-group .lab-text-field[data-control-size='small'] {
+    --lab-text-field-height: var(--lab-toolbar-control);
   }
 }
 

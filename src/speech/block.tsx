@@ -2,15 +2,18 @@
 
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { GripVertical } from 'lucide-react'
-import { LabButton } from '../primitives/button'
+import { Button } from '../primitives/button'
 import { PixelTexture } from '../pixel-art'
 import { revealScrollChild } from '../scroll'
-import { useLabI18n } from '../i18n'
+import { useI18n } from '../i18n'
 import './speech.css'
 import { useSpeechReorder } from './reorder'
 
-/** Only the handle drags. Text editing, selection and viewport scrolling stay native. */
-export function LabSpeechBlock({
+/**
+ * One card in a speech script: a drag handle, a toolbar and the block's editor. Only the handle
+ * drags; text editing, selection and viewport scrolling stay native. Blocks must be siblings.
+ */
+export function SpeechBlock({
   children,
   toolbar,
   index,
@@ -19,15 +22,22 @@ export function LabSpeechBlock({
   seed,
   reorderDisabled = false,
 }: {
+  /** The block's editor, usually a multiline text field. */
   children: ReactNode
+  /** Controls next to the drag handle (speaker, style, delete). Defaults to a "Speech block N" caption. */
   toolbar?: ReactNode
+  /** Position of this block in the list, from 0. */
   index: number
+  /** Number of blocks in the list. Reordering is off below 2. */
   count: number
+  /** Stable id that picks the corner texture, usually the block id. */
   seed: string
+  /** Disables the drag handle, for example while a generation runs. */
   reorderDisabled?: boolean
+  /** Called once on drop (or arrow key) with the old and new index. */
   onMove: (from: number, to: number) => void
 }) {
-  const { t } = useLabI18n()
+  const { t } = useI18n()
   const root = useRef<HTMLElement>(null)
   const [announcement, announce] = useState('')
   const hint = useId()
@@ -64,7 +74,7 @@ export function LabSpeechBlock({
         <PixelTexture variant="corner" density="sparse" seed={seed} />
       </div>
       <div className="lab-speech-block-toolbar">
-        <LabButton
+        <Button
           variant="ghost"
           appearance="toolbar"
           controlSize="icon"
@@ -75,13 +85,13 @@ export function LabSpeechBlock({
           {...reorder}
         >
           <GripVertical size={20} />
-        </LabButton>
+        </Button>
         {toolbar ?? <span className="lab-speech-block-caption">{t('lab.speech.block', { index: index + 1 })}</span>}
       </div>
-      <span id={hint} className="sr-only">
+      <span id={hint} className="lab-sr-only">
         {t('lab.speech.hint')}
       </span>
-      <span className="sr-only" role="status">
+      <span className="lab-sr-only" role="status">
         {announcement}
       </span>
       {children}

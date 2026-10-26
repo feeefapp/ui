@@ -155,14 +155,15 @@ html[data-lab-theme]
   margin: 0;
   color: var(--lab-muted);
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 21px;
 }
 .lab-account-settings-content a {
   color: var(--lab-ink);
   text-decoration: none;
 }
 .lab-account-settings-content a:focus-visible {
-  outline: 2px solid var(--lab-focus);
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
 }
 @media (forced-colors: active) {
   .lab-account-avatar,
@@ -179,7 +180,7 @@ html[data-lab-theme]
 
 .lab-account-profile-trigger {
   background: var(--lab-surface-soft);
-  border-radius: calc(16px * var(--lab-radius-scale, 1));
+  border-radius: calc(16px * var(--lab-corner-scale, 1));
 }
 .lab-account-profile-row {
   padding: 0;

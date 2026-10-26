@@ -1,2 +1,5 @@
-/** Shared emphasis vocabulary for buttons, text fields and selection controls. */
-export type LabControlVariant = 'filled' | 'tonal' | 'elevated' | 'outlined' | 'text'
+/**
+ * Shared emphasis vocabulary for buttons, text fields and selects: `filled`, `tonal`,
+ * `elevated`, `outlined` and `text`, from strongest surface to none.
+ */
+export type ControlVariant = 'filled' | 'tonal' | 'elevated' | 'outlined' | 'text'

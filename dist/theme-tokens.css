@@ -78,3 +78,59 @@ html[data-lab-palette='mono'][data-lab-theme='dark'] {
   --lab-success: #f5f5f5;
   --lab-warning: #c9b48a;
 }
+
+/* Custom primary (theme-config.ts `primary`, set as `--lab-seed` with `data-lab-primary`). Every
+color is derived in oklab from the seed, so any hue keeps the Lab's balance: a bright primary,
+paper surfaces tinted toward it, ink and lines from the same hue. `--lab-seed-on*` (black or white)
+is computed for contrast in JS. Danger stays red and success stays green: they mean something. */
+html[data-lab-primary][data-lab-theme]:not([data-lab-palette='mono']) {
+  --lab-primary: var(--lab-seed);
+  --lab-accent: color-mix(in oklab, var(--lab-seed) 82%, white);
+  --lab-on-primary: var(--lab-seed-on);
+  --lab-brand-1: var(--lab-seed);
+  --lab-brand-2: color-mix(in oklab, var(--lab-seed) 80%, white);
+  --lab-pixel-ink: color-mix(in oklab, var(--lab-seed) 82%, white);
+  --lab-focus: color-mix(in oklab, var(--lab-seed) 55%, black);
+  --lab-ground: color-mix(in oklab, var(--lab-seed) 5%, #f5f5f3);
+  --lab-surface: color-mix(in oklab, var(--lab-seed) 2%, #fdfdfc);
+  --lab-surface-soft: color-mix(in oklab, var(--lab-seed) 9%, #eeeeec);
+  --lab-line: color-mix(in oklab, var(--lab-seed) 14%, #dcdcda);
+  --lab-ink: color-mix(in oklab, var(--lab-seed) 14%, #161616);
+  --lab-muted: color-mix(in oklab, var(--lab-seed) 18%, #676767);
+  --lab-pixel-sage: color-mix(in oklab, var(--lab-seed) 30%, #707070);
+  --lab-pixel-muted: color-mix(in oklab, var(--lab-seed) 20%, #a0a0a0);
+}
+html[data-lab-primary][data-lab-theme='dark']:not([data-lab-palette='mono']) {
+  --lab-primary: color-mix(in srgb, var(--lab-seed) 70%, white);
+  --lab-accent: color-mix(in srgb, var(--lab-seed) 70%, white);
+  --lab-on-primary: var(--lab-seed-on-dark);
+  --lab-brand-2: color-mix(in srgb, var(--lab-seed) 70%, white);
+  --lab-pixel-ink: color-mix(in srgb, var(--lab-seed) 70%, white);
+  --lab-focus: color-mix(in srgb, var(--lab-seed) 70%, white);
+  --lab-ground: color-mix(in oklab, var(--lab-seed) 12%, #0d0d0d);
+  --lab-surface: color-mix(in oklab, var(--lab-seed) 14%, #1d1d1d);
+  --lab-surface-soft: color-mix(in oklab, var(--lab-seed) 12%, #161616);
+  --lab-line: color-mix(in oklab, var(--lab-seed) 22%, #383838);
+  --lab-ink: color-mix(in oklab, var(--lab-seed) 8%, #f0f0f0);
+  --lab-muted: color-mix(in oklab, var(--lab-seed) 18%, #b0b0b0);
+  --lab-pixel-sage: color-mix(in oklab, var(--lab-seed) 30%, #8a8a8a);
+  --lab-pixel-muted: color-mix(in oklab, var(--lab-seed) 20%, #5c5c5c);
+}
+/* `mono` + primary: neutrals stay grey; only the accent takes the color. */
+html[data-lab-palette='mono'][data-lab-primary][data-lab-theme] {
+  --lab-primary: var(--lab-seed);
+  --lab-accent: var(--lab-seed);
+  --lab-on-primary: var(--lab-seed-on);
+  --lab-focus: color-mix(in oklab, var(--lab-seed) 70%, black);
+  --lab-brand-1: var(--lab-seed);
+  --lab-brand-2: var(--lab-seed);
+  --lab-pixel-ink: var(--lab-seed);
+}
+html[data-lab-palette='mono'][data-lab-primary][data-lab-theme='dark'] {
+  --lab-primary: color-mix(in srgb, var(--lab-seed) 70%, white);
+  --lab-accent: color-mix(in srgb, var(--lab-seed) 70%, white);
+  --lab-on-primary: var(--lab-seed-on-dark);
+  --lab-focus: color-mix(in srgb, var(--lab-seed) 70%, white);
+  --lab-brand-2: color-mix(in srgb, var(--lab-seed) 70%, white);
+  --lab-pixel-ink: color-mix(in srgb, var(--lab-seed) 70%, white);
+}

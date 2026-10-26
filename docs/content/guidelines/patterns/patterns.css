@@ -1,0 +1,312 @@
+/* Bounded screens for the Page patterns guideline. Layout only; colors, radii and sizes are kit tokens. */
+/* Whole-px line heights (the stage's 1.6, rounded): Flutter rounds every line box. */
+.pt-frame {
+  position: relative;
+  width: 100%;
+  height: 460px;
+  overflow: hidden;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-panel);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface);
+  font-size: 14px;
+  line-height: 22px;
+}
+.pt-title {
+  overflow: hidden;
+  max-width: 200px;
+  padding-inline: 10px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pt-status {
+  padding-inline: 8px;
+  white-space: nowrap;
+}
+.pt-muted {
+  color: var(--lab-muted);
+}
+
+/* Lists */
+.pt-list {
+  display: grid;
+  gap: 8px;
+}
+.pt-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-inline: 4px;
+  color: var(--lab-muted);
+  font-size: 13px;
+  line-height: 21px;
+}
+.pt-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-small);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface);
+}
+.pt-row[data-selected] {
+  border-color: color-mix(in srgb, var(--lab-primary) 45%, var(--lab-line));
+  background: color-mix(in srgb, var(--lab-primary) 6%, var(--lab-surface));
+}
+.pt-row-end {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  flex-shrink: 0;
+  font-size: 13px;
+  line-height: 21px;
+}
+.pt-tag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--lab-surface-soft);
+  color: var(--lab-muted);
+  font-size: 12px;
+  line-height: 19px;
+  white-space: nowrap;
+}
+.pt-tag[data-tone='success'] {
+  background: color-mix(in srgb, var(--lab-success) 14%, transparent);
+  color: var(--lab-ink);
+}
+
+/* Calm states: empty, no results, error, loading */
+.pt-state {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 12px;
+  min-height: 300px;
+  padding: 24px;
+  text-align: center;
+}
+.pt-state h4 {
+  margin: 0;
+  font-size: 17px;
+}
+.pt-state p {
+  max-width: 340px;
+  margin: 0;
+  color: var(--lab-muted);
+}
+.pt-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Detail with inspector */
+.pt-detail {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+  width: 100%;
+}
+.pt-detail[data-inspector] {
+  grid-template-columns: minmax(0, 1fr) 240px;
+}
+.pt-main {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.pt-main h3 {
+  margin: 4px 0 0;
+  font-size: 22px;
+}
+.pt-card {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-small);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface);
+}
+.pt-card h4 {
+  margin: 0;
+  font-size: 15px;
+}
+.pt-card p {
+  margin: 0;
+}
+.pt-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--lab-line);
+}
+.pt-inspector {
+  position: sticky;
+  top: 0;
+}
+.pt-facts {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+.pt-facts dt {
+  color: var(--lab-muted);
+  font-size: 13px;
+  line-height: 21px;
+}
+.pt-facts dd {
+  margin: 0;
+}
+
+/* Forms */
+.pt-form {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+}
+.pt-section {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-small);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface);
+}
+.pt-section h4 {
+  margin: 0;
+  font-size: 15px;
+}
+.pt-section > p {
+  margin: -8px 0 0;
+  color: var(--lab-muted);
+  font-size: 13px;
+  line-height: 21px;
+}
+.pt-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+.pt-switch-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.pt-switch-row > span {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+}
+.pt-switch-row small {
+  color: var(--lab-muted);
+  font-size: 13px;
+  line-height: 21px;
+}
+
+/* Dialog body */
+.pt-dialog {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+}
+.pt-dialog h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.pt-dialog p {
+  margin: 0;
+}
+.pt-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Quick edit */
+.pt-edit-card {
+  display: grid;
+  gap: 4px;
+  width: min(100%, 460px);
+  padding: 8px 16px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-panel);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface);
+}
+.pt-edit-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  min-height: 56px;
+  padding-block: 6px;
+}
+.pt-edit-row + .pt-edit-row {
+  border-top: 1px solid var(--lab-line);
+}
+.pt-edit-row > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.pt-edit-row small {
+  color: var(--lab-muted);
+  font-size: 13px;
+  line-height: 21px;
+}
+.pt-inline-form {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+}
+.pt-inline-form > :first-child {
+  flex: 1 1 180px;
+}
+
+/* Page-only harness: preview width toggle above a demo */
+.pt-preview {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  width: 100%;
+}
+.pt-preview-box {
+  width: 100%;
+  transition: max-width 240ms var(--lab-ease);
+}
+.pt-preview-box[data-phone] {
+  max-width: 390px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pt-preview-box {
+    transition: none;
+  }
+}
+.pt-form + .pt-section {
+  margin-top: 16px;
+}
+
+/* Dock lays out one child; several actions sit in a row of their own. */
+.pt-dock-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+}
+.pt-line > strong,
+.pt-row-end strong {
+  white-space: nowrap;
+}

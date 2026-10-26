@@ -14,7 +14,7 @@ html[data-lab-theme] .lab-scaffold .lab-app[data-tool-scaffold] {
   min-height: 0;
 }
 .lab-tool-scaffold {
-  --lab-navigation-inset: calc(var(--lab-workspace-side-width) + 8px);
+  --lab-navigation-inset: calc(var(--lab-workspace-side-width) + var(--lab-shell-gap));
 }
 .lab-tool-side-host {
   height: 100%;
@@ -94,7 +94,7 @@ html[data-lab-theme] .lab-app[data-tool-scaffold] .lab-tool-scaffold .lab-voice-
   }
   .lab-tool-app-bar .lab-workspace-app-bar {
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--lab-toolbar-gap);
   }
   .lab-tool-app-bar .lab-workspace-app-trailing {
     flex-wrap: wrap;
@@ -102,7 +102,7 @@ html[data-lab-theme] .lab-app[data-tool-scaffold] .lab-tool-scaffold .lab-voice-
     flex: 1;
   }
   .lab-tool-scaffold > .lab-workspace-scaffold-row > .lab-workspace-main {
-    margin-block-end: max(8px, env(safe-area-inset-bottom));
+    margin-block-end: max(var(--lab-shell-gap), env(safe-area-inset-bottom));
   }
 }
 .lab-tool-side-host .lab-account-profile-row {
@@ -140,7 +140,7 @@ html[data-lab-theme] .lab-app[data-tool-scaffold] .lab-tool-scaffold .lab-voice-
 .lab-tool-editor-workspace {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 8px;
+  gap: var(--lab-shell-gap);
   block-size: 100%;
   min-block-size: 0;
   min-inline-size: 0;
@@ -161,11 +161,11 @@ html[data-lab-theme] .lab-app[data-tool-scaffold] .lab-tool-scaffold .lab-voice-
 .lab-tool-scaffold--image .lab-workspace-scaffold-row { grid-template-columns: minmax(0, 1fr); }
 .lab-tool-scaffold--image .lab-workspace-side-boundary { display: none; }
 .lab-tool-scaffold--image .lab-workspace-main { grid-column: 1; }
-.lab-tool-scaffold--image .lab-image-project-toolbar .lab-toolbar-leading { gap: 8px; }
+.lab-tool-scaffold--image .lab-image-project-toolbar .lab-toolbar-leading { gap: var(--lab-toolbar-gap); }
 html[data-lab-theme] .lab-tool-scaffold--image .lab-workspace-drawer {
-  margin: 8px;
-  block-size: calc(100dvh - 16px);
-  max-block-size: calc(100dvh - 16px);
+  margin: var(--lab-shell-gap);
+  block-size: calc(100dvh - 2 * var(--lab-shell-gap));
+  max-block-size: calc(100dvh - 2 * var(--lab-shell-gap));
   border: 1px solid var(--lab-line);
   border-radius: var(--lab-radius-panel);
 }

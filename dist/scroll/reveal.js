@@ -1,5 +1,10 @@
 import { scrollRevealDelta } from './metrics.js';
-/** Reveal only inside the supplied viewport; native scrollIntoView also moves ancestors. */
+import { prefersReducedMotion } from '../physics/motion-value.js';
+/**
+ * Scrolls `viewport` the minimum needed to show `child`, honoring the viewport's scroll padding
+ * (the floats' reservations). Unlike native scrollIntoView it never moves ancestors or the page.
+ * Reduced motion forces an instant scroll.
+ */
 export function revealScrollChild(viewport, child, { block = 'nearest', inline = 'nearest', behavior = 'instant', } = {}) {
     if (!viewport || !child || !viewport.contains(child))
         return;
@@ -18,7 +23,7 @@ export function revealScrollChild(viewport, child, { block = 'nearest', inline =
     viewport.scrollBy({
         top: dy,
         left: dx,
-        behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : behavior,
+        behavior: prefersReducedMotion() ? 'instant' : behavior,
     });
 }
 //# sourceMappingURL=reveal.js.map

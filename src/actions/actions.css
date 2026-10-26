@@ -7,6 +7,7 @@
   font-family: var(--lab-font);
 }
 .lab-actions-bar__row {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -43,17 +44,8 @@ html[data-lab-theme] .lab-actions-bar__control {
   flex: 0 0 auto;
   white-space: nowrap;
 }
-html[data-lab-theme]
-  .lab-actions-bar[data-size='compact']
-  .lab-actions-bar__control[data-control-size='icon'] {
-  height: var(--lab-control-compact);
-  min-height: var(--lab-control-compact);
-  min-width: var(--lab-control-compact);
-  width: var(--lab-control-compact);
-  padding: 0;
-}
-.lab-actions-bar[data-size='compact'] .lab-actions-bar__row {
-  min-block-size: var(--lab-control-compact);
+.lab-actions-bar[data-size='small'] .lab-actions-bar__row {
+  min-block-size: var(--lab-control-small);
 }
 html[data-lab-theme] .lab-actions-bar__control[aria-pressed='true'] {
   border-color: var(--lab-focus);
@@ -90,33 +82,12 @@ html[data-lab-theme]
   color: var(--lab-danger);
   font-size: 13px;
 }
-.lab-actions-menu {
-  z-index: 160;
-  box-sizing: border-box;
-  min-inline-size: min(200px, calc(100vw - 24px));
-  max-inline-size: min(360px, calc(100vw - 24px));
-  max-block-size: var(--radix-dropdown-menu-content-available-height);
-  overflow-y: auto;
-  padding: var(--lab-space-1);
-  border: 1px solid var(--lab-line);
-  border-radius: var(--lab-radius-control);
-  corner-shape: superellipse(1.5);
-  background: var(--lab-surface);
-  color: var(--lab-ink);
-  box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
-  font: 400 14px/1.4 var(--lab-font);
-  transform-origin: var(--radix-dropdown-menu-content-transform-origin);
-  animation: lab-actions-menu-enter var(--lab-duration-fast) var(--lab-ease);
-}
+/* The menu itself is a MenuSurface (menu/menu.css): glass, metrics and the morph live there. */
 .lab-actions-menu__item {
   display: flex;
   position: relative;
   align-items: center;
-  gap: var(--lab-space-2);
-  min-block-size: var(--lab-control-compact);
-  padding: var(--lab-space-2) var(--lab-space-3);
-  border-radius: calc(10px * var(--lab-radius-scale, 1));
-  corner-shape: superellipse(1.5);
+  gap: var(--lab-space-3);
   outline: none;
   cursor: default;
   user-select: none;
@@ -127,7 +98,7 @@ html[data-lab-theme]
 }
 .lab-actions-menu__item[data-highlighted],
 .lab-actions-menu__item[data-state='open'] {
-  background: var(--lab-surface-soft);
+  background: color-mix(in srgb, var(--lab-ink) 8%, transparent);
 }
 .lab-actions-menu__item[data-destructive] {
   color: var(--lab-danger);
@@ -140,45 +111,12 @@ html[data-lab-theme]
   flex: 0 0 auto;
   margin-inline-start: var(--lab-space-3);
 }
-[dir='rtl'] .lab-actions-menu__chevron {
-  transform: rotate(180deg);
-}
-@keyframes lab-actions-menu-enter {
-  from {
-    opacity: 0;
-    transform: translateY(-3px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
 @media (pointer: coarse) {
-  .lab-actions-menu__item {
-    min-block-size: 44px;
-  }
   .lab-actions-bar__row {
-    min-block-size: 44px;
-  }
-  html[data-lab-theme]
-    .lab-actions-bar[data-size='compact']
-    .lab-actions-bar__control[data-control-size='icon'] {
-    min-width: 44px;
-    min-height: 44px;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .lab-actions-menu {
-    animation: none;
+    min-block-size: var(--lab-control-touch-target);
   }
 }
 @media (forced-colors: active) {
-  .lab-actions-menu {
-    background: Canvas;
-    color: CanvasText;
-    border-color: CanvasText;
-    box-shadow: none;
-  }
   .lab-actions-menu__item[data-highlighted],
   .lab-actions-menu__item[data-state='open'] {
     background: Highlight;
@@ -188,4 +126,11 @@ html[data-lab-theme]
   .lab-actions-menu__item[data-destructive] {
     color: LinkText;
   }
+}
+
+/* An action on its way into the More menu: the real element, inert, shrinking into the button. */
+.lab-actions-bar__ghost {
+  position: absolute;
+  margin: 0;
+  pointer-events: none;
 }

@@ -1,7 +1,8 @@
-import { FO_CORNER_EXPONENT, foSuperellipsePath, type FoCornerRadii } from './geometry'
+import { cornerFit, trueCornerRadius } from './corner-fit'
+import { foSuperellipsePath, type FoCornerRadii } from './geometry'
 
 const selector =
-  '[data-lab-corners], :is([class^="lab-"], [class*=" lab-"]), .lab-app :is(button, a, input, textarea, select), .lab-dialog :is(button, a, input, textarea, select)'
+  '[data-lab-corners], :is([class^="lab-"], [class*=" lab-"]), .lab-app :is(button, a, input, textarea, select), .lab-presentation :is(button, a, input, textarea, select)'
 const ownedProperties = [
   'background-color',
   'background-image',
@@ -45,16 +46,16 @@ const restore = (host: HTMLElement, property: string, value: InlineValue) => {
   if (value.value) host.style.setProperty(property, value.value, value.priority)
   else host.style.removeProperty(property)
 }
-const radius = (value: string, width: number, height: number) => {
+const radius = (value: string, width: number, height: number, fit: number) => {
   const [horizontal, vertical = horizontal] = value.split(' ')
   const length = (part: string, size: number) =>
-    part.endsWith('%') ? (Number.parseFloat(part) * size) / 100 : Number.parseFloat(part) || 0
+    part.endsWith('%') ? (Number.parseFloat(part) * size) / 100 : trueCornerRadius(Number.parseFloat(part) || 0, width, height, fit)
   return { x: length(horizontal, width), y: length(vertical, height) }
 }
 
 /**
  * Optional SVG fallback for browsers without native corner-shape support.
- * LabProvider leaves this engine disabled unless enableCornerFallback is true.
+ * Provider leaves this engine disabled unless enableCornerFallback is true.
  * Interactive hosts are never clipped; cleanup restores their original paint.
  */
 export function installFoContinuousCorners(root?: Document | HTMLElement) {
@@ -104,6 +105,7 @@ export function installFoContinuousCorners(root?: Document | HTMLElement) {
       restore(host, property, entry.original.get(property)!)
     })
     const style = getComputedStyle(host)
+    const fit = cornerFit()
     const width = host.offsetWidth
     const height = host.offsetHeight
     const radii = [
@@ -111,7 +113,10 @@ export function installFoContinuousCorners(root?: Document | HTMLElement) {
       style.borderTopRightRadius,
       style.borderBottomRightRadius,
       style.borderBottomLeftRadius,
-    ].map((value) => radius(value, width, height)) as FoCornerRadii
+    ]
+      // Smoothed CSS radii are shrunk to look right as circles (--lab-corner-fit, never a capsule's);
+      // the SVG draws the real clamped continuous curve.
+      .map((value) => radius(value, width, height, fit)) as FoCornerRadii
     const image = style.backgroundImage
     if (
       !width ||
@@ -130,8 +135,8 @@ export function installFoContinuousCorners(root?: Document | HTMLElement) {
     const borderWidth = Number.parseFloat(style.borderTopWidth) || 0
     const position = style.position
     const backgroundStyle = style.background
-    const exponent =
-      Number.parseFloat(style.getPropertyValue('--lab-corner-exponent')) || FO_CORNER_EXPONENT
+    // An explicit --lab-corner-exponent applies to every corner; otherwise each corner is clamped.
+    const exponent = Number.parseFloat(style.getPropertyValue('--lab-corner-exponent')) || undefined
     const path = foSuperellipsePath(width, height, radii, 0, exponent)
     const mask = svgImage(width, height, `<path fill="white" d="${path}"/>`)
     if (image === 'none') {
@@ -151,9 +156,9 @@ export function installFoContinuousCorners(root?: Document | HTMLElement) {
       set(host, entry, 'border-image-width', '0')
       set(host, entry, 'border-image-outset', '0')
       set(host, entry, 'border-image-repeat', 'stretch')
-      // Firefox otherwise clips scrolling dialog contents with a circular curve
+      // Firefox otherwise clips scrolling dialog and pane contents with a circular curve
       // inside the superellipse paint, leaving a crescent around nested panels.
-      if (host.matches('dialog, .lab-upgrade-art')) set(host, entry, 'border-radius', '0')
+      if (host.matches('.lab-modal, .lab-pane, .lab-upgrade-art')) set(host, entry, 'border-radius', '0')
     } else {
       // Preserve CSS gradients/images on a separate masked paint layer. No
       // pseudo-element slots are consumed and no content is wrapped or moved.
@@ -213,7 +218,7 @@ export function installFoContinuousCorners(root?: Document | HTMLElement) {
     width: number,
     height: number,
     radii: FoCornerRadii,
-    exponent: number
+    exponent: number | undefined
   ) {
     const inner = radii.map((corner) => ({
       x: Math.max(0, corner.x - 1),

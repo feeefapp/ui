@@ -1,5 +1,5 @@
 /* Existing feature adapters. Preserve selectors while consumers migrate to semantic tokens. */
-html[data-lab-theme] :is(.lab-app, .lab-dialog, .lab-floating-root) {
+html[data-lab-theme] :is(.lab-app, .lab-presentation, .lab-floating-root) {
   --text-main: var(--lab-ink);
   --line: var(--lab-line);
   color: var(--lab-ink);
@@ -8,7 +8,7 @@ html[data-lab-theme] .lab-app {
   background: var(--lab-ground);
 }
 html[data-lab-theme]
-  :is(.lab-editor, .lab-dialog, .lab-billing-card, .lab-saved-voice, .lab-plan-tile) {
+  :is(.lab-editor, .lab-modal, .lab-pane, .lab-billing-card, .lab-saved-voice, .lab-plan-tile) {
   background: var(--lab-surface);
   border-color: var(--lab-line);
 }
@@ -50,12 +50,12 @@ html[data-lab-theme]
   ) {
   color: var(--lab-muted);
 }
-html[data-lab-theme] :is(.lab-app, .lab-dialog) .lab-dark:not([data-variant]) {
+html[data-lab-theme] :is(.lab-app, .lab-presentation) .lab-dark:not([data-variant]) {
   background: var(--lab-primary) !important;
   color: var(--lab-on-primary) !important;
   border-color: transparent;
 }
-html[data-lab-theme] :is(.lab-app, .lab-dialog) .lab-dark:not([data-variant]):hover {
+html[data-lab-theme] :is(.lab-app, .lab-presentation) .lab-dark:not([data-variant]):hover {
   background: var(--lab-accent) !important;
 }
 html[data-lab-theme]
@@ -70,12 +70,12 @@ html[data-lab-theme]
   background: var(--lab-surface);
 }
 html[data-lab-theme]
-  :is(.lab-app, .lab-dialog)
+  :is(.lab-app, .lab-presentation)
   button:not(.lab-dark, [data-variant], [data-surface-variant], .lab-field-select-control):hover {
   background-color: var(--lab-surface-soft);
 }
-html[data-lab-theme] :is(.lab-app, .lab-dialog) :focus-visible {
-  outline-color: var(--lab-focus);
+html[data-lab-theme] :is(.lab-app, .lab-presentation) :focus-visible {
+  outline-color: var(--lab-focus-ring-color);
 }
 html[data-lab-theme] .lab-app .lab-discover-voice {
   background: var(--lab-surface) !important;
@@ -100,11 +100,6 @@ html[data-lab-theme] .lab-scaffold :is(.lab-workspace, .lab-allowance) {
 html[data-lab-theme] .lab-pro-badge {
   background: var(--lab-surface-soft);
   color: var(--lab-muted);
-  border-color: var(--lab-line);
-}
-html[data-lab-theme] .lab-select-menu {
-  background: var(--lab-surface);
-  color: var(--lab-ink);
   border-color: var(--lab-line);
 }
 html[data-lab-theme] .lab-select-option[data-highlighted] {
@@ -148,7 +143,8 @@ html[data-lab-theme] .lab-control.lab-voice-input[data-variant] {
   height: var(--lab-voice-input-size);
   min-height: var(--lab-voice-input-size);
   padding: 0;
-  border-radius: var(--lab-radius-control-compact);
+  border-radius: var(--lab-radius-control-small);
+  corner-shape: superellipse(1.5);
   color: var(--lab-focus);
   background: var(--lab-surface-soft);
 }
@@ -209,12 +205,12 @@ html[data-lab-theme='dark']
   }
 }
 html[data-lab-theme='dark']
-  :is(.lab-app, .lab-dialog, .lab-floating-root)
+  :is(.lab-app, .lab-presentation, .lab-floating-root)
   :is(h1, h2, h3, h4, strong, b, label:not(.lab-text-field-label)) {
   color: var(--lab-ink);
 }
 html[data-lab-theme='dark']
-  :is(.lab-app, .lab-dialog, .lab-floating-root)
+  :is(.lab-app, .lab-presentation, .lab-floating-root)
   button:not(
     .lab-dark,
     .lab-audio-dock__play,
@@ -247,7 +243,7 @@ html[data-lab-theme='dark']
     .lab-outline:not([data-variant])
   ):not([data-surface-variant]),
 html[data-lab-theme='dark']
-  .lab-dialog
+  .lab-presentation
   :is(.lab-select, .lab-outline:not([data-variant])):not([data-surface-variant]),
 html[data-lab-theme='dark'] .lab-badge {
   background: var(--lab-surface-soft) !important;
@@ -270,7 +266,7 @@ html[data-lab-theme='dark'] .lab-allowance b > span {
   corner-shape: superellipse(1.5);
 }
 html[data-lab-theme]
-  :is(.lab-app, .lab-dialog)
+  :is(.lab-app, .lab-presentation)
   :is(
     input:not(
       [type='checkbox'],

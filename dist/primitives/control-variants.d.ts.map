@@ -1,1 +1,1 @@
-{"version":3,"file":"control-variants.d.ts","sourceRoot":"","sources":["../../src/primitives/control-variants.ts"],"names":[],"mappings":"AAAA,kFAAkF;AAClF,MAAM,MAAM,iBAAiB,GAAG,QAAQ,GAAG,OAAO,GAAG,UAAU,GAAG,UAAU,GAAG,MAAM,CAAA"}
+{"version":3,"file":"control-variants.d.ts","sourceRoot":"","sources":["../../src/primitives/control-variants.ts"],"names":[],"mappings":"AAAA;;;GAGG;AACH,MAAM,MAAM,cAAc,GAAG,QAAQ,GAAG,OAAO,GAAG,UAAU,GAAG,UAAU,GAAG,MAAM,CAAA"}

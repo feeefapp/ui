@@ -2,18 +2,24 @@
 import { jsx as _jsx } from "react/jsx-runtime";
 import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useState, } from 'react';
 import { Monitor, Moon, Sun } from 'lucide-react';
-import { LabSwap } from './motion.js';
-import { LabButton } from './ui.js';
+import { Swap } from './motion.js';
+import { Button } from './ui.js';
 import './theme.css';
 import './system.css';
 import { installFoContinuousCorners } from './brand/corners.js';
-import { useLabServices } from './services.js';
-import { useLabI18n } from './i18n.js';
-import { applyLabThemeConfig } from './theme-config.js';
+import { useServices } from './services.js';
+import { useI18n } from './i18n.js';
+import { applyThemeConfig } from './theme-config.js';
 const Context = createContext(null);
 const layoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
-export function LabThemeProvider({ children, initialMode = 'system', enableCornerFallback = false, config, }) {
-    const { preferences } = useLabServices();
+/**
+ * Owns the color mode and the app theme config. Sets `data-lab-theme="light|dark"` on `<html>`
+ * (every color token hangs off it), applies `config` with `applyThemeConfig`, and stores
+ * the chosen mode in the `preferences` service under `feeef-lab-theme`.
+ * `Provider` renders this for you.
+ */
+export function ThemeProvider({ children, initialMode = 'system', enableCornerFallback = false, config, }) {
+    const { preferences } = useServices();
     const [mode, setMode] = useState(() => {
         if (typeof window === 'undefined')
             return initialMode;
@@ -30,10 +36,15 @@ export function LabThemeProvider({ children, initialMode = 'system', enableCorne
         if (enableCornerFallback)
             return installFoContinuousCorners();
     }, [enableCornerFallback]);
-    const { palette, density, radius } = config ?? {};
+    const { palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction, motion, metrics } = config ?? {};
+    // Metrics are an object, often written inline: compare them by value, not identity.
+    const metricsKey = JSON.stringify(metrics ?? {});
     layoutEffect(() => {
-        applyLabThemeConfig(document.documentElement, { palette, density, radius });
-    }, [palette, density, radius]);
+        applyThemeConfig(document.documentElement, {
+            palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction, motion,
+            metrics: JSON.parse(metricsKey),
+        });
+    }, [palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction, motion, metricsKey]);
     layoutEffect(() => {
         const root = document.documentElement, previous = root.getAttribute('data-lab-theme'), preference = matchMedia('(prefers-color-scheme: dark)');
         const apply = () => {
@@ -58,17 +69,22 @@ export function LabThemeProvider({ children, initialMode = 'system', enableCorne
     const value = useMemo(() => ({ mode, resolvedMode, setMode }), [mode, resolvedMode]);
     return _jsx(Context.Provider, { value: value, children: children });
 }
-export function useLabTheme() {
+/**
+ * Current mode (`system|light|dark`), the resolved `light|dark` and `setMode`.
+ * Throws outside `Provider` / `ThemeProvider`.
+ */
+export function useTheme() {
     const context = useContext(Context);
     if (!context)
-        throw new Error('useLabTheme requires LabProvider or LabThemeProvider');
+        throw new Error('useTheme requires Provider or ThemeProvider');
     return context;
 }
-export function LabThemeSwitch() {
-    const { t } = useLabI18n();
-    const context = useLabTheme();
+/** Icon button that cycles system → light → dark → system. Its label comes from `lab.common.theme*`. */
+export function ThemeSwitch() {
+    const { t } = useI18n();
+    const context = useTheme();
     const next = context.mode === 'system' ? 'light' : context.mode === 'light' ? 'dark' : 'system';
     const Icon = context.mode === 'system' ? Monitor : context.mode === 'dark' ? Moon : Sun;
-    return (_jsx(LabButton, { className: "lab-theme-switch", variant: "ghost", appearance: "toolbar", controlSize: "icon", "aria-label": t('lab.common.themeSwitchTo', { mode: context.mode, next }), title: t('lab.common.theme', { mode: context.mode }), onClick: () => context.setMode(next), children: _jsx(LabSwap, { swapKey: context.mode, children: _jsx(Icon, { size: 20 }) }) }));
+    return (_jsx(Button, { className: "lab-theme-switch", variant: "ghost", appearance: "toolbar", controlSize: "icon", "aria-label": t('lab.common.themeSwitchTo', { mode: context.mode, next }), title: t('lab.common.theme', { mode: context.mode }), onClick: () => context.setMode(next), children: _jsx(Swap, { swapKey: context.mode, children: _jsx(Icon, { size: 20 }) }) }));
 }
 //# sourceMappingURL=theme.js.map

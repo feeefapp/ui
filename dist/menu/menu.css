@@ -1,0 +1,225 @@
+/* Menus: one Liquid Glass bubble per menu (MenuSurface). The Radix content element only lays out
+and positions; three layers paint it: a shadow behind, the glass bubble (rows inside, clipped by it)
+and the rim on top. During the morph menu-surface.tsx moves the bubble's clip-path and the layers'
+boxes every frame; at rest they fill the content. Metrics are tokens so themes can change them.
+iOS 26 menus (research/liquid-glass/CONTROLS-MEASURED.md §8): at least 250 wide, 42px rows, groups
+split by a 21px band with a hairline, ~32.7 corners, thicker glass than controls, no dimming. */
+html[data-lab-theme] {
+  --lab-menu-min-width: 250px;
+  --lab-menu-max-width: 360px;
+  --lab-menu-row: 42px;
+  --lab-menu-separator: 21px;
+  /* Space between the glass edge and the rows. */
+  --lab-menu-inset: 10px;
+  --lab-menu-row-inline: 14px;
+  --lab-menu-radius: var(--lab-radius-glass);
+  /* Menus carry text over anything, so their glass is at least this tinted and this blurred. */
+  --lab-menu-tint: 1;
+  /* A menu is read over anything: thicker than the regular material (veil at least 88 %, blurred
+  20px) so content under it never reads as drawn on top of it. */
+  --lab-menu-veil: max(var(--lab-glass-veil-large), 0.88);
+  --lab-menu-blur: max(var(--lab-glass-blur-large), 20px);
+  /* The large glass material (system.css formulas, glass/material.ts glassMaterial) at that tint. */
+  --lab-menu-fill: color-mix(in srgb, var(--lab-surface) calc(var(--lab-menu-veil) * 100%), transparent);
+  --lab-menu-saturate: calc(
+    (1 - var(--lab-menu-tint) * var(--lab-glass-colour-loss-large)) / (1 - var(--lab-menu-tint) * var(--lab-glass-veil-large))
+  );
+  --lab-menu-lift: contrast(calc((1.03 - 0.03 * var(--lab-menu-tint)) / (1.182 - 0.182 * var(--lab-menu-tint))))
+    brightness(calc(1.182 - 0.182 * var(--lab-menu-tint)));
+  --lab-menu-shadow: 0 14px 40px -12px rgb(0 0 0 / 24%);
+  /* How long a closing menu stays mounted for its morph back (MENU_MORPH.closeEnd + a frame). */
+  --lab-menu-exit: 360ms;
+}
+html[data-lab-density='compact'][data-lab-theme] {
+  --lab-menu-min-width: 220px;
+  --lab-menu-row: 34px;
+  --lab-menu-separator: 15px;
+  --lab-menu-inset: 6px;
+  --lab-menu-row-inline: 10px;
+}
+html[data-lab-density='thin'][data-lab-theme] {
+  --lab-menu-min-width: 200px;
+  --lab-menu-row: 28px;
+  --lab-menu-separator: 11px;
+  --lab-menu-inset: 4px;
+  --lab-menu-row-inline: 8px;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-lab-theme] {
+    --lab-menu-exit: 120ms;
+  }
+}
+
+/* Zero specificity: hosts (a phone frame, a pane) set their own position. */
+:where(.lab-floating-boundary) {
+  position: relative;
+}
+
+.lab-menu {
+  position: relative;
+  z-index: 160;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-inline-size: min(var(--lab-menu-min-width), var(--radix-popper-available-width, 100vw));
+  max-inline-size: min(var(--lab-menu-max-width), var(--radix-popper-available-width, 100vw));
+  max-block-size: var(--radix-popper-available-height, none);
+  color: var(--lab-ink);
+  font: 400 14px/20px var(--lab-font);
+  outline: none;
+  animation: none;
+}
+/* Radix keeps a closing menu mounted while an animation runs; this one only times the morph back. */
+.lab-menu:is([data-state='closed'], [data-closing]) {
+  animation: lab-menu-exit var(--lab-menu-exit) linear both;
+  pointer-events: none;
+}
+@keyframes lab-menu-exit {
+  from {
+    outline-color: transparent;
+  }
+  to {
+    outline-color: transparent;
+  }
+}
+.lab-menu__bubble {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow: hidden;
+  border-radius: var(--lab-menu-radius);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-menu-fill);
+  backdrop-filter: blur(var(--lab-menu-blur)) saturate(var(--lab-menu-saturate)) var(--lab-menu-lift);
+  -webkit-backdrop-filter: blur(var(--lab-menu-blur)) saturate(var(--lab-menu-saturate)) var(--lab-menu-lift);
+}
+.lab-menu__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-block-size: 0;
+  box-sizing: border-box;
+  padding: var(--lab-menu-inset);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.lab-menu__shadow,
+.lab-menu__edge {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  pointer-events: none;
+  border-radius: var(--lab-menu-radius);
+  corner-shape: superellipse(1.5);
+}
+.lab-menu__shadow {
+  z-index: -1;
+  box-shadow: var(--lab-menu-shadow);
+}
+.lab-menu__edge {
+  z-index: 1;
+  border: 1px solid var(--lab-line);
+  box-shadow: var(--lab-glass-light);
+}
+
+/* Rows: the kit's menu items share the menu metrics wherever they appear. */
+.lab-menu :is(.lab-menu__item, .lab-actions-menu__item, .lab-pc-menu-item, .lab-select-option) {
+  min-block-size: var(--lab-menu-row);
+  padding-block: 0;
+  padding-inline: var(--lab-menu-row-inline);
+  border-radius: calc(var(--lab-menu-radius) - var(--lab-menu-inset));
+  corner-shape: superellipse(1.5);
+}
+.lab-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--lab-space-3, 12px);
+  outline: none;
+  cursor: default;
+  user-select: none;
+}
+.lab-menu__item[data-highlighted],
+.lab-menu__item[data-state='open'] {
+  background: color-mix(in srgb, var(--lab-ink) 8%, transparent);
+}
+.lab-menu__item[data-disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.lab-menu__label {
+  padding: 6px var(--lab-menu-row-inline) 2px;
+  color: var(--lab-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+/* Groups are split by a band with a hairline in its middle, inset 24px from the glass edge. */
+.lab-menu :is(.lab-menu__separator, .lab-pc-menu-sep) {
+  position: relative;
+  flex: none;
+  block-size: var(--lab-menu-separator);
+  margin: 0;
+  border: 0;
+  background: none;
+}
+.lab-menu :is(.lab-menu__separator, .lab-pc-menu-sep)::after {
+  content: '';
+  position: absolute;
+  inset-inline: max(0px, calc(24px - var(--lab-menu-inset)));
+  inset-block-start: calc(50% - 0.5px);
+  block-size: 1px;
+  background: var(--lab-line);
+}
+
+@media (pointer: coarse) {
+  .lab-menu :is(.lab-menu__item, .lab-actions-menu__item, .lab-pc-menu-item, .lab-select-option) {
+    min-block-size: max(var(--lab-menu-row), 44px);
+  }
+}
+
+/* Solid fallback where transparency hurts. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .lab-menu__bubble {
+    background: var(--lab-surface);
+  }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .lab-menu__bubble {
+    background: var(--lab-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+@media (prefers-contrast: more) {
+  .lab-menu__edge {
+    border-color: var(--lab-ink);
+    box-shadow: none;
+  }
+}
+html[data-lab-glass='solid'] .lab-menu__bubble {
+  background: var(--lab-surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+@media (forced-colors: active) {
+  .lab-menu__bubble {
+    background: Canvas;
+    color: CanvasText;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .lab-menu__edge {
+    border-color: CanvasText;
+    box-shadow: none;
+  }
+  .lab-menu__shadow {
+    display: none;
+  }
+  .lab-menu__item[data-highlighted],
+  .lab-menu__item[data-state='open'] {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+}

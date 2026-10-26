@@ -1,14 +1,16 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { LabButton } from '../ui.js';
-import { useLabI18n } from '../i18n.js';
-import { LabGlassGroup } from '../scaffold.js';
+import { Button } from '../ui.js';
+import { useI18n } from '../i18n.js';
+import { GlassGroup } from '../scaffold.js';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, } from 'react';
 import { Maximize, Minus, Plus, RefreshCw, Trash2, X, Star } from 'lucide-react';
 import { PixelArtwork, PixelLoader } from '../pixel-art.js';
 import { revealCovered } from './freeform-frame.js';
 import { elapsed, stageRatio, takeErrorText } from './board-utils.js';
 import './freeform-board.css';
+import { GlassScope } from '../glass/container.js';
+import { prefersReducedMotion } from '../physics/motion-value.js';
 /** World height of every card; widths follow each image's proportions. */
 const CARD_H = 560;
 const GAP = 72;
@@ -42,9 +44,11 @@ export function fitView(rect, viewport, insets, padding = 28, maxScale = 1) {
  * pan, pinch or ⌘/Ctrl+scroll to zoom, double-click a card to fit it.
  */
 export function FreeformBoard({ embedded = false, takes, selectedId, onSelect, insets, now, signedIn, starters, onStarter, onRetry, onRemove, emptyContent, }) {
-    const { t } = useLabI18n();
+    const { t } = useI18n();
     const root = useRef(null);
-    const [size, setSize] = useState({ w: 1280, h: 800 });
+    // 0 × 0 until the board is measured: nothing is fitted to a guessed size.
+    const [size, setSize] = useState({ w: 0, h: 0 });
+    const fittedOnce = useRef(false);
     const [view, setView] = useState({ x: 0, y: 0, scale: 1 });
     const [animate, setAnimate] = useState(false);
     const [ratios, setRatios] = useState({});
@@ -61,17 +65,17 @@ export function FreeformBoard({ embedded = false, takes, selectedId, onSelect, i
         observer.observe(el);
         return () => observer.disconnect();
     }, []);
-    const glide = useCallback((next) => {
-        setAnimate(!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+    const glide = useCallback((next, instant = false) => {
+        setAnimate(!instant && !prefersReducedMotion());
         setView(next);
     }, []);
-    const fitCard = useCallback((card) => {
+    const fitCard = useCallback((card, instant = false) => {
         if (!card)
             return;
         const fitted = fitView(card, size, insets, 28, card.take.status === 'completed' ? 1.4 : 1);
         // Centering the selection leaves the poster beside it under the rail
         // whenever the free area is wider than the card. Pull that neighbor clear.
-        glide(revealCovered(fitted, cards, card, size, insets, 28));
+        glide(revealCovered(fitted, cards, card, size, insets, 28), instant);
     }, [glide, size, insets, cards]);
     const fitAll = () => {
         if (!cards.length)
@@ -83,14 +87,20 @@ export function FreeformBoard({ embedded = false, takes, selectedId, onSelect, i
     const layoutKey = cards.map((card) => `${card.take.id}:${card.x}:${card.w}`).join('|');
     const key = `${selected?.take.id}:${layoutKey}:${size.w}x${size.h}:${insets.left},${insets.top},${insets.right},${insets.bottom}`;
     useEffect(() => {
+        // Unmeasured or hidden (a viewport no bigger than the chrome around it): nothing to fit yet. The
+        // first real fit snaps into place; later ones glide.
+        if (size.w - insets.left - insets.right <= 56 || size.h - insets.top - insets.bottom <= 56)
+            return;
+        const instant = !fittedOnce.current;
+        fittedOnce.current = true;
         if (selected)
-            fitCard(selected);
+            fitCard(selected, instant);
         else
             glide({
                 x: insets.left + (size.w - insets.left - insets.right) / 2,
                 y: insets.top + (size.h - insets.top - insets.bottom) / 2,
                 scale: 1,
-            });
+            }, instant);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [key]);
     const zoomAt = (factor, px, py) => {
@@ -204,7 +214,7 @@ export function FreeformBoard({ embedded = false, takes, selectedId, onSelect, i
                                     const r = img.naturalWidth / Math.max(1, img.naturalHeight);
                                     if (Number.isFinite(r) && Math.abs((ratios[take.id] ?? 0) - r) > 0.01)
                                         setRatios((old) => ({ ...old, [take.id]: r }));
-                                } })) : busy ? (_jsxs("div", { className: "lab-ff-state", role: "status", children: [_jsx(PixelLoader, { size: 40, label: t('lab.board.creating') }), _jsx("b", { children: t('lab.board.takingShape') }), _jsxs("small", { children: [elapsed(take.createdAt, now), " \u00B7 ", t('lab.board.usually')] })] })) : (_jsxs("div", { className: "lab-ff-state", role: "alert", children: [_jsx("b", { children: t('lab.board.didntWork') }), _jsx("small", { children: takeErrorText(take, t, t('lab.board.tryAnother')) }), _jsxs("span", { className: "lab-ff-state-actions", children: [_jsxs(LabButton, { type: "button", variant: "secondary", onPointerDown: (e) => e.stopPropagation(), onClick: () => onRetry(take), children: [_jsx(RefreshCw, { size: 18 }), " ", t('lab.canvas.tryAgain')] }), _jsxs(LabButton, { type: "button", variant: "destructive", onPointerDown: (e) => e.stopPropagation(), onClick: () => onRemove(take), children: [_jsx(Trash2, { size: 18 }), " ", t('lab.canvas.remove')] })] })] })), _jsxs("figcaption", { className: "lab-ff-label", style: { transform: `scale(${1 / view.scale})` }, children: [take.starred && _jsx(Star, { size: 11, fill: "currentColor" }), t(`lab.canvas.op_${take.operation}`), " #", card.number, take.status === 'failed' && _jsx(X, { size: 11 })] })] }, take.id));
+                                } })) : busy ? (_jsxs("div", { className: "lab-ff-state", role: "status", children: [_jsx(PixelLoader, { size: 40, label: t('lab.board.creating') }), _jsx("b", { children: t('lab.board.takingShape') }), _jsxs("small", { children: [elapsed(take.createdAt, now), " \u00B7 ", t('lab.board.usually')] })] })) : (_jsxs("div", { className: "lab-ff-state", role: "alert", children: [_jsx("b", { children: t('lab.board.didntWork') }), _jsx("small", { children: takeErrorText(take, t, t('lab.board.tryAnother')) }), _jsxs("span", { className: "lab-ff-state-actions", children: [_jsxs(Button, { type: "button", variant: "elevated", onPointerDown: (e) => e.stopPropagation(), onClick: () => onRetry(take), children: [_jsx(RefreshCw, { size: 18 }), " ", t('lab.canvas.tryAgain')] }), _jsxs(Button, { type: "button", variant: "destructive", onPointerDown: (e) => e.stopPropagation(), onClick: () => onRemove(take), children: [_jsx(Trash2, { size: 18 }), " ", t('lab.canvas.remove')] })] })] })), _jsxs("figcaption", { className: "lab-ff-label", style: { transform: `scale(${1 / view.scale})` }, children: [take.starred && _jsx(Star, { size: 11, fill: "currentColor" }), t(`lab.canvas.op_${take.operation}`), " #", card.number, take.status === 'failed' && _jsx(X, { size: 11 })] })] }, take.id));
                 }) }), !cards.length && (_jsx("div", { className: "lab-ff-empty-frame", style: {
                     top: insets.top,
                     right: insets.right,
@@ -212,6 +222,6 @@ export function FreeformBoard({ embedded = false, takes, selectedId, onSelect, i
                     left: insets.left,
                 }, children: emptyContent ?? (_jsxs("div", { className: "lab-ff-empty", children: [_jsx(PixelArtwork, { variant: "orbit", seed: "image-canvas", size: 84, tone: "muted", animated: true }), _jsx("b", { children: t('lab.board.endless') }), _jsx("small", { children: signedIn
                                 ? t('lab.board.describeBelow')
-                                : t('lab.board.describeSignIn') }), _jsx("span", { className: "lab-ff-starters", children: starters.map((starter) => (_jsx(LabButton, { type: "button", variant: "secondary", onPointerDown: (e) => e.stopPropagation(), onClick: () => onStarter(starter.prompt), children: starter.label }, starter.label))) })] })) })), cards.length > 0 && (_jsxs(LabGlassGroup, { className: "lab-ff-zoom", style: { right: insets.right + 14 }, onPointerDown: (e) => e.stopPropagation(), role: "toolbar", "aria-label": t('lab.board.zoom'), children: [_jsx(LabButton, { type: "button", variant: "ghost", appearance: "toolbar", controlSize: "icon", "aria-label": t('lab.board.zoomOut'), onClick: () => zoomCentre(1 / 1.25), children: _jsx(Minus, { size: 20 }) }), _jsxs(LabButton, { type: "button", variant: "ghost", appearance: "toolbar", controlSize: "icon", className: "lab-ff-percent", "aria-label": t('lab.board.fitSelection'), title: t('lab.board.fitSelection'), onClick: () => fitCard(selected), children: [percent, "%"] }), _jsx(LabButton, { type: "button", variant: "ghost", appearance: "toolbar", controlSize: "icon", "aria-label": t('lab.board.zoomIn'), onClick: () => zoomCentre(1.25), children: _jsx(Plus, { size: 20 }) }), _jsx(LabButton, { type: "button", variant: "ghost", appearance: "toolbar", controlSize: "icon", "aria-label": t('lab.board.showAllVersions'), title: t('lab.board.showAll'), onClick: fitAll, disabled: cards.length < 2, children: _jsx(Maximize, { size: 20 }) })] }))] }));
+                                : t('lab.board.describeSignIn') }), _jsx("span", { className: "lab-ff-starters", children: starters.map((starter) => (_jsx(Button, { type: "button", variant: "elevated", onPointerDown: (e) => e.stopPropagation(), onClick: () => onStarter(starter.prompt), children: starter.label }, starter.label))) })] })) })), cards.length > 0 && (_jsx(GlassScope, { className: "lab-ff-zoom-layer", style: { right: insets.right + 14 }, children: _jsxs(GlassGroup, { className: "lab-ff-zoom", onPointerDown: (e) => e.stopPropagation(), role: "toolbar", "aria-label": t('lab.board.zoom'), children: [_jsx(Button, { type: "button", variant: "ghost", appearance: "toolbar", controlSize: "icon", "aria-label": t('lab.board.zoomOut'), onClick: () => zoomCentre(1 / 1.25), children: _jsx(Minus, { size: 20 }) }), _jsxs(Button, { type: "button", variant: "ghost", appearance: "toolbar", controlSize: "icon", className: "lab-ff-percent", "aria-label": t('lab.board.fitSelection'), title: t('lab.board.fitSelection'), onClick: () => fitCard(selected), children: [percent, "%"] }), _jsx(Button, { type: "button", variant: "ghost", appearance: "toolbar", controlSize: "icon", "aria-label": t('lab.board.zoomIn'), onClick: () => zoomCentre(1.25), children: _jsx(Plus, { size: 20 }) }), _jsx(Button, { type: "button", variant: "ghost", appearance: "toolbar", controlSize: "icon", "aria-label": t('lab.board.showAllVersions'), title: t('lab.board.showAll'), onClick: fitAll, disabled: cards.length < 2, children: _jsx(Maximize, { size: 20 }) })] }) }))] }));
 }
 //# sourceMappingURL=freeform-board.js.map

@@ -12,12 +12,18 @@
   justify-content: flex-end;
 }
 .lab-dock-host > .lab-dock {
+  /* Tile and actions sit as far apart as from the edge: a gap wider than the inset looks loose. */
+  --lab-dock-inset: 4px;
   pointer-events: auto;
   width: max-content;
   max-width: 100%;
   min-width: 0;
-  padding: 4px;
-  --lab-glass-radius: var(--lab-radius-panel);
+  padding: var(--lab-dock-inset);
+  /* A capsule one row tall (the toolbar control, the inset and the 1px border a side). */
+  --lab-glass-radius: calc((var(--lab-toolbar-control) + 2 * var(--lab-dock-inset) + 2px) / 2 * var(--lab-capsule-scale, 1));
+  /* Regular controls take the toolbar control height: 38 + the 4px inset and 1px border a side is
+  48 at comfortable density, iOS's bottom bar. */
+  --lab-control-height: var(--lab-toolbar-control);
 }
 .lab-dock-host--stretch > .lab-dock {
   width: 100%;
@@ -26,7 +32,7 @@
   display: flex;
   align-items: center;
   min-width: 0;
-  gap: 8px;
+  gap: var(--lab-dock-inset, 4px);
 }
 .lab-dock-content {
   flex: 0 1 auto;
@@ -45,13 +51,15 @@
   color: var(--lab-muted);
   font-size: 11px;
 }
+/* Buttons passed straight to the dock sit in one row; a ActionsBar child overflows into its menu. */
 .lab-dock-actions {
+  display: flex;
   flex: 0 1 auto;
-  min-width: var(--lab-control-compact);
-  max-width: 100%;
-}
-.lab-dock-actions > .lab-ui-row {
   flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  min-width: var(--lab-toolbar-control);
+  max-width: 100%;
 }
 .lab-dock-swap {
   min-width: 0;
@@ -85,9 +93,6 @@
   }
 }
 @media (max-width: 420px) {
-  .lab-dock-row {
-    gap: 4px;
-  }
   .lab-dock-content {
     padding-inline: 6px;
     min-width: 48px;

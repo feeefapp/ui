@@ -1,0 +1,56 @@
+/* Hosts for the Dock page. A dock does not position itself; these boxes stand in for its host. */
+.dock-demo-stack {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+}
+.dock-demo-host {
+  width: 100%;
+  padding: 24px 12px;
+  box-sizing: border-box;
+  border: 1px dashed color-mix(in srgb, var(--lab-ink) 25%, transparent);
+  border-radius: var(--lab-radius-panel);
+  background: var(--lab-surface);
+}
+.dock-demo-host[data-label]::before {
+  content: attr(data-label);
+  display: block;
+  margin-bottom: 10px;
+  color: var(--lab-muted);
+  font-size: 12px;
+  line-height: 19px;
+}
+.dock-demo-host-narrow {
+  max-width: var(--dock-demo-width, 100%);
+  margin-inline: auto;
+}
+.dock-demo-frame {
+  width: 100%;
+  height: 340px;
+  overflow: hidden;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-panel);
+  background: var(--lab-surface);
+}
+.dock-demo-list {
+  display: grid;
+  gap: 8px;
+}
+.dock-demo-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-small);
+  font-size: 13px;
+  line-height: 21px;
+  cursor: pointer;
+}
+.dock-demo-row[aria-checked='true'] {
+  border-color: var(--lab-primary);
+  background: var(--lab-control-selected);
+}
+.dock-demo-row input {
+  accent-color: var(--lab-primary);
+}

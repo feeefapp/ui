@@ -1,0 +1,954 @@
+import 'dart:math' as math;
+
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart' hide Action;
+
+import '../i18n/i18n.dart';
+import '../icons/lucide.dart';
+import '../layout/size_reporter.dart';
+import '../physics/motion_value.dart';
+import '../physics/spring.dart';
+import '../primitives/button.dart';
+import '../menu/anchored_panel.dart';
+import '../scaffold.dart' show GlassGroup;
+import '../menu/menu_surface.dart';
+import '../theme.dart';
+import 'layout.dart';
+import 'types.dart';
+
+/// The width a shrink-wrapping parent (a Dock) offers its actions, before fitting. Without it,
+/// each bar fits its own host. The twin of `ActionsWidthProvider` in the web kit.
+class ActionsWidthProvider extends InheritedWidget {
+  const ActionsWidthProvider({
+    super.key,
+    required this.value,
+    required super.child,
+  });
+  final double? value;
+
+  static double? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<ActionsWidthProvider>()?.value;
+
+  @override
+  bool updateShouldNotify(ActionsWidthProvider old) => old.value != value;
+}
+
+/// Which side the row hugs inside a wider host.
+enum ActionsAlign { start, end }
+
+/// Responsive, priority-based actions: the twin of `ActionsBar` in `@feeef.dev/ui/actions`. It
+/// measures its real controls and moves the lowest-priority ones into a "More actions" menu when
+/// they don't fit; entries shrink into the More button and grow back out of it.
+class ActionsBar extends StatefulWidget {
+  const ActionsBar({
+    super.key,
+    required this.actions,
+    required this.label,
+    this.align = ActionsAlign.end,
+    this.size = ControlSize.regular,
+    this.gap = 4,
+    this.overflowLabel,
+    this.onActionError,
+  });
+
+  /// The action tree, in display order.
+  final List<Action> actions;
+
+  /// Accessible name of the group.
+  final String label;
+  final ActionsAlign align;
+
+  /// Control height: `regular` (36px, or the host's height in a dock or toolbar) or `small` 30px.
+  final ControlSize size;
+
+  /// Space between controls, included in the fit.
+  final double gap;
+
+  /// Accessible name of the overflow trigger.
+  final String? overflowLabel;
+
+  /// Application effects are injected; this primitive never calls business APIs.
+  final void Function(Object error, Action action)? onActionError;
+
+  @override
+  State<ActionsBar> createState() => _ActionsBarState();
+}
+
+class _ActionsBarState extends State<ActionsBar> {
+  final _widths = <String, double>{};
+  double _overflowWidth = 40;
+  final _pending = <String>{};
+  String _error = '';
+  final _moreKey = GlobalKey();
+  final _entryKeys = <String, GlobalKey>{};
+  // Overflow motion: where entries and the More button were last frame.
+  var _lastVisible = <String>[];
+  final _lastRects = <String, Rect>{};
+  Rect? _lastMore;
+  final _motion = <String, _EntryMotion>{};
+  final _ghosts = <String, _Ghost>{};
+
+  GlobalKey _keyFor(String id) => _entryKeys.putIfAbsent(id, GlobalKey.new);
+
+  /// Stopping the motions in [dispose] notifies their listeners; they must not rebuild.
+  bool _disposing = false;
+
+  @override
+  void dispose() {
+    _disposing = true;
+    for (final m in _motion.values) {
+      m.dispose();
+    }
+    for (final g in _ghosts.values) {
+      g.motion.stop();
+    }
+    super.dispose();
+  }
+
+  void _measured(String id, Size size) {
+    if (_widths[id] == size.width) return;
+    setState(() => _widths[id] = size.width);
+  }
+
+  void _execute(Action action, [bool? checked]) {
+    if (action is GroupAction) return;
+    if (action.disabled || action.loading || _pending.contains(action.id)) {
+      return;
+    }
+    setState(() {
+      _pending.add(action.id);
+      _error = '';
+    });
+    () async {
+      try {
+        switch (action) {
+          case ToggleAction():
+            await action.onCheckedChange(checked ?? !action.checked);
+          case CommandAction():
+            await action.onAction();
+          case GroupAction():
+            break;
+        }
+      } catch (error) {
+        if (mounted) {
+          setState(
+            () => _error = '${action.label} could not complete. Try again.',
+          );
+        }
+        widget.onActionError?.call(error, action);
+      } finally {
+        if (mounted) setState(() => _pending.remove(action.id));
+      }
+    }();
+  }
+
+  /// After layout: slide entries that moved, grow returning entries out of the More button,
+  /// shrink leaving ones into it (the web kit's useOverflowMotion).
+  void _afterLayout(List<String> visible) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final host = context.findRenderObject() as RenderBox?;
+      if (host == null || !host.hasSize) return;
+      Rect? rectOf(GlobalKey key) {
+        final box = key.currentContext?.findRenderObject() as RenderBox?;
+        if (box == null || !box.hasSize || !box.attached) return null;
+        return box.localToGlobal(Offset.zero, ancestor: host) & box.size;
+      }
+
+      final rects = <String, Rect>{
+        for (final id in visible) id: ?rectOf(_keyFor(id)),
+      };
+      final more = rectOf(_moreKey) ?? _lastMore;
+      final reduced = reducedMotionOf(context);
+      final previous = _lastVisible;
+      if (previous.isNotEmpty && !reduced) {
+        final diff = diffVisibleActions(previous, visible);
+        for (final id in diff.staying) {
+          final now = rects[id], before = _lastRects[id];
+          if (now == null || before == null) continue;
+          final d = before.topLeft - now.topLeft;
+          if (d.distance > 0.5) _motionFor(id).slideFrom(d);
+        }
+        for (final id in diff.entering) {
+          final now = rects[id];
+          if (now == null) continue;
+          _motionFor(id)
+              .growFrom(more != null ? more.center - now.center : Offset.zero);
+        }
+        for (final id in diff.leaving) {
+          final before = _lastRects[id];
+          final action = _find(widget.actions, id) ?? _ghostAction[id];
+          if (before == null || action == null) continue;
+          final ghost = _Ghost(action, before, MotionValue(0, 0.002));
+          setState(() => _ghosts[id] = ghost);
+          final to = more != null ? more.center - before.center : Offset.zero;
+          ghost.to = to;
+          ghost.motion.subscribe((_) {
+            if (mounted && !_disposing) setState(() {});
+          });
+          ghost.motion.animateTo(1, spring: Springs.snappy).then((_) {
+            if (mounted && !_disposing) setState(() => _ghosts.remove(id));
+          });
+        }
+      }
+      _lastVisible = visible;
+      _lastRects
+        ..clear()
+        ..addAll(rects);
+      _lastMore = more;
+      for (final a in widget.actions) {
+        _ghostAction[a.id] = a;
+      }
+    });
+  }
+
+  final _ghostAction = <String, Action>{};
+
+  _EntryMotion _motionFor(String id) => _motion.putIfAbsent(id, () {
+    final m = _EntryMotion();
+    m.listenable.addListener(() {
+      if (mounted && !_disposing) setState(() {});
+    });
+    return m;
+  });
+
+  Action? _find(List<Action> list, String id) {
+    for (final a in list) {
+      if (a.id == id) return a;
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.actions.isEmpty) return const SizedBox.shrink();
+    final theme = ThemeProvider.of(context);
+    final c = theme.colors;
+    final overflowLabel =
+        widget.overflowLabel ?? I18n.of(context).t('lab.common.moreActions');
+    final s = theme.sizes;
+    final inherited = ActionsWidthProvider.maybeOf(context);
+    final small = widget.size == ControlSize.small;
+    final overrides = ControlOverrides.maybeOf(context);
+    // A toolbar/dock owns the visual height; TouchTarget keeps coarse-pointer
+    // reach independently. Growing this row to 44 would add 3px above and below
+    // its 38px buttons, breaking the host's equal inset.
+    final minHeight = !small && overrides?.height != null
+        ? overrides!.height!
+        : theme.coarsePointer(context)
+        ? overrides?.touchTarget ?? s.touchTarget
+        : small
+        ? s.controlSmall
+        : s.controlHeight;
+    final measured = widget.actions.every((a) => _widths.containsKey(a.id));
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final available =
+            inherited ??
+            (constraints.maxWidth.isFinite ? constraints.maxWidth : 1e9);
+        final layout = measured
+            ? computeActionsLayout<Action>(
+                actions: widget.actions,
+                maxWidth: math.max(0, available),
+                measure: (a) => _widths[a.id] ?? _overflowWidth,
+                priority: (a) => a.priority,
+                overflowWidth: _overflowWidth,
+                gap: widget.gap,
+              )
+            : (
+                visible: widget.actions,
+                overflow: <Action>[],
+                requiredWidth: 0.0,
+              );
+        _afterLayout([for (final a in layout.visible) a.id]);
+
+        Widget entry(Action action) {
+          final motion = _motion[action.id];
+          Widget control = action is GroupAction
+              ? _MenuAnchor(
+                  label: action.label,
+                  actions: action.actions,
+                  pending: _pending,
+                  execute: _execute,
+                  onOpen: action.onOpen,
+                  enabled: !action.disabled && action.actions.isNotEmpty,
+                  builder: (open) => _ActionControl(
+                    action: action,
+                    size: widget.size,
+                    loading: _pending.contains(action.id),
+                    onClick: open,
+                  ),
+                )
+              : _ActionControl(
+                  action: action,
+                  size: widget.size,
+                  loading: _pending.contains(action.id),
+                  onClick: () => _execute(action),
+                );
+          if (motion != null) control = motion.wrap(control);
+          return KeyedSubtree(key: _keyFor(action.id), child: control);
+        }
+
+        final row = Row(
+          mainAxisSize: MainAxisSize.min,
+          spacing: widget.gap,
+          children: [
+            for (final action in layout.visible) entry(action),
+            if (layout.overflow.isNotEmpty)
+              KeyedSubtree(
+                key: _moreKey,
+                child: _MenuAnchor(
+                  label: overflowLabel,
+                  actions: layout.overflow,
+                  pending: _pending,
+                  execute: _execute,
+                  enabled: true,
+                  builder: (open) =>
+                      _moreButton(widget.size, overflowLabel, open),
+                ),
+              ),
+          ],
+        );
+
+        // A checked toggle reads as a selected chip: soft surface, focus-coloured edge.
+        return ControlOverrides.merge(
+          context,
+          pressedFill: c.surfaceSoft,
+          pressedEdge: c.focus,
+          child: Semantics(
+            container: true,
+            explicitChildNodes: true,
+            label: widget.label,
+            child: SizedBox(
+              width: inherited == null ? null : layout.requiredWidth,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: widget.align == ActionsAlign.end
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
+                children: [
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      // Real controls, hidden and inert, keep the measurement exact.
+                      // Positioned, so the row takes its natural width whatever the host.
+                      Positioned(
+                        left: 0,
+                        top: 0,
+                        child: Offstage(
+                          child: ExcludeSemantics(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Keyed: an inserted action gets its own reporter even when
+                                // it is as wide as the one whose slot it takes.
+                                for (final action in widget.actions)
+                                  SizeReporter(
+                                    key: ValueKey(action.id),
+                                    onSize: (size) =>
+                                        _measured(action.id, size),
+                                    child: _ActionControl(
+                                      action: action,
+                                      size: widget.size,
+                                      loading: _pending.contains(action.id),
+                                    ),
+                                  ),
+                                SizeReporter(
+                                  onSize: (size) {
+                                    if (_overflowWidth != size.width) {
+                                      setState(
+                                        () => _overflowWidth = size.width,
+                                      );
+                                    }
+                                  },
+                                  child: _moreButton(
+                                    widget.size,
+                                    overflowLabel,
+                                    null,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Visibility.maintain(
+                        visible: measured,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(minHeight: minHeight),
+                          child: Align(
+                            widthFactor: 1,
+                            alignment: widget.align == ActionsAlign.end
+                                ? AlignmentDirectional.centerEnd
+                                : AlignmentDirectional.centerStart,
+                            // An action that grows (a loader, a longer label) is laid out one
+                            // frame before it is measured again and refitted: that frame clips
+                            // instead of overflowing.
+                            child: UnconstrainedBox(
+                              constrainedAxis: Axis.vertical,
+                              clipBehavior: Clip.hardEdge,
+                              alignment: widget.align == ActionsAlign.end
+                                  ? AlignmentDirectional.centerEnd
+                                  : AlignmentDirectional.centerStart,
+                              child: row,
+                            ),
+                          ),
+                        ),
+                      ),
+                      for (final ghost in _ghosts.values)
+                        Positioned.fromRect(
+                          rect: ghost.from,
+                          child: IgnorePointer(
+                            child: ExcludeSemantics(
+                              child: Opacity(
+                                opacity: (1 - ghost.motion.get()).clamp(
+                                  0.0,
+                                  1.0,
+                                ),
+                                child: Transform.translate(
+                                  offset: ghost.to * ghost.motion.get(),
+                                  child: Transform.scale(
+                                    scale: 1 - 0.6 * ghost.motion.get(),
+                                    child: _ActionControl(
+                                      action: ghost.action,
+                                      size: widget.size,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  if (_error.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          _error,
+                          style: TextStyle(color: c.danger, fontSize: 13),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _Ghost {
+  _Ghost(this.action, this.from, this.motion);
+  final Action action;
+  final Rect from;
+  final MotionValue motion;
+  Offset to = Offset.zero;
+}
+
+/// One entry's motion: a slide from where it was, or a growth out of the More button.
+class _EntryMotion {
+  final _progress = MotionValue(1, 0.002);
+  Offset _from = Offset.zero;
+  bool _grow = false;
+  final listenable = ValueNotifier<int>(0);
+
+  _EntryMotion() {
+    _progress.subscribe((_) => listenable.value++);
+  }
+
+  void slideFrom(Offset delta) {
+    _from = delta;
+    _grow = false;
+    _progress.set(0);
+    _progress.animateTo(1, spring: Springs.snappy);
+  }
+
+  void growFrom(Offset delta) {
+    _from = delta;
+    _grow = true;
+    _progress.set(0);
+    _progress.animateTo(1, spring: Springs.snappy);
+  }
+
+  Widget wrap(Widget child) {
+    final p = _progress.get();
+    if ((p - 1).abs() < 0.001) return child;
+    final offset = _from * (1 - p);
+    Widget moved = Transform.translate(offset: offset, child: child);
+    if (_grow) {
+      moved = Opacity(
+        opacity: p.clamp(0.0, 1.0),
+        child: Transform.translate(
+          offset: offset,
+          child: Transform.scale(scale: 0.4 + 0.6 * p, child: child),
+        ),
+      );
+    }
+    return moved;
+  }
+
+  void dispose() {
+    _progress.stop();
+    listenable.dispose();
+  }
+}
+
+Widget _moreButton(ControlSize size, String label, VoidCallback? onClick) =>
+    IconButton(
+      variant: ButtonVariant.ghost,
+      appearance: ButtonAppearance.toolbar,
+      controlSize: size == ControlSize.small
+          ? ControlSize.small
+          : ControlSize.regular,
+      ariaLabel: label,
+      onClick: onClick ?? () {},
+      icon: const LucideEllipsis(size: 20),
+    );
+
+/// One inline action: the web kit's ActionControl recipe.
+class _ActionControl extends StatelessWidget {
+  const _ActionControl({
+    required this.action,
+    required this.size,
+    this.loading = false,
+    this.onClick,
+  });
+  final Action action;
+  final ControlSize size;
+  final bool loading;
+  final VoidCallback? onClick;
+
+  @override
+  Widget build(BuildContext context) {
+    final a = action;
+    final iconOnly =
+        a.display == ActionDisplay.icon &&
+        (a is ToggleAction || a.icon != null);
+    final blocked = a.disabled || (a is GroupAction && a.actions.isEmpty);
+    final variant = a.destructive
+        ? ButtonVariant.destructive
+        : (a.variant ??
+              (a is ToggleAction && a.checked
+                  ? ButtonVariant.elevated
+                  : ButtonVariant.ghost));
+    final appearance =
+        a.appearance ??
+        (!a.destructive &&
+                (a.variant == null || a.variant == ButtonVariant.ghost)
+            ? ButtonAppearance.toolbar
+            : ButtonAppearance.defaultAppearance);
+    final Widget? icon = a.icon != null
+        ? IconTheme.merge(
+            data: IconThemeData(size: iconOnly ? 20 : 18),
+            child: a.icon!,
+          )
+        : a is ToggleAction
+        ? (a.checked
+              ? const LucideSquareCheck(size: 18)
+              : const LucideSquare(size: 18))
+        : null;
+    final children = <Widget>[
+      ?icon,
+      if (!iconOnly) Text(a.label),
+      if (a is GroupAction && !iconOnly) const LucideChevronDown(size: 14),
+    ];
+    if (iconOnly) {
+      return IconButton(
+        variant: variant,
+        appearance: appearance,
+        controlSize: size == ControlSize.small
+            ? ControlSize.small
+            : ControlSize.regular,
+        disabled: blocked,
+        loading: loading || a.loading,
+        pressed: a is ToggleAction ? a.checked : null,
+        ariaLabel: a.label,
+        onClick: onClick ?? () {},
+        icon: icon ?? Text(a.label),
+      );
+    }
+    return Button(
+      variant: variant,
+      controlSize: size,
+      appearance: appearance,
+      disabled: blocked,
+      loading: loading || a.loading,
+      pressed: a is ToggleAction ? a.checked : null,
+      ariaLabel: a.label,
+      onClick: onClick ?? () {},
+      children: children,
+    );
+  }
+}
+
+/// A trigger that opens a menu of [actions] as a glass bubble that grows out of it and covers it
+/// ([MenuSurface]; in a glass group or toolbar it lines up with the trigger's edge on its side of
+/// the app, elsewhere it is centred on the trigger), or opens beside it on [side] when [cover] is
+/// false (a sidebar rail item): rows with icons, checkable toggles, nested submenus, destructive
+/// rows, arrow keys and Escape. The Flutter stand-in for a Radix `DropdownMenu` on
+/// `MenuSurface` with the kit's `.lab-actions-menu` rows, and the same menu an [ActionsBar] opens
+/// for its groups and overflow. Commands run like in the bar: a returned future blocks repeats
+/// until it completes.
+class ActionsMenuAnchor extends StatefulWidget {
+  const ActionsMenuAnchor({
+    super.key,
+    required this.label,
+    required this.actions,
+    required this.builder,
+    this.enabled = true,
+    this.cover = true,
+    this.side = PanelSide.bottom,
+    this.gap = 4,
+    this.onActionError,
+  });
+
+  /// Accessible name of the menu.
+  final String label;
+  final List<Action> actions;
+
+  /// Builds the trigger; `open` toggles the menu (null when disabled).
+  final Widget Function(VoidCallback? open) builder;
+  final bool enabled;
+
+  /// The menu covers its trigger and grows out of it (default). False opens it beside the
+  /// trigger on [side], [gap] away, lined up with the trigger's start edge (`MenuSurface`
+  /// `cover={false}` on the web).
+  final bool cover;
+
+  /// Where the menu opens when it doesn't [cover] its trigger: `end` for a sidebar rail item. It
+  /// flips to the other side when there is no room, and drops below the trigger when a side
+  /// panel fits neither side.
+  final PanelSide side;
+
+  /// Distance from the trigger when the menu doesn't [cover] it, in px.
+  final double gap;
+  final void Function(Object error, Action action)? onActionError;
+
+  @override
+  State<ActionsMenuAnchor> createState() => _ActionsMenuAnchorState();
+}
+
+class _ActionsMenuAnchorState extends State<ActionsMenuAnchor> {
+  final _pending = <String>{};
+
+  void _execute(Action action, [bool? checked]) {
+    if (action is GroupAction) return;
+    if (action.disabled || action.loading || _pending.contains(action.id)) {
+      return;
+    }
+    setState(() => _pending.add(action.id));
+    () async {
+      try {
+        switch (action) {
+          case ToggleAction():
+            await action.onCheckedChange(checked ?? !action.checked);
+          case CommandAction():
+            await action.onAction();
+          case GroupAction():
+            break;
+        }
+      } catch (error) {
+        widget.onActionError?.call(error, action);
+      } finally {
+        if (mounted) setState(() => _pending.remove(action.id));
+      }
+    }();
+  }
+
+  @override
+  Widget build(BuildContext context) => _MenuAnchor(
+    label: widget.label,
+    actions: widget.actions,
+    pending: _pending,
+    execute: _execute,
+    enabled: widget.enabled && widget.actions.isNotEmpty,
+    toolbar: null,
+    cover: widget.cover,
+    side: widget.side,
+    gap: widget.gap,
+    builder: widget.builder,
+  );
+}
+
+/// A trigger that opens a menu of actions: a glass bubble growing out of it and covering it (in a
+/// toolbar lined up with the trigger's edge on its side of the bounds, else centred), or beside
+/// it on [side] (a submenu: beside its row, toward the inline end).
+class _MenuAnchor extends StatefulWidget {
+  const _MenuAnchor({
+    required this.label,
+    required this.actions,
+    required this.pending,
+    required this.execute,
+    required this.enabled,
+    required this.builder,
+    this.onOpen,
+    this.cover = true,
+    this.side = PanelSide.bottom,
+    this.gap = 4,
+    this.toolbar = true,
+  });
+  final String label;
+
+  /// Covers the trigger; false opens beside it on [side], [gap] away, start-aligned (a submenu
+  /// is `side: end`, like Radix `SubContent`).
+  final bool cover;
+  final PanelSide side;
+  final double gap;
+
+  /// The trigger sits in a toolbar (the bar), not in content. Null: when it is inside a
+  /// [GlassGroup] (a toolbar group, a dock), like the web kit's check of the trigger's ancestors.
+  final bool? toolbar;
+  final List<Action> actions;
+  final Set<String> pending;
+  final void Function(Action action, [bool? checked]) execute;
+  final bool enabled;
+  final bool Function()? onOpen;
+  final Widget Function(VoidCallback? open) builder;
+
+  @override
+  State<_MenuAnchor> createState() => _MenuAnchorState();
+}
+
+class _MenuAnchorState extends State<_MenuAnchor> {
+  bool _open = false;
+  final _anchor = FocusNode(
+    debugLabel: 'Menu trigger',
+    canRequestFocus: false,
+    skipTraversal: true,
+  );
+
+  @override
+  void dispose() {
+    _anchor.dispose();
+    super.dispose();
+  }
+
+  void _toggle() {
+    if (_open) return _close();
+    if (widget.onOpen?.call() == false) return;
+    setState(() => _open = true);
+  }
+
+  /// Closes the menu and returns focus to its trigger, like Radix.
+  void _close() {
+    if (!_open) return;
+    setState(() => _open = false);
+    for (final node in _anchor.descendants) {
+      if (node.canRequestFocus && !node.skipTraversal) {
+        node.requestFocus();
+        break;
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => AnchoredPanel(
+    open: _open,
+    onDismiss: _close,
+    cover: widget.cover,
+    side: widget.cover ? PanelSide.bottom : widget.side,
+    align: !widget.cover
+        ? PanelAlign.start
+        : ((widget.toolbar ??
+                  context.findAncestorWidgetOfExactType<GlassGroup>() != null)
+              ? null
+              : PanelAlign.center),
+    sideOffset: widget.cover ? 0 : widget.gap,
+    panel: (context) => _ActionsMenu(
+      label: widget.label,
+      actions: widget.actions,
+      pending: widget.pending,
+      execute: (action, [checked]) {
+        _close();
+        widget.execute(action, checked);
+      },
+      close: _close,
+    ),
+    child: Focus(
+      focusNode: _anchor,
+      child: widget.builder(widget.enabled ? _toggle : null),
+    ),
+  );
+}
+
+/// `.lab-actions-menu` on a [MenuSurface]: rows of actions, checkable toggles, submenus.
+class _ActionsMenu extends StatefulWidget {
+  const _ActionsMenu({
+    required this.label,
+    required this.actions,
+    required this.pending,
+    required this.execute,
+    required this.close,
+  });
+  final String label;
+  final List<Action> actions;
+  final Set<String> pending;
+  final void Function(Action action, [bool? checked]) execute;
+  final VoidCallback close;
+
+  @override
+  State<_ActionsMenu> createState() => _ActionsMenuState();
+}
+
+class _ActionsMenuState extends State<_ActionsMenu> {
+  int _highlight = -1;
+  final _scope = FocusScopeNode(debugLabel: 'Actions menu');
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _scope.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scope.dispose();
+    super.dispose();
+  }
+
+  void _move(int delta) {
+    final n = widget.actions.length;
+    if (n == 0) return;
+    var next = _highlight;
+    for (var i = 0; i < n; i++) {
+      next = (next + delta + n) % n;
+      if (!widget.actions[next].disabled) break;
+    }
+    setState(() => _highlight = next);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final leading = menuHasLeading(widget.actions, widget.pending);
+    return FocusScope(
+      node: _scope,
+      onKeyEvent: (_, event) {
+        if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+          return KeyEventResult.ignored;
+        }
+        final key = event.logicalKey;
+        if (key == LogicalKeyboardKey.escape) {
+          widget.close();
+        } else if (key == LogicalKeyboardKey.arrowDown) {
+          _move(1);
+        } else if (key == LogicalKeyboardKey.arrowUp) {
+          _move(-1);
+        } else if ((key == LogicalKeyboardKey.enter ||
+                key == LogicalKeyboardKey.space) &&
+            _highlight >= 0) {
+          final a = widget.actions[_highlight];
+          if (a is! GroupAction) widget.execute(a);
+        } else {
+          return KeyEventResult.ignored;
+        }
+        return KeyEventResult.handled;
+      },
+      child: MenuSurface(
+        label: widget.label,
+        child: Column(
+          // The menu hugs its rows; it scrolls when it has less room.
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < widget.actions.length; i++)
+              _MenuRow(
+                action: widget.actions[i],
+                highlighted: i == _highlight,
+                loading:
+                    widget.actions[i].loading ||
+                    widget.pending.contains(widget.actions[i].id),
+                leadingSlot: leading,
+                onHover: () => setState(() => _highlight = i),
+                pending: widget.pending,
+                execute: widget.execute,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MenuRow extends StatelessWidget {
+  const _MenuRow({
+    required this.action,
+    required this.highlighted,
+    required this.loading,
+    required this.leadingSlot,
+    required this.onHover,
+    required this.pending,
+    required this.execute,
+  });
+  final Action action;
+  final bool highlighted, loading;
+
+  /// Some row of this menu has an icon (or a check, or a loader): every row keeps the slot so the
+  /// labels line up. Without one, no row reserves it.
+  final bool leadingSlot;
+  final VoidCallback onHover;
+  final Set<String> pending;
+  final void Function(Action action, [bool? checked]) execute;
+
+  @override
+  Widget build(BuildContext context) {
+    final a = action;
+    final disabled =
+        a.disabled || loading || (a is GroupAction && a.actions.isEmpty);
+    final destructive = a.destructive || a.variant == ButtonVariant.destructive;
+    final Widget? leading = !leadingSlot
+        ? null
+        : loading
+        ? const SizedBox.square(dimension: 17)
+        : a is ToggleAction
+        ? (a.checked ? const LucideCheck(size: 18) : const SizedBox.shrink())
+        : (a.icon ?? const SizedBox.shrink());
+    Widget row(VoidCallback? onTap) => MenuRow(
+      leading: leading,
+      label: Text(a.label),
+      trailing: a is GroupAction
+          ? Padding(
+              padding: const EdgeInsetsDirectional.only(start: 12),
+              // Points toward the inline end, where the submenu opens.
+              child: Transform.flip(
+                flipX: Directionality.of(context) == TextDirection.rtl,
+                child: const LucideChevronRight(size: 16),
+              ),
+            )
+          : null,
+      highlighted: highlighted,
+      destructive: destructive,
+      enabled: !disabled,
+      onHover: onHover,
+      onTap: onTap,
+    );
+    final Widget item = a is GroupAction
+        ? _MenuAnchor(
+            label: a.label,
+            actions: a.actions,
+            pending: pending,
+            execute: execute,
+            enabled: !disabled,
+            onOpen: a.onOpen,
+            cover: false,
+            side: PanelSide.end,
+            builder: row,
+          )
+        : row(() => execute(a));
+    return Semantics(
+      button: true,
+      checked: a is ToggleAction ? a.checked : null,
+      enabled: !disabled,
+      label: a.label,
+      excludeSemantics: true,
+      child: item,
+    );
+  }
+}

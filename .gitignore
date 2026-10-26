@@ -2,3 +2,7 @@ node_modules/
 .DS_Store
 *.log
 *.tgz
+docs/dist/
+parity/dist
+parity/out
+parity/runs

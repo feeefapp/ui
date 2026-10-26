@@ -1,0 +1,82 @@
+{
+ "lift/flat-ebebeb": [
+  0.03,
+  20.0
+ ],
+ "lift/lightphoto": [
+  0.98,
+  25.5
+ ],
+ "lift/text": [
+  16.28,
+  28.1
+ ],
+ "lift/photo": [
+  1.34,
+  28.2
+ ],
+ "lift/flat-808080": [
+  1.1,
+  30.4
+ ],
+ "lift+blur/flat-ebebeb": [
+  0.03,
+  20.0
+ ],
+ "lift+blur/lightphoto": [
+  0.93,
+  25.5
+ ],
+ "lift+blur/text": [
+  5.42,
+  26.5
+ ],
+ "lift+blur/photo": [
+  1.39,
+  27.7
+ ],
+ "lift+blur/flat-808080": [
+  1.42,
+  29.8
+ ],
+ "edge/flat-ebebeb": [
+  9.06,
+  3.4
+ ],
+ "edge/lightphoto": [
+  11.09,
+  7.5
+ ],
+ "edge/text": [
+  17.26,
+  27.0
+ ],
+ "edge/photo": [
+  9.29,
+  17.0
+ ],
+ "edge/flat-808080": [
+  7.27,
+  23.7
+ ],
+ "lift+blur+edge/flat-ebebeb": [
+  0.03,
+  20.0
+ ],
+ "lift+blur+edge/lightphoto": [
+  0.97,
+  25.7
+ ],
+ "lift+blur+edge/text": [
+  5.31,
+  26.2
+ ],
+ "lift+blur+edge/photo": [
+  1.38,
+  31.1
+ ],
+ "lift+blur+edge/flat-808080": [
+  0.89,
+  35.5
+ ]
+}

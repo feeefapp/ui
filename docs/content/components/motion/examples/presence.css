@@ -1,0 +1,33 @@
+/* App CSS: the component only sets data-state; the motion lives here. */
+.sync-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-panel);
+  background: var(--lab-surface);
+}
+.sync-notice[data-state='open'] {
+  animation: sync-notice-in 240ms var(--lab-ease-out) both;
+}
+.sync-notice[data-state='closed'] {
+  animation: sync-notice-out 160ms var(--lab-ease-in) both;
+}
+@keyframes sync-notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+@keyframes sync-notice-out {
+  to {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sync-notice[data-state] {
+    animation: none;
+  }
+}

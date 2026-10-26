@@ -3,19 +3,28 @@
 import * as React from 'react'
 import { cn } from '../utils'
 import { sliderRange, sliderValue, sliderFraction, sliderPointer, sliderKey } from './slider-core'
+import { SWITCH_SLOP, switchDragPosition, switchSnap } from './lens-model'
+import { VelocityTracker } from '../physics/velocity'
+import './lens.css'
 import './slider.css'
 import { useSliderMotion } from './slider-motion'
 
-export type LabSliderState = {
+/** What the `render*` slots receive on every frame of interaction. */
+export type SliderState = {
+  /** The committed value, snapped to `step`. */
   value: number
   /** Smooth pointer position, useful for progressive effects between discrete stops. */
   position: number
+  /** `position` as 0–1 along the track. */
   fraction: number
+  /** True while a pointer drags the thumb. */
   dragging: boolean
+  /** True when disabled or when the range is empty. */
   disabled: boolean
 }
-export type LabSliderMark = { value: number; label?: React.ReactNode }
-export type LabSliderProps = Omit<
+/** A stop on the track, optionally labelled under it. */
+export type SliderMark = { value: number; label?: React.ReactNode }
+export type SliderProps = Omit<
   React.HTMLAttributes<HTMLDivElement>,
   | 'onChange'
   | 'defaultValue'
@@ -26,34 +35,57 @@ export type LabSliderProps = Omit<
   | 'aria-valuemax'
   | 'aria-checked'
 > & {
-  controlSize?: 'regular' | 'compact'
+  /** Control height: `regular` (36px) or `small` (30px). A switch has one size and ignores it. */
+  controlSize?: 'small' | 'regular'
+  /** `thick`: the track is the control surface. `thin`: the iOS slider, a 6px rail with a 37 × 24 capsule thumb. */
   trackStyle?: 'thick' | 'thin'
+  /** Accessible name. Not rendered; show a visible label next to the control yourself. */
   label: string
+  /** The value, for a controlled slider. */
   value?: number
+  /** The initial value, for an uncontrolled slider. Defaults to `min`. */
   defaultValue?: number
+  /** Lowest value. */
   min?: number
+  /** Highest value. */
   max?: number
+  /** Distance between allowed values. Page Up / Page Down move ten steps. */
   step?: number
+  /** Ignores pointer and keyboard input and removes the slider from the tab order. */
   disabled?: boolean
+  /** Called on every value change while dragging or pressing keys. */
   onValueChange?: (value: number) => void
+  /** Called once when the user settles on a value: pointer release or a key press. */
   onValueCommit?: (value: number) => void
+  /** Turns the value into the text screen readers announce, such as `"1,200 DZD"`. */
   getValueText?: (value: number) => string
+  /** Draws a dot at every step (up to 101 steps). Ignored when `marks` is set. */
   showStops?: boolean
-  marks?: LabSliderMark[]
-  renderTrack?: (state: LabSliderState) => React.ReactNode
-  renderFill?: (state: LabSliderState) => React.ReactNode
-  renderThumb?: (state: LabSliderState) => React.ReactNode
+  /** Dots at chosen values; marks with a `label` also print it under the track. */
+  marks?: SliderMark[]
+  /** Decoration drawn behind the rail, such as a waveform or gradient. */
+  renderTrack?: (state: SliderState) => React.ReactNode
+  /** Content inside the filled part of the track. */
+  renderFill?: (state: SliderState) => React.ReactNode
+  /** Content inside the thumb, such as an icon or the value. */
+  renderThumb?: (state: SliderState) => React.ReactNode
+  /** Form field name; the value is submitted through a hidden input. */
   name?: string
+  /** Id of a form outside the slider that its hidden input belongs to. */
   form?: string
 }
 
-/** Large single-value slider. Decoration slots share one interaction/geometry engine. */
-export const LabSlider = React.forwardRef<HTMLDivElement, LabSliderProps>((props, ref) => (
+/**
+ * A single-value slider with a large touch-friendly track, springy thumb, optional stops and
+ * marks, and render slots for custom track, fill and thumb decoration. While dragged the thumb turns
+ * into a larger glass lens that stretches with its speed, glows under the finger and springs back.
+ */
+export const Slider = React.forwardRef<HTMLDivElement, SliderProps>((props, ref) => (
   <SliderControl {...props} forwardedRef={ref} />
 ))
-LabSlider.displayName = 'LabSlider'
+Slider.displayName = 'Slider'
 
-type ControlProps = LabSliderProps & {
+type ControlProps = SliderProps & {
   forwardedRef?: React.ForwardedRef<HTMLDivElement>
   switchMode?: boolean
   checkedText?: (value: number) => string | undefined
@@ -107,7 +139,13 @@ function SliderControl({
     start: number
     value: number
     x: number
+    y: number
+    touch: boolean
     moved: boolean
+    /** A dragged switch thumb: where it is (0 off … 1 on, rubber-banded past either end). */
+    thumb: number
+    /** The switch thumb's travel in px, for the release velocity. */
+    tracker: VelocityTracker
   } | null>(null)
   const [position, setPosition] = React.useState<number | null>(null)
   const inert = disabled || range.max <= range.min
@@ -128,7 +166,7 @@ function SliderControl({
       getComputedStyle(event.currentTarget).direction === 'rtl',
       Number.parseFloat(
         getComputedStyle(event.currentTarget).getPropertyValue('--lab-slider-inset')
-      ) || 22
+      ) || rect.height / 2
     )
     return range.min + fraction * (range.max - range.min)
   }
@@ -167,9 +205,46 @@ function SliderControl({
     return () => owner?.removeEventListener('reset', reset)
   }, [value, defaultValue, range.min, range.max, range.step, form])
   const displayPosition = inert ? current : (position ?? current)
-  const fraction = sliderFraction(displayPosition, range.min, range.max)
-  useSliderMotion(host, fraction, tracking, pressed, trackStyle === 'thin', inert)
-  const state: LabSliderState = {
+  // A dragged switch thumb shows its rubber band; everything else stays on the track.
+  const fraction =
+    switchMode && position !== null && !inert
+      ? position
+      : sliderFraction(displayPosition, range.min, range.max)
+  const motion = useSliderMotion(host, fraction, tracking, pressed, trackStyle === 'thin', inert, switchMode)
+  /** The pointer in the control's own px (`x` from its inline start), undoing scaled ancestors. */
+  const local = (event: React.PointerEvent<HTMLDivElement>) => {
+    const el = event.currentTarget
+    const rect = el.getBoundingClientRect()
+    const scale = el.offsetWidth ? rect.width / el.offsetWidth : 1
+    const rtl = getComputedStyle(el).direction === 'rtl'
+    return {
+      x: (rtl ? rect.right - event.clientX : event.clientX - rect.left) / scale,
+      y: (event.clientY - rect.top) / scale,
+    }
+  }
+  /** How far (px) the switch thumb travels from off to on. */
+  const travel = (el: HTMLElement) => {
+    const inset =
+      Number.parseFloat(getComputedStyle(el).getPropertyValue('--lab-slider-inset')) ||
+      el.offsetHeight / 2
+    return Math.max(0, el.offsetWidth - 2 * inset)
+  }
+  /** Drags the switch thumb by the pointer's travel since the press; the state flips at halfway. */
+  const dragSwitch = (event: React.PointerEvent<HTMLDivElement>) => {
+    const active = gesture.current
+    if (!active) return
+    const el = event.currentTarget
+    const rect = el.getBoundingClientRect()
+    const scale = el.offsetWidth ? rect.width / el.offsetWidth : 1
+    const rtl = getComputedStyle(el).direction === 'rtl'
+    const length = travel(el)
+    const dx = ((event.clientX - active.x) / scale) * (rtl ? -1 : 1)
+    active.thumb = switchDragPosition(active.start, dx, length)
+    active.tracker.add(active.thumb * length, event.timeStamp)
+    setPosition(active.thumb)
+    active.value = publish(active.thumb)
+  }
+  const state: SliderState = {
     value: current,
     position: displayPosition,
     fraction,
@@ -224,26 +299,36 @@ function SliderControl({
             return
           setTracking(false)
           setPressed(true)
-          event.currentTarget.focus({ preventScroll: true })
+          // A pointer press focuses without the keyboard ring (Chrome would otherwise show it).
+          event.currentTarget.focus({ preventScroll: true, focusVisible: false } as FocusOptions)
           gesture.current = {
             id: event.pointerId,
             start: current,
             value: current,
             x: event.clientX,
+            y: event.clientY,
+            touch: event.pointerType === 'touch',
             moved: false,
+            thumb: current,
+            tracker: new VelocityTracker(),
           }
           event.currentTarget.setPointerCapture(event.pointerId)
+          motion.pointer(local(event))
           if (!switchMode) move(event)
         }}
         onPointerMove={(event) => {
           onPointerMove?.(event)
           const active = gesture.current
           if (event.defaultPrevented || active?.id !== event.pointerId) return
-          if (Math.abs(event.clientX - active.x) > 4) {
+          const dx = Math.abs(event.clientX - active.x)
+          const slop = switchMode ? SWITCH_SLOP[active.touch ? 'touch' : 'mouse'] : 4
+          if (!active.moved && dx > slop && (!switchMode || dx >= Math.abs(event.clientY - active.y))) {
             active.moved = true
             setTracking(true)
           }
-          if (!switchMode || active.moved) move(event)
+          motion.pointer(local(event))
+          if (!switchMode) move(event)
+          else if (active.moved) dragSwitch(event)
         }}
         onPointerUp={(event) => {
           onPointerUp?.(event)
@@ -252,10 +337,15 @@ function SliderControl({
             cancel()
             return
           }
-          if (switchMode && !gesture.current.moved)
-            gesture.current.value = publish(1 - gesture.current.start)
-          else move(event)
-          const next = gesture.current.value
+          const active = gesture.current
+          if (switchMode && !active.moved) active.value = publish(1 - active.start)
+          else if (switchMode) {
+            // Settles where the thumb's momentum carries it: a flick toggles.
+            const length = travel(event.currentTarget)
+            const velocity = length ? active.tracker.velocity(event.timeStamp) / length : 0
+            active.value = publish(switchSnap(active.thumb, velocity))
+          } else move(event)
+          const next = active.value
           setPressed(false)
           setTracking(false)
           gesture.current = null
@@ -327,6 +417,10 @@ function SliderControl({
             />
           ))}
         <span className="lab-slider-thumb" aria-hidden="true">
+          {/* Pressed or dragged, the thumb turns into a glass lens (slider-motion.ts). */}
+          <span className="lab-lens">
+            <span className="lab-lens-glow" />
+          </span>
           {renderThumb?.(state)}
         </span>
         {switchMode && (
@@ -370,8 +464,9 @@ function SliderControl({
   )
 }
 
-export type LabSlideSwitchProps = Omit<
-  LabSliderProps,
+export type SlideSwitchProps = Omit<
+  SliderProps,
+  | 'controlSize'
   | 'value'
   | 'defaultValue'
   | 'min'
@@ -383,16 +478,29 @@ export type LabSlideSwitchProps = Omit<
   | 'showStops'
   | 'marks'
 > & {
+  /** Disables the switch and marks it busy while a change is saving. */
   loading?: boolean
+  /** The state, for a controlled switch. */
   checked?: boolean
+  /** The initial state, for an uncontrolled switch. */
   defaultChecked?: boolean
+  /** Called whenever the state changes, including mid-drag. */
   onCheckedChange?: (checked: boolean) => void
+  /** Called once when the user settles: a click, a key press or the end of a drag. */
   onCheckedCommit?: (checked: boolean) => void
+  /** Short text shown on the track while on. Visual only. */
   onText?: string
+  /** Short text shown on the track while off. Visual only. */
   offText?: string
 }
-/** Same track, thumb, pointer and animation engine; boolean state maps exactly to 0/1. */
-export const LabSlideSwitch = React.forwardRef<HTMLDivElement, LabSlideSwitchProps>(
+/**
+ * An on/off switch, sized like iOS's (63 × 28 track, 37 × 24 thumb at comfortable density;
+ * ThemeConfig `metrics.switchSize` / `thumbSize`). A tap toggles it; the thumb can also be dragged
+ * and settles on the side its momentum carries it to. Pressed or dragged, the thumb turns into a
+ * larger glass lens that stretches as it moves, glows under the finger and springs back. It shares
+ * the slider's track, thumb and spring; the state maps to 0 and 1.
+ */
+export const SlideSwitch = React.forwardRef<HTMLDivElement, SlideSwitchProps>(
   (
     {
       checked,
@@ -425,17 +533,20 @@ export const LabSlideSwitch = React.forwardRef<HTMLDivElement, LabSlideSwitchPro
     )
   }
 )
-LabSlideSwitch.displayName = 'LabSlideSwitch'
+SlideSwitch.displayName = 'SlideSwitch'
 
-/** Noninteractive menu decoration with the same geometry and spring, never nested switch semantics. */
-export function LabSlideSwitchIndicator({
+/**
+ * A non-interactive switch picture for menu items and rows that already carry the checked
+ * semantics (for example `menuitemcheckbox`). Same geometry and spring, hidden from assistive technology.
+ */
+export function SlideSwitchIndicator({
   checked,
   loading,
-  controlSize = 'compact',
 }: {
+  /** The state to draw. */
   checked: boolean
+  /** Dims the indicator while a change is saving. */
   loading?: boolean
-  controlSize?: 'regular' | 'compact'
 }) {
   const host = React.useRef<HTMLDivElement | null>(null)
   useSliderMotion(host, Number(checked), false, false, false, Boolean(loading))
@@ -445,7 +556,6 @@ export function LabSlideSwitchIndicator({
       className="lab-slider lab-slide-switch-indicator"
       data-checked={checked}
       data-switch
-      data-control-size={controlSize}
       data-disabled={loading || undefined}
       aria-hidden="true"
       style={{ '--lab-slider-fraction': Number(checked) } as React.CSSProperties}

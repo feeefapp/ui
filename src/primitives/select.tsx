@@ -1,37 +1,59 @@
 'use client'
 
-import { LabPopoverSurface } from './popover-surface'
+import { MenuSurface } from '../menu/menu-surface'
+import { useFloatingBoundary } from '../menu/boundary'
+import { menuCloseDuration } from '../menu/morph-model'
 import * as React from 'react'
-import * as Select from '@radix-ui/react-select'
+import * as SelectPrimitive from '@radix-ui/react-select'
 import { Check, ChevronDown } from 'lucide-react'
 import { cn } from '../utils'
-import { LabFieldShell, type LabFieldDecorationProps } from './field-shell'
-import { LabRawInput, type LabInputValidator } from './raw-input'
+import { FieldShell, type FieldDecorationProps } from './field-shell'
+import { RawInput, type InputValidator } from './raw-input'
+import { motionOf } from '../physics/motion-value'
 
-export type LabSelectProps = LabFieldDecorationProps & {
+export type SelectProps = FieldDecorationProps & {
+  /** The `Option` items of the menu. */
   'children': React.ReactNode
+  /** The selected option's value. `null` or `''` means nothing is selected. */
   'value': string | null
+  /** Called with the chosen option's value (`''` for an option without one). */
   'onValueChange': (value: string) => void
+  /** Class name for the trigger button. */
   'className'?: string
+  /** Accessible name when the select has no `hint`. */
   'aria-label'?: string
   'aria-labelledby'?: string
   'aria-describedby'?: string
   'aria-invalid'?: React.AriaAttributes['aria-invalid']
+  /** Id for the trigger button. Generated when omitted. */
   'id'?: string
+  /** Text shown while nothing is selected. Only used when there is no `hint`. */
   'placeholder'?: string
+  /** Disables the trigger and closes the menu. */
   'disabled'?: boolean
+  /** Form field name; the value is submitted with the form. */
   'name'?: string
+  /** An empty selection blocks form submission and shows `requiredMessage`. */
   'required'?: boolean
+  /** Error shown when a required select is empty. */
   'requiredMessage'?: string
-  'validator'?: LabInputValidator
+  /** Synchronous check run on the value; return an actionable error, or nothing when it is valid. */
+  'validator'?: InputValidator
+  /** When errors appear: after the menu first closes or the trigger blurs (`blur`), on every change (`change`) or only on submit (`submit`). */
   'validationMode'?: 'blur' | 'change' | 'submit'
+  /** Called with the visible error message, or `null` when it clears. */
   'onValidationChange'?: (error: string | null) => void
   'onBlur'?: React.FocusEventHandler<HTMLButtonElement>
 }
 
 const EMPTY = '__lab_natural__'
 
-export function LabSelect({
+/**
+ * A single-choice dropdown in the same field frame as `TextField`: floating hint, icons,
+ * supporting text and validation. The options (`Option`) open in a glass menu that grows out of
+ * the field and covers it (`MenuSurface`).
+ */
+export function Select({
   children,
   value: suppliedValue,
   onValueChange,
@@ -57,7 +79,7 @@ export function LabSelect({
   onValidationChange,
   onBlur,
   ...props
-}: LabSelectProps) {
+}: SelectProps) {
   const value = suppliedValue ?? ''
   const floatingHint = hint ?? label
   const touched = React.useRef(false)
@@ -125,7 +147,8 @@ export function LabSelect({
     return () => observer.disconnect()
   }, [dir])
   const [container, setContainer] = React.useState<HTMLElement>()
-  // Radix unmounts Select content immediately, so hold it open while it fades.
+  const boundary = useFloatingBoundary()
+  // Radix unmounts Select content immediately, so hold it open while the menu flies back.
   const [open, setOpen] = React.useState(false),
     [closing, setClosing] = React.useState(false)
   const closeTimer = React.useRef(0)
@@ -137,7 +160,7 @@ export function LabSelect({
     setOpen(false)
   }, [props.disabled])
   return (
-    <Select.Root
+    <SelectPrimitive.Root
       dir={resolvedDirection}
       value={value || EMPTY}
       onValueChange={(next) => {
@@ -152,7 +175,7 @@ export function LabSelect({
       onOpenChange={(next) => {
         clearTimeout(closeTimer.current)
         if (next) {
-          setContainer(trigger.current?.closest('dialog') || undefined)
+          setContainer(trigger.current?.closest('dialog') || boundary || undefined)
           setClosing(false)
           setOpen(true)
           return
@@ -165,13 +188,13 @@ export function LabSelect({
             setOpen(false)
             setClosing(false)
           },
-          window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 140
+          menuCloseDuration(motionOf()) * 1000 + 20
         )
       }}
       disabled={props.disabled}
     >
       {decorated ? (
-        <LabFieldShell
+        <FieldShell
           id={props.id}
           label={label}
           hint={hint}
@@ -192,7 +215,7 @@ export function LabSelect({
           populated={Boolean(value)}
         >
           {({ id, describedBy, invalid }) => (
-            <Select.Trigger
+            <SelectPrimitive.Trigger
               ref={trigger}
               id={id}
               className={cn('lab-field-select-control', className)}
@@ -210,18 +233,18 @@ export function LabSelect({
               }}
             >
               <span className="lab-field-select-value">
-                <Select.Value>
+                <SelectPrimitive.Value>
                   {!value && !floatingHint && placeholder ? placeholder : undefined}
-                </Select.Value>
+                </SelectPrimitive.Value>
               </span>
-              <Select.Icon>
+              <SelectPrimitive.Icon>
                 <ChevronDown size={18} aria-hidden="true" />
-              </Select.Icon>
-            </Select.Trigger>
+              </SelectPrimitive.Icon>
+            </SelectPrimitive.Trigger>
           )}
-        </LabFieldShell>
+        </FieldShell>
       ) : (
-        <Select.Trigger
+        <SelectPrimitive.Trigger
           ref={trigger}
           className={cn('lab-select lab-control', className)}
           aria-label={props['aria-label']}
@@ -241,16 +264,16 @@ export function LabSelect({
             onBlur?.(event)
           }}
         >
-          <Select.Value>
+          <SelectPrimitive.Value>
             {!value && !floatingHint && placeholder ? placeholder : undefined}
-          </Select.Value>
-          <Select.Icon>
+          </SelectPrimitive.Value>
+          <SelectPrimitive.Icon>
             <ChevronDown size={18} aria-hidden="true" />
-          </Select.Icon>
-        </Select.Trigger>
+          </SelectPrimitive.Icon>
+        </SelectPrimitive.Trigger>
       )}
       {(required || validator || name || error) && (
-        <LabRawInput
+        <RawInput
           className="lab-sr-only"
           tabIndex={-1}
           aria-hidden="true"
@@ -270,37 +293,43 @@ export function LabSelect({
           }}
         />
       )}
-      <Select.Portal container={container}>
-        <LabPopoverSurface asChild>
-          <Select.Content
+      <SelectPrimitive.Portal container={container}>
+        <MenuSurface asChild>
+          <SelectPrimitive.Content
             className="lab-select-menu"
-            data-lab-corners
             data-closing={closing || undefined}
             inert={closing || undefined}
             position="popper"
-            sideOffset={6}
-            collisionPadding={12}
-            collisionBoundary={container}
+            {...(container ? { collisionBoundary: container } : {})}
           >
-            <Select.Viewport>{children}</Select.Viewport>
-          </Select.Content>
-        </LabPopoverSurface>
-      </Select.Portal>
-    </Select.Root>
+            <SelectPrimitive.Viewport>{children}</SelectPrimitive.Viewport>
+          </SelectPrimitive.Content>
+        </MenuSurface>
+      </SelectPrimitive.Portal>
+    </SelectPrimitive.Root>
   )
 }
 
-export function LabOption({ value, children }: { value?: string; children: React.ReactNode }) {
+/** One choice in a `Select` menu. A check marks the selected option. */
+export function Option({
+  value,
+  children,
+}: {
+  /** The value passed to `onValueChange`. Defaults to the text of `children`; `''` is the "no selection" option. */
+  value?: string
+  /** The option's visible text, also shown in the trigger when selected. */
+  children: React.ReactNode
+}) {
   return (
-    <Select.Item
+    <SelectPrimitive.Item
       data-lab-corners
       className="lab-select-option"
       value={(value ?? String(children)) || EMPTY}
     >
-      <Select.ItemText>{children}</Select.ItemText>
-      <Select.ItemIndicator>
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      <SelectPrimitive.ItemIndicator>
         <Check size={18} aria-hidden="true" />
-      </Select.ItemIndicator>
-    </Select.Item>
+      </SelectPrimitive.ItemIndicator>
+    </SelectPrimitive.Item>
   )
 }

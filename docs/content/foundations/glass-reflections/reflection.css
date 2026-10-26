@@ -1,0 +1,70 @@
+.reflection-controls { display: flex; flex-wrap: wrap; gap: 12px; margin-block: 16px; }
+.reflection-stage {
+  display: grid; gap: 56px; padding: 48px 24px; min-height: 360px;
+  border: 1px solid var(--lab-line); border-radius: var(--lab-radius-panel);
+}
+.reflection-backdrop[data-background='grid'] {
+  background-color: var(--lab-surface-soft);
+  background-image: linear-gradient(var(--lab-line) 1px, transparent 1px), linear-gradient(90deg, var(--lab-line) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+.reflection-backdrop[data-background='color'] {
+  background: radial-gradient(ellipse at 15% 30%, color-mix(in srgb, var(--lab-primary) 70%, transparent), transparent 60%), radial-gradient(ellipse at 90% 80%, color-mix(in srgb, var(--lab-accent) 70%, transparent), transparent 65%), var(--lab-surface-soft);
+}
+.reflection-specimen { display: grid; gap: 22px; justify-items: center; }
+.reflection-specimen p { margin: 0; font-size: 13px; color: var(--lab-muted); text-align: center; }
+.reflection-row { display: flex; align-items: center; justify-content: center; gap: 24px; max-width: 100%; }
+.reflection-drop, .reflection-pill, .reflection-merge { display: grid; place-items: center; flex-shrink: 0; }
+.reflection-drop { width: 72px; height: 72px; border-radius: var(--reflection-radius, 36px); }
+.reflection-pill { width: clamp(120px, 28vw, 240px); height: 72px; border-radius: var(--reflection-radius, 36px); }
+.reflection-merge { width: 88px; height: 72px; border-radius: var(--reflection-radius, 36px); }
+@media (max-width: 440px) { .reflection-stage { padding-inline: 16px; } .reflection-row { gap: 16px; } }
+
+.reflection-tuning { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-block: 24px 8px; }
+.reflection-slider-label { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; margin-bottom: 8px; }
+.reflection-slider-label output { color: var(--lab-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.reflection-tuning-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.reflection-tuning-footer > span { font-size: 12px; color: var(--lab-muted); max-width: 60ch; }
+@media (max-width: 540px) { .reflection-tuning { grid-template-columns: 1fr; gap: 12px; } }
+
+/* An optical test scene: bright sky, distant dark ridge and warm foreground. */
+.reflection-backdrop[data-background='landscape'] {
+  background:
+    radial-gradient(ellipse at 78% 18%, #fff6d4 0%, #fff6d400 26%),
+    linear-gradient(165deg, transparent 48%, #183f46 48.4%, #31595b 62%, transparent 62.4%),
+    linear-gradient(190deg, transparent 60%, #699187 60.5%, #a8b99b 76%, transparent 76.5%),
+    linear-gradient(180deg, #7dbad2, #d8e4d9 48%, #598d99 49%, #81b1b0 68%, #d6bc91 69%, #ae8b61);
+}
+
+.reflection-stage[data-background='landscape'] .reflection-specimen > p {
+  color: #172f33;
+  text-shadow: 0 1px 2px #f5f8ed;
+}
+/* Keep the optical inspection scene free of the docs shell's pixelated edge wash. */
+.lab-scroll-area:has(.reflection-stage) > .lab-scroll-gradient > .lab-scroll-wash { opacity: 0; }
+
+.reflection-stage { position: relative; isolation: isolate; }
+.reflection-backdrop { position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--lab-surface-soft); pointer-events: none; }
+
+.reflection-reference-note { color: var(--lab-muted); font-size: 13px; line-height: 1.5; max-width: 76ch; }
+
+.reflection-large { display: grid; place-items: center; width: min(280px, 60vw); height: 240px; border-radius: var(--reflection-radius, 36px); text-align: center; }
+
+/* The tuning UI itself uses the shared glass renderer, over a disjoint Firefox source. */
+.reflection-live-panel { position: relative; isolation: isolate; padding: 24px; margin-block: 24px; border-radius: var(--lab-radius-panel); }
+.reflection-control-surface { display: block; padding: 24px; border-radius: var(--reflection-radius, 36px); }
+.reflection-control-surface .reflection-controls:first-child { margin-top: 0; }
+.reflection-control-surface .reflection-tuning-footer { margin-bottom: 0; }
+
+.reflection-card-content { padding: 28px; display: grid; gap: 16px; justify-items: center; }
+.reflection-card-content p { margin: 0; font-size: 13px; line-height: 1.5; }
+.reflection-large { width: min(320px, 68vw); min-height: 240px; height: auto; }
+@media (max-width: 540px) {
+  .reflection-live-panel { padding: 12px; }
+  .reflection-control-surface { padding: 16px; }
+  .reflection-tuning-footer { flex-wrap: wrap; }
+}
+
+.reflection-stage[data-background="landscape"] .reflection-card-content { color: #172f33; text-shadow: 0 1px 2px #f5f8ed; }
+.reflection-stage[data-background="landscape"] .reflection-card-content p { color: inherit; }
+.reflection-live-panel > .reflection-backdrop::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: color-mix(in srgb, var(--lab-surface-soft) 65%, transparent); }

@@ -1,6 +1,6 @@
-export declare const LAB_SCROLL_FADE_ZONE = 80;
-export declare const LAB_SCROLL_REST_TOP = 0.28;
-export declare const LAB_SCROLL_REST_BOTTOM = 0.48;
+export declare const SCROLL_FADE_ZONE = 80;
+export declare const SCROLL_REST_TOP = 0.28;
+export declare const SCROLL_REST_BOTTOM = 0.48;
 /** Mirrors Merchant ScrollGradientOverlay, including underflow and overscroll. */
 export declare function scrollEdgeOpacities(offset: number, extent: number, fadeZone?: number): {
     top: number;

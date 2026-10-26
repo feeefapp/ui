@@ -22,7 +22,8 @@
   width: 100%;
   height: 100%;
   z-index: -1;
-  opacity: 0.35;
+  /* Ambient texture, not content: kept quiet so it never competes with the page. */
+  opacity: var(--lab-ground-pixels-opacity);
 }
 .lab-workspace-top-side:empty {
   display: none;
@@ -58,8 +59,6 @@
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  gap: 16px;
-  padding: 12px 10px;
   box-sizing: border-box;
   background: transparent;
 }
@@ -77,28 +76,44 @@
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  margin: 8px;
+  /* One shell gap all round; beside a visible sidebar the sidebar's own gap is the one. */
+  margin: var(--lab-shell-gap);
   border: 1px solid var(--lab-line);
   border-radius: var(--lab-radius-panel);
   corner-shape: superellipse(1.5);
   background: var(--lab-surface);
+  transition:
+    margin 220ms var(--lab-ease),
+    border-color 220ms var(--lab-ease),
+    border-radius 220ms var(--lab-ease);
+}
+.lab-workspace-scaffold:not([data-side-mode='hidden']) .lab-workspace-main {
+  margin-inline-start: 0;
+}
+/* Nothing around the content (no top row, sidebar hidden or in the compact drawer): no card. */
+.lab-workspace-scaffold[data-framed='false'] .lab-workspace-main {
+  margin: 0;
+  border-color: transparent;
+  border-radius: 0;
 }
 .lab-workspace-main:focus {
   outline: none;
 }
 .lab-workspace-main:focus-visible {
-  outline: 2px solid var(--lab-focus);
-  outline-offset: -3px;
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: calc(-1 * var(--lab-focus-ring-width));
 }
 .lab-workspace-route {
   flex: 1;
   min-height: 0;
   padding: 0;
+  /* The app bar and dock sit --lab-toolbar-inset (the shell gap G by default) from the panel's sides. */
+  --lab-scroll-side-gap: var(--lab-toolbar-inset);
 }
 .lab-workspace-app-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--lab-toolbar-gap);
   min-width: 0;
   padding: 0;
   width: 100%;
@@ -108,7 +123,7 @@
 .lab-workspace-app-trailing {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--lab-toolbar-gap);
   flex: none;
 }
 .lab-workspace-app-leading:empty,
@@ -125,6 +140,9 @@
 .lab-workspace-app-trailing {
   margin-inline-start: auto;
 }
+.lab-workspace-app-title[data-squeezed] {
+  visibility: hidden;
+}
 .lab-workspace-app-title > .lab-toolbar-group {
   width: fit-content;
   max-width: 100%;
@@ -133,8 +151,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
-  padding: 8px 8px 0;
+  gap: var(--lab-toolbar-gap);
+  padding: var(--lab-shell-gap) var(--lab-shell-gap) 0;
 }
 .lab-workspace-top-bar > :first-child,
 .lab-workspace-top-bar > :last-child {
@@ -151,29 +169,61 @@
   background: transparent;
 }
 /* Android-style navigation drawer: attached to the logical start edge, full height. */
-html[data-lab-theme] .lab-dialog.lab-workspace-drawer {
-  inset: 0;
-  inset-inline-end: auto;
-  margin: 0;
-  width: min(320px, calc(100vw - 56px));
-  max-width: none;
-  height: 100dvh;
-  max-height: none;
+html[data-lab-theme] .lab-workspace-drawer {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 1;
   box-sizing: border-box;
+  width: min(320px, calc(100% - 56px));
+  height: 100%;
   overflow: hidden;
-  border-radius: 0 20px 20px 0;
+  border: 1px solid var(--lab-line);
+  border-inline-start: 0;
+  border-start-end-radius: calc(20px * var(--lab-corner-scale, 1));
+  border-end-end-radius: calc(20px * var(--lab-corner-scale, 1));
+  color: var(--lab-ink);
   background: color-mix(in srgb, var(--lab-primary) 3%, var(--lab-surface));
   --lab-drawer-offset: -100%;
 }
 html[data-lab-theme] .lab-workspace-drawer:dir(rtl) {
-  border-radius: calc(20px * var(--lab-radius-scale, 1)) 0 0 calc(20px * var(--lab-radius-scale, 1));
   --lab-drawer-offset: 100%;
+}
+.lab-workspace-drawer-close {
+  position: absolute;
+  top: 12px;
+  inset-inline-end: 12px;
+  z-index: 3;
 }
 html[data-lab-theme] .lab-workspace-drawer[data-state='open'] {
   animation: lab-workspace-drawer-in 240ms var(--lab-ease-out) both;
 }
 html[data-lab-theme] .lab-workspace-drawer[data-state='closed'] {
   animation: lab-workspace-drawer-out 180ms var(--lab-ease-in) both;
+  pointer-events: none;
+}
+.lab-workspace-drawer-scrim[data-state='open'] {
+  opacity: 1;
+  animation: lab-workspace-scrim-in 240ms var(--lab-ease-out) both;
+}
+.lab-workspace-drawer-scrim[data-state='closed'] {
+  animation: lab-workspace-scrim-out 180ms var(--lab-ease-in) both;
+}
+@keyframes lab-workspace-scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes lab-workspace-scrim-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+html:is([data-lab-motion='reduced'], [data-lab-motion='none']) :is(.lab-workspace-drawer, .lab-workspace-drawer-scrim)[data-state] {
+  animation: none;
 }
 @keyframes lab-workspace-drawer-in {
   from {
@@ -207,7 +257,8 @@ html[data-lab-theme] .lab-workspace-drawer[data-state='closed'] {
 }
 @media (prefers-reduced-motion: reduce) {
   .lab-workspace-scaffold-row,
-  .lab-workspace-side-content {
+  .lab-workspace-side-content,
+  .lab-workspace-main {
     transition: none;
   }
 }
@@ -228,7 +279,7 @@ html[data-lab-theme] .lab-workspace-drawer[data-state='closed'] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html[data-lab-theme] .lab-workspace-drawer[data-state] {
+  html[data-lab-theme] :is(.lab-workspace-drawer, .lab-workspace-drawer-scrim)[data-state] {
     animation: none;
   }
 }
@@ -240,10 +291,6 @@ html[data-lab-theme] .lab-workspace-drawer[data-state='closed'] {
 
 .lab-workspace-side-main {
   --lab-scroll-surface: var(--lab-ground);
-}
-.lab-workspace-side {
-  padding: 0;
-  gap: 0;
 }
 .lab-workspace-side-leading,
 .lab-workspace-side-trailing {

@@ -2,10 +2,10 @@
 
 import { forwardRef, useImperativeHandle, useLayoutEffect, useRef, type ReactNode } from 'react'
 import { X } from 'lucide-react'
-import { LabButton } from '../ui'
-import { LabScrollArea } from '../scroll'
+import { Button } from '../ui'
+import { ScrollArea } from '../scroll'
 import { scrollContentReserve } from '../scroll/metrics'
-import { useLabI18n } from '../i18n'
+import { useI18n } from '../i18n'
 import './prompt-composer.css'
 
 const EDGE_GAP = 12
@@ -15,11 +15,13 @@ const CONTENT_PADDING = 12
 export const PromptSettingsPanel = forwardRef<
   HTMLDivElement,
   {
+    /** The settings controls. */
     children: ReactNode
+    /** Called by the panel's close button. */
     onClose(): void
   }
 >(function PromptSettingsPanel({ children, onClose }, ref) {
-  const { t } = useLabI18n()
+  const { t } = useI18n()
   const host = useRef<HTMLDivElement>(null)
   const content = useRef<HTMLDivElement>(null)
   const header = useRef<HTMLDivElement>(null)
@@ -45,14 +47,14 @@ export const PromptSettingsPanel = forwardRef<
   }, [])
   return (
     <div ref={host} className="lab-pc-panel lab-light-edge" data-lab-corners>
-      <LabScrollArea
+      <ScrollArea
         label={t('lab.imgcomposer.outputSettings')}
         edgeGap={EDGE_GAP}
         contentPadding={CONTENT_PADDING}
         top={
           <div ref={header} className="lab-pc-panel-head">
             <strong>{t('lab.imgcomposer.outputSettings')}</strong>
-            <LabButton
+            <Button
               variant="ghost"
               appearance="toolbar"
               controlSize="icon"
@@ -60,14 +62,14 @@ export const PromptSettingsPanel = forwardRef<
               onClick={onClose}
             >
               <X size={20} aria-hidden="true" />
-            </LabButton>
+            </Button>
           </div>
         }
       >
         <div ref={content} className="lab-pc-panel-content">
           {children}
         </div>
-      </LabScrollArea>
+      </ScrollArea>
     </div>
   )
 })

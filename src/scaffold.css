@@ -29,7 +29,7 @@
 .lab-floating-root {
   z-index: 40;
   color: var(--lab-ink);
-  font: 13px/1.5 var(--lab-font);
+  font: 13px/20px var(--lab-font);
 }
 
 .lab-floating-root *,
@@ -55,7 +55,8 @@
 }
 
 .lab-floating-layer--notice > * {
-  bottom: calc(var(--lab-floating-bottom, 0px) + 12px);
+  /* The shell gap G above the other bottom chrome. */
+  bottom: calc(var(--lab-floating-bottom, 0px) + var(--lab-shell-gap));
 }
 
 /* One material layer per floating group; controls share it. */
@@ -71,12 +72,17 @@
   border-radius: var(--lab-glass-radius);
   corner-shape: superellipse(1.5);
   background: var(--lab-glass-fill);
-  backdrop-filter: blur(18px) saturate(1.1);
-  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate)) var(--lab-glass-lift);
+  -webkit-backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate)) var(--lab-glass-lift);
   box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
 }
 .lab-glass-group::before {
   display: none;
+}
+/* Toolbar bubbles and docks are capsules: their corners are round at full radius (system.css
+--lab-corner-shape-capsule), not the superellipse that squares a capsule's ends. */
+.lab-glass-group:is(.lab-toolbar-group, .lab-dock) {
+  corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
 }
 
 .lab-view-transition {
@@ -131,7 +137,7 @@ html[data-lab-transition]::view-transition-new(lab-content) {
   }
 
   .lab-glass-group {
-    --lab-glass-radius: calc(27px * var(--lab-radius-scale, 1));
+    --lab-glass-radius: calc(27px * var(--lab-corner-scale, 1));
   }
 }
 

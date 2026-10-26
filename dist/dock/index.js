@@ -1,2 +1,2 @@
-export { LabDock } from './dock.js';
+export { Dock } from './dock.js';
 //# sourceMappingURL=index.js.map

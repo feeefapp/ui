@@ -1,3 +1,3 @@
-export { LabDock } from './dock.js';
-export type { LabDockProps } from './dock.js';
+export { Dock } from './dock.js';
+export type { DockProps } from './dock.js';
 //# sourceMappingURL=index.d.ts.map

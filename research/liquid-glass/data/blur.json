@@ -1,0 +1,226 @@
+{
+ "regular/circle44": {
+  "gain": 1.0,
+  "sigma_px": 0.0,
+  "sigma_pt": 0.0,
+  "patch_pt": 22.0,
+  "height_pt": 44,
+  "min_side_pt": 44
+ },
+ "regular/circle64": {
+  "gain": 1.0,
+  "sigma_px": 0.0,
+  "sigma_pt": 0.0,
+  "patch_pt": 24.0,
+  "height_pt": 64,
+  "min_side_pt": 64
+ },
+ "regular/capsule170x56": {
+  "gain": 1.0,
+  "sigma_px": 0.0,
+  "sigma_pt": 0.0,
+  "patch_pt": 16.0,
+  "height_pt": 56,
+  "min_side_pt": 56
+ },
+ "regular/circle120": {
+  "gain": 0.1252,
+  "sigma_px": 9.22,
+  "sigma_pt": 3.07,
+  "patch_pt": 80.0,
+  "height_pt": 120,
+  "min_side_pt": 120
+ },
+ "regular/rect198x120r12": {
+  "gain": 0.1568,
+  "sigma_px": 11.49,
+  "sigma_pt": 3.83,
+  "patch_pt": 80.0,
+  "height_pt": 120,
+  "min_side_pt": 120
+ },
+ "regular/circle240": {
+  "gain": 0.0717,
+  "sigma_px": 12.77,
+  "sigma_pt": 4.26,
+  "patch_pt": 85.3,
+  "height_pt": 240,
+  "min_side_pt": 240
+ },
+ "regular/capsule64x220": {
+  "gain": 1.0,
+  "sigma_px": 0.0,
+  "sigma_pt": 0.0,
+  "patch_pt": 24.0,
+  "height_pt": 220,
+  "min_side_pt": 64
+ },
+ "regular/rect354x140r28": {
+  "gain": 0.2231,
+  "sigma_px": 13.16,
+  "sigma_pt": 4.39,
+  "patch_pt": 85.3,
+  "height_pt": 140,
+  "min_side_pt": 140
+ },
+ "clear/circle44": {
+  "gain": 2.1188,
+  "sigma_px": 7.03,
+  "sigma_pt": 2.34,
+  "patch_pt": 22.0,
+  "height_pt": 44,
+  "min_side_pt": 44
+ },
+ "clear/circle64": {
+  "gain": 0.9996,
+  "sigma_px": 5.03,
+  "sigma_pt": 1.68,
+  "patch_pt": 24.0,
+  "height_pt": 64,
+  "min_side_pt": 64
+ },
+ "clear/capsule170x56": {
+  "gain": 0.2679,
+  "sigma_px": 0.21,
+  "sigma_pt": 0.07,
+  "patch_pt": 16.0,
+  "height_pt": 56,
+  "min_side_pt": 56
+ },
+ "clear/circle120": {
+  "gain": 1.0029,
+  "sigma_px": 4.64,
+  "sigma_pt": 1.55,
+  "patch_pt": 80.0,
+  "height_pt": 120,
+  "min_side_pt": 120
+ },
+ "clear/rect198x120r12": {
+  "gain": 1.0135,
+  "sigma_px": 4.89,
+  "sigma_pt": 1.63,
+  "patch_pt": 80.0,
+  "height_pt": 120,
+  "min_side_pt": 120
+ },
+ "clear/circle240": {
+  "gain": 0.9933,
+  "sigma_px": 4.95,
+  "sigma_pt": 1.65,
+  "patch_pt": 85.3,
+  "height_pt": 240,
+  "min_side_pt": 240
+ },
+ "clear/capsule64x220": {
+  "gain": 0.7477,
+  "sigma_px": 4.24,
+  "sigma_pt": 1.41,
+  "patch_pt": 24.0,
+  "height_pt": 220,
+  "min_side_pt": 64
+ },
+ "clear/rect354x140r28": {
+  "gain": 1.0214,
+  "sigma_px": 4.85,
+  "sigma_pt": 1.62,
+  "patch_pt": 85.3,
+  "height_pt": 140,
+  "min_side_pt": 140
+ },
+ "regular/capsule354x44": {
+  "gain": 1.0,
+  "sigma_px": 0.0,
+  "sigma_pt": 0.0,
+  "patch_pt": 22.0,
+  "height_pt": 44,
+  "min_side_pt": 44
+ },
+ "regular/rect354x200r24": {
+  "gain": 0.0912,
+  "sigma_px": 10.54,
+  "sigma_pt": 3.51,
+  "patch_pt": 85.3,
+  "height_pt": 200,
+  "min_side_pt": 200
+ },
+ "regular/rect160r44": {
+  "gain": 0.1373,
+  "sigma_px": 14.32,
+  "sigma_pt": 4.77,
+  "patch_pt": 85.3,
+  "height_pt": 160,
+  "min_side_pt": 160
+ },
+ "regular/circle88": {
+  "gain": 0.3879,
+  "sigma_px": 12.96,
+  "sigma_pt": 4.32,
+  "patch_pt": 48.0,
+  "height_pt": 88,
+  "min_side_pt": 88
+ },
+ "regular/rect148x60r8": {
+  "gain": 1.0,
+  "sigma_px": 0.0,
+  "sigma_pt": 0.0,
+  "patch_pt": 20.0,
+  "height_pt": 60,
+  "min_side_pt": 60
+ },
+ "regular/capsule354x120": {
+  "gain": 0.2222,
+  "sigma_px": 14.04,
+  "sigma_pt": 4.68,
+  "patch_pt": 80.0,
+  "height_pt": 120,
+  "min_side_pt": 120
+ },
+ "clear/capsule354x44": {
+  "gain": 0.9331,
+  "sigma_px": 4.72,
+  "sigma_pt": 1.57,
+  "patch_pt": 22.0,
+  "height_pt": 44,
+  "min_side_pt": 44
+ },
+ "clear/rect354x200r24": {
+  "gain": 0.9497,
+  "sigma_px": 4.89,
+  "sigma_pt": 1.63,
+  "patch_pt": 85.3,
+  "height_pt": 200,
+  "min_side_pt": 200
+ },
+ "clear/rect160r44": {
+  "gain": 0.9979,
+  "sigma_px": 4.83,
+  "sigma_pt": 1.61,
+  "patch_pt": 85.3,
+  "height_pt": 160,
+  "min_side_pt": 160
+ },
+ "clear/circle88": {
+  "gain": 0.9924,
+  "sigma_px": 4.84,
+  "sigma_pt": 1.61,
+  "patch_pt": 48.0,
+  "height_pt": 88,
+  "min_side_pt": 88
+ },
+ "clear/rect148x60r8": {
+  "gain": 0.8427,
+  "sigma_px": 4.8,
+  "sigma_pt": 1.6,
+  "patch_pt": 20.0,
+  "height_pt": 60,
+  "min_side_pt": 60
+ },
+ "clear/capsule354x120": {
+  "gain": 0.9881,
+  "sigma_px": 4.8,
+  "sigma_pt": 1.6,
+  "patch_pt": 80.0,
+  "height_pt": 120,
+  "min_side_pt": 120
+ }
+}

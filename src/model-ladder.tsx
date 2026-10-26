@@ -1,10 +1,11 @@
 'use client'
 
-import { LabToolbarSearch } from './toolbar-search'
-import { LabPopoverSurface, LabSlider } from './ui'
+import { ToolbarSearch } from './toolbar-search'
+import { PopoverSurface, Slider } from './ui'
+import { useFloatingBoundary } from './menu/boundary'
 
-import { LabButton } from './ui'
-import { LabScrollArea, revealScrollChild } from './scroll'
+import { Button } from './ui'
+import { ScrollArea, revealScrollChild } from './scroll'
 import {
   useEffect,
   useId,
@@ -17,7 +18,7 @@ import {
 } from 'react'
 import * as Popover from '@radix-ui/react-popover'
 import { ArrowLeft, Brain, Check, ChevronDown, RotateCcw, Zap } from 'lucide-react'
-import { useLabI18n } from './i18n'
+import { useI18n } from './i18n'
 import './model-ladder.css'
 
 import {
@@ -28,20 +29,20 @@ import {
   FIRE_PALETTE as PALETTE,
   formatUsd,
   heatAt,
-  reducedMotion,
   visibleLabel,
   type AspectReadout,
   type LadderCopy,
   type LadderStop,
 } from './model-ladder-core'
+import { prefersReducedMotion } from './physics/motion-value'
 
 export * from './model-ladder-core'
 
 // ---------------------------------------------------------------------------------- trigger
 
 /** Localized ladder copy; an explicit `copy` prop still wins (docs fixtures, tests). */
-function useLabLadderCopy(copy?: LadderCopy): LadderCopy {
-  const { t } = useLabI18n()
+function useLadderCopy(copy?: LadderCopy): LadderCopy {
+  const { t } = useI18n()
   if (copy) return copy
   return {
     quality: t('lab.ladder.quality'),
@@ -57,6 +58,10 @@ function useLabLadderCopy(copy?: LadderCopy): LadderCopy {
   }
 }
 
+/**
+ * Quality picker: a trigger (chip or icon) that opens a popover with the ladder card. Moves
+ * between curated models with one slider, cheapest first; the title opens the full model list.
+ */
 export function ModelLadder({
   stops,
   index,
@@ -76,31 +81,47 @@ export function ModelLadder({
   side = 'top',
   className,
 }: {
+  /** The quality rungs, cheapest first. Nothing renders when empty. */
   stops: LadderStop[]
+  /** Selected rung (controlled). Clamped to the stops. */
   index: number
+  /** The rung "Reset to default" returns to. */
   defaultIndex?: number
+  /** Called with the new rung index. */
   onChange(index: number): void
+  /** `false` disables the trigger so the popover cannot open. */
   enabled?: boolean
+  /** Size and aspect readout of the output canvas, shown under the title. */
   canvas?: AspectReadout | null
   /** Extra controls under the model switch (e.g. a length or shape picker). */
   belowModel?: ReactNode
   /** Every model the user may pick from the title list; defaults to the ladder rungs. */
   catalog?: LadderStop[]
+  /** Called when the user picks a catalog model that is not one of the rungs. */
   onPickModel?(modelId: string): void
+  /** Replaces the built-in model list: the title button closes the popover and calls this. */
   onBrowseModels?(): void
+  /** Called when the popover opens or closes. */
   onOpenChange?(open: boolean): void
   /** A specific catalog choice outside the curated quality ladder. */
   selectedModel?: LadderStop
+  /** Overrides the localized strings. */
   copy?: LadderCopy
-  /** `chip` shows the tier and model name; `icon` is a compact brain button like marchant. */
-  variant?: 'chip' | 'icon'
+  /**
+   * `chip` shows the tier and model name; `icon` is a compact brain button like marchant;
+   * `compact` is one small-control line (brain, tier, chevron) for composer and toolbar rows.
+   */
+  variant?: 'chip' | 'icon' | 'compact'
+  /** Popover alignment against the trigger. */
   align?: 'start' | 'center' | 'end'
+  /** Which side of the trigger the popover opens on. */
   side?: 'top' | 'bottom'
   className?: string
 }) {
-  copy = useLabLadderCopy(copy)
+  copy = useLadderCopy(copy)
   const [open, setOpen] = useState(false)
   const [container, setContainer] = useState<HTMLElement | null>(null)
+  const boundary = useFloatingBoundary()
   const trigger = useRef<HTMLButtonElement>(null)
   const popover = useRef<HTMLDivElement>(null)
   if (!stops.length) return null
@@ -116,13 +137,32 @@ export function ModelLadder({
       open={open}
       onOpenChange={(next) => {
         // Inside a top-layer <dialog> the popover must portal into it, or it renders underneath.
-        if (next) setContainer(trigger.current?.closest('dialog') ?? null)
+        if (next) setContainer(trigger.current?.closest('dialog') ?? boundary)
         setOpen(next)
         onOpenChange?.(next)
       }}
     >
       <Popover.Trigger asChild disabled={!enabled}>
-        <LabButton
+        {variant === 'compact' ? (
+          <Button
+            ref={trigger}
+            type="button"
+            variant="ghost"
+            appearance="toolbar"
+            controlSize="small"
+            className={`lab-ladder-compact ${className ?? ''}`}
+            data-top={top}
+            aria-label={`${copy.quality}: ${tier}${tier === name ? '' : `, ${name}`}`}
+            title={`${tier}${tier === name ? '' : ` · ${name}`}`}
+          >
+            <Brain aria-hidden="true" />
+            <span key={tier} className="lab-ladder-compact-label lab-ladder-swap">
+              {tier}
+            </span>
+            <ChevronDown className="lab-ladder-compact-chevron" aria-hidden="true" />
+          </Button>
+        ) : (
+        <Button
           ref={trigger}
           type="button"
           variant="ghost"
@@ -145,10 +185,11 @@ export function ModelLadder({
             </span>
           )}
           {variant === 'chip' && <ChevronDown size={14} aria-hidden="true" />}
-        </LabButton>
+        </Button>
+        )}
       </Popover.Trigger>
       <Popover.Portal container={container ?? undefined}>
-        <LabPopoverSurface asChild>
+        <PopoverSurface asChild>
           <Popover.Content
             ref={popover}
             className="lab-ladder-popover"
@@ -156,6 +197,7 @@ export function ModelLadder({
             align={align}
             sideOffset={8}
             collisionPadding={12}
+            collisionBoundary={container ?? undefined}
             onEscapeKeyDown={(event) => {
               const target = event.target
               // Radix handles Escape during document capture. Let the focused
@@ -193,7 +235,7 @@ export function ModelLadder({
               copy={copy}
             />
           </Popover.Content>
-        </LabPopoverSurface>
+        </PopoverSurface>
       </Popover.Portal>
     </Popover.Root>
   )
@@ -216,22 +258,33 @@ export function ModelLadderCard({
   copy,
   pickable = true,
 }: {
+  /** The quality rungs, cheapest first. Needs at least one. */
   stops: LadderStop[]
+  /** Selected rung (controlled). Clamped to the stops. */
   index: number
+  /** The rung "Reset to default" returns to. */
   defaultIndex?: number
+  /** Called with the new rung index. */
   onChange(index: number): void
+  /** Size and aspect readout of the output canvas, shown under the title. */
   canvas?: AspectReadout | null
+  /** Extra controls between the readout and the track. */
   belowModel?: ReactNode
+  /** Every model the user may pick from the title list; defaults to the ladder rungs. */
   catalog?: LadderStop[]
+  /** Called when the user picks a catalog model that is not one of the rungs. */
   onPickModel?(modelId: string): void
+  /** Replaces the built-in model list: the title button calls this instead. */
   onBrowseModels?(): void
   /** A specific catalog choice outside the curated quality ladder. */
   selectedModel?: LadderStop
+  /** Overrides the localized strings. */
   copy?: LadderCopy
+  /** `false` turns the title into a plain label with no model list. */
   pickable?: boolean
 }) {
-  const { t } = useLabI18n()
-  copy = useLabLadderCopy(copy)
+  const { t } = useI18n()
+  copy = useLadderCopy(copy)
   const [view, setView] = useState<'ladder' | 'pick'>('ladder')
   const titleButton = useRef<HTMLButtonElement>(null)
   const restoreTitleFocus = useRef(false)
@@ -277,7 +330,7 @@ export function ModelLadderCard({
     <div className="lab-ladder-card lab-light-edge">
       <div className="lab-ladder-head">
         <Zap className="lab-ladder-bolt" size={18} strokeWidth={1.5} aria-hidden="true" />
-        <LabButton
+        <Button
           ref={titleButton}
           type="button"
           variant="ghost"
@@ -304,8 +357,8 @@ export function ModelLadderCard({
           {pickable && (count > 1 || !!catalog?.length || !!onBrowseModels) && (
             <ChevronDown size={14} aria-hidden="true" />
           )}
-        </LabButton>
-        <LabButton
+        </Button>
+        <Button
           type="button"
           variant="ghost"
           appearance="toolbar"
@@ -317,7 +370,7 @@ export function ModelLadderCard({
           onClick={() => onChange(safeDefault)}
         >
           <RotateCcw size={16} strokeWidth={1.6} />
-        </LabButton>
+        </Button>
       </div>
       {stop.priceUsd && stop.access !== 'free' ? (
         <p className="lab-ladder-price">{copy.typical(formatUsd(stop.priceUsd))}</p>
@@ -350,7 +403,9 @@ export function AspectBox({
   widthOverHeight,
   box = 20,
 }: {
+  /** Aspect ratio as width divided by height. */
   widthOverHeight: number
+  /** Side of the square it is fitted into, in pixels. */
   box?: number
 }) {
   const ratio = widthOverHeight > 0 ? widthOverHeight : 1
@@ -380,7 +435,7 @@ function LadderTrack({
   valueText(index: number): string
 }) {
   return (
-    <LabSlider
+    <Slider
       className="lab-ladder-track"
       label={label}
       min={0}
@@ -433,7 +488,7 @@ function PixelFire() {
           ctx.fillRect(col * CELL, row * CELL, CELL - 1, CELL - 1)
         }
     }
-    if (reducedMotion()) {
+    if (prefersReducedMotion()) {
       draw(0)
       return
     }
@@ -469,7 +524,7 @@ function ModelList({
   onBack(): void
   onPick(modelId: string): void
 }) {
-  const { t } = useLabI18n()
+  const { t } = useI18n()
   const [query, setQuery] = useState('')
   const [activeId, setActiveId] = useState(selectedId)
   const listId = useId()
@@ -543,31 +598,33 @@ function ModelList({
         onBack()
       }}
     >
-      <LabScrollArea
+      <ScrollArea
         ref={viewport}
         className="lab-ladder-list-scroll"
         label={copy.pickModel}
-        edgeGap={12}
         contentPadding={12}
         viewportProps={{ tabIndex: -1 }}
         top={
           <div className="lab-ladder-list-tools">
             <div className="lab-ladder-list-head">
-              <LabButton
+              <Button
                 type="button"
-                variant="secondary"
+                variant="elevated"
                 controlSize="icon"
                 aria-label={copy.back}
                 title={copy.back}
                 onClick={onBack}
               >
                 <ArrowLeft size={20} strokeWidth={1.75} className="lab-dir-flip" />
-              </LabButton>
+              </Button>
               <b id={titleId}>{copy.pickModel}</b>
             </div>
             {count > 6 && (
               <div className="lab-ladder-search">
-                <LabToolbarSearch
+                {/* Open from the start: a collapsed editor is inert, so the focus call above
+                    would land nowhere, and search is the point of a long list. */}
+                <ToolbarSearch
+                  defaultExpanded
                   label={copy.searchModels}
                   value={query}
                   onValueChange={setQuery}
@@ -592,7 +649,7 @@ function ModelList({
         >
           {rows.length === 0 && <p className="lab-ladder-empty">{copy.noMatches}</p>}
           {rows.map(({ stop, name, tier }) => (
-            <LabButton
+            <Button
               key={stop.modelId}
               ref={(button) => {
                 if (button) optionButtons.current.set(stop.modelId, button)
@@ -626,10 +683,10 @@ function ModelList({
                 <em className="lab-ladder-option-price">{formatUsd(stop.priceUsd)}</em>
               ) : null}
               {stop.modelId === selectedId && <Check size={15} aria-hidden="true" />}
-            </LabButton>
+            </Button>
           ))}
         </div>
-      </LabScrollArea>
+      </ScrollArea>
     </div>
   )
 }

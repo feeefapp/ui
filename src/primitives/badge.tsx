@@ -1,6 +1,8 @@
 import { LockKeyhole } from 'lucide-react'
+import './badge.css'
 
-export function LabProBadge() {
+/** A small lock + "PRO" tag for a feature that needs a paid plan. Takes no props. */
+export function ProBadge() {
   return (
     <span className="lab-badge">
       <LockKeyhole size={10} /> PRO

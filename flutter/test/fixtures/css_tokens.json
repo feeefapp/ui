@@ -1,0 +1,278 @@
+{
+ "lab-light": {
+  "tokens": {
+   "ground": "rgb(243, 246, 239)",
+   "surface": "rgb(252, 253, 249)",
+   "surface-soft": "rgb(232, 238, 226)",
+   "line": "rgb(214, 225, 207)",
+   "ink": "rgb(23, 38, 27)",
+   "muted": "rgb(101, 116, 96)",
+   "focus": "rgb(49, 93, 44)",
+   "primary": "rgb(114, 206, 93)",
+   "on-primary": "rgb(20, 37, 18)",
+   "accent": "rgb(134, 230, 114)",
+   "success": "rgb(47, 107, 40)",
+   "warning": "rgb(138, 83, 0)",
+   "danger": "rgb(160, 43, 43)",
+   "on-danger": "rgb(255, 255, 255)",
+   "control-surface": "rgb(252, 253, 249)",
+   "control-border": "color(srgb 0.853529 0.865686 0.845882)",
+   "control-hover": "color(srgb 0.943333 0.95 0.932941)",
+   "control-pressed": "color(srgb 0.898431 0.907843 0.889412)",
+   "control-selected": "color(srgb 0.869176 0.951608 0.841882)",
+   "glass-fill": "color(srgb 0.988235 0.992157 0.976471 / 0.26)",
+   "glass-edge-light": "rgba(255, 255, 255, 0.62)",
+   "glass-edge-low": "rgba(255, 255, 255, 0.27)",
+   "glass-shadow-color": "rgba(0, 0, 0, 0.02)",
+   "glass-glow": "rgba(255, 255, 255, 0.45)",
+   "control-highlight": "rgba(255, 255, 255, 0.76)",
+   "glass-fill-large": "color(srgb 0.988235 0.992157 0.976471 / 0.26)",
+   "focus-ring-color": "color(srgb 0.192157 0.364706 0.172549 / 0.65)"
+  },
+  "variants": {
+   "filled": {
+    "fill": "rgb(114, 206, 93)",
+    "hover": "color(srgb 0.491294 0.823216 0.415529)",
+    "pressed": "color(srgb 0.410196 0.741569 0.335294)",
+    "edge": "color(srgb 0.402824 0.728314 0.329412)",
+    "ink": "rgb(20, 37, 18)"
+   },
+   "tonal": {
+    "fill": "color(srgb 0.869176 0.951608 0.841882)",
+    "hover": "color(srgb 0.825882 0.936863 0.792941)",
+    "pressed": "color(srgb 0.793412 0.925804 0.756235)",
+    "edge": "rgba(0, 0, 0, 0)",
+    "ink": "rgb(23, 38, 27)"
+   },
+   "elevated": {
+    "fill": "rgb(252, 253, 249)",
+    "hover": "color(srgb 0.943333 0.95 0.932941)",
+    "pressed": "color(srgb 0.898431 0.907843 0.889412)",
+    "edge": "color(srgb 0.853529 0.865686 0.845882)",
+    "ink": "rgb(23, 38, 27)"
+   },
+   "outlined": {
+    "fill": "rgba(0, 0, 0, 0)",
+    "hover": "color(srgb 0.943333 0.95 0.932941)",
+    "pressed": "color(srgb 0.898431 0.907843 0.889412)",
+    "edge": "color(srgb 0.853529 0.865686 0.845882)",
+    "ink": "rgb(23, 38, 27)"
+   },
+   "text": {
+    "fill": "rgba(0, 0, 0, 0)",
+    "hover": "color(srgb 0.943333 0.95 0.932941)",
+    "pressed": "color(srgb 0.898431 0.907843 0.889412)",
+    "edge": "rgba(0, 0, 0, 0)",
+    "ink": "rgb(23, 38, 27)"
+   }
+  },
+  "glassTint": 0.5
+ },
+ "lab-dark": {
+  "tokens": {
+   "ground": "rgb(16, 30, 23)",
+   "surface": "rgb(35, 55, 42)",
+   "surface-soft": "rgb(26, 42, 33)",
+   "line": "rgb(64, 87, 68)",
+   "ink": "rgb(237, 244, 232)",
+   "muted": "rgb(180, 195, 174)",
+   "focus": "rgb(183, 229, 147)",
+   "primary": "rgb(183, 229, 147)",
+   "on-primary": "rgb(20, 37, 18)",
+   "accent": "rgb(183, 229, 147)",
+   "success": "rgb(183, 229, 147)",
+   "warning": "rgb(242, 198, 109)",
+   "danger": "rgb(255, 180, 171)",
+   "on-danger": "rgb(87, 24, 18)",
+   "control-surface": "rgb(35, 55, 42)",
+   "control-border": "color(srgb 0.256078 0.326863 0.276471)",
+   "control-hover": "color(srgb 0.176863 0.252745 0.201961)",
+   "control-pressed": "color(srgb 0.216471 0.289804 0.239216)",
+   "control-selected": "color(srgb 0.264941 0.365804 0.255294)",
+   "glass-fill": "color(srgb 0.137255 0.215686 0.164706 / 0.025)",
+   "glass-edge-light": "rgba(255, 255, 255, 0.13)",
+   "glass-edge-low": "rgba(255, 255, 255, 0.14)",
+   "glass-shadow-color": "rgba(0, 0, 0, 0.04)",
+   "glass-glow": "rgba(255, 255, 255, 0.16)",
+   "control-highlight": "rgba(255, 255, 255, 0.2)",
+   "glass-fill-large": "color(srgb 0.137255 0.215686 0.164706 / 0.025)",
+   "focus-ring-color": "color(srgb 0.717647 0.898039 0.576471 / 0.65)"
+  },
+  "variants": {
+   "filled": {
+    "fill": "rgb(183, 229, 147)",
+    "hover": "color(srgb 0.740235 0.906196 0.610353)",
+    "pressed": "color(srgb 0.653726 0.822745 0.525882)",
+    "edge": "color(srgb 0.640941 0.807686 0.515765)",
+    "ink": "rgb(20, 37, 18)"
+   },
+   "tonal": {
+    "fill": "color(srgb 0.264941 0.365804 0.255294)",
+    "hover": "color(srgb 0.311373 0.420392 0.288235)",
+    "pressed": "color(srgb 0.346196 0.461333 0.312941)",
+    "edge": "rgba(0, 0, 0, 0)",
+    "ink": "rgb(237, 244, 232)"
+   },
+   "elevated": {
+    "fill": "rgb(35, 55, 42)",
+    "hover": "color(srgb 0.176863 0.252745 0.201961)",
+    "pressed": "color(srgb 0.216471 0.289804 0.239216)",
+    "edge": "color(srgb 0.256078 0.326863 0.276471)",
+    "ink": "rgb(237, 244, 232)"
+   },
+   "outlined": {
+    "fill": "rgba(0, 0, 0, 0)",
+    "hover": "color(srgb 0.176863 0.252745 0.201961)",
+    "pressed": "color(srgb 0.216471 0.289804 0.239216)",
+    "edge": "color(srgb 0.256078 0.326863 0.276471)",
+    "ink": "rgb(237, 244, 232)"
+   },
+   "text": {
+    "fill": "rgba(0, 0, 0, 0)",
+    "hover": "color(srgb 0.176863 0.252745 0.201961)",
+    "pressed": "color(srgb 0.216471 0.289804 0.239216)",
+    "edge": "rgba(0, 0, 0, 0)",
+    "ink": "rgb(237, 244, 232)"
+   }
+  },
+  "glassTint": 0.5
+ },
+ "mono-light": {
+  "tokens": {
+   "ground": "rgb(244, 244, 244)",
+   "surface": "rgb(255, 255, 255)",
+   "surface-soft": "rgb(239, 239, 239)",
+   "line": "rgb(226, 226, 226)",
+   "ink": "rgb(10, 10, 10)",
+   "muted": "rgb(107, 107, 107)",
+   "focus": "rgb(10, 10, 10)",
+   "primary": "rgb(10, 10, 10)",
+   "on-primary": "rgb(255, 255, 255)",
+   "accent": "rgb(10, 10, 10)",
+   "success": "rgb(10, 10, 10)",
+   "warning": "rgb(122, 98, 52)",
+   "danger": "rgb(160, 43, 43)",
+   "on-danger": "rgb(255, 255, 255)",
+   "control-surface": "rgb(255, 255, 255)",
+   "control-border": "color(srgb 0.855882 0.855882 0.855882)",
+   "control-hover": "color(srgb 0.951961 0.951961 0.951961)",
+   "control-pressed": "color(srgb 0.903922 0.903922 0.903922)",
+   "control-selected": "color(srgb 0.788627 0.788627 0.788627)",
+   "glass-fill": "color(srgb 1 1 1 / 0.26)",
+   "glass-edge-light": "rgba(255, 255, 255, 0.62)",
+   "glass-edge-low": "rgba(255, 255, 255, 0.27)",
+   "glass-shadow-color": "rgba(0, 0, 0, 0.02)",
+   "glass-glow": "rgba(255, 255, 255, 0.45)",
+   "control-highlight": "rgba(255, 255, 255, 0.76)",
+   "glass-fill-large": "color(srgb 1 1 1 / 0.26)",
+   "focus-ring-color": "color(srgb 0.0392157 0.0392157 0.0392157 / 0.65)"
+  },
+  "variants": {
+   "filled": {
+    "fill": "rgb(10, 10, 10)",
+    "hover": "color(srgb 0.116078 0.116078 0.116078)",
+    "pressed": "color(srgb 0.135294 0.135294 0.135294)",
+    "edge": "color(srgb 0.15451 0.15451 0.15451)",
+    "ink": "rgb(255, 255, 255)"
+   },
+   "tonal": {
+    "fill": "color(srgb 0.788627 0.788627 0.788627)",
+    "hover": "color(srgb 0.711765 0.711765 0.711765)",
+    "pressed": "color(srgb 0.654118 0.654118 0.654118)",
+    "edge": "rgba(0, 0, 0, 0)",
+    "ink": "rgb(10, 10, 10)"
+   },
+   "elevated": {
+    "fill": "rgb(255, 255, 255)",
+    "hover": "color(srgb 0.951961 0.951961 0.951961)",
+    "pressed": "color(srgb 0.903922 0.903922 0.903922)",
+    "edge": "color(srgb 0.855882 0.855882 0.855882)",
+    "ink": "rgb(10, 10, 10)"
+   },
+   "outlined": {
+    "fill": "rgba(0, 0, 0, 0)",
+    "hover": "color(srgb 0.951961 0.951961 0.951961)",
+    "pressed": "color(srgb 0.903922 0.903922 0.903922)",
+    "edge": "color(srgb 0.855882 0.855882 0.855882)",
+    "ink": "rgb(10, 10, 10)"
+   },
+   "text": {
+    "fill": "rgba(0, 0, 0, 0)",
+    "hover": "color(srgb 0.951961 0.951961 0.951961)",
+    "pressed": "color(srgb 0.903922 0.903922 0.903922)",
+    "edge": "rgba(0, 0, 0, 0)",
+    "ink": "rgb(10, 10, 10)"
+   }
+  },
+  "glassTint": 0.5
+ },
+ "mono-dark": {
+  "tokens": {
+   "ground": "rgb(10, 10, 10)",
+   "surface": "rgb(20, 20, 20)",
+   "surface-soft": "rgb(28, 28, 28)",
+   "line": "rgb(44, 44, 44)",
+   "ink": "rgb(245, 245, 245)",
+   "muted": "rgb(163, 163, 163)",
+   "focus": "rgb(245, 245, 245)",
+   "primary": "rgb(245, 245, 245)",
+   "on-primary": "rgb(10, 10, 10)",
+   "accent": "rgb(245, 245, 245)",
+   "success": "rgb(245, 245, 245)",
+   "warning": "rgb(201, 180, 138)",
+   "danger": "rgb(255, 180, 171)",
+   "on-danger": "rgb(87, 24, 18)",
+   "control-surface": "rgb(20, 20, 20)",
+   "control-border": "color(srgb 0.210784 0.210784 0.210784)",
+   "control-hover": "color(srgb 0.122549 0.122549 0.122549)",
+   "control-pressed": "color(srgb 0.166667 0.166667 0.166667)",
+   "control-selected": "color(srgb 0.272549 0.272549 0.272549)",
+   "glass-fill": "color(srgb 0.0784314 0.0784314 0.0784314 / 0.025)",
+   "glass-edge-light": "rgba(255, 255, 255, 0.13)",
+   "glass-edge-low": "rgba(255, 255, 255, 0.14)",
+   "glass-shadow-color": "rgba(0, 0, 0, 0.04)",
+   "glass-glow": "rgba(255, 255, 255, 0.16)",
+   "control-highlight": "rgba(255, 255, 255, 0.2)",
+   "glass-fill-large": "color(srgb 0.0784314 0.0784314 0.0784314 / 0.025)",
+   "focus-ring-color": "color(srgb 0.960784 0.960784 0.960784 / 0.65)"
+  },
+  "variants": {
+   "filled": {
+    "fill": "rgb(245, 245, 245)",
+    "hover": "color(srgb 0.963922 0.963922 0.963922)",
+    "pressed": "color(srgb 0.868627 0.868627 0.868627)",
+    "edge": "color(srgb 0.850196 0.850196 0.850196)",
+    "ink": "rgb(10, 10, 10)"
+   },
+   "tonal": {
+    "fill": "color(srgb 0.272549 0.272549 0.272549)",
+    "hover": "color(srgb 0.343137 0.343137 0.343137)",
+    "pressed": "color(srgb 0.396078 0.396078 0.396078)",
+    "edge": "rgba(0, 0, 0, 0)",
+    "ink": "rgb(245, 245, 245)"
+   },
+   "elevated": {
+    "fill": "rgb(20, 20, 20)",
+    "hover": "color(srgb 0.122549 0.122549 0.122549)",
+    "pressed": "color(srgb 0.166667 0.166667 0.166667)",
+    "edge": "color(srgb 0.210784 0.210784 0.210784)",
+    "ink": "rgb(245, 245, 245)"
+   },
+   "outlined": {
+    "fill": "rgba(0, 0, 0, 0)",
+    "hover": "color(srgb 0.122549 0.122549 0.122549)",
+    "pressed": "color(srgb 0.166667 0.166667 0.166667)",
+    "edge": "color(srgb 0.210784 0.210784 0.210784)",
+    "ink": "rgb(245, 245, 245)"
+   },
+   "text": {
+    "fill": "rgba(0, 0, 0, 0)",
+    "hover": "color(srgb 0.122549 0.122549 0.122549)",
+    "pressed": "color(srgb 0.166667 0.166667 0.166667)",
+    "edge": "rgba(0, 0, 0, 0)",
+    "ink": "rgb(245, 245, 245)"
+   }
+  },
+  "glassTint": 0.5
+ }
+}

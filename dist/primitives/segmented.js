@@ -1,37 +1,26 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useRef } from 'react';
-import { LabButton } from './button.js';
-import { cn } from '../utils.js';
-import { revealScrollChild } from '../scroll/reveal.js';
-import './segmented.css';
-export function LabSegmentedControl({ value, onChange, options, label, disabled = false, className, appearance = 'grouped', }) {
-    const group = useRef(null);
-    const enabled = options.filter((option) => !disabled && !option.disabled);
-    const tabValue = enabled.some((option) => option.value === value) ? value : enabled[0]?.value;
-    const navigate = (event) => {
-        if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key) ||
-            !enabled.length)
-            return;
-        event.preventDefault();
-        const rtl = group.current && getComputedStyle(group.current).direction === 'rtl';
-        const index = enabled.findIndex((option) => option.value === value);
-        const horizontal = event.key === 'ArrowLeft' || event.key === 'ArrowRight';
-        const delta = (event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1) *
-            (horizontal && rtl ? -1 : 1);
-        const next = event.key === 'Home'
-            ? enabled[0]
-            : event.key === 'End'
-                ? enabled[enabled.length - 1]
-                : enabled[(Math.max(0, index) + delta + enabled.length) % enabled.length];
-        onChange(next.value);
-        const position = options.findIndex((option) => option.value === next.value);
-        const button = group.current?.querySelectorAll('button')[position];
-        button?.focus({ preventScroll: true });
-        revealScrollChild(group.current, button, { block: false });
-        revealScrollChild(group.current?.closest('.lab-scroll-viewport'), button, {
-            inline: false,
-        });
-    };
-    return (_jsx("div", { ref: group, className: cn('lab-segmented', appearance === 'grouped' && 'lab-light-edge', className), "data-appearance": appearance, role: "radiogroup", "aria-label": label, "aria-disabled": disabled || undefined, onKeyDown: navigate, "data-lab-corners": true, children: options.map((option) => (_jsxs(LabButton, { variant: "ghost", appearance: "toolbar", controlSize: "regular", className: "lab-segmented-option", role: "radio", "aria-checked": option.value === value, tabIndex: option.value === tabValue ? 0 : -1, disabled: disabled || option.disabled, "data-state": option.value === value ? 'on' : 'off', onClick: () => onChange(option.value), children: [option.icon && _jsx("span", { "aria-hidden": "true", children: option.icon }), option.label] }, option.value))) }));
+'use client';
+import { jsx as _jsx } from "react/jsx-runtime";
+import { SelectionTrack } from './selection-track.js';
+/**
+ * A single choice among short options, shown side by side in one row. A filled pill marks the
+ * selection and slides to the next one; press it and it becomes a glass lens you can drag (or
+ * press another option and drag: the pill comes to you). Radio semantics: one Tab stop, arrow keys
+ * move and select. Options can carry a count (`badge`).
+ *
+ * When its row has no room for every option it folds, like an actions bar spills into More: the
+ * other options fold into the selected one, which gains a chevron and opens them as a single-choice
+ * menu (`overflow="menu"`, the default). Every foldable control in the row is fitted together,
+ * folding from the end, and unfolds as soon as the room is back. A status filter with many options
+ * takes `overflow="scroll"` instead: options that don't fit scroll sideways inside the control
+ * (never wrap or squeeze), its edges fade where there is more, the selection scrolls into view
+ * whenever it changes, and a pill dragged near an edge scrolls on. On touch a swipe scrolls; a drag
+ * that starts on the pill moves the pill.
+ *
+ * It paints no container: put it in glass (`ToolbarGroup`), on a box of your own (a surface-token
+ * background; the root already has the capsule radius) or leave it bare. `TabView`'s tab bar is the
+ * same control with tab semantics.
+ */
+export function SegmentedControl({ value, onChange, options, label, disabled = false, equalWidth = false, overflow = 'menu', className, }) {
+    return (_jsx(SelectionTrack, { semantics: "radio", value: value, onSelect: (next) => onChange(next), options: options, label: label, disabled: disabled, equalWidth: equalWidth, overflow: overflow, className: className }));
 }
 //# sourceMappingURL=segmented.js.map

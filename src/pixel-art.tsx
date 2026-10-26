@@ -1,32 +1,15 @@
 'use client'
 
 import { useEffect, useMemo, useRef, type CSSProperties } from 'react'
-import { useLabI18n } from './i18n'
+import { useI18n } from './i18n'
 import { installFoPixelFallback } from './brand/pixel-fallback'
 import './pixel-art.css'
 import { voiceFingerprint } from './avatar-fingerprint'
+import { randomSequence, texturePixels } from './brand/pixel-noise'
 
 type Pixel = { x: number; y: number; opacity: number; color?: string }
 type PixelTone = 'ink' | 'sage' | 'inverse' | 'muted'
 type PixelVariant = 'voice' | 'wave' | 'orbit' | 'spark'
-
-function seedNumber(value: string) {
-  let result = 2166136261
-  for (let index = 0; index < value.length; index++) {
-    result = Math.imul(result ^ value.charCodeAt(index), 16777619)
-  }
-  return result >>> 0
-}
-
-function randomSequence(value: string) {
-  let state = seedNumber(value)
-  return () => {
-    state += 0x6d2b79f5
-    let next = Math.imul(state ^ (state >>> 15), 1 | state)
-    next ^= next + Math.imul(next ^ (next >>> 7), 61 | next)
-    return ((next ^ (next >>> 14)) >>> 0) / 4294967296
-  }
-}
 
 const bayer = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
 
@@ -84,10 +67,15 @@ function artworkPixels(variant: PixelVariant, seed: string) {
 }
 
 export type PixelArtworkProps = {
+  /** Motif: `voice` (multicolor fingerprint), `wave` (2:1 band), `orbit` (ring) or `spark` (star). */
   variant?: PixelVariant
+  /** Stable string that picks the arrangement; the same seed always draws the same art. */
   seed?: string
+  /** Width in pixels. Height follows the motif's aspect ratio. */
   size?: number
+  /** Ink for `wave`, `orbit` and `spark`. `voice` uses its own seeded palette. */
   tone?: PixelTone
+  /** Adds a slow breathing animation. Stays still under reduced motion. */
   animated?: boolean
   className?: string
   style?: CSSProperties
@@ -95,6 +83,7 @@ export type PixelArtworkProps = {
   title?: string
 }
 
+/** Seeded pixel artwork for identity: avatars, empty states, cards. Decorative unless `title` is set. */
 export function PixelArtwork({
   variant = 'voice',
   seed = 'feeef',
@@ -136,41 +125,25 @@ export function PixelArtwork({
 }
 
 export type PixelTextureProps = {
+  /** Where pixels gather: `corner` toward the top end, `grain` across the field, `wave` along a band. */
   variant?: 'corner' | 'grain' | 'wave'
+  /** Stable string that picks the arrangement, such as a record id. */
   seed?: string
+  /** How many squares are drawn. Opacity is set separately with `--pixel-texture-opacity`. */
   density?: 'sparse' | 'medium' | 'dense'
+  /** Ink color. Omit it to inherit the surface's `currentColor`. */
   tone?: PixelTone
+  /** Adds a slow opacity pulse. Stays still under reduced motion. */
   animated?: boolean
   className?: string
   style?: CSSProperties
 }
 
-function texturePixels(
-  variant: NonNullable<PixelTextureProps['variant']>,
-  seed: string,
-  density: string
-) {
-  const random = randomSequence(seed)
-  const threshold = density === 'dense' ? 0.6 : density === 'medium' ? 0.39 : 0.23
-  const pixels: Pixel[] = []
 
-  for (let row = 0; row < 24; row++) {
-    for (let column = 0; column < 64; column++) {
-      const x = column / 63
-      const y = row / 23
-      let field = 1
-      if (variant === 'corner') field = Math.pow(x, 1.7) * (0.35 + Math.pow(1 - y, 1.4) * 0.65)
-      if (variant === 'wave')
-        field = Math.max(0, 1 - Math.abs(y - 0.5 - Math.sin(x * 8) * 0.24) * 3)
-      if (random() < field * threshold) {
-        pixels.push({ x: column * 4, y: row * 4, opacity: 0.25 + random() * 0.75 })
-      }
-    }
-  }
-  return pixels
-}
-
-/** Overlay inside a positioned, clipped surface. It inherits the surface's ink color. */
+/**
+ * Decorative pixel paint for a surface. Absolutely positioned to fill its nearest positioned
+ * ancestor, `aria-hidden` and pointer-transparent. It inherits the surface's ink color.
+ */
 export function PixelTexture({
   variant = 'corner',
   seed = 'feeef-surface',
@@ -207,10 +180,23 @@ export function PixelTexture({
 }
 
 export type PixelLoaderProps = {
+  /** Width and height in pixels. */
   size?: number
+  /** Accessible status text. Defaults to the localized "Loading…". */
   label?: string
+  /** Hides the loader from assistive technology when nearby text already announces the work. */
   decorative?: boolean
+  /** Shows progress instead of the wave: 0 … 1 lights the squares one by one in wave order (a pull-to-refresh pulling toward its threshold). */
+  progress?: number
   className?: string
+}
+
+/** Squares in wave order: by their wave delay (column 110ms, row 80ms). */
+const LOADER_ORDER = [0, 3, 1, 6, 4, 2, 7, 5, 8]
+
+/** How lit square `index` is (0 … 1) at `progress` (0 … 1): one square per ninth, in wave order. */
+export function pixelLoaderCell(index: number, progress: number) {
+  return Math.min(1, Math.max(0, progress * 9 - LOADER_ORDER.indexOf(index)))
 }
 
 /** A nine-pixel loading wave; use decorative when adjacent text already announces status. */
@@ -218,9 +204,10 @@ export function PixelLoader({
   size = 20,
   label,
   decorative = false,
+  progress,
   className = '',
 }: PixelLoaderProps) {
-  const { t } = useLabI18n()
+  const { t } = useI18n()
   const resolvedLabel = label ?? t('lab.common.loading')
   return (
     <span
@@ -235,9 +222,13 @@ export function PixelLoader({
           key={index}
           className="lab-pixel-loader-cell"
           style={
-            {
-              '--pixel-delay': `${(index % 3) * 110 + Math.floor(index / 3) * 80}ms`,
-            } as CSSProperties
+            progress == null
+              ? ({ '--pixel-delay': `${(index % 3) * 110 + Math.floor(index / 3) * 80}ms` } as CSSProperties)
+              : (() => {
+                  // The wave's resting and peak frames (opacity 0.22 → 1, scale 0.7 → 1).
+                  const lit = pixelLoaderCell(index, progress)
+                  return { animation: 'none', opacity: 0.22 + 0.78 * lit, transform: `scale(${0.7 + 0.3 * lit})` }
+                })()
           }
         />
       ))}
@@ -246,13 +237,21 @@ export function PixelLoader({
 }
 
 export type PixelShaderProps = {
+  /** Sizes and places the canvas. Copied to the drawing canvas when it starts. */
   className?: string
+  /** Strength of the pixel band, about 0.5 to 1.35 (higher values are capped). */
   density?: number
+  /** Animation speed multiplier. */
   speed?: number
+  /** Inline size and position. Copied to the drawing canvas when it starts. */
   style?: CSSProperties
 }
 
-/** The CPU renderer keeps Feeef's transparent pixel field consistent across browser GPU drivers. */
+/**
+ * Animated, transparent pixel field on a canvas, painted with ordered dithering in the theme's
+ * `--lab-pixel-ink`. Runs at up to 18 fps, pauses off screen and in hidden tabs, and draws one still
+ * frame under reduced motion. The CPU renderer keeps it consistent across browser GPU drivers.
+ */
 export function PixelShader({
   className = '',
   density = 1.2,

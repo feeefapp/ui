@@ -1,0 +1,10 @@
+.build/
+flutter/lib/examples/
+flutter/macos/
+flutter/build/
+flutter/.dart_tool/
+flutter/.flutter-plugins*
+flutter/.metadata
+flutter/pubspec.lock
+flutter/*.iml
+flutter/.idea/

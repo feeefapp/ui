@@ -3,34 +3,46 @@
 import * as React from 'react'
 import './raw-input.css'
 
-export type LabInputElement = HTMLInputElement | HTMLTextAreaElement
-export type LabInputValidator = (value: string) => string | null | undefined
+export type InputElement = HTMLInputElement | HTMLTextAreaElement
+export type InputValidator = (value: string) => string | null | undefined
 
 type CommonProps = {
-  /** Synchronous domain validation; return an actionable error or nothing. */
+  /** An error to show now, such as one from the server. Blocks form submission while set. */
   error?: string | null
-  validator?: LabInputValidator
+  /** Synchronous check run on the value; return an actionable error, or nothing when it is valid. */
+  validator?: InputValidator
+  /** When errors appear: after the first blur (`blur`), on every change (`change`) or only on submit (`submit`). */
   validationMode?: 'blur' | 'change' | 'submit'
+  /** Called with the visible error message, or `null` when it clears. */
   onValidationChange?: (error: string | null) => void
-  /** Bespoke editors can retain their own measured sizing. */
+  /** Multiline only: grows the textarea with its content between `minLines` and `maxLines`. Turn off for editors that size themselves. */
   autoResize?: boolean
+  /** Called with the new text on every change. */
   onValueChange?: (value: string) => void
 }
 type SingleLineProps = React.InputHTMLAttributes<HTMLInputElement> & {
+  /** Renders a growing `<textarea>` instead of an `<input>`. */
   multiline?: false
   minLines?: never
   maxLines?: never
 }
 type MultilineProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  /** Renders a growing `<textarea>` instead of an `<input>`. */
   multiline: true
+  /** Multiline only: visible lines when empty. */
   minLines?: number
+  /** Multiline only: lines before the textarea scrolls. Unlimited when omitted. */
   maxLines?: number
   type?: never
 }
-export type LabRawInputProps = CommonProps & (SingleLineProps | MultilineProps)
+export type RawInputProps = CommonProps & (SingleLineProps | MultilineProps)
 
-/** Unpainted editing primitive. Native selection, IME, autofill and form semantics stay intact. */
-export const LabRawInput = React.forwardRef<LabInputElement, LabRawInputProps>(
+/**
+ * An unpainted native `<input>` or `<textarea>` with the kit's validation and auto-growing
+ * lines. Native selection, IME, autofill and form semantics stay intact. Use it inside bespoke
+ * editors that draw their own surface; use `TextField` everywhere else.
+ */
+export const RawInput = React.forwardRef<InputElement, RawInputProps>(
   (
     {
       multiline = false,
@@ -51,7 +63,7 @@ export const LabRawInput = React.forwardRef<LabInputElement, LabRawInputProps>(
     },
     forwardedRef
   ) => {
-    const node = React.useRef<LabInputElement | null>(null)
+    const node = React.useRef<InputElement | null>(null)
     const touched = React.useRef(false)
     const resize = React.useCallback(() => {
       const el = node.current
@@ -74,7 +86,7 @@ export const LabRawInput = React.forwardRef<LabInputElement, LabRawInputProps>(
       textarea.style.overflowY = textarea.scrollHeight > height ? 'auto' : 'hidden'
     }, [multiline, minLines, maxLines, autoResize])
     const validate = React.useCallback(
-      (el: LabInputElement, reveal: boolean) => {
+      (el: InputElement, reveal: boolean) => {
         el.setCustomValidity(error || validator?.(el.value) || '')
         if (reveal) onValidationChange?.(el.validity.valid ? null : el.validationMessage)
       },
@@ -110,30 +122,30 @@ export const LabRawInput = React.forwardRef<LabInputElement, LabRawInputProps>(
     const shared = {
       ...props,
       className: ['lab-raw-editor', className].filter(Boolean).join(' '),
-      ref: (el: LabInputElement | null) => {
+      ref: (el: InputElement | null) => {
         node.current = el
         if (typeof forwardedRef === 'function') forwardedRef(el)
         else if (forwardedRef) forwardedRef.current = el
       },
       style: { ...style, ...(multiline ? { resize: 'none' as const } : {}) },
-      onChange: (event: React.ChangeEvent<LabInputElement>) => {
+      onChange: (event: React.ChangeEvent<InputElement>) => {
         validate(
           event.currentTarget,
           validationMode === 'change' || (touched.current && validationMode === 'blur')
         )
         resize()
         onValueChange?.(event.currentTarget.value)
-        ;(onChange as React.ChangeEventHandler<LabInputElement> | undefined)?.(event)
+        ;(onChange as React.ChangeEventHandler<InputElement> | undefined)?.(event)
       },
-      onBlur: (event: React.FocusEvent<LabInputElement>) => {
+      onBlur: (event: React.FocusEvent<InputElement>) => {
         touched.current = true
         validate(event.currentTarget, validationMode !== 'submit')
-        ;(onBlur as React.FocusEventHandler<LabInputElement> | undefined)?.(event)
+        ;(onBlur as React.FocusEventHandler<InputElement> | undefined)?.(event)
       },
-      onInvalid: (event: React.InvalidEvent<LabInputElement>) => {
+      onInvalid: (event: React.InvalidEvent<InputElement>) => {
         touched.current = true
         onValidationChange?.(event.currentTarget.validationMessage)
-        ;(onInvalid as React.FormEventHandler<LabInputElement> | undefined)?.(event)
+        ;(onInvalid as React.FormEventHandler<InputElement> | undefined)?.(event)
       },
     }
     return multiline ? (
@@ -146,4 +158,4 @@ export const LabRawInput = React.forwardRef<LabInputElement, LabRawInputProps>(
     )
   }
 )
-LabRawInput.displayName = 'LabRawInput'
+RawInput.displayName = 'RawInput'

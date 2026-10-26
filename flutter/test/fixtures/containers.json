@@ -1,0 +1,414 @@
+{
+  "offsets": [
+    0,
+    300,
+    600,
+    900,
+    1200,
+    1500,
+    1800,
+    2100
+  ],
+  "progress": [
+    {
+      "slideCenter": 120,
+      "trackCenter": 200,
+      "step": 300,
+      "value": -0.26666666666666666
+    },
+    {
+      "slideCenter": 500,
+      "trackCenter": 200,
+      "step": 300,
+      "value": 1
+    },
+    {
+      "slideCenter": 200,
+      "trackCenter": 200,
+      "step": 300,
+      "value": 0
+    },
+    {
+      "slideCenter": -40,
+      "trackCenter": 160,
+      "step": 0,
+      "value": 0
+    },
+    {
+      "slideCenter": 37.5,
+      "trackCenter": 10,
+      "step": 262.4,
+      "value": 0.10480182926829269
+    },
+    {
+      "slideCenter": -100,
+      "trackCenter": 200,
+      "step": 312,
+      "value": -0.9615384615384616
+    }
+  ],
+  "centered": [
+    {
+      "progress": [
+        0
+      ],
+      "index": 0
+    },
+    {
+      "progress": [
+        -1.2,
+        -0.2,
+        0.8
+      ],
+      "index": 1
+    },
+    {
+      "progress": [
+        0.5,
+        -0.5
+      ],
+      "index": 0
+    },
+    {
+      "progress": [
+        2,
+        1,
+        0.4,
+        -0.6
+      ],
+      "index": 2
+    },
+    {
+      "progress": [
+        -0.3,
+        0.3,
+        1.3
+      ],
+      "index": 0
+    }
+  ],
+  "flicks": [
+    {
+      "scroll": 0,
+      "velocity": 0,
+      "current": 0,
+      "maxSkip": 3,
+      "target": 0
+    },
+    {
+      "scroll": 140,
+      "velocity": 0,
+      "current": 0,
+      "maxSkip": 3,
+      "target": 0
+    },
+    {
+      "scroll": 160,
+      "velocity": 0,
+      "current": 0,
+      "maxSkip": 3,
+      "target": 1
+    },
+    {
+      "scroll": 310,
+      "velocity": 800,
+      "current": 1,
+      "maxSkip": 3,
+      "target": 2
+    },
+    {
+      "scroll": 310,
+      "velocity": -800,
+      "current": 1,
+      "maxSkip": 3,
+      "target": 0
+    },
+    {
+      "scroll": 300,
+      "velocity": 4000,
+      "current": 1,
+      "maxSkip": 3,
+      "target": 4
+    },
+    {
+      "scroll": 300,
+      "velocity": 20000,
+      "current": 1,
+      "maxSkip": 3,
+      "target": 4
+    },
+    {
+      "scroll": 2100,
+      "velocity": 3000,
+      "current": 7,
+      "maxSkip": 3,
+      "target": 7
+    },
+    {
+      "scroll": 900,
+      "velocity": -20000,
+      "current": 3,
+      "maxSkip": 3,
+      "target": 0
+    },
+    {
+      "scroll": 450,
+      "velocity": 150,
+      "current": 1,
+      "maxSkip": 3,
+      "target": 2
+    },
+    {
+      "scroll": 300,
+      "velocity": 20000,
+      "current": 1,
+      "maxSkip": 1,
+      "target": 2
+    },
+    {
+      "scroll": 300,
+      "velocity": 20000,
+      "current": 1,
+      "maxSkip": 6,
+      "target": 7
+    }
+  ],
+  "effects": [
+    {
+      "effect": "none",
+      "progress": 0,
+      "scale": 1,
+      "opacity": 1
+    },
+    {
+      "effect": "none",
+      "progress": 0.25,
+      "scale": 1,
+      "opacity": 1
+    },
+    {
+      "effect": "none",
+      "progress": -0.5,
+      "scale": 1,
+      "opacity": 1
+    },
+    {
+      "effect": "none",
+      "progress": 1,
+      "scale": 1,
+      "opacity": 1
+    },
+    {
+      "effect": "none",
+      "progress": -1,
+      "scale": 1,
+      "opacity": 1
+    },
+    {
+      "effect": "none",
+      "progress": 1.4,
+      "scale": 1,
+      "opacity": 1
+    },
+    {
+      "effect": "none",
+      "progress": 2.5,
+      "scale": 1,
+      "opacity": 1
+    },
+    {
+      "effect": "scale",
+      "progress": 0,
+      "scale": 1,
+      "opacity": 1
+    },
+    {
+      "effect": "scale",
+      "progress": 0.25,
+      "scale": 0.98,
+      "opacity": 1
+    },
+    {
+      "effect": "scale",
+      "progress": -0.5,
+      "scale": 0.96,
+      "opacity": 1
+    },
+    {
+      "effect": "scale",
+      "progress": 1,
+      "scale": 0.92,
+      "opacity": 1
+    },
+    {
+      "effect": "scale",
+      "progress": -1,
+      "scale": 0.92,
+      "opacity": 1
+    },
+    {
+      "effect": "scale",
+      "progress": 1.4,
+      "scale": 0.92,
+      "opacity": 1
+    },
+    {
+      "effect": "scale",
+      "progress": 2.5,
+      "scale": 0.92,
+      "opacity": 1
+    },
+    {
+      "effect": "fade",
+      "progress": 0,
+      "scale": 1,
+      "opacity": 1
+    },
+    {
+      "effect": "fade",
+      "progress": 0.25,
+      "scale": 1,
+      "opacity": 0.8625
+    },
+    {
+      "effect": "fade",
+      "progress": -0.5,
+      "scale": 1,
+      "opacity": 0.725
+    },
+    {
+      "effect": "fade",
+      "progress": 1,
+      "scale": 1,
+      "opacity": 0.44999999999999996
+    },
+    {
+      "effect": "fade",
+      "progress": -1,
+      "scale": 1,
+      "opacity": 0.44999999999999996
+    },
+    {
+      "effect": "fade",
+      "progress": 1.4,
+      "scale": 1,
+      "opacity": 0.44999999999999996
+    },
+    {
+      "effect": "fade",
+      "progress": 2.5,
+      "scale": 1,
+      "opacity": 0.44999999999999996
+    },
+    {
+      "effect": "parallax",
+      "progress": 0,
+      "scale": 1,
+      "opacity": 1
+    },
+    {
+      "effect": "parallax",
+      "progress": 0.25,
+      "scale": 1,
+      "opacity": 1
+    },
+    {
+      "effect": "parallax",
+      "progress": -0.5,
+      "scale": 1,
+      "opacity": 1
+    },
+    {
+      "effect": "parallax",
+      "progress": 1,
+      "scale": 1,
+      "opacity": 1
+    },
+    {
+      "effect": "parallax",
+      "progress": -1,
+      "scale": 1,
+      "opacity": 1
+    },
+    {
+      "effect": "parallax",
+      "progress": 1.4,
+      "scale": 1,
+      "opacity": 1
+    },
+    {
+      "effect": "parallax",
+      "progress": 2.5,
+      "scale": 1,
+      "opacity": 1
+    }
+  ],
+  "fitting": [
+    {
+      "widths": [
+        300,
+        200,
+        100
+      ],
+      "available": 320,
+      "index": 0
+    },
+    {
+      "widths": [
+        300,
+        200,
+        100
+      ],
+      "available": 300,
+      "index": 0
+    },
+    {
+      "widths": [
+        300,
+        200,
+        100
+      ],
+      "available": 299.6,
+      "index": 0
+    },
+    {
+      "widths": [
+        300,
+        200,
+        100
+      ],
+      "available": 299.4,
+      "index": 1
+    },
+    {
+      "widths": [
+        300,
+        200,
+        100
+      ],
+      "available": 150,
+      "index": 2
+    },
+    {
+      "widths": [
+        300,
+        200,
+        100
+      ],
+      "available": 40,
+      "index": 2
+    },
+    {
+      "widths": [],
+      "available": 100,
+      "index": -1
+    },
+    {
+      "widths": [
+        80
+      ],
+      "available": 10,
+      "index": 0
+    }
+  ]
+}

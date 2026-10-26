@@ -1,0 +1,42 @@
+name: feeef_ui
+description: "Feeef UI kit for Flutter: the Dart twin of @feeef.dev/ui."
+version: 0.11.0
+publish_to: none
+homepage:
+
+environment:
+  sdk: ^3.13.4
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  path_parsing: ^1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+  # Glass refraction on Impeller (glass/refraction_filter.dart).
+  shaders:
+    - shaders/glass_refraction.frag
+  # The kit's fonts: IBM Plex Sans Arabic (Arabic and Latin) and Outfit (brand), both SIL OFL 1.1.
+  fonts:
+    - family: IBM Plex Sans Arabic
+      fonts:
+        - asset: fonts/IBMPlexSansArabic-Regular.ttf
+        - asset: fonts/IBMPlexSansArabic-Medium.ttf
+          weight: 500
+        - asset: fonts/IBMPlexSansArabic-SemiBold.ttf
+          weight: 600
+        - asset: fonts/IBMPlexSansArabic-Bold.ttf
+          weight: 700
+    - family: Outfit
+      fonts:
+        - asset: fonts/Outfit-Variable.ttf

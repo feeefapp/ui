@@ -1,225 +1,230 @@
-.lab-temporal-selection-layout {
-  display: grid;
-  gap: 16px;
+/* Temporal picker: preset chips, calendar months, number-field times, typed entry.
+   The editor is a container: one column by default; two months and a preset column when wide. */
+.lab-temporal-editor {
+  --lab-calendar-cell: 40px;
+  container-type: inline-size;
   min-width: 0;
 }
-.lab-temporal-selection-main {
+.lab-temporal-layout {
   display: grid;
   gap: 12px;
   min-width: 0;
 }
-.lab-temporal-editor .lab-temporal-presets {
+.lab-temporal-main {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Presets: visible chips, never a hidden menu. Dialogs use the scrolling bar (temporal-dialog.css). */
+.lab-temporal-presets[data-layout='list'] {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  align-content: start;
 }
-.lab-temporal-editor .lab-temporal-presets .lab-control[aria-pressed='true'] {
+
+/* Range ends: a segmented switch that also shows each end, on a recessed box in the editor (the
+dialog floats it in its top bar's glass instead). */
+.lab-temporal-layout > .lab-temporal-edges {
   background: var(--lab-surface-soft);
-  color: var(--lab-primary);
 }
-.lab-temporal-range-summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.lab-temporal-range-summary > * {
-  flex: 1;
-  min-width: 0;
-}
+
+/* Months */
 .lab-calendar-pair {
   display: grid;
-  gap: 16px;
+  gap: 20px;
   min-width: 0;
-  direction: ltr;
 }
 .lab-calendar-second {
   display: none;
 }
 .lab-calendar-month {
+  display: grid;
+  gap: 8px;
   min-width: 0;
 }
+/* The heading is a plain row on the surface, not a glass group: a calendar is content. */
 .lab-calendar-heading {
-  display: grid;
-  grid-template-columns: 40px minmax(76px, 1fr) minmax(68px, 0.8fr) 40px;
-  gap: 4px;
+  display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  gap: 4px;
+  min-width: 0;
+}
+html[data-lab-theme] .lab-calendar-heading .lab-calendar-title.lab-control {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+.lab-calendar-months {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
 }
 .lab-calendar-grid {
   width: 100%;
   table-layout: fixed;
-  border-collapse: collapse;
-  border-spacing: 0;
+  border-collapse: separate;
+  border-spacing: 0 2px;
 }
 .lab-calendar-grid th {
-  color: var(--lab-muted);
-  font-size: 11px;
-  font-weight: 400;
   height: 28px;
+  color: var(--lab-muted);
+  font: 500 11px var(--lab-font);
   text-align: center;
 }
 .lab-calendar-grid td {
-  padding: 2px 0;
-  height: 38px;
+  height: var(--lab-calendar-cell);
+  padding: 0;
   text-align: center;
-  position: relative;
+}
+
+/* A range is one continuous band: full cells between the ends, half cells under each end. */
+.lab-calendar-grid {
+  --lab-calendar-band: color-mix(in srgb, var(--lab-primary) 18%, transparent);
 }
 .lab-calendar-grid td[data-between='true'] {
-  background: color-mix(in srgb, var(--lab-primary) 15%, transparent);
+  background: var(--lab-calendar-band);
 }
-.lab-calendar-grid button {
-  font: 400 12px var(--lab-font);
-  width: 100%;
-  max-width: 38px;
-  height: 36px;
+.lab-calendar-grid td[data-range-start] {
+  background: linear-gradient(to right, transparent 50%, var(--lab-calendar-band) 50%);
+}
+.lab-calendar-grid td[data-range-end] {
+  background: linear-gradient(to right, var(--lab-calendar-band) 50%, transparent 50%);
+}
+.lab-calendar-grid:dir(rtl) td[data-range-start] {
+  background: linear-gradient(to left, transparent 50%, var(--lab-calendar-band) 50%);
+}
+.lab-calendar-grid:dir(rtl) td[data-range-end] {
+  background: linear-gradient(to left, var(--lab-calendar-band) 50%, transparent 50%);
+}
+
+.lab-calendar-day {
+  display: inline-grid;
+  place-items: center;
+  width: var(--lab-calendar-cell);
+  max-width: 100%;
+  height: var(--lab-calendar-cell);
+  margin: 0;
   padding: 0;
   border: 0;
-  border-radius: var(--lab-radius-small);
+  border-radius: calc(20px * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
   background: transparent;
   color: var(--lab-ink);
+  font: 400 14px var(--lab-font);
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
+  transition: background-color var(--lab-duration-fast) var(--lab-ease);
 }
-.lab-calendar-grid button:hover:not(:disabled) {
-  background: var(--lab-surface-soft);
+@media (hover: hover) {
+  .lab-calendar-day:hover:not(:disabled, [data-selected]) {
+    background: var(--lab-control-hover);
+  }
 }
-.lab-calendar-grid button[data-endpoint='true'] {
-  background: var(--lab-primary);
-  color: var(--lab-on-primary, var(--lab-ground));
+.lab-calendar-day:active:not(:disabled, [data-selected]) {
+  background: var(--lab-control-pressed);
+}
+.lab-calendar-day[aria-current='date']:not([data-selected]) {
+  box-shadow: inset 0 0 0 1px var(--lab-control-border);
   font-weight: 600;
 }
-.lab-calendar-grid button[aria-current='date'] {
-  text-decoration: underline;
-  text-underline-offset: 4px;
+.lab-calendar-day[data-selected] {
+  background: var(--lab-primary);
+  color: var(--lab-on-primary);
+  font-weight: 600;
 }
-.lab-calendar-grid button:disabled {
-  opacity: 0.3;
+.lab-calendar-day:disabled {
+  opacity: 0.35;
   cursor: default;
 }
-.lab-calendar-grid button:focus-visible {
-  outline: 2px solid var(--lab-focus);
-  outline-offset: 1px;
+.lab-calendar-day:focus-visible {
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
 }
-.lab-temporal-time-row {
+
+/* Times: number fields people drag, type or step. */
+.lab-temporal-times {
   display: grid;
-  gap: 12px;
-}
-.lab-time-choices {
-  display: flex;
   gap: 8px;
-  min-width: 0;
 }
-.lab-time-choices > * {
+.lab-time-input {
+  display: grid;
+  gap: 6px;
+}
+.lab-time-input-label {
+  color: var(--lab-muted);
+  font-size: 13px;
+}
+.lab-time-input-fields {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.lab-time-input-fields > .lab-number-field-container {
   flex: 1;
   min-width: 0;
 }
-.lab-temporal-hint {
+.lab-time-input-colon {
   color: var(--lab-muted);
-  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Footer row: typed-entry toggle at the start, the host's actions (popovers) at the end. */
+.lab-temporal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lab-temporal-fields {
+  display: grid;
+  gap: 8px;
+}
+.lab-temporal-note {
   margin: 0;
-  line-height: 1.5;
+  color: var(--lab-muted);
+  font-size: 13px;
+  line-height: 18px;
 }
-html[data-lab-theme] .lab-dialog.lab-filter-calendar-dialog {
-  width: 860px;
-  max-width: calc(100vw - 24px);
+html[data-lab-theme] .lab-temporal-actions.lab-toolbar-group {
+  margin-inline-start: auto;
 }
-.lab-filter-value-menu:has(.lab-calendar-month) {
-  width: min(380px, calc(100vw - 24px));
-  height: min(550px, var(--radix-popover-content-available-height, 550px));
-}
-@container (min-width:640px) {
-  .lab-calendar-pair {
+
+@container (min-width: 620px) {
+  /* Two months: the first keeps only its previous arrow, the second only its next arrow. */
+  .lab-calendar-pair[data-pair] > .lab-calendar-month [data-nav='next'] {
+    display: none;
+  }
+  .lab-calendar-pair[data-pair] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .lab-calendar-second {
+  .lab-calendar-pair[data-pair] .lab-calendar-second {
     display: block;
   }
-  .lab-temporal-time-row {
+  .lab-temporal-editor[data-range='true'] .lab-temporal-times,
+  .lab-temporal-fields[data-range='true'] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-@container (min-width:680px) {
-  .lab-temporal-selection-layout {
-    grid-template-columns: 132px minmax(0, 1fr);
-  }
-  .lab-temporal-editor .lab-temporal-presets {
-    display: grid;
-    gap: 2px;
-  }
-  .lab-temporal-presets .lab-control {
-    justify-content: flex-start;
-    width: 100%;
-  }
+/* Filter bar hosts the same editor. */
+.lab-filter-value-menu:has(.lab-calendar-month) {
+  width: min(360px, calc(100vw - 24px));
 }
-@media (max-width: 599px) {
-  html[data-lab-theme] .lab-dialog.lab-filter-calendar-dialog {
-    width: calc(100vw - 16px);
-    max-width: calc(100vw - 16px);
-  }
-}
+
 @media (pointer: coarse) {
-  .lab-calendar-grid button {
-    height: 42px;
-    max-width: 42px;
-  }
-  .lab-calendar-grid td {
-    height: 44px;
+  .lab-temporal-editor {
+    --lab-calendar-cell: 44px;
   }
 }
 @media (forced-colors: active) {
-  .lab-calendar-grid td[data-between='true'] {
-    background: Highlight;
+  .lab-calendar-grid td:is([data-between='true'], [data-range-start], [data-range-end]) {
+    background: Canvas;
+    outline: 1px solid Highlight;
   }
-  .lab-calendar-grid button[data-endpoint='true'] {
+  .lab-calendar-day[data-selected] {
     background: Highlight;
     color: HighlightText;
   }
-}
-
-.lab-calendar-grid button[data-endpoint='true']:hover:not(:disabled) {
-  background: var(--lab-primary);
-  color: var(--lab-on-primary, var(--lab-ground));
-}
-
-.lab-temporal-editor .lab-temporal-presets {
-  display: none;
-}
-.lab-temporal-presets-mobile {
-  display: block;
-}
-@container (min-width:680px) {
-  .lab-temporal-presets-mobile {
-    display: none;
-  }
-  .lab-temporal-editor .lab-temporal-presets {
-    display: grid;
-  }
-}
-html[data-lab-theme] .lab-calendar-grid .lab-control.lab-calendar-day {
-  width: 100%;
-  min-width: 0;
-  max-width: 38px;
-  height: 36px;
-  min-height: 36px;
-  padding: 0;
-  border: 0;
-  box-shadow: none;
-  border-radius: var(--lab-radius-small);
-  --lab-control-fill: transparent;
-  --lab-control-edge: transparent;
-  --lab-control-elevation: none;
-}
-html[data-lab-theme] .lab-calendar-grid .lab-control.lab-calendar-day[data-endpoint='true'] {
-  background: var(--lab-primary);
-  color: var(--lab-on-primary);
-}
-@media (pointer: coarse) {
-  html[data-lab-theme] .lab-calendar-grid .lab-control.lab-calendar-day {
-    height: 44px;
-    min-height: 44px;
-    max-width: 44px;
-  }
-}
-html[data-lab-theme] .lab-calendar-grid .lab-control.lab-calendar-day:not([data-endpoint='true']) {
-  color: var(--lab-ink);
 }

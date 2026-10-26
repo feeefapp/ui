@@ -18,7 +18,7 @@
 
   /* The sidebar keeps only the brand at the top; the nav leaves it and docks to the bottom. */
   html[data-lab-theme] .lab-scaffold .lab-sidebar .lab-rail-nav {
-    --lab-glass-radius: calc(32px * var(--lab-radius-scale, 1));
+    --lab-glass-radius: calc(var(--lab-tabbar-h) / 2 * var(--lab-capsule-scale, 1));
     position: fixed;
     inset: auto 20px calc(var(--lab-tabbar-gap) + env(safe-area-inset-bottom, 0px) + var(--lab-viewport-bottom, 0px));
     z-index: 25;
@@ -28,40 +28,18 @@
     width: auto;
     height: var(--lab-tabbar-h);
     padding: 4px;
-    border: 1px solid rgb(255 255 255 / 55%);
-    border-radius: calc(32px * var(--lab-radius-scale, 1));
-    background:
-      linear-gradient(180deg, rgb(255 255 255 / 30%), rgb(255 255 255 / 4%) 45%),
-      color-mix(in srgb, var(--lab-surface) 40%, transparent);
-    box-shadow:
-      0 12px 34px -10px rgb(10 24 16 / 32%),
-      0 2px 8px rgb(10 24 16 / 10%);
+    border: 1px solid var(--lab-line);
+    border-radius: calc(var(--lab-tabbar-h) / 2 * var(--lab-capsule-scale, 1));
+    corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
+    /* The kit's control-sized glass material (research/liquid-glass); the blur is on ::before. */
+    background: var(--lab-glass-fill);
+    box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
-  html[data-lab-theme='dark'] .lab-scaffold .lab-sidebar .lab-rail-nav {
-    border-color: rgb(255 255 255 / 16%);
-    background:
-      linear-gradient(180deg, rgb(255 255 255 / 12%), rgb(255 255 255 / 2%) 45%),
-      color-mix(in srgb, var(--lab-surface) 36%, transparent);
-    box-shadow:
-      0 14px 38px -10px rgb(0 0 0 / 55%),
-      0 2px 8px rgb(0 0 0 / 30%);
-  }
-  /* Heavier blur and saturation than the other glass, so the page glows through. */
   html[data-lab-theme] .lab-scaffold .lab-sidebar .lab-rail-nav::before {
-    backdrop-filter: blur(16px) saturate(1.9) brightness(1.04);
-    -webkit-backdrop-filter: blur(16px) saturate(1.9) brightness(1.04);
-    background:
-      radial-gradient(ellipse at 6% 0%, rgb(255 255 255 / 45%), transparent 55%),
-      linear-gradient(140deg, rgb(255 255 255 / 10%), transparent 50%);
-  }
-  html[data-lab-theme='dark'] .lab-scaffold .lab-sidebar .lab-rail-nav::before {
-    backdrop-filter: blur(16px) saturate(1.7) brightness(1.1);
-    -webkit-backdrop-filter: blur(16px) saturate(1.7) brightness(1.1);
-    background:
-      radial-gradient(ellipse at 6% 0%, rgb(255 255 255 / 16%), transparent 55%),
-      linear-gradient(140deg, rgb(255 255 255 / 5%), transparent 50%);
+    backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate)) var(--lab-glass-lift);
+    -webkit-backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate)) var(--lab-glass-lift);
   }
 
   /* The lens: one glass capsule that slides under whichever tab is selected. */
@@ -72,8 +50,8 @@
     bottom: 4px;
     inset-inline-start: 4px;
     width: calc((100% - 8px) / 5);
-    border-radius: calc(28px * var(--lab-radius-scale, 1));
-    corner-shape: superellipse(1.5);
+    border-radius: calc((var(--lab-tabbar-h) - 8px) / 2 * var(--lab-capsule-scale, 1));
+    corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
     pointer-events: none;
     background: color-mix(in srgb, var(--lab-focus) 13%, transparent);
     box-shadow:
@@ -109,13 +87,14 @@
     height: 100%;
     margin: 0;
     padding: 0 2px;
-    border-radius: calc(28px * var(--lab-radius-scale, 1));
+    border-radius: calc((var(--lab-tabbar-h) - 8px) / 2 * var(--lab-capsule-scale, 1));
+    corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
     background: transparent;
     color: color-mix(in srgb, var(--lab-ink) 62%, transparent);
     font-size: 10px;
     font-weight: 500;
     letter-spacing: 0.005em;
-    line-height: 1.1;
+    line-height: 11px;
     transition:
       color 220ms,
       transform 260ms cubic-bezier(0.3, 1.4, 0.5, 1);

@@ -1,0 +1,48 @@
+/* Backdrops for the Toolbar page: toolbars float over content, so demos give them some. */
+.toolbar-demo-surface {
+  width: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-panel);
+  background: var(--lab-surface);
+}
+.toolbar-demo-title {
+  padding-inline: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.toolbar-demo-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.toolbar-demo-content > div {
+  padding: 12px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-small);
+  font-size: 13px;
+}
+.toolbar-demo-content small {
+  display: block;
+  color: var(--lab-muted);
+}
+/* A horizontal strip of groups that scrolls inside the toolbar's leading side. */
+.toolbar-demo-strip {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.toolbar-demo-strip > * {
+  flex: 0 0 auto;
+}
+.toolbar-demo-strip::-webkit-scrollbar {
+  display: none;
+}

@@ -1,0 +1,307 @@
+/* Presentation surfaces (Alert, Modal, Pane; Sheet's host too). One host covers the viewport in
+the top layer (or a container): a scrim dims the page and the surface sits on top. Motion writes
+transform/opacity from JS (presentation/motion.ts, pane.tsx, sheet.tsx). Alert metrics are iOS 26
+alerts (research/liquid-glass/CONTROLS-MEASURED.md §9): 320 wide, ~35 corners, 48px capsule
+buttons 8 apart and 16 from the edges, 17 semibold title, 15 regular message, 20% dimming. */
+html[data-lab-theme] {
+  --lab-presentation-scrim: rgb(0 0 0 / 20%);
+  --lab-alert-width: 320px;
+  --lab-alert-radius: calc(35px * var(--lab-corner-scale, 1));
+  --lab-alert-button: 48px;
+  /* Buttons from the alert's sides and bottom; also the least screen margin around it. */
+  --lab-alert-inset: 16px;
+  --lab-alert-gap: var(--lab-shell-gap, 8px);
+  --lab-modal-width: 560px;
+  --lab-modal-wide-width: 980px;
+  --lab-modal-fill-height: 720px;
+  --lab-pane-max-share: 60cqi;
+}
+html[data-lab-theme='dark'] {
+  --lab-presentation-scrim: rgb(0 0 0 / 48%);
+}
+html[data-lab-density='compact'][data-lab-theme] {
+  --lab-alert-width: 300px;
+  --lab-alert-radius: calc(30px * var(--lab-corner-scale, 1));
+  --lab-alert-button: 40px;
+  --lab-alert-inset: 12px;
+}
+html[data-lab-density='thin'][data-lab-theme] {
+  --lab-alert-width: 280px;
+  --lab-alert-radius: calc(26px * var(--lab-corner-scale, 1));
+  --lab-alert-button: 34px;
+  --lab-alert-inset: 10px;
+}
+
+/* ---- Host ---- */
+.lab-presentation {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: var(--lab-ink);
+  font: 15px/23px var(--lab-font);
+  outline: none;
+  container-type: size;
+}
+.lab-presentation::backdrop {
+  background: transparent;
+}
+.lab-presentation[data-inline] {
+  position: absolute;
+}
+/* Centred surfaces. A closed native dialog stays display: none. */
+.lab-presentation:is([data-kind='alert'], [data-kind='modal']):is([open], [data-inline]) {
+  display: grid;
+  place-items: center;
+}
+/* A non-modal surface leaves the page usable around it. */
+.lab-presentation:not([data-modal]) {
+  pointer-events: none;
+}
+.lab-presentation:not([data-modal]) > * {
+  pointer-events: auto;
+}
+html:has(.lab-presentation[data-modal][open]) {
+  overflow: hidden;
+}
+.lab-presentation-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--lab-presentation-scrim);
+  opacity: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- Header and body ---- */
+.lab-presentation-header {
+  display: flex;
+  align-items: center;
+  gap: var(--lab-toolbar-gap);
+  inline-size: 100%;
+}
+.lab-presentation-header-start {
+  flex: 1;
+  min-inline-size: 0;
+}
+.lab-presentation-header-title {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}
+html[data-lab-theme] .lab-presentation-title {
+  margin: 0;
+  padding: 0 10px;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lab-presentation-header > :not(.lab-presentation-header-start) {
+  flex-shrink: 0;
+}
+.lab-presentation-body {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-block-size: 0;
+}
+.lab-presentation-body[data-fill] {
+  flex: 1 1 0%;
+}
+.lab-presentation-scroll {
+  flex: 1 1 0%;
+  min-block-size: 0;
+  --lab-scroll-surface: var(--lab-surface);
+}
+.lab-presentation-scroll .lab-scroll-viewport {
+  overscroll-behavior: contain;
+}
+/* Measured at its own height, never stretched to the scroll area's min-height. */
+.lab-presentation-content {
+  display: flow-root;
+  min-inline-size: 0;
+}
+
+/* ---- Modal ---- */
+.lab-modal {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  /* Sized from the host (a size container): a percentage would measure the grid row, which is as
+     tall as the content, so a hugging modal could grow past the screen. */
+  inline-size: min(var(--lab-modal-width), calc(100cqi - 4 * var(--lab-shell-gap, 8px)));
+  max-block-size: calc(100cqb - 4 * var(--lab-shell-gap, 8px));
+  overflow: clip;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-panel);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface);
+  box-shadow: 0 30px 80px -24px rgb(0 0 0 / 40%);
+  transform-origin: 50% 50%;
+}
+.lab-modal--wide {
+  inline-size: min(var(--lab-modal-wide-width), calc(100cqi - 4 * var(--lab-shell-gap, 8px)));
+}
+.lab-modal[data-fill] {
+  block-size: min(var(--lab-modal-fill-height), calc(100cqb - 4 * var(--lab-shell-gap, 8px)));
+}
+/* Firefox may clear the surface radius for SVG corner paint; the scroll boundary stays rounded. */
+:is(.lab-modal, .lab-pane) .lab-presentation-scroll {
+  border-radius: calc(var(--lab-radius-panel) - 1px);
+}
+
+/* ---- Alert ---- */
+.lab-alert {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  inline-size: min(var(--lab-alert-width), calc(100cqi - 2 * var(--lab-alert-inset)));
+  max-block-size: calc(100cqb - 2 * var(--lab-alert-inset));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--lab-alert-radius);
+  corner-shape: superellipse(1.5);
+  color: var(--lab-ink);
+  text-align: center;
+  /* The thick glass the menus use (menu/menu.css). */
+  background: var(--lab-menu-fill);
+  backdrop-filter: blur(var(--lab-menu-blur)) saturate(var(--lab-menu-saturate)) var(--lab-menu-lift);
+  -webkit-backdrop-filter: blur(var(--lab-menu-blur)) saturate(var(--lab-menu-saturate)) var(--lab-menu-lift);
+  box-shadow:
+    var(--lab-menu-shadow),
+    inset 0 0 0 1px var(--lab-line),
+    var(--lab-glass-light);
+  transform-origin: 50% 50%;
+}
+.lab-alert-text {
+  display: grid;
+  gap: 4px;
+  padding: 24px 24px 0;
+}
+html[data-lab-theme] .lab-alert-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 22px;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.lab-alert-message {
+  color: var(--lab-muted);
+  font-size: 15px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+.lab-alert-message > p {
+  margin: 0;
+}
+.lab-alert-content {
+  padding: 16px var(--lab-alert-inset) 0;
+  text-align: start;
+}
+.lab-alert-actions {
+  --lab-control-height: var(--lab-alert-button);
+  display: flex;
+  flex-direction: column;
+  gap: var(--lab-alert-gap);
+  padding: 20px var(--lab-alert-inset) var(--lab-alert-inset);
+}
+.lab-alert[data-layout='row'] .lab-alert-actions {
+  flex-direction: row;
+}
+html[data-lab-theme] .lab-alert .lab-alert-action {
+  flex: 1 1 0%;
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+.lab-alert-action-label {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* ---- Pane ---- */
+.lab-pane-frame {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--lab-shell-gap, 8px);
+  box-sizing: border-box;
+  max-inline-size: 100%;
+  padding: var(--lab-shell-gap, 8px);
+}
+.lab-pane-frame[data-side='start'] {
+  inset-inline-end: auto;
+  inset-inline-start: 0;
+  flex-direction: row-reverse;
+}
+.lab-pane {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  box-sizing: border-box;
+  inline-size: min(var(--lab-pane-width, 420px), var(--lab-pane-max-share));
+  min-inline-size: 0;
+  overflow: clip;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-panel);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface);
+  box-shadow: 0 20px 60px -24px rgb(0 0 0 / 35%);
+}
+.lab-pane-close {
+  flex: none;
+}
+
+/* ---- Material fallbacks ---- */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .lab-alert {
+    background: var(--lab-surface);
+  }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .lab-alert {
+    background: var(--lab-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+@media (prefers-contrast: more) {
+  .lab-alert {
+    box-shadow: inset 0 0 0 1px var(--lab-ink);
+  }
+}
+html[data-lab-glass='solid'] .lab-alert {
+  background: var(--lab-surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+@media (forced-colors: active) {
+  .lab-alert,
+  .lab-modal,
+  .lab-pane {
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}

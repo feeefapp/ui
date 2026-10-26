@@ -3,11 +3,18 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
 import * as React from 'react';
 import { cn } from '../utils.js';
 import { sliderRange, sliderValue, sliderFraction, sliderPointer, sliderKey } from './slider-core.js';
+import { SWITCH_SLOP, switchDragPosition, switchSnap } from './lens-model.js';
+import { VelocityTracker } from '../physics/velocity.js';
+import './lens.css';
 import './slider.css';
 import { useSliderMotion } from './slider-motion.js';
-/** Large single-value slider. Decoration slots share one interaction/geometry engine. */
-export const LabSlider = React.forwardRef((props, ref) => (_jsx(SliderControl, { ...props, forwardedRef: ref })));
-LabSlider.displayName = 'LabSlider';
+/**
+ * A single-value slider with a large touch-friendly track, springy thumb, optional stops and
+ * marks, and render slots for custom track, fill and thumb decoration. While dragged the thumb turns
+ * into a larger glass lens that stretches with its speed, glows under the finger and springs back.
+ */
+export const Slider = React.forwardRef((props, ref) => (_jsx(SliderControl, { ...props, forwardedRef: ref })));
+Slider.displayName = 'Slider';
 function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', value, defaultValue, min = 0, max = 100, step = 1, disabled = false, onValueChange, onValueCommit, getValueText, showStops = false, marks, renderTrack, renderFill, renderThumb, name, form, forwardedRef, switchMode = false, checkedText, className, style, onKeyDown, onClick, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, onLostPointerCapture, ...hostProps }) {
     const range = sliderRange(min, max, step);
     const normalize = (next) => sliderValue(next, range.min, range.max, range.step);
@@ -34,7 +41,7 @@ function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', v
     };
     const atPointer = (event) => {
         const rect = event.currentTarget.getBoundingClientRect();
-        const fraction = sliderPointer(event.clientX, rect.left, rect.width, getComputedStyle(event.currentTarget).direction === 'rtl', Number.parseFloat(getComputedStyle(event.currentTarget).getPropertyValue('--lab-slider-inset')) || 22);
+        const fraction = sliderPointer(event.clientX, rect.left, rect.width, getComputedStyle(event.currentTarget).direction === 'rtl', Number.parseFloat(getComputedStyle(event.currentTarget).getPropertyValue('--lab-slider-inset')) || rect.height / 2);
         return range.min + fraction * (range.max - range.min);
     };
     const move = (event) => {
@@ -75,8 +82,44 @@ function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', v
         return () => owner?.removeEventListener('reset', reset);
     }, [value, defaultValue, range.min, range.max, range.step, form]);
     const displayPosition = inert ? current : (position ?? current);
-    const fraction = sliderFraction(displayPosition, range.min, range.max);
-    useSliderMotion(host, fraction, tracking, pressed, trackStyle === 'thin', inert);
+    // A dragged switch thumb shows its rubber band; everything else stays on the track.
+    const fraction = switchMode && position !== null && !inert
+        ? position
+        : sliderFraction(displayPosition, range.min, range.max);
+    const motion = useSliderMotion(host, fraction, tracking, pressed, trackStyle === 'thin', inert, switchMode);
+    /** The pointer in the control's own px (`x` from its inline start), undoing scaled ancestors. */
+    const local = (event) => {
+        const el = event.currentTarget;
+        const rect = el.getBoundingClientRect();
+        const scale = el.offsetWidth ? rect.width / el.offsetWidth : 1;
+        const rtl = getComputedStyle(el).direction === 'rtl';
+        return {
+            x: (rtl ? rect.right - event.clientX : event.clientX - rect.left) / scale,
+            y: (event.clientY - rect.top) / scale,
+        };
+    };
+    /** How far (px) the switch thumb travels from off to on. */
+    const travel = (el) => {
+        const inset = Number.parseFloat(getComputedStyle(el).getPropertyValue('--lab-slider-inset')) ||
+            el.offsetHeight / 2;
+        return Math.max(0, el.offsetWidth - 2 * inset);
+    };
+    /** Drags the switch thumb by the pointer's travel since the press; the state flips at halfway. */
+    const dragSwitch = (event) => {
+        const active = gesture.current;
+        if (!active)
+            return;
+        const el = event.currentTarget;
+        const rect = el.getBoundingClientRect();
+        const scale = el.offsetWidth ? rect.width / el.offsetWidth : 1;
+        const rtl = getComputedStyle(el).direction === 'rtl';
+        const length = travel(el);
+        const dx = ((event.clientX - active.x) / scale) * (rtl ? -1 : 1);
+        active.thumb = switchDragPosition(active.start, dx, length);
+        active.tracker.add(active.thumb * length, event.timeStamp);
+        setPosition(active.thumb);
+        active.value = publish(active.thumb);
+    };
     const state = {
         value: current,
         position: displayPosition,
@@ -108,15 +151,21 @@ function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', v
                         return;
                     setTracking(false);
                     setPressed(true);
-                    event.currentTarget.focus({ preventScroll: true });
+                    // A pointer press focuses without the keyboard ring (Chrome would otherwise show it).
+                    event.currentTarget.focus({ preventScroll: true, focusVisible: false });
                     gesture.current = {
                         id: event.pointerId,
                         start: current,
                         value: current,
                         x: event.clientX,
+                        y: event.clientY,
+                        touch: event.pointerType === 'touch',
                         moved: false,
+                        thumb: current,
+                        tracker: new VelocityTracker(),
                     };
                     event.currentTarget.setPointerCapture(event.pointerId);
+                    motion.pointer(local(event));
                     if (!switchMode)
                         move(event);
                 }, onPointerMove: (event) => {
@@ -124,12 +173,17 @@ function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', v
                     const active = gesture.current;
                     if (event.defaultPrevented || active?.id !== event.pointerId)
                         return;
-                    if (Math.abs(event.clientX - active.x) > 4) {
+                    const dx = Math.abs(event.clientX - active.x);
+                    const slop = switchMode ? SWITCH_SLOP[active.touch ? 'touch' : 'mouse'] : 4;
+                    if (!active.moved && dx > slop && (!switchMode || dx >= Math.abs(event.clientY - active.y))) {
                         active.moved = true;
                         setTracking(true);
                     }
-                    if (!switchMode || active.moved)
+                    motion.pointer(local(event));
+                    if (!switchMode)
                         move(event);
+                    else if (active.moved)
+                        dragSwitch(event);
                 }, onPointerUp: (event) => {
                     onPointerUp?.(event);
                     if (gesture.current?.id !== event.pointerId)
@@ -138,11 +192,18 @@ function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', v
                         cancel();
                         return;
                     }
-                    if (switchMode && !gesture.current.moved)
-                        gesture.current.value = publish(1 - gesture.current.start);
+                    const active = gesture.current;
+                    if (switchMode && !active.moved)
+                        active.value = publish(1 - active.start);
+                    else if (switchMode) {
+                        // Settles where the thumb's momentum carries it: a flick toggles.
+                        const length = travel(event.currentTarget);
+                        const velocity = length ? active.tracker.velocity(event.timeStamp) / length : 0;
+                        active.value = publish(switchSnap(active.thumb, velocity));
+                    }
                     else
                         move(event);
-                    const next = gesture.current.value;
+                    const next = active.value;
                     setPressed(false);
                     setTracking(false);
                     gesture.current = null;
@@ -185,21 +246,30 @@ function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', v
                         .filter((mark) => mark.value >= range.min && mark.value <= range.max)
                         .map((mark, index) => (_jsx("span", { className: "lab-slider-stop", "aria-hidden": "true", "data-active": mark.value <= current, style: {
                             '--lab-slider-stop': sliderFraction(mark.value, range.min, range.max),
-                        } }, index))), _jsx("span", { className: "lab-slider-thumb", "aria-hidden": "true", children: renderThumb?.(state) }), switchMode && (_jsx("span", { className: "lab-slider-switch-text", "aria-hidden": "true", children: checkedText?.(current) }))] }), marks?.some((mark) => mark.label != null) && (_jsx("div", { className: "lab-slider-marks", "data-control-size": controlSize, "data-track-style": trackStyle, "aria-hidden": "true", children: marks
+                        } }, index))), _jsxs("span", { className: "lab-slider-thumb", "aria-hidden": "true", children: [_jsx("span", { className: "lab-lens", children: _jsx("span", { className: "lab-lens-glow" }) }), renderThumb?.(state)] }), switchMode && (_jsx("span", { className: "lab-slider-switch-text", "aria-hidden": "true", children: checkedText?.(current) }))] }), marks?.some((mark) => mark.label != null) && (_jsx("div", { className: "lab-slider-marks", "data-control-size": controlSize, "data-track-style": trackStyle, "aria-hidden": "true", children: marks
                     .filter((mark) => mark.value >= range.min && mark.value <= range.max)
                     .map((mark, index) => (_jsx("span", { style: {
                         '--lab-slider-stop': sliderFraction(mark.value, range.min, range.max),
                     }, children: mark.label }, index))) })), _jsx("input", { ref: hidden, type: "hidden", name: name, form: form, value: current, disabled: disabled })] }));
 }
-/** Same track, thumb, pointer and animation engine; boolean state maps exactly to 0/1. */
-export const LabSlideSwitch = React.forwardRef(({ checked, loading, defaultChecked = false, onCheckedChange, onCheckedCommit, onText, offText, ...props }, ref) => {
+/**
+ * An on/off switch, sized like iOS's (63 × 28 track, 37 × 24 thumb at comfortable density;
+ * ThemeConfig `metrics.switchSize` / `thumbSize`). A tap toggles it; the thumb can also be dragged
+ * and settles on the side its momentum carries it to. Pressed or dragged, the thumb turns into a
+ * larger glass lens that stretches as it moves, glows under the finger and springs back. It shares
+ * the slider's track, thumb and spring; the state maps to 0 and 1.
+ */
+export const SlideSwitch = React.forwardRef(({ checked, loading, defaultChecked = false, onCheckedChange, onCheckedCommit, onText, offText, ...props }, ref) => {
     return (_jsx(SliderControl, { ...props, forwardedRef: ref, switchMode: true, disabled: props.disabled || loading, "aria-busy": loading || undefined, min: 0, max: 1, step: 1, value: checked === undefined ? undefined : Number(checked), defaultValue: Number(defaultChecked), onValueChange: (next) => onCheckedChange?.(next === 1), onValueCommit: (next) => onCheckedCommit?.(next === 1), checkedText: (next) => (next === 1 ? onText : offText) }));
 });
-LabSlideSwitch.displayName = 'LabSlideSwitch';
-/** Noninteractive menu decoration with the same geometry and spring, never nested switch semantics. */
-export function LabSlideSwitchIndicator({ checked, loading, controlSize = 'compact', }) {
+SlideSwitch.displayName = 'SlideSwitch';
+/**
+ * A non-interactive switch picture for menu items and rows that already carry the checked
+ * semantics (for example `menuitemcheckbox`). Same geometry and spring, hidden from assistive technology.
+ */
+export function SlideSwitchIndicator({ checked, loading, }) {
     const host = React.useRef(null);
     useSliderMotion(host, Number(checked), false, false, false, Boolean(loading));
-    return (_jsxs("div", { ref: host, className: "lab-slider lab-slide-switch-indicator", "data-checked": checked, "data-switch": true, "data-control-size": controlSize, "data-disabled": loading || undefined, "aria-hidden": "true", style: { '--lab-slider-fraction': Number(checked) }, children: [_jsx("span", { className: "lab-slider-rail" }), _jsx("span", { className: "lab-slider-fill" }), _jsx("span", { className: "lab-slider-thumb" })] }));
+    return (_jsxs("div", { ref: host, className: "lab-slider lab-slide-switch-indicator", "data-checked": checked, "data-switch": true, "data-disabled": loading || undefined, "aria-hidden": "true", style: { '--lab-slider-fraction': Number(checked) }, children: [_jsx("span", { className: "lab-slider-rail" }), _jsx("span", { className: "lab-slider-fill" }), _jsx("span", { className: "lab-slider-thumb" })] }));
 }
 //# sourceMappingURL=slider.js.map

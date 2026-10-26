@@ -2,13 +2,20 @@
 
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { cn } from '../utils'
+import { prefersReducedMotion } from '../physics/motion-value'
 
-/** Coarse identity controls swaps; same-key changes keep focus and child state. */
-export function LabDockContentSwap({
+/**
+ * Cross-fades interactive dock content when `swapKey` changes: the old content fades out and turns
+ * inert (focus moves to the dock first), then the new content fades in. Same-key changes keep focus
+ * and child state.
+ */
+export function DockContentSwap({
   swapKey,
   children,
 }: {
+  /** Coarse task identity, e.g. `idle` / `selected`. */
   swapKey: string
+  /** The current content. */
   children: ReactNode
 }) {
   const latest = useRef({ key: swapKey, node: children })
@@ -27,7 +34,7 @@ export function LabDockContentSwap({
     }
     let enter = 0,
       settle = 0
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const reduced = prefersReducedMotion()
     // A focused outgoing action must not leave focus on an inert or detached node.
     const active = document.activeElement
     const owner =

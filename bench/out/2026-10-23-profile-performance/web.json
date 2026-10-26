@@ -1,0 +1,1067 @@
+{
+  "label": "profile-performance",
+  "theme": "performance",
+  "date": "2026-10-23T14:29:04.728Z",
+  "machine": {
+    "cpus": 8,
+    "model": "Apple M1 Pro",
+    "loadavg": [
+      30.6,
+      38,
+      53.1
+    ],
+    "platform": "darwin 25.4.0"
+  },
+  "viewport": {
+    "width": 1280,
+    "height": 800,
+    "deviceScaleFactor": 2
+  },
+  "reps": 3,
+  "note": "Docs build with unminified app code. Frame metrics are medians over reps. over16 = frames > 19.2 ms (missed a 60 Hz vsync, with jitter margin).",
+  "browsers": {
+    "chrome": {
+      "version": "Chrome/155.0.8059.82",
+      "pages": {
+        "components/glass-container/examples": {
+          "idle": {
+            "rafCallbacks": 0,
+            "rafSites": [],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 0,
+              "mainFrames": 0,
+              "rafFired": 0,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 5.97
+            },
+            "cdp": {
+              "script": 0.2,
+              "layout": 0,
+              "style": 0,
+              "task": 7.7,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 19152992
+            },
+            "heap": 26870353
+          },
+          "scroll": {
+            "frames": 160,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 94.6,
+              "layout": 4.7,
+              "style": 11.1,
+              "task": 191.4,
+              "layouts": 25,
+              "styles": 41,
+              "heap": 20964472
+            },
+            "heap": 28783050
+          },
+          "pointer": {
+            "frames": 122,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 11.9,
+              "layout": 0,
+              "style": 1.4,
+              "task": 80.5,
+              "layouts": 0,
+              "styles": 4,
+              "heap": 21310528
+            },
+            "heap": 29128578
+          },
+          "drag": {
+            "frames": 120,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 11.2,
+              "layout": 0.3,
+              "style": 3.9,
+              "task": 107.7,
+              "layouts": 2,
+              "styles": 13,
+              "heap": 15807060
+            },
+            "heap": 23726585
+          },
+          "split": {
+            "frames": 146,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 26.2,
+              "layout": 0.9,
+              "style": 6.8,
+              "task": 76.5,
+              "layouts": 6,
+              "styles": 17,
+              "heap": 16484724
+            },
+            "heap": 24487497
+          },
+          "repsOk": 3
+        },
+        "components/actions-bar/examples": {
+          "idle": {
+            "rafCallbacks": 0,
+            "rafSites": [],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 0,
+              "mainFrames": 0,
+              "rafFired": 0,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 6.57
+            },
+            "cdp": {
+              "script": 0.2,
+              "layout": 0,
+              "style": 0,
+              "task": 3.9,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 20095944
+            },
+            "heap": 28296937
+          },
+          "scroll": {
+            "frames": 159,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 65.3,
+              "layout": 8.4,
+              "style": 5.8,
+              "task": 174.6,
+              "layouts": 27,
+              "styles": 29,
+              "heap": 19972204
+            },
+            "heap": 27610992
+          },
+          "pointer": {
+            "frames": 122,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 7.6,
+              "layout": 0,
+              "style": 0.9,
+              "task": 51,
+              "layouts": 0,
+              "styles": 4,
+              "heap": 20315512
+            },
+            "heap": 27953772
+          },
+          "menu": {
+            "frames": 170,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 22.6,
+              "layout": 0.9,
+              "style": 11.6,
+              "task": 90.5,
+              "layouts": 12,
+              "styles": 48,
+              "heap": 18513116
+            },
+            "heap": 26239158
+          },
+          "repsOk": 3
+        },
+        "components/segmented-control/examples": {
+          "idle": {
+            "rafCallbacks": 0,
+            "rafSites": [],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 0,
+              "mainFrames": 0,
+              "rafFired": 0,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 2.39
+            },
+            "cdp": {
+              "script": 0.1,
+              "layout": 0,
+              "style": 0,
+              "task": 1.9,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 19191152
+            },
+            "heap": 27053806
+          },
+          "scroll": {
+            "frames": 160,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 73.6,
+              "layout": 5.4,
+              "style": 6.1,
+              "task": 183.9,
+              "layouts": 27,
+              "styles": 39,
+              "heap": 16669736
+            },
+            "heap": 24651273
+          },
+          "pointer": {
+            "frames": 122,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 8.3,
+              "layout": 0,
+              "style": 1,
+              "task": 57.9,
+              "layouts": 0,
+              "styles": 4,
+              "heap": 16999664
+            },
+            "heap": 24980664
+          },
+          "drag": {
+            "frames": 120,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 9.7,
+              "layout": 0.3,
+              "style": 9.7,
+              "task": 69.8,
+              "layouts": 2,
+              "styles": 11,
+              "heap": 17280608
+            },
+            "heap": 25262056
+          },
+          "repsOk": 3
+        },
+        "components/toolbar/examples": {
+          "idle": {
+            "rafCallbacks": 0,
+            "rafSites": [],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 0,
+              "mainFrames": 0,
+              "rafFired": 0,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 9.11
+            },
+            "cdp": {
+              "script": 0.2,
+              "layout": 0,
+              "style": 0,
+              "task": 1.9,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 18377596
+            },
+            "heap": 25963260
+          },
+          "scroll": {
+            "frames": 157,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 64.7,
+              "layout": 4.4,
+              "style": 4.4,
+              "task": 141.5,
+              "layouts": 23,
+              "styles": 30,
+              "heap": 21475468
+            },
+            "heap": 29120035
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 8.6,
+              "layout": 0,
+              "style": 1.1,
+              "task": 51,
+              "layouts": 0,
+              "styles": 4,
+              "heap": 21820224
+            },
+            "heap": 29464254
+          },
+          "repsOk": 3
+        },
+        "components/switch/examples": {
+          "idle": {
+            "rafCallbacks": 0,
+            "rafSites": [],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 0,
+              "mainFrames": 0,
+              "rafFired": 0,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 11.18
+            },
+            "cdp": {
+              "script": 0.3,
+              "layout": 0,
+              "style": 0,
+              "task": 8.3,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 16546076
+            },
+            "heap": 23177934
+          },
+          "scroll": {
+            "frames": 157,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 60,
+              "layout": 4.6,
+              "style": 6.2,
+              "task": 144.1,
+              "layouts": 20,
+              "styles": 24,
+              "heap": 19300628
+            },
+            "heap": 25987739
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 8,
+              "layout": 0,
+              "style": 0.8,
+              "task": 51.8,
+              "layouts": 0,
+              "styles": 4,
+              "heap": 19576968
+            },
+            "heap": 26263551
+          },
+          "drag": {
+            "frames": 120,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 39.8,
+              "layout": 4.4,
+              "style": 45.4,
+              "task": 180.1,
+              "layouts": 45,
+              "styles": 139,
+              "heap": 20338944
+            },
+            "heap": 27026391
+          },
+          "repsOk": 3
+        },
+        "foundations/glass-reflections": {
+          "idle": {
+            "rafCallbacks": 0,
+            "rafSites": [],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 0,
+              "mainFrames": 0,
+              "rafFired": 0,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 9.44
+            },
+            "cdp": {
+              "script": 0.1,
+              "layout": 0,
+              "style": 0,
+              "task": 9.2,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 16075464
+            },
+            "heap": 27645312
+          },
+          "scroll": {
+            "frames": 154,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 53.4,
+              "layout": 3.8,
+              "style": 4.2,
+              "task": 129,
+              "layouts": 19,
+              "styles": 23,
+              "heap": 15226488
+            },
+            "heap": 26903606
+          },
+          "pointer": {
+            "frames": 120,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 8.4,
+              "layout": 0,
+              "style": 2.1,
+              "task": 46,
+              "layouts": 0,
+              "styles": 8,
+              "heap": 17236212
+            },
+            "heap": 29021985
+          },
+          "repsOk": 3
+        },
+        "guidelines/patterns": {
+          "idle": {
+            "rafCallbacks": 0,
+            "rafSites": [],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 0,
+              "mainFrames": 0,
+              "rafFired": 0,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 5.82
+            },
+            "cdp": {
+              "script": 0.2,
+              "layout": 0,
+              "style": 0,
+              "task": 6.1,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 19310776
+            },
+            "heap": 26830426
+          },
+          "scroll": {
+            "frames": 154,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 34.5,
+              "layout": 2.4,
+              "style": 2.4,
+              "task": 94.8,
+              "layouts": 8,
+              "styles": 10,
+              "heap": 15653792
+            },
+            "heap": 22732999
+          },
+          "pointer": {
+            "frames": 120,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 9.2,
+              "layout": 0,
+              "style": 3,
+              "task": 73.5,
+              "layouts": 0,
+              "styles": 14,
+              "heap": 16046048
+            },
+            "heap": 23124973
+          },
+          "drag": {
+            "frames": 240,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 54.9,
+              "layout": 6.4,
+              "style": 54.5,
+              "task": 303.7,
+              "layouts": 48,
+              "styles": 152,
+              "heap": 13005104
+            },
+            "heap": 20082172
+          },
+          "repsOk": 3
+        },
+        "get-started/introduction": {
+          "idle": {
+            "rafCallbacks": 0,
+            "rafSites": [],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": {
+              "drawFrames": 0,
+              "mainFrames": 0,
+              "rafFired": 0,
+              "paints": 0,
+              "styleRecalcs": 0,
+              "layouts": 0,
+              "mainBusyMs": 5.14
+            },
+            "cdp": {
+              "script": 0.4,
+              "layout": 0,
+              "style": 0,
+              "task": 5.1,
+              "layouts": 0,
+              "styles": 0,
+              "heap": 18340760
+            },
+            "heap": 24074632
+          },
+          "scroll": {
+            "frames": 154,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.7,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 12.3,
+              "layout": 0.6,
+              "style": 0.8,
+              "task": 51.1,
+              "layouts": 1,
+              "styles": 1,
+              "heap": 18482044
+            },
+            "heap": 24214366
+          },
+          "pointer": {
+            "frames": 120,
+            "fps": 60,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 16.8,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": {
+              "script": 8.7,
+              "layout": 0,
+              "style": 7.2,
+              "task": 63.9,
+              "layouts": 0,
+              "styles": 4,
+              "heap": 18829932
+            },
+            "heap": 24561732
+          },
+          "repsOk": 3
+        }
+      },
+      "backdropFilter": {
+        "cssSupports": true,
+        "painted": true
+      }
+    },
+    "firefox": {
+      "version": "firefox/158.0.1",
+      "pages": {
+        "components/glass-container/examples": {
+          "idle": {
+            "rafCallbacks": 0,
+            "rafSites": [],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": null,
+            "cdp": null,
+            "heap": null
+          },
+          "scroll": {
+            "frames": 106,
+            "fps": 60.6,
+            "p50": 16.66,
+            "p95": 16.7,
+            "max": 17.36,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60.5,
+            "p50": 16.66,
+            "p95": 16.68,
+            "max": 17.4,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "drag": {
+            "frames": 82,
+            "fps": 60,
+            "p50": 16.66,
+            "p95": 17.1,
+            "max": 17.58,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "split": {
+            "frames": 149,
+            "fps": 60.3,
+            "p50": 16.66,
+            "p95": 16.86,
+            "max": 36.96,
+            "over16": 1,
+            "over33": 1,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "repsOk": 3
+        },
+        "components/actions-bar/examples": {
+          "idle": {
+            "rafCallbacks": 0,
+            "rafSites": [],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": null,
+            "cdp": null,
+            "heap": null
+          },
+          "scroll": {
+            "frames": 105,
+            "fps": 60.6,
+            "p50": 16.66,
+            "p95": 16.9,
+            "max": 17.4,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "pointer": {
+            "frames": 120,
+            "fps": 60,
+            "p50": 16.66,
+            "p95": 16.9,
+            "max": 33.34,
+            "over16": 1,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "menu": {
+            "frames": 173,
+            "fps": 60.3,
+            "p50": 16.66,
+            "p95": 16.82,
+            "max": 17.38,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "repsOk": 3
+        },
+        "components/segmented-control/examples": {
+          "idle": {
+            "rafCallbacks": 0,
+            "rafSites": [],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": null,
+            "cdp": null,
+            "heap": null
+          },
+          "scroll": {
+            "frames": 104,
+            "fps": 60.6,
+            "p50": 16.66,
+            "p95": 16.96,
+            "max": 17.3,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60.5,
+            "p50": 16.66,
+            "p95": 16.96,
+            "max": 17.42,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "drag": {
+            "frames": 79,
+            "fps": 60.6,
+            "p50": 16.66,
+            "p95": 17.18,
+            "max": 17.46,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "repsOk": 3
+        },
+        "components/toolbar/examples": {
+          "idle": {
+            "rafCallbacks": 0,
+            "rafSites": [],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": null,
+            "cdp": null,
+            "heap": null
+          },
+          "scroll": {
+            "frames": 105,
+            "fps": 60.5,
+            "p50": 16.66,
+            "p95": 17.08,
+            "max": 17.52,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60.5,
+            "p50": 16.66,
+            "p95": 16.84,
+            "max": 17.42,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "repsOk": 3
+        },
+        "components/switch/examples": {
+          "idle": {
+            "rafCallbacks": 0,
+            "rafSites": [],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": null,
+            "cdp": null,
+            "heap": null
+          },
+          "scroll": {
+            "frames": 112,
+            "fps": 60,
+            "p50": 16.66,
+            "p95": 17.18,
+            "max": 32.8,
+            "over16": 1,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "pointer": {
+            "frames": 122,
+            "fps": 60.5,
+            "p50": 16.66,
+            "p95": 17.02,
+            "max": 17.36,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "drag": {
+            "frames": 87,
+            "fps": 60.7,
+            "p50": 16.66,
+            "p95": 17.16,
+            "max": 17.44,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "repsOk": 3
+        },
+        "foundations/glass-reflections": {
+          "idle": {
+            "rafCallbacks": 0,
+            "rafSites": [],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": null,
+            "cdp": null,
+            "heap": null
+          },
+          "scroll": {
+            "frames": 122,
+            "fps": 54.7,
+            "p50": 16.66,
+            "p95": 17.48,
+            "max": 100.04,
+            "over16": 6,
+            "over33": 3,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60.1,
+            "p50": 16.66,
+            "p95": 17.16,
+            "max": 17.54,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "repsOk": 3
+        },
+        "guidelines/patterns": {
+          "idle": {
+            "rafCallbacks": 0,
+            "rafSites": [],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": null,
+            "cdp": null,
+            "heap": null
+          },
+          "scroll": {
+            "frames": 121,
+            "fps": 48.1,
+            "p50": 16.66,
+            "p95": 50,
+            "max": 83.32,
+            "over16": 19,
+            "over33": 10,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "pointer": {
+            "frames": 120,
+            "fps": 60.1,
+            "p50": 16.66,
+            "p95": 17.04,
+            "max": 17.52,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "drag": {
+            "frames": 171,
+            "fps": 59.5,
+            "p50": 16.66,
+            "p95": 17.12,
+            "max": 50,
+            "over16": 1,
+            "over33": 1,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "repsOk": 3
+        },
+        "get-started/introduction": {
+          "idle": {
+            "rafCallbacks": 0,
+            "rafSites": [],
+            "runningAnimations": 0,
+            "infiniteAnimations": [],
+            "trace": null,
+            "cdp": null,
+            "heap": null
+          },
+          "scroll": {
+            "frames": 105,
+            "fps": 60.6,
+            "p50": 16.66,
+            "p95": 16.8,
+            "max": 17.58,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "pointer": {
+            "frames": 121,
+            "fps": 60.5,
+            "p50": 16.66,
+            "p95": 16.68,
+            "max": 17.22,
+            "over16": 0,
+            "over33": 0,
+            "longTasks": 0,
+            "cdp": null,
+            "heap": null
+          },
+          "repsOk": 3
+        }
+      },
+      "backdropFilter": {
+        "cssSupports": true,
+        "painted": false
+      },
+      "warning": "Backdrop filters are not painted in this automation mode: Firefox numbers measure main-thread work only, not glass compositing."
+    }
+  }
+}

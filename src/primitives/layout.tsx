@@ -1,15 +1,15 @@
 import * as React from 'react'
 
-export const LabBox = React.forwardRef<
+export const Box = React.forwardRef<
   HTMLElement,
   React.HTMLAttributes<HTMLElement> & {
     as?: 'div' | 'header' | 'nav' | 'main' | 'aside' | 'section' | 'article' | 'footer' | 'span'
   }
 >(({ as = 'div', ...props }, ref) => React.createElement(as, { ...props, ref }))
 
-LabBox.displayName = 'LabBox'
+Box.displayName = 'Box'
 
-export function LabText({
+export function Text({
   as: Component = 'span',
   ...props
 }: React.HTMLAttributes<HTMLElement> & {
@@ -18,26 +18,26 @@ export function LabText({
   return <Component {...props} />
 }
 
-export function LabLink(props: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
+export function Link(props: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
   return <a {...props} />
 }
 
-export function LabForm(props: React.FormHTMLAttributes<HTMLFormElement>) {
+export function Form(props: React.FormHTMLAttributes<HTMLFormElement>) {
   return <form {...props} />
 }
 
-export function LabList(props: React.HTMLAttributes<HTMLUListElement>) {
+export function List(props: React.HTMLAttributes<HTMLUListElement>) {
   return <ul {...props} />
 }
 
-export function LabListItem(props: React.LiHTMLAttributes<HTMLLIElement>) {
+export function ListItem(props: React.LiHTMLAttributes<HTMLLIElement>) {
   return <li {...props} />
 }
 
-export function LabDivider() {
+export function Divider() {
   return <hr />
 }
 
-export function LabStyle({ children }: { children: string }) {
+export function Style({ children }: { children: string }) {
   return <style>{children}</style>
 }

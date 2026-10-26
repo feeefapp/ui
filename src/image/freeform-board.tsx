@@ -1,8 +1,8 @@
 'use client'
 
-import { LabButton } from '../ui'
-import { useLabI18n } from '../i18n'
-import { LabGlassGroup } from '../scaffold'
+import { Button } from '../ui'
+import { useI18n } from '../i18n'
+import { GlassGroup } from '../scaffold'
 import {
   useCallback,
   useEffect,
@@ -19,6 +19,8 @@ import { revealCovered } from './freeform-frame'
 import { elapsed, stageRatio, takeErrorText } from './board-utils'
 import type { ImageTake } from './types'
 import './freeform-board.css'
+import { GlassScope } from '../glass/container'
+import { prefersReducedMotion } from '../physics/motion-value'
 
 export type Insets = { top: number; right: number; bottom: number; left: number }
 type View = { x: number; y: number; scale: number }
@@ -80,23 +82,36 @@ export function FreeformBoard({
   onRemove,
   emptyContent,
 }: {
+  /** Fills its positioned parent instead of the whole window (`position: fixed`). */
   embedded?: boolean
+  /** Versions to show, newest first; they are laid out oldest to newest, left to right. */
   takes: ImageTake[]
+  /** The selected take; the board glides it into view. Defaults to the newest. */
   selectedId: string | undefined
+  /** Called with a take id when its card is clicked (not dragged). */
   onSelect(id: string): void
+  /** Room taken by floating chrome on each edge, in pixels; cards fit between them. */
   insets: Insets
+  /** Current time in ms, for the elapsed timer on pending cards. Tick it while work runs. */
   now: number
+  /** Picks the empty-board hint for signed-in or signed-out users. */
   signedIn: boolean
+  /** Starter prompts on the empty board. */
   starters: { label: string; prompt: string }[]
+  /** Called with the prompt of the starter the user clicked. */
   onStarter(prompt: string): void
+  /** Called from a failed card's "Try again". */
   onRetry(take: ImageTake): void
+  /** Called from a failed card's "Remove". */
   onRemove(take: ImageTake): void
   /** Replaces the default welcome on an empty board (e.g. the poster template gallery). */
   emptyContent?: ReactNode
 }) {
-  const { t } = useLabI18n()
+  const { t } = useI18n()
   const root = useRef<HTMLDivElement>(null)
-  const [size, setSize] = useState({ w: 1280, h: 800 })
+  // 0 × 0 until the board is measured: nothing is fitted to a guessed size.
+  const [size, setSize] = useState({ w: 0, h: 0 })
+  const fittedOnce = useRef(false)
   const [view, setView] = useState<View>({ x: 0, y: 0, scale: 1 })
   const [animate, setAnimate] = useState(false)
   const [ratios, setRatios] = useState<Record<string, number>>({})
@@ -124,17 +139,17 @@ export function FreeformBoard({
     return () => observer.disconnect()
   }, [])
 
-  const glide = useCallback((next: View) => {
-    setAnimate(!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
+  const glide = useCallback((next: View, instant = false) => {
+    setAnimate(!instant && !prefersReducedMotion())
     setView(next)
   }, [])
   const fitCard = useCallback(
-    (card: Card | undefined) => {
+    (card: Card | undefined, instant = false) => {
       if (!card) return
       const fitted = fitView(card, size, insets, 28, card.take.status === 'completed' ? 1.4 : 1)
       // Centering the selection leaves the poster beside it under the rail
       // whenever the free area is wider than the card. Pull that neighbor clear.
-      glide(revealCovered(fitted, cards, card, size, insets, 28))
+      glide(revealCovered(fitted, cards, card, size, insets, 28), instant)
     },
     [glide, size, insets, cards]
   )
@@ -148,13 +163,21 @@ export function FreeformBoard({
   const layoutKey = cards.map((card) => `${card.take.id}:${card.x}:${card.w}`).join('|')
   const key = `${selected?.take.id}:${layoutKey}:${size.w}x${size.h}:${insets.left},${insets.top},${insets.right},${insets.bottom}`
   useEffect(() => {
-    if (selected) fitCard(selected)
+    // Unmeasured or hidden (a viewport no bigger than the chrome around it): nothing to fit yet. The
+    // first real fit snaps into place; later ones glide.
+    if (size.w - insets.left - insets.right <= 56 || size.h - insets.top - insets.bottom <= 56) return
+    const instant = !fittedOnce.current
+    fittedOnce.current = true
+    if (selected) fitCard(selected, instant)
     else
-      glide({
-        x: insets.left + (size.w - insets.left - insets.right) / 2,
-        y: insets.top + (size.h - insets.top - insets.bottom) / 2,
-        scale: 1,
-      })
+      glide(
+        {
+          x: insets.left + (size.w - insets.left - insets.right) / 2,
+          y: insets.top + (size.h - insets.top - insets.bottom) / 2,
+          scale: 1,
+        },
+        instant
+      )
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 
@@ -321,22 +344,22 @@ export function FreeformBoard({
                   <b>{t('lab.board.didntWork')}</b>
                   <small>{takeErrorText(take, t, t('lab.board.tryAnother'))}</small>
                   <span className="lab-ff-state-actions">
-                    <LabButton
+                    <Button
                       type="button"
-                      variant="secondary"
+                      variant="elevated"
                       onPointerDown={(e) => e.stopPropagation()}
                       onClick={() => onRetry(take)}
                     >
                       <RefreshCw size={18} /> {t('lab.canvas.tryAgain')}
-                    </LabButton>
-                    <LabButton
+                    </Button>
+                    <Button
                       type="button"
                       variant="destructive"
                       onPointerDown={(e) => e.stopPropagation()}
                       onClick={() => onRemove(take)}
                     >
                       <Trash2 size={18} /> {t('lab.canvas.remove')}
-                    </LabButton>
+                    </Button>
                   </span>
                 </div>
               )}
@@ -374,15 +397,15 @@ export function FreeformBoard({
               </small>
               <span className="lab-ff-starters">
                 {starters.map((starter) => (
-                  <LabButton
+                  <Button
                     key={starter.label}
                     type="button"
-                    variant="secondary"
+                    variant="elevated"
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={() => onStarter(starter.prompt)}
                   >
                     {starter.label}
-                  </LabButton>
+                  </Button>
                 ))}
               </span>
             </div>
@@ -390,14 +413,14 @@ export function FreeformBoard({
         </div>
       )}
       {cards.length > 0 && (
-        <LabGlassGroup
+        <GlassScope className="lab-ff-zoom-layer" style={{ right: insets.right + 14 }}>
+        <GlassGroup
           className="lab-ff-zoom"
-          style={{ right: insets.right + 14 }}
           onPointerDown={(e) => e.stopPropagation()}
           role="toolbar"
           aria-label={t('lab.board.zoom')}
         >
-          <LabButton
+          <Button
             type="button"
             variant="ghost"
             appearance="toolbar"
@@ -406,8 +429,8 @@ export function FreeformBoard({
             onClick={() => zoomCentre(1 / 1.25)}
           >
             <Minus size={20} />
-          </LabButton>
-          <LabButton
+          </Button>
+          <Button
             type="button"
             variant="ghost"
             appearance="toolbar"
@@ -418,8 +441,8 @@ export function FreeformBoard({
             onClick={() => fitCard(selected)}
           >
             {percent}%
-          </LabButton>
-          <LabButton
+          </Button>
+          <Button
             type="button"
             variant="ghost"
             appearance="toolbar"
@@ -428,8 +451,8 @@ export function FreeformBoard({
             onClick={() => zoomCentre(1.25)}
           >
             <Plus size={20} />
-          </LabButton>
-          <LabButton
+          </Button>
+          <Button
             type="button"
             variant="ghost"
             appearance="toolbar"
@@ -440,8 +463,9 @@ export function FreeformBoard({
             disabled={cards.length < 2}
           >
             <Maximize size={20} />
-          </LabButton>
-        </LabGlassGroup>
+          </Button>
+        </GlassGroup>
+        </GlassScope>
       )}
     </div>
   )

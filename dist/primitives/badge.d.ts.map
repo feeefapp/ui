@@ -1,1 +1,1 @@
-{"version":3,"file":"badge.d.ts","sourceRoot":"","sources":["../../src/primitives/badge.tsx"],"names":[],"mappings":"AAEA,wBAAgB,WAAW,gCAM1B"}
+{"version":3,"file":"badge.d.ts","sourceRoot":"","sources":["../../src/primitives/badge.tsx"],"names":[],"mappings":"AACA,OAAO,aAAa,CAAA;AAEpB,qFAAqF;AACrF,wBAAgB,QAAQ,gCAMvB"}

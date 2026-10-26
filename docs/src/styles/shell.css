@@ -1,0 +1,324 @@
+/* Shell glue for the kit's Scaffold. Layout, sidebar, drawer, app bar and scrolling are the kit's;
+   this file only sizes the scaffold to the window and styles the docs' own content inside its slots. */
+
+html,
+body,
+#root,
+.docs-app {
+  height: 100%;
+}
+body {
+  overflow: hidden;
+}
+.docs-scaffold {
+  height: 100dvh;
+}
+.docs-content {
+  min-height: 100%;
+}
+
+/* Sidebar contents */
+.docs-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px;
+  border-radius: var(--docs-radius-small);
+  color: var(--lab-ink);
+  font-weight: 600;
+  font-size: 17px;
+  text-decoration: none;
+}
+.docs-brand .fo-logo {
+  color: var(--lab-ink);
+}
+.docs-version {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--lab-surface-soft);
+  color: var(--lab-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.docs-side-leading {
+  display: grid;
+  gap: 8px;
+}
+.docs-side-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+.docs-side-brand[data-rail] {
+  justify-content: center;
+}
+.docs-side-nav {
+  display: grid;
+  gap: 18px;
+}
+.docs-side-heading {
+  margin: 4px 0 2px;
+  padding-inline: 12px;
+  color: var(--lab-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+.docs-side-subheading {
+  margin: 10px 0 2px;
+  padding-inline: 12px;
+  color: var(--lab-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.docs-side-group {
+  display: grid;
+  gap: 2px;
+}
+.docs-side-empty {
+  padding-inline: 12px;
+  color: var(--lab-muted);
+  font-size: 13px;
+}
+
+/* App bar contents */
+.docs-app-bar-title > span {
+  overflow: hidden;
+  max-width: 40vw;
+  padding-inline: 10px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Page + "On this page" rail, inside the scaffold's scroll area */
+.docs-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--docs-toc);
+  gap: 40px;
+  max-width: calc(var(--docs-content) + var(--docs-toc) + 40px);
+  margin: 0 auto;
+  /* Reading text: the scaffold's content padding is the shell gap G (8px); prose wants at least
+  16px from the panel edge, so the page adds the rest itself. */
+  padding: 16px clamp(8px, 2vw, 24px) 64px;
+}
+.docs-toc {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  max-height: calc(100dvh - var(--lab-scroll-top-reserve, 0px) - 24px);
+  overflow-y: auto;
+  padding-top: 12px;
+  font-size: 13px;
+}
+/* Two-line pager links: out-specify the kit's fixed control height (html[data-lab-theme]
+.lab-control[data-variant]) so the capsule grows around both lines. */
+html[data-lab-theme] .docs-pager .lab-control[data-variant] {
+  height: auto;
+  min-height: 56px;
+  padding-block: 8px;
+  line-height: 20px;
+}
+.docs-pager span {
+  display: grid;
+  text-align: start;
+}
+.docs-pager [data-dir='next'] span {
+  text-align: end;
+}
+
+@media (max-width: 1200px) {
+  .docs-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .docs-toc {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  .docs-layout {
+    /* + the scaffold's G (8px) = 16px from the panel edge. */
+    padding: 8px 8px 48px;
+  }
+}
+
+.docs-chip {
+  display: inline-block;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--lab-surface-soft);
+  color: var(--lab-muted);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 20px;
+  vertical-align: middle;
+}
+h1 .docs-chip {
+  margin-inline-start: 12px;
+  font-size: 13px;
+  line-height: 24px;
+}
+kbd {
+  display: inline-block;
+  min-width: 22px;
+  padding: 1px 6px;
+  border: 1px solid var(--lab-line);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: var(--lab-surface);
+  color: var(--lab-muted);
+  font: 500 12px/18px var(--docs-mono);
+  text-align: center;
+}
+.docs-toc h2 {
+  margin: 0 0 8px;
+  color: var(--lab-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+.docs-toc ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-inline-start: 1px solid var(--lab-line);
+}
+.docs-toc a {
+  display: block;
+  margin-inline-start: -1px;
+  padding: 4px 12px;
+  border-inline-start: 2px solid transparent;
+  color: var(--lab-muted);
+  text-decoration: none;
+  line-height: 1.4;
+}
+.docs-toc li[data-level='3'] a {
+  padding-inline-start: 24px;
+}
+.docs-toc a:hover {
+  color: var(--lab-ink);
+}
+.docs-toc a[aria-current='location'] {
+  border-inline-start-color: var(--lab-focus);
+  color: var(--lab-ink);
+  font-weight: 500;
+}
+.docs-pager {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px 16px;
+  margin-top: 72px;
+  padding-top: 24px;
+  border-top: 1px solid var(--lab-line);
+}
+.docs-pager small {
+  color: var(--lab-muted);
+  font-weight: 400;
+}
+
+/* Long code lines scroll inside their block instead of widening the page. */
+.docs-page,
+.docs-code,
+.docs-page-meta,
+.docs-example-card,
+.docs-playground {
+  min-width: 0;
+}
+/* Inside the grid the page fills its track (auto margins would make it fit-content wide). */
+.docs-layout > .docs-page {
+  width: 100%;
+  margin: 0;
+}
+
+
+/* Minimal scaffold: the logo rides in the app bar's leading bubble. */
+.docs-app-bar-logo {
+  padding: 0 10px 0 6px;
+  font-size: 15px;
+}
+html[data-lab-theme] .docs-app-bar-brand.lab-toolbar-group {
+  gap: 2px;
+}
+@media (max-width: 380px) {
+  .docs-app-bar-logo > span {
+    display: none;
+  }
+}
+
+/* Collapsed title: appears once the page's large title scrolls under the bar. */
+.docs-app-bar-title {
+  transition:
+    opacity 180ms var(--lab-ease),
+    translate 220ms var(--lab-ease);
+}
+.docs-app-bar-title[data-state='open'] {
+  opacity: 1;
+  translate: 0 0;
+  @starting-style {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}
+.docs-app-bar-title[data-state='closed'] {
+  opacity: 0;
+  translate: 0 6px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .docs-app-bar-title {
+    transition: none;
+  }
+}
+/* Long neighbouring titles truncate instead of pushing past the panel. */
+.docs-pager .lab-control {
+  max-width: 100%;
+  min-width: 0;
+}
+.docs-pager .lab-control span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Platform and version (app bar) ---------- */
+.docs-version-trigger {
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.docs-version-next {
+  padding: 1px 6px;
+  border-radius: calc(6px * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
+  background: color-mix(in srgb, var(--lab-primary) 24%, transparent);
+  color: var(--lab-ink);
+  font-size: 11px;
+  line-height: 16px;
+}
+/* A narrow bar (a sidebar beside a small window) drops the "next" tag first: the segmented
+controls beside it fold into menus on their own (overflow="menu"), the tag is just extra. The trigger
+keeps saying it in its accessible name. */
+.docs-app-bar {
+  container: docs-app-bar / inline-size;
+}
+@container docs-app-bar (max-width: 520px) {
+  .docs-version-trigger .docs-version-next {
+    display: none;
+  }
+}
+.docs-version-name {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.docs-version-name small {
+  color: var(--lab-muted);
+  font-size: 12px;
+}
+.docs-version-menu [data-disabled] {
+  opacity: 1;
+  color: var(--lab-ink);
+}

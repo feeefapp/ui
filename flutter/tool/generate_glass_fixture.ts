@@ -1,0 +1,227 @@
+/**
+ * Writes flutter/test/fixtures/glass.json from the web kit's glass geometry and light, so the Dart
+ * twin is tested against the same numbers. Run from ui/: npx tsx flutter/tool/generate_glass_fixture.ts
+ */
+import { writeFileSync } from 'node:fs'
+import {
+  shapeDistance,
+  smoothMin,
+  unionDistance,
+  rectGap,
+  glassClusters,
+  unionLoops,
+  loopArea,
+  clampRadius,
+  type GlassShape,
+} from '../../src/glass/geometry'
+import { glassLightToward } from '../../src/glass/light'
+import { mergeWidth } from '../../src/glass/geometry'
+import { refractionAt, refractionScale } from '../../src/glass/refraction'
+import { edgeMask, glassBlur, glassBlurAt, glassEdgeTerms, glassHairline, glassMaterial, glassRim, glassSize, rimLayer } from '../../src/glass/material'
+import { hairlineBands } from '../../src/glass/hairline'
+import { SPRINGS, solveSpring, springCoefficients, rubberBand } from '../../src/physics/spring'
+import { glassStretch, pressedShape } from '../../src/glass/press'
+import { planGlassTransition } from '../../src/glass/transitions'
+import { swipeRelease, swipeIsFull, reorderTarget, reorderShifts, reorderLanding } from '../../src/primitives/list-model'
+import { parseNumberExpression, stepDecimals, clampNumber, dragValue, keyValue, fillFraction } from '../../src/primitives/number-field-core'
+import { computeActionsLayout } from '../../src/actions/layout'
+import { diffVisibleActions } from '../../src/actions/overflow-motion'
+import { VelocityTracker } from '../../src/physics/velocity'
+import { scrollWashPaths, scrollEdgeOpacities, scrollContentReserve } from '../../src/scroll/metrics'
+
+const pill: GlassShape = { x: 10, y: 20, width: 120, height: 46, radius: 23 }
+const square: GlassShape = { x: 0, y: 0, width: 40, height: 40, radius: 12 }
+const points: [number, number][] = [
+  [0, 0], [10, 20], [70, 43], [130, 43], [140, 43], [12, 22], [128, 64], [70, 10], [5, 50], [140, 70],
+]
+const pairs: { a: GlassShape; b: GlassShape; spacing: number }[] = [
+  { a: { x: 0, y: 0, width: 80, height: 44, radius: 22 }, b: { x: 86, y: 0, width: 44, height: 44, radius: 22 }, spacing: 12 },
+  { a: { x: 0, y: 0, width: 80, height: 44, radius: 22 }, b: { x: 100, y: 0, width: 44, height: 44, radius: 22 }, spacing: 12 },
+  { a: { x: 0, y: 0, width: 60, height: 60, radius: 20 }, b: { x: 50, y: 30, width: 60, height: 60, radius: 20 }, spacing: 8 },
+]
+const fixture = {
+  distance: [pill, square].map((shape) => ({
+    shape,
+    clamped: clampRadius(shape),
+    samples: points.map(([x, y]) => [x, y, shapeDistance(x, y, shape)]),
+  })),
+  smoothMin: [[1, 2, 4], [1, 9, 4], [-3, -2.5, 8], [0, 0, 6], [5, 1, 0]].map(([a, b, k]) => [a, b, k, smoothMin(a, b, k)]),
+  union: pairs.map(({ a, b, spacing }) => ({
+    a,
+    b,
+    spacing,
+    gap: rectGap(a, b),
+    clusters: glassClusters([a, b], spacing).length,
+    samples: points.map(([x, y]) => [x, y, unionDistance(x, y, [a, b], spacing)]),
+    loops: unionLoops([a, b], spacing, 2).map((loop) => ({ points: loop.length, area: loopArea(loop), first: loop[0] })),
+  })),
+  light: [
+    { centre: { x: 100, y: 100 }, pointer: null },
+    { centre: { x: 100, y: 100 }, pointer: { x: 400, y: 100 } },
+    { centre: { x: 100, y: 100 }, pointer: { x: 100, y: 101 } },
+    { centre: { x: 0, y: 0 }, pointer: { x: -50, y: 300 } },
+  ].map(({ centre, pointer }) => ({ centre, pointer, light: glassLightToward(centre, pointer) })),
+  // The measured Liquid Glass model (research/liquid-glass): merge width, bend, material.
+  mergeWidth: [[0, 40], [8, 40], [16, 40], [30, 40], [5, 0], [3, 12]].map(([gap, spacing]) => [gap, spacing, mergeWidth(gap, spacing)]),
+  refraction: [[-0.2, 1, 0, 27], [-5, 0.6, -0.8, 27], [-13.5, 0, 1, 27], [-30, 1, 0, 27], [1, 1, 0, 27], [-4, 1, 0, 12]].map(([d, nx, ny, bezel]) => [d, nx, ny, bezel, refractionAt(d, nx, ny, bezel)]),
+  refractionScale: [20, 44, 64, 88, 300].map((side) => [side, refractionScale(side)]),
+  material: [20, 44, 64, 72, 73, 100, 160, 400].map((side) => [side, glassBlur(side), glassSize(side)]),
+  // The edge (research/liquid-glass/LIGHT-EDGES.md): rim [depth, cosine, tint, scheme, alpha],
+  // edge mask [depth, cosine, mask], blur [side, tint, blurOn, sigma], edge terms
+  // [tint, scheme, size, surface, {k1, k3}].
+  rimLayer: (['light', 'dark'] as const).flatMap((scheme) => [0, 0.5, 1].flatMap((tint) =>
+    [-0.1, 0, 0.4, 0.8, 1.15].flatMap((depth) => [1, -0.6, 0].map((cosine) =>
+      [depth, cosine, tint, scheme, rimLayer(depth, cosine, glassRim(tint, scheme))])))),
+  // iOS 27's hairline: strengths [tint, scheme, {ring, sliver}] and bands (loop counts, widest reach).
+  hairline: (['light', 'dark'] as const).flatMap((scheme) => [0, 0.5, 1].map((tint) => [tint, scheme, glassHairline(tint, scheme)])),
+  hairlineBands: [
+    { shapes: [{ x: 10, y: 10, width: 48, height: 48, radius: 24, cornerExponent: 2 }], spacing: 8 },
+    { shapes: [{ x: 10, y: 10, width: 160, height: 44, radius: 22, cornerExponent: 2 }], spacing: 8 },
+    { shapes: [{ x: 10, y: 10, width: 48, height: 48, radius: 24, cornerExponent: 2 }, { x: 60, y: 10, width: 48, height: 48, radius: 24, cornerExponent: 2 }], spacing: 16 },
+  ].map(({ shapes, spacing }) => {
+    const bands = hairlineBands(shapes, spacing)
+    const reach = (loops: [number, number][][]) => {
+      let most = 0
+      for (let i = 0; i + 1 < loops.length; i += 2) loops[i].forEach(([x, y], k) => { most = Math.max(most, Math.hypot(x - loops[i + 1][k][0], y - loops[i + 1][k][1])) })
+      return most
+    }
+    return { shapes, spacing, ringLoops: bands.ring.length, sliverLoops: bands.sliver.length, ringReach: reach(bands.ring), sliverReach: reach(bands.sliver) }
+  }),
+  edgeMask: [-0.1, 0, 0.3, 0.7, 1].flatMap((depth) => [1, 0.5, 0].map((cosine) => [depth, cosine, edgeMask(depth, cosine)])),
+  blurAt: [44, 120, 300].flatMap((side) => [0, 0.5, 1].flatMap((tint) => [false, true].map((on) => [side, tint, on, glassBlurAt(side, tint, on)]))),
+  edgeTerms: (['light', 'dark'] as const).flatMap((scheme) => [0, 0.5, 1].flatMap((tint) => (['small', 'large'] as const).map((size) => {
+    const surface = scheme === 'light' ? 0.99 : 0.13
+    return [tint, scheme, size, surface, glassEdgeTerms(tint, scheme, glassMaterial(tint, scheme, size), surface)]
+  }))),
+  // The tint curve (ThemeConfig glassTint): [tint, scheme, size, material].
+  tint: [0, 0.25, 0.5, 0.75, 1, -1, 3].flatMap((tint) =>
+    (['light', 'dark'] as const).flatMap((scheme) =>
+      (['small', 'large'] as const).map((size) => [tint, scheme, size, glassMaterial(tint, scheme, size)])
+    )
+  ),
+}
+writeFileSync(new URL('../test/fixtures/glass.json', import.meta.url), JSON.stringify(fixture, null, 1) + '\n')
+console.log('wrote glass.json')
+
+// Springs and press response, shared by the glass engine.
+const springs = Object.entries(SPRINGS).map(([name, spring]) => {
+  const at = solveSpring(spring, 0, 100, 40)
+  return { name, coefficients: springCoefficients(spring), samples: [0, 0.05, 0.1, 0.2, 0.35, 0.6, 1].map((t) => [t, at(t).position, at(t).velocity]) }
+})
+const overdamped = solveSpring({ duration: 0.5, bounce: -0.4 }, 10, -5, 0)
+const motion = {
+  springs,
+  overdamped: [0, 0.1, 0.3, 0.8].map((t) => [t, overdamped(t).position, overdamped(t).velocity]),
+  rubberBand: [[0, 100], [10, 100], [-40, 100], [500, 48], [3, 0]].map(([o, d]) => [o, d, rubberBand(o, d)]),
+  stretch: [[0, 0], [20, -8], [-300, 120]].map(([dx, dy]) => [dx, dy, glassStretch(dx, dy)]),
+  pressed: pressedShape({ x: 10, y: 10, width: 100, height: 40, radius: 20 }, 1.06, 6, -3),
+  // Births and deaths: a split next to a far newcomer, a title bubble born out of the brand and
+  // absorbed back, a same-row neighbour beating a closer one below, and a lone bubble.
+  plans: (() => {
+    const r = (x: number, y: number, width: number, height: number) => ({ x, y, width, height })
+    const cases: [string, [string, ReturnType<typeof r>][], [string, ReturnType<typeof r>][], number][] = [
+      ['split', [['pair', r(0, 0, 120, 44)], ['far', r(400, 0, 44, 44)]], [['left', r(0, 0, 56, 44)], ['right', r(64, 0, 56, 44)], ['new', r(250, 0, 44, 44)]], 12],
+      ['title appears', [['brand', r(8, 8, 150, 44)], ['tools', r(900, 8, 44, 44)]], [['brand', r(8, 8, 150, 44)], ['tools', r(900, 8, 44, 44)], ['title', r(166, 8, 120, 44)]], 8],
+      ['title leaves', [['brand', r(8, 8, 150, 44)], ['title', r(166, 8, 120, 44)]], [['brand', r(8, 8, 150, 44)]], 8],
+      ['same row first', [['side', r(0, 0, 80, 46)], ['below', r(300, 50, 80, 46)]], [['side', r(0, 0, 80, 46)], ['below', r(300, 50, 80, 46)], ['new', r(300, 0, 80, 46)]], 2],
+      ['stacked', [['top', r(0, 0, 200, 44)]], [['top', r(0, 0, 200, 44)], ['under', r(40, 200, 60, 40)]], 8],
+      ['lone', [], [['only', r(10, 10, 44, 44)]], 8],
+    ]
+    return cases.map(([name, previous, next, spacing]) => ({
+      name,
+      previous: Object.fromEntries(previous),
+      next: Object.fromEntries(next),
+      spacing,
+      ...planGlassTransition(new Map(previous), new Map(next), spacing),
+    }))
+  })(),
+}
+writeFileSync(new URL('../test/fixtures/motion.json', import.meta.url), JSON.stringify(motion, null, 1) + '\n')
+console.log('wrote motion.json')
+
+// Scroll washes and edge opacities.
+const washLevels = (columns: number, rows: number) => {
+  const grid = Array.from({ length: columns * rows }, () => 0)
+  scrollWashPaths(columns, rows).forEach((d, level) => {
+    for (const [, x, y] of d.matchAll(/M(\d+) (\d+)/g)) grid[Number(y) * columns + Number(x)] = level
+  })
+  return grid
+}
+const scroll = {
+  wash: [[12, 5], [40, 13], [3, 1]].map(([c, r]) => ({ columns: c, rows: r, levels: washLevels(c, r) })),
+  edges: [[0, 0], [0, 500], [40, 500], [500, 500], [-20, 500], [700, 500], [10, 1]].map(([o, e]) => [o, e, scrollEdgeOpacities(o, e)]),
+  reserve: [[0, 12, 24], [52, 12, 24], [52, -3, 24]].map(([h, g, p]) => [h, g, p, scrollContentReserve(h, g, p)]),
+}
+writeFileSync(new URL('../test/fixtures/scroll.json', import.meta.url), JSON.stringify(scroll) + '\n')
+console.log('wrote scroll.json')
+
+// List rows: swipe landings and reorder targets.
+const sides = { leading: 76, trailing: 152, row: 360, fullLeading: true, fullTrailing: true }
+const list = {
+  release: [[10, 0], [50, 0], [30, 800], [-90, 0], [-60, -900], [250, 0], [-250, 0], [-250, 0, false]].map(
+    ([o, v, full]) => {
+      const s = { ...sides, fullTrailing: full !== false }
+      return [o, v, full !== false, swipeRelease(o as number, v as number, s), swipeIsFull(o as number, s)]
+    }
+  ),
+  reorder: [[0, 30], [0, 90], [2, -70], [3, 0], [1, 200]].map(([from, delta]) => {
+    const heights = [56, 64, 56, 72]
+    const to = reorderTarget(heights, from, delta)
+    return [from, delta, to, reorderShifts(heights, from, to), reorderLanding(heights, from, to)]
+  }),
+}
+writeFileSync(new URL('../test/fixtures/list.json', import.meta.url), JSON.stringify(list) + '\n')
+console.log('wrote list.json')
+
+// Actions: which entries fit.
+const fit = (widths: number[], priorities: number[], maxWidth: number) => {
+  const actions = widths.map((w, i) => ({ id: `a${i}`, priority: priorities[i], w }))
+  const layout = computeActionsLayout({ actions, maxWidth, measure: (a) => a.w, overflowWidth: 40, gap: 4 })
+  return { widths, priorities, maxWidth, visible: layout.visible.map((a) => a.id), overflow: layout.overflow.map((a) => a.id), requiredWidth: layout.requiredWidth }
+}
+const actionsFixture = {
+  layouts: [
+    fit([80, 60, 90], [0, 0, 0], 400),
+    fit([80, 60, 90], [0, 0, 0], 200),
+    fit([80, 60, 90], [2, 0, 1], 150),
+    fit([80, 60, 90], [0, 0, 0], 10),
+    fit([], [], 100),
+  ],
+  diff: diffVisibleActions(['a', 'b', 'c'], ['a', 'c', 'd']),
+}
+writeFileSync(new URL('../test/fixtures/actions.json', import.meta.url), JSON.stringify(actionsFixture) + '\n')
+console.log('wrote actions.json')
+
+// Number field: parsing, clamping, scrubbing and keys.
+const nb = { min: 0, max: 100, step: 5 }
+const open = { step: 0.25 }
+const numbers = {
+  parse: ['12', '1,5', '1,250.75', '2000*15%', '(3+4)*2', '10 / 4', '−3', '٣٫', '١٢٣', '2e3', 'abc', '', '1+', '3×4÷2', '50%'].map((t) => [t, parseNumberExpression(t)]),
+  decimals: [1, 0.25, 0.1, 0.001, 1e-7, 5].map((s) => [s, stepDecimals(s)]),
+  clamp: [[37, nb], [-4, nb], [1e9, nb], [1.13, open], [Number.NaN, nb], [7.3, { min: 2, step: 0.5 }], [7.3, { max: 2, step: 0.5 }]].map(([v, b]) => [v, b, clampNumber(v as number, b as never)]),
+  drag: [
+    [{ ...nb, startValue: 50, dx: 20, width: 200 }],
+    [{ ...nb, startValue: 50, dx: 20, width: 200, fine: true }],
+    [{ ...nb, startValue: 50, dx: 20, width: 200, rtl: true }],
+    [{ ...open, startValue: 1, dx: 33, width: 200 }],
+  ].map(([o]) => [o, dragValue(o as never)]),
+  keys: [['ArrowUp', 50], ['ArrowLeft', 50], ['PageDown', 50], ['Home', 50], ['End', 50], ['Tab', 50]].map(([k, v]) => [k, v, keyValue(k as string, v as number, nb), keyValue(k as string, v as number, nb, { rtl: true })]),
+  fill: [[25, nb], [5, open]].map(([v, b]) => [v, b, fillFraction(v as number, b as never)]),
+}
+writeFileSync(new URL('../test/fixtures/numbers.json', import.meta.url), JSON.stringify(numbers) + '\n')
+console.log('wrote numbers.json')
+
+// Velocity tracking.
+const tracks = [
+  { samples: [[0, 0], [16, 10], [32, 20], [48, 30]], now: 50 },
+  { samples: [[0, 0], [10, 5], [20, 30], [30, 31], [140, 31]], now: 150 },
+  { samples: [[0, 0], [16, 10], [32, 20]], now: 200 },
+  { samples: [[0, 0], [1, 100]], now: 1 },
+  { samples: [[0, 0]], now: 0 },
+].map(({ samples, now }) => {
+  const t = new VelocityTracker()
+  for (const [time, value] of samples) t.add(value, time)
+  return { samples, now, velocity: t.velocity(now), loose: t.velocity() }
+})
+writeFileSync(new URL('../test/fixtures/velocity.json', import.meta.url), JSON.stringify(tracks) + '\n')
+console.log('wrote velocity.json')

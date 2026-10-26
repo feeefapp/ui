@@ -1,62 +1,412 @@
-/* Shared mode group: selected choices use an explicit, high-contrast surface. */
+/* Selection track (selection-track.tsx): the base of the segmented control and of TabView's tab
+bar. Options and one moving pill in one row, no container of its own (the host decides: glass, a box
+or nothing). A segmented control is a regular button tall (--lab-control-height, so a toolbar
+bubble's control height inside one); the pill sits --lab-segmented-inset inside it, and options are
+--lab-segmented-gap apart (never more than the inset). The root keeps the capsule radius so a
+background set on it (a box) has the right shape. Root > scroller (the inset; scrolls when the
+options don't fit, data-overflow) > track (options and pill). Motion, the pill's geometry,
+data-overflow and the edge fades are written by selection-track.tsx; the selected option carries
+data-selected (aria-checked for a radio, aria-selected for a tab). Variants: data-layout
+(inline | stacked), data-pill (filled | tinted), data-overflow-mode / data-menu-folded. */
 .lab-segmented {
+  --lab-segmented-size: var(--lab-control-height);
+  --lab-segmented-option: calc(var(--lab-segmented-size) - 2 * var(--lab-segmented-inset));
+  --lab-segmented-gap: var(--lab-segmented-inset);
+  /* SEGMENTED_FADE and SEGMENTED_BLEED (segmented-model.ts). */
+  --lab-segmented-fade: 24px;
+  --lab-segmented-bleed: 8px;
+  /* The pill's rest paint and the selected ink: filled (a segmented control) or quiet (a tab bar).
+  --lab-segmented-lens-ink: the ink inside the pill while it is a clear glass drop. */
+  --lab-segmented-pill-fill: var(--lab-primary);
+  --lab-segmented-pill-ink: var(--lab-on-primary);
+  --lab-segmented-lens-ink: var(--lab-ink);
+  --lab-lens: 0;
+  --lab-lens-glow: 0;
+  position: relative;
+  box-sizing: border-box;
   display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px;
+  min-width: 0;
   max-width: 100%;
-  flex-wrap: wrap;
-  border: 1px solid var(--lab-line);
-  border-radius: var(--lab-radius-group);
-  corner-shape: superellipse(1.5);
-  background: var(--lab-glass-fill);
-  box-shadow: var(--lab-glass-light);
+  min-height: var(--lab-segmented-size);
+  border-radius: calc(var(--lab-segmented-size) / 2 * var(--lab-capsule-scale, 1));
+  corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
+  /* Horizontal drags move the pill; vertical ones still scroll the page. */
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
-.lab-segmented[data-appearance='plain'] {
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  padding: 0;
+/* iOS 27's tab bar: a quiet pill that only darkens (light) or lightens (dark) what is under it by
+about 7% (Figma: #EDEDED plus-darker / #121212 plus-lighter), with the selected glyph and label in
+the accent colour, also while the pill is a glass drop. */
+.lab-segmented[data-pill='quiet'] {
+  --lab-segmented-pill-fill: color-mix(in srgb, var(--lab-ink) 7%, transparent);
+  --lab-segmented-pill-ink: var(--lab-primary);
+  --lab-segmented-lens-ink: var(--lab-primary);
 }
-html[data-lab-theme] .lab-segmented > .lab-segmented-option {
+.lab-segmented[data-equal-width] {
+  display: flex;
+  width: 100%;
+}
+.lab-segmented-scroller {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: var(--lab-segmented-inset);
+}
+.lab-segmented-track {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--lab-segmented-gap);
+}
+.lab-segmented[data-equal-width] .lab-segmented-track {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+/* Too many options: the scroller scrolls inside the control, its clip reaching
+--lab-segmented-bleed above and below (a pressed pill swells and casts a shadow), its edges fading
+where there is more (--lab-segmented-fade-left/right, 0 … 1). Only the options take the pointer, so
+the bleed never covers what is around the control. On touch a swipe scrolls; the selected option
+keeps horizontal drags for the pill. */
+.lab-segmented[data-overflow] > .lab-segmented-scroller {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  scroll-padding-inline: var(--lab-segmented-fade);
+  margin-block: calc(-1 * var(--lab-segmented-bleed));
+  padding-block: calc(var(--lab-segmented-inset) + var(--lab-segmented-bleed));
+  pointer-events: none;
+  mask-image: linear-gradient(
+    to right,
+    rgb(0 0 0 / calc(1 - var(--lab-segmented-fade-left, 0))),
+    #000 var(--lab-segmented-fade),
+    #000 calc(100% - var(--lab-segmented-fade)),
+    rgb(0 0 0 / calc(1 - var(--lab-segmented-fade-right, 0)))
+  );
+}
+.lab-segmented[data-overflow] > .lab-segmented-scroller::-webkit-scrollbar {
+  display: none;
+}
+.lab-segmented[data-overflow] .lab-segmented-option {
+  pointer-events: auto;
+}
+.lab-segmented[data-overflow] .lab-segmented-option[data-selected] {
+  touch-action: pan-y;
+}
+/* Out-specifies toolbar and touch sizing of `.lab-control[data-variant]`: the pill sets the size. */
+html[data-lab-theme] .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
+  z-index: 1;
   flex: 0 1 auto;
   min-width: max-content;
-  height: var(--lab-control-compact);
-  min-height: var(--lab-control-compact);
+  height: var(--lab-segmented-option);
+  min-height: var(--lab-segmented-option);
   padding: 0 var(--lab-control-padding);
-  border-radius: var(--lab-radius-control-compact);
-  font: 400 15px/20px var(--lab-font);
+  border-radius: calc(var(--lab-segmented-option) / 2 * var(--lab-capsule-scale, 1));
+  corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
+  font: 600 13px/18px var(--lab-font);
   color: var(--lab-muted);
-  --lab-control-selected: color-mix(in srgb, var(--lab-primary) 16%, var(--lab-surface));
   --lab-control-elevation: none;
+  /* Until the pill is placed (server render), only the selected option shows selected ink. */
+  --lab-segmented-clip: inset(50%);
 }
-html[data-lab-theme] .lab-segmented > .lab-segmented-option[data-state='on'] {
-  color: var(--lab-on-primary);
-  background: var(--lab-primary);
-  --lab-control-selected: var(--lab-primary);
-  --lab-control-edge: transparent;
-  --lab-control-elevation: none;
+html[data-lab-theme] .lab-segmented[data-equal-width] .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
+  flex: 1 1 0;
+  min-width: 0;
+}
+html[data-lab-theme] .lab-segmented-track > .lab-segmented-option.lab-control[data-selected] {
+  --lab-segmented-clip: inset(0);
+}
+/* The pill is the selected option's paint: the option itself stays clear under it. */
+html[data-lab-theme] .lab-segmented-track > .lab-segmented-option.lab-control[data-selected]:is(:hover, :active, :focus-visible) {
+  background: transparent;
   box-shadow: none;
 }
-.lab-segmented-option > span {
+html[data-lab-theme] .lab-segmented-track > .lab-segmented-pill[data-hidden] ~ .lab-segmented-option[data-selected] {
+  background: var(--lab-segmented-pill-fill);
+}
+html[data-lab-theme] .lab-segmented[data-dragging] .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
+  background: transparent;
+  cursor: grabbing;
+}
+.lab-segmented-content {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+/* The selected ink: a copy of the content laid over it, cut to the pill (--lab-segmented-clip). */
+.lab-segmented-option > .lab-segmented-ink {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  padding: inherit;
+  /* At rest the pill's ink; as a drop, the lens ink (its fill is gone, the glass is clear). */
+  color: color-mix(in srgb, var(--lab-segmented-pill-ink) calc((1 - var(--lab-lens)) * 100%), var(--lab-segmented-lens-ink));
+  clip-path: var(--lab-segmented-clip);
+  /* Where liquid glass can't bend, the copy stands in for its magnifier (lens-model.ts
+  lensInkZoom): scaled around the drop's centre, the clip set in the scaled space so it still
+  matches the drop. Glass that magnifies for real leaves it at 1. */
+  transform-origin: var(--lab-segmented-lens-at, 50% 50%);
+  scale: var(--lab-segmented-zoom, 1);
+  pointer-events: none;
+}
+.lab-segmented-icon {
+  display: inline-flex;
+  flex: none;
+}
+/* A status tone colours the icon of an option that isn't selected (the selected ink is the pill's). */
+.lab-segmented-icon[data-tone='success'] {
+  color: var(--lab-success);
+}
+.lab-segmented-icon[data-tone='warning'] {
+  color: var(--lab-warning);
+}
+.lab-segmented-icon[data-tone='danger'] {
+  color: var(--lab-danger);
+}
+.lab-segmented-ink > .lab-segmented-icon[data-tone] {
+  color: inherit;
+}
+/* A count after the label: a small neutral pill of the ink around it, so it reads on the bare
+option and, in the selected ink, on the pill (it turns over with the label as the pill passes). */
+.lab-segmented-badge {
+  flex: none;
+  box-sizing: border-box;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: calc(9px * var(--lab-capsule-scale, 1));
+  corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  font: 600 11px/18px var(--lab-font);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  white-space: nowrap;
+}
+.lab-segmented-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .lab-segmented-option svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
-@media (pointer: coarse) {
-  html[data-lab-theme] .lab-segmented > .lab-segmented-option {
-    min-height: 44px;
-    height: 44px;
+html[data-lab-density='thin'][data-lab-theme] .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
+  font-size: 12px;
+  line-height: 16px;
+}
+
+/* Stacked (a tab): the icon over the label, the badge on the icon's corner as a count that needs
+action. The badge is drawn once, above the selected ink (z-index), so the pill never repaints it. The
+host sets the option's size and type (tab-view.css). */
+.lab-segmented[data-layout='stacked'] .lab-segmented-content {
+  flex-direction: column;
+  gap: 2px;
+}
+.lab-segmented[data-layout='stacked'] .lab-segmented-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+}
+.lab-segmented[data-layout='stacked'] .lab-segmented-icon > svg {
+  width: 22px;
+  height: 22px;
+}
+.lab-segmented[data-layout='stacked'] .lab-segmented-label {
+  max-width: 100%;
+}
+.lab-segmented[data-layout='stacked'] .lab-segmented-icon > .lab-segmented-badge {
+  position: absolute;
+  z-index: 1;
+  top: -5px;
+  inset-inline-start: 14px;
+  background: var(--lab-danger);
+  color: var(--lab-surface);
+  font-variant-numeric: normal;
+}
+.lab-segmented[data-layout='stacked'] .lab-segmented-ink .lab-segmented-icon > .lab-segmented-badge {
+  /* At rest the plain badge shows; under the drop (where the plain content is cut out) the
+  magnified copy's badge takes over. */
+  opacity: var(--lab-lens);
+}
+
+/* Folding into a menu (data-overflow-mode='menu', selection-track.tsx): when the row has no room
+the other options fold away on a spring (the snappy spring as a CSS easing) and the selected option, on its
+pill, gains a chevron: one capsule that opens the options as a radio menu. Never scrolls, never
+shrinks (the row fits it). Scoped to the root's own track: the hidden measuring copy keeps its
+unfolded size. */
+.lab-segmented[data-overflow-mode='menu'],
+.lab-toolbar-group:has(> .lab-segmented[data-overflow-mode='menu']) {
+  /* Its bubble keeps the control's width while it folds: the row makes room, nothing overlaps. */
+  flex-shrink: 0;
+  max-width: none;
+}
+.lab-segmented[data-overflow-mode='menu'] > .lab-segmented-scroller > .lab-segmented-track {
+  transition: column-gap var(--lab-segmented-fold-duration) var(--lab-segmented-fold-ease);
+}
+html[data-lab-theme] .lab-segmented[data-overflow-mode='menu'] > .lab-segmented-scroller > .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
+  overflow: hidden;
+  max-width: var(--lab-segmented-natural, 100vw);
+  transition-property: max-width, min-width, padding, opacity, background-color, color;
+  transition-duration: var(--lab-segmented-fold-duration), var(--lab-segmented-fold-duration),
+    var(--lab-segmented-fold-duration), 160ms, var(--lab-duration-fast), var(--lab-duration-fast);
+  transition-timing-function: var(--lab-segmented-fold-ease), var(--lab-segmented-fold-ease),
+    var(--lab-segmented-fold-ease), ease, var(--lab-ease), var(--lab-ease);
+}
+.lab-segmented[data-menu-folded] > .lab-segmented-scroller > .lab-segmented-track {
+  column-gap: 0;
+}
+html[data-lab-theme] .lab-segmented[data-menu-folded] > .lab-segmented-scroller > .lab-segmented-track > .lab-segmented-option.lab-control[data-variant]:not([data-selected]) {
+  min-width: 0;
+  max-width: 0;
+  padding-inline: 0;
+  border-width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+/* The chevron: folded away (no width) until the track folds; the measuring copy shows it. */
+.lab-segmented-chevron {
+  display: inline-flex;
+  flex: none;
+  box-sizing: border-box;
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition-property: max-width, padding, opacity;
+  transition-duration: var(--lab-segmented-fold-duration, 0ms), var(--lab-segmented-fold-duration, 0ms), 160ms;
+  transition-timing-function: var(--lab-segmented-fold-ease, ease), var(--lab-segmented-fold-ease, ease), ease;
+}
+.lab-segmented .lab-segmented-option .lab-segmented-chevron > svg,
+.lab-segmented-measure .lab-segmented-chevron > svg {
+  width: 14px;
+  height: 14px;
+}
+/* The content's own 6px gap would show beside the hidden chevron: the chevron brings its own. */
+.lab-segmented-content > .lab-segmented-chevron {
+  margin-inline-start: -6px;
+}
+.lab-segmented[data-menu-folded] .lab-segmented-option[data-selected] .lab-segmented-chevron,
+.lab-segmented-measure .lab-segmented-chevron {
+  max-width: 24px;
+  padding-inline-start: 4px;
+  opacity: 1;
+}
+.lab-segmented-measure {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+.lab-segmented-measure > .lab-segmented-track {
+  width: max-content;
+}
+/* The menu grows out of the whole capsule. */
+.lab-segmented-menu-anchor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.lab-segmented-menu .lab-segmented-icon > svg {
+  width: 16px;
+  height: 16px;
+}
+.lab-segmented-menu .lab-segmented-badge {
+  margin-inline-start: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-lab-theme] .lab-segmented[data-overflow-mode='menu'] > .lab-segmented-scroller > .lab-segmented-track,
+  html[data-lab-theme] .lab-segmented[data-overflow-mode='menu'] > .lab-segmented-scroller > .lab-segmented-track > .lab-segmented-option.lab-control[data-variant],
+  html[data-lab-theme] .lab-segmented-chevron {
+    transition-duration: 0ms;
   }
 }
+html[data-lab-theme]:is([data-lab-motion='reduced'], [data-lab-motion='none']) :is(.lab-segmented[data-overflow-mode='menu'] > .lab-segmented-scroller > .lab-segmented-track, .lab-segmented[data-overflow-mode='menu'] > .lab-segmented-scroller > .lab-segmented-track > .lab-segmented-option.lab-control[data-variant], .lab-segmented-chevron) {
+  transition-duration: 0ms;
+}
+
+/* The pill: filled at rest; pressed or dragged the fill fades out under the glass lens laid over the
+options (.lab-segmented-lens, glass/lens-layer.ts), it swells with --lab-segmented-press and casts
+the lens's shadow, like a pressed GlassContainer bubble. */
+.lab-segmented-pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: calc(var(--lab-segmented-option) / 2 * var(--lab-capsule-scale, 1) * var(--lab-segmented-press, 1));
+  corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--lab-glass-shadow-color) calc(var(--lab-lens) * 100%), transparent);
+  will-change: transform;
+}
+.lab-segmented-pill[data-hidden] {
+  visibility: hidden;
+}
+/* The pill's glass (lens.css), placed by selection-track.tsx: above the options it bends and
+magnifies, and free to lift out past the track. */
+.lab-segmented-track > .lab-segmented-lens {
+  inset: auto;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
+  will-change: transform;
+}
+.lab-segmented-pill > span {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border-radius: inherit;
+  corner-shape: inherit;
+}
+.lab-segmented-fill {
+  background: var(--lab-segmented-pill-fill);
+  opacity: calc(1 - var(--lab-lens));
+}
+/* Solid pill: no lens when transparency is unwanted, contrast is raised or glass is solid. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .lab-segmented-fill,
+  .lab-segmented-option > .lab-segmented-ink {
+    opacity: 1;
+  }
+}
+html[data-lab-glass='solid'] .lab-segmented-fill,
+html[data-lab-glass='solid'] .lab-segmented-option > .lab-segmented-ink {
+  opacity: 1;
+}
+.lab-segmented[aria-disabled='true'] .lab-segmented-pill {
+  opacity: 0.42;
+}
+
+/* Touch keeps its look: each option's hit area reaches out to --lab-control-touch-target
+(system.css), the control stays a regular button tall. */
 @media (forced-colors: active) {
-  .lab-segmented {
-    background: Canvas;
+  .lab-segmented-pill {
+    forced-color-adjust: none;
     box-shadow: none;
   }
-  html[data-lab-theme] .lab-segmented > .lab-segmented-option[data-state='on'] {
-    outline: 1px solid Highlight;
+  .lab-segmented-fill {
+    background: Highlight;
+    opacity: 1;
+  }
+  .lab-segmented-option > .lab-segmented-ink {
+    forced-color-adjust: none;
+    color: HighlightText;
+    opacity: 1;
   }
 }

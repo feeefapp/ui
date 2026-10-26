@@ -1,0 +1,579 @@
+/* Docs chrome. Colors, radii and type come from the kit's tokens, so the reader's Customize
+   choices (palette, density, radius, mode, direction) restyle the docs and the demos together. */
+
+:root {
+  --docs-toc: 224px;
+  --docs-content: 820px;
+  --docs-code-bg: color-mix(in srgb, var(--lab-surface-soft) 55%, var(--lab-surface));
+  --docs-radius: var(--lab-radius-panel);
+  --docs-radius-small: var(--lab-radius-small);
+  --docs-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--lab-surface);
+  color: var(--lab-ink);
+  font: 400 15px/1.6 var(--lab-font);
+  -webkit-font-smoothing: antialiased;
+}
+a {
+  color: var(--lab-focus);
+}
+::selection {
+  background: color-mix(in srgb, var(--lab-primary) 35%, transparent);
+}
+.docs-dir-flip:dir(rtl) {
+  transform: scaleX(-1);
+}
+
+/* ---------- Top bar ---------- */
+
+/* ---------- Layout ---------- */
+
+/* ---------- Side navigation ---------- */
+
+/* ---------- Drawer (phones) ---------- */
+
+/* ---------- Table of contents ---------- */
+
+/* ---------- Page ---------- */
+.docs-page {
+  max-width: var(--docs-content);
+  margin: 0 auto;
+}
+.docs-page-header {
+  margin-bottom: 32px;
+}
+.docs-breadcrumb {
+  margin: 0 0 8px;
+  color: var(--lab-muted);
+  font-size: 13px;
+}
+.docs-breadcrumb a {
+  color: inherit;
+}
+.docs-page h1 {
+  margin: 0;
+  font-size: clamp(30px, 4vw, 40px);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+}
+.docs-summary {
+  max-width: 64ch;
+  margin: 12px 0 0;
+  color: var(--lab-muted);
+  font-size: 18px;
+  line-height: 1.5;
+}
+.docs-studio-note {
+  margin: 16px 0 0;
+  padding: 12px 16px;
+  border-radius: var(--docs-radius-small);
+  background: color-mix(in srgb, var(--lab-warning, #8a5300) 10%, var(--lab-surface));
+  font-size: 14px;
+}
+.docs-page-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* ---------- Prose ---------- */
+.docs-page-body > * + * {
+  margin-top: 24px;
+}
+.docs-section + .docs-section {
+  margin-top: 48px;
+}
+.docs-heading {
+  position: relative;
+  margin: 0 0 12px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+h2.docs-heading {
+  font-size: 24px;
+  letter-spacing: -0.01em;
+}
+h3.docs-heading {
+  margin-top: 28px;
+  font-size: 18px;
+}
+.docs-heading-anchor {
+  position: absolute;
+  inset-inline-end: 100%;
+  padding-inline-end: 8px;
+  color: var(--lab-muted);
+  text-decoration: none;
+  opacity: 0;
+}
+.docs-heading:hover .docs-heading-anchor {
+  opacity: 1;
+}
+.docs-page p,
+.docs-page li {
+  max-width: 72ch;
+}
+.docs-page p {
+  margin: 0 0 12px;
+}
+.docs-page ul,
+.docs-page ol {
+  padding-inline-start: 22px;
+}
+.docs-lead {
+  font-size: 17px;
+}
+.docs-muted {
+  color: var(--lab-muted);
+}
+.docs-inline-code,
+.docs-page p code,
+.docs-page li code,
+.docs-page td code:not(.docs-type):not(.docs-prop-name) {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--docs-code-bg);
+  font: 0.88em var(--docs-mono);
+}
+.docs-callout {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--docs-radius-small);
+  background: color-mix(in srgb, var(--lab-primary) 12%, var(--lab-surface));
+}
+.docs-callout[data-tone='warning'] {
+  background: color-mix(in srgb, var(--lab-warning, #8a5300) 12%, var(--lab-surface));
+}
+.docs-callout > svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.docs-callout strong {
+  display: block;
+  margin-bottom: 2px;
+}
+.docs-callout p:last-child {
+  margin-bottom: 0;
+}
+.docs-dodont {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+/* The do / don't indicator is a rounded bar inside the card, inset by the same space as the text. */
+.docs-dodont > div {
+  --docs-dodont-pad: 18px;
+  --docs-dodont-bar: 4px;
+  position: relative;
+  padding: var(--docs-dodont-pad);
+  padding-inline-start: calc(var(--docs-dodont-pad) * 2 + var(--docs-dodont-bar));
+  border-radius: var(--lab-radius-panel);
+  background: var(--docs-code-bg);
+}
+.docs-dodont > div::before {
+  content: '';
+  position: absolute;
+  inset-block: var(--docs-dodont-pad);
+  inset-inline-start: var(--docs-dodont-pad);
+  width: var(--docs-dodont-bar);
+  border-radius: 999px;
+  background: var(--docs-dodont-tone);
+}
+.docs-dodont [data-kind='do'] {
+  --docs-dodont-tone: var(--lab-success, #2f6b28);
+}
+.docs-dodont [data-kind='dont'] {
+  --docs-dodont-tone: var(--lab-danger);
+}
+.docs-dodont strong svg {
+  color: var(--docs-dodont-tone);
+}
+.docs-dodont strong {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.docs-dodont ul {
+  margin: 8px 0 0;
+}
+
+/* ---------- Code ---------- */
+
+/* ---------- Examples ---------- */
+.docs-example + .docs-example {
+  margin-top: 40px;
+}
+.docs-example-description {
+  color: var(--lab-muted);
+}
+.docs-example-card {
+  overflow: hidden;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--docs-radius);
+}
+.docs-stage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 168px;
+  padding: 40px 24px;
+  background: var(--lab-ground);
+}
+.docs-stage[data-align='start'] {
+  align-items: stretch;
+  justify-content: flex-start;
+}
+.docs-stage > * {
+  max-width: 100%;
+}
+.docs-example-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 4px 8px;
+  border-top: 1px solid var(--lab-line);
+  background: var(--lab-surface);
+}
+/* Example demos lay out their own pieces with these helpers. */
+.demo-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+/* Scoped and doubled: a component's own width rule (the toolbar's `.lab-toolbar-layout[role]
+{inline-size: 100%}`) must not win by specificity or bundle order. */
+.docs-stage .demo-column.demo-column {
+  display: grid;
+  gap: 16px;
+  width: min(100%, 360px);
+}
+.docs-stage .demo-wide.demo-wide {
+  width: min(100%, 560px);
+}
+/* A segmented control on a plain box (its root already has the capsule radius). Dart: a DecoratedBox
+with ShapeDecoration(color: colors.surfaceSoft, shape: SuperellipseBorder(radius: sizes.radiusControl)). */
+.demo-segmented-box {
+  background: var(--lab-surface-soft);
+}
+
+/* ---------- Playground ---------- */
+.docs-playground {
+  overflow: hidden;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--docs-radius);
+}
+.docs-playground-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+}
+.docs-playground-main .docs-stage {
+  min-height: 280px;
+}
+.docs-playground-controls {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 16px;
+  border-inline-start: 1px solid var(--lab-line);
+  background: var(--lab-surface);
+}
+.docs-playground-controls-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+.docs-playground-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+.docs-playground-slider {
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+}
+.docs-playground-slider output {
+  color: var(--lab-muted);
+  font-family: var(--docs-mono);
+}
+
+/* ---------- Tables ---------- */
+.docs-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--docs-radius-small);
+}
+.docs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.docs-table th {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--lab-line);
+  background: var(--docs-code-bg);
+  color: var(--lab-muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: start;
+}
+.docs-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--lab-line);
+  vertical-align: top;
+}
+.docs-table tr:last-child td {
+  border-bottom: 0;
+}
+.docs-prop-name {
+  font: 600 13px var(--docs-mono);
+  color: var(--lab-ink);
+  white-space: nowrap;
+}
+.docs-type {
+  color: var(--lab-focus);
+  font: 12.5px/1.6 var(--docs-mono);
+  word-break: break-word;
+}
+.docs-required {
+  display: inline-block;
+  margin-inline-start: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--lab-danger) 14%, var(--lab-surface));
+  color: var(--lab-danger);
+  font-size: 11px;
+  font-weight: 500;
+}
+.docs-props td:nth-child(1) {
+  width: 22%;
+}
+.docs-props td:nth-child(2) {
+  width: 30%;
+}
+.docs-props td:nth-child(3) {
+  width: 14%;
+}
+.docs-api + .docs-api {
+  margin-top: 48px;
+}
+.docs-inherits,
+.docs-source {
+  margin-top: 12px !important;
+  color: var(--lab-muted);
+  font-size: 14px;
+}
+
+/* ---------- Cards ---------- */
+.docs-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.docs-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--docs-radius);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color var(--lab-duration-fast) var(--lab-ease);
+}
+@media (hover: hover) {
+  .docs-card:hover {
+    border-color: color-mix(in srgb, var(--lab-ink) 30%, var(--lab-line));
+  }
+}
+.docs-card-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 128px;
+  overflow: hidden;
+  padding: 16px;
+  background: var(--lab-ground);
+  pointer-events: none;
+}
+.docs-card-initial {
+  color: var(--lab-muted);
+  font-size: 40px;
+  font-weight: 600;
+}
+.docs-card-text {
+  display: grid;
+  gap: 2px;
+  padding: 14px 16px 16px;
+}
+.docs-card-text span {
+  color: var(--lab-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* ---------- Pager ---------- */
+
+/* ---------- Search ---------- */
+
+/* ---------- Customize ---------- */
+.docs-customize {
+  z-index: 40;
+  display: grid;
+  gap: 14px;
+  width: min(340px, calc(100vw - 24px));
+  /* Never taller than the room Radix found beside the trigger: the panel scrolls instead. */
+  max-height: var(--radix-popover-content-available-height, calc(100dvh - 24px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+  padding: 16px;
+}
+.docs-customize h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.docs-customize p {
+  margin: -8px 0 0;
+  color: var(--lab-muted);
+  font-size: 13px;
+}
+
+/* ---------- Home ---------- */
+.docs-home {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+.docs-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(24px, 5vw, 72px);
+  padding: clamp(16px, 5vw, 56px) 0 48px;
+}
+.docs-eyebrow {
+  margin: 0 0 12px;
+  color: var(--lab-focus);
+  font: 500 13px var(--docs-mono);
+}
+.docs-hero h1 {
+  margin: 0;
+  font-size: clamp(36px, 6vw, 60px);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+.docs-hero-text > p:not(.docs-eyebrow) {
+  max-width: 52ch;
+  margin: 20px 0 28px;
+  color: var(--lab-muted);
+  font-size: 19px;
+  line-height: 1.5;
+}
+.docs-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.docs-hero-demo {
+  display: grid;
+  gap: 18px;
+  padding: 28px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-glass);
+  background: var(--lab-ground);
+}
+.docs-hero-demo-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.docs-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  padding-bottom: 48px;
+}
+.docs-feature {
+  padding: 20px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--docs-radius);
+}
+.docs-feature svg {
+  color: var(--lab-focus);
+}
+.docs-feature h2 {
+  margin: 12px 0 6px;
+  font-size: 16px;
+}
+.docs-feature p {
+  margin: 0;
+  color: var(--lab-muted);
+  font-size: 14px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .docs-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .docs-playground-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .docs-playground-controls {
+    border-inline-start: 0;
+    border-top: 1px solid var(--lab-line);
+  }
+}
+@media (max-width: 640px) {
+  .docs-stage {
+    padding: 28px 16px;
+  }
+  /* Prop tables become stacked cards. */
+  .docs-props thead {
+    display: none;
+  }
+  .docs-props tr {
+    display: grid;
+    gap: 6px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--lab-line);
+  }
+  .docs-props tr:last-child {
+    border-bottom: 0;
+  }
+  .docs-props td {
+    width: auto !important;
+    padding: 0;
+    border: 0;
+  }
+  .docs-props td[data-label='Type']::before,
+  .docs-props td[data-label='Default']::before {
+    content: attr(data-label) ': ';
+    color: var(--lab-muted);
+    font-size: 12px;
+  }
+}

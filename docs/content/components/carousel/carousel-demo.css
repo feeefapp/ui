@@ -1,0 +1,48 @@
+.cd-card {
+  display: grid;
+  gap: 8px;
+  height: 100%;
+  padding: 10px;
+  border-radius: var(--lab-radius-group);
+  background: color-mix(in srgb, var(--lab-ink) 4%, var(--lab-surface));
+}
+.cd-art {
+  aspect-ratio: 4 / 3;
+  border-radius: calc(14px * var(--lab-corner-scale, 1));
+}
+.cd-card strong {
+  font-size: 15px;
+}
+.cd-card span {
+  color: var(--lab-muted);
+  font-size: 13px;
+}
+.cd-banner {
+  position: relative;
+  display: grid;
+  align-content: end;
+  height: 220px;
+  padding: 20px;
+  overflow: hidden;
+  border-radius: var(--lab-radius-group);
+  color: #fff;
+}
+.cd-banner > [data-lab-parallax] {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+.cd-banner {
+  isolation: isolate;
+}
+.cd-banner h4 {
+  margin: 0;
+  font-size: 22px;
+}
+.cd-banner p {
+  margin: 4px 0 0;
+  opacity: 0.9;
+}
+.cd-wide {
+  width: 100%;
+}
