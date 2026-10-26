@@ -22,14 +22,16 @@ export type MenuSurfaceProps = React.HTMLAttributes<HTMLDivElement> & {
     gap?: number;
 };
 /**
- * The kit's menu: one Liquid Glass bubble that grows out of the button that opened it (the button
- * pinches, the bubble springs to the menu's size on `SPRINGS.menu`, the rows sharpen inside it) and
- * flies back into it when it closes. It covers its trigger, lines up with the trigger's edge in
- * toolbars and centres on it elsewhere, and stays inside the nearest `FloatingBoundary` (else the
- * window). With `asChild` it decorates a Radix content part: Radix keeps focus, keyboard and
- * dismissal; the surface supplies placement defaults (`sideOffset`, `align`, `collisionBoundary`,
- * `collisionPadding`) that the content's own props override. Reduced motion crossfades instead;
- * reduced transparency and more contrast paint it solid.
+ * The kit's menu: one glass shape, painted by a GlassContainer in the thick menu material (the
+ * container's hairline, pointer-following rim light and lens included), born out of the button
+ * that opened it (`GLASS_ORIGIN_SPRINGS`: a glass button gives its own glass, a plain one a droplet
+ * at its centre) with the rows sharpening inside it, and merging back into the button when it
+ * closes. It covers its trigger, lines up with the trigger's edge in toolbars and centres on it
+ * elsewhere, and stays inside the nearest `FloatingBoundary` (else the window). With `asChild` it
+ * decorates a Radix content part: Radix keeps focus, keyboard and dismissal; the surface supplies
+ * placement defaults (`sideOffset`, `align`, `collisionBoundary`, `collisionPadding`) that the
+ * content's own props override. Reduced motion shows the glass in place and crossfades the rows;
+ * reduced transparency, more contrast and `glass: 'solid'` paint it opaque.
  */
 export declare const MenuSurface: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLDivElement> & {
     /** Decorate the Radix content part (DropdownMenu, Select or Popover `Content`) instead of rendering a div. */

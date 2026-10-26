@@ -127,7 +127,7 @@ export type SlideSwitchProps = Omit<SliderProps, 'controlSize' | 'value' | 'defa
  * larger glass lens that stretches as it moves and springs back. It shares
  * the slider's track, thumb and spring; the state maps to 0 and 1.
  */
-export declare const SlideSwitch: React.ForwardRefExoticComponent<Omit<SliderProps, "value" | "min" | "max" | "defaultValue" | "onValueChange" | "controlSize" | "step" | "onValueCommit" | "getValueText" | "showStops" | "marks"> & {
+export declare const SlideSwitch: React.ForwardRefExoticComponent<Omit<SliderProps, "value" | "min" | "max" | "defaultValue" | "step" | "onValueChange" | "controlSize" | "onValueCommit" | "getValueText" | "showStops" | "marks"> & {
     /** Disables the switch and marks it busy while a change is saving. */
     loading?: boolean;
     /** The state, for a controlled switch. */

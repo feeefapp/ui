@@ -1,34 +1,56 @@
 'use client';
-import { jsx as _jsx, Fragment as _Fragment, jsxs as _jsxs } from "react/jsx-runtime";
+import { jsx as _jsx } from "react/jsx-runtime";
 import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cn } from '../utils.js';
-import { cornerFit, cssCornerRadius, cssCornerShape, trueCornerRadius } from '../brand/corner-fit.js';
 import { motionOf, onAnimationFrame } from '../physics/motion-value.js';
+import { GlassContainer } from '../glass/container.js';
+import { useGlassMember } from '../glass/member.js';
 import { useFloatingBoundary } from './boundary.js';
-import { MENU_MORPH, menuAlign, menuBubblePath, menuCloseFrame, menuFadeFrame, menuOpenFrame, menuRestFrame, } from './morph-model.js';
+import { MENU_MORPH, menuAlign, menuContentCloseFrame, menuContentOpenFrame } from './morph-model.js';
 import { physicalMenuSide, sidePanelFallback } from './placement.js';
 import './menu.css';
 /** Minimum distance between a floating panel and the edges of its bounds, in px. */
 export const MENU_COLLISION_PADDING = 12;
+/** The bubble: the menu's one glass shape, born out of `origin` once `ready`, leaving when `leaving`. */
+const MenuBubble = React.forwardRef(function MenuBubble({ origin, ready, children }, ref) {
+    const element = React.useRef(null);
+    const glass = useGlassMember(element, undefined, { origin, enabled: ready });
+    return (_jsx("div", { ref: (node) => {
+            element.current = node;
+            if (typeof ref === 'function')
+                ref(node);
+            else if (ref)
+                ref.current = node;
+        }, className: "lab-menu__bubble", "data-glass-member": glass ? '' : undefined, children: children }));
+});
 /**
- * The kit's menu: one Liquid Glass bubble that grows out of the button that opened it (the button
- * pinches, the bubble springs to the menu's size on `SPRINGS.menu`, the rows sharpen inside it) and
- * flies back into it when it closes. It covers its trigger, lines up with the trigger's edge in
- * toolbars and centres on it elsewhere, and stays inside the nearest `FloatingBoundary` (else the
- * window). With `asChild` it decorates a Radix content part: Radix keeps focus, keyboard and
- * dismissal; the surface supplies placement defaults (`sideOffset`, `align`, `collisionBoundary`,
- * `collisionPadding`) that the content's own props override. Reduced motion crossfades instead;
- * reduced transparency and more contrast paint it solid.
+ * The kit's menu: one glass shape, painted by a GlassContainer in the thick menu material (the
+ * container's hairline, pointer-following rim light and lens included), born out of the button
+ * that opened it (`GLASS_ORIGIN_SPRINGS`: a glass button gives its own glass, a plain one a droplet
+ * at its centre) with the rows sharpening inside it, and merging back into the button when it
+ * closes. It covers its trigger, lines up with the trigger's edge in toolbars and centres on it
+ * elsewhere, and stays inside the nearest `FloatingBoundary` (else the window). With `asChild` it
+ * decorates a Radix content part: Radix keeps focus, keyboard and dismissal; the surface supplies
+ * placement defaults (`sideOffset`, `align`, `collisionBoundary`, `collisionPadding`) that the
+ * content's own props override. Reduced motion shows the glass in place and crossfades the rows;
+ * reduced transparency, more contrast and `glass: 'solid'` paint it opaque.
  */
 export const MenuSurface = React.forwardRef(({ asChild = false, cover = true, side = 'bottom', gap = 4, className, children, ...props }, ref) => {
     const boundary = useFloatingBoundary();
     const node = React.useRef(null);
-    const layers = React.useRef({ shadow: null, bubble: null, body: null, edge: null });
+    const bubble = React.useRef(null);
+    const body = React.useRef(null);
     const placed = React.useRef(false);
+    // Radix Select first renders its content into a detached fragment: the menu runs on whichever
+    // element is current.
+    const [element, setElement] = React.useState(null);
+    const [origin, setOrigin] = React.useState(null);
+    const [ready, setReady] = React.useState(!asChild);
     const [placement, setPlacement] = React.useState(null);
     const setNode = React.useCallback((element) => {
         node.current = element;
+        setElement(element);
         if (typeof ref === 'function')
             ref(element);
         else if (ref)
@@ -38,6 +60,7 @@ export const MenuSurface = React.forwardRef(({ asChild = false, cover = true, si
         if (!asChild || !node.current)
             return;
         const trigger = findTrigger(node.current);
+        setOrigin(trigger);
         const bounds = (boundary ?? trigger?.closest('[data-lab-boundary]') ?? null);
         const rtl = getComputedStyle(node.current).direction === 'rtl';
         const area = bounds?.getBoundingClientRect() ?? {
@@ -79,17 +102,16 @@ export const MenuSurface = React.forwardRef(({ asChild = false, cover = true, si
             }
         }
         setPlacement({ offset, alignOffset, align, side: physical, boundary: bounds });
-    }, [asChild, boundary, cover, side, gap]);
+    }, [asChild, boundary, cover, side, gap, element]);
     React.useLayoutEffect(() => {
         placed.current = !!placement;
     }, [placement]);
     React.useLayoutEffect(() => {
-        const element = node.current;
-        if (!asChild || !element)
+        if (!asChild || !element?.isConnected || !bubble.current || !body.current)
             return;
-        return runMorph(element, layers.current, cover, () => placed.current);
-    }, [asChild, cover]);
-    const content = (inner) => (_jsxs(_Fragment, { children: [_jsx("span", { className: "lab-menu__shadow", "aria-hidden": "true", ref: (el) => void (layers.current.shadow = el) }), _jsx("div", { className: "lab-menu__bubble", ref: (el) => void (layers.current.bubble = el), children: _jsx("div", { className: "lab-menu__body", ref: (el) => void (layers.current.body = el), children: inner }) }), _jsx("span", { className: "lab-menu__edge", "aria-hidden": "true", ref: (el) => void (layers.current.edge = el) })] }));
+        return runMenu(element, bubble.current, body.current, cover, () => placed.current, () => setReady(true));
+    }, [asChild, cover, element]);
+    const content = (inner) => (_jsx(GlassContainer, { className: "lab-menu__glass", material: "menu", interactive: false, adaptive: false, children: _jsx(MenuBubble, { ref: bubble, origin: origin, ready: ready, children: _jsx("div", { className: "lab-menu__body", ref: body, children: inner }) }) }));
     if (!asChild)
         return (_jsx("div", { ...props, ref: setNode, className: cn('lab-menu', className), "data-lab-menu-phase": "open", children: content(children) }));
     const child = React.Children.only(children);
@@ -116,20 +138,13 @@ function isSubmenuTrigger(trigger) {
 function isToolbarTrigger(trigger) {
     return !!trigger.closest('[role="toolbar"], .lab-toolbar-group, .lab-glass-group, .lab-actions-bar, .lab-dock, .lab-scaffold-app-bar');
 }
-function radiusOf(element, box) {
-    const css = Number.parseFloat(getComputedStyle(element).borderTopLeftRadius) || 0;
-    return Math.min(trueCornerRadius(css, box.width, box.height), Math.min(box.width, box.height) / 2);
-}
 /**
- * Drives one menu's morph on its own frame loop: waits for Radix to place it, grows it out of its
- * trigger, rests, and flies back when Radix marks it closed (`data-state="closed"`, or the kit's
- * `data-closing` for Select). Measures every frame, so a scrolling trigger is followed. Returns
- * the cleanup.
+ * Plays one menu around its glass: waits for Radix to place it, then lets its glass be born out of
+ * the trigger (`start`), sharpens the rows, hides the covered trigger, and when Radix marks it
+ * closed (`data-state="closed"`, or the kit's `data-closing` for Select) fades the rows, sends the
+ * glass back into the trigger (`data-glass-hidden`) and shows the trigger again. Returns the cleanup.
  */
-function runMorph(content, layers, cover, placed) {
-    const { shadow, bubble, body, edge } = layers;
-    if (!shadow || !bubble || !body || !edge)
-        return;
+function runMenu(content, bubble, body, cover, placed, start) {
     const motion = motionOf();
     const reduced = motion !== 'full';
     let trigger = findTrigger(content);
@@ -146,63 +161,18 @@ function runMorph(content, layers, cover, placed) {
     let phase = 'pending';
     let started = 0;
     let waited = 0;
-    let shown = null;
-    let closingFrom = null;
-    let triggerRadius = 0;
-    let menuRadius = 0;
+    let shown = { opacity: 0, blur: 0, settled: false };
+    let closingFrom = shown;
     const paint = (frame) => {
         shown = frame;
-        const fit = cornerFit();
-        const atRest = frame.settled && phase === 'open';
-        bubble.style.clipPath = atRest ? '' : `path('${menuBubblePath(frame.box, frame.radius)}')`;
-        for (const layer of [shadow, edge]) {
-            const s = layer.style;
-            if (atRest) {
-                s.inset = '';
-                s.width = '';
-                s.height = '';
-                s.borderRadius = '';
-                s.removeProperty('corner-shape');
-            }
-            else {
-                s.inset = `${frame.box.y}px auto auto ${frame.box.x}px`;
-                s.width = `${frame.box.width}px`;
-                s.height = `${frame.box.height}px`;
-                s.borderRadius = `${cssCornerRadius(frame.radius, frame.box.width, frame.box.height, fit)}px`;
-                s.setProperty('corner-shape', cssCornerShape(frame.radius, frame.box.width, frame.box.height));
-            }
-            s.opacity = frame.materialOpacity >= 1 ? '' : String(frame.materialOpacity);
-        }
-        bubble.style.opacity = frame.materialOpacity >= 1 ? '' : String(frame.materialOpacity);
-        body.style.opacity = frame.contentOpacity >= 1 ? '' : String(frame.contentOpacity);
-        body.style.filter = frame.contentBlur > 0.05 ? `blur(${frame.contentBlur.toFixed(2)}px)` : '';
+        body.style.opacity = frame.opacity >= 1 ? '' : String(frame.opacity);
+        body.style.filter = frame.blur > 0.05 ? `blur(${frame.blur.toFixed(2)}px)` : '';
     };
     // Invisible (but focusable) until Radix has placed it.
-    for (const layer of [shadow, bubble, edge, body])
-        layer.style.opacity = '0';
-    // Geometry is read once and again only after a scroll or resize: reading it every frame right
-    // after the layers' style writes would force a synchronous layout per frame.
-    let measured = null;
-    const invalidate = () => {
-        measured = null;
-    };
-    const measure = () => (measured ??= read());
-    const read = () => {
-        const rect = content.getBoundingClientRect();
-        const scale = content.offsetWidth ? rect.width / content.offsetWidth : 1;
-        const full = { x: 0, y: 0, width: content.offsetWidth, height: content.offsetHeight };
-        const t = trigger?.isConnected ? trigger.getBoundingClientRect() : null;
-        const from = t
-            ? {
-                x: (t.left - rect.left) / scale,
-                y: (t.top - rect.top) / scale,
-                width: t.width / scale,
-                height: t.height / scale,
-            }
-            : null;
-        return { full, from };
-    };
+    paint(shown);
     const isClosing = () => content.getAttribute('data-state') === 'closed' || content.hasAttribute('data-closing');
+    /** The glass leaves: it flies back into the trigger (GlassMemberOptions `origin`). */
+    const leave = () => bubble.setAttribute('data-glass-hidden', '');
     let stop = null;
     const tick = (now) => {
         if (!content.isConnected)
@@ -210,50 +180,39 @@ function runMorph(content, layers, cover, placed) {
         if (phase === 'pending') {
             const wrapper = content.parentElement;
             const positioned = !wrapper?.style.transform.includes('-200%');
-            // Radix is still placing it: read fresh every frame until the morph starts.
-            const { full, from } = (measured = read());
-            const covering = !cover ||
-                !from ||
-                (from.y < full.height - 1 && from.y + from.height > 1);
             waited++;
-            if (waited < 30 && (!positioned || !placed() || (!covering && waited < 10)))
+            if (waited < 30 && (!positioned || !placed()))
                 return;
             trigger = trigger ?? findTrigger(content);
-            triggerRadius = trigger && from ? radiusOf(trigger, from) : 0;
-            menuRadius = radiusOf(bubble, full);
             content.setAttribute('data-lab-menu-phase', 'opening');
             phase = 'opening';
             started = now;
+            start();
         }
         const elapsed = (now - started) / 1000;
-        const { full, from } = measure();
         if (phase === 'opening') {
             if (isClosing())
                 return beginClose(now);
-            const frame = reduced || !from
-                ? menuFadeFrame(elapsed, true, full, menuRadius, motion)
-                : menuOpenFrame(elapsed, from, triggerRadius, full, menuRadius);
-            if (elapsed >= (reduced || !from ? 0 : MENU_MORPH.hideTrigger))
+            const frame = menuContentOpenFrame(elapsed, motion);
+            if (elapsed >= (reduced ? 0 : MENU_MORPH.hideTrigger))
                 hideTrigger(true);
+            paint(frame);
             if (frame.settled) {
                 phase = 'open';
                 content.setAttribute('data-lab-menu-phase', 'open');
-                paint(menuRestFrame(full, menuRadius));
                 stopLoop();
-                return;
             }
-            paint(frame);
             return;
         }
         if (phase === 'closing') {
-            const target = from ?? full;
-            const frame = reduced || !from || !closingFrom
-                ? menuFadeFrame(elapsed, false, shown?.box ?? full, shown?.radius ?? menuRadius, motion)
-                : menuCloseFrame(elapsed, closingFrom, target, triggerRadius);
-            if (reduced || !from || elapsed >= MENU_MORPH.revealTrigger)
-                hideTrigger(false);
+            const frame = menuContentCloseFrame(elapsed, closingFrom, motion);
             paint(frame);
-            if (frame.settled) {
+            // Reduced motion: the glass stays until the rows are gone, then leaves at once.
+            if (reduced && frame.settled)
+                leave();
+            if (reduced || elapsed >= MENU_MORPH.revealTrigger)
+                hideTrigger(false);
+            if (frame.settled && (reduced || elapsed >= MENU_MORPH.revealTrigger)) {
                 phase = 'closed';
                 stopLoop();
             }
@@ -262,15 +221,16 @@ function runMorph(content, layers, cover, placed) {
     const beginClose = (now) => {
         if (phase === 'closing' || phase === 'closed')
             return;
-        const { full } = measure();
-        closingFrom = shown ?? menuRestFrame(full, menuRadius);
         if (phase === 'pending') {
             hideTrigger(false);
             phase = 'closed';
             return;
         }
+        closingFrom = shown;
         phase = 'closing';
         content.setAttribute('data-lab-menu-phase', 'closing');
+        if (!reduced)
+            leave();
         started = now;
         startLoop();
     };
@@ -302,9 +262,6 @@ function runMorph(content, layers, cover, placed) {
         pressedInside = false;
     };
     const doc = content.ownerDocument;
-    const view = doc.defaultView;
-    view?.addEventListener('scroll', invalidate, { capture: true, passive: true });
-    view?.addEventListener('resize', invalidate);
     content.addEventListener('pointerdown', onDown, true);
     content.addEventListener('pointerup', onUp, true);
     doc.addEventListener('pointermove', onMove, true);
@@ -316,8 +273,6 @@ function runMorph(content, layers, cover, placed) {
     const finish = () => {
         stopLoop();
         observer.disconnect();
-        view?.removeEventListener('scroll', invalidate, { capture: true });
-        view?.removeEventListener('resize', invalidate);
         content.removeEventListener('pointerdown', onDown, true);
         content.removeEventListener('pointerup', onUp, true);
         doc.removeEventListener('pointermove', onMove, true);

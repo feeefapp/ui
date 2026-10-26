@@ -1,4 +1,45 @@
 import { rectGap } from './geometry.js';
+import { SPRINGS } from '../physics/spring.js';
+/**
+ * The `source` of a birth and `target` of a death that come from or go to the bubble's origin: the
+ * control that opened it (a menu's button), which may be another container's glass or no glass at
+ * all. Its rect is `glassOrigin`'s.
+ */
+export const GLASS_ORIGIN = 'origin';
+/**
+ * The springs of a bubble growing out of its origin and returning into it: iOS 26 menus springing
+ * out of their button (`SPRINGS.menu`) and flying back into it (`SPRINGS.menuDismiss`, narrowing
+ * past it before it lands). Every other change uses the container's `SPRINGS.snappy`.
+ */
+export const GLASS_ORIGIN_SPRINGS = { grow: SPRINGS.menu, absorb: SPRINGS.menuDismiss };
+/**
+ * Side (px) of the droplet a bubble grows out of when its origin is not glass (a plain button in
+ * content): a small round drop at the origin's centre, so no glass copy of the button pops in.
+ */
+export const GLASS_ORIGIN_SEED = 8;
+/** How far (px) a bubble may reach past its origin on each side and still be the origin's glass. */
+export const GLASS_ORIGIN_HUG = 12;
+/**
+ * The rect a bubble is born out of and returns into. `origin` is the control's rect; `glass` the
+ * glass bubble around it, or null when it is not glass. A bubble that hugs the control (a button in
+ * its own toolbar bubble, within `GLASS_ORIGIN_HUG`) gives its own rect, so the new bubble leaves
+ * and rejoins exactly that glass; a wider one (a group of buttons) gives the control's rect; no
+ * glass gives a `GLASS_ORIGIN_SEED` droplet at the control's centre, so no glass copy of a plain
+ * button pops in.
+ */
+export function glassOrigin(origin, glass) {
+    if (glass) {
+        const hugs = glass.width <= origin.width + 2 * GLASS_ORIGIN_HUG && glass.height <= origin.height + 2 * GLASS_ORIGIN_HUG;
+        return hugs ? glass : origin;
+    }
+    const side = Math.min(GLASS_ORIGIN_SEED, origin.width, origin.height);
+    return {
+        x: origin.x + (origin.width - side) / 2,
+        y: origin.y + (origin.height - side) / 2,
+        width: side,
+        height: side,
+    };
+}
 const overlap = (a, b) => Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)) *
     Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
 /** True when `a` and `b` share some height: bubbles of one row. */
@@ -59,14 +100,21 @@ export function glassSeed(anchor, toward) {
  * Plans births and deaths between two measurements.
  * @param previous current visual rects of bubbles drawn before the change (including ones leaving)
  * @param next target rects of the bubbles present after the change
+ * @param origins the `glassOrigin` rect of bubbles with an origin: they are born out of it and
+ *   return into it
  */
-export function planGlassTransition(previous, next, spacing) {
+export function planGlassTransition(previous, next, spacing, origins = new Map()) {
     const leaving = new Map([...previous].filter(([id]) => !next.has(id)));
     const staying = new Map([...previous].filter(([id]) => next.has(id)));
     const births = [];
     for (const [id, rect] of next) {
         if (previous.has(id))
             continue;
+        const origin = origins.get(id);
+        if (origin) {
+            births.push({ id, kind: 'grow', source: GLASS_ORIGIN, from: origin });
+            continue;
+        }
         // A bubble that just left right here (a split or a replacement), else the nearest neighbour
         // that stays, else the nearest one leaving.
         const source = nearest(rect, leaving, spacing) ?? neighbour(rect, staying) ?? neighbour(rect, leaving);
@@ -82,6 +130,11 @@ export function planGlassTransition(previous, next, spacing) {
     }
     const deaths = [];
     for (const [id, rect] of leaving) {
+        const origin = origins.get(id);
+        if (origin) {
+            deaths.push({ id, kind: 'absorb', target: GLASS_ORIGIN, into: origin });
+            continue;
+        }
         // In a split the parent is absorbed into the child it overlaps most while the children grow
         // out of it, so the glass never has a gap; otherwise into its nearest neighbour.
         const target = nearest(rect, next, spacing) ?? neighbour(rect, next);

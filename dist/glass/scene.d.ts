@@ -1,4 +1,5 @@
 import type { GlassMemberOptions } from './context.js';
+import { type GlassKind } from './material.js';
 /** How far (px) a member may reach past the container and still be drawn (overshoot, growing bubbles). */
 export declare const GLASS_MARGIN = 32;
 /** True when `animation` is running and changes geometry (CSS transition, keyframes or WAAPI). */
@@ -44,6 +45,8 @@ export declare class GlassScene {
     /** ThemeConfig `glassTint`: 0 clear … 1 tinted (the CSS reads `--lab-glass-tint`; the refraction filter needs the numbers). */
     cornerShape: 'superellipse' | 'round';
     tint: number;
+    /** Which material it paints (GlassContainer `material`): regular glass, or menus' thick glass. */
+    material: GlassKind;
     /** ThemeConfig `glassBlur`: the measured backdrop blur, sized per cluster. */
     blur: boolean;
     /** ThemeConfig `glassRefraction`: bend the backdrop continuously at the edges, where supported. */
@@ -117,6 +120,13 @@ export declare class GlassScene {
      * whether one of them scrolled since the last measure.
      */
     private clipOf;
+    /**
+     * Where a bubble with an origin comes from and returns to, in the container's pixels
+     * (`glassOrigin`: the origin's rect when it is glass, else a droplet at its centre); null when the
+     * origin is gone.
+     */
+    private originRect;
+    private clearOriginClip;
     private release;
     private scheduleDraw;
     private readDrawInput;

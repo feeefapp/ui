@@ -6,6 +6,7 @@ import { Button } from '../primitives/button.js';
 import { PresentationHost, usePresented } from './host.js';
 import { usePopMotion } from './motion.js';
 import { alertActionOrder, alertActionsFit } from './alert-model.js';
+import '../glass/glass.css';
 import '../menu/menu.css';
 import './presentation.css';
 const variantOf = (role) => role === 'primary' ? 'filled' : role === 'destructive' ? 'destructive' : 'elevated';

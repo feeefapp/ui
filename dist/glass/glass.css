@@ -268,3 +268,28 @@ html[data-lab-glass='solid'] .lab-glass-backdrop[data-glass-source]::after { bac
 .lab-glass-bar {
   display: contents;
 }
+
+/* The menu material (GlassContainer material="menu", material.ts GLASS_MENU): menus carry text over
+anything, so their glass is the full regular material (tint 1, large), veiled at least 88 % and
+blurred at least 20px (the scene sets --lab-glass-blur per piece), with a deeper shadow. Alerts
+paint the same thick glass from these tokens. */
+html[data-lab-theme] {
+  --lab-menu-tint: 1;
+  --lab-menu-veil: max(var(--lab-glass-veil-large), 0.88);
+  --lab-menu-blur: max(var(--lab-glass-blur-large), 20px);
+  --lab-menu-fill: color-mix(in srgb, var(--lab-surface) calc(var(--lab-menu-veil) * 100%), transparent);
+  --lab-menu-saturate: calc(
+    (1 - var(--lab-menu-tint) * var(--lab-glass-colour-loss-large)) / (1 - var(--lab-menu-tint) * var(--lab-glass-veil-large))
+  );
+  --lab-menu-lift: contrast(calc((1.03 - 0.03 * var(--lab-menu-tint)) / (1.182 - 0.182 * var(--lab-menu-tint))))
+    brightness(calc(1.182 - 0.182 * var(--lab-menu-tint)));
+  --lab-menu-shadow: 0 14px 40px -12px rgb(0 0 0 / 24%);
+}
+.lab-glass-container[data-glass-local-tint][data-glass-material='menu'] {
+  --lab-glass-fill: var(--lab-menu-fill);
+  --lab-glass-fill-large: var(--lab-menu-fill);
+  --lab-glass-saturate: var(--lab-menu-saturate);
+  --lab-glass-saturate-large: var(--lab-menu-saturate);
+  --lab-glass-lift: var(--lab-menu-lift);
+  --lab-glass-shadow-color: rgb(0 0 0 / 24%);
+}

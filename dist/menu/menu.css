@@ -1,9 +1,8 @@
-/* Menus: one Liquid Glass bubble per menu (MenuSurface). The Radix content element only lays out
-and positions; three layers paint it: a shadow behind, the glass bubble (rows inside, clipped by it)
-and the rim on top. During the morph menu-surface.tsx moves the bubble's clip-path and the layers'
-boxes every frame; at rest they fill the content. Metrics are tokens so themes can change them.
-iOS 26 menus (research/liquid-glass/CONTROLS-MEASURED.md §8): at least 250 wide, 42px rows, groups
-split by a 21px band with a hairline, ~32.7 corners, thicker glass than controls, no dimming. */
+/* Menus: one glass shape per menu (MenuSurface). The Radix content element only lays out and
+positions; inside it a GlassContainer with the menu material (glass.css, material.ts GLASS_MENU)
+paints the bubble, which is born out of the menu's button and returns into it. Metrics are tokens so
+themes can change them. iOS 26 menus (research/liquid-glass/CONTROLS-MEASURED.md §8): at least 250
+wide, 42px rows, groups split by a 21px band with a hairline, ~32.7 corners, no dimming. */
 html[data-lab-theme] {
   --lab-menu-min-width: 250px;
   --lab-menu-max-width: 360px;
@@ -13,22 +12,8 @@ html[data-lab-theme] {
   --lab-menu-inset: 10px;
   --lab-menu-row-inline: 14px;
   --lab-menu-radius: var(--lab-radius-glass);
-  /* Menus carry text over anything, so their glass is at least this tinted and this blurred. */
-  --lab-menu-tint: 1;
-  /* A menu is read over anything: thicker than the regular material (veil at least 88 %, blurred
-  20px) so content under it never reads as drawn on top of it. */
-  --lab-menu-veil: max(var(--lab-glass-veil-large), 0.88);
-  --lab-menu-blur: max(var(--lab-glass-blur-large), 20px);
-  /* The large glass material (system.css formulas, glass/material.ts glassMaterial) at that tint. */
-  --lab-menu-fill: color-mix(in srgb, var(--lab-surface) calc(var(--lab-menu-veil) * 100%), transparent);
-  --lab-menu-saturate: calc(
-    (1 - var(--lab-menu-tint) * var(--lab-glass-colour-loss-large)) / (1 - var(--lab-menu-tint) * var(--lab-glass-veil-large))
-  );
-  --lab-menu-lift: contrast(calc((1.03 - 0.03 * var(--lab-menu-tint)) / (1.182 - 0.182 * var(--lab-menu-tint))))
-    brightness(calc(1.182 - 0.182 * var(--lab-menu-tint)));
-  --lab-menu-shadow: 0 14px 40px -12px rgb(0 0 0 / 24%);
-  /* How long a closing menu stays mounted for its morph back (MENU_MORPH.closeEnd + a frame). */
-  --lab-menu-exit: 360ms;
+  /* How long a closing menu stays mounted while its glass flies back (MENU_MORPH.closeEnd + a frame). */
+  --lab-menu-exit: 500ms;
 }
 html[data-lab-density='compact'][data-lab-theme] {
   --lab-menu-min-width: 220px;
@@ -69,7 +54,7 @@ html[data-lab-density='thin'][data-lab-theme] {
   outline: none;
   animation: none;
 }
-/* Radix keeps a closing menu mounted while an animation runs; this one only times the morph back. */
+/* Radix keeps a closing menu mounted while an animation runs; this one only times the flight back. */
 .lab-menu:is([data-state='closed'], [data-closing]) {
   animation: lab-menu-exit var(--lab-menu-exit) linear both;
   pointer-events: none;
@@ -82,18 +67,19 @@ html[data-lab-density='thin'][data-lab-theme] {
     outline-color: transparent;
   }
 }
+.lab-menu__glass,
 .lab-menu__bubble {
-  position: relative;
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
   min-block-size: 0;
+}
+/* The glass is the container's; the bubble keeps the corner the glass reads and clips its rows. */
+.lab-menu__bubble {
+  position: relative;
   overflow: hidden;
   border-radius: var(--lab-menu-radius);
   corner-shape: superellipse(1.5);
-  background: var(--lab-menu-fill);
-  backdrop-filter: blur(var(--lab-menu-blur)) saturate(var(--lab-menu-saturate)) var(--lab-menu-lift);
-  -webkit-backdrop-filter: blur(var(--lab-menu-blur)) saturate(var(--lab-menu-saturate)) var(--lab-menu-lift);
 }
 .lab-menu__body {
   display: flex;
@@ -104,24 +90,6 @@ html[data-lab-density='thin'][data-lab-theme] {
   padding: var(--lab-menu-inset);
   overflow-y: auto;
   overscroll-behavior: contain;
-}
-.lab-menu__shadow,
-.lab-menu__edge {
-  position: absolute;
-  inset: 0;
-  box-sizing: border-box;
-  pointer-events: none;
-  border-radius: var(--lab-menu-radius);
-  corner-shape: superellipse(1.5);
-}
-.lab-menu__shadow {
-  z-index: -1;
-  box-shadow: var(--lab-menu-shadow);
-}
-.lab-menu__edge {
-  z-index: 1;
-  border: 1px solid var(--lab-line);
-  box-shadow: var(--lab-glass-light);
 }
 
 /* Rows: the kit's menu items share the menu metrics wherever they appear. */
@@ -178,43 +146,12 @@ html[data-lab-density='thin'][data-lab-theme] {
   }
 }
 
-/* Solid fallback where transparency hurts. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .lab-menu__bubble {
-    background: var(--lab-surface);
-  }
-}
-@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
-  .lab-menu__bubble {
-    background: var(--lab-surface);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-}
-@media (prefers-contrast: more) {
-  .lab-menu__edge {
-    border-color: var(--lab-ink);
-    box-shadow: none;
-  }
-}
-html[data-lab-glass='solid'] .lab-menu__bubble {
-  background: var(--lab-surface);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
+/* Forced colors drop the glass material (glass.css): the bubble paints system colours itself. */
 @media (forced-colors: active) {
   .lab-menu__bubble {
     background: Canvas;
     color: CanvasText;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-  .lab-menu__edge {
-    border-color: CanvasText;
-    box-shadow: none;
-  }
-  .lab-menu__shadow {
-    display: none;
+    border: 1px solid CanvasText;
   }
   .lab-menu__item[data-highlighted],
   .lab-menu__item[data-state='open'] {

@@ -8,7 +8,9 @@ import { type GlassRect } from './geometry.js';
  *   droplet at the neighbour's facing edge (`glassSeed`) that stretches out to its place;
  * - a leaving bubble is absorbed into the new bubble it overlaps (several merging into one), else
  *   into its nearest neighbour, preferring the same row, shrinking into that neighbour's facing edge;
- * - only a bubble with no other bubble in the container materializes in place or dematerializes.
+ * - only a bubble with no other bubble in the container materializes in place or dematerializes;
+ * - a bubble with an origin (a menu and the button that opened it) is born out of its origin and
+ *   returns into it, whatever else is in the container (`GLASS_ORIGIN`).
  */
 export type GlassBirth = 
 /** Start at `from` (the source bubble's rect, or a droplet at its facing edge) and spring to the target. */
@@ -41,6 +43,43 @@ export type GlassPlan = {
     births: GlassBirth[];
     deaths: GlassDeath[];
 };
+/**
+ * The `source` of a birth and `target` of a death that come from or go to the bubble's origin: the
+ * control that opened it (a menu's button), which may be another container's glass or no glass at
+ * all. Its rect is `glassOrigin`'s.
+ */
+export declare const GLASS_ORIGIN = "origin";
+/**
+ * The springs of a bubble growing out of its origin and returning into it: iOS 26 menus springing
+ * out of their button (`SPRINGS.menu`) and flying back into it (`SPRINGS.menuDismiss`, narrowing
+ * past it before it lands). Every other change uses the container's `SPRINGS.snappy`.
+ */
+export declare const GLASS_ORIGIN_SPRINGS: {
+    readonly grow: {
+        readonly duration: 0.3;
+        readonly bounce: 0.27;
+    };
+    readonly absorb: {
+        readonly duration: 0.31;
+        readonly bounce: 0.33;
+    };
+};
+/**
+ * Side (px) of the droplet a bubble grows out of when its origin is not glass (a plain button in
+ * content): a small round drop at the origin's centre, so no glass copy of the button pops in.
+ */
+export declare const GLASS_ORIGIN_SEED = 8;
+/** How far (px) a bubble may reach past its origin on each side and still be the origin's glass. */
+export declare const GLASS_ORIGIN_HUG = 12;
+/**
+ * The rect a bubble is born out of and returns into. `origin` is the control's rect; `glass` the
+ * glass bubble around it, or null when it is not glass. A bubble that hugs the control (a button in
+ * its own toolbar bubble, within `GLASS_ORIGIN_HUG`) gives its own rect, so the new bubble leaves
+ * and rejoins exactly that glass; a wider one (a group of buttons) gives the control's rect; no
+ * glass gives a `GLASS_ORIGIN_SEED` droplet at the control's centre, so no glass copy of a plain
+ * button pops in.
+ */
+export declare function glassOrigin(origin: GlassRect, glass: GlassRect | null): GlassRect;
 /** True when `a` and `b` share some height: bubbles of one row. */
 export declare function sameGlassRow(a: GlassRect, b: GlassRect): boolean;
 /**
@@ -54,8 +93,10 @@ export declare function glassSeed(anchor: GlassRect, toward: GlassRect): GlassRe
  * Plans births and deaths between two measurements.
  * @param previous current visual rects of bubbles drawn before the change (including ones leaving)
  * @param next target rects of the bubbles present after the change
+ * @param origins the `glassOrigin` rect of bubbles with an origin: they are born out of it and
+ *   return into it
  */
-export declare function planGlassTransition(previous: ReadonlyMap<string, GlassRect>, next: ReadonlyMap<string, GlassRect>, spacing: number): GlassPlan;
+export declare function planGlassTransition(previous: ReadonlyMap<string, GlassRect>, next: ReadonlyMap<string, GlassRect>, spacing: number, origins?: ReadonlyMap<string, GlassRect>): GlassPlan;
 /** True when `a` and `b` describe the same rect within half a pixel. */
 export declare function sameRect(a: GlassRect, b: GlassRect): boolean;
 /**

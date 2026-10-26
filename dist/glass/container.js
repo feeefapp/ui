@@ -43,7 +43,7 @@ export function useGlassOptions() {
  * bubble materializes. Bubbles keep their layout, focus and semantics; only the paint moves here. Without
  * JavaScript, or in forced colors, every bubble paints its own glass as before.
  */
-export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'div', spacing = 8, cornerShape = 'superellipse', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 1, highlightProfile = 'rim', highlightStrength = 1, refractionStrength = 1, refractionProfile = 'gentle', tint, backdropSource, className, children, ...props }, ref) {
+export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'div', spacing = 8, cornerShape = 'superellipse', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 1, highlightProfile = 'rim', highlightStrength = 1, refractionStrength = 1, refractionProfile = 'gentle', tint, backdropSource, material = 'regular', className, children, ...props }, ref) {
     const host = React.useRef(null);
     const backdrop = React.useRef(null);
     const paint = React.useRef(null);
@@ -56,6 +56,9 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
     // Inside a GlassBar the theme tint is raised and the backdrop blurred (an explicit `tint` wins).
     const bar = React.useContext(GlassBarContext);
     tint ??= bar?.tint;
+    // Menu glass is always the full regular material under its veil.
+    if (material === 'menu')
+        tint = 1;
     const options = useGlassOptions();
     const liquid = style === 'liquid';
     const setHost = React.useCallback((element) => {
@@ -109,6 +112,7 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
         current.followPointer = light === 'pointer' && liquid;
         current.interactive = interactive && liquid;
         current.adaptive = adaptive;
+        current.material = material;
         current.tint = tint === undefined ? options.tint : clampGlassTint(tint);
         current.blur = options.blur || bar !== null;
         current.highlightWidth = Number.isFinite(highlightWidth) ? Math.min(100, Math.max(0, highlightWidth)) : 1;
@@ -150,17 +154,17 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
             document.documentElement.removeEventListener('pointerleave', leave);
         };
     }, [light, reduced, liquid]);
-    return React.createElement(as, { ...props, 'ref': setHost, 'className': cn('lab-glass-container', className), 'data-glass-container': '', 'data-glass-corners': cornerShape, 'data-glass-local-tint': '', style: { ...props.style, ...(tint === undefined ? {} : { '--lab-glass-tint': clampGlassTint(tint) }) } }, _jsxs("div", { className: "lab-glass-material", "aria-hidden": "true", children: [_jsx("svg", { ref: shadow, className: "lab-glass-shadow" }), _jsx("div", { ref: backdrop, className: "lab-glass-backdrops" }), _jsx("svg", { ref: paint, className: "lab-glass-paint" })] }), _jsx(GlassContext.Provider, { value: registry, children: children }));
+    return React.createElement(as, { ...props, 'ref': setHost, 'className': cn('lab-glass-container', className), 'data-glass-container': '', 'data-glass-corners': cornerShape, 'data-glass-material': material, 'data-glass-local-tint': '', style: { ...props.style, ...(tint === undefined ? {} : { '--lab-glass-tint': clampGlassTint(tint) }) } }, _jsxs("div", { className: "lab-glass-material", "aria-hidden": "true", children: [_jsx("svg", { ref: shadow, className: "lab-glass-shadow" }), _jsx("div", { ref: backdrop, className: "lab-glass-backdrops" }), _jsx("svg", { ref: paint, className: "lab-glass-paint" })] }), _jsx(GlassContext.Provider, { value: registry, children: children }));
 });
 /**
  * A GlassContainer unless one already encloses it, then a plain element. Kit rows (app bar,
  * toolbar, dock, search) use it so they share one material without ever nesting containers.
  */
-export const GlassScope = React.forwardRef(function GlassScope({ as = 'div', spacing, cornerShape, light, interactive, adaptive, tint, highlightWidth, highlightProfile, highlightStrength, refractionStrength, refractionProfile, backdropSource, ...props }, ref) {
+export const GlassScope = React.forwardRef(function GlassScope({ as = 'div', spacing, cornerShape, light, interactive, adaptive, tint, highlightWidth, highlightProfile, highlightStrength, refractionStrength, refractionProfile, backdropSource, material, ...props }, ref) {
     const outer = React.useContext(GlassContext);
     if (outer)
         return React.createElement(as, { ...props, ref });
-    return _jsx(GlassContainer, { ...props, as: as, spacing: spacing, cornerShape: cornerShape, light: light, interactive: interactive, adaptive: adaptive, tint: tint, highlightWidth: highlightWidth, highlightProfile: highlightProfile, highlightStrength: highlightStrength, refractionStrength: refractionStrength, refractionProfile: refractionProfile, backdropSource: backdropSource, ref: ref });
+    return _jsx(GlassContainer, { ...props, as: as, spacing: spacing, cornerShape: cornerShape, light: light, interactive: interactive, adaptive: adaptive, tint: tint, highlightWidth: highlightWidth, highlightProfile: highlightProfile, highlightStrength: highlightStrength, refractionStrength: refractionStrength, refractionProfile: refractionProfile, backdropSource: backdropSource, material: material, ref: ref });
 });
 /**
  * Glass bars floating over scrolling content (a ScrollArea's app bar and dock, a TabView's tab

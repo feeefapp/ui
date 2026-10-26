@@ -379,4 +379,29 @@ export declare function lensMaterial(kind: 'pill' | 'thumb', lens: number, schem
     };
     shadow: number;
 };
+/**
+ * The container's materials: `regular` is the tint curve above; `menu` is the thick glass menus are
+ * made of (they carry text over anything, so content under them never reads as drawn on top of
+ * them): regular glass (tint 1, large) veiled at least `GLASS_MENU.veil`, blurred at least
+ * `GLASS_MENU.blur` px whatever ThemeConfig `glassBlur` says, and lifted higher off the page by a
+ * deeper shadow (`GLASS_MENU.shadow`: `dy` px down, std dev `blur`, the shape shrunk by `inset` px
+ * first, black at `alpha`; CSS `0 14px 40px -12px rgb(0 0 0 / 24%)`). The hairline, rim light and
+ * lens are the container's as for every glass. The `--lab-menu-*` tokens in menu.css and Flutter's
+ * `glassMenuMaterial` match.
+ */
+export type GlassKind = 'regular' | 'menu';
+export declare const GLASS_MENU: {
+    readonly veil: 0.88;
+    readonly blur: 20;
+    readonly shadow: {
+        readonly dy: 14;
+        readonly blur: 20;
+        readonly inset: 12;
+        readonly alpha: 0.24;
+    };
+};
+/** The menu material for one colour scheme (see `GLASS_MENU`). */
+export declare function glassMenuMaterial(scheme: 'light' | 'dark'): GlassMaterial;
+/** Backdrop blur (std dev, px) of `kind` glass whose shorter side is `side` px (see `glassBlurAt`). */
+export declare function glassKindBlur(kind: GlassKind, side: number, tint: number, blurOn: boolean): number;
 //# sourceMappingURL=material.d.ts.map

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { type GlassKind } from './material.js';
 import type { GlassStyle } from '../theme-config.js';
 import './glass.css';
 /** The app's glass style (ThemeConfig `glass`, on `<html data-lab-glass>`), live. */
@@ -55,6 +56,13 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
     refractionProfile?: 'gentle' | 'measured';
     /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
     backdropSource?: string;
+    /**
+     * `regular` (default) is the theme's glass. `menu` is the thick glass menus are made of
+     * (`GLASS_MENU`: the full regular material veiled at least 88 %, blurred at least 20 px, with a
+     * deeper shadow) so text on it reads over anything; the hairline, moving light and lens stay. It
+     * ignores `tint` and never adapts its tone. MenuSurface uses it.
+     */
+    material?: GlassKind;
 };
 /**
  * Draws ONE glass material for every bubble inside it (GlassGroup, ToolbarGroup, Dock, …), like
@@ -108,6 +116,13 @@ export declare const GlassContainer: React.ForwardRefExoticComponent<React.HTMLA
     refractionProfile?: "gentle" | "measured";
     /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
     backdropSource?: string;
+    /**
+     * `regular` (default) is the theme's glass. `menu` is the thick glass menus are made of
+     * (`GLASS_MENU`: the full regular material veiled at least 88 %, blurred at least 20 px, with a
+     * deeper shadow) so text on it reads over anything; the hairline, moving light and lens stay. It
+     * ignores `tint` and never adapts its tone. MenuSurface uses it.
+     */
+    material?: GlassKind;
 } & React.RefAttributes<HTMLElement>>;
 /**
  * A GlassContainer unless one already encloses it, then a plain element. Kit rows (app bar,
@@ -155,6 +170,13 @@ export declare const GlassScope: React.ForwardRefExoticComponent<React.HTMLAttri
     refractionProfile?: "gentle" | "measured";
     /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
     backdropSource?: string;
+    /**
+     * `regular` (default) is the theme's glass. `menu` is the thick glass menus are made of
+     * (`GLASS_MENU`: the full regular material veiled at least 88 %, blurred at least 20 px, with a
+     * deeper shadow) so text on it reads over anything; the hairline, moving light and lens stay. It
+     * ignores `tint` and never adapts its tone. MenuSurface uses it.
+     */
+    material?: GlassKind;
 } & React.RefAttributes<HTMLElement>>;
 /**
  * Glass bars floating over scrolling content (a ScrollArea's app bar and dock, a TabView's tab

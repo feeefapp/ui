@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { type AlertActionRole } from './alert-model.js';
+import '../glass/glass.css';
 import '../menu/menu.css';
 import './presentation.css';
 export type { AlertActionRole } from './alert-model.js';

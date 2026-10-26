@@ -1,15 +1,15 @@
 import { MotionValue, onMeasureFrame, onRenderFrame } from '../physics/motion-value.js';
 import { SPRINGS } from '../physics/spring.js';
-import { boundsOf, clampRadius, clipAxes, clipInset, clippedGlassPaths, hostFrame, memberClip, openClip, toLocalPoint, toLocalRect, toScreenPoint, translatePath, } from './geometry.js';
+import { boundsOf, clampRadius, clipAxes, clipInset, clippedGlassPaths, hostFrame, memberClip, openClip, shapePath, toLocalPoint, toLocalRect, toScreenPoint, translatePath, } from './geometry.js';
 import { DEFAULT_GLASS_LIGHT, glassLightToward, surfaceReflection, surfaceShade, highlightSurface } from './light.js';
 import { glassMemberRect } from './member-bounds.js';
-import { GLASS_FOLLOW_ATTRIBUTE, GLASS_INSTANT_ATTRIBUTE, GLASS_SETTLED_EVENT, glassChangesAtOnce, planGlassTransition, sameRect } from './transitions.js';
+import { GLASS_FOLLOW_ATTRIBUTE, GLASS_INSTANT_ATTRIBUTE, GLASS_ORIGIN_SPRINGS, GLASS_SETTLED_EVENT, glassChangesAtOnce, glassOrigin, planGlassTransition, sameRect } from './transitions.js';
 import { adaptiveGlassTone, backdropTone, parseCssColor } from './adaptive.js';
 import { liveDisplacementMap, rgbaBmpDataUrl, elementImagePlacement, supportsElementRefraction, supportsRefraction } from './refraction.js';
 import { DecodedRefractionMap } from './decoded-refraction-map.js';
 import { RefractionWork } from './refraction-work.js';
 import { obsoleteRimRegions, rimBufferCapacity } from './rim-buffer.js';
-import { GLASS_RIM_MAX_WIDTH, GLASS_SHADOW, glassBlurAt, glassEdgeTerms, glassHairline, glassMaterial, glassRim, glassSize, rimLayer } from './material.js';
+import { GLASS_MENU, GLASS_RIM_MAX_WIDTH, GLASS_SHADOW, glassEdgeTerms, glassHairline, glassKindBlur, glassMaterial, glassMenuMaterial, glassRim, glassSize, rimLayer } from './material.js';
 import { bandPath, hairlineBands } from './hairline.js';
 import { GLASS_CONTENT_FOLLOW, GLASS_GLOW_START, GLASS_PRESS_SCALE, glassGlowRadius, glassLayoutRect, glassStretch, pressedShape } from './press.js';
 import { cornerFit, cssCornerRadius, cssCornerShape, trueCornerRadius } from '../brand/corner-fit.js';
@@ -94,6 +94,12 @@ class Shape {
     growing = false;
     leaving = false;
     token = 0;
+    /** The control it was born out of and returns into (GlassMemberOptions `origin`). */
+    origin = null;
+    /** The spring its next move uses: the origin's while it grows out of it, else the container's. */
+    spring = SPRING;
+    /** Its element's box while it is leaving (`layout` is gone by then), for its content's clip. */
+    home = null;
     constructor(rect, scale = 1) {
         this.x = new MotionValue(rect.x, 0.05);
         this.y = new MotionValue(rect.y, 0.05);
@@ -103,6 +109,10 @@ class Shape {
     }
     rect() {
         return { x: this.x.get(), y: this.y.get(), width: this.width.get(), height: this.height.get() };
+    }
+    /** Where its springs are heading (its rect when at rest). */
+    target() {
+        return { x: this.x.getTarget(), y: this.y.getTarget(), width: this.width.getTarget(), height: this.height.getTarget() };
     }
     /** The rect drawn this frame (scaled around its centre while materializing). */
     visual() {
@@ -128,12 +138,12 @@ class Shape {
         this.width.set(rect.width);
         this.height.set(rect.height);
     }
-    animate(rect, instant) {
+    animate(rect, instant, spring = this.spring) {
         return Promise.all([
-            this.x.animateTo(rect.x, { spring: SPRING, instant }),
-            this.y.animateTo(rect.y, { spring: SPRING, instant }),
-            this.width.animateTo(rect.width, { spring: SPRING, instant }),
-            this.height.animateTo(rect.height, { spring: SPRING, instant }),
+            this.x.animateTo(rect.x, { spring, instant }),
+            this.y.animateTo(rect.y, { spring, instant }),
+            this.width.animateTo(rect.width, { spring, instant }),
+            this.height.animateTo(rect.height, { spring, instant }),
         ]).then((done) => done.every(Boolean));
     }
 }
@@ -196,6 +206,8 @@ export class GlassScene {
     /** ThemeConfig `glassTint`: 0 clear … 1 tinted (the CSS reads `--lab-glass-tint`; the refraction filter needs the numbers). */
     cornerShape = 'superellipse';
     tint = 0;
+    /** Which material it paints (GlassContainer `material`): regular glass, or menus' thick glass. */
+    material = 'regular';
     /** ThemeConfig `glassBlur`: the measured backdrop blur, sized per cluster. */
     blur = false;
     /** ThemeConfig `glassRefraction`: bend the backdrop continuously at the edges, where supported. */
@@ -339,7 +351,7 @@ export class GlassScene {
     readBackdropTone() {
         const paths = this.cache.paths;
         let tone = null;
-        if (this.adaptive && paths.length && typeof document.elementsFromPoint === 'function') {
+        if (this.adaptive && this.material === 'regular' && paths.length && typeof document.elementsFromPoint === 'function') {
             const frame = this.frame();
             const tones = paths.map((path) => {
                 const { x, y } = toScreenPoint(frame, path.bounds.x + path.bounds.width / 2, path.bounds.y + path.bounds.height / 2);
@@ -595,18 +607,45 @@ export class GlassScene {
             this.shownAt ??= now;
         const previous = new Map([...this.shapes].map(([id, shape]) => [id, shape.rect()]));
         const next = new Map([...targets].map(([id, target]) => [id, target.rect]));
-        const plan = planGlassTransition(previous, next, this.spacing);
+        // Bubbles born out of their origin (a menu out of its button), and ones returning into it.
+        const origins = new Map();
+        const originOf = new Map();
+        for (const [id, target] of targets) {
+            const element = target.member?.options.origin;
+            if (this.shapes.has(id) || !element)
+                continue;
+            const rect = this.originRect(element, frame);
+            if (rect) {
+                origins.set(id, rect);
+                originOf.set(id, element);
+            }
+        }
+        for (const [id, shape] of this.shapes) {
+            if (next.has(id) || shape.leaving || !shape.origin)
+                continue;
+            const rect = this.originRect(shape.origin, frame);
+            if (rect)
+                origins.set(id, rect);
+        }
+        // A surface opening out of its button always grows, even in a container that just appeared.
+        const atOnce = this.reduceMotion || this.host.closest(`[${GLASS_INSTANT_ATTRIBUTE}]`) !== null;
+        const plan = planGlassTransition(previous, next, this.spacing, origins);
         for (const birth of plan.births) {
             const target = targets.get(birth.id);
-            const grow = birth.kind === 'grow' && !instant;
+            const origin = originOf.get(birth.id) ?? null;
+            const grow = birth.kind === 'grow' && !(origin ? atOnce : instant);
             const shape = new Shape(grow ? birth.from : target.rect, grow || instant ? 1 : 0);
             shape.carry = !grow;
             shape.growing = grow;
             // A bubble growing out of a neighbour crosses the space between them: no clip (a slot's
             // overflow box would cut it off at the slot's edge) until it arrives.
             shape.clip = grow ? undefined : target.clip;
+            shape.origin = origin;
+            if (origin && grow)
+                shape.spring = GLASS_ORIGIN_SPRINGS.grow;
             this.shapes.set(birth.id, shape);
-            if (!instant && target.member)
+            // A surface out of its origin fades its own content in.
+            if (!instant && !origin && target.member)
                 fadeIn(target.member.element);
         }
         for (const death of plan.deaths) {
@@ -614,6 +653,7 @@ export class GlassScene {
             if (!shape || shape.leaving)
                 continue;
             shape.leaving = true;
+            shape.home = shape.layout;
             shape.layout = null;
             // It travels into its neighbour: free of its old slot's clip.
             if (death.kind === 'absorb')
@@ -621,15 +661,20 @@ export class GlassScene {
             this.release(shape, death.id);
             const token = ++shape.token;
             const done = () => {
-                if (shape.token === token && shape.leaving && this.shapes.get(death.id) === shape)
+                if (shape.token === token && shape.leaving && this.shapes.get(death.id) === shape) {
                     this.shapes.delete(death.id);
+                    if (shape.origin)
+                        this.clearOriginClip(death.id);
+                }
                 this.scheduleDraw();
             };
-            if (instant)
+            if (shape.origin ? atOnce : instant) {
                 this.shapes.delete(death.id);
+                this.clearOriginClip(death.id);
+            }
             else {
                 if (death.kind === 'absorb')
-                    void shape.animate(death.into, false).then(done);
+                    void shape.animate(death.into, false, shape.origin ? GLASS_ORIGIN_SPRINGS.absorb : SPRING).then(done);
                 else
                     void shape.scale.animateTo(0, { spring: SPRING }).then(done);
                 // Springs only advance on animation frames, which a hidden or background tab pauses:
@@ -655,25 +700,29 @@ export class GlassScene {
                     followAll);
             const changed = !shape.layout || !sameRect(shape.layout, target.rect);
             shape.layout = target.rect;
+            // A bubble out of its origin keeps growing in a container that just appeared.
+            const jump = shape.origin ? atOnce : instant;
             if (shape.scale.getTarget() !== 1)
-                void shape.scale.animateTo(1, { spring: SPRING, instant });
-            if (follow || instant) {
+                void shape.scale.animateTo(1, { spring: SPRING, instant: jump });
+            if (follow || jump) {
                 shape.set(target.rect);
                 // A jump ends any growth in progress (its spring's arrival would have): the bubble is its
                 // own shape again, back in its slot's clip, not a bridge out of its neighbour.
-                if (instant && shape.growing) {
+                if (jump && shape.growing) {
                     ++shape.token;
                     shape.carry = true;
                     shape.growing = false;
                     shape.clip = target.clip;
                 }
             }
-            else if (changed || !sameRect(shape.rect(), target.rect)) {
+            else if (changed || (!sameRect(shape.rect(), target.rect) && !sameRect(shape.target(), target.rect))) {
+                // A spring already heading there keeps its course (tracking measures every frame).
                 const token = ++shape.token;
                 void shape.animate(target.rect, false).then((arrived) => {
                     if (arrived && shape.token === token) {
                         shape.carry = true;
                         shape.growing = false;
+                        shape.spring = SPRING;
                         shape.clip = target.clip;
                     }
                     this.scheduleDraw();
@@ -710,6 +759,25 @@ export class GlassScene {
             clips.push(openClip(toLocalRect(frame, edge), axes));
         }
         return { clip: memberClip(clips), scrolled };
+    }
+    /**
+     * Where a bubble with an origin comes from and returns to, in the container's pixels
+     * (`glassOrigin`: the origin's rect when it is glass, else a droplet at its centre); null when the
+     * origin is gone.
+     */
+    originRect(origin, frame) {
+        if (!origin.isConnected)
+            return null;
+        const box = origin.getBoundingClientRect();
+        if (!box.width || !box.height)
+            return null;
+        const member = origin.closest('[data-glass-member]');
+        return glassOrigin(toLocalRect(frame, box), member ? toLocalRect(frame, member.getBoundingClientRect()) : null);
+    }
+    clearOriginClip(id) {
+        const member = this.members.get(id);
+        if (member)
+            setStyleIfChanged(member.element.style, 'clipPath', '');
     }
     release(shape, id) {
         const member = this.members.get(id);
@@ -783,9 +851,16 @@ export class GlassScene {
         const visuals = [];
         const clips = [];
         for (const [id, shape] of this.shapes) {
-            visuals.push({ ...shape.visual(), id });
+            const visual = shape.visual();
+            visuals.push({ ...visual, id });
             clips.push(shape.clip);
             const member = this.members.get(id);
+            // A surface out of its origin shows its content only inside its glass while it travels.
+            if (member && shape.origin) {
+                const home = shape.layout ?? shape.home;
+                const travelling = (shape.growing || shape.leaving) && home;
+                setStyleIfChanged(member.element.style, 'clipPath', travelling ? `path('${shapePath({ ...visual, x: visual.x - home.x, y: visual.y - home.y })}')` : '');
+            }
             if (!member || shape.leaving || !shape.layout)
                 continue;
             // Content rides with its glass (centre to centre) while the bubble moves.
@@ -817,7 +892,7 @@ export class GlassScene {
         this.surfaceGrey = input.paint.surface;
         renderPaint(this.paint, paths, lights, this.uid, this.spacing, this.highlightWidth, this.highlightStrength, this.highlightProfile, glassRim(this.tint, this.scheme()), input.paint, glow ? { x: glow.x, y: glow.y, radius: glow.radius.get(), opacity: glow.opacity.get() } : null);
         // iOS 27 casts the faint shadow under clear glass too.
-        renderShadow(this.shadow, paths, this.uid);
+        renderShadow(this.shadow, paths, this.uid, this.material === 'menu' ? GLASS_MENU.shadow : GLASS_SHADOW);
         if (!this.host.hasAttribute('data-glass-ready'))
             this.host.setAttribute('data-glass-ready', '');
         this.updateRefraction(key);
@@ -844,7 +919,7 @@ export class GlassScene {
             if (piece.dataset.glassSize !== size)
                 piece.dataset.glassSize = size;
             // Clear glass always softens a little (1.6 px); the regular blur joins with the tint when on.
-            setPropertyIfChanged(style, '--lab-glass-blur', `${glassBlurAt(side, this.tint, this.blur).toFixed(2)}px`);
+            setPropertyIfChanged(style, '--lab-glass-blur', `${glassKindBlur(this.material, side, this.tint, this.blur).toFixed(2)}px`);
             setStyleIfChanged(style, 'left', `${x}px`);
             setStyleIfChanged(style, 'top', `${y}px`);
             setStyleIfChanged(style, 'width', `${width}px`);
@@ -916,7 +991,7 @@ export class GlassScene {
     }
     /** Keep the same optical layer alive through motion, merges and adaptive tone changes. */
     updateRefraction(outline) {
-        const key = `${outline}|${this.tint}|${this.blur}|${this.scheme()}|${this.surfaceGrey.toFixed(3)}|${this.refractionStrength}|${this.refractionProfile}|${this.backdropSource ?? ''}`;
+        const key = `${outline}|${this.material}|${this.tint}|${this.blur}|${this.scheme()}|${this.surfaceGrey.toFixed(3)}|${this.refractionStrength}|${this.refractionProfile}|${this.backdropSource ?? ''}`;
         const wanted = this.refraction && this.refractionStrength > 0 &&
             (supportsRefraction() || (supportsElementRefraction() && !!this.elementSource())) &&
             document.documentElement.getAttribute('data-lab-glass') !== 'solid' &&
@@ -992,8 +1067,8 @@ export class GlassScene {
                 this.refractionMaps[i] = map;
             }
             const side = smallestSide(path.shapes);
-            const material = glassMaterial(this.tint, this.scheme(), glassSize(side));
-            const blur = glassBlurAt(side, this.tint, this.blur);
+            const material = this.material === 'menu' ? glassMenuMaterial(this.scheme()) : glassMaterial(this.tint, this.scheme(), glassSize(side));
+            const blur = glassKindBlur(this.material, side, this.tint, this.blur);
             const edgeTerms = glassEdgeTerms(this.tint, this.scheme(), material, this.surfaceGrey);
             let filter = this.filters[i];
             if (!filter) {
@@ -1386,9 +1461,10 @@ function renderPaint(svg, paths, lights, uid, spacing, highlightWidth, highlight
  * box (the SVG overflows), so its regions extend well beyond it.
  */
 const shadowLayers = new WeakMap();
-function renderShadow(svg, paths, uid) {
+function renderShadow(svg, paths, uid, shadow) {
     let layer = shadowLayers.get(svg);
-    const key = paths.map(path => `${path.d}|${glassSize(smallestSide(path.shapes))}|${path.clip ? Object.values(path.clip).join(',') : ''}`).join(';');
+    const inset = shadow.inset ?? 0;
+    const key = `${shadow.dy},${shadow.blur},${inset}|` + paths.map(path => `${path.d}|${glassSize(smallestSide(path.shapes))}|${path.clip ? Object.values(path.clip).join(',') : ''}`).join(';');
     if (layer?.key === key && layer.defs.parentNode === svg)
         return;
     if (!paths.length) {
@@ -1396,22 +1472,26 @@ function renderShadow(svg, paths, uid) {
         shadowLayers.delete(svg);
         return;
     }
-    if (!layer || layer.defs.parentNode !== svg) {
+    const spec = `${shadow.dy},${shadow.blur},${inset}`;
+    if (!layer || layer.defs.parentNode !== svg || layer.spec !== spec) {
         const defs = node('defs', {});
         const mask = node('mask', { id: `${uid}-m`, maskUnits: 'userSpaceOnUse' });
         const bounds = node('rect', { fill: 'white' });
         const cutout = node('path', { fill: 'black' });
         mask.append(bounds, cutout);
         const blur = node('filter', { id: `${uid}-b`, filterUnits: 'userSpaceOnUse' });
-        blur.append(node('feGaussianBlur', { stdDeviation: GLASS_SHADOW.blur }));
+        // A negative spread (the menu's) shrinks the shape before it blurs.
+        if (inset > 0)
+            blur.append(node('feMorphology', { operator: 'erode', radius: inset }));
+        blur.append(node('feGaussianBlur', { stdDeviation: shadow.blur }));
         defs.append(mask, blur);
         const group = node('g', { mask: `url(#${uid}-m)` });
         svg.replaceChildren(defs, group);
-        layer = { key: '', defs, mask, bounds, cutout, blur, group, shapes: [], scissors: [] };
+        layer = { key: '', spec, defs, mask, bounds, cutout, blur, group, shapes: [], scissors: [] };
         shadowLayers.set(svg, layer);
     }
     layer.key = key;
-    const reach = GLASS_SHADOW.blur * 3 + GLASS_SHADOW.dy;
+    const reach = shadow.blur * 3 + shadow.dy;
     const box = boundsOf(paths.map(path => path.bounds));
     const region = { x: box.x - reach, y: box.y - reach, width: box.width + reach * 2, height: box.height + reach * 2 };
     for (const element of [layer.mask, layer.bounds, layer.blur])
@@ -1427,7 +1507,7 @@ function renderShadow(svg, paths, uid) {
         if (!shape) {
             shape = node('path', {
                 'class': 'lab-glass-shadow-shape',
-                'transform': `translate(0 ${GLASS_SHADOW.dy})`,
+                'transform': `translate(0 ${shadow.dy})`,
                 'filter': `url(#${uid}-b)`,
             });
             layer.group.append(shape);
@@ -1446,7 +1526,7 @@ function renderShadow(svg, paths, uid) {
                 layer.scissors[i] = scissor;
             }
             const rect = scissor.firstElementChild;
-            const clip = { ...path.clip, y: path.clip.y - GLASS_SHADOW.dy };
+            const clip = { ...path.clip, y: path.clip.y - shadow.dy };
             for (const [name, value] of Object.entries(clip))
                 rect.setAttribute(name, String(value));
             shape.setAttribute('clip-path', `url(#${uid}-s${i})`);

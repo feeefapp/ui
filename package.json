@@ -1,6 +1,6 @@
 {
   "name": "@feeef.dev/ui",
-  "version": "0.12.21",
+  "version": "0.12.22",
   "description": "Feeef UI kit: tokens, workspace scaffold and controls shared by every Feeef web app (Lab, Cloud console, …).",
   "private": true,
   "license": "UNLICENSED",

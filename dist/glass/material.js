@@ -246,4 +246,18 @@ export function lensMaterial(kind, lens, scheme) {
         shadow: LENS_SHADOW.alpha * t,
     };
 }
+export const GLASS_MENU = {
+    veil: 0.88,
+    blur: 20,
+    shadow: { dy: 14, blur: 20, inset: 12, alpha: 0.24 },
+};
+/** The menu material for one colour scheme (see `GLASS_MENU`). */
+export function glassMenuMaterial(scheme) {
+    const regular = glassMaterial(1, scheme, 'large');
+    return { ...regular, veil: Math.max(regular.veil, GLASS_MENU.veil) };
+}
+/** Backdrop blur (std dev, px) of `kind` glass whose shorter side is `side` px (see `glassBlurAt`). */
+export function glassKindBlur(kind, side, tint, blurOn) {
+    return kind === 'menu' ? Math.max(glassBlur(side), GLASS_MENU.blur) : glassBlurAt(side, tint, blurOn);
+}
 //# sourceMappingURL=material.js.map
