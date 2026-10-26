@@ -12,6 +12,15 @@ export type GlassMemberOptions = {
   /** Bubbles sharing a union name draw as one shape spanning all of them, even when apart. */
   union?: string
   motion?: GlassMotion
+  /**
+   * The control this bubble comes out of (a menu's button): the bubble is born out of it and
+   * returns into it when it leaves (`GLASS_ORIGIN_SPRINGS`), whatever else is in the container, and
+   * its content is clipped to its glass while it travels. A glass origin (inside a
+   * `[data-glass-member]`) gives the rect of the bubble hugging it (else its own), so the bubble
+   * leaves and rejoins that glass; any other origin gives a small droplet at its centre
+   * (`glassOrigin`).
+   */
+  origin?: HTMLElement | null
 }
 
 export type GlassRegistry = {

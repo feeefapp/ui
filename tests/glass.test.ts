@@ -12,7 +12,7 @@ import {
   unionLoops,
   type GlassShape,
 } from '../src/glass/geometry.ts'
-import { glassSeed, planGlassTransition, sameGlassRow, sameRect } from '../src/glass/transitions.ts'
+import { GLASS_ORIGIN, GLASS_ORIGIN_HUG, GLASS_ORIGIN_SEED, glassOrigin, glassSeed, planGlassTransition, sameGlassRow, sameRect } from '../src/glass/transitions.ts'
 import { DEFAULT_GLASS_LIGHT, glassLightToward } from '../src/glass/light.ts'
 
 const pill = (x: number, width = 80, y = 0): GlassShape => ({ x, y, width, height: 46, radius: 23 })
@@ -175,6 +175,26 @@ test('births and deaths prefer a neighbour in the same row over a closer one in 
 test('a new bubble prefers a living neighbour over one that is leaving far away', () => {
   const plan = planGlassTransition(map([['stay', pill(500)], ['gone', pill(0)]]), map([['stay', pill(500)], ['new', pill(200)]]), 8)
   assert.deepEqual(plan.births.map((b) => (b.kind === 'grow' ? b.source : b.kind)), ['stay'])
+})
+
+test('a bubble with an origin is born out of it and returns into it, whatever else is there', () => {
+  const menu = { x: 0, y: 0, width: 250, height: 209 }
+  const button = { x: 206, y: 0, width: 44, height: 44 }
+  // A neighbour right next to it would otherwise be its source.
+  const born = planGlassTransition(map([['other', pill(260)]]), map([['other', pill(260)], ['menu', { ...menu, radius: 32 }]]), 8, new Map([['menu', button]]))
+  assert.deepEqual(born.births, [{ id: 'menu', kind: 'grow', source: GLASS_ORIGIN, from: button }])
+  const gone = planGlassTransition(map([['menu', { ...menu, radius: 32 }]]), map([]), 8, new Map([['menu', button]]))
+  assert.deepEqual(gone.deaths, [{ id: 'menu', kind: 'absorb', target: GLASS_ORIGIN, into: button }])
+})
+
+test('glassOrigin: the glass hugging the control, the control in a wide group, a droplet without glass', () => {
+  const button = { x: 100, y: 10, width: 36, height: 36 }
+  const bubble = { x: 96, y: 6, width: 44, height: 44 }
+  assert.deepEqual(glassOrigin(button, bubble), bubble)
+  const group = { x: 0, y: 6, width: 100 + 36 + GLASS_ORIGIN_HUG * 2 + 1, height: 44 }
+  assert.deepEqual(glassOrigin(button, group), button)
+  const seed = glassOrigin(button, null)
+  assert.deepEqual(seed, { x: 118 - GLASS_ORIGIN_SEED / 2, y: 28 - GLASS_ORIGIN_SEED / 2, width: GLASS_ORIGIN_SEED, height: GLASS_ORIGIN_SEED })
 })
 
 test('glassSeed tucks a drop inside the anchor end facing the other bubble', () => {

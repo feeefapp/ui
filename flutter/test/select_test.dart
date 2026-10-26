@@ -16,8 +16,9 @@ Widget overlay(Widget child) => host(
 );
 
 /// The open menu's grain breathes forever, like the web kit's, so pump fixed steps.
+/// Long enough for a menu to open, or to close and its glass to land back (`MenuMorph.closeEnd`).
 Future<void> settle(WidgetTester tester) async {
-  for (var i = 0; i < 10; i++) {
+  for (var i = 0; i < 14; i++) {
     await tester.pump(const Duration(milliseconds: 50));
   }
 }

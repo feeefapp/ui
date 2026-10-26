@@ -306,3 +306,41 @@ LensMaterial lensMaterial({
     shadow: lensShadowAlpha * t,
   );
 }
+
+/// The container's materials (the web kit's `GlassKind`): `regular` is the tint curve above;
+/// `menu` is the thick glass menus are made of (they carry text over anything): regular glass
+/// (tint 1, large) veiled at least [glassMenuVeil], blurred at least [glassMenuBlur] px whatever
+/// the theme's `glassBlur` says, and lifted off the page by a deeper shadow ([glassMenuShadow]). The
+/// hairline, rim light and lens are the container's as for every glass.
+enum GlassKind { regular, menu }
+
+/// The least share of the surface veiling what is under menu glass (`GLASS_MENU.veil`).
+const double glassMenuVeil = 0.88;
+
+/// The least backdrop blur of menu glass, in px (`GLASS_MENU.blur`).
+const double glassMenuBlur = 20;
+
+/// Menu glass's shadow (`GLASS_MENU.shadow`): [dy] px down, std dev [blur], the shape shrunk by
+/// [inset] px first, black at [alpha] (CSS `0 14px 40px -12px rgb(0 0 0 / 24%)`).
+const glassMenuShadow = (dy: 14.0, blur: 20.0, inset: 12.0, alpha: 0.24);
+
+/// The menu material for one brightness (`glassMenuMaterial` in the web kit).
+GlassMaterial glassMenuMaterial({required bool dark}) {
+  final regular = glassMaterial(1, dark: dark, size: GlassSize.large);
+  return (
+    veil: math.max(regular.veil, glassMenuVeil),
+    saturate: regular.saturate,
+    gain: regular.gain,
+    offset: regular.offset,
+  );
+}
+
+/// Backdrop blur (std dev, px) of [kind] glass whose shorter side is [side] px ([glassBlurAt]).
+double glassKindBlur(
+  GlassKind kind,
+  double side,
+  double tint, {
+  required bool blurOn,
+}) => kind == GlassKind.menu
+    ? math.max(glassBlur(side), glassMenuBlur)
+    : glassBlurAt(side, tint, blurOn: blurOn);

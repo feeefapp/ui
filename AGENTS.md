@@ -262,13 +262,20 @@ only); the alert layout rule is pure (`alert-model.ts`, tested on both sides). F
 `PresentationRouteScope` instead of `open`. Never hand-roll a dialog shell: compose these parts.
 
 Menus and floating panels (`src/menu`, `flutter/lib/menu`): a list of commands or choices behind a
-button is a `MenuSurface` (asChild on the Radix content): one glass bubble that grows out of its
-trigger and flies back into it (`SPRINGS.menu` / `SPRINGS.menuDismiss`, pure geometry in
-`morph-model.ts` and its Dart twin, vectors in `flutter/test/fixtures/menu.json` via
-`flutter/tool/generate_menu_fixture.ts`). It supplies the Radix placement (cover offset, align,
-collision padding and boundary); don't set those on the content. Forms and pickers stay on
-`PopoverSurface`. Every floating panel respects the app's bounds: pass `useFloatingBoundary()` as
-portal container and `collisionBoundary`; apps in a frame wrap themselves in `FloatingBoundary`. In
-Flutter every popup lays out in `AnchoredPanel` (inside the hosting overlay, flip, shift, max
-extent, follows scrolling); never position a popup with `CompositedTransformFollower` or screen
-maths.
+button is a `MenuSurface` (asChild on the Radix content): a `GlassContainer` with `material="menu"`
+(Flutter `GlassKind.menu`; `GLASS_MENU` in material.ts: the full regular material veiled ≥ 88 %,
+blurred ≥ 20 px, deeper shadow; hairline, pointer light and lens as all container glass) holding one
+bubble whose `origin` is the trigger. A bubble with an origin is born out of it and returns into it
+(`planGlassTransition` origins, `GLASS_ORIGIN_SPRINGS` = `SPRINGS.menu` / `SPRINGS.menuDismiss`),
+its content clipped to its glass while it travels; `glassOrigin` picks the trigger's hugging glass
+bubble, its own rect inside a wider one, or a `GLASS_ORIGIN_SEED` droplet for a plain trigger. The
+rows' fade/blur and the trigger hide/reveal are pure in `morph-model.ts` and its Dart twin (vectors in
+`flutter/test/fixtures/menu.json` via `flutter/tool/generate_menu_fixture.ts`); a closing menu stays
+mounted `MENU_MORPH.closeEnd` (`--lab-menu-exit`) while its glass lands. No menu paints its own glass.
+It supplies the Radix placement (cover offset, align, collision padding and boundary); don't set those
+on the content. Forms and pickers stay on `PopoverSurface`. Every floating panel respects the app's
+bounds: pass `useFloatingBoundary()` as portal container and `collisionBoundary`; apps in a frame wrap
+themselves in `FloatingBoundary`. In Flutter every popup lays out in `AnchoredPanel` (inside the
+hosting overlay, flip, shift, max extent, follows scrolling); never position a popup with
+`CompositedTransformFollower` or screen maths. A bubble in an overlay opened from inside another bubble
+(a menu from a toolbar button) belongs to its own container, not the opener's (`_InsideBubble.registry`).

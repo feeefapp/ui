@@ -6,6 +6,7 @@ import { Button, type ButtonVariant } from '../primitives/button'
 import { PresentationHost, usePresented } from './host'
 import { usePopMotion } from './motion'
 import { alertActionOrder, alertActionsFit, type AlertActionRole } from './alert-model'
+import '../glass/glass.css'
 import '../menu/menu.css'
 import './presentation.css'
 

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import '../physics/spring.dart';
 import 'geometry.dart';
 
 /// How bubbles change when the layout changes, following Apple's glass rules: the twin of
@@ -12,7 +13,9 @@ import 'geometry.dart';
 ///   droplet at the neighbour's facing edge ([glassSeed]) that stretches out to its place;
 /// - a leaving bubble is absorbed into the new bubble it overlaps (a merge), else into its nearest
 ///   neighbour, preferring the same row, shrinking into that neighbour's facing edge;
-/// - only a bubble with no other bubble in the container materializes or dematerializes.
+/// - only a bubble with no other bubble in the container materializes or dematerializes;
+/// - a bubble with an origin (a menu and the button that opened it) is born out of its origin and
+///   returns into it, whatever else is in the container ([glassOriginId]).
 sealed class GlassBirth {
   const GlassBirth(this.id);
   final String id;
@@ -47,6 +50,38 @@ final class GlassAbsorb extends GlassDeath {
 /// Shrink to a point and drop it.
 final class GlassDematerialize extends GlassDeath {
   const GlassDematerialize(super.id);
+}
+
+/// The `source` of a birth and `target` of a death that come from or go to the bubble's origin:
+/// the control that opened it (`GLASS_ORIGIN`).
+const glassOriginId = 'origin';
+
+/// The springs of a bubble growing out of its origin and returning into it
+/// (`GLASS_ORIGIN_SPRINGS`): iOS 26 menus springing out of their button and flying back into it.
+const glassOriginSprings = (grow: Springs.menu, absorb: Springs.menuDismiss);
+
+/// Side (px) of the droplet a bubble grows out of when its origin is not glass
+/// (`GLASS_ORIGIN_SEED`).
+const double glassOriginSeed = 8;
+
+/// How far (px) a bubble may reach past its origin on each side and still be the origin's glass
+/// (`GLASS_ORIGIN_HUG`).
+const double glassOriginHug = 12;
+
+/// The rect a bubble is born out of and returns into (`glassOrigin`). [origin] is the control's
+/// rect; [glass] the glass bubble around it, or null when it is not glass. A bubble hugging the
+/// control (within [glassOriginHug]) gives its own rect, so the new bubble leaves and rejoins
+/// exactly that glass; a wider one gives the control's rect; no glass gives a [glassOriginSeed]
+/// droplet at the control's centre, so no glass copy of a plain button pops in.
+Rect glassOrigin(Rect origin, Rect? glass) {
+  if (glass != null) {
+    final hugs =
+        glass.width <= origin.width + 2 * glassOriginHug &&
+        glass.height <= origin.height + 2 * glassOriginHug;
+    return hugs ? glass : origin;
+  }
+  final side = math.min(glassOriginSeed, math.min(origin.width, origin.height));
+  return Rect.fromCenter(center: origin.center, width: side, height: side);
 }
 
 double _gap(Rect a, Rect b) =>
@@ -122,12 +157,14 @@ Rect glassSeed(Rect anchor, Rect toward) {
 }
 
 /// Plans births and deaths between two measurements. [previous]: current visual rects of bubbles
-/// drawn before the change (including ones leaving); [next]: targets after the change.
+/// drawn before the change (including ones leaving); [next]: targets after the change; [origins]:
+/// the [glassOrigin] rect of bubbles with an origin, born out of it and returning into it.
 ({List<GlassBirth> births, List<GlassDeath> deaths}) planGlassTransition(
   Map<String, Rect> previous,
   Map<String, Rect> next,
-  double spacing,
-) {
+  double spacing, [
+  Map<String, Rect> origins = const {},
+]) {
   final leaving = {
     for (final e in previous.entries)
       if (!next.containsKey(e.key)) e.key: e.value,
@@ -139,6 +176,11 @@ Rect glassSeed(Rect anchor, Rect toward) {
   final births = <GlassBirth>[];
   for (final MapEntry(key: id, value: rect) in next.entries) {
     if (previous.containsKey(id)) continue;
+    final origin = origins[id];
+    if (origin != null) {
+      births.add(GlassGrow(id, glassOriginId, origin));
+      continue;
+    }
     // A bubble that just left right here (a split or a replacement), else the nearest neighbour
     // that stays, else the nearest one leaving.
     final source =
@@ -159,6 +201,11 @@ Rect glassSeed(Rect anchor, Rect toward) {
   }
   final deaths = <GlassDeath>[];
   for (final MapEntry(key: id, value: rect) in leaving.entries) {
+    final origin = origins[id];
+    if (origin != null) {
+      deaths.add(GlassAbsorb(id, glassOriginId, origin));
+      continue;
+    }
     // In a split the parent is absorbed into the child it overlaps most while the children grow
     // out of it, so the glass never has a gap; otherwise into its nearest neighbour.
     final target = _nearest(rect, next, spacing) ?? _neighbour(rect, next);

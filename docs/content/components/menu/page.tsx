@@ -43,8 +43,9 @@ function Overview() {
       <Section title="When to use">
         <p>
           <C>MenuSurface</C> is the kit’s menu: a list of choices or commands that a button opens.
-          It is one Liquid Glass bubble that grows out of the button and covers it, like menus on
-          iOS 26. The <Link to="/components/actions-bar">Actions bar</Link> overflow and group menus,{' '}
+          It is one glass shape of the kit’s <Link to="/components/glass-container">glass
+          container</Link>, in the thick menu material, born out of the button’s glass and covering
+          it, like menus on iOS 26. The <Link to="/components/actions-bar">Actions bar</Link> overflow and group menus,{' '}
           <Link to="/components/select">Select</Link>, the language switcher and the prompt
           composer’s add menu all use it. For a panel that holds a form or a picker (a delivery note,
           a date), use <Link to="/components/popover-surface">PopoverSurface</Link> instead: popovers
@@ -56,7 +57,7 @@ function Overview() {
         <p>
           With <C>asChild</C>, put it directly around a Radix <C>DropdownMenu.Content</C>,{' '}
           <C>Select.Content</C> or <C>Popover.Content</C>, inside the <C>Portal</C>. Radix keeps
-          focus, typeahead, keyboard and dismissal; the surface adds the glass, the morph and its
+          focus, typeahead, keyboard and dismissal; the surface adds the glass, the motion and its
           placement: <C>sideOffset</C> (it covers the trigger), <C>align</C> (the trigger’s outer edge
           in a toolbar, centred elsewhere), <C>collisionPadding</C> and <C>collisionBoundary</C>.
           Props you set on the content win, so leave those out unless you mean them. Submenus pass{' '}
@@ -88,21 +89,37 @@ import { MenuSurface } from '@feeef.dev/ui/menu'
         </p>
       </Section>
 
+      <Section title="Glass">
+        <p>
+          The menu is a <C>GlassContainer</C> with <C>{'material="menu"'}</C> holding one bubble, so
+          it has everything container glass has: the dark exterior hairline, the rim light that
+          turns toward the pointer, the lens at the rim and the shadow. Its material is thicker than
+          a toolbar’s because menus carry text over anything: the full regular material veiled at
+          least 88 % and blurred at least 20 px whatever the theme’s <C>glassBlur</C>, with a
+          deeper shadow (<C>GLASS_MENU</C>; Flutter <C>GlassKind.menu</C>). Reduced transparency,
+          more contrast and <C>{"glass: 'solid'"}</C> make it opaque; forced colors paint system
+          colors.
+        </p>
+      </Section>
+
       <Section title="How it moves">
         <p>
-          The motion is measured from iOS 26.2 menus. Opening, the button pinches for about 25 ms,
-          then one bubble springs from the button’s frame to the menu’s (<C>SPRINGS.menu</C>:
-          response 0.30 s, damping 0.73). Its width overshoots by about 2.5 % near 0.22 s and it
-          settles by 0.45 s. It starts as a blob and becomes the menu’s rounded rectangle as it
-          arrives; the rows are inside it from the first frame, blurred and faint, and sharpen by
-          about 0.35 s. Closing, the rows go within 50 ms and the empty bubble springs back into the
-          button (<C>SPRINGS.menuDismiss</C>), narrowing past it before it lands, while the button
-          reappears. Nothing behind the menu dims.
+          The menu’s glass is born out of its button the way a container births a bubble out of its
+          neighbour: the bubble’s <C>origin</C> is the button. A button in its own glass bubble (a
+          toolbar button) gives that bubble, so the menu leaves the button’s glass and, when it
+          closes, flies back and merges into it. A button with no glass (a plain button in content)
+          gives a small droplet at its centre (<C>GLASS_ORIGIN_SEED</C>, 8 px), so a glass copy of
+          the button never pops in: the menu grows out of the point you pressed and shrinks back into
+          it. A button inside a wider bubble (a group of buttons) gives its own rect.
         </p>
         <p>
-          The geometry is pure and shared by both kits (<C>menuOpenFrame</C>,{' '}
-          <C>menuCloseFrame</C> in <C>@feeef.dev/ui/menu</C>). Reduced motion swaps the spring for
-          a 150 ms crossfade in place.
+          The springs are measured from iOS 26.2 menus (<C>GLASS_ORIGIN_SPRINGS</C>): out on{' '}
+          <C>SPRINGS.menu</C> (response 0.30 s, damping 0.73, settled by about 0.36 s), back on{' '}
+          <C>SPRINGS.menuDismiss</C>, narrowing past the button before it lands by 0.48 s. The rows
+          are in the glass from its first frame, clipped to it, blurred and faint, and sharpen by
+          about 0.42 s; closing, they go within 50 ms, then the glass flies back while the button
+          reappears. Nothing behind the menu dims. Reduced motion shows the glass in place and
+          crossfades the rows; closing, the rows fade first and then the glass leaves.
         </p>
       </Section>
 
@@ -178,6 +195,7 @@ ActionsMenuAnchor(
             [<C>--lab-menu-tint</C>, '1: the full regular material', 'same'],
             [<C>--lab-menu-veil</C>, 'the large glass veil, at least 88%', 'same'],
             [<C>--lab-menu-blur</C>, 'the large glass blur, at least 20px', 'same'],
+            [<C>--lab-menu-exit</C>, '500ms: mounted until the glass has landed', '120ms with reduced motion'],
           ]}
         />
         <p>
@@ -204,7 +222,7 @@ ActionsMenuAnchor(
 
       <Section title="Accessibility">
         <p>
-          The glass layers are <C>aria-hidden</C> and ignore the pointer; roles, focus and keys come
+          The glass is the container’s <C>aria-hidden</C> material and ignores the pointer; roles, focus and keys come
           from Radix. The button is hidden while the menu covers it and keeps its focus state, and
           focus returns to it when the menu closes.
         </p>
@@ -219,7 +237,7 @@ ActionsMenuAnchor(
         />
         <Callout title="Reduced motion and transparency">
           <p>
-            Reduced motion crossfades instead of springing. Reduced transparency, more contrast and{' '}
+            Reduced motion shows the glass in place and crossfades the rows instead of springing. Reduced transparency, more contrast and{' '}
             <C>glass: 'solid'</C> paint the menu on the opaque surface; forced colors use system
             colors.
           </p>
@@ -235,7 +253,7 @@ export default definePage({
   title: 'Menu',
   group: 'Containment',
   order: 3,
-  summary: 'A Liquid Glass menu that grows out of the button that opens it and stays inside the app.',
+  summary: 'A glass menu born out of the button that opens it, merging back into it, inside the app.',
   importLine: "import { MenuSurface, FloatingBoundary } from '@feeef.dev/ui/menu'",
   source: 'src/menu/menu-surface.tsx',
   api: ['MenuSurface', 'FloatingBoundary'],

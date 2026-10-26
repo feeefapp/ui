@@ -81,7 +81,7 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
 | Person-defined order | `ListSection onReorder` | up/down buttons on every row |
 | Browsing a few items sideways | `Carousel` | auto-advancing slides |
 | One component, any pane width | `AdaptiveStack`, `ViewThatFits`, `useSizeClass` | window media queries in components |
-| Commands or choices behind a button | `MenuSurface` (glass, grows out of the button) | a popover with a column of buttons |
+| Commands or choices behind a button | `MenuSurface` (a thick glass shape born out of the button's glass, merging back into it) | a popover with a column of buttons |
 | Light, anchored, dismissable extra | `PopoverSurface` | a modal for a color picker |
 | Task actions for the whole view | `Dock` (+ `ActionsBar`) | buttons scattered through content |
 | Fresh data in a list people keep open | `ScrollArea onRefresh` (pull) + a Refresh button on the same `RefreshController` | pull as the only way to reload |
@@ -139,6 +139,12 @@ opacity animate; layout switches once at rest. Gestures never replace a visible 
   popovers never leave it.
 - Empty, loading and error states each offer a next step.
 - Keyboard: Tab order follows the reading order, focus is visible and returns after dialogs.
+
+Menus are glass container shapes (`GlassContainer material="menu"` / `GlassKind.menu`): thicker
+than toolbar glass so their text reads over anything, with the container's hairline, moving light
+and lens. A menu is born out of its button's glass and merges back into it; a button with no glass
+(plain, in content) gives a small droplet at its centre instead, so no glass copy of it pops in.
+Never paint your own menu glass or morph: give the bubble an `origin`.
 
 Flutter compact glass (shorter side up to 72px) has one rim on its outer silhouette.
 Do not stack a dark exterior hairline or an inset border on toolbar bubbles. Large

@@ -4,6 +4,7 @@ import { test } from 'node:test'
 import {
   GLASS_CLEAR,
   GLASS_HAIRLINE,
+  GLASS_MENU,
   GLASS_REGULAR_LIFT,
   GLASS_SHADOW,
   GLASS_SATURATE,
@@ -11,7 +12,9 @@ import {
   GLASS_TINT_DEFAULT,
   GLASS_VEIL,
   clampGlassTint,
+  glassKindBlur,
   glassMaterial,
+  glassMenuMaterial,
   liftFilter,
 } from '../src/glass/material.ts'
 
@@ -143,4 +146,21 @@ test('glass bars over scrolling content are at least 0.85 tinted on both kits', 
   assert.equal(GLASS_BAR_TINT, 0.85)
   const dart = readFileSync('flutter/lib/glass/material.dart', 'utf8')
   assert.match(dart, /const double glassBarTint = 0\.85;/)
+})
+
+test('menu glass is regular glass veiled at least 88 % and blurred at least 20px, matching the CSS tokens', () => {
+  for (const scheme of ['light', 'dark'] as const) {
+    const regular = glassMaterial(1, scheme, 'large')
+    const menu = glassMenuMaterial(scheme)
+    close(menu.veil, Math.max(regular.veil, GLASS_MENU.veil), `${scheme} veil`)
+    close(menu.saturate, regular.saturate, `${scheme} saturate`)
+    close(menu.gain, regular.gain, `${scheme} gain`)
+  }
+  assert.equal(glassKindBlur('menu', 40, 0, false), GLASS_MENU.blur)
+  assert.equal(glassKindBlur('regular', 40, 0, false), glassKindBlur('regular', 40, 0, false))
+  const css = readFileSync(new URL('../src/glass/glass.css', import.meta.url), 'utf8')
+  assert.match(css, new RegExp(`--lab-menu-veil: max\\(var\\(--lab-glass-veil-large\\), ${GLASS_MENU.veil}\\)`))
+  assert.match(css, new RegExp(`--lab-menu-blur: max\\(var\\(--lab-glass-blur-large\\), ${GLASS_MENU.blur}px\\)`))
+  const { dy, blur, inset, alpha } = GLASS_MENU.shadow
+  assert.ok(css.includes(`--lab-menu-shadow: 0 ${dy}px ${blur * 2}px -${inset}px rgb(0 0 0 / ${alpha * 100}%)`))
 })

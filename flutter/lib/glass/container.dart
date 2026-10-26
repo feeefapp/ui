@@ -7,6 +7,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
+import '../brand/geometry.dart' show superellipsePath;
 import '../physics/motion_value.dart';
 import '../physics/spring.dart';
 import '../theme.dart';
@@ -43,8 +44,16 @@ class GlassContainer extends StatefulWidget {
     this.light = GlassLightMode.pointer,
     this.interactive = true,
     this.adaptive = true,
+    this.material = GlassKind.regular,
     required this.child,
   });
+
+  /// [GlassKind.regular] (default) is the theme's glass. [GlassKind.menu] is the thick glass
+  /// menus are made of (the full regular material veiled at least [glassMenuVeil], blurred at
+  /// least [glassMenuBlur] px, with a deeper shadow) so text on it reads over anything; the
+  /// hairline, moving light and lens stay. It ignores the theme's tint and never adapts its tone.
+  /// [MenuSurface] uses it.
+  final GlassKind material;
 
   /// Small glass (at most [glassAdaptMaxHeight] tall) over a [GlassBackdrop] of the opposite
   /// tone switches to that tone's glass and ink, like the web kit's adaptive tint.
@@ -89,9 +98,11 @@ class GlassScope extends StatelessWidget {
     this.light = GlassLightMode.pointer,
     this.interactive = true,
     this.adaptive = true,
+    this.material = GlassKind.regular,
     required this.child,
   });
 
+  final GlassKind material;
   final double spacing;
   final GlassLightMode light;
   final bool interactive;
@@ -110,6 +121,7 @@ class GlassScope extends StatelessWidget {
           light: light,
           interactive: interactive,
           adaptive: adaptive,
+          material: material,
           child: child,
         );
 }
@@ -165,6 +177,10 @@ class GlassMemberHandle {
   /// Translation and scale the bubble's content takes to ride with its glass.
   ValueListenable<(Offset, double)> get content => _scene._contentFor(id);
 
+  /// A bubble with an origin shows its content only inside its glass while it travels: the glass's
+  /// outline in the bubble's own pixels then, null at rest.
+  ValueListenable<Path?> get clip => _scene._clipFor(id);
+
   void unregister() => _scene._unregister(id);
 }
 
@@ -173,6 +189,22 @@ abstract final class GlassMember {
   static GlassMemberRegistry? of(BuildContext context) => context
       .dependOnInheritedWidgetOfExactType<_GlassRegistryScope>()
       ?.registry;
+}
+
+/// The control a bubble comes out of (a menu's button): the twin of the web kit's
+/// GlassMemberOptions `origin`. The bubble is born out of it and returns into it when it leaves
+/// ([glassOriginSprings]), whatever else is in the container, and its content is clipped to its
+/// glass while it travels ([GlassMemberHandle.clip]). [glass] is the glass bubble around the control
+/// (null when it is not glass): a bubble hugging it gives its own rect, so the new bubble leaves and
+/// rejoins that glass; no glass gives a droplet at the control's centre ([glassOrigin]).
+class GlassOrigin {
+  const GlassOrigin({required this.box, this.glass});
+
+  /// The control's render box.
+  final RenderBox? Function() box;
+
+  /// The glass bubble around the control, or null.
+  final RenderBox? Function()? glass;
 }
 
 /// Registers bubbles with their container.
@@ -188,8 +220,16 @@ class GlassMemberRegistry {
     String? union,
     GlassMotion motion = GlassMotion.spring,
     bool singleRim = false,
+    GlassOrigin? origin,
   }) {
-    _scene._members[id] = _Member(key, radius, union, motion, singleRim);
+    _scene._members[id] = _Member(
+      key,
+      radius,
+      union,
+      motion,
+      singleRim,
+      origin,
+    );
     _scene._requestMeasure();
     return GlassMemberHandle._(_scene, id);
   }
@@ -313,7 +353,9 @@ class _GlassContainerState extends State<GlassContainer> {
 
   @override
   Widget build(BuildContext context) {
-    final backdrop = widget.adaptive ? GlassBackdrop.maybeOf(context) : null;
+    final backdrop = widget.adaptive && widget.material == GlassKind.regular
+        ? GlassBackdrop.maybeOf(context)
+        : null;
     if (backdrop == null) return _build(context);
     // Adaptive tint: small glass over the opposite tone takes that tone's glass and ink.
     _measureHeight();
@@ -348,10 +390,13 @@ class _GlassContainerState extends State<GlassContainer> {
       ..followPointer = widget.light == GlassLightMode.pointer && liquid
       ..interactive = widget.interactive && liquid;
     _scene._requestMeasure();
+    final menu = widget.material == GlassKind.menu;
     final material = _GlassMaterial(
       colors: theme.colors,
       style: style,
-      tint: theme.colors.glassTint,
+      kind: widget.material,
+      // Menu glass is always the full regular material under its veil.
+      tint: menu ? 1 : theme.colors.glassTint,
       blur: theme.config.glassBlur,
       // The bend is part of the liquid effect: transparent glass stays unbent.
       refraction: theme.config.glassRefraction && liquid,
@@ -392,6 +437,7 @@ class _GlassMaterial {
   const _GlassMaterial({
     required this.colors,
     required this.style,
+    required this.kind,
     required this.tint,
     required this.blur,
     required this.refraction,
@@ -403,6 +449,7 @@ class _GlassMaterial {
   });
   final ColorTokens colors;
   final GlassStyle style;
+  final GlassKind kind;
   final double tint;
   final bool blur, refraction, highContrast;
 
@@ -417,6 +464,8 @@ class _GlassMaterial {
   /// The veil over a cluster whose smallest bubble's shorter side is [side] px.
   Color fillFor(double side) => style == GlassStyle.solid
       ? colors.surface
+      : kind == GlassKind.menu
+      ? colors.surface.withValues(alpha: glassMenuMaterial(dark: dark).veil)
       : glassSize(side) == GlassSize.small
       ? colors.glassFill
       : colors.glassFillLarge;
@@ -440,11 +489,12 @@ class _GlassMaterial {
     );
   }
 
-  GlassMaterial materialFor(double side) =>
-      glassMaterial(tint, dark: dark, size: glassSize(side));
+  GlassMaterial materialFor(double side) => kind == GlassKind.menu
+      ? glassMenuMaterial(dark: dark)
+      : glassMaterial(tint, dark: dark, size: glassSize(side));
 
   /// Blur (std dev, px) for a cluster whose smallest bubble's shorter side is [side] px.
-  double blurFor(double side) => glassBlurAt(side, tint, blurOn: blur);
+  double blurFor(double side) => glassKindBlur(kind, side, tint, blurOn: blur);
 
   /// The edge terms (veil thinning, dark clear light) for that cluster.
   ({double k1, double k3}) edgeFor(double side) {
@@ -624,16 +674,35 @@ class _GlassPainter extends CustomPainter {
   /// Each cluster's faint shadow (iOS 27: y 8, std dev 7.5), cut at its clip.
   void _shadows(Canvas canvas, List<GlassPath> paths) {
     final c = material.colors;
+    final menu = material.kind == GlassKind.menu;
     for (final p in paths) {
       canvas.save();
       if (p.clip != null) canvas.clipRect(p.clip!);
+      // Menu glass casts the deeper menu shadow, from its shapes shrunk by the negative spread.
+      const s = glassMenuShadow;
+      final shape = menu ? (Path()..fillType = PathFillType.nonZero) : p.path;
+      if (menu) {
+        for (final g in p.shapes) {
+          final rect = Rect.fromLTWH(
+            g.x,
+            g.y,
+            g.width,
+            g.height,
+          ).deflate(s.inset);
+          if (rect.isEmpty) continue;
+          final r = math.max(0.0, clampRadius(g) - s.inset);
+          shape.addPath(superellipsePath(rect, [r, r, r, r]), Offset.zero);
+        }
+      }
       canvas.drawPath(
-        p.path.shift(const Offset(0, glassShadowDy)),
+        shape.shift(Offset(0, menu ? s.dy : glassShadowDy)),
         Paint()
-          ..color = c.glassShadowColor
-          ..maskFilter = const MaskFilter.blur(
+          ..color = menu
+              ? Color.from(alpha: s.alpha, red: 0, green: 0, blue: 0)
+              : c.glassShadowColor
+          ..maskFilter = MaskFilter.blur(
             BlurStyle.normal,
-            glassShadowBlur,
+            menu ? s.blur : glassShadowBlur,
           ),
       );
       canvas.restore();
@@ -646,7 +715,8 @@ class _GlassPainter extends CustomPainter {
   /// ancestor, draws them live. Returns false when the caller must draw them live.
   bool _cachedShadows(Canvas canvas, List<GlassPath> paths, Rect region) {
     final c = material.colors;
-    final key = '${scene._key}|${c.glassShadowColor.toARGB32()}|$dpr';
+    final key =
+        '${scene._key}|${material.kind}|${c.glassShadowColor.toARGB32()}|$dpr';
     final still = key == scene._shadowKey;
     scene._shadowKey = key;
     final cached = scene._shadowImage;
@@ -708,7 +778,11 @@ class _GlassPainter extends CustomPainter {
 
     // A wide, soft shadow outside the glass only (7.5px down, blur 19.5), lighter under
     // control-sized glass, like the web kit's SVG shadow.
-    final region = all.getBounds().inflate(glassShadowBlur * 3 + glassShadowDy);
+    final region = all.getBounds().inflate(
+      material.kind == GlassKind.menu
+          ? glassMenuShadow.blur * 3 + glassMenuShadow.dy
+          : glassShadowBlur * 3 + glassShadowDy,
+    );
     canvas.save();
     canvas.clipPath(
       Path.combine(PathOperation.difference, Path()..addRect(region), all),
@@ -778,6 +852,7 @@ class _GlassPainter extends CustomPainter {
   bool shouldRepaint(_GlassPainter old) =>
       old.scene != scene ||
       old.material.style != material.style ||
+      old.material.kind != material.kind ||
       old.material.tint != material.tint ||
       old.material.highContrast != material.highContrast ||
       old.material.rim != material.rim ||
@@ -816,12 +891,20 @@ class _ShadowImage {
 }
 
 class _Member {
-  _Member(this.key, this.radius, this.union, this.motion, this.singleRim);
+  _Member(
+    this.key,
+    this.radius,
+    this.union,
+    this.motion,
+    this.singleRim,
+    this.origin,
+  );
   final GlobalKey key;
   final double Function() radius;
   final String? union;
   final GlassMotion motion;
   final bool singleRim;
+  final GlassOrigin? origin;
 }
 
 /// One bubble's glass: an animated rect, its corner radius and, while alive, its content offset.
@@ -852,7 +935,20 @@ class _Shape {
   bool leaving = false;
   int token = 0;
 
+  /// The control it was born out of and returns into ([GlassOrigin]).
+  GlassOrigin? origin;
+
+  /// The spring its next move uses: the origin's while it grows out of it, else the container's.
+  Spring spring = _spring;
+
+  /// Its bubble's box while it is leaving ([layout] is gone by then), for its content's clip.
+  Rect? home;
+
   Rect rect() => Rect.fromLTWH(x.get(), y.get(), width.get(), height.get());
+
+  /// Where its springs are heading (its rect when at rest).
+  Rect target() =>
+      Rect.fromLTWH(x.target, y.target, width.target, height.target);
 
   /// The shape drawn this frame (scaled around its centre while materializing, then pressed).
   GlassShape visual() {
@@ -890,12 +986,17 @@ class _Shape {
     height.set(rect.height);
   }
 
-  Future<bool> animate(Rect rect, {bool instant = false}) async {
+  Future<bool> animate(
+    Rect rect, {
+    bool instant = false,
+    Spring? spring,
+  }) async {
+    final s = spring ?? this.spring;
     final done = await Future.wait([
-      x.animateTo(rect.left, spring: _spring, instant: instant),
-      y.animateTo(rect.top, spring: _spring, instant: instant),
-      width.animateTo(rect.width, spring: _spring, instant: instant),
-      height.animateTo(rect.height, spring: _spring, instant: instant),
+      x.animateTo(rect.left, spring: s, instant: instant),
+      y.animateTo(rect.top, spring: s, instant: instant),
+      width.animateTo(rect.width, spring: s, instant: instant),
+      height.animateTo(rect.height, spring: s, instant: instant),
     ]);
     return done.every((d) => d);
   }
@@ -968,6 +1069,31 @@ class _GlassScene extends ChangeNotifier {
 
   ValueNotifier<(Offset, double)> _contentFor(String id) =>
       _contents.putIfAbsent(id, () => ValueNotifier((Offset.zero, 1)));
+
+  /// Content clips of bubbles with an origin ([GlassMemberHandle.clip]).
+  final _clips = <String, ValueNotifier<Path?>>{};
+  final _pendingClips = <String, Path?>{};
+
+  ValueNotifier<Path?> _clipFor(String id) =>
+      _clips.putIfAbsent(id, () => ValueNotifier(null));
+
+  /// Where [origin] comes from and returns to, in the container's pixels ([glassOrigin]); null
+  /// when its control is gone.
+  Rect? _originRect(GlassOrigin origin, RenderBox host) {
+    Rect? read(RenderBox? box) {
+      if (box == null || !box.attached || !box.hasSize || box.size.isEmpty) {
+        return null;
+      }
+      return MatrixUtils.transformRect(
+        box.getTransformTo(host),
+        Offset.zero & box.size,
+      );
+    }
+
+    final control = read(origin.box());
+    if (control == null) return null;
+    return glassOrigin(control, read(origin.glass?.call()));
+  }
 
   void _unregister(String id) {
     _members.remove(id);
@@ -1065,7 +1191,10 @@ class _GlassScene extends ChangeNotifier {
     for (final v in _shapes[id]?.values ?? const <MotionValue>[]) {
       v.stop();
     }
-    _shapes.remove(id);
+    if (_shapes.remove(id)?.origin != null) {
+      final notifier = _clips[id];
+      if (notifier != null) _setClip(id, notifier, null);
+    }
   }
 
   /// Reads every bubble's layout box and moves the glass toward it.
@@ -1132,16 +1261,35 @@ class _GlassScene extends ChangeNotifier {
       for (final MapEntry(key: id, value: s) in _shapes.entries) id: s.rect(),
     };
     final next = {for (final e in targets.entries) e.key: e.value.$1};
-    final plan = planGlassTransition(previous, next, spacing);
+    // Bubbles born out of their origin (a menu out of its button), and ones returning into it.
+    final origins = <String, Rect>{};
+    for (final MapEntry(key: id, value: target) in targets.entries) {
+      final origin = target.$3?.origin;
+      if (_shapes.containsKey(id) || origin == null) continue;
+      final rect = _originRect(origin, box);
+      if (rect != null) origins[id] = rect;
+    }
+    for (final MapEntry(key: id, value: shape) in _shapes.entries) {
+      final origin = shape.origin;
+      if (next.containsKey(id) || shape.leaving || origin == null) continue;
+      final rect = _originRect(origin, box);
+      if (rect != null) origins[id] = rect;
+    }
+    // A surface opening out of its button always grows, even in a container that just appeared.
+    final atOnce = reduceMotion || this.instant;
+    final plan = planGlassTransition(previous, next, spacing, origins);
     for (final birth in plan.births) {
       final target = targets[birth.id]!;
-      final grow = birth is GlassGrow && !instant;
+      final origin = origins.containsKey(birth.id) ? target.$3?.origin : null;
+      final grow = birth is GlassGrow && !(origin != null ? atOnce : instant);
       final shape = _Shape(
         grow ? birth.from : target.$1,
-        grow || instant ? 1 : 0,
+        grow || instant || origin != null ? 1 : 0,
       );
       shape.carry = !grow;
       shape.growing = grow;
+      shape.origin = origin;
+      if (origin != null && grow) shape.spring = glassOriginSprings.grow;
       // A bubble growing out of a neighbour crosses the space between them: no clip (a slot's
       // clip would cut it off at the slot's edge) until it arrives.
       shape.clip = grow ? null : target.$4.clip;
@@ -1153,6 +1301,7 @@ class _GlassScene extends ChangeNotifier {
       final shape = _shapes[death.id];
       if (shape == null || shape.leaving) continue;
       shape.leaving = true;
+      shape.home = shape.layout;
       shape.layout = null;
       // It travels into its neighbour: free of its old slot's clip.
       if (death is GlassAbsorb) shape.clip = null;
@@ -1171,12 +1320,19 @@ class _GlassScene extends ChangeNotifier {
         }
       }
 
-      if (instant) {
+      if (shape.origin != null ? atOnce : instant) {
         _drop(death.id);
       } else {
         switch (death) {
           case GlassAbsorb(:final into):
-            shape.animate(into).then(done);
+            shape
+                .animate(
+                  into,
+                  spring: shape.origin != null
+                      ? glassOriginSprings.absorb
+                      : _spring,
+                )
+                .then(done);
           case GlassDematerialize():
             shape.scale.animateTo(0, spring: _spring).then(done);
         }
@@ -1218,20 +1374,32 @@ class _GlassScene extends ChangeNotifier {
       final changed =
           shape.layout == null || !sameRect(shape.layout!, target.$1);
       shape.layout = target.$1;
+      // A bubble out of its origin keeps growing in a container that just appeared.
+      final jump = shape.origin != null ? atOnce : instant;
       if (shape.scale.target != 1) {
-        shape.scale.animateTo(1, spring: _spring, instant: instant);
+        shape.scale.animateTo(1, spring: _spring, instant: jump);
       }
-      if (follow || instant) {
+      if (follow || jump) {
+        if (jump && shape.growing) {
+          ++shape.token;
+          shape.carry = true;
+          shape.growing = false;
+          shape.spring = _spring;
+        }
         if (!sameRect(shape.rect(), target.$1) || changed) {
           shape.set(target.$1);
           dirty = true;
         }
-      } else if (changed || !sameRect(shape.rect(), target.$1)) {
+      } else if (changed ||
+          (!sameRect(shape.rect(), target.$1) &&
+              !sameRect(shape.target(), target.$1))) {
+        // Paint measures every frame: a spring already heading there keeps its course.
         final token = ++shape.token;
         shape.animate(target.$1).then((arrived) {
           if (arrived && shape.token == token) {
             shape.carry = true;
             shape.growing = false;
+            shape.spring = _spring;
             shape.clip = target.$4.clip;
           }
           _changed();
@@ -1256,6 +1424,16 @@ class _GlassScene extends ChangeNotifier {
           visuals[index]: shape.singleRim,
       };
       paths = clippedGlassPaths(visuals, clips, spacing);
+    }
+    // A surface out of its origin shows its content only inside its glass while it travels.
+    for (final MapEntry(key: id, value: shape) in _shapes.entries) {
+      final notifier = _clips[id];
+      if (notifier == null || shape.origin == null) continue;
+      final home = shape.layout ?? shape.home;
+      final Path? next = (shape.growing || shape.leaving) && home != null
+          ? shapePath(shape.visual().shift(-home.left, -home.top))
+          : null;
+      _setClip(id, notifier, next);
     }
     // Content rides with its glass (centre to centre) while the bubble moves.
     for (final MapEntry(key: id, value: shape) in _shapes.entries) {
@@ -1287,6 +1465,29 @@ class _GlassScene extends ChangeNotifier {
         _pendingContent.remove(id);
         content.value = next;
       }
+    }
+  }
+
+  void _setClip(String id, ValueNotifier<Path?> notifier, Path? next) {
+    if (notifier.value == null &&
+        next == null &&
+        !_pendingClips.containsKey(id)) {
+      return;
+    }
+    if (_painting) {
+      // Applied after this frame: a listener rebuilding during paint is not allowed.
+      final queued = _pendingClips.containsKey(id);
+      _pendingClips[id] = next;
+      if (!queued) {
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          if (!_disposed && _pendingClips.containsKey(id)) {
+            notifier.value = _pendingClips.remove(id);
+          }
+        });
+      }
+    } else {
+      _pendingClips.remove(id);
+      notifier.value = next;
     }
   }
 
@@ -1389,6 +1590,9 @@ class _GlassScene extends ChangeNotifier {
     }
     for (final content in _contents.values) {
       content.dispose();
+    }
+    for (final clip in _clips.values) {
+      clip.dispose();
     }
     _shadowImage?.image.dispose();
     _shadowImage = null;

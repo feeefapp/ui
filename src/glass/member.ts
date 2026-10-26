@@ -22,11 +22,11 @@ export function useGlassMember(
   const glass = options.enabled === false ? null : context
   const autoId = useId()
   const key = id ?? autoId
-  const { union, motion } = options
+  const { union, motion, origin } = options
   useIsomorphicLayoutEffect(() => {
     if (!glass || !ref.current) return
-    return glass.register(key, ref.current, { union, motion })
-  }, [glass, key, union, motion])
+    return glass.register(key, ref.current, { union, motion, origin })
+  }, [glass, key, union, motion, origin])
   // Content changes can resize the bubble without a resize the container would notice in time.
   useIsomorphicLayoutEffect(() => glass?.requestMeasure())
   return glass !== null

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../motion.dart';
@@ -17,8 +18,21 @@ class GlassMemberBox extends StatefulWidget {
     required this.standalone,
     this.hidden = false,
     this.singleRim = false,
+    this.origin,
     required this.child,
   });
+
+  /// The control this bubble comes out of (a menu's button): it is born out of it, returns into it
+  /// when it leaves, and its content is clipped to its glass while it travels ([GlassOrigin]).
+  final GlassOrigin? origin;
+
+  /// The render box of the glass bubble [context] sits in, or null outside one: a menu's
+  /// [GlassOrigin.glass].
+  static RenderBox? glassOf(BuildContext context) {
+    final bubble = context.getInheritedWidgetOfExactType<_InsideBubble>();
+    final box = bubble?.box.currentContext?.findRenderObject();
+    return box is RenderBox ? box : null;
+  }
 
   /// Identity inside the container; defaults to one per widget.
   final String? glassId;
@@ -47,9 +61,18 @@ class GlassMemberBox extends StatefulWidget {
 }
 
 class _InsideBubble extends InheritedWidget {
-  const _InsideBubble({required super.child});
+  const _InsideBubble({
+    required this.box,
+    required this.registry,
+    required super.child,
+  });
+  final GlobalKey box;
+
+  /// The container that bubble belongs to: a bubble in an overlay opened from it (a menu, under a
+  /// [GlassLayer] or its own container) is not inside it.
+  final GlassMemberRegistry? registry;
   @override
-  bool updateShouldNotify(_InsideBubble old) => false;
+  bool updateShouldNotify(_InsideBubble old) => old.registry != registry;
 }
 
 class _GlassMemberBoxState extends State<GlassMemberBox> {
@@ -61,6 +84,11 @@ class _GlassMemberBoxState extends State<GlassMemberBox> {
   /// Inside a container, even while hidden: the bubble never paints its own glass there.
   bool _inContainer = false;
   static final _still = ValueNotifier<(Offset, double)>((Offset.zero, 1));
+  static final _unclipped = ValueNotifier<Path?>(null);
+
+  /// The clip of a bubble with an origin; kept after it leaves so its content stays inside its
+  /// glass while that flies back.
+  ValueListenable<Path?>? _clip;
   String? _id;
   static int _serial = 0;
   late final String _autoId = 'glass-member-${_serial++}';
@@ -79,14 +107,16 @@ class _GlassMemberBoxState extends State<GlassMemberBox> {
           old.union != widget.union ||
           old.motion != widget.motion ||
           old.hidden != widget.hidden ||
-          old.singleRim != widget.singleRim,
+          old.singleRim != widget.singleRim ||
+          old.origin != widget.origin,
     );
   }
 
   void _sync({bool force = false}) {
-    _nested =
-        context.dependOnInheritedWidgetOfExactType<_InsideBubble>() != null;
-    final container = _nested ? null : GlassMember.of(context);
+    final inside = context.dependOnInheritedWidgetOfExactType<_InsideBubble>();
+    final nearest = GlassMember.of(context);
+    _nested = inside != null && inside.registry == nearest;
+    final container = _nested ? null : nearest;
     _inContainer = container != null;
     final closing = Presence.stateOf(context) == PresenceState.closed;
     final registry = widget.hidden || closing || GlassHidden.of(context)
@@ -106,7 +136,9 @@ class _GlassMemberBoxState extends State<GlassMemberBox> {
         singleRim: widget.singleRim,
         union: widget.union,
         motion: widget.motion,
+        origin: widget.origin,
       );
+      if (widget.origin != null) _clip = _handle!.clip;
     }
   }
 
@@ -134,7 +166,11 @@ class _GlassMemberBoxState extends State<GlassMemberBox> {
 
   @override
   Widget build(BuildContext context) {
-    final content = _InsideBubble(child: widget.child);
+    final content = _InsideBubble(
+      box: _box,
+      registry: GlassMember.of(context),
+      child: widget.child,
+    );
     if (_inContainer) {
       // Content rides with its glass while the bubble moves, and swells with a press. The tree
       // keeps one shape whether or not the bubble is hidden, so its content keeps its state.
@@ -146,7 +182,12 @@ class _GlassMemberBoxState extends State<GlassMemberBox> {
             offset: value.$1,
             child: Transform.scale(scale: value.$2, child: child),
           ),
-          child: content,
+          child: widget.origin == null
+              ? content
+              : ClipPath(
+                  clipper: _GlassClipper(_clip ?? _unclipped),
+                  child: content,
+                ),
         ),
       );
     }
@@ -169,4 +210,21 @@ class GlassHidden extends InheritedWidget {
 
   @override
   bool updateShouldNotify(GlassHidden old) => old.hidden != hidden;
+}
+
+/// Clips a bubble's content to its glass while it travels ([GlassMemberHandle.clip]); at rest it
+/// clips nothing.
+class _GlassClipper extends CustomClipper<Path> {
+  _GlassClipper(this.clip) : super(reclip: clip);
+  final ValueListenable<Path?> clip;
+
+  @override
+  Path getClip(Size size) =>
+      clip.value ??
+      (Path()..addRect(
+        Rect.fromLTWH(-1e4, -1e4, size.width + 2e4, size.height + 2e4),
+      ));
+
+  @override
+  bool shouldReclip(_GlassClipper old) => old.clip != clip;
 }

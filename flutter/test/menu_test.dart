@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:ui' show PointerDeviceKind;
 
 import 'package:feeef_ui/feeef_ui.dart';
+import 'package:feeef_ui/glass/transitions.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter/widgets.dart' hide Action;
 import 'package:flutter_test/flutter_test.dart';
@@ -72,32 +73,24 @@ void main() {
     return Rect.fromLTWH(n(m['x']), n(m['y']), n(m['width']), n(m['height']));
   }
 
-  MenuMorphFrame frameOf(Object? v) {
-    final m = v! as Map<String, dynamic>;
-    return MenuMorphFrame(
-      box: box(m['box']),
-      radius: n(m['radius']),
-      contentOpacity: n(m['contentOpacity']),
-      contentBlur: n(m['contentBlur']),
-      materialOpacity: n(m['materialOpacity']),
-      settled: m['settled'] as bool,
-    );
+  Rect? maybeBox(Object? v) => v == null ? null : box(v);
+
+  void expectContent(MenuContentFrame actual, Object? expected) {
+    final e = expected! as Map<String, dynamic>;
+    expect(actual.opacity, closeTo(n(e['opacity']), 1e-9));
+    expect(actual.blur, closeTo(n(e['blur']), 1e-9));
+    expect(actual.settled, e['settled']);
   }
 
-  void expectFrame(MenuMorphFrame actual, Object? expected) {
-    final e = frameOf(expected);
-    expect(actual.box.left, closeTo(e.box.left, 1e-9));
-    expect(actual.box.top, closeTo(e.box.top, 1e-9));
-    expect(actual.box.width, closeTo(e.box.width, 1e-9));
-    expect(actual.box.height, closeTo(e.box.height, 1e-9));
-    expect(actual.radius, closeTo(e.radius, 1e-9));
-    expect(actual.contentOpacity, closeTo(e.contentOpacity, 1e-9));
-    expect(actual.contentBlur, closeTo(e.contentBlur, 1e-9));
-    expect(actual.materialOpacity, closeTo(e.materialOpacity, 1e-9));
-    expect(actual.settled, e.settled);
+  void expectRect(Rect actual, Object? expected) {
+    final e = box(expected);
+    expect(actual.left, closeTo(e.left, 1e-9));
+    expect(actual.top, closeTo(e.top, 1e-9));
+    expect(actual.width, closeTo(e.width, 1e-9));
+    expect(actual.height, closeTo(e.height, 1e-9));
   }
 
-  group('menu morph matches the web kit', () {
+  group('menu motion matches the web kit', () {
     test('springs', () {
       const named = {'menu': Springs.menu, 'menuDismiss': Springs.menuDismiss};
       for (final entry in fixture['springs'] as List) {
@@ -107,55 +100,32 @@ void main() {
           expect(at(n(s[0])).velocity, closeTo(n(s[2]), 1e-9));
         }
       }
+      expect(glassOriginSprings.grow, Springs.menu);
+      expect(glassOriginSprings.absorb, Springs.menuDismiss);
     });
 
-    test('opening frames', () {
-      for (final c in fixture['open'] as List) {
-        for (final f in c['frames'] as List) {
-          expectFrame(
-            menuOpenFrame(
-              n(f['t']),
-              box(c['from']),
-              n(c['fromRadius']),
-              box(c['to']),
-              n(c['toRadius']),
-            ),
+    test('rows opening and closing, in every motion setting', () {
+      final m = fixture['midway'] as Map<String, dynamic>;
+      final midway = MenuContentFrame(
+        opacity: n(m['opacity']),
+        blur: n(m['blur']),
+        settled: m['settled'] as bool,
+      );
+      for (final c in fixture['content'] as List) {
+        final motion = Motion.values.byName(c['motion'] as String);
+        for (final f in c['open'] as List) {
+          expectContent(
+            menuContentOpenFrame(n(f['t']), motion: motion),
+            f['frame'],
+          );
+        }
+        for (final f in c['close'] as List) {
+          expectContent(
+            menuContentCloseFrame(n(f['t']), midway, motion: motion),
             f['frame'],
           );
         }
       }
-    });
-
-    test('closing frames, from rest and from midway', () {
-      for (final c in fixture['close'] as List) {
-        final rest = menuRestFrame(box(c['to']), n(c['toRadius']));
-        for (final f in c['fromRest'] as List) {
-          expectFrame(
-            menuCloseFrame(n(f['t']), rest, box(c['from']), n(c['fromRadius'])),
-            f['frame'],
-          );
-        }
-        final midway = frameOf(c['fromMidway']['start']);
-        for (final f in c['fromMidway']['frames'] as List) {
-          expectFrame(
-            menuCloseFrame(
-              n(f['t']),
-              midway,
-              box(c['from']),
-              n(c['fromRadius']),
-            ),
-            f['frame'],
-          );
-        }
-      }
-    });
-
-    test('motion none shows the end state at once', () {
-      const menu = Rect.fromLTWH(0, 0, 250, 209);
-      final open = menuFadeFrame(0, true, menu, 32.7, motion: Motion.none);
-      expect(open.settled && open.materialOpacity == 1, isTrue);
-      final closed = menuFadeFrame(0, false, menu, 32.7, motion: Motion.none);
-      expect(closed.settled && closed.materialOpacity == 0, isTrue);
       expect(menuCloseDuration(Motion.none), 0);
       expect(
         menuCloseDuration(Motion.reduced),
@@ -164,14 +134,60 @@ void main() {
       expect(menuCloseDuration(), MenuMorph.closeEnd);
     });
 
-    test('reduced-motion fades and alignment', () {
-      const menu = Rect.fromLTWH(0, 0, 250, 209);
-      for (final f in fixture['fade'] as List) {
-        expectFrame(
-          menuFadeFrame(n(f['t']), f['opening'] as bool, menu, 32.7),
-          f['frame'],
+    test('the glass is born out of its origin and returns into it', () {
+      for (final c in fixture['origin'] as List) {
+        expectRect(
+          glassOrigin(box(c['origin']), maybeBox(c['glass'])),
+          c['rect'],
         );
       }
+      const button = Rect.fromLTWH(206, 0, 44, 44);
+      const menu = Rect.fromLTWH(0, 0, 250, 209);
+      final born = planGlassTransition(
+        {'other': button.translate(94, 0)},
+        {'other': button.translate(94, 0), 'menu': menu},
+        8,
+        {'menu': button},
+      );
+      final birth = born.births.single as GlassGrow;
+      final expected = (fixture['plan']['birth']['births'] as List).single;
+      expect(birth.id, expected['id']);
+      expect(birth.source, expected['source']);
+      expectRect(birth.from, expected['from']);
+      final gone = planGlassTransition({'menu': menu}, {}, 8, {'menu': button});
+      final death = gone.deaths.single as GlassAbsorb;
+      expect(death.target, glassOriginId);
+      expectRect(
+        death.into,
+        (fixture['plan']['death']['deaths'] as List).single['into'],
+      );
+    });
+
+    test('menu material', () {
+      final m = fixture['material'] as Map<String, dynamic>;
+      expect(glassMenuVeil, n(m['menu']['veil']));
+      expect(glassMenuBlur, n(m['menu']['blur']));
+      expect(glassMenuShadow.dy, n(m['menu']['shadow']['dy']));
+      expect(glassMenuShadow.blur, n(m['menu']['shadow']['blur']));
+      expect(glassMenuShadow.inset, n(m['menu']['shadow']['inset']));
+      expect(glassMenuShadow.alpha, n(m['menu']['shadow']['alpha']));
+      for (final dark in [false, true]) {
+        final e = m[dark ? 'dark' : 'light'] as Map<String, dynamic>;
+        final a = glassMenuMaterial(dark: dark);
+        expect(a.veil, closeTo(n(e['veil']), 1e-9));
+        expect(a.saturate, closeTo(n(e['saturate']), 1e-9));
+        expect(a.gain, closeTo(n(e['gain']), 1e-9));
+        expect(a.offset, closeTo(n(e['offset']), 1e-9));
+      }
+      for (final b in m['blur'] as List) {
+        expect(
+          glassKindBlur(GlassKind.menu, n(b[0]), 0.5, blurOn: false),
+          closeTo(n(b[1]), 1e-9),
+        );
+      }
+    });
+
+    test('alignment', () {
       for (final a in fixture['align'] as List) {
         expect(
           menuAlign(
@@ -185,24 +201,137 @@ void main() {
         );
       }
     });
+  });
 
-    test(
-      'measured shape: 2–4 % width overshoot near 0.22 s, settled by 0.45 s',
-      () {
-        const menu = Rect.fromLTWH(0, 0, 250, 209);
-        const button = Rect.fromLTWH(83.5, 0, 83, 54);
-        var peak = 0.0;
-        for (var t = 0.0; t < 0.6; t += 1 / 240) {
-          final w = menuOpenFrame(t, button, 27, menu, 32.7).box.width;
-          if (w > peak) peak = w;
-        }
-        expect((peak - 250) / 250, inInclusiveRange(0.015, 0.04));
+  group('menu glass', () {
+    Finder menuGlass() => find.byWidgetPredicate(
+      (w) => w is GlassContainer && w.material == GlassKind.menu,
+    );
+
+    Rect glassRect(WidgetTester tester) {
+      final element = tester.element(menuGlass());
+      final paths = GlassContainer.debugPathsOf(element);
+      final origin = tester.getTopLeft(menuGlass());
+      final shape = paths.single.shapes.single;
+      return Rect.fromLTWH(
+        shape.x,
+        shape.y,
+        shape.width,
+        shape.height,
+      ).shift(origin);
+    }
+
+    Widget toolbarMenu() => _frame(
+      _at(
+        Alignment.topRight,
+        GlassScope(
+          child: ToolbarGroup(
+            label: 'Order',
+            children: [
+              ActionsMenuAnchor(
+                label: 'Order actions',
+                actions: _actions(3),
+                builder: (open) => IconButton(
+                  appearance: ButtonAppearance.toolbar,
+                  ariaLabel: 'Order actions',
+                  onClick: open ?? () {},
+                  icon: const LucideEllipsis(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    testWidgets(
+      'is one container shape born out of the trigger glass, flying back into it',
+      (tester) async {
+        await tester.pumpWidget(toolbarMenu());
+        await _settle(tester);
+        final bubble = tester.getRect(find.byType(ToolbarGroup));
+        await tester.tap(find.bySemanticsLabel('Order actions'));
+        await tester.pump();
+        // The first frame after the menu is measured: no spring time has passed yet.
+        await tester.pump(Duration.zero);
+        // Born out of the toolbar bubble that hugs the button.
+        final born = glassRect(tester);
+        // It springs from the bubble toward the menu, which lines up with the bubble's top-right.
         expect(
-          menuOpenFrame(0.45, button, 27, menu, 32.7).box.width,
-          closeTo(250, 1),
+          (born.topRight - bubble.topRight).distance,
+          lessThan(1.5),
+          reason: 'born $born, bubble $bubble',
         );
+        expect(born.width, lessThan(bubble.width * 1.5));
+        await _settle(tester);
+        final menu = tester.getRect(find.byType(MenuSurface));
+        final open = glassRect(tester);
+        expect(
+          open.left,
+          closeTo(menu.left, 0.5),
+          reason: 'open $open menu $menu',
+        );
+        expect(open.width, closeTo(menu.width, 0.5));
+        // Rows are inside their glass, the trigger hidden under it.
+        expect(find.text('Action number 0'), findsOneWidget);
+        // Closing: the glass flies back into the button, then the menu leaves.
+        await tester.tapAt(_bounds(tester).bottomLeft + const Offset(4, -4));
+        await tester.pump();
+        for (var i = 0; i < 6; i++) {
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+        final back = glassRect(tester);
+        expect(back.width, lessThan(open.width));
+        await _settle(tester);
+        expect(menuGlass(), findsNothing);
       },
     );
+
+    testWidgets(
+      'a plain trigger births its menu from a droplet at its centre',
+      (tester) async {
+        await tester.pumpWidget(
+          _frame(
+            _at(
+              Alignment.center,
+              ActionsMenuAnchor(
+                label: 'Sort',
+                actions: _actions(3),
+                builder: (open) => Button(
+                  variant: ButtonVariant.tonal,
+                  onClick: open ?? () {},
+                  children: const [Text('Sort')],
+                ),
+              ),
+            ),
+          ),
+        );
+        final button = tester.getRect(find.byType(Button));
+        await tester.tap(find.byType(Button));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 16));
+        final born = glassRect(tester);
+        expect((born.center - button.center).distance, lessThan(6));
+        expect(born.width, lessThan(glassOriginSeed * 3));
+      },
+    );
+
+    testWidgets('reduced motion shows the glass in place', (tester) async {
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: toolbarMenu(),
+        ),
+      );
+      await tester.tap(find.bySemanticsLabel('Order actions'));
+      await tester.pump();
+      // The first frame after the menu is measured: no spring time has passed yet.
+      await tester.pump(Duration.zero);
+      final menu = tester.getRect(find.byType(MenuSurface));
+      expect(glassRect(tester).width, closeTo(menu.width, 0.5));
+      await tester.pumpWidget(const SizedBox());
+      await _settle(tester);
+    });
   });
 
   group('placeAnchoredPanel', () {

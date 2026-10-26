@@ -1,4 +1,4 @@
-/** Menus: the Liquid Glass menu bubble, its morph and the app bounds every floating panel respects. */
+/** Menus: the menu's glass shape (a GlassContainer shape born out of its button), its motion and the app bounds every floating panel respects. */
 export { MenuSurface, MENU_COLLISION_PADDING } from './menu-surface'
 export type { MenuSurfaceProps } from './menu-surface'
 export { FloatingBoundary, FloatingPortalScope, useFloatingBoundary } from './boundary'
@@ -8,13 +8,8 @@ export type { FloatingBoundaryProps } from './boundary'
 export {
   MENU_MORPH,
   menuAlign,
-  menuBubblePath,
   menuCloseDuration,
-  menuCloseFrame,
-  menuFadeFrame,
-  menuOpenFrame,
-  menuRestFrame,
-  mixBox,
-  pinchedBox,
+  menuContentCloseFrame,
+  menuContentOpenFrame,
 } from './morph-model'
-export type { MenuBox, MenuMorphFrame } from './morph-model'
+export type { MenuContentFrame } from './morph-model'

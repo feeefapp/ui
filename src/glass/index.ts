@@ -22,7 +22,7 @@ export type { GlassRect, GlassShape } from './geometry'
 export { DEFAULT_GLASS_LIGHT, glassLightToward } from './light'
 export type { GlassLight } from './light'
 export { GLASS_MAX_SIDE, GLASS_MAX_SPAN, glassMemberRect } from './member-bounds'
-export { GLASS_FOLLOW_ATTRIBUTE, GLASS_INSTANT_ATTRIBUTE, GLASS_SETTLED_EVENT, GLASS_SETTLE_MS, settleGlass, glassChangesAtOnce, glassSeed, planGlassTransition, sameGlassRow } from './transitions'
+export { GLASS_FOLLOW_ATTRIBUTE, GLASS_INSTANT_ATTRIBUTE, GLASS_ORIGIN, GLASS_ORIGIN_HUG, GLASS_ORIGIN_SEED, GLASS_ORIGIN_SPRINGS, GLASS_SETTLED_EVENT, GLASS_SETTLE_MS, glassOrigin, settleGlass, glassChangesAtOnce, glassSeed, planGlassTransition, sameGlassRow } from './transitions'
 export type { GlassBirth, GlassDeath, GlassPlan } from './transitions'
 export {
   GLASS_BEZEL,
@@ -46,6 +46,7 @@ export {
   GLASS_CLEAR_BLUR,
   GLASS_EDGE,
   GLASS_HAIRLINE,
+  GLASS_MENU,
   GLASS_REGULAR_LIFT,
   GLASS_RIM,
   GLASS_RIM_MAX_WIDTH,
@@ -61,6 +62,8 @@ export {
   glassBlurAt,
   glassEdgeTerms,
   glassHairline,
+  glassKindBlur,
+  glassMenuMaterial,
   glassMaterial,
   glassRim,
   glassSize,
@@ -70,7 +73,7 @@ export {
   liftFilter,
   rimLayer,
 } from './material'
-export type { GlassMaterial, GlassRim, GlassSize } from './material'
+export type { GlassKind, GlassMaterial, GlassRim, GlassSize } from './material'
 export type { LensKind } from './refraction'
 export { GlassLensLayer, lensBends, lensMode } from './lens-layer'
 export type { LensMode } from './lens-layer'

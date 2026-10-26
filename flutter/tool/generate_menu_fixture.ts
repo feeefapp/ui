@@ -1,30 +1,20 @@
 /**
- * Writes flutter/test/fixtures/menu.json from the web kit's menu morph model, so the Dart twin is
- * tested against the same numbers. Run from ui/: npx tsx flutter/tool/generate_menu_fixture.ts
+ * Writes flutter/test/fixtures/menu.json from the web kit's menu model and the glass origin rules,
+ * so the Dart twin is tested against the same numbers. Run from ui/: npx tsx flutter/tool/generate_menu_fixture.ts
  */
 import { writeFileSync } from 'node:fs'
 import { SPRINGS, solveSpring } from '../../src/physics/spring'
-import {
-  menuAlign,
-  menuCloseFrame,
-  menuFadeFrame,
-  menuOpenFrame,
-  menuRestFrame,
-  type MenuBox,
-} from '../../src/menu/morph-model'
+import { menuAlign, menuContentCloseFrame, menuContentOpenFrame } from '../../src/menu/morph-model'
+import { glassOrigin, planGlassTransition } from '../../src/glass/transitions'
+import { GLASS_MENU, glassKindBlur, glassMenuMaterial } from '../../src/glass/material'
+import type { Motion } from '../../src/theme-config'
 
-const menu: MenuBox = { x: 0, y: 0, width: 250, height: 209 }
-const cases: { name: string; from: MenuBox; fromRadius: number; to: MenuBox; toRadius: number }[] = [
-  // A toolbar circle at the menu's top-right corner (trailing + top aligned).
-  { name: 'toolbar', from: { x: 206, y: 0, width: 44, height: 44 }, fromRadius: 22, to: menu, toRadius: 32.7 },
-  // An in-content button the menu is centred on, opening down.
-  { name: 'content-down', from: { x: 83.5, y: 0, width: 83, height: 54 }, fromRadius: 27, to: menu, toRadius: 32.7 },
-  // Opening up: bottom aligned.
-  { name: 'content-up', from: { x: 83.5, y: 155, width: 83, height: 54 }, fromRadius: 27, to: menu, toRadius: 32.7 },
-  // A select field the menu covers.
-  { name: 'field', from: { x: 0, y: 0, width: 300, height: 56 }, fromRadius: 12, to: { x: 0, y: 0, width: 300, height: 120 }, toRadius: 32 },
-]
 const times = [0, 0.01, 0.024, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.6, 1]
+const motions: Motion[] = ['full', 'reduced', 'none']
+const midway = menuContentOpenFrame(0.1)
+
+const button = { x: 206, y: 0, width: 44, height: 44 }
+const menu = { x: 0, y: 0, width: 250, height: 209, radius: 32.7 }
 
 const fixture = {
   springs: (['menu', 'menuDismiss'] as const).map((name) => ({
@@ -34,20 +24,28 @@ const fixture = {
       return [t, s.position, s.velocity]
     }),
   })),
-  open: cases.map((c) => ({
-    ...c,
-    frames: times.map((t) => ({ t, frame: menuOpenFrame(t, c.from, c.fromRadius, c.to, c.toRadius) })),
+  content: motions.map((motion) => ({
+    motion,
+    open: times.map((t) => ({ t, frame: menuContentOpenFrame(t, motion) })),
+    close: times.map((t) => ({ t, frame: menuContentCloseFrame(t, midway, motion) })),
   })),
-  close: cases.map((c) => {
-    const midway = menuOpenFrame(0.12, c.from, c.fromRadius, c.to, c.toRadius)
-    const rest = menuRestFrame(c.to, c.toRadius)
-    return {
-      ...c,
-      fromRest: times.map((t) => ({ t, frame: menuCloseFrame(t, rest, c.from, c.fromRadius) })),
-      fromMidway: { start: midway, frames: times.map((t) => ({ t, frame: menuCloseFrame(t, midway, c.from, c.fromRadius) })) },
-    }
-  }),
-  fade: times.flatMap((t) => [true, false].map((opening) => ({ t, opening, frame: menuFadeFrame(t, opening, menu, 32.7) }))),
+  midway,
+  origin: [
+    { origin: button, glass: { x: 202, y: -4, width: 52, height: 52 } },
+    { origin: button, glass: { x: 0, y: -4, width: 260, height: 52 } },
+    { origin: button, glass: null },
+    { origin: { x: 10, y: 10, width: 4, height: 30 }, glass: null },
+  ].map((c) => ({ ...c, rect: glassOrigin(c.origin, c.glass) })),
+  plan: {
+    birth: planGlassTransition(new Map([['other', { ...button, x: 300 }]]), new Map([['other', { ...button, x: 300 }], ['menu', menu]]), 8, new Map([['menu', button]])),
+    death: planGlassTransition(new Map([['menu', menu]]), new Map(), 8, new Map([['menu', button]])),
+  },
+  material: {
+    menu: GLASS_MENU,
+    light: glassMenuMaterial('light'),
+    dark: glassMenuMaterial('dark'),
+    blur: [10, 44, 300].map((side) => [side, glassKindBlur('menu', side, 0.5, false)]),
+  },
   align: [
     [false, 50, 0, 400, false],
     [true, 30, 0, 400, false],

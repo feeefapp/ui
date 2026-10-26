@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 import '../glass/container.dart';
+import '../glass/member.dart';
 import 'morph_model.dart' show menuAlign;
 import 'placement.dart';
 
@@ -67,6 +68,13 @@ class AnchoredPanelScope extends InheritedWidget {
       (_state.widget.anchor ?? _state._anchor).currentContext
               ?.findRenderObject()
           as RenderBox?;
+
+  /// The glass bubble the trigger sits in (a toolbar button's), or null when it is not glass: a
+  /// menu is born out of that glass ([GlassOrigin.glass]).
+  RenderBox? get triggerGlass {
+    final context = (_state.widget.anchor ?? _state._anchor).currentContext;
+    return context == null ? null : GlassMemberBox.glassOf(context);
+  }
 
   /// Keeps the panel mounted after it closes until [exited] is called.
   void holdExit() => _state._holds++;
