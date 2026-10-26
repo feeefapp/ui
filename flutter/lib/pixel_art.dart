@@ -362,19 +362,21 @@ class _PixelTextureState extends State<PixelTexture>
     return IgnorePointer(
       child: ExcludeSemantics(
         child: SizedBox.expand(
-          // The SVG clips its sliced view box to the box.
-          child: ClipRect(
-            child: AnimatedBuilder(
-              animation: _pulse,
-              builder: (context, _) => CustomPaint(
-                painter: _TexturePainter(
-                  color: color,
-                  opacity: _pulse.isAnimating
-                      ? _breathe(_pulse.value, 1, 0.55) * widget.opacity
-                      : widget.opacity,
-                  variant: widget.variant,
-                  seed: widget.seed,
-                  density: widget.density,
+          // The SVG clips its sliced view box to the box. The pulse repaints only this layer.
+          child: RepaintBoundary(
+            child: ClipRect(
+              child: AnimatedBuilder(
+                animation: _pulse,
+                builder: (context, _) => CustomPaint(
+                  painter: _TexturePainter(
+                    color: color,
+                    opacity: _pulse.isAnimating
+                        ? _breathe(_pulse.value, 1, 0.55) * widget.opacity
+                        : widget.opacity,
+                    variant: widget.variant,
+                    seed: widget.seed,
+                    density: widget.density,
+                  ),
                 ),
               ),
             ),

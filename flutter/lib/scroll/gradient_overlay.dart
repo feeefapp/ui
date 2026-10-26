@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 
@@ -40,22 +39,44 @@ class ScrollGradientOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => IgnorePointer(
-    child: CustomPaint(
-      size: Size.infinite,
-      painter: _WashPainter(
-        controller: controller,
-        top: topHeight,
-        bottom: bottomHeight,
-        density: density.clamp(0.0, 1.0),
-        fadeZone: fadeZone,
-        color: color,
-        radius: radius,
+    // The washes repaint on every scroll step: in their own layer, so the page doesn't.
+    child: RepaintBoundary(
+      child: CustomPaint(
+        size: Size.infinite,
+        painter: _WashPainter(
+          controller: controller,
+          top: topHeight,
+          bottom: bottomHeight,
+          density: density.clamp(0.0, 1.0),
+          fadeZone: fadeZone,
+          color: color,
+          radius: radius,
+        ),
       ),
     ),
   );
 }
 
-final _levels = <(int, int), Uint8List>{};
+/// The dither cells per wash grid, grouped by level (1–11): one path per level, so a wash is at
+/// most 11 draw calls instead of one per cell.
+final _cells = <(int, int, double, double), List<Path?>>{};
+
+List<Path?> _cellPaths(int columns, int rows, double cw, double ch) =>
+    _cells.putIfAbsent((columns, rows, cw, ch), () {
+      if (_cells.length > 32) _cells.clear();
+      final levels = scrollWashLevels(columns, rows);
+      final paths = List<Path?>.filled(12, null);
+      for (var y = 0; y < rows; y++) {
+        for (var x = 0; x < columns; x++) {
+          final level = levels[y * columns + x];
+          if (level == 0) continue;
+          (paths[level] ??= Path()).addRect(
+            Rect.fromLTWH(x * cw, y * ch, cw, ch),
+          );
+        }
+      }
+      return paths;
+    });
 
 class _WashPainter extends CustomPainter {
   _WashPainter({
@@ -103,21 +124,15 @@ class _WashPainter extends CustomPainter {
     if (width <= 0 || height <= 0 || opacity <= 0) return;
     final columns = math.max(1, (width / 8).ceil());
     final rows = math.max(1, (height / 8).ceil());
-    final levels = _levels.putIfAbsent((
-      columns,
-      rows,
-    ), () => scrollWashLevels(columns, rows));
-    final cw = width / columns, ch = height / rows;
+    final paths = _cellPaths(columns, rows, width / columns, height / rows);
     final paint = Paint()..isAntiAlias = false;
-    for (var y = 0; y < rows; y++) {
-      for (var x = 0; x < columns; x++) {
-        final level = levels[y * columns + x];
-        if (level == 0) continue;
-        paint.color = color.withValues(
-          alpha: color.a * density * opacity * level / 11,
-        );
-        canvas.drawRect(Rect.fromLTWH(x * cw, y * ch, cw, ch), paint);
-      }
+    for (var level = 1; level < paths.length; level++) {
+      final path = paths[level];
+      if (path == null) continue;
+      paint.color = color.withValues(
+        alpha: color.a * density * opacity * level / 11,
+      );
+      canvas.drawPath(path, paint);
     }
   }
 

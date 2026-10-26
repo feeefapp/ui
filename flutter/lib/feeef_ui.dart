@@ -33,7 +33,7 @@ export 'filters/calendar.dart';
 export 'filters/temporal.dart';
 export 'filters/temporal_dialog.dart';
 export 'filters/temporal_editor.dart';
-export 'glass/container.dart' hide glassRimVertices;
+export 'glass/container.dart';
 export 'glass/lens_glass.dart';
 export 'glass/geometry.dart' show GlassShape, GlassPath, glassPaths, mergeWidth;
 export 'glass/material.dart';

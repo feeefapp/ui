@@ -1,10 +1,19 @@
 import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui' show PointMode;
 
 import 'package:flutter/painting.dart';
 
 import 'pixel_noise.dart';
 
-final _cache = <(TextureVariant, String, TextureDensity), List<TexturePixel>>{};
+/// Square centres per opacity step (in view-box units), per texture: one draw call per step
+/// instead of one per square.
+final _cache =
+    <(TextureVariant, String, TextureDensity), Map<int, Float32List>>{};
+
+/// Square opacities are kept to this many steps (finer than 8-bit alpha can show at the
+/// textures' strengths).
+const _steps = 64;
 
 /// Paints a PixelTexture (the web kit's `<svg viewBox="0 0 256 96" preserveAspectRatio="xMidYMid
 /// slice" shape-rendering="crispEdges">`) into [box]: the view box covers the box and is centred,
@@ -18,25 +27,33 @@ void paintPixelTexture(
   String seed = 'feeef-surface',
   TextureDensity density = TextureDensity.medium,
 }) {
-  final pixels = _cache.putIfAbsent((
-    variant,
-    seed,
-    density,
-  ), () => texturePixels(variant, seed, density));
+  final levels = _cache.putIfAbsent((variant, seed, density), () {
+    final points = <int, List<double>>{};
+    for (final pixel in texturePixels(variant, seed, density)) {
+      final level = (pixel.opacity * _steps).round();
+      if (level <= 0) continue;
+      (points[level] ??= [])
+        ..add(pixel.x + 1)
+        ..add(pixel.y + 1);
+    }
+    return {
+      for (final MapEntry(:key, :value) in points.entries)
+        key: Float32List.fromList(value),
+    };
+  });
   final scale = math.max(box.width / 256, box.height / 96);
   final dx = box.left + (box.width - 256 * scale) / 2;
   final dy = box.top + (box.height - 96 * scale) / 2;
-  final paint = Paint()..isAntiAlias = false;
-  for (final pixel in pixels) {
-    paint.color = color.withValues(alpha: color.a * opacity * pixel.opacity);
-    canvas.drawRect(
-      Rect.fromLTWH(
-        dx + pixel.x * scale,
-        dy + pixel.y * scale,
-        2 * scale,
-        2 * scale,
-      ),
-      paint,
-    );
+  canvas.save();
+  canvas.translate(dx, dy);
+  canvas.scale(scale);
+  final paint = Paint()
+    ..isAntiAlias = false
+    ..strokeWidth = 2
+    ..strokeCap = StrokeCap.square;
+  for (final MapEntry(key: level, value: points) in levels.entries) {
+    paint.color = color.withValues(alpha: color.a * opacity * level / _steps);
+    canvas.drawRawPoints(PointMode.points, points, paint);
   }
+  canvas.restore();
 }

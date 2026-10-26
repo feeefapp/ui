@@ -998,20 +998,32 @@ class _CardViewState extends State<_CardView> with TickerProviderStateMixin {
     return Semantics(
       selected: widget.current,
       container: true,
-      child: AnimatedBuilder(
-        animation: _sheen,
-        builder: (context, child) => CustomPaint(
-          painter: _CardPainter(
-            radius: radius,
-            surface: c.surface,
-            shadow: glassShadowColor(theme.brightness),
-            sheen: _busy ? mixSrgb(c.primary, 0.20, transparent) : null,
-            sheenProgress: _sheen.isAnimating ? _sheen.value : null,
-            outline: widget.current ? c.primary : null,
-          ),
-          child: child,
+      child: CustomPaint(
+        painter: _CardPainter(
+          radius: radius,
+          surface: c.surface,
+          shadow: glassShadowColor(theme.brightness),
+          outline: widget.current ? c.primary : null,
         ),
-        child: content,
+        child: _busy
+            ? Stack(
+                children: [
+                  // The sheen moves every frame: it repaints in its own layer, not the card.
+                  Positioned.fill(
+                    child: RepaintBoundary(
+                      child: CustomPaint(
+                        painter: _SheenPainter(
+                          radius: radius,
+                          color: mixSrgb(c.primary, 0.20, transparent),
+                          progress: _sheen,
+                        ),
+                      ),
+                    ),
+                  ),
+                  content,
+                ],
+              )
+            : content,
       ),
     );
   }
@@ -1027,23 +1039,18 @@ class _ShapeClipper extends CustomClipper<Path> {
   bool shouldReclip(_ShapeClipper old) => old.radius != radius;
 }
 
-/// Card paint: the glass shadow (0 8px 24px -14px), the surface, the moving sheen while the take
-/// works, and the 2px primary outline 3px outside when it is the selection.
+/// Card paint: the glass shadow (0 8px 24px -14px), the surface, and the 2px primary outline 3px
+/// outside when it is the selection.
 class _CardPainter extends CustomPainter {
   _CardPainter({
     required this.radius,
     required this.surface,
     required this.shadow,
-    required this.sheen,
-    required this.sheenProgress,
     required this.outline,
   });
   final double radius;
   final Color surface, shadow;
-  final Color? sheen, outline;
-
-  /// Animation progress, or null when the sheen is still (reduced motion).
-  final double? sheenProgress;
+  final Color? outline;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1063,33 +1070,6 @@ class _CardPainter extends CustomPainter {
       );
     }
     canvas.drawPath(shape, Paint()..color = surface);
-    if (sheen != null) {
-      // linear-gradient(100deg, transparent 30%, sheen 50%, transparent 70%) 0 0 / 220% 100%,
-      // moving from background-position 160% to -60%; still at 0 under reduced motion.
-      final tileW = size.width * 2.2;
-      final position = sheenProgress == null ? 0.0 : 1.6 - 2.2 * sheenProgress!;
-      final left = (size.width - tileW) * position;
-      final tile = Rect.fromLTWH(left, 0, tileW, size.height);
-      const angle = 100 * math.pi / 180;
-      final direction = Offset(math.sin(angle), -math.cos(angle));
-      final half =
-          (tileW * math.sin(angle).abs() +
-              size.height * math.cos(angle).abs()) /
-          2;
-      canvas.save();
-      canvas.clipPath(shape);
-      canvas.drawRect(
-        tile,
-        Paint()
-          ..shader = ui.Gradient.linear(
-            tile.center - direction * half,
-            tile.center + direction * half,
-            [transparent, sheen!, transparent],
-            const [0.3, 0.5, 0.7],
-          ),
-      );
-      canvas.restore();
-    }
     if (outline != null) {
       canvas.drawPath(
         superellipsePath(rect.inflate(5), r(radius + 5), inset: 1),
@@ -1105,9 +1085,65 @@ class _CardPainter extends CustomPainter {
   bool shouldRepaint(_CardPainter old) =>
       old.radius != radius ||
       old.surface != surface ||
-      old.sheen != sheen ||
-      old.sheenProgress != sheenProgress ||
+      old.shadow != shadow ||
       old.outline != outline;
+}
+
+/// The sheen moving over a card while its take works: linear-gradient(100deg, transparent 30%,
+/// sheen 50%, transparent 70%) 0 0 / 220% 100%, from background-position 160% to -60%; still at 0
+/// under reduced motion (the controller doesn't run).
+class _SheenPainter extends CustomPainter {
+  _SheenPainter({
+    required this.radius,
+    required this.color,
+    required this.progress,
+  }) : super(repaint: progress);
+  final double radius;
+  final Color color;
+  final AnimationController progress;
+  Size? _size;
+  Path? _shape;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // The card's outline is the same every frame: built once per size.
+    if (_size != size) {
+      _size = size;
+      _shape = superellipsePath(Offset.zero & size, [
+        radius,
+        radius,
+        radius,
+        radius,
+      ]);
+    }
+    final shape = _shape!;
+    final tileW = size.width * 2.2;
+    final position = progress.isAnimating ? 1.6 - 2.2 * progress.value : 0.0;
+    final left = (size.width - tileW) * position;
+    final tile = Rect.fromLTWH(left, 0, tileW, size.height);
+    const angle = 100 * math.pi / 180;
+    final direction = Offset(math.sin(angle), -math.cos(angle));
+    final half =
+        (tileW * math.sin(angle).abs() + size.height * math.cos(angle).abs()) /
+        2;
+    canvas.save();
+    canvas.clipPath(shape);
+    canvas.drawRect(
+      tile,
+      Paint()
+        ..shader = ui.Gradient.linear(
+          tile.center - direction * half,
+          tile.center + direction * half,
+          [transparent, color, transparent],
+          const [0.3, 0.5, 0.7],
+        ),
+    );
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_SheenPainter old) =>
+      old.radius != radius || old.color != color || old.progress != progress;
 }
 
 /// `.lab-ff-state`: loader, title and timer while the take works; the failure and its actions.

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -408,25 +409,30 @@ class _GlassContainerState extends State<GlassContainer> {
     );
     return _GlassRegistryScope(
       registry: _registry,
-      child: Stack(
-        key: _hostKey,
-        clipBehavior: Clip.none,
-        fit: StackFit.passthrough,
-        children: [
-          Positioned.fill(
-            child: IgnorePointer(
-              child: _GlassLayers(scene: _scene, material: material),
+      // The glass repaints whenever its light, glow or shapes move: only the container (glass and
+      // bubbles) repaints then, never the page around it. The glass measures its bubbles while
+      // painting, so they share this layer.
+      child: RepaintBoundary(
+        child: Stack(
+          key: _hostKey,
+          clipBehavior: Clip.none,
+          fit: StackFit.passthrough,
+          children: [
+            Positioned.fill(
+              child: IgnorePointer(
+                child: _GlassLayers(scene: _scene, material: material),
+              ),
             ),
-          ),
-          // A scroll view between a bubble and the container moves and clips its glass.
-          NotificationListener<ScrollUpdateNotification>(
-            onNotification: (notification) {
-              _scene.scrolled(notification.context?.findRenderObject());
-              return false;
-            },
-            child: widget.child,
-          ),
-        ],
+            // A scroll view between a bubble and the container moves and clips its glass.
+            NotificationListener<ScrollUpdateNotification>(
+              onNotification: (notification) {
+                _scene.scrolled(notification.context?.findRenderObject());
+                return false;
+              },
+              child: widget.child,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -553,52 +559,104 @@ class _GlassLayers extends StatelessWidget {
       size: Size.infinite,
     );
     if (!material.translucent) return paint;
-    // One backdrop per cluster, clipped to its outline: saturation and the clear lift at the
-    // theme's tint, the blur sized to the cluster when it is on, and (Impeller) the measured
-    // refraction.
-    final refract = material.refraction && GlassRefraction.supported;
-    return ListenableBuilder(
-      listenable: scene,
-      builder: (context, _) => Stack(
-        clipBehavior: Clip.none,
-        children: [
-          for (final path in scene.paths)
-            Positioned.fill(
-              child: ClipPath(
-                clipper: _PathClipper(scene, scene.paths.indexOf(path)),
-                child: refract
-                    ? GlassRefraction(
-                        path: path,
-                        spacing: scene.spacing,
-                        backdropKey: scene.backdropKey,
-                        blur: material.blurFor(_materialSide(scene, path)),
-                        strength: material.refractionStrength,
-                        colour: glassBackdropMatrix(
-                          material.materialFor(_materialSide(scene, path)),
-                        ),
-                        edge: material.edgeFor(_materialSide(scene, path)),
-                        light: scene.lightFor(path.bounds),
-                      )
-                    : BackdropFilter(
-                        filter: material.backdropFor(
-                          _materialSide(scene, path),
-                        ),
-                        backdropGroupKey: scene.backdropKey,
-                        child: const SizedBox.expand(),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned.fill(
+          child: _GlassBackdrops(scene: scene, material: material),
+        ),
+        Positioned.fill(child: paint),
+      ],
+    );
+  }
+}
+
+/// One backdrop per cluster, clipped to its outline: saturation and the clear lift at the theme's
+/// tint, the blur sized to the cluster when it is on, and (Impeller) the measured refraction. The
+/// clips follow the scene on their own; the widgets are rebuilt only when the clusters change
+/// (or, with the lens, when its light turns), not on every light or glow step.
+class _GlassBackdrops extends StatefulWidget {
+  const _GlassBackdrops({required this.scene, required this.material});
+  final _GlassScene scene;
+  final _GlassMaterial material;
+
+  @override
+  State<_GlassBackdrops> createState() => _GlassBackdropsState();
+}
+
+class _GlassBackdropsState extends State<_GlassBackdrops> {
+  List<GlassPath>? _built;
+
+  bool get _refract => widget.material.refraction && GlassRefraction.supported;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.scene.addListener(_changed);
+  }
+
+  @override
+  void didUpdateWidget(_GlassBackdrops old) {
+    super.didUpdateWidget(old);
+    if (old.scene != widget.scene) {
+      old.scene.removeListener(_changed);
+      widget.scene.addListener(_changed);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.scene.removeListener(_changed);
+    super.dispose();
+  }
+
+  void _changed() {
+    if (_refract || !identical(widget.scene.paths, _built)) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scene = widget.scene;
+    final material = widget.material;
+    final refract = _refract;
+    _built = scene.paths;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        for (final (index, path) in scene.paths.indexed)
+          Positioned.fill(
+            child: ClipPath(
+              clipper: _PathClipper(scene, index),
+              child: refract
+                  ? GlassRefraction(
+                      path: path,
+                      spacing: scene.spacing,
+                      backdropKey: scene.backdropKey,
+                      blur: material.blurFor(_materialSide(scene, path)),
+                      strength: material.refractionStrength,
+                      colour: glassBackdropMatrix(
+                        material.materialFor(_materialSide(scene, path)),
                       ),
-              ),
+                      edge: material.edgeFor(_materialSide(scene, path)),
+                      light: scene.lightFor(path.bounds),
+                    )
+                  : BackdropFilter(
+                      filter: material.backdropFor(_materialSide(scene, path)),
+                      backdropGroupKey: scene.backdropKey,
+                      child: const SizedBox.expand(),
+                    ),
             ),
-          // The dark hairline iOS 27 draws outside every glass shape, small or large (the web
-          // kit's GLASS_HAIRLINE): it is what defines the edge over light content.
-          for (final path in scene.paths)
+          ),
+        // The dark hairline iOS 27 draws outside every glass shape, small or large (the web
+        // kit's GLASS_HAIRLINE): it is what defines the edge over light content. Natively it
+        // subtracts from the backdrop, exactly; the web paints it black at its strength in the
+        // painter, like the web kit, instead of two more backdrop reads per cluster.
+        if (!kIsWeb)
+          for (final (index, _) in scene.paths.indexed)
             for (final sliver in const [false, true])
               Positioned.fill(
                 child: ClipPath(
-                  clipper: _HairlineClipper(
-                    scene,
-                    scene.paths.indexOf(path),
-                    sliver: sliver,
-                  ),
+                  clipper: _HairlineClipper(scene, index, sliver: sliver),
                   child: BackdropFilter(
                     filter: ColorFilter.matrix(
                       subtractMatrix(
@@ -612,9 +670,7 @@ class _GlassLayers extends StatelessWidget {
                   ),
                 ),
               ),
-          Positioned.fill(child: paint),
-        ],
-      ),
+      ],
     );
   }
 }
@@ -628,25 +684,33 @@ class _HairlineClipper extends CustomClipper<Path> {
   final int index;
   final bool sliver;
 
-  static final _bands =
-      Expando<({List<List<Offset>> ring, List<List<Offset>> sliver})>();
-
   @override
   Path getClip(Size size) {
     if (index < 0 || index >= scene.paths.length) return Path();
-    final path = scene.paths[index];
-    final bands = _bands[path] ??= hairlineBands(path.shapes, scene.spacing);
-    final band = bandPath(sliver ? bands.sliver : bands.ring);
-    final clip = path.clip;
-    return clip == null
-        ? band
-        : Path.combine(PathOperation.intersect, band, Path()..addRect(clip));
+    final bands = _hairlinePaths(scene.paths[index], scene.spacing);
+    return sliver ? bands.sliver : bands.ring;
   }
 
   @override
   bool shouldReclip(_HairlineClipper old) =>
       old.index != index || old.sliver != sliver || old.scene != scene;
 }
+
+/// A cluster's hairline bands as paths, cut to its clip, built once per outline.
+final _hairlines = Expando<({Path ring, Path sliver})>();
+
+({Path ring, Path sliver}) _hairlinePaths(GlassPath path, double spacing) =>
+    _hairlines[path] ??= () {
+      final bands = hairlineBands(path.shapes, spacing);
+      final clip = path.clip;
+      Path cut(Path band) => clip == null
+          ? band
+          : Path.combine(PathOperation.intersect, band, Path()..addRect(clip));
+      return (
+        ring: cut(bandPath(bands.ring)),
+        sliver: cut(bandPath(bands.sliver)),
+      );
+    }();
 
 /// The outline of cluster [index], cut to its clip, read while painting: a scroll moves the
 /// glass on the same frame as its bubbles.
@@ -766,9 +830,36 @@ class _GlassPainter extends CustomPainter {
     final paths = scene.paths;
     if (paths.isEmpty) return;
     final c = material.colors;
-    final all = Path();
-    for (final p in paths) {
-      all.addPath(p.path, Offset.zero);
+    final menu = material.kind == GlassKind.menu;
+    // The merged outline, the shadow's reach and the area outside the glass, once per layout.
+    final geometry = scene._paintGeometry;
+    final ({Path all, Rect region, Path outside}) shape;
+    if (geometry != null &&
+        identical(geometry.paths, paths) &&
+        geometry.menu == menu) {
+      shape = geometry.shape;
+    } else {
+      final all = Path();
+      for (final p in paths) {
+        all.addPath(p.path, Offset.zero);
+      }
+      // A wide, soft shadow outside the glass only (7.5px down, blur 19.5), lighter under
+      // control-sized glass, like the web kit's SVG shadow.
+      final region = all.getBounds().inflate(
+        menu
+            ? glassMenuShadow.blur * 3 + glassMenuShadow.dy
+            : glassShadowBlur * 3 + glassShadowDy,
+      );
+      shape = (
+        all: all,
+        region: region,
+        outside: Path.combine(
+          PathOperation.difference,
+          Path()..addRect(region),
+          all,
+        ),
+      );
+      scene._paintGeometry = (paths: paths, menu: menu, shape: shape);
     }
     // Glass in a scroll view or clip is cut straight at its edge, shadow included.
     void scissor(GlassPath p) {
@@ -776,19 +867,38 @@ class _GlassPainter extends CustomPainter {
       if (p.clip != null) canvas.clipRect(p.clip!);
     }
 
-    // A wide, soft shadow outside the glass only (7.5px down, blur 19.5), lighter under
-    // control-sized glass, like the web kit's SVG shadow.
-    final region = all.getBounds().inflate(
-      material.kind == GlassKind.menu
-          ? glassMenuShadow.blur * 3 + glassMenuShadow.dy
-          : glassShadowBlur * 3 + glassShadowDy,
-    );
     canvas.save();
-    canvas.clipPath(
-      Path.combine(PathOperation.difference, Path()..addRect(region), all),
-    );
-    if (!_cachedShadows(canvas, paths, region)) _shadows(canvas, paths);
+    canvas.clipPath(shape.outside);
+    if (!_cachedShadows(canvas, paths, shape.region)) _shadows(canvas, paths);
     canvas.restore();
+    if (kIsWeb && material.rim) {
+      // The hairline outside every cluster, black at its strength like the web kit (natively it
+      // subtracts from the backdrop; see _GlassBackdrops).
+      final strength = material.hairline;
+      for (final p in paths) {
+        final bands = _hairlinePaths(p, scene.spacing);
+        canvas.drawPath(
+          bands.ring,
+          Paint()
+            ..color = Color.from(
+              alpha: strength.ring,
+              red: 0,
+              green: 0,
+              blue: 0,
+            ),
+        );
+        canvas.drawPath(
+          bands.sliver,
+          Paint()
+            ..color = Color.from(
+              alpha: strength.sliver,
+              red: 0,
+              green: 0,
+              blue: 0,
+            ),
+        );
+      }
+    }
     for (final p in paths) {
       scissor(p);
       canvas.drawPath(
@@ -813,15 +923,9 @@ class _GlassPainter extends CustomPainter {
       if (material.rim) {
         // A layer of white inside the outline (clipped above), lit at both ends of the light
         // axis by the edge normal: glassRim / rimLayer, drawn as a band of vertices.
-        final rim = glassRimVertices(
-          p.path,
-          scene.lightFor(p.bounds),
-          material.rimLight,
-        );
-        if (rim != null) {
-          canvas.drawVertices(rim, BlendMode.dst, Paint());
-          rim.dispose();
-        }
+        final rim = _RimBand.of(p)
+            .vertices(scene.lightFor(p.bounds), material.rimLight);
+        if (rim != null) canvas.drawVertices(rim, BlendMode.dst, Paint());
       }
       canvas.restore();
     }
@@ -1066,6 +1170,14 @@ class _GlassScene extends ChangeNotifier {
   /// The shadows of still glass ([_GlassPainter]) and the geometry key of the last paint.
   _ShadowImage? _shadowImage;
   String? _shadowKey;
+
+  /// The painter's merged outline and shadow area for [paths] ([_GlassPainter.paint]).
+  ({
+    List<GlassPath> paths,
+    bool menu,
+    ({Path all, Rect region, Path outside}) shape,
+  })?
+  _paintGeometry;
 
   ValueNotifier<(Offset, double)> _contentFor(String id) =>
       _contents.putIfAbsent(id, () => ValueNotifier((Offset.zero, 1)));
@@ -1631,50 +1743,108 @@ class GlassBar extends StatelessWidget {
   }
 }
 
-/// The rim as a triangle band along [outline]: at each sample along the outline the alpha of
-/// `rimLayer` at depth 0, ⅔ of the rim's width and its full width, by the outward normal there
-/// against [light]. Clipped to the outline by the caller, so nothing paints outside.
-ui.Vertices? glassRimVertices(Path outline, Offset light, GlassRim rim) {
-  const step = 1.5;
-  final positions = <Offset>[];
-  final colors = <Color>[];
-  final indices = <int>[];
-  const depths = [0.0, 2 / 3, 1.0];
-  for (final metric in outline.computeMetrics()) {
-    final count = math.max(3, (metric.length / step).ceil());
-    // The outward side: probe once per contour (union outlines are simple closed loops).
-    final probe = metric.getTangentForOffset(0);
-    if (probe == null) continue;
-    final n0 = Offset(probe.vector.dy, -probe.vector.dx);
-    final outward = outline.contains(probe.position + n0 * 0.75) ? -1.0 : 1.0;
-    final first = positions.length;
-    for (var i = 0; i <= count; i++) {
-      final tangent = metric.getTangentForOffset(metric.length * i / count);
-      if (tangent == null) continue;
-      final normal = Offset(tangent.vector.dy, -tangent.vector.dx) * outward;
-      final cosine = normal.dx * light.dx + normal.dy * light.dy;
-      for (final depth in depths) {
-        final d = depth * rim.width;
-        positions.add(tangent.position - normal * d);
-        colors.add(
-          const Color(0xFFFFFFFF).withValues(alpha: rimLayer(d, cosine, rim)),
-        );
+/// The rim as a triangle band along an outline: at each sample along it the alpha of `rimLayer`
+/// at depth 0, ⅔ of the rim's width and its full width, by the outward normal there against the
+/// light. Clipped to the outline by the caller, so nothing paints outside. The samples (positions
+/// and normals every 1.5 px) are measured once per outline, the positions once per rim width and
+/// the vertices once per light: a light that turns with the pointer only recomputes colours, and
+/// glass that repaints for anything else reuses everything.
+class _RimBand {
+  _RimBand(Path outline) {
+    final contours = outline.computeMetrics().toList();
+    final total = contours.fold(0.0, (sum, m) => sum + m.length);
+    // Every vertex has a 16-bit index: a huge outline is sampled less densely.
+    final step = math.max(1.5, total * 3 / 60000);
+    final samples = <double>[];
+    final rows = <int>[];
+    for (final metric in contours) {
+      final count = math.max(3, (metric.length / step).ceil());
+      // The outward side: probe once per contour (union outlines are simple closed loops).
+      final probe = metric.getTangentForOffset(0);
+      if (probe == null) continue;
+      final n0 = Offset(probe.vector.dy, -probe.vector.dx);
+      final outward = outline.contains(probe.position + n0 * 0.75) ? -1.0 : 1.0;
+      var taken = 0;
+      for (var i = 0; i <= count; i++) {
+        final tangent = metric.getTangentForOffset(metric.length * i / count);
+        if (tangent == null) continue;
+        samples
+          ..add(tangent.position.dx)
+          ..add(tangent.position.dy)
+          ..add(tangent.vector.dy * outward)
+          ..add(-tangent.vector.dx * outward);
+        taken++;
       }
+      rows.add(taken);
     }
-    final rows = (positions.length - first) ~/ depths.length;
-    for (var i = 0; i + 1 < rows; i++) {
-      for (var k = 0; k + 1 < depths.length; k++) {
-        final a = first + i * depths.length + k;
-        final b = a + depths.length;
-        indices.addAll([a, b, a + 1, a + 1, b, b + 1]);
+    _samples = Float32List.fromList(samples);
+    final indices = <int>[];
+    var first = 0;
+    for (final count in rows) {
+      for (var i = 0; i + 1 < count; i++) {
+        for (var k = 0; k + 1 < _depths.length; k++) {
+          final a = (first + i) * _depths.length + k;
+          final b = a + _depths.length;
+          indices.addAll([a, b, a + 1, a + 1, b, b + 1]);
+        }
       }
+      first += count;
     }
+    _indices = Uint16List.fromList(indices);
   }
-  if (indices.isEmpty) return null;
-  return ui.Vertices(
-    ui.VertexMode.triangles,
-    positions,
-    colors: colors,
-    indices: indices,
-  );
+
+  static const _depths = [0.0, 2 / 3, 1.0];
+
+  /// x, y and the outward normal's x, y per sample.
+  late final Float32List _samples;
+  late final Uint16List _indices;
+  double? _width;
+  Float32List? _positions;
+  Offset? _light;
+  GlassRim? _rim;
+  ui.Vertices? _vertices;
+
+  static final _bands = Expando<_RimBand>();
+
+  /// The band along [path]'s outline.
+  static _RimBand of(GlassPath path) => _bands[path] ??= _RimBand(path.path);
+
+  ui.Vertices? vertices(Offset light, GlassRim rim) {
+    if (_indices.isEmpty) return null;
+    if (_vertices != null && _light == light && _rim == rim) return _vertices;
+    final count = _samples.length ~/ 4;
+    if (_width != rim.width) {
+      final positions = Float32List(count * _depths.length * 2);
+      for (var i = 0; i < count; i++) {
+        final x = _samples[i * 4], y = _samples[i * 4 + 1];
+        final nx = _samples[i * 4 + 2], ny = _samples[i * 4 + 3];
+        for (var k = 0; k < _depths.length; k++) {
+          final d = _depths[k] * rim.width;
+          positions[(i * _depths.length + k) * 2] = x - nx * d;
+          positions[(i * _depths.length + k) * 2 + 1] = y - ny * d;
+        }
+      }
+      _positions = positions;
+      _width = rim.width;
+    }
+    final colors = Int32List(count * _depths.length);
+    for (var i = 0; i < count; i++) {
+      final cosine =
+          _samples[i * 4 + 2] * light.dx + _samples[i * 4 + 3] * light.dy;
+      for (var k = 0; k < _depths.length; k++) {
+        final alpha = rimLayer(_depths[k] * rim.width, cosine, rim);
+        final a = (alpha.clamp(0.0, 1.0) * 255).round();
+        colors[i * _depths.length + k] = (a << 24) | 0x00FFFFFF;
+      }
+    }
+    _vertices?.dispose();
+    _light = light;
+    _rim = rim;
+    return _vertices = ui.Vertices.raw(
+      ui.VertexMode.triangles,
+      _positions!,
+      colors: colors,
+      indices: _indices,
+    );
+  }
 }
