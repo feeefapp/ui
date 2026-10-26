@@ -27,7 +27,7 @@ import '../theme/css_text.dart';
 import '../theme/surfaces.dart';
 import 'button.dart' show ControlOverrides;
 import '../glass/lens_glass.dart';
-import 'lens.dart';
+import '../glass/refraction.dart' show LensKind;
 import 'lens_model.dart';
 import 'segmented.dart' show SegmentOption, SegmentTone;
 import 'segmented_model.dart';
@@ -48,8 +48,9 @@ enum SelectionLayout { inline, stacked }
 
 /// The pill at rest: the primary fill with on-primary ink (a segmented control), or iOS 27's quiet
 /// pill (a tab bar): the ink at 7 % over what is under it, with the selected glyph and label in the
-/// primary colour. Pressed or dragged, both become the same glass lens (a water drop that
-/// magnifies, [lensMagnify]); inside it the ink is the ink colour (filled) or the primary (quiet).
+/// primary colour. Pressed or dragged, both become the same clear glass lens ([GlassLens]); inside
+/// it the ink is the ink colour (filled) or the primary (quiet), and a quiet pill's selected item
+/// grows by [lensTabScale] (iOS's tab bar). Segmented labels never grow.
 enum SelectionPill { filled, quiet }
 
 /// What a track does when its options don't fit: scroll them inside itself, or fold into one
@@ -182,9 +183,8 @@ class SelectionMinimize extends ChangeNotifier {
       _measure?.call(ancestor);
 }
 
-/// One row of options and one moving pill: measuring, the pill and its glass lens with the touch
-/// glow, drag with rubber band and momentum snap, auto-scroll, one-row overflow with edge fades and
-/// reveal, keyboard roving, right-to-left, badges, tones, reduced motion and solid glass.
+/// One row of options and one moving pill: measuring, the pill and its glass lens, drag with
+/// rubber band and momentum snap, auto-scroll, one-row overflow with edge fades and reveal, keyboard roving, right-to-left, badges, tones, reduced motion and solid glass.
 ///
 /// [semantics] makes it a radio group or a tab list; [layout], [pill] and [sizes] make it a
 /// segmented control or a tab bar. A host's [minimize] folds it toward the selected option (a
@@ -310,19 +310,23 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
       return const SizedBox.shrink();
     }
     final t = lens.get().clamp(0.0, 1.0);
-    final liquid = GlassLens.liquidOf(context);
-    // A liquid lens lifts out of its pill: bigger on every side, over the track's edges.
-    final lift = liquid ? _pill.height * lensPillLift * t : 0.0;
-    final rect = _pill.inflate(lift);
+    // A liquid lens lifts out of its pill by [lensPillLiftX] / [lensPillLiftY] from the pill's
+    // rest size (the lift is iOS's whole growth), over the track's edges.
+    final rest = _restPill;
+    final glass = lensPillShape(
+      rest,
+      math.min(rest.width, rest.height) /
+          2 *
+          ThemeProvider.of(context).sizes.radiusScale,
+      t,
+      GlassLens.liquidOf(context),
+    );
     final fade = 1 - (widget.minimize?.progress ?? 0).clamp(0.0, 1.0);
     return GlassLens(
-      rect: rect,
-      radius: _pillRadius(ThemeProvider.of(context).sizes.radiusScale) + lift,
+      kind: LensKind.pill,
+      rect: glass.rect,
+      radius: glass.radius,
       lens: t * fade,
-      glowAt: _glowAt - rect.topLeft,
-      glowRadius: glowRadius.get(),
-      glowOpacity: glowOpacity.get(),
-      magnify: liquid ? lensMagnify : 0,
     );
   }
 
@@ -335,15 +339,13 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
   late final Ticker _autoScroll = createTicker(_autoScrollTick);
   Duration _autoLast = Duration.zero;
 
-  // Pill: centre, width and top; press response: swell, stretch, lens (0 filled … 1 glass), glow.
+  // Pill: centre, width and top; press response: swell, stretch, lens (0 filled … 1 glass).
   final center = MotionValue(0, 0.05);
   final width = MotionValue(0, 0.05);
   final top = MotionValue(0, 0.05);
   final press = MotionValue(1, 0.0005);
   final stretch = MotionValue(0, 0.05);
   final lens = MotionValue(0, 0.002);
-  final glowRadius = MotionValue(glassGlowStart, 0.5);
-  final glowOpacity = MotionValue(0, 0.005);
   final _unsubscribe = <void Function()>[];
 
   List<Rect> _boxes = const [];
@@ -353,7 +355,6 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
   bool _overflow = false;
   bool _placed = false;
   bool _measureQueued = false;
-  Offset _glowAt = Offset.zero;
   _Drag? _drag;
   bool _dragging = false;
 
@@ -409,16 +410,7 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
   @override
   void initState() {
     super.initState();
-    for (final value in [
-      center,
-      width,
-      top,
-      press,
-      stretch,
-      lens,
-      glowRadius,
-      glowOpacity,
-    ]) {
+    for (final value in [center, width, top, press, stretch, lens]) {
       _unsubscribe.add(value.subscribe((_) => _motion.changed()));
     }
     _attachMinimize(widget.minimize);
@@ -454,16 +446,7 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
     for (final off in _unsubscribe) {
       off();
     }
-    for (final value in [
-      center,
-      width,
-      top,
-      press,
-      stretch,
-      lens,
-      glowRadius,
-      glowOpacity,
-    ]) {
+    for (final value in [center, width, top, press, stretch, lens]) {
       value.stop();
     }
     for (final node in _nodes.values) {
@@ -622,7 +605,12 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
   }
 
   /// The pill as drawn: placed, then swollen and stretched by a press.
-  Rect get _pill {
+  Rect get _pill => _pillAt(press.get());
+
+  /// The pill at its rest size (stretched, not swollen): what its lens lifts out of.
+  Rect get _restPill => _pillAt(1);
+
+  Rect _pillAt(double scale) {
     final height = _boxes.isEmpty ? 0.0 : _boxes.first.height;
     final w = width.get();
     final shape = pressedShape(
@@ -633,28 +621,23 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
         height: height,
         radius: 0,
       ),
-      press.get(),
+      scale,
       stretch.get(),
       0,
     );
     return Rect.fromLTWH(shape.x, shape.y, shape.width, shape.height);
   }
 
-  void _pressIn(Offset at) {
+  void _pressIn() {
     if (_reduced) return;
-    _glowAt = at;
     press.animateTo(glassPressScale, spring: Springs.snappy);
     lens.animateTo(1, spring: Springs.snappy);
-    glowRadius.set(glassGlowStart);
-    glowOpacity.set(1);
-    glowRadius.animateTo(glassGlowRadius(width.get()), spring: Springs.smooth);
   }
 
   void _pressOut() {
     press.animateTo(1, spring: Springs.bouncy);
     stretch.animateTo(0, spring: Springs.bouncy);
     lens.animateTo(0, spring: Springs.snappy);
-    glowOpacity.animateTo(0, spring: Springs.smooth);
   }
 
   Offset? _local(Offset global) {
@@ -684,7 +667,7 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
       index: index,
       time: event.timeStamp.inMicroseconds / 1000,
     );
-    if (onPill) _pressIn(at);
+    if (onPill) _pressIn();
   }
 
   /// True once the press has become a drag (the recognizer then claims the pointer).
@@ -704,7 +687,7 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
       }
       d.active = true;
       setState(() => _dragging = true);
-      if (!d.onPill) _pressIn(at);
+      if (!d.onPill) _pressIn();
       if (_overflow && !_autoScroll.isActive) {
         _autoLast = Duration.zero;
         _autoScroll.start();
@@ -729,7 +712,6 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
       }
       return;
     }
-    _glowAt = at;
     final target = segmentedDragCenter(at.dx, d.grab, _spans);
     if (d.catching || auto) {
       center.animateTo(target, spring: Springs.interactive);
@@ -1027,6 +1009,7 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
         inkColor: pillInk,
         lensInkColor: lensInk,
         lens: () => solid ? 0 : lens.get(),
+        zoomInk: quiet,
         motion: _motion,
       ),
     );
@@ -1060,7 +1043,6 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
         painter: _PillPainter(
           state: this,
           fill: pillFill,
-          lensPaint: LensPaint.of(c),
           radiusScale: s.radiusScale,
           solid: solid,
           disabled: widget.disabled,
@@ -1505,18 +1487,17 @@ class _InkClip {
 
 /// Paints its child, then paints it again in the selected ink inside [ink]'s drop: the selected
 /// ink of an option (the web kit's `.lab-segmented-ink` copy), without a second copy of the label
-/// in the tree. Pressed or dragged ([lens] > 0) the drop magnifies: the ink copy scales by
-/// `1 + lensMagnify × lens` around the drop's centre, still cut to the drop, its colour turns from
-/// [color] to [lensColor], and the plain child is cut out under the drop (an elliptical hole the
-/// drop's size). [_InkHole]s below it (a tab's badge) are drawn over the copy in their own paint,
-/// magnified with it.
+/// in the tree. Pressed or dragged ([lens] > 0) its colour turns from [color] to [lensColor]; a tab
+/// bar's ([zoom]) ink copy also grows by [lensInkZoom] around the drop's centre, still cut to the
+/// drop, and the plain child is cut out under the drop (an elliptical hole the drop's size).
+/// [_InkHole]s below it (a tab's badge) are drawn over the copy in their own paint, scaled with it.
 class _InkOverlay extends SingleChildRenderObjectWidget {
   const _InkOverlay({
     required this.ink,
     required this.color,
     required this.lensColor,
     required this.lens,
-    required this.magnify,
+    required this.zoom,
     required this.repaint,
     required super.child,
   });
@@ -1524,15 +1505,14 @@ class _InkOverlay extends SingleChildRenderObjectWidget {
   final Color color, lensColor;
   final double Function() lens;
 
-  /// Whether the copy magnifies itself: only for liquid glass the lens can't bend (Skia, refraction
-  /// off). Where [GlassLens] magnifies for real the options are never enlarged twice, and
-  /// transparent glass doesn't magnify at all.
-  final bool magnify;
+  /// Whether the selected item grows under the lens: a tab bar's quiet pill ([lensTabScale]),
+  /// never a segmented control's.
+  final bool zoom;
   final Listenable repaint;
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
-      _RenderInkOverlay(ink, color, lensColor, lens, magnify, repaint);
+      _RenderInkOverlay(ink, color, lensColor, lens, zoom, repaint);
 
   @override
   void updateRenderObject(
@@ -1544,7 +1524,7 @@ class _InkOverlay extends SingleChildRenderObjectWidget {
       ..color = color
       ..lensColor = lensColor
       ..lens = lens
-      ..magnify = magnify
+      ..zoom = zoom
       ..repaint = repaint;
   }
 }
@@ -1555,16 +1535,16 @@ class _RenderInkOverlay extends RenderProxyBox {
     this._color,
     this._lensColor,
     this.lens,
-    this._magnify,
+    this._zoom,
     this._repaint,
   );
   _InkClip ink;
   double Function() lens;
 
-  bool _magnify;
-  set magnify(bool value) {
-    if (value == _magnify) return;
-    _magnify = value;
+  bool _zoom;
+  set zoom(bool value) {
+    if (value == _zoom) return;
+    _zoom = value;
     markNeedsPaint();
   }
 
@@ -1617,8 +1597,8 @@ class _RenderInkOverlay extends RenderProxyBox {
     final bounds = Offset.zero & size;
     final drop = ink.drop();
     final amount = lens().clamp(0.0, 1.0);
-    final zoom = _magnify ? 1 + lensMagnify * amount : 1.0;
-    // The plain content, cut out where the drop magnifies it.
+    final zoom = lensInkZoom(amount, _zoom);
+    // The plain content, cut out where the drop shows it grown.
     final crosses =
         zoom > 1 &&
         drop != null &&
@@ -1674,7 +1654,7 @@ class _RenderInkOverlay extends RenderProxyBox {
         ColorFilter.mode(inkColor, BlendMode.srcIn),
         (context, offset) => context.paintChild(child, offset),
       );
-      // The badges show in the copy in their own colours, magnified with it.
+      // The badges show in the copy in their own colours, scaled with it.
       for (final hole in live) {
         context.pushTransform(
           true,
@@ -1728,19 +1708,17 @@ class _RenderInkHole extends RenderProxyBox {
 
 /// The pill under the labels: [fill] at rest (the primary, or the quiet 7 % ink on a tab bar),
 /// fading out while pressed or dragged as the glass over the labels fades in ([GlassLens], laid by
-/// the track), with the lens's shadow. Solid styles keep the fill.
+/// the track, which casts its own shadow). Solid styles keep the fill.
 class _PillPainter extends CustomPainter {
   _PillPainter({
     required this.state,
     required this.fill,
-    required this.lensPaint,
     required this.radiusScale,
     required this.solid,
     required this.disabled,
   }) : super(repaint: state._motion);
   final _SelectionTrackState<dynamic> state;
   final Color fill;
-  final LensPaint lensPaint;
   final double radiusScale;
   final bool solid, disabled;
 
@@ -1762,7 +1740,6 @@ class _PillPainter extends CustomPainter {
         Paint()..color = Color.from(alpha: alpha, red: 0, green: 0, blue: 0),
       );
     }
-    lensPaint.paintShadow(canvas, shape, lens);
     if (lens < 0.999) {
       canvas.drawPath(
         shape,
@@ -1776,7 +1753,6 @@ class _PillPainter extends CustomPainter {
   bool shouldRepaint(_PillPainter old) =>
       old.state != state ||
       old.fill != fill ||
-      old.lensPaint != lensPaint ||
       old.radiusScale != radiusScale ||
       old.solid != solid ||
       old.disabled != disabled;
@@ -1813,6 +1789,7 @@ class _Segment<T> extends StatefulWidget {
     required this.inkColor,
     required this.lensInkColor,
     required this.lens,
+    required this.zoomInk,
     required this.motion,
     required this.radiusScale,
     this.fill = false,
@@ -1861,6 +1838,9 @@ class _Segment<T> extends StatefulWidget {
 
   /// 0 the pill at rest … 1 a glass drop (0 for solid glass).
   final double Function() lens;
+
+  /// The selected item grows under the lens ([lensInkZoom]): a tab bar's quiet pill.
+  final bool zoomInk;
   final Listenable motion;
 
   @override
@@ -2101,8 +2081,8 @@ class _SegmentState<T> extends State<_Segment<T>> {
       color: widget.inkColor,
       lensColor: widget.lensInkColor,
       lens: widget.lens,
-      // Only liquid lenses magnify; the glass does it where it can, this copy elsewhere.
-      magnify: GlassLens.liquidOf(context) && !GlassLens.magnifiesOf(context),
+      // A tab bar's selected item grows under the lens (lens() is 0 where none shows).
+      zoom: widget.zoomInk,
       repaint: widget.motion,
       child: Padding(padding: padding, child: content),
     );

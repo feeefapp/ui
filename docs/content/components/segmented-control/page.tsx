@@ -200,13 +200,14 @@ function Overview() {
         <p>
           Choosing an option slides the filled pill there, changing its width on the way, on the{' '}
           <C>snappy</C> spring; a new choice mid-flight picks up the pill where it is, at its speed.
-          Press the pill and it lifts into a glass lens: it swells like a pressed glass bubble, shows
-          the same touch glow and stretches along a quick drag. The lens is real glass laid over the
-          options, never blurred, so the labels it crosses stay readable. With <C>liquid</C> glass it
-          lifts out of the track (15% of the pill’s height on every side) and magnifies what it covers
-          by 1.18×, bending the labels where the browser can (Chromium); elsewhere the selected label
-          scales up inside it instead, never both. <C>transparent</C> glass keeps a plain clear lens the
-          size of the pill. Drag it and it follows the pointer,
+          Press the pill and it lifts into a glass lens, as iOS 26.2 draws it (measured from held stock
+          controls), and stretches along a quick drag. The lens is clear glass laid over the options:
+          never blurred, brightened or magnified, so the labels it crosses keep their size and stay
+          readable; a little darker along its top, an even rim light and a soft shadow, with no touch
+          glow. With <C>liquid</C> glass it grows past the track (12px each side, 8px above and below:
+          a 96 × 28 pill becomes 120 × 44) and bends what it covers outward along its rim, so lines
+          crowd toward the edge with a faint rainbow, where the browser can (Chromium).{' '}
+          <C>transparent</C> glass keeps a plain clear lens the size of the pill. Drag it and it follows the pointer,
           kept on the track with a slight rubber band at the ends; release it and it settles on the
           nearest option (a flick carries on to the next) on the <C>release</C> spring, keeping the
           pointer’s speed. Pressing another option and dragging works too: the pill comes to the
@@ -214,8 +215,8 @@ function Overview() {
         </p>
         <p>
           <C>onChange</C> fires once, on the release, never while dragging. A press in the control never
-          swells the glass bubble around it. Reduced motion moves the pill instantly with no lens,
-          stretch or glow; reduced transparency, more contrast and the <C>solid</C> glass style keep a
+          swells the glass bubble around it. Reduced motion moves the pill instantly with no lens or
+          stretch; reduced transparency, more contrast and the <C>solid</C> glass style keep a
           solid pill.
         </p>
         <p>

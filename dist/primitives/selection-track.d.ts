@@ -28,8 +28,7 @@ export type SelectionPill = 'filled' | 'quiet';
  * capsule (the selection and a chevron) that opens the options as a single-choice menu. */
 export type SelectionOverflow = 'scroll' | 'menu';
 /**
- * One row of options and one moving pill: measuring, the pill and its glass lens with the touch
- * glow, drag with rubber band and momentum snap, auto-scroll, one-row overflow with edge fades and
+ * One row of options and one moving pill: measuring, the pill and its glass lens, drag with rubber band and momentum snap, auto-scroll, one-row overflow with edge fades and
  * reveal, keyboard roving, right-to-left, badges, tones, reduced motion and solid glass.
  *
  * `semantics` makes it a radio group (`radio`, `aria-checked`) or a tab list (`tab`, `aria-selected`

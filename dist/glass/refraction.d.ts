@@ -64,23 +64,51 @@ export declare function liveDisplacementMap(width: number, height: number, clust
     data: Uint8ClampedArray<ArrayBuffer>;
     scale: number;
 };
+/** A control lens's kind: a pill (segmented control, tab bar) or a thumb (slider, switch). */
+export type LensKind = 'pill' | 'thumb';
 /**
- * Where a lens magnifying by `magnify` (0 none, 0.2 = 1.2×) about (`cx`, `cy`) samples the backdrop
- * for the point (`px`, `py`), as an offset (px): the point pulled toward the centre by
- * `1 / (1 + magnify)`. Flutter's `glass_refraction.frag` (`uMagnify`) does the same.
+ * How iOS 26.2's control lenses bend what is behind them, measured with phase-shifted fringes under
+ * held stock controls (research/liquid-glass/LENS-MEASURED.md §2). The shift (px, positive = the
+ * pixel shows the backdrop from further inside) at depth `d` px from the outline:
+ * - pill: a 1 px inward rim, then outward (it shows the backdrop from outside its edge, so lines
+ *   crowd toward the rim): rising 1 px per px to 4.3 px at 5 px deep, then fading as
+ *   `exp(-(d - 5) / 10.5)`, leaning away from the centre (`radial`: the direction is the outline's
+ *   normal plus `radial` × the offset from the centre over the half size), so lines bow along its
+ *   top and bottom. The flat middle neither bends nor magnifies.
+ * - thumb: inward, 7.1 px over the outer 1 px, then `7.1 · (1 - (d - 1) / 6.5)^2.2` to nothing at
+ *   7.5 px.
+ * Both are the same in light and dark appearance.
  */
-export declare function magnifyOffset(px: number, py: number, cx: number, cy: number, magnify: number): {
-    x: number;
-    y: number;
+export declare const LENS_BEND: {
+    readonly pill: {
+        readonly rim: 6;
+        readonly rimWidth: 0.6;
+        readonly peak: 4.3;
+        readonly at: 5;
+        readonly decay: 10.5;
+        readonly radial: 1.5;
+    };
+    readonly thumb: {
+        readonly peak: 7.1;
+        readonly at: 1;
+        readonly reach: 6.5;
+        readonly power: 2.2;
+    };
 };
+/** Colour split of a control lens's bend: red bends this much less than green and blue this much
+ * more (iOS 26.2: 0.94 and 1.05 across the pill's strongest band), the rainbow along its rim. */
+export declare const LENS_DISPERSION = 0.06;
+/** Raster work allowed for one lens map: up to 3 samples per px on a control lens. */
+export declare const LENS_MAP_PIXELS = 65536;
+/** The bend (px, positive inward) of a `kind` lens at depth `d` px inside its outline. */
+export declare function lensBend(kind: LensKind, d: number): number;
 /**
- * The map of a control's lens (lens-layer.ts): one `shape` (its own box, at 0, 0) that bends at its
- * rim (the gentle profile × `strength`) and magnifies everything inside by `magnify` about its
- * centre. Same encoding as `displacementMap` (red/green = shift as a share of `scale / 2`, blue =
- * the edge mask, alpha = the shape), sampled at most `GLASS_LIVE_MAP_PIXELS`. Both effects are
+ * The map of a control's lens (lens-layer.ts): one `shape` (its own box, at 0, 0) bending by
+ * `lensBend` along its outline's normal. Same encoding as `displacementMap` (red/green = shift as a
+ * share of `scale / 2`, alpha = the shape), sampled at most `LENS_MAP_PIXELS`. The bend is
  * linear in `scale`, so an owner eases the lens in by scaling `scale` alone.
  */
-export declare function lensDisplacementMap(shape: GlassShape, magnify: number, strength?: number): {
+export declare function lensDisplacementMap(shape: GlassShape, kind: LensKind): {
     width: number;
     height: number;
     data: Uint8ClampedArray<ArrayBuffer>;

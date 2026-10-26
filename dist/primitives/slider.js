@@ -11,7 +11,7 @@ import { useSliderMotion } from './slider-motion.js';
 /**
  * A single-value slider with a large touch-friendly track, springy thumb, optional stops and
  * marks, and render slots for custom track, fill and thumb decoration. While dragged the thumb turns
- * into a larger glass lens that stretches with its speed, glows under the finger and springs back.
+ * into a larger glass lens that stretches with its speed and springs back.
  */
 export const Slider = React.forwardRef((props, ref) => (_jsx(SliderControl, { ...props, forwardedRef: ref })));
 Slider.displayName = 'Slider';
@@ -86,18 +86,7 @@ function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', v
     const fraction = switchMode && position !== null && !inert
         ? position
         : sliderFraction(displayPosition, range.min, range.max);
-    const motion = useSliderMotion(host, fraction, tracking, pressed, trackStyle === 'thin', inert, switchMode);
-    /** The pointer in the control's own px (`x` from its inline start), undoing scaled ancestors. */
-    const local = (event) => {
-        const el = event.currentTarget;
-        const rect = el.getBoundingClientRect();
-        const scale = el.offsetWidth ? rect.width / el.offsetWidth : 1;
-        const rtl = getComputedStyle(el).direction === 'rtl';
-        return {
-            x: (rtl ? rect.right - event.clientX : event.clientX - rect.left) / scale,
-            y: (event.clientY - rect.top) / scale,
-        };
-    };
+    useSliderMotion(host, fraction, tracking, pressed, trackStyle === 'thin', inert, switchMode);
     /** How far (px) the switch thumb travels from off to on. */
     const travel = (el) => {
         const inset = Number.parseFloat(getComputedStyle(el).getPropertyValue('--lab-slider-inset')) ||
@@ -165,7 +154,6 @@ function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', v
                         tracker: new VelocityTracker(),
                     };
                     event.currentTarget.setPointerCapture(event.pointerId);
-                    motion.pointer(local(event));
                     if (!switchMode)
                         move(event);
                 }, onPointerMove: (event) => {
@@ -179,7 +167,6 @@ function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', v
                         active.moved = true;
                         setTracking(true);
                     }
-                    motion.pointer(local(event));
                     if (!switchMode)
                         move(event);
                     else if (active.moved)
@@ -246,7 +233,7 @@ function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', v
                         .filter((mark) => mark.value >= range.min && mark.value <= range.max)
                         .map((mark, index) => (_jsx("span", { className: "lab-slider-stop", "aria-hidden": "true", "data-active": mark.value <= current, style: {
                             '--lab-slider-stop': sliderFraction(mark.value, range.min, range.max),
-                        } }, index))), _jsxs("span", { className: "lab-slider-thumb", "aria-hidden": "true", children: [_jsx("span", { className: "lab-lens", children: _jsx("span", { className: "lab-lens-glow" }) }), renderThumb?.(state)] }), switchMode && (_jsx("span", { className: "lab-slider-switch-text", "aria-hidden": "true", children: checkedText?.(current) }))] }), marks?.some((mark) => mark.label != null) && (_jsx("div", { className: "lab-slider-marks", "data-control-size": controlSize, "data-track-style": trackStyle, "aria-hidden": "true", children: marks
+                        } }, index))), _jsxs("span", { className: "lab-slider-thumb", "aria-hidden": "true", children: [_jsx("span", { className: "lab-lens" }), renderThumb?.(state)] }), switchMode && (_jsx("span", { className: "lab-slider-switch-text", "aria-hidden": "true", children: checkedText?.(current) }))] }), marks?.some((mark) => mark.label != null) && (_jsx("div", { className: "lab-slider-marks", "data-control-size": controlSize, "data-track-style": trackStyle, "aria-hidden": "true", children: marks
                     .filter((mark) => mark.value >= range.min && mark.value <= range.max)
                     .map((mark, index) => (_jsx("span", { style: {
                         '--lab-slider-stop': sliderFraction(mark.value, range.min, range.max),
@@ -256,7 +243,7 @@ function SliderControl({ label, controlSize = 'regular', trackStyle = 'thick', v
  * An on/off switch, sized like iOS's (63 × 28 track, 37 × 24 thumb at comfortable density;
  * ThemeConfig `metrics.switchSize` / `thumbSize`). A tap toggles it; the thumb can also be dragged
  * and settles on the side its momentum carries it to. Pressed or dragged, the thumb turns into a
- * larger glass lens that stretches as it moves, glows under the finger and springs back. It shares
+ * larger glass lens that stretches as it moves and springs back. It shares
  * the slider's track, thumb and spring; the state maps to 0 and 1.
  */
 export const SlideSwitch = React.forwardRef(({ checked, loading, defaultChecked = false, onCheckedChange, onCheckedCommit, onText, offText, ...props }, ref) => {

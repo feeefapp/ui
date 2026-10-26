@@ -46,8 +46,9 @@ function Overview() {
         <p>
           The tab bar is a <Link to="/components/segmented-control">segmented control</Link> with tab
           semantics: the same pill, glass lens and physics. A tap opens a tab. Press the selected tab
-          and it lifts into a glass lens, as iOS 27’s does: with <C>liquid</C> glass a clear drop bigger
-          than the pill that sticks out of the bar and magnifies the tab under it. Drag it across the
+          and it lifts into a glass lens, as iOS’s does: with <C>liquid</C> glass a clear drop 8px
+          taller than the pill on each side that sticks out of the bar, and the tab under it grows 1.2×
+          (its icon and label, not the glass). Drag it across the
           bar (or press another tab and drag, and the lens comes to you) and the tab under it when you
           let go opens, never one on the way.
           A quick flick carries on to the next tab. Right to left, the bar and the drag mirror.

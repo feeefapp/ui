@@ -58,7 +58,7 @@ class ThemeConfig {
 
   /// Floating glass: `liquid` (default) is clear glass with the liquid effect: it bends what is
   /// behind its rim, lights up toward the pointer, responds to presses, and a pressed control's
-  /// lens lifts out bigger and magnifies what it covers. `transparent` is the same clear glass and
+  /// lens lifts out bigger and bends what it covers. `transparent` is the same clear glass and
   /// morphs without that effect: no bend, a fixed light, no press response, plain lenses. `solid`
   /// paints opaque chrome for dense tools.
   final GlassStyle glass;

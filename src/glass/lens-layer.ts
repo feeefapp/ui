@@ -1,6 +1,6 @@
 import type { GlassShape } from './geometry'
 import { lensMaterial } from './material'
-import { lensDisplacementMap, rgbaBmpDataUrl, supportsRefraction, type LensKind } from './refraction'
+import { LENS_DISPERSION, lensDisplacementMap, rgbaBmpDataUrl, supportsRefraction, type LensKind } from './refraction'
 
 /**
  * The real glass of a control's lens: the moving part of a slider, a switch, a segmented control or
@@ -148,7 +148,8 @@ export class GlassLensLayer {
     setProperty(style, '--lab-lens-rim-edge-top', material.rimEdge.top.toFixed(4))
     setProperty(style, '--lab-lens-rim-edge-side', material.rimEdge.side.toFixed(4))
     setProperty(style, '--lab-lens-rim-edge-bottom', material.rimEdge.bottom.toFixed(4))
-    setProperty(style, '--lab-lens-line', material.line.toFixed(4))
+    setProperty(style, '--lab-lens-line', material.line.inner.toFixed(4))
+    setProperty(style, '--lab-lens-line-outer', material.line.outer.toFixed(4))
     setProperty(style, '--lab-lens-shadow', material.shadow.toFixed(4))
     const radius = Math.min(size.radius, size.width / 2, size.height / 2)
     const value = mode === 'liquid' && lensBends() ? this.refraction(size.width, size.height, radius, t) : null
@@ -164,7 +165,7 @@ export class GlassLensLayer {
     }
   }
 
-  /** The SVG backdrop filter: the measured bend, cut to the shape. */
+  /** The SVG backdrop filter: the measured bend per colour channel (LENS_DISPERSION), cut to the shape. */
   private refraction(width: number, height: number, radius: number, t: number) {
     if (!filterHost || !filterHost.isConnected) {
       filterHost = node('svg', { 'width': 0, 'height': 0, 'aria-hidden': 'true', 'class': 'lab-lens-filters' }) as SVGSVGElement
@@ -175,9 +176,22 @@ export class GlassLensLayer {
     let filter = this.filter
     if (!filter || !filter.isConnected) {
       filter = node('filter', { 'id': this.id, 'color-interpolation-filters': 'sRGB', 'filterUnits': 'userSpaceOnUse', 'x': 0, 'y': 0 }) as SVGFilterElement
+      const bend = (result: string) => node('feDisplacementMap', { in: 'SourceGraphic', in2: 'map', xChannelSelector: 'R', yChannelSelector: 'G', scale: 0, result })
+      // One channel of a bent copy, opaque: the three add up to the colour.
+      const channel = (input: string, keep: number, result: string) => {
+        const rows = [0, 1, 2].map((row) => [0, 1, 2, 3, 4].map((column) => Number(row === keep && column === keep)).join(' '))
+        return node('feColorMatrix', { in: input, type: 'matrix', values: [...rows, '0 0 0 1 0'].join('  '), result })
+      }
       filter.append(
         node('feImage', { result: 'map', preserveAspectRatio: 'none', x: 0, y: 0 }),
-        node('feDisplacementMap', { in: 'SourceGraphic', in2: 'map', xChannelSelector: 'R', yChannelSelector: 'G', scale: 0, result: 'bent' }),
+        bend('red'),
+        bend('green'),
+        bend('blue'),
+        channel('red', 0, 'r'),
+        channel('green', 1, 'g'),
+        channel('blue', 2, 'b'),
+        node('feComposite', { in: 'r', in2: 'g', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'rg' }),
+        node('feComposite', { in: 'rg', in2: 'b', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'bent' }),
         // Chromium ignores clip-path on an SVG backdrop filter: the map's alpha cuts the shape.
         node('feComposite', { in: 'bent', in2: 'map', operator: 'in' })
       )
@@ -188,14 +202,16 @@ export class GlassLensLayer {
     const mapWidth = grid(width)
     const mapHeight = grid(height)
     const map = lensMap(mapWidth, mapHeight, Math.round(Math.min(radius * (mapHeight / height), mapWidth / 2, mapHeight / 2)), this.kind)
-    const [image, bent] = Array.from(filter.children)
+    const [image, red, green, blue] = Array.from(filter.children)
     for (const element of [filter, image]) {
       setAttribute(element, 'width', width.toFixed(2))
       setAttribute(element, 'height', height.toFixed(2))
     }
     setAttribute(image, 'href', map.href)
     // The bend scales with the map's scale: the lens eases it in.
-    setAttribute(bent, 'scale', (map.scale * t).toFixed(2))
+    setAttribute(red, 'scale', (map.scale * t * (1 - LENS_DISPERSION)).toFixed(2))
+    setAttribute(green, 'scale', (map.scale * t).toFixed(2))
+    setAttribute(blue, 'scale', (map.scale * t * (1 + LENS_DISPERSION)).toFixed(2))
     return `url(#${this.id})`
   }
 

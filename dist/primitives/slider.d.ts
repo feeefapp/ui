@@ -62,7 +62,7 @@ export type SliderProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange' 
 /**
  * A single-value slider with a large touch-friendly track, springy thumb, optional stops and
  * marks, and render slots for custom track, fill and thumb decoration. While dragged the thumb turns
- * into a larger glass lens that stretches with its speed, glows under the finger and springs back.
+ * into a larger glass lens that stretches with its speed and springs back.
  */
 export declare const Slider: React.ForwardRefExoticComponent<Omit<React.HTMLAttributes<HTMLDivElement>, "children" | "defaultValue" | "role" | "aria-checked" | "aria-valuemax" | "aria-valuemin" | "aria-valuenow" | "onChange"> & {
     /** Control height: `regular` (36px) or `small` (30px). A switch has one size and ignores it. */
@@ -124,7 +124,7 @@ export type SlideSwitchProps = Omit<SliderProps, 'controlSize' | 'value' | 'defa
  * An on/off switch, sized like iOS's (63 × 28 track, 37 × 24 thumb at comfortable density;
  * ThemeConfig `metrics.switchSize` / `thumbSize`). A tap toggles it; the thumb can also be dragged
  * and settles on the side its momentum carries it to. Pressed or dragged, the thumb turns into a
- * larger glass lens that stretches as it moves, glows under the finger and springs back. It shares
+ * larger glass lens that stretches as it moves and springs back. It shares
  * the slider's track, thumb and spring; the state maps to 0 and 1.
  */
 export declare const SlideSwitch: React.ForwardRefExoticComponent<Omit<SliderProps, "value" | "min" | "max" | "defaultValue" | "onValueChange" | "controlSize" | "step" | "onValueCommit" | "getValueText" | "showStops" | "marks"> & {

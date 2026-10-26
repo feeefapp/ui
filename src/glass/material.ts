@@ -257,11 +257,11 @@ export function liftFilter(gain: number, offset: number) {
  * - `veil`: white laid at this alpha (the thumb's faint frost; the pill has none).
  * - `shade`: black at `top` alpha along the top edge fading to `middle` by half the height and
  *   staying there (the lens is a little darker on top, 0.89 → 0.965 on white).
- * - `rim`: white along the inner 1 px edge, by side (`top`, `side`, `bottom`), per colour scheme,
- *   brighter by `LENS_RIM_EDGE` over its outermost third: the pill's is even all round, the thumb's
- *   lit at its sides and bottom.
- * - `line`: black along the thumb's top edge (its outermost third), a dark line that shows on light
- *   backdrops.
+ * - `rim`: white along the inner edge, by side (`top`, `side`, `bottom`), per colour scheme: `band`
+ *   over 1 px and `edge` over its outermost third (iOS's is brightest at the outline and fades in
+ *   about 1 px). The pill's is even all round, the thumb's lit at its sides.
+ * - `line`: black along the thumb's top edge, `inner` over its inner 1 px and `outer` over 0.5 px
+ *   outside it: a dark line that shows on light backdrops.
  * - `shadow`: black at `alpha` under it, `dy` px down, blurred by `blur` (CSS blur radius, px).
  * There is no hairline: iOS draws none around control lenses.
  */
@@ -269,20 +269,23 @@ export const LENS_MATERIAL = {
   pill: {
     veil: 0,
     shade: { top: 0.105, middle: 0.035 },
-    rim: { light: { top: 0.33, side: 0.33, bottom: 0.33 }, dark: { top: 0.6, side: 0.6, bottom: 0.6 } },
-    line: { light: 0, dark: 0 },
+    rim: {
+      light: { band: { top: 0.27, side: 0.27, bottom: 0.27 }, edge: { top: 0.45, side: 0.45, bottom: 0.45 } },
+      dark: { band: { top: 0.2, side: 0.2, bottom: 0.2 }, edge: { top: 1, side: 1, bottom: 1 } },
+    },
+    line: { light: { inner: 0, outer: 0 }, dark: { inner: 0, outer: 0 } },
   },
   thumb: {
     veil: 0.09,
     shade: { top: 0.14, middle: 0.04 },
-    rim: { light: { top: 0, side: 0.25, bottom: 0.2 }, dark: { top: 0.12, side: 0.12, bottom: 0.12 } },
-    line: { light: 0.42, dark: 0.33 },
+    rim: {
+      light: { band: { top: 0, side: 0.25, bottom: 0.08 }, edge: { top: 0, side: 0.3, bottom: 0.1 } },
+      dark: { band: { top: 0, side: 0.15, bottom: 0.15 }, edge: { top: 0, side: 0.18, bottom: 0.18 } },
+    },
+    line: { light: { inner: 0.35, outer: 0.23 }, dark: { inner: 0.24, outer: 0.31 } },
   },
 } as const
 
-/** The rim's outermost third is this much brighter than the rest of it (iOS: 0.6, 0.42, 0.23 over
- * its three device pixels). */
-export const LENS_RIM_EDGE = 1.2
 
 /** The shadow every control lens casts (LENS-MEASURED.md §3): 0.89 on white just under its bottom
  * edge, gone ~12 px below, barely any above. */
@@ -296,9 +299,9 @@ export function lensMaterial(kind: 'pill' | 'thumb', lens: number, scheme: 'ligh
   return {
     veil: m.veil * t,
     shade: { top: m.shade.top * t, middle: m.shade.middle * t },
-    rim: { top: rim.top * t, side: rim.side * t, bottom: rim.bottom * t },
-    rimEdge: { top: Math.min(1, rim.top * LENS_RIM_EDGE) * t, side: Math.min(1, rim.side * LENS_RIM_EDGE) * t, bottom: Math.min(1, rim.bottom * LENS_RIM_EDGE) * t },
-    line: m.line[scheme] * t,
+    rim: { top: rim.band.top * t, side: rim.band.side * t, bottom: rim.band.bottom * t },
+    rimEdge: { top: rim.edge.top * t, side: rim.edge.side * t, bottom: rim.edge.bottom * t },
+    line: { inner: m.line[scheme].inner * t, outer: m.line[scheme].outer * t },
     shadow: LENS_SHADOW.alpha * t,
   }
 }

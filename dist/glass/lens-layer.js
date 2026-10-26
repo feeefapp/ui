@@ -1,5 +1,5 @@
-import { lensMaterial, liftFilter } from './material.js';
-import { lensDisplacementMap, rgbaBmpDataUrl, supportsRefraction } from './refraction.js';
+import { lensMaterial } from './material.js';
+import { LENS_DISPERSION, lensDisplacementMap, rgbaBmpDataUrl, supportsRefraction } from './refraction.js';
 const SVG = 'http://www.w3.org/2000/svg';
 const PLAIN_QUERY = '(prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active)';
 let plainQuery;
@@ -14,9 +14,9 @@ export function lensMode() {
     const glass = document.documentElement.getAttribute('data-lab-glass');
     return glass === 'solid' ? 'off' : glass === 'transparent' ? 'transparent' : 'liquid';
 }
-/** Whether lenses magnify for real: liquid, with the theme's refraction on, in a browser whose
- * backdrop filters bend (Chromium). Where they don't, a control may fake the enlargement itself. */
-export function lensMagnifies() {
+/** Whether lenses bend what is behind them: liquid, with the theme's refraction on, in a browser
+ * whose backdrop filters bend (Chromium). */
+export function lensBends() {
     return (lensMode() === 'liquid' &&
         document.documentElement.getAttribute('data-lab-glass-refraction') !== 'off' &&
         supportsRefraction());
@@ -24,13 +24,13 @@ export function lensMagnifies() {
 /** Lens maps by quantised geometry, shared by every lens (a drag revisits the same widths). */
 const MAPS_KEPT = 64;
 const maps = new Map();
-function lensMap(width, height, radius, magnify) {
-    const key = `${width}|${height}|${radius}|${magnify}`;
+function lensMap(width, height, radius, kind) {
+    const key = `${width}|${height}|${radius}|${kind}`;
     let map = maps.get(key);
     if (map)
         maps.delete(key);
     else {
-        const pixels = lensDisplacementMap({ x: 0, y: 0, width, height, radius }, magnify);
+        const pixels = lensDisplacementMap({ x: 0, y: 0, width, height, radius }, kind);
         map = { scale: pixels.scale, href: rgbaBmpDataUrl(pixels.width, pixels.height, pixels.data) };
     }
     maps.set(key, map);
@@ -59,6 +59,7 @@ function setProperty(style, name, value) {
 /** One lens element's glass. `update` runs on every frame the lens moves; it touches only what changed. */
 export class GlassLensLayer {
     el;
+    kind;
     filter = null;
     id = `lab-lens-${++filterCount}`;
     measured = null;
@@ -68,13 +69,14 @@ export class GlassLensLayer {
      * `measure`: the lens takes its size and corners from the element (a thumb's own box, which CSS
      * sizes), watched with a ResizeObserver. Otherwise every `update` passes the shape.
      */
-    constructor(el, measure = false) {
+    constructor(el, kind, measure = false) {
         this.el = el;
+        this.kind = kind;
         if (measure && typeof ResizeObserver !== 'undefined') {
             this.observer = new ResizeObserver(() => {
                 this.measure();
-                if (this.last)
-                    this.update(this.last.lens, this.last.magnify);
+                if (this.last !== null)
+                    this.update(this.last);
             });
             this.observer.observe(el);
         }
@@ -86,12 +88,11 @@ export class GlassLensLayer {
         this.measured = { width, height, radius };
     }
     /**
-     * Shows the lens at `lens` (0 rest … 1 glass), magnifying by `magnify` at full lens (liquid glass
-     * only; pass `LENS_MAGNIFY` or 0). `shape` is the lens's box in its own pixels (only its size and
-     * radius count; owners place the element) unless the layer measures itself.
+     * Shows the lens at `lens` (0 rest … 1 glass). `shape` is the lens's box in its own pixels (only
+     * its size and radius count; owners place the element) unless the layer measures itself.
      */
-    update(lens, magnify, shape) {
-        this.last = { lens, magnify };
+    update(lens, shape) {
+        this.last = lens;
         const el = this.el;
         const t = Number.isFinite(lens) ? Math.max(0, Math.min(1, lens)) : 0;
         const mode = lensMode();
@@ -113,32 +114,36 @@ export class GlassLensLayer {
             : document.documentElement.getAttribute('data-lab-theme') === 'dark'
                 ? 'dark'
                 : 'light';
-        const material = lensMaterial(t, scheme);
-        const { rim, hairline } = material;
+        const material = lensMaterial(this.kind, t, scheme);
         const style = el.style;
-        // The rim light against the light axis (top left): lit at |cos| 1, half at 45°, w0 across it.
-        setProperty(style, '--lab-lens-rim-peak', (rim.w0 + rim.w1).toFixed(4));
-        setProperty(style, '--lab-lens-rim-mid', (rim.w0 + rim.w1 * Math.SQRT1_2 ** rim.p).toFixed(4));
-        setProperty(style, '--lab-lens-rim-base', rim.w0.toFixed(4));
-        setProperty(style, '--lab-lens-rim-width', `${rim.width.toFixed(2)}px`);
-        setProperty(style, '--lab-lens-ring', hairline.ring.toFixed(4));
-        setProperty(style, '--lab-lens-sliver', hairline.sliver.toFixed(4));
+        setProperty(style, '--lab-lens-veil', material.veil.toFixed(4));
+        setProperty(style, '--lab-lens-shade-top', material.shade.top.toFixed(4));
+        setProperty(style, '--lab-lens-shade-middle', material.shade.middle.toFixed(4));
+        setProperty(style, '--lab-lens-rim-top', material.rim.top.toFixed(4));
+        setProperty(style, '--lab-lens-rim-side', material.rim.side.toFixed(4));
+        setProperty(style, '--lab-lens-rim-bottom', material.rim.bottom.toFixed(4));
+        setProperty(style, '--lab-lens-rim-edge-top', material.rimEdge.top.toFixed(4));
+        setProperty(style, '--lab-lens-rim-edge-side', material.rimEdge.side.toFixed(4));
+        setProperty(style, '--lab-lens-rim-edge-bottom', material.rimEdge.bottom.toFixed(4));
+        setProperty(style, '--lab-lens-line', material.line.inner.toFixed(4));
+        setProperty(style, '--lab-lens-line-outer', material.line.outer.toFixed(4));
+        setProperty(style, '--lab-lens-shadow', material.shadow.toFixed(4));
         const radius = Math.min(size.radius, size.width / 2, size.height / 2);
-        const value = mode === 'liquid' && lensMagnifies() ? this.refraction(size.width, size.height, radius, magnify, t, material) : null;
+        const value = mode === 'liquid' && lensBends() ? this.refraction(size.width, size.height, radius, t) : null;
         if (value) {
             setProperty(style, 'backdrop-filter', value);
             setProperty(style, '-webkit-backdrop-filter', value);
         }
         else {
             this.dropFilter();
-            const lift = liftFilter(material.gain, material.offset);
-            const css = `saturate(${material.saturate.toFixed(4)}) contrast(${lift.contrast.toFixed(4)}) brightness(${lift.brightness.toFixed(4)})`;
-            setProperty(style, 'backdrop-filter', css);
-            setProperty(style, '-webkit-backdrop-filter', css);
+            if (style.getPropertyValue('backdrop-filter')) {
+                style.removeProperty('backdrop-filter');
+                style.removeProperty('-webkit-backdrop-filter');
+            }
         }
     }
-    /** The SVG backdrop filter: bend and magnify, saturate, lift, the edge, cut to the shape. */
-    refraction(width, height, radius, magnify, t, material) {
+    /** The SVG backdrop filter: the measured bend per colour channel (LENS_DISPERSION), cut to the shape. */
+    refraction(width, height, radius, t) {
         if (!filterHost || !filterHost.isConnected) {
             filterHost = node('svg', { 'width': 0, 'height': 0, 'aria-hidden': 'true', 'class': 'lab-lens-filters' });
             filterHost.style.position = 'absolute';
@@ -148,36 +153,32 @@ export class GlassLensLayer {
         let filter = this.filter;
         if (!filter || !filter.isConnected) {
             filter = node('filter', { 'id': this.id, 'color-interpolation-filters': 'sRGB', 'filterUnits': 'userSpaceOnUse', 'x': 0, 'y': 0 });
-            const lift = node('feComponentTransfer', { in: 'tone', result: 'lifted' });
-            for (const channel of ['feFuncR', 'feFuncG', 'feFuncB'])
-                lift.append(node(channel, { type: 'linear', slope: 1, intercept: 0 }));
-            filter.append(node('feImage', { result: 'map', preserveAspectRatio: 'none', x: 0, y: 0 }), node('feDisplacementMap', { in: 'SourceGraphic', in2: 'map', xChannelSelector: 'R', yChannelSelector: 'G', scale: 0, result: 'bent' }), node('feColorMatrix', { in: 'bent', type: 'saturate', values: 1, result: 'tone' }), lift, 
-            // The edge mask E (the map's blue) as grey: x + k1·x·E + k3·E (material.ts glassEdgeTerms).
-            node('feColorMatrix', { in: 'map', type: 'matrix', values: '0 0 1 0 0  0 0 1 0 0  0 0 1 0 0  0 0 0 0 1', result: 'edge' }), node('feComposite', { in: 'lifted', in2: 'edge', operator: 'arithmetic', k1: 0, k2: 1, k3: 0, k4: 0, result: 'edged' }), 
+            const bend = (result) => node('feDisplacementMap', { in: 'SourceGraphic', in2: 'map', xChannelSelector: 'R', yChannelSelector: 'G', scale: 0, result });
+            // One channel of a bent copy, opaque: the three add up to the colour.
+            const channel = (input, keep, result) => {
+                const rows = [0, 1, 2].map((row) => [0, 1, 2, 3, 4].map((column) => Number(row === keep && column === keep)).join(' '));
+                return node('feColorMatrix', { in: input, type: 'matrix', values: [...rows, '0 0 0 1 0'].join('  '), result });
+            };
+            filter.append(node('feImage', { result: 'map', preserveAspectRatio: 'none', x: 0, y: 0 }), bend('red'), bend('green'), bend('blue'), channel('red', 0, 'r'), channel('green', 1, 'g'), channel('blue', 2, 'b'), node('feComposite', { in: 'r', in2: 'g', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'rg' }), node('feComposite', { in: 'rg', in2: 'b', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'bent' }), 
             // Chromium ignores clip-path on an SVG backdrop filter: the map's alpha cuts the shape.
-            node('feComposite', { in: 'edged', in2: 'map', operator: 'in' }));
+            node('feComposite', { in: 'bent', in2: 'map', operator: 'in' }));
             filterHost.append(filter);
             this.filter = filter;
         }
         const grid = (value) => Math.max(MAP_GRID, Math.round(value / MAP_GRID) * MAP_GRID);
         const mapWidth = grid(width);
         const mapHeight = grid(height);
-        const map = lensMap(mapWidth, mapHeight, Math.round(Math.min(radius * (mapHeight / height), mapWidth / 2, mapHeight / 2)), Math.max(0, magnify));
-        const [image, bent, tone, lift, , edged] = Array.from(filter.children);
+        const map = lensMap(mapWidth, mapHeight, Math.round(Math.min(radius * (mapHeight / height), mapWidth / 2, mapHeight / 2)), this.kind);
+        const [image, red, green, blue] = Array.from(filter.children);
         for (const element of [filter, image]) {
             setAttribute(element, 'width', width.toFixed(2));
             setAttribute(element, 'height', height.toFixed(2));
         }
         setAttribute(image, 'href', map.href);
-        // The bend and the magnification both scale with the map's scale: the lens eases them in.
-        setAttribute(bent, 'scale', (map.scale * t).toFixed(2));
-        setAttribute(tone, 'values', material.saturate.toFixed(4));
-        for (const channel of Array.from(lift.children)) {
-            setAttribute(channel, 'slope', material.gain.toFixed(4));
-            setAttribute(channel, 'intercept', material.offset.toFixed(4));
-        }
-        setAttribute(edged, 'k1', material.k1.toFixed(4));
-        setAttribute(edged, 'k3', material.k3.toFixed(4));
+        // The bend scales with the map's scale: the lens eases it in.
+        setAttribute(red, 'scale', (map.scale * t * (1 - LENS_DISPERSION)).toFixed(2));
+        setAttribute(green, 'scale', (map.scale * t).toFixed(2));
+        setAttribute(blue, 'scale', (map.scale * t * (1 + LENS_DISPERSION)).toFixed(2));
         return `url(#${this.id})`;
     }
     hide() {

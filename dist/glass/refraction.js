@@ -176,26 +176,56 @@ function sampleDisplacementMap(logicalWidth, logicalHeight, w, h, clusters, spac
     return { width: w, height: h, data, scale: 2 * largest };
 }
 /**
- * Where a lens magnifying by `magnify` (0 none, 0.2 = 1.2×) about (`cx`, `cy`) samples the backdrop
- * for the point (`px`, `py`), as an offset (px): the point pulled toward the centre by
- * `1 / (1 + magnify)`. Flutter's `glass_refraction.frag` (`uMagnify`) does the same.
+ * How iOS 26.2's control lenses bend what is behind them, measured with phase-shifted fringes under
+ * held stock controls (research/liquid-glass/LENS-MEASURED.md §2). The shift (px, positive = the
+ * pixel shows the backdrop from further inside) at depth `d` px from the outline:
+ * - pill: a 1 px inward rim, then outward (it shows the backdrop from outside its edge, so lines
+ *   crowd toward the rim): rising 1 px per px to 4.3 px at 5 px deep, then fading as
+ *   `exp(-(d - 5) / 10.5)`, leaning away from the centre (`radial`: the direction is the outline's
+ *   normal plus `radial` × the offset from the centre over the half size), so lines bow along its
+ *   top and bottom. The flat middle neither bends nor magnifies.
+ * - thumb: inward, 7.1 px over the outer 1 px, then `7.1 · (1 - (d - 1) / 6.5)^2.2` to nothing at
+ *   7.5 px.
+ * Both are the same in light and dark appearance.
  */
-export function magnifyOffset(px, py, cx, cy, magnify) {
-    const k = magnify > 0 ? 1 / (1 + magnify) - 1 : 0;
-    // + 0 keeps the centre (and no magnification) at +0, never -0.
-    return { x: (px - cx) * k + 0, y: (py - cy) * k + 0 };
+export const LENS_BEND = {
+    pill: { rim: 6, rimWidth: 0.6, peak: 4.3, at: 5, decay: 10.5, radial: 1.5 },
+    thumb: { peak: 7.1, at: 1, reach: 6.5, power: 2.2 },
+};
+/** Colour split of a control lens's bend: red bends this much less than green and blue this much
+ * more (iOS 26.2: 0.94 and 1.05 across the pill's strongest band), the rainbow along its rim. */
+export const LENS_DISPERSION = 0.06;
+/** Raster work allowed for one lens map: up to 3 samples per px on a control lens. */
+export const LENS_MAP_PIXELS = 65536;
+/** The bend (px, positive inward) of a `kind` lens at depth `d` px inside its outline. */
+export function lensBend(kind, d) {
+    if (!(d >= 0))
+        return 0;
+    if (kind === 'thumb') {
+        const { peak, at, reach, power } = LENS_BEND.thumb;
+        if (d <= at)
+            return peak;
+        const t = 1 - (d - at) / reach;
+        return t > 0 ? peak * t ** power : 0;
+    }
+    const { rim, rimWidth, peak, at, decay } = LENS_BEND.pill;
+    if (d < rimWidth)
+        return rim * (1 - d / rimWidth);
+    if (d < at)
+        return -peak * Math.min(1, (d - rimWidth) / (at - 1 - rimWidth));
+    return -peak * Math.exp(-(d - at) / decay);
 }
 /**
- * The map of a control's lens (lens-layer.ts): one `shape` (its own box, at 0, 0) that bends at its
- * rim (the gentle profile × `strength`) and magnifies everything inside by `magnify` about its
- * centre. Same encoding as `displacementMap` (red/green = shift as a share of `scale / 2`, blue =
- * the edge mask, alpha = the shape), sampled at most `GLASS_LIVE_MAP_PIXELS`. Both effects are
+ * The map of a control's lens (lens-layer.ts): one `shape` (its own box, at 0, 0) bending by
+ * `lensBend` along its outline's normal. Same encoding as `displacementMap` (red/green = shift as a
+ * share of `scale / 2`, alpha = the shape), sampled at most `LENS_MAP_PIXELS`. The bend is
  * linear in `scale`, so an owner eases the lens in by scaling `scale` alone.
  */
-export function lensDisplacementMap(shape, magnify, strength = 1) {
+export function lensDisplacementMap(shape, kind) {
     const logicalWidth = Number.isFinite(shape.width) ? Math.max(1, shape.width) : 1;
     const logicalHeight = Number.isFinite(shape.height) ? Math.max(1, shape.height) : 1;
-    const density = Math.min(1, Math.sqrt(GLASS_LIVE_MAP_PIXELS / logicalWidth / logicalHeight));
+    // The pill's inward rim is under 1 px wide: sample up to 3 map pixels per px.
+    const density = Math.min(3, Math.sqrt(LENS_MAP_PIXELS / logicalWidth / logicalHeight));
     const w = Math.max(1, Math.floor(logicalWidth * density));
     const h = Math.max(1, Math.floor(logicalHeight * density));
     const pixelWidth = logicalWidth / w;
@@ -203,12 +233,8 @@ export function lensDisplacementMap(shape, magnify, strength = 1) {
     const coverageWidth = Math.max(pixelWidth, pixelHeight);
     const box = { x: 0, y: 0, width: logicalWidth, height: logicalHeight, radius: shape.radius, cornerExponent: shape.cornerExponent };
     const distance = prepareUnionDistance([box], 0);
-    const side = Math.min(logicalWidth, logicalHeight);
-    const band = Math.min(GLASS_BEZEL * refractionScale(side), side / 2);
-    const shift = gentleRefractionShift(side) * Math.max(0, strength);
-    const zoom = Math.max(0, magnify);
-    const cx = logicalWidth / 2;
-    const cy = logicalHeight / 2;
+    // A small lens can't bend further than half its shorter side.
+    const limit = Math.min(logicalWidth, logicalHeight) / 2;
     const shifts = new Float32Array(w * h * 2);
     const data = new Uint8ClampedArray(w * h * 4);
     let largest = 0;
@@ -221,26 +247,20 @@ export function lensDisplacementMap(shape, magnify, strength = 1) {
             data[i * 4 + 3] = Math.round(Math.min(1, Math.max(0, 0.5 - d / coverageWidth)) * 255);
             if (d >= coverageWidth / 2)
                 continue;
-            const inside = Math.min(d, -1e-3);
-            const zoomed = magnifyOffset(px, py, cx, cy, zoom);
-            let dx = zoomed.x;
-            let dy = zoomed.y;
-            if (inside > -band) {
-                const gx = distance(px + 1, py) - distance(px - 1, py);
-                const gy = distance(px, py + 1) - distance(px, py - 1);
-                const length = Math.hypot(gx, gy) || 1;
-                const bend = refractionAt(inside, gx / length, gy / length, band);
-                dx += bend.x * shift;
-                dy += bend.y * shift;
-                const cosine = (gx * DEFAULT_GLASS_LIGHT.x + gy * DEFAULT_GLASS_LIGHT.y) / length;
-                let edge = 0;
-                for (let k = 0; k < 4; k++)
-                    edge += edgeMask(-d + ((k + 0.5) / 4 - 0.5) * coverageWidth, cosine);
-                data[i * 4 + 2] = Math.round((edge / 4) * 255);
-            }
-            shifts[i * 2] = dx;
-            shifts[i * 2 + 1] = dy;
-            largest = Math.max(largest, Math.abs(dx), Math.abs(dy));
+            const bend = Math.max(-limit, Math.min(limit, lensBend(kind, Math.max(0, -d))));
+            if (!bend)
+                continue;
+            const gx = distance(px + 1, py) - distance(px - 1, py);
+            const gy = distance(px, py + 1) - distance(px, py - 1);
+            const g = Math.hypot(gx, gy) || 1;
+            const lean = kind === 'pill' ? LENS_BEND.pill.radial : 0;
+            const nx = gx / g + (lean * (px - logicalWidth / 2)) / (logicalWidth / 2);
+            const ny = gy / g + (lean * (py - logicalHeight / 2)) / (logicalHeight / 2);
+            const length = Math.hypot(nx, ny) || 1;
+            // Positive bends sample inward: against the outward direction.
+            shifts[i * 2] = (-nx / length) * bend;
+            shifts[i * 2 + 1] = (-ny / length) * bend;
+            largest = Math.max(largest, Math.abs(shifts[i * 2]), Math.abs(shifts[i * 2 + 1]));
         }
     for (let i = 0; i < w * h; i++) {
         data[i * 4] = largest > 0 ? Math.round(128 + (shifts[i * 2] / largest) * 127) : 128;

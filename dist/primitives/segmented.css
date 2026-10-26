@@ -340,8 +340,8 @@ html[data-lab-theme]:is([data-lab-motion='reduced'], [data-lab-motion='none']) :
 }
 
 /* The pill: filled at rest; pressed or dragged the fill fades out under the glass lens laid over the
-options (.lab-segmented-lens, glass/lens-layer.ts), it swells with --lab-segmented-press and casts
-the lens's shadow, like a pressed GlassContainer bubble. */
+options (.lab-segmented-lens, glass/lens-layer.ts, which casts the shadow) and it swells with
+--lab-segmented-press, like a pressed GlassContainer bubble. */
 .lab-segmented-pill {
   position: absolute;
   left: 0;
@@ -351,7 +351,6 @@ the lens's shadow, like a pressed GlassContainer bubble. */
   pointer-events: none;
   border-radius: calc(var(--lab-segmented-option) / 2 * var(--lab-capsule-scale, 1) * var(--lab-segmented-press, 1));
   corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--lab-glass-shadow-color) calc(var(--lab-lens) * 100%), transparent);
   will-change: transform;
 }
 .lab-segmented-pill[data-hidden] {

@@ -239,3 +239,70 @@ List<double> glassBackdropMatrix(GlassMaterial material) {
             : s[row * 5 + col] * g,
   ];
 }
+
+/// One alpha per side of a lens's outline.
+typedef LensSides = ({double top, double side, double bottom});
+
+/// The material of a control lens, from held iOS 26.2 controls over flat white, grey and black
+/// backdrops (`research/liquid-glass/LENS-MEASURED.md` §3), the twin of the web kit's
+/// `lensMaterial`. Not the container material: lenses never blur, lift or saturate the backdrop.
+/// Over it, in this order: white at `veil`; black from `shade.top` at the top edge to
+/// `shade.middle` by half the height (flat below); the rim, white along the inner edge per side,
+/// `band` over 1 px and `edge` over its outermost third; the thumb's dark top line, `line.inner`
+/// over its inner 1 px and `line.outer` over 0.5 px outside; then the `shadow` ([lensShadowDy],
+/// [lensShadowBlur]). No hairline: iOS draws none around control lenses.
+typedef LensMaterial = ({
+  double veil,
+  ({double top, double middle}) shade,
+  LensSides band,
+  LensSides edge,
+  ({double inner, double outer}) line,
+  double shadow,
+});
+
+/// The shadow every control lens casts: black at [lensShadowAlpha], [lensShadowDy] px down,
+/// blurred by [lensShadowBlur] (a CSS blur radius: sigma is half of it). The web's `LENS_SHADOW`.
+const double lensShadowDy = 6;
+const double lensShadowBlur = 11;
+const double lensShadowAlpha = 0.13;
+
+LensSides _sides(double top, double side, double bottom) =>
+    (top: top, side: side, bottom: bottom);
+
+/// A pill (segmented control, tab bar: [pill] true) or thumb (slider, switch) lens's material at
+/// [lens] (0 rest … 1 glass), every alpha eased in with it.
+LensMaterial lensMaterial({
+  required bool pill,
+  required double lens,
+  required bool dark,
+}) {
+  final t = lens.isFinite ? lens.clamp(0.0, 1.0) : 0.0;
+  final LensSides band, edge;
+  final double veil, top, middle, inner, outer;
+  if (pill) {
+    veil = 0;
+    top = 0.105;
+    middle = 0.035;
+    band = dark ? _sides(0.2, 0.2, 0.2) : _sides(0.27, 0.27, 0.27);
+    edge = dark ? _sides(1, 1, 1) : _sides(0.45, 0.45, 0.45);
+    inner = 0;
+    outer = 0;
+  } else {
+    veil = 0.09;
+    top = 0.14;
+    middle = 0.04;
+    band = dark ? _sides(0, 0.15, 0.15) : _sides(0, 0.25, 0.08);
+    edge = dark ? _sides(0, 0.18, 0.18) : _sides(0, 0.3, 0.1);
+    inner = dark ? 0.24 : 0.35;
+    outer = dark ? 0.31 : 0.23;
+  }
+  LensSides eased(LensSides s) => _sides(s.top * t, s.side * t, s.bottom * t);
+  return (
+    veil: veil * t,
+    shade: (top: top * t, middle: middle * t),
+    band: eased(band),
+    edge: eased(edge),
+    line: (inner: inner * t, outer: outer * t),
+    shadow: lensShadowAlpha * t,
+  );
+}

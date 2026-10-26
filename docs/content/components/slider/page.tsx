@@ -86,13 +86,14 @@ function Overview() {
           Pressing Escape during a drag cancels it and returns to the value from before the drag.
         </p>
         <p>
-          While pressed or dragged the thumb becomes a glass lens, the switch’s and the segmented
-          control’s: 1.4× larger, stretched along the drag with its speed, with the touch glow under the
-          finger, springing back when released. The lens is real glass over the track, never blurred:
-          clear glass’s lift, the rim light and the dark hairline outside it. With <C>liquid</C> glass it
-          also bends at its rim and magnifies the track under it (1.18×) where the browser can bend a
-          backdrop (Chromium); <C>transparent</C> glass is a plain clear lens. Reduced motion turns it
-          off; reduced transparency, more contrast and the <C>solid</C> glass style keep a solid thumb.
+          While pressed or dragged the thumb becomes a glass lens, as iOS 26.2 draws it (measured from held
+          stock controls): 1.54× larger, stretched along the drag with its speed, springing back when
+          released. The lens is clear glass over the track: never blurred, brightened or magnified, a
+          faint white veil, a little darker along its top, a rim light on its sides, a dark line on its
+          top edge and a soft shadow, with no touch glow. With <C>liquid</C> glass it also bends the
+          track inward over its outer 7px, where the browser can bend a backdrop (Chromium);{' '}
+          <C>transparent</C> glass keeps it unbent. Reduced motion turns it off; reduced transparency,
+          more contrast and the <C>solid</C> glass style keep a solid thumb.
         </p>
       </Section>
 

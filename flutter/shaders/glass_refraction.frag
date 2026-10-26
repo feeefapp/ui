@@ -33,9 +33,11 @@ uniform vec4 uBlendB;
 // Toward the light (unit, y down) and the edge terms k1, k3.
 uniform vec2 uLight;
 uniform vec2 uEdge;
-// A lens's magnification beyond 1 (0 none, 0.2 = 1.2x), about the first shape's centre: a lifted
-// control lens enlarges what it covers (iOS 27's tab and segmented lens).
-uniform float uMagnify;
+// 0: container glass (the bezel profile above). 1 or 2: a control lens over the first shape, a
+// pill (segmented control, tab bar) or a thumb (slider, switch), bent by the profile measured on
+// iOS 26.2 (glass/refraction.dart lensBend, LENS-MEASURED.md §2) eased in by uShift (0 … 1), with
+// the colour split lensDispersion; uBezel and the edge terms are unused.
+uniform float uLens;
 
 uniform sampler2D uTexture;
 
@@ -93,9 +95,62 @@ float unionDistance(vec2 p) {
   return d;
 }
 
+// The measured lens bend (px, positive inward) at depth d px: glass/refraction.dart lensBend.
+float lensBend(bool thumb, float d) {
+  if (thumb) {
+    if (d <= 1.0) return 7.1;
+    float t = 1.0 - (d - 1.0) / 6.5;
+    return t > 0.0 ? 7.1 * pow(t, 2.2) : 0.0;
+  }
+  if (d < 0.6) return 6.0 * (1.0 - d / 0.6);
+  if (d < 5.0) return -4.3 * min(1.0, (d - 0.6) / (5.0 - 1.0 - 0.6));
+  return -4.3 * exp(-(d - 5.0) / 10.5);
+}
+
+vec4 sampleAt(vec2 frag) {
+  vec2 uv = frag / uSize;
+#ifdef IMPELLER_TARGET_OPENGLES
+  uv.y = 1.0 - uv.y;
+#endif
+  return texture(uTexture, clamp(uv, vec2(0.0), vec2(1.0)));
+}
+
+// A control lens: the measured bend along the outline's normal (the pill's leaning away from the
+// centre), red bending 6 % less and blue 6 % more than green. No colour change: the lens's
+// material is painted over it.
+vec4 lens(vec2 frag, vec2 p) {
+  float d = boxDistance(p, uRect0, uRadiusA.x);
+  if (d >= 0.0 || uShift <= 0.0) return sampleAt(frag);
+  bool thumb = uLens > 1.5;
+  vec2 e = vec2(0.5, 0.0);
+  vec2 n = vec2(
+    boxDistance(p + e.xy, uRect0, uRadiusA.x) - boxDistance(p - e.xy, uRect0, uRadiusA.x),
+    boxDistance(p + e.yx, uRect0, uRadiusA.x) - boxDistance(p - e.yx, uRect0, uRadiusA.x)
+  );
+  float len = length(n);
+  if (len < 1e-5) return sampleAt(frag);
+  vec2 dir = n / len;
+  vec2 hs = uRect0.zw * 0.5;
+  if (!thumb) dir += 1.5 * (p - (uRect0.xy + hs)) / max(hs, vec2(1e-5));
+  float dirLen = length(dir);
+  if (dirLen < 1e-5) return sampleAt(frag);
+  // A small lens can't bend further than half its shorter side.
+  float limit = min(hs.x, hs.y);
+  float bend = clamp(lensBend(thumb, -d), -limit, limit) * uShift;
+  vec2 offset = -dir / dirLen * bend * uDpr;
+  vec4 r = sampleAt(frag + offset * 0.94);
+  vec4 g = sampleAt(frag + offset);
+  vec4 b = sampleAt(frag + offset * 1.06);
+  return vec4(r.r, g.g, b.b, g.a);
+}
+
 void main() {
   vec2 frag = FlutterFragCoord().xy;
   vec2 p = (frag - uOrigin) / uDpr;
+  if (uLens > 0.5) {
+    fragColor = lens(frag, p);
+    return;
+  }
   float d = unionDistance(p);
   vec2 offset = vec2(0.0);
   float edge = 0.0;
@@ -115,15 +170,7 @@ void main() {
       }
     }
   }
-  if (d < 0.0 && uMagnify > 0.0) {
-    vec2 centre = uRect0.xy + uRect0.zw * 0.5;
-    offset += (centre + (p - centre) / (1.0 + uMagnify) - p) * uDpr;
-  }
-  vec2 uv = (frag + offset) / uSize;
-#ifdef IMPELLER_TARGET_OPENGLES
-  uv.y = 1.0 - uv.y;
-#endif
-  vec4 colour = texture(uTexture, clamp(uv, vec2(0.0), vec2(1.0)));
+  vec4 colour = sampleAt(frag + offset);
   // Premultiplied: the backdrop is opaque inside the glass, so treat rgb as straight colour.
   vec3 x = colour.rgb;
   colour.rgb = clamp(x + uEdge.x * x * edge + uEdge.y * edge * colour.a, vec3(0.0), vec3(colour.a));

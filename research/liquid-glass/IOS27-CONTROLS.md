@@ -243,11 +243,11 @@ Every value is a token. Confidence: **H** = documented by Apple, **M** = WWDC be
 | `tabBar.height` | 62 | Forum measurement, M |
 | `tabBar.itemWidth` | 58 | L |
 | `tabBar.label` | 10 semibold | L |
-| `tabBar.lens` | glass capsule, draggable, magnifies under the finger | WWDC25 219/284 behaviour, M |
+| `tabBar.lens` | glass capsule, draggable, ≈ 8 pt taller than the pill each side; the tab item under it grows ×1.2 (the glass itself doesn't magnify) | measured iOS 26.2 sim, LENS-MEASURED.md |
 | `segmented.height` | 32 (large: 49) | measured iOS 26.2 sim |
 | `segmented.inset` | 2 (thumb 28 high capsule; thumb width = segment − 2.67); label 13 semibold | measured iOS 26.2 sim |
 | `segmented.shape` | capsule track + capsule thumb | measured iOS 26.2 sim (agrees with Apple DTS forum reply) |
-| `segmented.thumbPress` | lift to glass lens, scale 1.15, stretch ≤ 1.25× along drag | WWDC25 284 behaviour, M; numbers L |
+| `segmented.thumbPress` | lift to a glass lens 120 × 44 over the 96 × 28 pill (+12 / +8 pt), no magnification, stretch along drag | measured iOS 26.2 sim, LENS-MEASURED.md |
 | `menu.morph` | open: frame spring response 0.30, damping 0.73 (bounce ≈ 0.27); width peaks +3–4 % at 0.21 s, settles ±0.5 pt by 0.41–0.50 s; content blurred inside the bubble from frame 1, contrast 90 % at ~0.21 s, sharp at ~0.35 s; close: content gone in ≤ 0.05 s, width spring response 0.31 / damping 0.67 (narrows ~16 pt past the button), height ease-out ~0.25 s, settled 0.6 s | measured iOS 26.2 sim (CONTROLS-MEASURED §8) |
 | `menu.material` | thicker glass (fill #dbdbdb light / #3c3c3c dark over #808080), background not dimmed | measured iOS 26.2 sim; behaviour WWDC25 219 |
 | `menu.rowHeight` | 42 (17 regular label); top/bottom padding 10 | measured iOS 26.2 sim |
@@ -271,10 +271,10 @@ Every value is a token. Confidence: **H** = documented by Apple, **M** = WWDC be
 | `textField.height` | 34 (`.roundedBorder`) | measured iOS 26.2 sim |
 | `textField.radius` | 5 (rounded rect, 1 px border), not a capsule | measured iOS 26.2 sim |
 | `switch.size` | 63 × 28 visible (layout frame 61 × 28) | measured iOS 26.2 sim |
-| `switch.thumb` | 37 × 24 capsule, inset 2; on colour #34c759 / #30d158 | measured iOS 26.2 sim (rest); press lens not measured |
+| `switch.thumb` | 37 × 24 capsule, inset 2; on colour #34c759 / #30d158; held: a ≈ 57 × 37 lens | measured iOS 26.2 sim, LENS-MEASURED.md |
 | `switch.onColor` | system green (accent optional) | HIG Toggles, H |
 | `slider.trackHeight` | 6 (capsule) | measured iOS 26.2 sim |
-| `slider.thumb` | 37 × 24 capsule (same as the switch thumb) at rest | measured iOS 26.2 sim (rest); drag lens not measured |
+| `slider.thumb` | 37 × 24 capsule (same as the switch thumb) at rest; held: a ≈ 57 × 37 lens (×1.54) | measured iOS 26.2 sim, LENS-MEASURED.md |
 | `slider.extras` | ticks, neutralValue, thumbless | WWDC25 284, H (API) |
 | `list.rowMin` | 44 | HIG, H |
 | `list.rowDefault` | 54 (one-line 17 regular) | measured iOS 26.2 sim |

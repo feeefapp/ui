@@ -95,9 +95,9 @@ switch is iOS's too: a --lab-switch-width × --lab-switch-height track with the 
   pointer-events: none;
 }
 .lab-slider-thumb {
-  /* The drawn thumb: pressed it grows by --lab-slider-press and stretches by --lab-slider-stretch
-  along its travel (px, logical, signed), narrowing a quarter of that across, like glass/press.ts
-  pressedShape; slider-motion.ts writes both. */
+  /* The drawn thumb: pressed it grows by --lab-slider-press (lens-model.ts LENS_THUMB_SCALE) and
+  stretches by --lab-slider-stretch along its travel (px, logical, signed), narrowing a quarter of
+  that across, like glass/press.ts pressedShape; slider-motion.ts writes both. */
   --lab-slider-thumb-drawn-width: calc(
     var(--lab-slider-thumb-width) * var(--lab-slider-press, 1) + var(--lab-slider-stretch-size, 0px)
   );
@@ -129,9 +129,8 @@ switch is iOS's too: a --lab-switch-width × --lab-switch-height track with the 
     transparent
   );
   color: var(--lab-ink);
-  box-shadow:
-    var(--lab-slider-thumb-rest-shadow),
-    0 4px 14px color-mix(in srgb, var(--lab-glass-shadow-color) calc(var(--lab-lens, 0) * 100%), transparent);
+  /* The lens casts its own shadow (lens.css). */
+  box-shadow: var(--lab-slider-thumb-rest-shadow);
   pointer-events: none;
 }
 /* The lens sits on the thumb's background, over the track it bends, under its content (renderThumb). */

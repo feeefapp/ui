@@ -17,7 +17,7 @@ import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
 import 'button.dart' show ControlSize;
 import '../glass/lens_glass.dart';
-import 'lens.dart';
+import '../glass/refraction.dart' show LensKind;
 import 'lens_model.dart';
 import 'slider_core.dart';
 import 'spring_core.dart';
@@ -485,13 +485,8 @@ class _SliderControlState extends State<_SliderControl>
       _pressed = true;
       _gesture = _Gesture(_current, local);
     });
-    _motion.pointer(_logical(local));
     if (!widget.switchMode) _move(local);
   }
-
-  /// [local] with x measured from the inline start (the glow and the switch drag are logical).
-  Offset _logical(Offset local) =>
-      _rtl ? Offset(_width - local.dx, local.dy) : local;
 
   /// How far (px) the switch thumb travels from off to on.
   double get _travel => math.max(0, _width - 2 * _inset);
@@ -608,9 +603,7 @@ class _SliderControlState extends State<_SliderControl>
                   ? _motion.position
                   : _motion.position.clamp(0.0, 1.0);
               final travel = width - 2 * geometry.inset;
-              _motion
-                ..travel = travel
-                ..thumbWidth = geometry.thumbWidth;
+              _motion.travel = travel;
               final fillWidth = geometry.inset + geometry.fillCap + travel * f;
               final trackTop = (height - geometry.trackHeight) / 2;
               final fillColor = widget.switchMode && !checked
@@ -631,7 +624,6 @@ class _SliderControlState extends State<_SliderControl>
                 stretch,
                 0,
               );
-              final pointer = _motion.pointerAt;
               return Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -692,18 +684,6 @@ class _SliderControlState extends State<_SliderControl>
                       ink: dark ? c.surface : c.ink,
                       thin: _thin,
                       lens: solid ? 0 : _motion.lens,
-                      lensPaint: LensPaint.of(c),
-                      // The glow under the pointer, in the thumb's own (physical) pixels.
-                      glowAt: pointer == null
-                          ? Offset(drawn.width / 2, drawn.height / 2)
-                          : Offset(
-                              _rtl
-                                  ? drawn.x + drawn.width - pointer.dx
-                                  : pointer.dx - drawn.x,
-                              pointer.dy - drawn.y,
-                            ),
-                      glowRadius: _motion.glowRadius,
-                      glowOpacity: _motion.glowOpacity,
                       child: widget.renderThumb?.call(state),
                     ),
                   ),
@@ -772,7 +752,6 @@ class _SliderControlState extends State<_SliderControl>
                 ? null
                 : (details) {
                     if (_gesture == null) return;
-                    _motion.pointer(_logical(details.localPosition));
                     if (!widget.switchMode) {
                       _move(details.localPosition);
                     } else if (_gesture!.moved) {
@@ -1013,17 +992,11 @@ class _Thumb extends StatelessWidget {
     required this.ink,
     required this.thin,
     required this.lens,
-    required this.lensPaint,
-    required this.glowAt,
-    required this.glowRadius,
-    required this.glowOpacity,
     this.child,
   });
-  final double radius, lens, glowRadius, glowOpacity;
+  final double radius, lens;
   final Color fill, ink;
   final bool thin;
-  final LensPaint lensPaint;
-  final Offset glowAt;
   final Widget? child;
 
   @override
@@ -1039,17 +1012,9 @@ class _Thumb extends StatelessWidget {
               ? const [(0, 1, 4, 0.18)]
               : const [(0, 1, 2, 0.20), (0, 3, 8, 0.12)],
           lens: lens.clamp(0.0, 1.0),
-          lensPaint: lensPaint,
         ),
       ),
-      GlassLens.fill(
-        radius: radius,
-        lens: lens,
-        magnify: lensMagnify,
-        glowAt: glowAt,
-        glowRadius: glowRadius,
-        glowOpacity: glowOpacity,
-      ),
+      GlassLens.fill(kind: LensKind.thumb, radius: radius, lens: lens),
       if (child != null)
         Center(
           child: IconTheme.merge(
@@ -1070,11 +1035,9 @@ class _ThumbPainter extends CustomPainter {
     required this.radius,
     required this.shadows,
     required this.lens,
-    required this.lensPaint,
   });
   final Color fill;
   final double radius, lens;
-  final LensPaint lensPaint;
 
   /// CSS box-shadows as (x, y, blur, black alpha); sigma = blur / 2.
   final List<(double, double, double, double)> shadows;
@@ -1095,7 +1058,7 @@ class _ThumbPainter extends CustomPainter {
         );
       }
     }
-    lensPaint.paintShadow(canvas, shape, lens);
+    // The lens casts its own shadow ([GlassLens]).
     if (rest > 0.001) {
       canvas.drawPath(
         shape,
@@ -1109,8 +1072,7 @@ class _ThumbPainter extends CustomPainter {
       old.fill != fill ||
       old.radius != radius ||
       old.shadows != shadows ||
-      old.lens != lens ||
-      old.lensPaint != lensPaint;
+      old.lens != lens;
 }
 
 class _Marks extends StatelessWidget {
@@ -1158,8 +1120,8 @@ class _Marks extends StatelessWidget {
 }
 
 /// One spring clock for fill, thumb travel and the thumb's glass lens (`useSliderMotion` in the
-/// web kit). While pressed the thumb turns into a lens ([lensThumbScale], [lensStretch], the touch
-/// glow) and springs back on release, on the segmented pill's springs. Reduced motion and a
+/// web kit). While pressed the thumb turns into a lens ([lensThumbScale], [lensStretch]) and
+/// springs back on release, on the segmented pill's springs. Reduced motion and a
 /// disabled control skip all of it.
 class _SliderMotion extends ChangeNotifier {
   _SliderMotion(TickerProvider vsync) {
@@ -1168,7 +1130,6 @@ class _SliderMotion extends ChangeNotifier {
 
   static final _snappy = springCoefficients(Springs.snappy);
   static final _bouncy = springCoefficients(Springs.bouncy);
-  static final _smooth = springCoefficients(Springs.smooth);
   static final _interactive = springCoefficients(Springs.interactive);
 
   late final Ticker _ticker;
@@ -1177,25 +1138,15 @@ class _SliderMotion extends ChangeNotifier {
   StepSpringState _press = (position: 1, velocity: 0);
   StepSpringState _lens = (position: 0, velocity: 0);
   StepSpringState _stretch = (position: 0, velocity: 0);
-  StepSpringState _glowRadius = (position: glassGlowStart, velocity: 0);
-  StepSpringState _glowOpacity = (position: 0, velocity: 0);
   bool _lensing = false;
   Duration? _last;
 
   /// The thumb's travel (px), set at layout: turns the speed into the lens stretch.
   double travel = 0;
 
-  /// The thumb's rest width (px), set at layout: the glow spreads to [glassGlowRadius] of it.
-  double thumbWidth = 0;
-
-  /// Where the pointer is (x from the inline start), for the glow; null when not pressed.
-  Offset? pointerAt;
-
   double get press => _press.position;
   double get lens => _lens.position.clamp(0.0, 1.0);
   double get stretch => _stretch.position;
-  double get glowRadius => _glowRadius.position;
-  double get glowOpacity => _glowOpacity.position.clamp(0.0, 1.0);
 
   double _target = 0;
   bool _tracking = false, _pressed = false, _thin = false;
@@ -1216,13 +1167,6 @@ class _SliderMotion extends ChangeNotifier {
     _thin = thin;
     _disabled = disabled;
     _reduced = reduced;
-    if (!pressed) pointerAt = null;
-    _wake();
-  }
-
-  /// Moves the touch glow to [at] (x from the inline start).
-  void pointer(Offset at) {
-    pointerAt = at;
     _wake();
   }
 
@@ -1261,7 +1205,6 @@ class _SliderMotion extends ChangeNotifier {
       _press = (position: 1, velocity: 0);
       _lens = (position: 0, velocity: 0);
       _stretch = (position: 0, velocity: 0);
-      _glowOpacity = (position: 0, velocity: 0);
       _lensing = false;
       _stop();
       return;
@@ -1281,16 +1224,9 @@ class _SliderMotion extends ChangeNotifier {
       position = next.position;
       velocity = next.velocity;
     }
-    // The lens: in on a press (the glow starts small under the finger and spreads), out on release.
-    if (_pressed && !_lensing) {
-      _lensing = true;
-      _glowRadius = (position: glassGlowStart, velocity: 0);
-      _glowOpacity = (position: 1, velocity: 0);
-    } else if (!_pressed) {
-      _lensing = false;
-    }
+    // The lens: in on a press, out on release.
+    _lensing = _pressed;
     final lensing = _lensing;
-    final glowTo = glassGlowRadius(thumbWidth);
     _press = _step(
       _press,
       lensing ? lensThumbScale : 1,
@@ -1305,23 +1241,18 @@ class _SliderMotion extends ChangeNotifier {
       dt,
       lensing ? _interactive : _bouncy,
     );
-    _glowRadius = _step(_glowRadius, glowTo, dt, _smooth);
-    _glowOpacity = _step(_glowOpacity, lensing ? 1 : 0, dt, _smooth);
     final moving =
         (position - _target).abs() > 0.0001 ||
         velocity.abs() > 0.002 ||
         !_resting(_press, lensing ? lensThumbScale : 1, 0.0005) ||
         !_resting(_lens, lensing ? 1 : 0, 0.002) ||
-        !_resting(_stretch, stretchTarget, 0.05) ||
-        !_resting(_glowOpacity, lensing ? 1 : 0, 0.005) ||
-        (lensing && !_resting(_glowRadius, glowTo, 0.5));
+        !_resting(_stretch, stretchTarget, 0.05);
     if (!moving) {
       position = _target;
       velocity = 0;
       _press = (position: lensing ? lensThumbScale : 1, velocity: 0);
       _lens = (position: lensing ? 1 : 0, velocity: 0);
       _stretch = (position: 0, velocity: 0);
-      _glowOpacity = (position: lensing ? 1 : 0, velocity: 0);
       _stop();
       return;
     }

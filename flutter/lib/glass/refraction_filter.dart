@@ -32,14 +32,17 @@ class GlassRefraction extends StatefulWidget {
     this.edge = (k1: 0, k3: 0),
     this.light = const Offset(-0.7071067811865476, -0.7071067811865476),
     this.strength = 1,
-    this.magnify = 0,
+    this.lens,
     this.backdropKey,
   });
 
-  /// Magnification beyond 1 about the first shape's centre (0 none, 0.2 = 1.2×): a lens.
-  final double magnify;
+  /// A control lens ([GlassLens]) over the first shape: bent by the measured [lensBend] profile
+  /// of its kind (with the colour split [lensDispersion]) instead of the container's bezel, eased
+  /// in by [strength] (0 … 1). Null for container glass.
+  final LensKind? lens;
 
-  /// Lens strength, a share of the measured shift (ThemeConfig `glassRefractionStrength`).
+  /// Lens strength, a share of the measured shift (ThemeConfig `glassRefractionStrength`); for a
+  /// control [lens], how much of its bend shows.
   final double strength;
 
   /// Shared by every cluster of one container: the engine reads the backdrop once for all of
@@ -143,7 +146,7 @@ class _GlassRefractionState extends State<GlassRefraction> {
       edge: widget.edge,
       light: widget.light,
       strength: widget.strength,
-      magnify: widget.magnify,
+      lens: widget.lens,
       dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
       backdropKey: widget.backdropKey,
     );
@@ -160,13 +163,14 @@ class _RefractionBackdrop extends LeafRenderObjectWidget {
     required this.edge,
     required this.light,
     required this.strength,
-    required this.magnify,
+    required this.lens,
     required this.dpr,
     required this.backdropKey,
   });
   final ui.FragmentProgram program;
   final GlassPath path;
-  final double spacing, blur, strength, magnify, dpr;
+  final double spacing, blur, strength, dpr;
+  final LensKind? lens;
   final List<double> colour;
   final ({double k1, double k3}) edge;
   final Offset light;
@@ -273,8 +277,14 @@ class _RenderRefraction extends RenderBox {
     set(origin.dy);
     set(config.dpr);
     set(bezel);
-    // The gentle lens (iOS 27): no mirrored band at the rim.
-    set(gentleRefractionShift(side) * config.strength);
+    // The gentle lens (iOS 27): no mirrored band at the rim. A control lens's bend is its own
+    // measured profile, eased in by the strength.
+    final lens = config.lens;
+    set(
+      lens != null
+          ? config.strength
+          : gentleRefractionShift(side) * config.strength,
+    );
     set(shapes.length.toDouble());
     for (var i = 0; i < GlassRefraction.maxShapes; i++) {
       final s = i < shapes.length ? shapes[i] : null;
@@ -293,30 +303,46 @@ class _RenderRefraction extends RenderBox {
     set(config.light.dy);
     set(config.edge.k1);
     set(config.edge.k3);
-    set(config.magnify);
+    set(switch (lens) {
+      null => 0,
+      LensKind.pill => 1,
+      LensKind.thumb => 2,
+    });
     // Two passes, never one composed filter: blur and colour first (sharing the container's
     // backdrop read), then the bend alone, which reads that result. Under a composed filter
     // Impeller may crop the shader's input to the clip and count FlutterFragCoord from the
     // crop's corner, depending on the engine; a plain shader pass always counts in the surface
     // frame, which is what [_origin] measures.
     final colour = ColorFilter.matrix(config.colour);
-    _base.layer = (_base.layer ?? BackdropFilterLayer())
-      // Without blur the colour reads the backdrop itself: no blur stage at all.
-      ..filter = config.blur > 0
-          ? ui.ImageFilter.compose(
-              outer: colour,
-              inner: ui.ImageFilter.blur(
-                sigmaX: config.blur,
-                sigmaY: config.blur,
-              ),
-            )
-          : colour
-      ..backdropKey = config.backdropKey;
-    context.pushLayer(_base.layer!, (context, offset) {}, offset);
+    if (config.blur <= 0 && _isIdentity(config.colour)) {
+      // Nothing to blur or tint (a control lens): the bend alone.
+      _base.layer = null;
+    } else {
+      _base.layer = (_base.layer ?? BackdropFilterLayer())
+        // Without blur the colour reads the backdrop itself: no blur stage at all.
+        ..filter = config.blur > 0
+            ? ui.ImageFilter.compose(
+                outer: colour,
+                inner: ui.ImageFilter.blur(
+                  sigmaX: config.blur,
+                  sigmaY: config.blur,
+                ),
+              )
+            : colour
+        ..backdropKey = config.backdropKey;
+      context.pushLayer(_base.layer!, (context, offset) {}, offset);
+    }
     // No shared key: the bend must see the blurred glass beneath it, not the page.
     _layer.layer = (_layer.layer ?? BackdropFilterLayer())
       ..filter = ui.ImageFilter.shader(_shader);
     context.pushLayer(_layer.layer!, (context, offset) {}, offset);
+  }
+
+  static bool _isIdentity(List<double> matrix) {
+    for (var i = 0; i < 20; i++) {
+      if (matrix[i] != (i % 6 == 0 ? 1.0 : 0.0)) return false;
+    }
+    return true;
   }
 
   @override

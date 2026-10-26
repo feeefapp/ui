@@ -66,10 +66,10 @@ function Overview() {
           stays where it is.
         </p>
         <p>
-          Pressed or dragged, the thumb turns into a glass lens like iOS 26’s: it grows to 1.4×{' '}
-          (<C>LENS_THUMB_SCALE</C>), stretches along a quick drag, shows the glass touch glow under the
-          finger and springs back on release. Reduced motion keeps the solid thumb with no swell,
-          stretch or glow; reduced transparency, more contrast and the <C>solid</C> glass style keep a
+          Pressed or dragged, the thumb turns into a glass lens measured from iOS 26.2’s: it grows to
+          1.54× (<C>LENS_THUMB_SCALE</C>, 37 × 24 → 57 × 37), stretches along a quick drag and springs
+          back on release. The lens is the same as the slider’s. Reduced motion keeps the solid thumb
+          with no swell or stretch; reduced transparency, more contrast and the <C>solid</C> glass style keep a
           solid thumb that still grows. On touch screens the switch keeps its 63 × 28px look and its hit
           area reaches 44px tall.
         </p>

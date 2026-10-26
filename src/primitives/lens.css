@@ -21,12 +21,12 @@ forced colours and glass: 'solid'. */
       rgb(0 0 0 / var(--lab-lens-shade-middle, 0)) 50%
     ),
     linear-gradient(rgb(255 255 255 / var(--lab-lens-veil, 0)) 0 0);
-  /* The thumb's dark top line (--lab-lens-line), then the rim light, white along the inner edge by
+  /* The thumb's dark top line (--lab-lens-line inside, --lab-lens-line-outer outside), the rim light, white along the inner edge by
   side: its outermost third (--lab-lens-rim-edge-*) and its 1 px (--lab-lens-rim-*), as inset
   shadows (a masked rim layer would make Chromium sample the backdrop at low resolution). Then
   material.ts LENS_SHADOW. */
   box-shadow:
-    inset 0 0.34px rgb(0 0 0 / var(--lab-lens-line, 0)),
+    inset 0 1px rgb(0 0 0 / var(--lab-lens-line, 0)),
     inset 0 0.34px rgb(255 255 255 / var(--lab-lens-rim-edge-top, 0)),
     inset 0 -0.34px rgb(255 255 255 / var(--lab-lens-rim-edge-bottom, 0)),
     inset 0.34px 0 rgb(255 255 255 / var(--lab-lens-rim-edge-side, 0)),
@@ -35,6 +35,7 @@ forced colours and glass: 'solid'. */
     inset 0 -1px rgb(255 255 255 / var(--lab-lens-rim-bottom, 0)),
     inset 1px 0 rgb(255 255 255 / var(--lab-lens-rim-side, 0)),
     inset -1px 0 rgb(255 255 255 / var(--lab-lens-rim-side, 0)),
+    0 -0.5px rgb(0 0 0 / var(--lab-lens-line-outer, 0)),
     0 6px 11px rgb(0 0 0 / var(--lab-lens-shadow, 0));
 }
 .lab-lens[data-hidden] {

@@ -3,32 +3,11 @@ import 'dart:ui' as ui show Gradient;
 
 import 'package:flutter/widgets.dart';
 
-import '../theme/tokens.dart';
-
-/// What a control's lens paints itself (the glass is [GlassLens]): the lift shadow under a pressed
-/// lens and the touch glow (also a pressed glass button's). The twin of the shadow and glow in the
-/// web kit's `lens.css`.
-class LensPaint {
-  const LensPaint({required this.shadow});
-
-  /// The lens paint of [c]: the glass shadow colour.
-  factory LensPaint.of(ColorTokens c) => LensPaint(shadow: c.glassShadowColor);
-
-  final Color shadow;
-
-  /// `0 4px 14px` in the glass shadow colour, at [lens] strength: a lifted lens casts it.
-  void paintShadow(Canvas canvas, Path shape, double lens) {
-    if (lens <= 0.001) return;
-    canvas.drawPath(
-      shape.shift(const Offset(0, 4)),
-      Paint()
-        ..color = shadow.withValues(alpha: shadow.a * lens)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7),
-    );
-  }
-
+/// The touch glow of a pressed glass button. Control lenses ([GlassLens]) have none, as on iOS
+/// 26.2, and paint their own shadow.
+abstract final class LensPaint {
   /// The touch glow ([color], `--lab-glass-glow`) centred on [at], [radius] px wide, at [opacity],
-  /// clipped to [shape]: a pressed lens or glass button.
+  /// clipped to [shape]: a pressed glass button.
   static void paintGlow(
     Canvas canvas,
     Path shape,
@@ -53,11 +32,4 @@ class LensPaint {
     );
     canvas.restore();
   }
-
-  @override
-  bool operator ==(Object other) =>
-      other is LensPaint && other.shadow == shadow;
-
-  @override
-  int get hashCode => shadow.hashCode;
 }

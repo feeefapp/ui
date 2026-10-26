@@ -202,15 +202,24 @@ export type LensKind = 'pill' | 'thumb'
  * pixel shows the backdrop from further inside) at depth `d` px from the outline:
  * - pill: a 1 px inward rim, then outward (it shows the backdrop from outside its edge, so lines
  *   crowd toward the rim): rising 1 px per px to 4.3 px at 5 px deep, then fading as
- *   `exp(-(d - 5) / 10.5)`. The flat middle neither bends nor magnifies.
+ *   `exp(-(d - 5) / 10.5)`, leaning away from the centre (`radial`: the direction is the outline's
+ *   normal plus `radial` × the offset from the centre over the half size), so lines bow along its
+ *   top and bottom. The flat middle neither bends nor magnifies.
  * - thumb: inward, 7.1 px over the outer 1 px, then `7.1 · (1 - (d - 1) / 6.5)^2.2` to nothing at
  *   7.5 px.
  * Both are the same in light and dark appearance.
  */
 export const LENS_BEND = {
-  pill: { rim: 6, rimWidth: 0.6, peak: 4.3, at: 5, decay: 10.5 },
+  pill: { rim: 6, rimWidth: 0.6, peak: 4.3, at: 5, decay: 10.5, radial: 1.5 },
   thumb: { peak: 7.1, at: 1, reach: 6.5, power: 2.2 },
 } as const
+
+/** Colour split of a control lens's bend: red bends this much less than green and blue this much
+ * more (iOS 26.2: 0.94 and 1.05 across the pill's strongest band), the rainbow along its rim. */
+export const LENS_DISPERSION = 0.06
+
+/** Raster work allowed for one lens map: up to 3 samples per px on a control lens. */
+export const LENS_MAP_PIXELS = 65536
 
 /** The bend (px, positive inward) of a `kind` lens at depth `d` px inside its outline. */
 export function lensBend(kind: LensKind, d: number) {
@@ -230,13 +239,14 @@ export function lensBend(kind: LensKind, d: number) {
 /**
  * The map of a control's lens (lens-layer.ts): one `shape` (its own box, at 0, 0) bending by
  * `lensBend` along its outline's normal. Same encoding as `displacementMap` (red/green = shift as a
- * share of `scale / 2`, alpha = the shape), sampled at most `GLASS_LIVE_MAP_PIXELS`. The bend is
+ * share of `scale / 2`, alpha = the shape), sampled at most `LENS_MAP_PIXELS`. The bend is
  * linear in `scale`, so an owner eases the lens in by scaling `scale` alone.
  */
 export function lensDisplacementMap(shape: GlassShape, kind: LensKind) {
   const logicalWidth = Number.isFinite(shape.width) ? Math.max(1, shape.width) : 1
   const logicalHeight = Number.isFinite(shape.height) ? Math.max(1, shape.height) : 1
-  const density = Math.min(1, Math.sqrt(GLASS_LIVE_MAP_PIXELS / logicalWidth / logicalHeight))
+  // The pill's inward rim is under 1 px wide: sample up to 3 map pixels per px.
+  const density = Math.min(3, Math.sqrt(LENS_MAP_PIXELS / logicalWidth / logicalHeight))
   const w = Math.max(1, Math.floor(logicalWidth * density))
   const h = Math.max(1, Math.floor(logicalHeight * density))
   const pixelWidth = logicalWidth / w
@@ -260,10 +270,14 @@ export function lensDisplacementMap(shape: GlassShape, kind: LensKind) {
     if (!bend) continue
     const gx = distance(px + 1, py) - distance(px - 1, py)
     const gy = distance(px, py + 1) - distance(px, py - 1)
-    const length = Math.hypot(gx, gy) || 1
-    // Positive bends sample inward: against the outward normal.
-    shifts[i * 2] = (-gx / length) * bend
-    shifts[i * 2 + 1] = (-gy / length) * bend
+    const g = Math.hypot(gx, gy) || 1
+    const lean = kind === 'pill' ? LENS_BEND.pill.radial : 0
+    const nx = gx / g + (lean * (px - logicalWidth / 2)) / (logicalWidth / 2)
+    const ny = gy / g + (lean * (py - logicalHeight / 2)) / (logicalHeight / 2)
+    const length = Math.hypot(nx, ny) || 1
+    // Positive bends sample inward: against the outward direction.
+    shifts[i * 2] = (-nx / length) * bend
+    shifts[i * 2 + 1] = (-ny / length) * bend
     largest = Math.max(largest, Math.abs(shifts[i * 2]), Math.abs(shifts[i * 2 + 1]))
   }
   for (let i = 0; i < w * h; i++) {

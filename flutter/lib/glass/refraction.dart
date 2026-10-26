@@ -54,3 +54,51 @@ double gentleRefractionShift(double side, [double bezel = glassBezel]) {
     math.min(glassRefraction * size, band * 0.8 / glassBezelPower),
   );
 }
+
+/// A control lens's kind: a pill (segmented control, tab bar) or a thumb (slider, switch).
+enum LensKind { pill, thumb }
+
+/// How iOS 26.2's control lenses bend what is behind them, measured with phase-shifted fringes
+/// under held stock controls (`research/liquid-glass/LENS-MEASURED.md` §2), the twin of the web
+/// kit's `LENS_BEND`. The pill: an inward rim of [lensPillRim] px over its outer
+/// [lensPillRimWidth] px, then outward (it shows the backdrop from outside its edge, so lines
+/// crowd toward the rim), rising to [lensPillPeak] px at [lensPillAt] px deep, then fading as
+/// `exp(-(d - at) / decay)`. The thumb: inward, [lensThumbPeak] px over its outer [lensThumbAt]
+/// px, then `peak · (1 - (d - at) / reach)^power`. Same in light and dark.
+const double lensPillRim = 6;
+const double lensPillRimWidth = 0.6;
+const double lensPillPeak = 4.3;
+const double lensPillAt = 5;
+const double lensPillDecay = 10.5;
+
+/// The pill bend's direction is the outline's normal plus this × the offset from the centre over
+/// the half size, normalised: vertical lines bow along its top and bottom.
+const double lensPillRadial = 1.5;
+const double lensThumbPeak = 7.1;
+const double lensThumbAt = 1;
+const double lensThumbReach = 6.5;
+const double lensThumbPower = 2.2;
+
+/// Colour split of a lens's bend: red bends this much less than green and blue this much more
+/// (the web kit's `LENS_DISPERSION`), the rainbow along its rim.
+const double lensDispersion = 0.06;
+
+/// The bend (px, positive inward) of a [kind] lens at depth [d] px inside its outline: the twin
+/// of the web kit's `lensBend`. `shaders/glass_refraction.frag` evaluates the same per pixel.
+double lensBend(LensKind kind, double d) {
+  if (!(d >= 0)) return 0;
+  if (kind == LensKind.thumb) {
+    if (d <= lensThumbAt) return lensThumbPeak;
+    final t = 1 - (d - lensThumbAt) / lensThumbReach;
+    return t > 0 ? lensThumbPeak * math.pow(t, lensThumbPower) : 0;
+  }
+  if (d < lensPillRimWidth) return lensPillRim * (1 - d / lensPillRimWidth);
+  if (d < lensPillAt) {
+    return -lensPillPeak *
+        math.min(
+          1.0,
+          (d - lensPillRimWidth) / (lensPillAt - 1 - lensPillRimWidth),
+        );
+  }
+  return -lensPillPeak * math.exp(-(d - lensPillAt) / lensPillDecay);
+}

@@ -7,21 +7,25 @@ import type { GlassShape } from '../glass/geometry.js';
  * content button's press scale and the invisible touch hit area. Shared with the Flutter twin
  * (`lens_model.dart`, vectors in `flutter/test/fixtures/lens.json`).
  */
-/** How much a pressed switch or slider thumb grows into its lens (iOS: about 1.3–1.5×,
- * research/liquid-glass/IOS27-CONTROLS.md §7). A segmented pill swells by `GLASS_PRESS_SCALE`. */
-export declare const LENS_THUMB_SCALE = 1.4;
-/** How far a liquid pill lens (segmented control, tab bar) lifts out past its pill on every side,
- * as a share of the pill's height: a 54 px tab pill becomes a ~70 px drop that sticks out of its
- * 62 px bar and reaches into the neighbouring tabs, as iOS 27's (FIGMA-27.md tab bar notes).
- * Flutter's `lensPillLift` matches. */
-export declare const LENS_PILL_LIFT = 0.15;
-/** How much a liquid lens enlarges what it covers at full lens (iOS 27: about 1.15–1.25×).
- * Flutter's `lensMagnify` matches. */
-export declare const LENS_MAGNIFY = 0.18;
+/** How much a pressed switch or slider thumb grows into its lens: iOS 26.2's 37 × 24 thumb becomes
+ * a 57 × 37 lens (research/liquid-glass/LENS-MEASURED.md §1). A segmented pill grows by
+ * `LENS_PILL_LIFT` instead. */
+export declare const LENS_THUMB_SCALE = 1.54;
+/** How far (px) a liquid pill lens (segmented control, tab bar) reaches past its pill: iOS 26.2's
+ * 96 × 28 segment pill becomes a 120 × 44 lens and a 54 px tab pill a ~72 px one, sticking out of
+ * its bar (LENS-MEASURED.md §1). Flutter's `lensPillLift` matches. */
+export declare const LENS_PILL_LIFT: {
+    readonly x: 12;
+    readonly y: 8;
+};
+/** How much a tab bar's selected item (icon and label) grows under the lens: iOS 26.2's goes from
+ * 26.7 to 32 pt wide (LENS-MEASURED.md §4). Segmented labels and the backdrop never grow: iOS
+ * lenses don't magnify. Flutter's `lensTabScale` matches. */
+export declare const LENS_TAB_SCALE = 1.2;
 /**
  * The glass a pill turns into at `lens` (0 rest … 1 glass): liquid glass lifts it out by
- * `LENS_PILL_LIFT` of its height on every side (corners grow with it), transparent glass keeps the
- * pill's own box. `radius` is the pill's corner radius.
+ * `LENS_PILL_LIFT` (corners grow with it), transparent glass keeps the pill's own box. `radius` is
+ * the pill's corner radius.
  */
 export declare function lensPillShape(pill: {
     x: number;
@@ -29,15 +33,9 @@ export declare function lensPillShape(pill: {
     width: number;
     height: number;
 }, radius: number, lens: number, liquid: boolean): GlassShape;
-/** How much a lens magnifies at `lens`: `LENS_MAGNIFY` eased in, only for liquid glass. */
-export declare function lensMagnify(lens: number, liquid: boolean): number;
-/**
- * The scale of a segmented control's selected-ink copy under the lens: the stand-in magnifier,
- * only for liquid glass whose lens can't bend (no SVG backdrop filters, refraction off). Where the
- * glass magnifies for real the copy stays 1, so nothing is enlarged twice; transparent glass never
- * magnifies.
- */
-export declare function lensInkZoom(lens: number, liquid: boolean, glassMagnifies: boolean): number;
+/** The scale of a tab bar's selected item under the lens (`LENS_TAB_SCALE` eased in); 1 for a
+ * segmented control and wherever no lens shows. */
+export declare function lensInkZoom(lens: number, tab: boolean): number;
 /** The lens stretches by the distance the pointer covers in this many seconds (rubber-banded). */
 export declare const LENS_STRETCH_TIME = 0.1;
 /** How far (px) a switch thumb can be pulled past either end, with rubber-band resistance. */

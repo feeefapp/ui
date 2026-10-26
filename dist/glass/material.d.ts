@@ -247,26 +247,136 @@ export declare function liftFilter(gain: number, offset: number): {
     brightness: number;
 };
 /**
- * The material of a control's lens at `lens` (0 rest … 1 glass): clear glass (tint 0), as iOS
- * lenses are, eased in from the bare backdrop. Saturation and the lift `gain · x + offset` go from
- * the identity to clear glass's, the edge terms, rim and hairline from nothing to theirs. Never
- * blurred: whatever the lens crosses stays readable. Flutter's `GlassLens` mixes the same.
+ * The material of a control lens (pill: segmented control, tab bar; thumb: slider, switch), from
+ * held iOS 26.2 controls over flat white, grey and black backdrops (LENS-MEASURED.md §3). Not the
+ * container material: lenses never blur or lift the backdrop. Over it, in this order:
+ * - `veil`: white laid at this alpha (the thumb's faint frost; the pill has none).
+ * - `shade`: black at `top` alpha along the top edge fading to `middle` by half the height and
+ *   staying there (the lens is a little darker on top, 0.89 → 0.965 on white).
+ * - `rim`: white along the inner edge, by side (`top`, `side`, `bottom`), per colour scheme: `band`
+ *   over 1 px and `edge` over its outermost third (iOS's is brightest at the outline and fades in
+ *   about 1 px). The pill's is even all round, the thumb's lit at its sides.
+ * - `line`: black along the thumb's top edge, `inner` over its inner 1 px and `outer` over 0.5 px
+ *   outside it: a dark line that shows on light backdrops.
+ * - `shadow`: black at `alpha` under it, `dy` px down, blurred by `blur` (CSS blur radius, px).
+ * There is no hairline: iOS draws none around control lenses.
  */
-export declare function lensMaterial(lens: number, scheme: 'light' | 'dark'): {
-    saturate: number;
-    gain: number;
-    offset: number;
-    k1: number;
-    k3: number;
+export declare const LENS_MATERIAL: {
+    readonly pill: {
+        readonly veil: 0;
+        readonly shade: {
+            readonly top: 0.105;
+            readonly middle: 0.035;
+        };
+        readonly rim: {
+            readonly light: {
+                readonly band: {
+                    readonly top: 0.27;
+                    readonly side: 0.27;
+                    readonly bottom: 0.27;
+                };
+                readonly edge: {
+                    readonly top: 0.45;
+                    readonly side: 0.45;
+                    readonly bottom: 0.45;
+                };
+            };
+            readonly dark: {
+                readonly band: {
+                    readonly top: 0.2;
+                    readonly side: 0.2;
+                    readonly bottom: 0.2;
+                };
+                readonly edge: {
+                    readonly top: 1;
+                    readonly side: 1;
+                    readonly bottom: 1;
+                };
+            };
+        };
+        readonly line: {
+            readonly light: {
+                readonly inner: 0;
+                readonly outer: 0;
+            };
+            readonly dark: {
+                readonly inner: 0;
+                readonly outer: 0;
+            };
+        };
+    };
+    readonly thumb: {
+        readonly veil: 0.09;
+        readonly shade: {
+            readonly top: 0.14;
+            readonly middle: 0.04;
+        };
+        readonly rim: {
+            readonly light: {
+                readonly band: {
+                    readonly top: 0;
+                    readonly side: 0.25;
+                    readonly bottom: 0.08;
+                };
+                readonly edge: {
+                    readonly top: 0;
+                    readonly side: 0.3;
+                    readonly bottom: 0.1;
+                };
+            };
+            readonly dark: {
+                readonly band: {
+                    readonly top: 0;
+                    readonly side: 0.15;
+                    readonly bottom: 0.15;
+                };
+                readonly edge: {
+                    readonly top: 0;
+                    readonly side: 0.18;
+                    readonly bottom: 0.18;
+                };
+            };
+        };
+        readonly line: {
+            readonly light: {
+                readonly inner: 0.35;
+                readonly outer: 0.23;
+            };
+            readonly dark: {
+                readonly inner: 0.24;
+                readonly outer: 0.31;
+            };
+        };
+    };
+};
+/** The shadow every control lens casts (LENS-MEASURED.md §3): 0.89 on white just under its bottom
+ * edge, gone ~12 px below, barely any above. */
+export declare const LENS_SHADOW: {
+    readonly dy: 6;
+    readonly blur: 11;
+    readonly alpha: 0.13;
+};
+/** A `kind` lens's material at `lens` (0 rest … 1 glass): every alpha eased in with it. */
+export declare function lensMaterial(kind: 'pill' | 'thumb', lens: number, scheme: 'light' | 'dark'): {
+    veil: number;
+    shade: {
+        top: number;
+        middle: number;
+    };
     rim: {
-        w0: number;
-        w1: number;
-        p: number;
-        width: number;
+        top: number;
+        side: number;
+        bottom: number;
     };
-    hairline: {
-        ring: number;
-        sliver: number;
+    rimEdge: {
+        top: number;
+        side: number;
+        bottom: number;
     };
+    line: {
+        inner: number;
+        outer: number;
+    };
+    shadow: number;
 };
 //# sourceMappingURL=material.d.ts.map

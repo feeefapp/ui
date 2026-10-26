@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+import 'dart:ui' show Rect;
+
 import '../glass/press.dart';
 import '../physics/spring.dart';
 
@@ -6,18 +9,53 @@ import '../physics/spring.dart';
 /// content button's press scale and the invisible touch hit area: the twin of `@feeef.dev/ui/primitives/lens-model` (vectors in
 /// `test/fixtures/lens.json`).
 
-/// How much a pressed switch or slider thumb grows into its lens (iOS: about 1.3–1.5×). A
-/// segmented pill swells by [glassPressScale].
-const double lensThumbScale = 1.4;
+/// How much a pressed switch or slider thumb grows into its lens: iOS 26.2's 37 × 24 thumb becomes
+/// a 57 × 37 lens (`research/liquid-glass/LENS-MEASURED.md` §1). A segmented pill grows by
+/// [lensPillLiftX] and [lensPillLiftY] instead.
+const double lensThumbScale = 1.54;
 
-/// How far a liquid pill lens (segmented control, tab bar) lifts out past its pill on every side,
-/// as a share of the pill's height: a 54 pt tab pill becomes a ~70 pt drop that sticks out of its
-/// 62 pt bar and reaches into the neighbouring tabs, as iOS 27's (Figma tab bar notes).
-const double lensPillLift = 0.15;
+/// How far (px) a liquid pill lens (segmented control, tab bar) reaches past its rest pill on the
+/// left and the right: iOS 26.2's 96 × 28 segment pill becomes a 120 × 44 lens (LENS-MEASURED.md
+/// §1).
+const double lensPillLiftX = 12;
 
-/// How much a liquid lens enlarges what it covers (the web kit's `LENS_MAGNIFY`): iOS 27 magnifies
-/// about 1.15–1.25×.
-const double lensMagnify = 0.18;
+/// How far (px) a liquid pill lens reaches past its rest pill above and below (its corners grow
+/// by the same): a 54 px tab pill becomes a ~72 px lens that sticks out of its bar.
+const double lensPillLiftY = 8;
+
+/// How much a tab bar's selected item (icon and label) grows under the lens: iOS 26.2's goes from
+/// 26.7 to 32 pt wide (LENS-MEASURED.md §4). Segmented labels and the backdrop never grow: iOS
+/// lenses don't magnify.
+const double lensTabScale = 1.2;
+
+/// The glass a pill [rect] at rest (corner [radius]) turns into at [lens] (0 rest … 1 glass):
+/// liquid glass lifts it out by [lensPillLiftX] / [lensPillLiftY] (corners grow with it),
+/// transparent glass keeps the pill's own box. The twin of the web kit's `lensPillShape`.
+({Rect rect, double radius}) lensPillShape(
+  Rect rect,
+  double radius,
+  double lens,
+  bool liquid,
+) {
+  final t = liquid && lens.isFinite ? lens.clamp(0.0, 1.0) : 0.0;
+  final x = lensPillLiftX * t;
+  final y = lensPillLiftY * t;
+  final r = math.min(radius, math.min(rect.width, rect.height) / 2);
+  return (
+    rect: Rect.fromLTRB(
+      rect.left - x,
+      rect.top - y,
+      rect.right + x,
+      rect.bottom + y,
+    ),
+    radius: r + y,
+  );
+}
+
+/// The scale of a tab bar's selected item under the lens ([lensTabScale] eased in by [lens]); 1
+/// for a segmented control ([tab] false). The twin of the web kit's `lensInkZoom`.
+double lensInkZoom(double lens, bool tab) =>
+    tab && lens.isFinite ? 1 + (lensTabScale - 1) * lens.clamp(0.0, 1.0) : 1;
 
 /// The lens stretches by the distance the pointer covers in this many seconds (rubber-banded).
 const double lensStretchTime = 0.1;

@@ -2,11 +2,11 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import {
-  LENS_MAGNIFY,
   LENS_PILL_LIFT,
+  LENS_TAB_SCALE,
+  LENS_THUMB_SCALE,
   SWITCH_OVERDRAG,
   lensInkZoom,
-  lensMagnify,
   lensPillShape,
   lensStretch,
   switchDragPosition,
@@ -14,8 +14,8 @@ import {
   touchOutset,
 } from '../src/primitives/lens-model.ts'
 import { GLASS_STRETCH_LIMIT } from '../src/glass/press.ts'
-import { glassHairline, glassMaterial, glassRim, lensMaterial } from '../src/glass/material.ts'
-import { lensDisplacementMap, magnifyOffset } from '../src/glass/refraction.ts'
+import { LENS_MATERIAL, LENS_SHADOW, lensMaterial } from '../src/glass/material.ts'
+import { lensBend, lensDisplacementMap } from '../src/glass/refraction.ts'
 import { lensFixture } from '../flutter/tool/lens_fixture.ts'
 
 test('the lens stretches with speed, signed and bounded', () => {
@@ -61,78 +61,84 @@ test('the shared fixture is current', () => {
   assert.deepEqual(file, JSON.parse(JSON.stringify(lensFixture())), 'run npx tsx flutter/tool/generate_lens_fixture.ts')
 })
 
-test('a liquid pill lens lifts out by LENS_PILL_LIFT of its height on every side', () => {
-  const pill = { x: 10, y: 4, width: 90, height: 54 }
-  const rest = lensPillShape(pill, 27, 0, true)
-  assert.deepEqual(rest, { ...pill, radius: 27 }, 'no lens, no lift')
-  const full = lensPillShape(pill, 27, 1, true)
-  const lift = 54 * LENS_PILL_LIFT
-  assert.ok(Math.abs(full.x - (10 - lift)) < 1e-9 && Math.abs(full.y - (4 - lift)) < 1e-9)
-  assert.ok(Math.abs(full.width - (90 + 2 * lift)) < 1e-9)
-  assert.ok(Math.abs(full.height - (54 + 2 * lift)) < 1e-9)
-  assert.ok(Math.abs(full.radius - (27 + lift)) < 1e-9, 'the capsule stays a capsule')
-  assert.ok(full.height > 62, 'a 54 px tab lens sticks out of its 62 px bar')
-  const half = lensPillShape(pill, 27, 0.5, true)
-  assert.ok(Math.abs(half.width - (90 + lift)) < 1e-9, 'eased in with the lens')
-  assert.deepEqual(lensPillShape(pill, 27, 1, false), { ...pill, radius: 27 }, 'transparent glass keeps the pill box')
-  assert.equal(lensPillShape(pill, 80, 0, true).radius, 27, 'the corner never passes half the shorter side')
+test('a liquid pill lens grows by LENS_PILL_LIFT, as iOS 26.2: 96 × 28 → 120 × 44', () => {
+  const pill = { x: 53, y: 184, width: 96, height: 28 }
+  assert.deepEqual(lensPillShape(pill, 14, 0, true), { ...pill, radius: 14 }, 'no lens, no lift')
+  assert.deepEqual(lensPillShape(pill, 14, 1, true), { x: 41, y: 176, width: 120, height: 44, radius: 22 })
+  const half = lensPillShape(pill, 14, 0.5, true)
+  assert.equal(half.width, 96 + LENS_PILL_LIFT.x)
+  assert.equal(half.height, 28 + LENS_PILL_LIFT.y)
+  assert.deepEqual(lensPillShape(pill, 14, 1, false), { ...pill, radius: 14 }, 'transparent glass keeps the pill box')
+  assert.equal(lensPillShape(pill, 80, 0, true).radius, 14, 'the corner never passes half the shorter side')
 })
 
-test('only liquid lenses magnify, and the ink copy never doubles real magnification', () => {
-  assert.equal(lensMagnify(1, true), LENS_MAGNIFY)
-  assert.equal(lensMagnify(0.5, true), LENS_MAGNIFY / 2)
-  assert.equal(lensMagnify(1, false), 0)
-  assert.equal(lensMagnify(2, true), LENS_MAGNIFY, 'clamped')
-  assert.equal(lensInkZoom(1, true, false), 1 + LENS_MAGNIFY, 'stand-in where the glass cannot bend')
-  assert.equal(lensInkZoom(1, true, true), 1, 'the glass magnifies: the copy does not')
-  assert.equal(lensInkZoom(1, false, false), 1, 'transparent glass never magnifies')
+test('a thumb lens is iOS 26.2\'s 57 × 37 over its 37 × 24 thumb', () => {
+  assert.ok(Math.abs(37 * LENS_THUMB_SCALE - 57) < 0.5 && Math.abs(24 * LENS_THUMB_SCALE - 37) < 0.5)
 })
 
-test('magnification samples toward the centre by 1 / (1 + m)', () => {
-  assert.deepEqual(magnifyOffset(50, 20, 50, 20, 0.2), { x: 0, y: 0 }, 'the centre stays')
-  const o = magnifyOffset(62, 20, 50, 20, 0.2)
-  assert.ok(Math.abs(50 + 12 / 1.2 - 62 - o.x) < 1e-9 && o.y === 0)
-  assert.deepEqual(magnifyOffset(62, 30, 50, 20, 0), { x: 0, y: 0 })
+test('only a tab bar\'s item grows under the lens', () => {
+  assert.equal(lensInkZoom(1, true), LENS_TAB_SCALE)
+  assert.equal(lensInkZoom(0.5, true), 1 + (LENS_TAB_SCALE - 1) / 2)
+  assert.equal(lensInkZoom(1, false), 1, 'segmented labels keep their size')
+  assert.equal(lensInkZoom(2, true), LENS_TAB_SCALE, 'clamped')
 })
 
-test('the lens map bends at the rim and magnifies inside, in one linear scale', () => {
-  const shape = { x: 0, y: 0, width: 80, height: 40, radius: 20 }
-  const flat = lensDisplacementMap(shape, 0)
-  const zoom = lensDisplacementMap(shape, LENS_MAGNIFY)
-  assert.equal(zoom.width, 80)
-  assert.equal(zoom.height, 40)
-  assert.ok(zoom.scale > flat.scale, 'magnifying shifts further')
-  const at = (map: typeof zoom, x: number, y: number) => {
-    const i = (y * map.width + x) * 4
+test('the bend follows the measured iOS profiles', () => {
+  // research/liquid-glass/LENS-MEASURED.md §2 (positive = from further inside).
+  const near = (a: number, b: number, tolerance: number) => assert.ok(Math.abs(a - b) <= tolerance, `${a} ≈ ${b}`)
+  assert.ok(lensBend('pill', 0.17) > 3, 'an inward rim')
+  near(lensBend('pill', 2.17), -2.0, 0.25)
+  near(lensBend('pill', 3.17), -3.0, 0.35)
+  near(lensBend('pill', 5), -4.3, 0.1)
+  near(lensBend('pill', 9.17), -3.0, 0.3)
+  near(lensBend('pill', 13.17), -2.0, 0.25)
+  near(lensBend('pill', 20.17), -1.0, 0.1)
+  near(lensBend('thumb', 0.5), 7.1, 0.1)
+  near(lensBend('thumb', 2.17), 4.6, 0.3)
+  near(lensBend('thumb', 4.17), 1.6, 0.3)
+  near(lensBend('thumb', 6.17), 0.3, 0.3)
+  assert.equal(lensBend('thumb', 8), 0, 'flat beyond 7.5 px')
+  assert.equal(lensBend('pill', -1), 0, 'nothing outside')
+})
+
+test('the lens map bends by lensBend and leans the pill away from its centre', () => {
+  const shape = { x: 0, y: 0, width: 120, height: 44, radius: 22 }
+  const map = lensDisplacementMap(shape, 'pill')
+  const density = map.width / 120
+  const at = (x: number, y: number) => {
+    const i = (Math.floor(y * density) * map.width + Math.floor(x * density)) * 4
     return { dx: ((map.data[i] - 128) / 127) * (map.scale / 2), dy: ((map.data[i + 1] - 128) / 127) * (map.scale / 2), alpha: map.data[i + 3] }
   }
-  // The flat middle: no bend without magnification; with it, it samples toward the centre.
-  assert.equal(at(flat, 55, 20).dx, 0)
-  const inner = at(zoom, 55, 20)
-  const expected = magnifyOffset(55.5, 20.5, 40, 20, LENS_MAGNIFY).x
-  assert.ok(Math.abs(inner.dx - expected) < zoom.scale / 254 + 1e-6, `${inner.dx} ≈ ${expected}`)
-  assert.ok(inner.dx < 0)
-  // The rim bends inward on top of that.
-  assert.ok(at(flat, 79, 20).dx < 0 && at(zoom, 79, 20).dx < at(zoom, 70, 20).dx)
-  // Alpha is the shape: inside opaque, the cut corner clear.
-  assert.equal(at(zoom, 40, 20).alpha, 255)
-  assert.equal(at(zoom, 0, 0).alpha, 0)
+  assert.ok(density > 1, 'finer than 1 sample per px: the rim is under 1 px wide')
+  // 5 px under the top edge the pill shows the backdrop from further out (up)...
+  const top = at(60, 5)
+  assert.ok(Math.abs(top.dy + 4.3) < 0.3, `dy ${top.dy}`)
+  // ...and leans sideways away from the centre, 36 px off it (iOS: about 1.5 px).
+  assert.ok(at(24, 5).dx < -1 && at(96, 5).dx > 1)
+  assert.ok(Math.abs(at(60, 5).dx) < 0.2)
+  assert.equal(at(60, 22).alpha, 255)
+  assert.equal(at(0.5, 0.5).alpha, 0, 'the cut corner')
+  const thumb = lensDisplacementMap({ x: 0, y: 0, width: 57, height: 37, radius: 18.5 }, 'thumb')
+  const td = thumb.width / 57
+  const ti = (Math.floor(2 * td) * thumb.width + Math.floor(28.5 * td)) * 4
+  assert.ok(((thumb.data[ti + 1] - 128) / 127) * (thumb.scale / 2) > 4, 'a thumb bends inward (down) under its top edge')
 })
 
-test('the lens material eases from the bare backdrop to clear glass', () => {
+test('the lens material: clear, a shade from the top, the measured rim and shadow', () => {
   for (const scheme of ['light', 'dark'] as const) {
-    const rest = lensMaterial(0, scheme)
-    assert.deepEqual([rest.saturate, rest.gain, rest.offset, rest.k1, rest.k3], [1, 1, 0, 0, 0])
-    assert.equal(rest.rim.w1, 0)
-    assert.equal(rest.hairline.ring, 0)
-    const glass = lensMaterial(1, scheme)
-    const clear = glassMaterial(0, scheme, 'small')
-    assert.equal(glass.gain, clear.gain)
-    assert.equal(glass.offset, clear.offset)
-    assert.equal(glass.saturate, clear.saturate)
-    assert.equal(glass.rim.w1, glassRim(0, scheme).w1)
-    assert.equal(glass.hairline.ring, glassHairline(0, scheme).ring)
-    const half = lensMaterial(0.5, scheme)
-    assert.ok(Math.abs(half.gain - (1 + clear.gain) / 2) < 1e-12)
+    for (const kind of ['pill', 'thumb'] as const) {
+      const rest = lensMaterial(kind, 0, scheme)
+      assert.equal(rest.veil, 0)
+      assert.equal(rest.shade.top, 0)
+      assert.equal(rest.shadow, 0)
+      const glass = lensMaterial(kind, 1, scheme)
+      assert.equal(glass.veil, LENS_MATERIAL[kind].veil)
+      assert.ok(glass.shade.top > glass.shade.middle, 'darker along the top')
+      assert.equal(glass.shadow, LENS_SHADOW.alpha)
+      assert.ok(glass.rimEdge.side >= glass.rim.side, 'brightest at the outline')
+      assert.equal(lensMaterial(kind, 0.5, scheme).shadow, LENS_SHADOW.alpha / 2)
+    }
   }
+  assert.equal(LENS_MATERIAL.pill.veil, 0, 'the pill never veils: black stays black')
+  assert.ok(lensMaterial('pill', 1, 'dark').rimEdge.top > lensMaterial('pill', 1, 'light').rimEdge.top, 'dark appearance lights the rim more')
 })

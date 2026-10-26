@@ -195,25 +195,55 @@ export function liftFilter(gain, offset) {
     return { contrast: gain / brightness, brightness };
 }
 /**
- * The material of a control's lens at `lens` (0 rest … 1 glass): clear glass (tint 0), as iOS
- * lenses are, eased in from the bare backdrop. Saturation and the lift `gain · x + offset` go from
- * the identity to clear glass's, the edge terms, rim and hairline from nothing to theirs. Never
- * blurred: whatever the lens crosses stays readable. Flutter's `GlassLens` mixes the same.
+ * The material of a control lens (pill: segmented control, tab bar; thumb: slider, switch), from
+ * held iOS 26.2 controls over flat white, grey and black backdrops (LENS-MEASURED.md §3). Not the
+ * container material: lenses never blur or lift the backdrop. Over it, in this order:
+ * - `veil`: white laid at this alpha (the thumb's faint frost; the pill has none).
+ * - `shade`: black at `top` alpha along the top edge fading to `middle` by half the height and
+ *   staying there (the lens is a little darker on top, 0.89 → 0.965 on white).
+ * - `rim`: white along the inner edge, by side (`top`, `side`, `bottom`), per colour scheme: `band`
+ *   over 1 px and `edge` over its outermost third (iOS's is brightest at the outline and fades in
+ *   about 1 px). The pill's is even all round, the thumb's lit at its sides.
+ * - `line`: black along the thumb's top edge, `inner` over its inner 1 px and `outer` over 0.5 px
+ *   outside it: a dark line that shows on light backdrops.
+ * - `shadow`: black at `alpha` under it, `dy` px down, blurred by `blur` (CSS blur radius, px).
+ * There is no hairline: iOS draws none around control lenses.
  */
-export function lensMaterial(lens, scheme) {
+export const LENS_MATERIAL = {
+    pill: {
+        veil: 0,
+        shade: { top: 0.105, middle: 0.035 },
+        rim: {
+            light: { band: { top: 0.27, side: 0.27, bottom: 0.27 }, edge: { top: 0.45, side: 0.45, bottom: 0.45 } },
+            dark: { band: { top: 0.2, side: 0.2, bottom: 0.2 }, edge: { top: 1, side: 1, bottom: 1 } },
+        },
+        line: { light: { inner: 0, outer: 0 }, dark: { inner: 0, outer: 0 } },
+    },
+    thumb: {
+        veil: 0.09,
+        shade: { top: 0.14, middle: 0.04 },
+        rim: {
+            light: { band: { top: 0, side: 0.25, bottom: 0.08 }, edge: { top: 0, side: 0.3, bottom: 0.1 } },
+            dark: { band: { top: 0, side: 0.15, bottom: 0.15 }, edge: { top: 0, side: 0.18, bottom: 0.18 } },
+        },
+        line: { light: { inner: 0.35, outer: 0.23 }, dark: { inner: 0.24, outer: 0.31 } },
+    },
+};
+/** The shadow every control lens casts (LENS-MEASURED.md §3): 0.89 on white just under its bottom
+ * edge, gone ~12 px below, barely any above. */
+export const LENS_SHADOW = { dy: 6, blur: 11, alpha: 0.13 };
+/** A `kind` lens's material at `lens` (0 rest … 1 glass): every alpha eased in with it. */
+export function lensMaterial(kind, lens, scheme) {
     const t = Number.isFinite(lens) ? Math.max(0, Math.min(1, lens)) : 0;
-    const clear = glassMaterial(0, scheme, 'small');
-    const edge = glassEdgeTerms(0, scheme, clear, 0);
-    const rim = glassRim(0, scheme);
-    const hairline = glassHairline(0, scheme);
+    const m = LENS_MATERIAL[kind];
+    const rim = m.rim[scheme];
     return {
-        saturate: 1 + (clear.saturate - 1) * t,
-        gain: 1 + (clear.gain - 1) * t,
-        offset: clear.offset * t,
-        k1: edge.k1 * t,
-        k3: edge.k3 * t,
-        rim: { ...rim, w0: rim.w0 * t, w1: rim.w1 * t },
-        hairline: { ring: hairline.ring * t, sliver: hairline.sliver * t },
+        veil: m.veil * t,
+        shade: { top: m.shade.top * t, middle: m.shade.middle * t },
+        rim: { top: rim.band.top * t, side: rim.band.side * t, bottom: rim.band.bottom * t },
+        rimEdge: { top: rim.edge.top * t, side: rim.edge.side * t, bottom: rim.edge.bottom * t },
+        line: { inner: m.line[scheme].inner * t, outer: m.line[scheme].outer * t },
+        shadow: LENS_SHADOW.alpha * t,
     };
 }
 //# sourceMappingURL=material.js.map

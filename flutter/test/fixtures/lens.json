@@ -1,14 +1,15 @@
 {
   "constants": {
-    "lensThumbScale": 1.4,
+    "lensThumbScale": 1.54,
     "lensStretchTime": 0.1,
     "switchOverdrag": 6,
     "switchDeceleration": 0.97,
     "switchSlopMouse": 4,
     "switchSlopTouch": 10,
     "contentPressScale": 1.03,
-    "lensPillLift": 0.15,
-    "lensMagnify": 0.18
+    "lensPillLiftX": 12,
+    "lensPillLiftY": 8,
+    "lensTabScale": 1.2
   },
   "stretch": [
     [

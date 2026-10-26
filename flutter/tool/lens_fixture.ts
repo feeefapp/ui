@@ -1,9 +1,9 @@
 /** The glass lens vectors shared by tests/lens.test.ts and the Dart twin's test. */
 import {
   CONTENT_PRESS_SCALE,
-  LENS_MAGNIFY,
   LENS_PILL_LIFT,
   LENS_STRETCH_TIME,
+  LENS_TAB_SCALE,
   LENS_THUMB_SCALE,
   SWITCH_DECELERATION,
   SWITCH_OVERDRAG,
@@ -35,8 +35,9 @@ export function lensFixture() {
       switchSlopMouse: SWITCH_SLOP.mouse,
       switchSlopTouch: SWITCH_SLOP.touch,
       contentPressScale: CONTENT_PRESS_SCALE,
-      lensPillLift: LENS_PILL_LIFT,
-      lensMagnify: LENS_MAGNIFY,
+      lensPillLiftX: LENS_PILL_LIFT.x,
+      lensPillLiftY: LENS_PILL_LIFT.y,
+      lensTabScale: LENS_TAB_SCALE,
     },
     stretch: VELOCITIES.map((v) => [v, round(lensStretch(v))]),
     dragPosition: TRAVELS.flatMap((travel) =>

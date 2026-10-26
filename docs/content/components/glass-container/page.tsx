@@ -98,11 +98,13 @@ function Overview() {
         </p>
         <p>
           Controls follow the same style. The moving part of a slider, a switch, a segmented control
-          and a tab bar turns into a glass lens while pressed (<C>GlassLensLayer</C>): clear glass,
-          never blurred, with the rim light and the hairline. A <C>liquid</C> lens lifts out bigger and
-          magnifies what it covers through the same SVG backdrop filter that bends glass edges in
-          Chromium; a <C>transparent</C> lens is plain clear glass; <C>solid</C> keeps the controls’
-          rest paint.
+          and a tab bar turns into a glass lens while pressed (<C>GlassLensLayer</C>), measured from iOS
+          26.2’s held controls (<C>research/liquid-glass/LENS-MEASURED.md</C>). It is not this
+          container’s material: lenses never blur, brighten or magnify, and carry their own shade, rim
+          and shadow. A <C>liquid</C> lens grows past its control and bends what it covers by the
+          measured profile (<C>lensBend</C>: a pill outward along its rim, a thumb inward) through an SVG
+          backdrop filter in Chromium; a <C>transparent</C> lens is clear and unbent; <C>solid</C> keeps
+          the controls’ rest paint.
         </p>
       </Section>
 
