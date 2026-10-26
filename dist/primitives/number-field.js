@@ -3,6 +3,8 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../utils.js';
+import { GlassBar, GlassScope } from '../glass/container.js';
+import { useGlassMember } from '../glass/member.js';
 import { useI18n } from '../i18n.js';
 import { IconButton } from './button.js';
 import { RawInput } from './raw-input.js';
@@ -181,30 +183,38 @@ export const NumberField = React.forwardRef(function NumberField({ label, value:
     const stepBy = (direction) => set(value + direction * step, true);
     const fraction = (fill ?? bounded) ? fillFraction(value, bounds) : null;
     const description = [describedBy, (message || supportingText) && feedbackId].filter(Boolean).join(' ') || undefined;
-    return (_jsxs("div", { className: cn('lab-number-field-container', containerClassName), "data-invalid": message ? '' : undefined, onBlur: (event) => {
-            if (event.currentTarget.contains(event.relatedTarget))
-                return;
-            touched.current = true;
-            if (validationMode !== 'submit')
-                reveal(latest.current);
-        }, children: [_jsxs("div", { ref: host, id: id, className: cn('lab-number-field lab-control', className), "data-surface-variant": variant, "data-control-size": controlSize, "data-editing": editing !== null || undefined, "data-dragging": dragging || undefined, "data-disabled": disabled || undefined, "data-lab-corners": true, role: editing !== null ? 'group' : bounded ? 'slider' : 'spinbutton', tabIndex: disabled || editing !== null ? -1 : 0, "aria-label": label, "aria-valuenow": editing !== null ? undefined : value, "aria-valuemin": editing !== null ? undefined : min, "aria-valuemax": editing !== null ? undefined : max, "aria-valuetext": editing !== null ? undefined : valueText, "aria-disabled": disabled || undefined, "aria-invalid": message ? true : undefined, "aria-describedby": description, style: fraction != null ? { '--lab-number-fill': fraction } : undefined, onPointerDown: onPointerDown, onPointerMove: onPointerMove, onPointerUp: (event) => endPointer(event, false), onPointerCancel: (event) => endPointer(event, true), onKeyDown: onKeyDown, children: [fraction != null && _jsx("span", { className: "lab-number-field-fill", "aria-hidden": "true" }), steppers && editing === null && (_jsx(IconButton, { "data-number-stepper": true, className: "lab-number-field-stepper", variant: "text", appearance: "toolbar", controlSize: "small", tabIndex: -1, "aria-label": `Decrease ${label}`, disabled: disabled || (min !== undefined && value <= min), onClick: () => stepBy(-1), children: _jsx(ChevronLeft, { size: 16, className: "lab-dir-flip" }) })), editing === null ? (_jsxs("span", { className: "lab-number-field-row", "aria-hidden": "true", children: [_jsx("span", { className: "lab-number-field-label", children: label }), _jsxs("span", { className: "lab-number-field-value", children: [display, unit && _jsx("span", { className: "lab-number-field-unit", children: unit })] })] })) : (_jsx(RawInput, { ref: input, className: "lab-number-field-input", "aria-label": label, inputMode: "decimal", autoComplete: "off", spellCheck: false, value: editing, onValueChange: setEditing, "aria-invalid": message ? true : undefined, "aria-describedby": description, onBlur: () => finishEditing(true, false), onKeyDown: (event) => {
-                            if (event.key === 'Enter') {
-                                event.preventDefault();
-                                finishEditing(true);
-                            }
-                            else if (event.key === 'Escape') {
-                                event.preventDefault();
-                                finishEditing(false);
-                            }
-                        } })), steppers && editing === null && (_jsx(IconButton, { "data-number-stepper": true, className: "lab-number-field-stepper", variant: "text", appearance: "toolbar", controlSize: "small", tabIndex: -1, "aria-label": `Increase ${label}`, disabled: disabled || (max !== undefined && value >= max), onClick: () => stepBy(1), children: _jsx(ChevronRight, { size: 16, className: "lab-dir-flip" }) }))] }), (name || validator || error != null) && (
-            // Invisible, not `type="hidden"`: hidden inputs skip constraint validation, and this one
-            // carries the validator's verdict so an invalid value blocks the form like any field.
-            _jsx("input", { ref: validity, className: "lab-number-field-validity", name: name, form: form, value: value, onChange: () => { }, tabIndex: -1, "aria-hidden": "true", autoComplete: "off", onInvalid: (event) => {
-                    event.preventDefault();
-                    touched.current = true;
+    return (
+    // The field is a glass bubble: its own container (or a member of the row's, inside one). Its text
+    // sits on whatever is behind it, so it takes the bars' legibility floor (tint and blur).
+    _jsx(GlassBar, { children: _jsxs(GlassScope, { cornerShape: "round", className: cn('lab-number-field-container', containerClassName), "data-invalid": message ? '' : undefined, onBlur: (event) => {
+                if (event.currentTarget.contains(event.relatedTarget))
+                    return;
+                touched.current = true;
+                if (validationMode !== 'submit')
                     reveal(latest.current);
-                    if (event.currentTarget.form?.querySelector(':invalid') === event.currentTarget)
-                        host.current?.focus({ preventScroll: false });
-                } })), _jsx("div", { className: "lab-number-field-details", children: _jsx("span", { id: feedbackId, "aria-live": "polite", children: message || supportingText }) })] }));
+            }, children: [_jsxs(GlassMemberDiv, { hostRef: host, id: id, className: cn('lab-number-field lab-control', className), "data-surface-variant": variant, "data-control-size": controlSize, "data-editing": editing !== null || undefined, "data-dragging": dragging || undefined, "data-disabled": disabled || undefined, "data-lab-corners": true, role: editing !== null ? 'group' : bounded ? 'slider' : 'spinbutton', tabIndex: disabled || editing !== null ? -1 : 0, "aria-label": label, "aria-valuenow": editing !== null ? undefined : value, "aria-valuemin": editing !== null ? undefined : min, "aria-valuemax": editing !== null ? undefined : max, "aria-valuetext": editing !== null ? undefined : valueText, "aria-disabled": disabled || undefined, "aria-invalid": message ? true : undefined, "aria-describedby": description, style: fraction != null ? { '--lab-number-fill': fraction } : undefined, onPointerDown: onPointerDown, onPointerMove: onPointerMove, onPointerUp: (event) => endPointer(event, false), onPointerCancel: (event) => endPointer(event, true), onKeyDown: onKeyDown, children: [fraction != null && _jsx("span", { className: "lab-number-field-fill", "aria-hidden": "true" }), steppers && editing === null && (_jsx(IconButton, { "data-number-stepper": true, className: "lab-number-field-stepper", variant: "text", appearance: "toolbar", controlSize: "small", tabIndex: -1, "aria-label": `Decrease ${label}`, disabled: disabled || (min !== undefined && value <= min), onClick: () => stepBy(-1), children: _jsx(ChevronLeft, { size: 16, className: "lab-dir-flip" }) })), editing === null ? (_jsxs("span", { className: "lab-number-field-row", "aria-hidden": "true", children: [_jsx("span", { className: "lab-number-field-label", children: label }), _jsxs("span", { className: "lab-number-field-value", children: [display, unit && _jsx("span", { className: "lab-number-field-unit", children: unit })] })] })) : (_jsx(RawInput, { ref: input, className: "lab-number-field-input", "aria-label": label, inputMode: "decimal", autoComplete: "off", spellCheck: false, value: editing, onValueChange: setEditing, "aria-invalid": message ? true : undefined, "aria-describedby": description, onBlur: () => finishEditing(true, false), onKeyDown: (event) => {
+                                if (event.key === 'Enter') {
+                                    event.preventDefault();
+                                    finishEditing(true);
+                                }
+                                else if (event.key === 'Escape') {
+                                    event.preventDefault();
+                                    finishEditing(false);
+                                }
+                            } })), steppers && editing === null && (_jsx(IconButton, { "data-number-stepper": true, className: "lab-number-field-stepper", variant: "text", appearance: "toolbar", controlSize: "small", tabIndex: -1, "aria-label": `Increase ${label}`, disabled: disabled || (max !== undefined && value >= max), onClick: () => stepBy(1), children: _jsx(ChevronRight, { size: 16, className: "lab-dir-flip" }) }))] }), (name || validator || error != null) && (
+                // Invisible, not `type="hidden"`: hidden inputs skip constraint validation, and this one
+                // carries the validator's verdict so an invalid value blocks the form like any field.
+                _jsx("input", { ref: validity, className: "lab-number-field-validity", name: name, form: form, value: value, onChange: () => { }, tabIndex: -1, "aria-hidden": "true", autoComplete: "off", onInvalid: (event) => {
+                        event.preventDefault();
+                        touched.current = true;
+                        reveal(latest.current);
+                        if (event.currentTarget.form?.querySelector(':invalid') === event.currentTarget)
+                            host.current?.focus({ preventScroll: false });
+                    } })), _jsx("div", { className: "lab-number-field-details", children: _jsx("span", { id: feedbackId, "aria-live": "polite", children: message || supportingText }) })] }) }));
 });
+/** The field's own element, a member of the enclosing glass container (the field's GlassScope). */
+function GlassMemberDiv({ hostRef, ...props }) {
+    const member = useGlassMember(hostRef);
+    return _jsx("div", { ...props, ref: hostRef, "data-glass-member": member ? '' : undefined });
+}
 //# sourceMappingURL=number-field.js.map

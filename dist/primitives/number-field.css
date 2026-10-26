@@ -72,12 +72,16 @@ html[data-lab-theme] .lab-number-field[data-disabled] {
   cursor: not-allowed;
 }
 
-/* Range fill, like Blender's slider: a tinted band from the start edge to the value. */
+/* Range fill, like Blender's slider: a tinted band from the start edge to the value, ending in a
+capsule cap like the Slider's fill (the field's own radius; the browser shrinks it on short fills). */
 .lab-number-field-fill {
   position: absolute;
   inset-block: 0;
   inset-inline-start: 0;
   width: calc(var(--lab-number-fill, 0) * 100%);
+  border-start-end-radius: calc(var(--lab-control-height) / 2 * var(--lab-corner-scale, 1));
+  border-end-end-radius: calc(var(--lab-control-height) / 2 * var(--lab-corner-scale, 1));
+  corner-shape: round;
   background: color-mix(in srgb, var(--lab-primary) 32%, transparent);
   pointer-events: none;
 }
@@ -169,6 +173,26 @@ html[data-lab-theme] .lab-number-field[data-dragging] > .lab-number-field-steppe
     background: Highlight;
     opacity: 0.4;
   }
+}
+
+/* On glass (the field is a glass bubble: GlassScope + member): the container paints the material,
+so states tint it instead of painting an opaque variant fill, and the editing and invalid edges stay
+drawn over it. The [data-glass-member] selectors out-specify glass.css's member reset. */
+html[data-lab-theme] .lab-number-field[data-glass-member]:not([data-disabled], [data-editing]):is(:hover, :focus-visible) {
+  background: color-mix(in srgb, var(--lab-ink) 6%, transparent);
+}
+html[data-lab-theme] .lab-number-field[data-glass-member][data-dragging] {
+  background: color-mix(in srgb, var(--lab-ink) 10%, transparent);
+}
+html[data-lab-theme] .lab-number-field[data-glass-member][data-editing] {
+  border-color: var(--lab-focus);
+  box-shadow: inset 0 0 0 calc(var(--lab-focus-ring-width) - 1px) var(--lab-focus);
+}
+html[data-lab-theme] .lab-number-field-container[data-invalid] > .lab-number-field[data-glass-member] {
+  border-color: var(--lab-field-error, var(--lab-danger));
+}
+html[data-lab-theme] .lab-number-field-container[data-invalid] > .lab-number-field[data-glass-member][data-editing] {
+  box-shadow: inset 0 0 0 calc(var(--lab-focus-ring-width) - 1px) var(--lab-field-error, var(--lab-danger));
 }
 
 /* The control plus its supporting line, like a TextField's details row. */
