@@ -207,6 +207,10 @@ export class GlassScene {
   private measureQueued = false
   private drawHook: (() => void) | null = null
   private wasMoving = false
+  /** The outline the shadow was last asked for, when it last changed, and whether it is resting. */
+  private shadowKey = ''
+  private shadowChangedAt = -Infinity
+  private shadowHeld = false
   private drawInput: { frame: HostFrame; sourceFrame: GlassRect | null; paint: ReturnType<typeof readPaintStyle> } | null = null
   private dirty = false
   private resize: ResizeObserver | null = null
@@ -280,6 +284,8 @@ export class GlassScene {
   ) {
     this.uid = uid.replace(/[^a-zA-Z0-9_-]/g, '')
     backdrop.replaceChildren()
+    // The shadow fades while the glass changes shape (see draw()).
+    shadow.style.transition = 'opacity 160ms ease-out'
     if (typeof ResizeObserver !== 'undefined') {
       this.resize = new ResizeObserver(() => this.requestMeasure())
       this.resize.observe(host)
@@ -901,8 +907,27 @@ export class GlassScene {
       input.paint,
       glow ? { x: glow.x, y: glow.y, radius: glow.radius.get(), opacity: glow.opacity.get() } : null
     )
-    // iOS 27 casts the faint shadow under clear glass too.
-    renderShadow(this.shadow, paths, this.uid, this.material === 'menu' ? GLASS_MENU.shadow : GLASS_SHADOW)
+    // iOS 27 casts the faint shadow under clear glass too. It is a masked, blurred SVG filter, which
+    // Safari (and Chrome on many phones) draws on the CPU: redrawn on every frame of a menu opening,
+    // bubbles merging or glass scrolling it cost whole frames on an iPhone. A one-off change redraws
+    // it at once; while the outline keeps changing (again within GLASS_SHADOW_REST ms) the shadow
+    // fades out as it was, and is drawn and faded back in once the outline has rested that long.
+    const now = performance.now()
+    if (key !== this.shadowKey) {
+      // A second change soon after the last one: the outline is moving.
+      if (now - this.shadowChangedAt < GLASS_SHADOW_REST) this.shadowHeld = true
+      this.shadowKey = key
+      this.shadowChangedAt = now
+    }
+    if (this.shadowHeld && now - this.shadowChangedAt < GLASS_SHADOW_REST) {
+      setStyleIfChanged(this.shadow.style, 'opacity', '0')
+      // Keep drawing until the outline has rested, then draw the shadow there.
+      this.scheduleDraw()
+    } else {
+      this.shadowHeld = false
+      renderShadow(this.shadow, paths, this.uid, this.material === 'menu' ? GLASS_MENU.shadow : GLASS_SHADOW)
+      setStyleIfChanged(this.shadow.style, 'opacity', '')
+    }
     if (!this.host.hasAttribute('data-glass-ready')) this.host.setAttribute('data-glass-ready', '')
     this.updateRefraction(key)
   }
@@ -1266,7 +1291,10 @@ function setAttributeIfChanged(element: Element, name: string, value: string) {
   if (element.getAttribute(name) !== value) element.setAttribute(name, value)
 }
 
-function setStyleIfChanged(style: CSSStyleDeclaration, name: 'scale' | 'display' | 'left' | 'top' | 'width' | 'height' | 'borderRadius' | 'clipPath', value: string) {
+/** How long (ms) an outline must hold still before its shadow is drawn again after changing twice. */
+const GLASS_SHADOW_REST = 100
+
+function setStyleIfChanged(style: CSSStyleDeclaration, name: 'scale' | 'display' | 'left' | 'top' | 'width' | 'height' | 'borderRadius' | 'clipPath' | 'opacity', value: string) {
   if (style[name] !== value) style[name] = value
 }
 
