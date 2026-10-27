@@ -1500,8 +1500,9 @@ function renderShadow(svg, paths, uid, shadow) {
     layer.cutout.setAttribute('d', paths.map(path => path.visible).join(''));
     while (layer.shapes.length > paths.length)
         layer.shapes.pop().remove();
+    // Sparse: only clipped paths have a scissor.
     while (layer.scissors.length > paths.length)
-        layer.scissors.pop().remove();
+        layer.scissors.pop()?.remove();
     paths.forEach((path, i) => {
         let shape = layer.shapes[i];
         if (!shape) {

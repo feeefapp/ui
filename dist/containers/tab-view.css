@@ -151,6 +151,14 @@ html[data-lab-theme] .lab-tab-track .lab-segmented-track > .lab-segmented-option
     font-size: 14px;
     line-height: 17px;
   }
+  /* Side-by-side labels take their own width (equal shares cut "Overview" to "Overv…") and no
+  longer overlap: the overlap belongs to the stacked phone tabs. Out-specifies the equal-width rule. */
+  html[data-lab-theme] .lab-tab-track[data-equal-width] .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
+    flex: 0 0 auto;
+  }
+  html[data-lab-theme] .lab-tab-track .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] + .lab-segmented-option {
+    margin-inline-start: 0;
+  }
   .lab-tab-track[data-layout='stacked'] .lab-segmented-content {
     flex-direction: row;
     gap: 8px;
