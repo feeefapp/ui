@@ -2,6 +2,7 @@ import 'package:feeef_ui/feeef_ui.dart';
 
 import 'dart:ui' show Tristate;
 
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' hide RadioGroup;
 import 'package:flutter_test/flutter_test.dart';
@@ -181,6 +182,58 @@ void main() {
       final mid = composerFrameSnapshot(from, to, 0.5);
       expect(mid.height, 63);
       expect(mid.slots[ComposerSlotName.send]!.y, 19);
+    });
+  });
+
+  group('ComposerHint', () {
+    testWidgets('an Arabic hint reads right to left, its question mark last', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        app(
+          const ComposerHint(text: 'ما الذي تريد تغييره في Hero؟'),
+          direction: TextDirection.rtl,
+        ),
+      );
+      await settle(tester, 30);
+      final paragraph = tester.renderObject<RenderParagraph>(
+        find
+            .descendant(
+              of: find.byType(ComposerHint),
+              matching: find.byType(RichText),
+            )
+            .first,
+      );
+      final text = paragraph.text.toPlainText();
+      double left(String word) => paragraph
+          .getBoxesForSelection(
+            TextSelection(
+              baseOffset: text.indexOf(word),
+              extentOffset: text.indexOf(word) + word.length,
+            ),
+          )
+          .first
+          .left;
+      // The first word sits at the right; the Latin name and the question mark end the line.
+      expect(left('ما'), greaterThan(left('تغييره')));
+      expect(left('تغييره'), greaterThan(left('Hero')));
+      expect(left('Hero'), greaterThan(left('؟')));
+    });
+
+    testWidgets('an English hint keeps its word order on an Arabic page', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        app(
+          const ComposerHint(text: 'Ask anything'),
+          direction: TextDirection.rtl,
+        ),
+      );
+      await settle(tester, 30);
+      expect(
+        tester.getTopLeft(find.text('Ask')).dx,
+        lessThan(tester.getTopLeft(find.text('anything')).dx),
+      );
     });
   });
 

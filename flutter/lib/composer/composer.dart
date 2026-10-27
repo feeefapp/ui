@@ -1124,6 +1124,9 @@ class _ComposerHintState extends State<ComposerHint>
             _parts.join(),
             Directionality.of(context),
           );
+          // Flutter places inline widgets left to right whatever the paragraph's direction, so a
+          // right-to-left hint fades its words in as text (no rise) and the paragraph orders them.
+          final inline = direction == TextDirection.rtl;
           return Text.rich(
             TextSpan(
               children: [
@@ -1132,6 +1135,13 @@ class _ComposerHintState extends State<ComposerHint>
                     const TextSpan()
                   else if (i.isOdd)
                     TextSpan(text: _parts[i])
+                  else if (inline)
+                    TextSpan(
+                      text: _parts[i],
+                      style: TextStyle(
+                        color: color.withValues(alpha: color.a * shown(i)),
+                      ),
+                    )
                   else
                     WidgetSpan(
                       alignment: PlaceholderAlignment.baseline,
