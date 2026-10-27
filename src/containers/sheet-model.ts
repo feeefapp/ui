@@ -1,11 +1,16 @@
-/** Pure geometry for Sheet: detent heights, where a release lands, and the dimming. */
-import { nearestTarget, projectMomentum, rubberBand } from '../physics/spring'
+/**
+ * Pure geometry for Sheet: detent heights, where a release lands, the dimming, and the iOS 26/27
+ * floating frame (a partial-height sheet floats inset from the edges on glass; rising toward full
+ * height it reaches the edges and turns opaque, continuously with the height).
+ */
+import { mix, nearestTarget, projectMomentum, rubberBand } from '../physics/spring'
 
 /**
- * A height a sheet can rest at: `medium` (half the screen), `large` (almost full), `fit` (its
- * content, up to large), a pixel height, or a percentage of the screen like `'35%'`.
+ * A height a sheet can rest at: `peek` (just its header, like the Maps search bar), `medium` (half
+ * the screen), `large` (almost full), `fit` (its content, up to large), a pixel height, or a
+ * percentage of the screen like `'35%'`.
  */
-export type SheetDetent = 'medium' | 'large' | 'fit' | number | `${number}%`
+export type SheetDetent = 'peek' | 'medium' | 'large' | 'fit' | number | `${number}%`
 
 export type SheetMetrics = {
   /** Height of the area the sheet covers (the viewport, or the container). */
@@ -14,6 +19,8 @@ export type SheetMetrics = {
   topInset: number
   /** The sheet's natural content height, for `fit`. */
   natural: number
+  /** The grabber plus the floating header and its gaps, for `peek`. */
+  peek?: number
 }
 
 /** Pixel height of one detent, clamped to [0, large]. */
@@ -26,9 +33,11 @@ export function detentHeight(detent: SheetDetent, m: SheetMetrics) {
         ? m.hostHeight * 0.5
         : detent === 'fit'
           ? m.natural
-          : typeof detent === 'number'
-            ? detent
-            : (parseFloat(detent) / 100) * m.hostHeight
+          : detent === 'peek'
+            ? (m.peek ?? 72)
+            : typeof detent === 'number'
+              ? detent
+              : (parseFloat(detent) / 100) * m.hostHeight
   return Math.round(Math.max(0, Math.min(large, value)))
 }
 
@@ -68,10 +77,21 @@ export function releaseTarget(
   return { height, index: heights.indexOf(height), dismiss: false }
 }
 
-/** Scrim strength 0–1: full at or above the lowest detent, fading as the sheet leaves. */
-export function sheetDim(visible: number, heights: readonly number[]) {
-  const min = Math.max(1, Math.min(...heights))
-  return Math.max(0, Math.min(1, visible / min))
+/**
+ * Scrim strength 0–1. Without `undimmed`: full at or above the lowest detent, fading as the sheet
+ * leaves. With `undimmed` (the height up to which the page stays usable, iOS
+ * `presentationBackgroundInteraction(.enabled(upThrough:))`): none up to it, rising to full at the
+ * next detent above it (or at `large` when there is none).
+ */
+export function sheetDim(visible: number, heights: readonly number[], undimmed?: number | null, large?: number) {
+  if (undimmed == null) {
+    const min = Math.max(1, Math.min(...heights))
+    return clamp01(visible / min)
+  }
+  const above = heights.filter((h) => h > undimmed + 0.5)
+  const full = above.length ? Math.min(...above) : (large ?? Math.max(...heights))
+  if (full <= undimmed) return 0
+  return clamp01((visible - undimmed) / (full - undimmed))
 }
 
 /**
@@ -82,4 +102,119 @@ export function sheetRecede(visible: number, large: number) {
   const start = large * 0.72
   if (large <= 0 || visible <= start) return 0
   return Math.max(0, Math.min(1, (visible - start) / (large - start)))
+}
+
+/** How the sheet's surface is drawn at one height. */
+export type SheetFrame = {
+  /** 0 at the lowest partial height, 1 at full height (attached). */
+  expansion: number
+  /** Gap in px between the surface and the side and bottom edges. */
+  gap: number
+  /** Radius in px of the bottom corners (the top corners keep the sheet radius). */
+  bottomRadius: number
+  /** Opacity 0–1 of the opaque surface over the glass. */
+  solid: number
+}
+
+export type SheetFrameOptions = {
+  /** Rest heights. */
+  heights: readonly number[]
+  /** Full height (the `large` detent's height, attached to the edges). */
+  large: number
+  /** Gap of a floating sheet in px. */
+  inset: number
+  /** The sheet's corner radius in px. */
+  radius: number
+  /**
+   * `float` (a phone sheet with a partial detent): inset on glass, reaching the edges and turning
+   * opaque as it rises to `large`. `attached`: always edge to edge and opaque (a sheet with only
+   * full-height detents, as on iOS). `card` (iPad Maps): always floating glass.
+   */
+  mode: 'float' | 'attached' | 'card'
+}
+
+/**
+ * The surface at `visible` height. Floating: full gap and glass up to the lowest partial detent,
+ * then the gap closes and the bottom corners square off along a smoothstep as the sheet rises to
+ * full height (so a medium detent sits closer to the edges, as in Maps), while the opaque surface
+ * fades in over the last stretch, reaching the edges exactly when it is fully opaque.
+ */
+export function sheetFrame(visible: number, o: SheetFrameOptions): SheetFrame {
+  if (o.mode === 'attached') return { expansion: 1, gap: 0, bottomRadius: 0, solid: 1 }
+  if (o.mode === 'card') return { expansion: 0, gap: o.inset, bottomRadius: o.radius, solid: 0 }
+  const partial = o.heights.filter((h) => h < o.large - 0.5)
+  const low = partial.length ? Math.min(...partial) : 0
+  const span = o.large - low
+  const expansion = span > 0 ? clamp01((visible - low) / span) : 1
+  const close = smooth(expansion)
+  return {
+    expansion,
+    gap: o.inset * (1 - close),
+    bottomRadius: o.radius * (1 - smooth(clamp01((expansion - 0.35) / 0.65))),
+    solid: smooth(clamp01((expansion - 0.55) / 0.45)),
+  }
+}
+
+/** A rectangle in host pixels. */
+export type SheetRect = { x: number; y: number; width: number; height: number }
+
+/** One frame of the morph out of (or back into) the control that opened the sheet. */
+export type SheetMorphFrame = {
+  /** Panel transform: moves the clip window over the source at p = 0. */
+  transform: string
+  /** Panel clip-path: the source's size at p = 0, the whole panel at p = 1. */
+  clip: string
+  /** Opacity of the sheet's content. */
+  content: number
+}
+
+/**
+ * The sheet growing out of the button that opened it (iOS 26 `matchedTransitionSource`): at
+ * `p` = 0 the panel is clipped to the source's size, its top centred on the source; at 1 it is
+ * the panel at rest. Corners go from the source's radius to the sheet's. `panel` and `source` are
+ * in the same pixels; the clip window grows from the panel's top centre, so the header arrives
+ * first, and the content fades in as it arrives.
+ */
+export function sheetMorphFrame(p: number, panel: SheetRect, source: SheetRect, sourceRadius: number, radius: number): SheetMorphFrame {
+  const t = Math.max(0, p)
+  const width = Math.max(0, mix(source.width, panel.width, t))
+  const height = Math.max(0, mix(source.height, panel.height, t))
+  const dx = (source.x + source.width / 2 - (panel.x + panel.width / 2)) * (1 - t)
+  const dy = (source.y - panel.y) * (1 - t)
+  const side = Math.max(0, (panel.width - width) / 2)
+  const bottom = Math.max(0, panel.height - height)
+  const r = mix(Math.min(sourceRadius, source.height / 2, source.width / 2), radius, clamp01(t))
+  return {
+    transform: `translate3d(${round(dx)}px, ${round(dy)}px, 0)`,
+    clip: `inset(0px ${round(side)}px ${round(bottom)}px ${round(side)}px round ${round(r)}px)`,
+    content: smooth(clamp01(t / 0.8)),
+  }
+}
+
+/** The detent a text field focused at `index` should raise the sheet to, or null to stay. */
+export function focusRaise(
+  detents: readonly SheetDetent[],
+  heights: readonly number[],
+  index: number,
+  focusDetent: SheetDetent | null | undefined
+): number | null {
+  if (focusDetent === null) return null
+  const target =
+    focusDetent !== undefined
+      ? detents.indexOf(focusDetent)
+      : detents[index] === 'peek'
+        ? heights.indexOf(Math.max(...heights))
+        : -1
+  if (target < 0 || heights[target] <= (heights[index] ?? 0)) return null
+  return target
+}
+
+function clamp01(value: number) {
+  return Math.max(0, Math.min(1, value))
+}
+function smooth(t: number) {
+  return t * t * (3 - 2 * t)
+}
+function round(value: number) {
+  return Math.round(value * 100) / 100
 }

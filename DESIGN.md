@@ -71,7 +71,8 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
 | A decision that blocks the task ("Delete order?") | `Alert` (title, message, 2–3 actions; cancel + destructive) | a popover, or a Modal with hand-made buttons |
 | A short form that blocks the task (edit an address) | `Modal` (floating title + close, actions in a `PresentationDock`) | a full-width painted header and footer |
 | Details of the thing the page is about, with the page still in view | `Pane` (beside the page; a bottom sheet below 720 automatically) | a modal that hides the page |
-| A short task about the page on a phone (filters, contact, quick edit) | `Sheet` (detents, `fit` for short forms; dialog when wide) | a new page that loses the person's place |
+| A short task about the page on a phone (filters, contact, quick edit) | `Sheet` (detents, `fit` for short forms; dialog when wide; `source` to grow out of its button) | a new page that loses the person's place |
+| Results or tools that live over the page (a map's search and places) | `Sheet` with `peek`/`medium`/`large`, `dismissible={false}`, `backgroundInteraction`, `regular="card"` | a pane or a page that hides the map |
 | Going deeper and coming back | `NavigationStack` + `NavigationPage` | swapping content with no back or swipe |
 | Many items from one list | `SplitView` (stack on phones) | a modal per item |
 | Rows that open, choose or show values | `ListSection` + `ListRow` | hand-made `<div>` rows |

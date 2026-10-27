@@ -1,13 +1,19 @@
 /* Sheet: one panel in a presentation host (presentation/presentation.css) that moves by
-   transform. Heights at rest are exact, so the panel's scroll area and dock lay out normally. */
+   transform. The panel paints nothing: its surface (glass with an opaque layer over it) is drawn
+   by .lab-sheet-surface, whose gap and bottom corners follow the height every frame (sheetFrame in
+   sheet-model.ts), and its content sits in .lab-sheet-column, which keeps the floating gap at
+   every height so nothing reflows while the sheet moves. Heights at rest are exact, so the
+   column's scroll area and dock lay out normally. */
 .lab-presentation[data-kind='sheet'] {
   --lab-sheet-scrim: rgb(0 0 0 / 0.3);
-  --lab-sheet-radius: calc(28px * var(--lab-corner-scale, 1));
-  --lab-sheet-shadow: 0 -10px 40px -12px rgb(0 0 0 / 0.22);
+  /* iOS 26 sheets: concentric with the screen corner, floating this far from the edges. */
+  --lab-sheet-radius: calc(32px * var(--lab-corner-scale, 1));
+  --lab-sheet-inset: var(--lab-shell-gap, 8px);
+  --lab-sheet-shadow: 0 -6px 36px -14px rgb(0 0 0 / 0.26);
 }
 html[data-lab-theme='dark'] .lab-presentation[data-kind='sheet'] {
   --lab-sheet-scrim: rgb(0 0 0 / 0.55);
-  --lab-sheet-shadow: 0 -10px 40px -12px rgb(0 0 0 / 0.6);
+  --lab-sheet-shadow: 0 -6px 36px -14px rgb(0 0 0 / 0.7);
 }
 
 .lab-sheet-scrim {
@@ -17,7 +23,8 @@ html[data-lab-theme='dark'] .lab-presentation[data-kind='sheet'] {
   opacity: 0;
   -webkit-tap-highlight-color: transparent;
 }
-.lab-sheet-safe-probe {
+.lab-sheet-safe-probe,
+.lab-sheet-token-probe {
   position: absolute;
   top: 0;
   width: 0;
@@ -25,21 +32,23 @@ html[data-lab-theme='dark'] .lab-presentation[data-kind='sheet'] {
   pointer-events: none;
   visibility: hidden;
 }
+/* Resolves the theme tokens to pixels for the geometry: width = gap, height = radius. */
+.lab-sheet-token-probe {
+  width: var(--lab-sheet-inset);
+  height: var(--lab-sheet-radius);
+}
 
 .lab-sheet {
   position: absolute;
   inset-inline: 0;
   bottom: 0;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-  border-radius: var(--lab-sheet-radius) var(--lab-sheet-radius) 0 0;
-  corner-shape: superellipse(1.5);
-  background: var(--lab-surface);
-  box-shadow: var(--lab-sheet-shadow);
   outline: none;
   will-change: transform;
+}
+/* Only the surface and the content take the pointer: the gaps around a floating sheet belong to
+the page (or the scrim) behind. */
+.lab-presentation[data-kind='sheet'] > .lab-sheet {
+  pointer-events: none;
 }
 .lab-sheet:not([data-ready]) {
   visibility: hidden;
@@ -50,6 +59,79 @@ html[data-lab-theme='dark'] .lab-presentation[data-kind='sheet'] {
     inset-inline: max(0px, calc((100% - 680px) / 2));
   }
 }
+/* iPad Maps: a floating glass card at the leading edge, with the sheet's detents. */
+.lab-sheet[data-presentation='card'] {
+  inset-inline-end: auto;
+  width: min(100%, calc(var(--lab-sheet-card-width, 380px) + 2 * var(--lab-sheet-inset)));
+}
+
+.lab-sheet-surface {
+  position: absolute;
+  top: 0;
+  inset-inline: var(--lab-sheet-inset);
+  bottom: var(--lab-sheet-inset);
+  overflow: hidden;
+  border-radius: var(--lab-sheet-radius);
+  corner-shape: superellipse(1.5);
+  pointer-events: auto;
+  /* The thick glass menus and alerts use (glass/glass.css). */
+  background: var(--lab-menu-fill);
+  backdrop-filter: blur(var(--lab-menu-blur)) saturate(var(--lab-menu-saturate)) var(--lab-menu-lift);
+  -webkit-backdrop-filter: blur(var(--lab-menu-blur)) saturate(var(--lab-menu-saturate)) var(--lab-menu-lift);
+  box-shadow:
+    var(--lab-sheet-shadow),
+    inset 0 0 0 1px color-mix(in srgb, var(--lab-line) 70%, transparent),
+    var(--lab-glass-light);
+}
+/* The opaque surface over the glass, faded in as the sheet reaches full height. */
+.lab-sheet-solid {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--lab-surface);
+  opacity: 0;
+}
+.lab-sheet[data-mode='attached'] .lab-sheet-solid,
+.lab-sheet[data-presentation='dialog'] .lab-sheet-solid {
+  opacity: 1;
+}
+.lab-sheet[data-mode='attached'] .lab-sheet-surface {
+  inset-inline: 0;
+  bottom: 0;
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+}
+/* Opaque where glass is turned off or unwanted. */
+html[data-lab-glass='solid'] .lab-sheet-solid {
+  opacity: 1 !important;
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .lab-sheet-solid {
+    opacity: 1 !important;
+  }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .lab-sheet-solid {
+    opacity: 1 !important;
+  }
+}
+
+.lab-sheet-column {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--lab-sheet-radius);
+  corner-shape: superellipse(1.5);
+  pointer-events: auto;
+}
+.lab-sheet[data-mode='attached'] .lab-sheet-column {
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+}
+
 .lab-sheet[data-presentation='dialog'] {
   top: 50%;
   bottom: auto;
@@ -57,9 +139,15 @@ html[data-lab-theme='dark'] .lab-presentation[data-kind='sheet'] {
   left: 50%;
   width: min(560px, calc(100% - 48px));
   translate: -50% -50%;
+  will-change: transform, opacity;
+}
+.lab-sheet[data-presentation='dialog'] .lab-sheet-surface {
+  inset: 0;
   border-radius: var(--lab-radius-panel);
   box-shadow: 0 30px 80px -24px rgb(0 0 0 / 0.4);
-  will-change: transform, opacity;
+}
+.lab-sheet[data-presentation='dialog'] .lab-sheet-column {
+  border-radius: var(--lab-radius-panel);
 }
 
 /* Grabber: a short pill; the whole row is a drag handle, the pill is a button that cycles heights. */
@@ -100,7 +188,7 @@ html[data-lab-theme='dark'] .lab-presentation[data-kind='sheet'] {
 }
 
 @media (forced-colors: active) {
-  .lab-sheet {
+  .lab-sheet-surface {
     border: 1px solid CanvasText;
   }
 }

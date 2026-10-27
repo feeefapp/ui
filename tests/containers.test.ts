@@ -6,7 +6,10 @@ import {
   detentHeights,
   dragHeight,
   releaseTarget,
+  focusRaise,
   sheetDim,
+  sheetFrame,
+  sheetMorphFrame,
   sheetRecede,
 } from '../src/containers/sheet-model.ts'
 
@@ -86,4 +89,70 @@ test('scrim and recede follow the visible height', () => {
   assert.equal(sheetRecede(400, 790), 0)
   assert.equal(sheetRecede(790, 790), 1)
   assert.ok(sheetRecede(700, 790) > 0 && sheetRecede(700, 790) < 1)
+})
+
+test('peek is the measured header, with a fallback', () => {
+  const m = { hostHeight: 800, topInset: 10, natural: 320 }
+  assert.equal(detentHeight('peek', { ...m, peek: 84 }), 84)
+  assert.equal(detentHeight('peek', m), 72)
+})
+
+test('background interaction: no dim up to the undimmed detent, full at the next one', () => {
+  const heights = [84, 400, 790]
+  assert.equal(sheetDim(84, heights, 84, 790), 0)
+  assert.equal(sheetDim(400, heights, 84, 790), 1)
+  assert.equal(sheetDim(242, heights, 84, 790), 0.5)
+  // Undimmed through medium: dims only between medium and large.
+  assert.equal(sheetDim(400, heights, 400, 790), 0)
+  assert.equal(sheetDim(790, heights, 400, 790), 1)
+  // Undimmed at the top detent: never dims.
+  assert.equal(sheetDim(790, heights, 790, 790), 0)
+})
+
+test('floating frame: inset glass low, edges and opaque at full height', () => {
+  const o = { heights: [84, 400, 790], large: 790, inset: 8, radius: 32, mode: 'float' as const }
+  const low = sheetFrame(84, o)
+  assert.deepEqual(low, { expansion: 0, gap: 8, bottomRadius: 32, solid: 0 })
+  const mid = sheetFrame(400, o)
+  assert.ok(mid.gap > 0 && mid.gap < 8, 'medium sits closer to the edges')
+  assert.equal(mid.solid, 0, 'medium is still glass')
+  const full = sheetFrame(790, o)
+  assert.deepEqual(full, { expansion: 1, gap: 0, bottomRadius: 0, solid: 1 })
+  // Monotonic: the gap only closes as it rises.
+  let last = Infinity
+  for (let v = 84; v <= 790; v += 20) {
+    const f = sheetFrame(v, o)
+    assert.ok(f.gap <= last + 1e-9)
+    last = f.gap
+  }
+  // Below the lowest detent (dragging away) it keeps the floating look.
+  assert.equal(sheetFrame(20, o).gap, 8)
+  assert.deepEqual(sheetFrame(400, { ...o, mode: 'attached' }), { expansion: 1, gap: 0, bottomRadius: 0, solid: 1 })
+  assert.deepEqual(sheetFrame(790, { ...o, mode: 'card' }), { expansion: 0, gap: 8, bottomRadius: 32, solid: 0 })
+})
+
+test('morph: clipped to the source over it at 0, the panel at rest at 1', () => {
+  const panel = { x: 0, y: 400, width: 390, height: 400 }
+  const source = { x: 300, y: 50, width: 80, height: 40 }
+  const start = sheetMorphFrame(0, panel, source, 20, 32)
+  // Clip window centred at the panel top, moved onto the source's centre and top.
+  assert.equal(start.transform, 'translate3d(145px, -350px, 0)')
+  assert.equal(start.clip, 'inset(0px 155px 360px 155px round 20px)')
+  assert.equal(start.content, 0)
+  const end = sheetMorphFrame(1, panel, source, 20, 32)
+  assert.equal(end.transform, 'translate3d(0px, 0px, 0)')
+  assert.equal(end.clip, 'inset(0px 0px 0px 0px round 32px)')
+  assert.equal(end.content, 1)
+  // A capsule radius larger than half the source is clamped to it.
+  assert.ok(sheetMorphFrame(0, panel, source, 999, 32).clip.endsWith('round 20px)'))
+})
+
+test('a focused field raises a peek sheet to its top detent', () => {
+  const detents = ['peek', 'medium', 'large'] as const
+  const heights = [84, 400, 790]
+  assert.equal(focusRaise(detents, heights, 0, undefined), 2)
+  assert.equal(focusRaise(detents, heights, 1, undefined), null)
+  assert.equal(focusRaise(detents, heights, 0, 'medium'), 1)
+  assert.equal(focusRaise(detents, heights, 2, 'medium'), null)
+  assert.equal(focusRaise(detents, heights, 0, null), null)
 })

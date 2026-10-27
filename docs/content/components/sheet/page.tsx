@@ -29,6 +29,7 @@ function Overview() {
         <Table
           head={['Detent', 'Height']}
           rows={[
+            [<C>'peek'</C>, 'Just the grabber and the header: a search field over a map, like Maps. Measured, so it follows the header.'],
             [<C>'medium'</C>, 'Half the screen. Enough for a short list with the page still visible above.'],
             [<C>'large'</C>, 'Full height minus a gap at the top. The page behind recedes like a stacked card.'],
             [<C>'fit'</C>, 'The content plus its header and dock, up to large: the same measured body a Modal hugs with. For short action sheets and forms.'],
@@ -50,6 +51,53 @@ function Overview() {
 >
   <ListSection header="Status">…</ListSection>
 </Sheet>`}
+        />
+      </Section>
+
+      <Section title="Floating glass">
+        <p>
+          A phone sheet with any detent below <C>'large'</C> floats, as in iOS 26 and 27: inset from the
+          sides and the bottom, every corner rounded, on the thick glass menus and alerts use. As it rises
+          the gap closes and the bottom corners square off, continuously with the finger (a medium sheet
+          already sits closer to the edges); over the last stretch the opaque surface fades in, so at full
+          height it is an ordinary attached sheet. A sheet with only <C>'large'</C> is attached from the start.
+          Force either with <C>floating</C>.
+        </p>
+        <p>
+          The content keeps the floating gap at every height, so nothing reflows while the sheet moves: the
+          surface is drawn on its own layer and only it changes. Content that should change with the height
+          reads <C>useSheet()</C>: the resting <C>detent</C>, a live <C>expansion</C> (0 low … 1 full, a
+          motion value to subscribe to) and <C>setDetent</C>.
+        </p>
+      </Section>
+
+      <Section title="Living on the page">
+        <p>
+          A Maps-style sheet never goes away: <C>{`detents={['peek', 'medium', 'large']}`}</C>,{' '}
+          <C>{'dismissible={false}'}</C> and a search field as its <C>header</C> (mark it{' '}
+          <C>data-lab-sheet-handle</C> so it drags the sheet). <C>backgroundInteraction</C> names the highest
+          detent at which the page stays usable: below it there is no dim and taps reach the map; above it the
+          page dims, and tapping it (or Escape) brings the sheet back down. Focusing a field at <C>'peek'</C>{' '}
+          raises the sheet to its top detent; change that with <C>focusDetent</C>.
+        </p>
+      </Section>
+
+      <Section title="Growing out of a button">
+        <p>
+          Pass the button that opens the sheet as <C>source</C>. The sheet grows out of it header first (the
+          button hides as the sheet covers it) and flies back into it when it closes from the close bubble,
+          the scrim or Escape. A sheet dragged away slides down instead, following the finger.
+        </p>
+      </Section>
+
+      <Section title="Wide screens">
+        <Table
+          head={['regular', 'From 720 px (regularBreakpoint)']}
+          rows={[
+            [<C>'dialog'</C>, 'A centered dialog (default). For tasks: forms, filters, confirmations.'],
+            [<C>'card'</C>, 'A floating glass card at the leading edge with the same detents and dragging, like Maps on iPad. For sheets that live on the page.'],
+            [<C>'sheet'</C>, 'Still a bottom sheet, kept a readable width.'],
+          ]}
         />
       </Section>
 
@@ -107,8 +155,9 @@ function Overview() {
           with <C>{'recede={false}'}</C>.
         </p>
         <p>
-          <C>{'modal={false}'}</C> keeps the page usable around the sheet (no scrim, no Escape), for a
-          results sheet over a map or a mini player.
+          <C>{'modal={false}'}</C> keeps the page usable around the sheet at every height (no scrim, no
+          Escape dismissal), for a mini player. For a sheet that should dim only when raised, use{' '}
+          <C>backgroundInteraction</C> instead.
         </p>
       </Section>
 
@@ -138,11 +187,11 @@ export default definePage({
   title: 'Sheet',
   group: 'Containment',
   order: 2,
-  summary: 'A bottom sheet with detents, momentum and scroll handoff that becomes a dialog on wide screens.',
+  summary: 'An iOS-style bottom sheet: floating glass detents that reach the edges as it rises, momentum, scroll handoff, morphing out of its button, a dialog or a card on wide screens.',
   importLine: "import { Sheet } from '@feeef.dev/ui/containers'",
   source: 'src/containers/sheet.tsx',
-  api: ['Sheet'],
-  keywords: ['bottom sheet', 'drawer', 'detent', 'action sheet', 'half sheet', 'panel', 'ios'],
+  api: ['Sheet', 'useSheet'],
+  keywords: ['maps', 'floating', 'liquid glass', 'morph', 'peek', 'bottom sheet', 'drawer', 'detent', 'action sheet', 'half sheet', 'panel', 'ios'],
   Overview,
   examples: examplesFrom(
     import.meta.glob('./examples/*.tsx', { eager: true }),

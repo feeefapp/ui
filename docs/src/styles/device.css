@@ -86,3 +86,48 @@
   flex: none;
   color: var(--lab-primary);
 }
+
+/* Sheet demos: a pretend street map (water, parks, roads) under the glass. */
+.demo-map {
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 60% 40% at 85% 8%, #8ec5ff 0 60%, transparent 61%),
+    radial-gradient(ellipse 30% 22% at 18% 62%, #a8dca0 0 60%, transparent 61%),
+    radial-gradient(ellipse 26% 18% at 70% 82%, #a8dca0 0 60%, transparent 61%),
+    linear-gradient(28deg, transparent 47%, #ffd479 47% 50.5%, transparent 50.5%),
+    linear-gradient(-62deg, transparent 58%, #fff 58% 60%, transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 46px, rgb(255 255 255 / 0.9) 46px 50px),
+    repeating-linear-gradient(90deg, transparent 0 58px, rgb(255 255 255 / 0.9) 58px 62px),
+    #ece6db;
+}
+html[data-lab-theme='dark'] .demo-map {
+  filter: invert(0.9) hue-rotate(180deg) brightness(0.9);
+}
+.demo-map-pin {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #e5484d;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.3);
+}
+.demo-maps-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding-inline: 4px;
+}
+.demo-maps-header > * {
+  flex: 1;
+  min-width: 0;
+}
+.demo-sheet-toolbar {
+  position: absolute;
+  inset-inline: 12px;
+  bottom: 24px;
+  display: flex;
+  justify-content: center;
+}
