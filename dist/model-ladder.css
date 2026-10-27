@@ -503,6 +503,13 @@ html[data-lab-theme] .lab-ladder-shape-options.lab-segmented .lab-segmented-trac
   flex-direction: column;
   gap: 5px;
 }
+/* Tiles never fold into a menu: the chevron only took the selected copy's room and squeezed its label. */
+.lab-ladder-shape-options .lab-segmented-chevron {
+  display: none;
+}
+.lab-ladder-shape-options .lab-segmented-label {
+  flex-shrink: 0;
+}
 .lab-ladder-shape-options i {
   display: block;
   border: 1.5px solid currentColor;
