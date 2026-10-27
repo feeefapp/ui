@@ -317,28 +317,34 @@ class _ScrollAreaState extends State<ScrollArea> {
               child: SingleChildScrollView(
                 controller: _controller,
                 physics: refreshable ? PullScrollPhysics(_gate) : null,
-                child: ConstrainedBox(
-                  // min-height: 100% of the viewport, padding included.
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      padding,
-                      topReserve + safe.top,
-                      padding,
-                      bottomReserve + extra + safe.bottom,
+                // The content is its own layer: a scroll step moves it instead of painting all of
+                // it again (a SingleChildScrollView adds no boundary of its own, unlike lists).
+                child: RepaintBoundary(
+                  child: ConstrainedBox(
+                    // min-height: 100% of the viewport, padding included.
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
                     ),
-                    // Nested areas start from zero (.lab-scroll-content > * resets it).
-                    child: ScrollRevealPadding(
-                      // scroll-padding: what revealScrollChild keeps clear.
-                      padding: EdgeInsets.only(
-                        top: topReserve + safe.top,
-                        bottom: bottomReserve + extra + safe.bottom,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        padding,
+                        topReserve + safe.top,
+                        padding,
+                        bottomReserve + extra + safe.bottom,
                       ),
-                      child: ScrollExtraBottom(
-                        value: 0,
-                        child: ScrollTopReserve(
-                          value: topReserve + safe.top,
-                          child: widget.child,
+                      // Nested areas start from zero (.lab-scroll-content > * resets it).
+                      child: ScrollRevealPadding(
+                        // scroll-padding: what revealScrollChild keeps clear.
+                        padding: EdgeInsets.only(
+                          top: topReserve + safe.top,
+                          bottom: bottomReserve + extra + safe.bottom,
+                        ),
+                        child: ScrollExtraBottom(
+                          value: 0,
+                          child: ScrollTopReserve(
+                            value: topReserve + safe.top,
+                            child: widget.child,
+                          ),
                         ),
                       ),
                     ),

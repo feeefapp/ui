@@ -610,7 +610,9 @@ class _SlideBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget body = child;
+    // Each slide is its own layer: scrolling the track and scaling or fading a slide move and
+    // blend it without painting its content again.
+    Widget body = RepaintBoundary(child: child);
     if (!reduced &&
         (effect == CarouselEffect.scale || effect == CarouselEffect.fade)) {
       body = ValueListenableBuilder<double>(
@@ -621,7 +623,7 @@ class _SlideBody extends StatelessWidget {
           if (fx.opacity != 1) out = Opacity(opacity: fx.opacity, child: out);
           return out;
         },
-        child: child,
+        child: body,
       );
     }
     if (effect == CarouselEffect.parallax) {

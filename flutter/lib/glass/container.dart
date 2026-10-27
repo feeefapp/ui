@@ -1274,6 +1274,9 @@ class _GlassScene extends ChangeNotifier {
   /// next paint re-measures them; at rest nothing listens.
   void scrolled(RenderObject? scrollable) {
     if (_disposed) return;
+    // A scroll view that holds none of the bubbles can't move or clip them (a page scrolling under
+    // a floating bar): the glass needn't measure or repaint for it.
+    if (scrollable != null && !_holdsMember(scrollable)) return;
     if (scrollable != null) _scrolled.add(scrollable);
     if (SchedulerBinding.instance.schedulerPhase ==
         SchedulerPhase.persistentCallbacks) {
@@ -1281,6 +1284,18 @@ class _GlassScene extends ChangeNotifier {
     } else {
       notifyListeners();
     }
+  }
+
+  /// Whether one of the registered bubbles sits inside [scrollable].
+  bool _holdsMember(RenderObject scrollable) {
+    for (final member in _members.values) {
+      RenderObject? node = member.key.currentContext?.findRenderObject();
+      while (node != null) {
+        if (identical(node, scrollable)) return true;
+        node = node.parent;
+      }
+    }
+    return false;
   }
 
   /// The part of the container [render] is visible in (the paint clips of every render object
