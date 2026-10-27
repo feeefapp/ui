@@ -22,6 +22,10 @@ export declare class GlassScene {
     private measureQueued;
     private drawHook;
     private wasMoving;
+    /** The outline the shadow was last asked for, when it last changed, and whether it is resting. */
+    private shadowKey;
+    private shadowChangedAt;
+    private shadowHeld;
     private drawInput;
     private dirty;
     private resize;
