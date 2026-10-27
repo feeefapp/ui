@@ -3,10 +3,10 @@ export { NavigationPage, NavigationStack, useNavigationPath, useNavigationStack,
 export type { NavigationPageProps, NavigationStackPage, NavigationStackProps, } from './navigation-stack.js';
 export { diffStack, dragDismissRect, mixRect, slideFrame, zoomFrame } from './stack-model.js';
 export type { Rect, StackChange } from './stack-model.js';
-export { Sheet } from './sheet.js';
-export type { SheetProps, SheetDetent } from './sheet.js';
-export { detentHeight, detentHeights, dragHeight, releaseTarget, sheetDim, sheetRecede } from './sheet-model.js';
-export type { SheetMetrics } from './sheet-model.js';
+export { Sheet, useSheet } from './sheet.js';
+export type { SheetProps, SheetDetent, SheetState } from './sheet.js';
+export { detentHeight, detentHeights, dragHeight, focusRaise, releaseTarget, sheetDim, sheetFrame, sheetMorphFrame, sheetRecede } from './sheet-model.js';
+export type { SheetFrame, SheetFrameOptions, SheetMetrics, SheetMorphFrame, SheetRect } from './sheet-model.js';
 export { SplitView, SplitPlaceholder } from './split-view.js';
 export type { SplitViewProps } from './split-view.js';
 export { TabView } from './tab-view.js';

@@ -9,18 +9,30 @@ import { attachPan, canChildPan } from '../physics/gesture.js';
 import { MotionValue, motionOf, prefersReducedMotion } from '../physics/motion-value.js';
 import { motionFade } from '../theme-config.js';
 import { SPRINGS, projectMomentum, rubberBand } from '../physics/spring.js';
-import { detentHeights, dragHeight, releaseTarget, sheetDim, sheetRecede, } from './sheet-model.js';
+import { detentHeight, detentHeights, dragHeight, focusRaise, releaseTarget, sheetDim, sheetFrame, sheetMorphFrame, sheetRecede, } from './sheet-model.js';
 import { cn } from '../utils.js';
 import { GLASS_INSTANT_ATTRIBUTE, settleGlass } from '../glass/transitions.js';
 import { POP_MOTION } from '../presentation/motion.js';
 import '../presentation/presentation.css';
 import './sheet.css';
-const DEFAULT_DETENTS = ['large'];
+const SheetContext = React.createContext(null);
 /**
- * A sheet that rises from the bottom, like iOS: it rests at detents (half, full, fit or custom
- * heights), follows the finger when dragged, snaps to the detent a flick projects to, and closes
- * when flicked down. Scrolling inside hands off to dragging the sheet at the top. On wide screens
- * it becomes a centered dialog. The page behind dims and, under a full-height sheet, recedes.
+ * The sheet this component is inside, or null: its resting detent, its live expansion and a way
+ * to move it. Use it to show more at higher detents (Maps shows only its search bar at `peek`).
+ */
+export function useSheet() {
+    return React.useContext(SheetContext);
+}
+const DEFAULT_DETENTS = ['large'];
+/** The sheet growing out of its source, and flying back into it. */
+const MORPH_OPEN = { duration: 0.46, bounce: 0.16 };
+const MORPH_CLOSE = { duration: 0.36, bounce: 0.08 };
+/**
+ * A sheet that rises from the bottom, like iOS 26/27: it rests at detents (just its header, half,
+ * full, fit or custom heights), follows the finger, snaps where a flick projects and closes when
+ * flicked down. Below full height it floats inset from the edges on glass; rising, it reaches the
+ * edges and turns opaque in one continuous motion. It can grow out of the button that opened it,
+ * leave the page usable at low detents, and becomes a dialog or a floating card on wide screens.
  */
 export function Sheet(props) {
     const { mounted, exited } = usePresented(props.open);
@@ -28,33 +40,66 @@ export function Sheet(props) {
         return null;
     return _jsx(SheetPresentation, { ...props, onExited: exited });
 }
-function SheetPresentation({ open, onOpenChange, label, children, detents = DEFAULT_DETENTS, detent: controlledDetent, defaultDetent, onDetentChange, dismissible = true, grabber, title, leading, trailing, showClose = true, header, dock, modal = true, regular = 'dialog', regularBreakpoint = 720, container, recede = true, contentPadding, initialFocusRef, returnFocusRef, className, onExited, }) {
+const EDITABLE = 'input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]), textarea, [contenteditable=""], [contenteditable="true"]';
+function SheetPresentation({ open, onOpenChange, label, children, detents = DEFAULT_DETENTS, detent: controlledDetent, defaultDetent, onDetentChange, dismissible = true, grabber, title, leading, trailing, showClose = true, header, dock, modal = true, backgroundInteraction, floating, source, focusDetent, regular = 'dialog', regularBreakpoint = 720, cardWidth = 380, container, recede = true, contentPadding, initialFocusRef, returnFocusRef, className, onExited, }) {
     const { t } = useI18n();
     const host = React.useRef(null);
     const panel = React.useRef(null);
+    const surface = React.useRef(null);
+    const solid = React.useRef(null);
+    const column = React.useRef(null);
     const scrim = React.useRef(null);
     const viewport = React.useRef(null);
     const grabRow = React.useRef(null);
     const probe = React.useRef(null);
+    const tokens = React.useRef(null);
     const titleId = React.useId();
     const [metrics, setMetrics] = React.useState(null);
     /** The body's natural height (content + reserved chrome), reported by PresentationBody. */
     const bodyNatural = React.useRef(0);
     const measureRef = React.useRef(() => { });
-    const presentation = metrics && metrics.width >= regularBreakpoint && regular === 'dialog' ? 'dialog' : 'sheet';
+    const wide = !!metrics && metrics.width >= regularBreakpoint;
+    const presentation = wide && regular !== 'sheet' ? regular : 'sheet';
     const heights = metrics ? detentHeights(detents, metrics) : [];
-    const showGrabber = presentation === 'sheet' && (grabber ?? detents.length > 1);
+    const large = metrics ? detentHeight('large', metrics) : 0;
+    const hasPartial = heights.some((h) => h < large - 0.5);
+    const mode = presentation === 'card' ? 'card' : (floating ?? hasPartial) ? 'float' : 'attached';
+    /** The content column keeps the floating gap at every height, so nothing reflows while it moves. */
+    const columnInset = presentation === 'dialog' || mode === 'attached' ? 0 : (metrics?.inset ?? 0);
+    const undimmed = backgroundInteraction !== undefined && metrics ? detentHeight(backgroundInteraction, metrics) : null;
+    const dims = modal || backgroundInteraction !== undefined;
+    const hostModal = modal && backgroundInteraction === undefined;
+    const showGrabber = presentation !== 'dialog' && (grabber ?? detents.length > 1);
     const [localIndex, setLocalIndex] = React.useState(() => Math.max(0, detents.indexOf(defaultDetent ?? detents[0])));
     const index = controlledDetent !== undefined ? Math.max(0, detents.indexOf(controlledDetent)) : Math.min(localIndex, detents.length - 1);
-    // Motion: `visible` is the sheet's visible height (sheet); `shown` 0–1 and `lift` px (dialog).
+    // Motion: `visible` is the sheet's visible height (sheet, card); `shown` 0–1 and `lift` px
+    // (dialog); `morph` 0–1 the growth out of the source; `expansion` mirrors the frame for content.
     const visible = React.useRef(new MotionValue(0, 0.5)).current;
     const shown = React.useRef(new MotionValue(0, 0.004)).current;
     const lift = React.useRef(new MotionValue(0, 0.5)).current;
+    const morph = React.useRef(new MotionValue(1, 0.002)).current;
+    const expansion = React.useRef(new MotionValue(0, 0.001)).current;
     const motionHeight = React.useRef(0);
     const presented = React.useRef(false);
     const dragging = React.useRef(false);
-    const live = React.useRef({ heights, metrics, presentation, index, open, dismissible, modal, onOpenChange });
-    live.current = { heights, metrics, presentation, index, open, dismissible, modal, onOpenChange };
+    /** Set while the sheet grows out of (or back into) its source: the rects of that morph. */
+    const morphing = React.useRef(null);
+    const draggedAway = React.useRef(false);
+    const live = React.useRef({
+        heights,
+        large,
+        metrics,
+        presentation,
+        mode,
+        index,
+        open,
+        dismissible,
+        dims,
+        hostModal,
+        undimmed,
+        onOpenChange,
+    });
+    live.current = { heights, large, metrics, presentation, mode, index, open, dismissible, dims, hostModal, undimmed, onOpenChange };
     const backdrop = React.useMemo(() => {
         if (typeof document === 'undefined')
             return null;
@@ -70,27 +115,89 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
         const m = live.current.metrics;
         if (!backdrop || !m)
             return;
-        const q = recede && live.current.modal && live.current.presentation === 'sheet' && !prefersReducedMotion()
-            ? sheetRecede(v, m.hostHeight - m.topInset)
+        const q = recede && live.current.hostModal && live.current.presentation === 'sheet' && !prefersReducedMotion()
+            ? sheetRecede(v, m.hostHeight - m.topInset) * morph.get()
             : 0;
         backdrop.style.transformOrigin = '50% 0';
         backdrop.style.transform = q ? `translate3d(0, ${q * 10}px, 0) scale(${1 - q * 0.06})` : '';
         backdrop.style.clipPath = q ? `inset(0 round ${q * 22}px)` : '';
     };
+    /** The surface (glass + opaque layer) at one frame; `offset` is how far the panel hangs below. */
+    const paintSurface = (frame, offset) => {
+        const s = surface.current;
+        if (!s)
+            return;
+        s.style.insetInline = `${frame.gap}px`;
+        s.style.bottom = `${offset + frame.gap}px`;
+        s.style.borderEndStartRadius = s.style.borderEndEndRadius = `${frame.bottomRadius}px`;
+        if (solid.current)
+            solid.current.style.opacity = String(frame.solid);
+        if (expansion.get() !== frame.expansion)
+            expansion.set(frame.expansion);
+    };
+    const paintScrim = (v) => {
+        const L = live.current;
+        const el = scrim.current;
+        if (!el)
+            return;
+        const dim = L.dims ? sheetDim(v, L.heights, L.undimmed, L.large) * morph.get() : 0;
+        el.style.opacity = String(dim);
+        // Below the undimmed detent the page under the scrim stays usable.
+        if (L.undimmed !== null)
+            el.style.pointerEvents = dim > 0.02 ? 'auto' : 'none';
+    };
     const paintSheet = (v) => {
         const el = panel.current;
-        if (!el || live.current.presentation !== 'sheet')
+        const L = live.current;
+        if (!el || L.presentation === 'dialog' || !L.metrics)
             return;
         const H = motionHeight.current;
+        const offset = H ? H - v : 0;
         if (H) {
-            const offset = H - v;
             el.style.transform = `translate3d(0, ${offset}px, 0)`;
             for (const node of pinned())
                 node.style.translate = `0 ${-offset}px`;
         }
-        if (scrim.current)
-            scrim.current.style.opacity = live.current.modal ? String(sheetDim(v, live.current.heights)) : '0';
+        paintSurface(sheetFrame(v, { heights: L.heights, large: L.large, inset: L.metrics.inset, radius: L.metrics.radius, mode: L.mode }), offset);
+        paintScrim(v);
         paintRecede(v);
+    };
+    /** One frame of the morph: the panel at rest, clipped to the source's size and moved over it. */
+    const paintMorph = (p) => {
+        const el = panel.current;
+        const m = morphing.current;
+        if (!el || !m || live.current.presentation === 'dialog')
+            return;
+        const height = el.offsetHeight;
+        const rect = {
+            x: el.offsetLeft,
+            y: (live.current.metrics?.hostHeight ?? height) - height,
+            width: el.offsetWidth,
+            height,
+        };
+        const frame = sheetMorphFrame(p, rect, m.source, m.radius, live.current.metrics?.radius ?? 28);
+        el.style.transform = frame.transform;
+        el.style.clipPath = frame.clip;
+        if (column.current)
+            column.current.style.opacity = String(frame.content);
+        // The source hides once the sheet covers it, and shows again as the sheet lands back in it.
+        m.element.style.opacity = p > 0.08 ? '0' : m.opacity;
+        paintScrim(visible.get());
+        paintRecede(visible.get());
+    };
+    const endMorph = () => {
+        const m = morphing.current;
+        const el = panel.current;
+        morphing.current = null;
+        if (m)
+            m.element.style.opacity = m.opacity;
+        if (el) {
+            el.style.clipPath = '';
+            if (!motionHeight.current)
+                el.style.transform = '';
+        }
+        if (column.current)
+            column.current.style.opacity = '';
     };
     /** While the panel moves, its glass rides it as is (no springs of its own) and leaves with it. */
     const riding = (on) => {
@@ -106,6 +213,11 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
     const beginMotion = () => {
         const el = panel.current;
         riding(true);
+        if (morphing.current) {
+            morph.stop();
+            morph.set(1);
+            endMorph();
+        }
         if (!el || motionHeight.current)
             return;
         motionHeight.current = Math.max(...live.current.heights, visible.get(), 1) + 240;
@@ -118,9 +230,11 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
         if (!el)
             return;
         motionHeight.current = 0;
-        riding(false);
+        if (!morphing.current)
+            riding(false);
         el.style.height = `${height}px`;
-        el.style.transform = '';
+        if (!morphing.current)
+            el.style.transform = '';
         for (const node of pinned())
             node.style.translate = '';
         paintSheet(height);
@@ -133,6 +247,32 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
             return arrived;
         });
     };
+    /** The source to grow out of, in host pixels, or null when there is none to see. */
+    const sourceRect = () => {
+        const box = host.current;
+        const origin = source?.current;
+        if (!box || !origin?.isConnected)
+            return null;
+        // A button hugged by its glass bubble grows out of the bubble.
+        const member = origin.closest('[data-glass-member]');
+        const element = member && member.getBoundingClientRect().width - origin.getBoundingClientRect().width < 16 ? member : origin;
+        const r = element.getBoundingClientRect();
+        const b = box.getBoundingClientRect();
+        if (!r.width || !r.height)
+            return null;
+        const scale = b.width / (box.offsetWidth || 1) || 1;
+        const radius = parseFloat(getComputedStyle(element).borderTopLeftRadius) || r.height / 2;
+        return {
+            element: origin,
+            radius,
+            source: {
+                x: (r.left - b.left) / scale,
+                y: (r.top - b.top) / scale,
+                width: r.width / scale,
+                height: r.height / scale,
+            },
+        };
+    };
     const paintDialog = () => {
         const el = panel.current;
         if (!el)
@@ -141,9 +281,10 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
         el.style.opacity = String(Math.max(0, Math.min(1, p)));
         el.style.transform = `translate3d(0, ${(1 - p) * 28 + lift.get()}px, 0) scale(${0.96 + 0.04 * p})`;
         if (scrim.current)
-            scrim.current.style.opacity = live.current.modal ? String(Math.max(0, Math.min(1, p))) : '0';
+            scrim.current.style.opacity = live.current.dims ? String(Math.max(0, Math.min(1, p))) : '0';
     };
     React.useLayoutEffect(() => visible.subscribe(paintSheet), []);
+    React.useLayoutEffect(() => morph.subscribe(paintMorph), []);
     React.useLayoutEffect(() => {
         const a = shown.subscribe(paintDialog), b = lift.subscribe(paintDialog);
         return () => {
@@ -157,17 +298,32 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
             const box = host.current;
             if (!box)
                 return;
+            const token = tokens.current;
+            const inset = token?.offsetWidth ?? 8;
+            const radius = token?.offsetHeight ?? 28;
+            const L = live.current;
+            const gap = L.presentation === 'dialog' || L.mode === 'attached' ? 0 : inset;
+            const grab = grabRow.current?.offsetHeight ?? 0;
+            // Peek: the grabber, the floating header and the same gap again below it.
+            const float = panel.current?.querySelector('.lab-presentation-scroll > .lab-scroll-float--top');
+            const peek = float ? grab + 2 * float.offsetTop + float.offsetHeight + gap : grab + 64 + gap;
             const next = {
                 width: box.clientWidth,
                 hostHeight: box.clientHeight,
                 topInset: 10 + (probe.current?.offsetHeight ?? 0),
-                natural: Math.ceil((grabRow.current?.offsetHeight ?? 0) + bodyNatural.current),
+                natural: Math.ceil(grab + bodyNatural.current + gap),
+                peek: Math.ceil(peek),
+                inset,
+                radius,
             };
             setMetrics((m) => m &&
                 m.width === next.width &&
                 m.hostHeight === next.hostHeight &&
                 m.topInset === next.topInset &&
-                m.natural === next.natural
+                m.natural === next.natural &&
+                m.peek === next.peek &&
+                m.inset === next.inset &&
+                m.radius === next.radius
                 ? m
                 : next);
         };
@@ -182,8 +338,13 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
                 backdrop.style.transform = '';
                 backdrop.style.clipPath = '';
             }
+            const m = morphing.current;
+            if (m)
+                m.element.style.opacity = m.opacity;
         };
     }, [container]);
+    // The column inset (and with it fit and peek) follows the presentation and floating mode.
+    React.useLayoutEffect(() => measureRef.current(), [columnInset]);
     // Present, follow detent and size changes, and leave.
     const target = heights[index] ?? 0;
     const dialogHeight = metrics ? Math.min(metrics.natural, metrics.hostHeight - 64) : 0;
@@ -231,19 +392,44 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
                     done();
             }
             else {
-                beginMotion();
-                void visible.animateTo(0, { spring: SPRINGS.smooth }).then((a) => a && done());
+                const back = !draggedAway.current && !dragging.current ? sourceRect() : null;
+                draggedAway.current = false;
+                if (back && !visible.isAnimating()) {
+                    // Fly back into the control that opened it.
+                    riding(true);
+                    morphing.current = { ...back, opacity: morphing.current?.opacity ?? back.element.style.opacity };
+                    void morph.animateTo(0, { spring: MORPH_CLOSE }).then((arrived) => {
+                        if (!arrived)
+                            return;
+                        endMorph();
+                        done();
+                    });
+                }
+                else {
+                    beginMotion();
+                    void visible.animateTo(0, { spring: SPRINGS.smooth }).then((a) => a && done());
+                }
             }
             return;
         }
         if (presentation === 'dialog') {
             const el = panel.current;
+            if (morphing.current) {
+                morph.stop();
+                morph.set(1);
+                endMorph();
+            }
             if (el) {
                 el.style.height = `${dialogHeight}px`;
                 motionHeight.current = 0;
                 for (const node of pinned())
                     node.style.translate = '';
             }
+            const s = surface.current;
+            if (s)
+                s.removeAttribute('style');
+            if (solid.current)
+                solid.current.style.opacity = '';
             paintRecede(0);
             if (!presented.current) {
                 presented.current = true;
@@ -274,6 +460,35 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
                 rest(target);
                 return;
             }
+            const from = !visible.isAnimating() && !morph.isAnimating() ? sourceRect() : null;
+            if (from) {
+                // Grow out of the control that opened it: the panel takes its place at rest at once and
+                // a clip the size of the control opens up to it.
+                morphing.current = { ...from, opacity: from.element.style.opacity };
+                riding(true);
+                visible.stop();
+                visible.set(target);
+                rest(target);
+                morph.set(0);
+                void morph.animateTo(1, { spring: MORPH_OPEN }).then((arrived) => {
+                    if (!arrived)
+                        return;
+                    endMorph();
+                    riding(false);
+                    rest(visible.get());
+                });
+                return;
+            }
+            if (morph.isAnimating() && morphing.current) {
+                // Reopened while flying back into the source: turn around.
+                void morph.animateTo(1, { spring: MORPH_OPEN }).then((arrived) => {
+                    if (!arrived)
+                        return;
+                    endMorph();
+                    riding(false);
+                });
+                return;
+            }
             // Reopened while still leaving: turn around from where it is.
             if (!visible.isAnimating())
                 visible.set(0);
@@ -282,6 +497,13 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
         }
         if (dragging.current)
             return;
+        if (morphing.current) {
+            // The detent moved while growing (a fit sheet measured late): the clip follows the panel.
+            visible.set(target);
+            rest(target);
+            paintMorph(morph.get());
+            return;
+        }
         if (visible.isAnimating()) {
             // The detent moved while rising (a fit sheet's content measured late): retarget in flight.
             if (Math.abs(visible.getTarget() - target) >= 1)
@@ -291,13 +513,15 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
             rest(target);
         else
             void moveTo(target);
-    }, [open, metrics, presentation, target, dialogHeight]);
+    }, [open, metrics, presentation, mode, target, dialogHeight]);
     const setDetentIndex = (next) => {
         if (controlledDetent === undefined)
             setLocalIndex(next);
         if (next !== live.current.index)
             onDetentChange?.(detents[next]);
     };
+    const setDetentRef = React.useRef(setDetentIndex);
+    setDetentRef.current = setDetentIndex;
     // Drag: the grabber and chrome always; the content when it is scrolled to the top (down) or the
     // sheet can still grow (up). Touch claims early so the browser does not start scrolling first.
     React.useEffect(() => {
@@ -310,7 +534,9 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
         return attachPan(el, () => ({
             axis: 'y',
             touch: 'claim',
-            canBegin: ({ target, pointerType }) => live.current.open && (pointerType !== 'mouse' || isChrome(target) || !!target?.closest('.lab-sheet-grabber')),
+            canBegin: ({ target, pointerType }) => live.current.open &&
+                !target?.closest(EDITABLE) &&
+                (pointerType !== 'mouse' || isChrome(target) || !!target?.closest('.lab-sheet-grabber')),
             shouldStart: ({ direction, target }) => {
                 const L = live.current;
                 if (L.presentation === 'dialog')
@@ -360,40 +586,72 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
                 const landing = releaseTarget(visible.get(), velocity, L.heights, L.dismissible);
                 if (landing.dismiss && !cancelled) {
                     // Leave at the finger's speed; the close that follows continues this same motion.
+                    draggedAway.current = true;
                     void visible.animateTo(0, { spring: SPRINGS.smooth, velocity });
                     L.onOpenChange(false);
                     // A host that keeps the sheet open gets it back at its detent.
                     window.setTimeout(() => {
+                        draggedAway.current = false;
                         if (live.current.open && !visible.isAnimating())
                             void moveTo(live.current.heights[live.current.index] ?? 0);
                     }, 400);
                     return;
                 }
                 const next = landing.dismiss ? L.index : landing.index;
-                setDetentIndex(next);
+                setDetentRef.current(next);
                 void moveTo(L.heights[next] ?? landing.height, SPRINGS.release, velocity);
             },
         }));
-    }, []);
+        // A sheet open before its container exists gets its panel when the container arrives.
+    }, [container]);
     const cycle = (step) => {
         const order = heights.map((h, i) => [h, i]).sort((a, b) => a[0] - b[0]);
         const at = order.findIndex(([, i]) => i === index);
         const next = order[(at + step + order.length) % order.length][1];
         setDetentIndex(next);
     };
-    const requestClose = () => {
+    /** Back down to where the page is usable, or closed. */
+    const collapse = () => {
+        const L = live.current;
+        if (L.undimmed !== null && backgroundInteraction !== undefined && heights[index] > L.undimmed + 0.5) {
+            setDetentIndex(detents.indexOf(backgroundInteraction));
+            return;
+        }
         if (dismissible)
             onOpenChange(false);
     };
+    const sheetState = React.useMemo(() => ({
+        detent: detents[index],
+        expansion,
+        presentation,
+        setDetent: (d) => {
+            const i = detents.indexOf(d);
+            if (i >= 0)
+                setDetentRef.current(i);
+        },
+    }), [detents[index], presentation]);
     const top = header !== undefined ? (header) : (_jsx(PresentationHeader, { title: title, leading: leading, titleId: titleId, trailing: trailing, onClose: showClose ? () => open && onOpenChange(false) : undefined, closeLabel: t('lab.composer.closeLabel', { label }) }));
-    return (_jsxs(PresentationHost, { ref: host, kind: "sheet", label: label, labelledBy: header === undefined && leading == null && title != null ? titleId : undefined, modal: modal, container: container, initialFocusRef: initialFocusRef ?? panel, returnFocusRef: returnFocusRef, onEscape: requestClose, children: [modal && _jsx("div", { ref: scrim, className: "lab-sheet-scrim", "aria-hidden": "true", onClick: requestClose }), _jsx("div", { ref: probe, className: "lab-sheet-safe-probe", "aria-hidden": "true" }), _jsxs("div", { ref: panel, className: cn('lab-sheet', className), "data-presentation": presentation, "data-ready": metrics ? '' : undefined, tabIndex: -1, children: [showGrabber && (_jsx("div", { ref: grabRow, className: "lab-sheet-grabber-row", "data-lab-sheet-handle": "", children: _jsx("button", { type: "button", className: "lab-sheet-grabber", "aria-label": t('lab.sheet.grabber'), onClick: () => cycle(1), onKeyDown: (event) => {
-                                if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-                                    event.preventDefault();
-                                    cycle(event.key === 'ArrowUp' ? 1 : -1);
-                                }
-                            } }) })), _jsx(PresentationBody, { ref: viewport, label: label, top: top, bottom: dock, fill: true, contentPadding: contentPadding, onNaturalHeight: (height) => {
-                            bodyNatural.current = height;
-                            measureRef.current();
-                        }, children: children })] })] }));
+    return (_jsxs(PresentationHost, { ref: host, kind: "sheet", label: label, labelledBy: header === undefined && leading == null && title != null ? titleId : undefined, modal: hostModal, container: container, initialFocusRef: initialFocusRef ?? panel, returnFocusRef: returnFocusRef, onEscape: collapse, children: [dims && _jsx("div", { ref: scrim, className: "lab-sheet-scrim", "aria-hidden": "true", onClick: collapse }), _jsx("div", { ref: probe, className: "lab-sheet-safe-probe", "aria-hidden": "true" }), _jsx("div", { ref: tokens, className: "lab-sheet-token-probe", "aria-hidden": "true" }), _jsxs("div", { ref: panel, className: cn('lab-sheet', className), "data-presentation": presentation, "data-mode": mode, "data-detent": typeof detents[index] === 'string' ? detents[index] : undefined, "data-ready": metrics ? '' : undefined, style: presentation === 'card' ? { '--lab-sheet-card-width': `${cardWidth}px` } : undefined, tabIndex: -1, onKeyDown: (event) => {
+                    // A non-modal host gets no cancel event: Escape still lowers or closes the sheet.
+                    if (event.key !== 'Escape' || hostModal || event.defaultPrevented)
+                        return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    collapse();
+                }, onFocus: (event) => {
+                    if (!(event.target instanceof Element) || !event.target.matches(EDITABLE))
+                        return;
+                    const next = focusRaise(detents, heights, index, focusDetent);
+                    if (next !== null)
+                        setDetentIndex(next);
+                }, children: [_jsx("div", { ref: surface, className: "lab-sheet-surface", "aria-hidden": "true", children: _jsx("div", { ref: solid, className: "lab-sheet-solid" }) }), _jsxs("div", { ref: column, className: "lab-sheet-column", style: columnInset ? { insetInline: columnInset, bottom: columnInset } : undefined, children: [showGrabber && (_jsx("div", { ref: grabRow, className: "lab-sheet-grabber-row", "data-lab-sheet-handle": "", children: _jsx("button", { type: "button", className: "lab-sheet-grabber", "aria-label": t('lab.sheet.grabber'), onClick: () => cycle(1), onKeyDown: (event) => {
+                                        if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+                                            event.preventDefault();
+                                            cycle(event.key === 'ArrowUp' ? 1 : -1);
+                                        }
+                                    } }) })), _jsx(SheetContext.Provider, { value: sheetState, children: _jsx(PresentationBody, { ref: viewport, label: label, top: top, bottom: dock, fill: true, contentPadding: contentPadding, onNaturalHeight: (height) => {
+                                        bodyNatural.current = height;
+                                        measureRef.current();
+                                    }, children: children }) })] })] })] }));
 }
 //# sourceMappingURL=sheet.js.map

@@ -1,8 +1,8 @@
 /** Structural containers: navigation stack, split view and sheet. */
 export { NavigationPage, NavigationStack, useNavigationPath, useNavigationStack, } from './navigation-stack.js';
 export { diffStack, dragDismissRect, mixRect, slideFrame, zoomFrame } from './stack-model.js';
-export { Sheet } from './sheet.js';
-export { detentHeight, detentHeights, dragHeight, releaseTarget, sheetDim, sheetRecede } from './sheet-model.js';
+export { Sheet, useSheet } from './sheet.js';
+export { detentHeight, detentHeights, dragHeight, focusRaise, releaseTarget, sheetDim, sheetFrame, sheetMorphFrame, sheetRecede } from './sheet-model.js';
 export { SplitView, SplitPlaceholder } from './split-view.js';
 export { TabView } from './tab-view.js';
 export { Carousel } from './carousel.js';

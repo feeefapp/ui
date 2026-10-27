@@ -47,7 +47,8 @@ export const PresentationHost = React.forwardRef(function PresentationHost({ kin
     const opener = React.useRef(null);
     /** What had focus before the surface opened, kept across an effect that runs again. */
     const giveBack = React.useRef(null);
-    React.useImperativeHandle(ref, () => host.current, []);
+    // Follows the element: a host open before its container exists mounts it later.
+    React.useImperativeHandle(ref, () => host.current, [container, layer]);
     const inline = container !== undefined;
     React.useLayoutEffect(() => {
         const element = host.current;
