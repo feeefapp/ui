@@ -160,6 +160,8 @@ export function SelectionTrack<const T extends string>({
     boxes: [] as Box[],
     spans: [] as SegmentSpan[],
     corner: 1,
+    /** The pill's drawn corner radius at rest (CSS), which the selected ink's clip follows. */
+    pillRadius: Infinity,
     placed: false,
     /** The options are wider than the track: it scrolls. */
     overflow: false,
@@ -253,6 +255,8 @@ export function SelectionTrack<const T extends string>({
     }))
     const style = getComputedStyle(root)
     state.corner = parseFloat(style.getPropertyValue('--lab-corner-scale')) || 1
+    const drawn = pillRef.current ? parseFloat(getComputedStyle(pillRef.current).borderTopLeftRadius) : NaN
+    state.pillRadius = Number.isFinite(drawn) && drawn > 0 ? drawn / (press.get() || 1) : Infinity
     state.rtl = style.direction === 'rtl'
     const overflow = !equalWidth && overflowMode !== 'menu' && scroller.scrollWidth - scroller.clientWidth > 0.5
     const changed = overflow !== state.overflow
@@ -265,7 +269,7 @@ export function SelectionTrack<const T extends string>({
   const paint = () => {
     const el = group.current
     const pillEl = pillRef.current
-    const { boxes, corner } = layoutState.current
+    const { boxes, corner, pillRadius } = layoutState.current
     if (!el || !pillEl || !boxes.length) return
     const height = boxes[0].h
     const w = width.get()
@@ -282,7 +286,9 @@ export function SelectionTrack<const T extends string>({
     el.style.setProperty('--lab-segmented-press', String(scale))
     const lensAmount = Math.max(0, Math.min(1, lens.get()))
     el.style.setProperty('--lab-lens', String(lensAmount))
-    const radius = (Math.min(shape.width, shape.height) / 2) * corner
+    // A tile-shaped pill (e.g. the ladder's shape tiles) is rounder than it is wide: clipping the
+    // ink to a full capsule there cut the label off, so the clip follows the pill as drawn.
+    const radius = Math.min((Math.min(shape.width, shape.height) / 2) * corner, pillRadius * scale)
     // Pressed or dragged, the pill is real glass over the options; a liquid one lifts out of the
     // pill (from its rest size: the lift is iOS's whole growth), past the track.
     const mode = lensMode()
