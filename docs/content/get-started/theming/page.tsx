@@ -91,11 +91,16 @@ export function Root({ children }: { children: React.ReactNode }) {
               <><C>full</C> (default), <C>reduced</C> or <C>none</C></>,
               <>How much the kit animates. <C>reduced</C> is the reduced-motion behaviour (springs jump, transitions become instant or short fades, no moving glass light or press response); <C>none</C> also stops ambient motion (pixel textures, shaders, loaders, glass sampling). The reader's reduced-motion setting still applies when stricter. Sets <C>data-lab-motion</C>; code reads it with <C>motionOf()</C> / <C>prefersReducedMotion()</C>.</>,
             ],
+            [
+              <C>performance</C>,
+              <><C>auto</C> (default), <C>full</C>, <C>balanced</C> or <C>light</C></>,
+              <>How much the effects may cost. <C>light</C> paints floating glass <C>solid</C> (no backdrop blur or refraction). <C>auto</C> keeps the full look and steps down to <C>light</C> on weak devices (2 GB of memory or less, 2 cores or fewer, no hardware GPU) and on devices whose frames measure slow after a tap or key (remembered for 14 days; <C>measuredPerformance.forget()</C> clears it). Resolved in the browser; sets <C>data-lab-performance</C>, and code reads it with <C>usePerformanceTier()</C>.</>,
+            ],
           ]}
         />
         <p>
           Unset options fall back to <C>THEME_DEFAULTS</C>:{' '}
-          <C>{"{ palette: 'lab', density: 'comfortable', radius: 1, glass: 'liquid', glassTint: 0.5, glassBlur: false, glassRefraction: true, motion: 'full' }"}</C>. Try every combination live in
+          <C>{"{ palette: 'lab', density: 'comfortable', radius: 1, glass: 'liquid', glassTint: 0.5, glassBlur: false, glassRefraction: true, motion: 'full', performance: 'auto' }"}</C>. Try every combination live in
           Customize, in the top bar.
         </p>
       </Section>

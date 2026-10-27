@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { clampGlassTint, GLASS_TINT_DEFAULT } from './glass/material'
+import type { Performance } from './performance'
 
 /**
  * App-level theme configuration. An app chooses its look here, once, and passes it to
@@ -62,6 +63,14 @@ export interface ThemeConfig {
    * sampling). The reader's own reduced-motion setting still applies when it is stricter.
    */
   motion?: Motion
+  /**
+   * How much the effects may cost (`Performance`, performance.ts). `auto` (default) keeps the full
+   * look and steps down to `light` on weak devices (little memory, few cores, no hardware GPU) and
+   * on devices whose frames measure slow; `light` paints floating glass `solid` (no backdrop blur
+   * or refraction). Resolved in the browser by `ThemeProvider`; server-rendered attributes show
+   * the configured glass until it runs.
+   */
+  performance?: Performance
   /**
    * Control sizes, overriding the density's. Each value set here replaces that size at every
    * density (density supplies the rest), so an app can keep the iOS defaults and only change, say,
@@ -161,6 +170,7 @@ export const THEME_DEFAULTS: Required<Omit<ThemeConfig, 'primary' | 'metrics'>> 
   glassBlur: false,
   glassRefraction: true,
   motion: 'full',
+  performance: 'auto',
 }
 
 /**
@@ -225,6 +235,7 @@ function resolve(config: ThemeConfig = {}): Resolved {
     glassBlur: config.glassBlur ?? THEME_DEFAULTS.glassBlur,
     glassRefraction: config.glassRefraction ?? THEME_DEFAULTS.glassRefraction,
     motion: config.motion === 'reduced' || config.motion === 'none' ? config.motion : 'full',
+    performance: config.performance ?? THEME_DEFAULTS.performance,
     radius,
     primary: config.primary && parseHexColor(config.primary) ? config.primary.toLowerCase() : null,
     metrics: config.metrics ?? {},

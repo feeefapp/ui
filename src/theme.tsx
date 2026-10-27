@@ -18,6 +18,7 @@ import { installFoContinuousCorners } from './brand/corners'
 import { useServices } from './services'
 import { useI18n } from './i18n'
 import { applyThemeConfig, type ThemeConfig } from './theme-config'
+import { measuredPerformance, readDeviceTraits, resolvePerformance, type DeviceTraits, type PerformanceTier } from './performance'
 /** Color mode. `system` follows `prefers-color-scheme` and updates when it changes. */
 export type ThemeMode = 'system' | 'light' | 'dark'
 type Mode = ThemeMode
@@ -63,15 +64,22 @@ export function ThemeProvider({
   useEffect(() => {
     if (enableCornerFallback) return installFoContinuousCorners()
   }, [enableCornerFallback])
-  const { palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction, motion, metrics } = config ?? {}
+  const { palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction, motion, metrics, performance } = config ?? {}
   // Metrics are an object, often written inline: compare them by value, not identity.
   const metricsKey = JSON.stringify(metrics ?? {})
+  const tier = usePerformanceTier(performance ?? 'auto')
+  // The light tier paints glass solid: no backdrop blur or refraction to re-filter every frame.
+  const light = tier === 'light'
   layoutEffect(() => {
     applyThemeConfig(document.documentElement, {
-      palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction, motion,
+      palette, density, radius, primary, glassTint, motion,
+      glass: light ? 'solid' : glass,
+      glassBlur: light ? false : glassBlur,
+      glassRefraction: light ? false : glassRefraction,
       metrics: JSON.parse(metricsKey),
     })
-  }, [palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction, motion, metricsKey])
+    document.documentElement.setAttribute('data-lab-performance', tier)
+  }, [palette, density, radius, primary, glass, glassTint, glassBlur, glassRefraction, motion, metricsKey, light, tier])
   layoutEffect(() => {
     const root = document.documentElement,
       previous = root.getAttribute('data-lab-theme'),
@@ -126,4 +134,26 @@ export function ThemeSwitch() {
       </Swap>
     </Button>
   )
+}
+
+let traits: DeviceTraits | null = null
+
+/**
+ * The effects tier for `mode` on this device (`performance.ts`). Starts measuring frames under
+ * `auto` and follows a device that measures slow. `balanced` until the browser has been read.
+ */
+export function usePerformanceTier(mode: ThemeConfig['performance'] = 'auto'): PerformanceTier {
+  const [slow, setSlow] = useState(() => measuredPerformance.slow)
+  const [read, setRead] = useState<DeviceTraits | null>(traits)
+  useEffect(() => {
+    if (!traits) {
+      traits = readDeviceTraits()
+      setRead(traits)
+    }
+    if (mode !== 'auto') return
+    measuredPerformance.watch()
+    setSlow(measuredPerformance.slow)
+    return measuredPerformance.subscribe(() => setSlow(measuredPerformance.slow))
+  }, [mode])
+  return read ? resolvePerformance(mode ?? 'auto', read, slow) : mode === 'auto' || !mode ? 'balanced' : mode
 }
