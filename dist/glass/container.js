@@ -53,6 +53,9 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
     const uid = React.useId();
     const reduced = useReducedMotion();
     const style = useGlassStyle();
+    // The light effects tier (ThemeProvider, performance.ts): bubbles never merge, so no union
+    // outline is traced on every frame they move.
+    const lightTier = useRootValue(['data-lab-performance'], (root) => root.getAttribute('data-lab-performance') ?? '', '') === 'light';
     // Inside a GlassBar the theme tint is raised and the backdrop blurred (an explicit `tint` wins).
     const bar = React.useContext(GlassBarContext);
     tint ??= bar?.tint;
@@ -107,7 +110,7 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
         if (!current)
             return;
         current.cornerShape = cornerShape;
-        current.spacing = Math.max(0, spacing);
+        current.spacing = lightTier ? 0 : Math.max(0, spacing);
         current.reduceMotion = reduced;
         current.followPointer = light === 'pointer' && liquid;
         current.interactive = interactive && liquid;
