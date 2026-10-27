@@ -17,6 +17,7 @@ export const THEME_DEFAULTS = {
     glassBlur: false,
     glassRefraction: true,
     motion: 'full',
+    performance: 'auto',
 };
 /**
  * Ready-made looks, as plain partial configs: spread one and override anything,
@@ -69,6 +70,7 @@ function resolve(config = {}) {
         glassBlur: config.glassBlur ?? THEME_DEFAULTS.glassBlur,
         glassRefraction: config.glassRefraction ?? THEME_DEFAULTS.glassRefraction,
         motion: config.motion === 'reduced' || config.motion === 'none' ? config.motion : 'full',
+        performance: config.performance ?? THEME_DEFAULTS.performance,
         radius,
         primary: config.primary && parseHexColor(config.primary) ? config.primary.toLowerCase() : null,
         metrics: config.metrics ?? {},

@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import type { Performance } from './performance.js';
 /**
  * App-level theme configuration. An app chooses its look here, once, and passes it to
  * `Provider theme={…}`; components never branch on it. Everything is expressed as
@@ -60,6 +61,14 @@ export interface ThemeConfig {
      * sampling). The reader's own reduced-motion setting still applies when it is stricter.
      */
     motion?: Motion;
+    /**
+     * How much the effects may cost (`Performance`, performance.ts). `auto` (default) keeps the full
+     * look and steps down to `light` on weak devices (little memory, few cores, no hardware GPU) and
+     * on devices whose frames measure slow; `light` paints floating glass `solid` (no backdrop blur
+     * or refraction). Resolved in the browser by `ThemeProvider`; server-rendered attributes show
+     * the configured glass until it runs.
+     */
+    performance?: Performance;
     /**
      * Control sizes, overriding the density's. Each value set here replaces that size at every
      * density (density supplies the rest), so an app can keep the iOS defaults and only change, say,

@@ -2,6 +2,7 @@ import { type ReactNode } from 'react';
 import './theme.css';
 import './system.css';
 import { type ThemeConfig } from './theme-config.js';
+import { type PerformanceTier } from './performance.js';
 /** Color mode. `system` follows `prefers-color-scheme` and updates when it changes. */
 export type ThemeMode = 'system' | 'light' | 'dark';
 type Mode = ThemeMode;
@@ -31,5 +32,10 @@ export declare function useTheme(): {
 };
 /** Icon button that cycles system → light → dark → system. Its label comes from `lab.common.theme*`. */
 export declare function ThemeSwitch(): import("react").JSX.Element;
+/**
+ * The effects tier for `mode` on this device (`performance.ts`). Starts measuring frames under
+ * `auto` and follows a device that measures slow. `balanced` until the browser has been read.
+ */
+export declare function usePerformanceTier(mode?: ThemeConfig['performance']): PerformanceTier;
 export {};
 //# sourceMappingURL=theme.d.ts.map
