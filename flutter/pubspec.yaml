@@ -29,6 +29,11 @@ flutter:
     - shaders/glass_refraction.frag
     - shaders/pixel_field.frag
   # The kit's fonts: IBM Plex Sans Arabic (Arabic and Latin) and Outfit (brand), both SIL OFL 1.1.
+  # Stored without hinting or glyph names (every glyph and layout feature kept): Flutter turns
+  # hinting off for all text, and Flutter web downloads these before its first frame (-35% gzip,
+  # renders pixel-identical). Redo after replacing a font:
+  #   pyftsubset F.ttf --unicodes='*' --glyphs='*' --layout-features='*' --name-IDs='*'
+  #     --name-languages='*' --notdef-outline --no-hinting --desubroutinize --output-file=F.ttf
   fonts:
     - family: IBM Plex Sans Arabic
       fonts:

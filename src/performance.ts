@@ -9,7 +9,8 @@ export type Performance = 'auto' | 'full' | 'balanced' | 'light'
 
 /**
  * The effects tier in use. `full` and `balanced` keep the whole look on the web; `light` paints
- * floating glass solid (no backdrop blur, refraction or glass shadow re-filtered while it moves).
+ * floating glass solid (no backdrop blur, refraction or glass shadow re-filtered while it moves)
+ * and bubbles never merge (no union outline traced per frame).
  */
 export type PerformanceTier = 'full' | 'balanced' | 'light'
 

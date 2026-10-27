@@ -94,7 +94,7 @@ export function Root({ children }: { children: React.ReactNode }) {
             [
               <C>performance</C>,
               <><C>auto</C> (default), <C>full</C>, <C>balanced</C> or <C>light</C></>,
-              <>How much the effects may cost. <C>light</C> paints floating glass <C>solid</C> (no backdrop blur or refraction). <C>auto</C> keeps the full look and steps down to <C>light</C> on weak devices (2 GB of memory or less, 2 cores or fewer, no hardware GPU) and on devices whose frames measure slow after a tap or key (remembered for 14 days; <C>measuredPerformance.forget()</C> clears it). Resolved in the browser; sets <C>data-lab-performance</C>, and code reads it with <C>usePerformanceTier()</C>.</>,
+              <>How much the effects may cost. <C>light</C> paints floating glass <C>solid</C> (no backdrop blur or refraction) and bubbles never merge. <C>auto</C> keeps the full look and steps down to <C>light</C> on weak devices (2 GB of memory or less, 2 cores or fewer, no hardware GPU) and on devices whose frames measure slow after a tap or key (remembered for 14 days; <C>measuredPerformance.forget()</C> clears it). Resolved in the browser; sets <C>data-lab-performance</C>, and code reads it with <C>usePerformanceTier()</C>.</>,
             ],
           ]}
         />
