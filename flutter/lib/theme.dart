@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import 'performance.dart';
 import 'primitives/touch_target.dart';
 import 'theme/focus_visible.dart';
 import 'theme/tokens.dart';
@@ -22,7 +23,15 @@ class ThemeData {
     required this.config,
     required this.brightness,
     ColorTokens? colors,
-  }) : colors =
+    PerformanceTier? performance,
+  }) : performance =
+           performance ??
+           resolvePerformance(
+             config.performance,
+             DeviceTraits.current,
+             slow: MeasuredPerformance.slow.value,
+           ),
+       colors =
            colors ??
            ColorTokens.resolve(
              config.palette,
@@ -36,6 +45,9 @@ class ThemeData {
   final Brightness brightness;
   final ColorTokens colors;
   final SizeTokens sizes;
+
+  /// The effects tier [config]'s `performance` resolves to on this device ([performanceOf]).
+  final PerformanceTier performance;
 
   /// Touch screens keep 44px targets whatever the density (CSS `pointer: coarse`).
   bool coarsePointer(BuildContext context) => const {
@@ -62,6 +74,7 @@ class ThemeData {
       other.config.highlightWidth == config.highlightWidth &&
       other.config.glassBarBoost == config.glassBarBoost &&
       other.config.motion == config.motion &&
+      other.performance == performance &&
       other.config.metrics == config.metrics;
 
   @override
@@ -81,6 +94,7 @@ class ThemeData {
     config.highlightWidth,
     config.glassBarBoost,
     config.motion,
+    performance,
     config.metrics,
   );
 }
@@ -126,22 +140,33 @@ class ThemeProvider extends StatelessWidget {
         brightness ??
         MediaQuery.maybePlatformBrightnessOf(context) ??
         Brightness.light;
-    final data = ThemeData(config: config, brightness: mode, colors: colors);
     // The root provider resolves the touch reach of the controls below it (TouchTarget).
     final Widget content = TouchTargetScope.exists(context)
         ? child
         : TouchTargetScope(child: child);
-    return _ThemeScope(
-      data: data,
-      child: FocusVisibility(
-        child: DefaultTextStyle.merge(
-          style: TextStyle(
-            color: data.colors.ink,
-            fontFamilyFallback: const [kitFontFamily],
+    // A device measured slow steps `auto` down while the app runs (MeasuredPerformance).
+    return ValueListenableBuilder<bool>(
+      valueListenable: MeasuredPerformance.slow,
+      child: content,
+      builder: (context, _, content) {
+        final data = ThemeData(
+          config: config,
+          brightness: mode,
+          colors: colors,
+        );
+        return _ThemeScope(
+          data: data,
+          child: FocusVisibility(
+            child: DefaultTextStyle.merge(
+              style: TextStyle(
+                color: data.colors.ink,
+                fontFamilyFallback: const [kitFontFamily],
+              ),
+              child: content!,
+            ),
           ),
-          child: content,
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -155,9 +180,11 @@ class _ThemeScope extends InheritedWidget {
 
 /// The glass style to paint with: the app's [ThemeConfig.glass], or `solid` when the platform asks
 /// for more contrast (`MediaQuery.highContrast`, the web kit's `prefers-contrast: more`; the kit
-/// then also outlines glass in the ink colour, see [glassHighContrastOf]). Flutter exposes no
+/// then also outlines glass in the ink colour, see [glassHighContrastOf]), or on a device whose
+/// effects tier can't afford backdrop filters ([PerformanceTier.backdrop]). Flutter exposes no
 /// reduce-transparency setting: apps that read one from the platform pass `GlassStyle.solid`.
-GlassStyle glassStyleOf(BuildContext context) => glassHighContrastOf(context)
+GlassStyle glassStyleOf(BuildContext context) =>
+    glassHighContrastOf(context) || !performanceOf(context).backdrop
     ? GlassStyle.solid
     : ThemeProvider.of(context).config.glass;
 

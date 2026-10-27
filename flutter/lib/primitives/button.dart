@@ -241,7 +241,7 @@ class _ButtonState extends State<Button> {
     }
     if (widget.appearance == ButtonAppearance.toolbar) {
       // The app's glass style: more contrast keeps the swell but drops the glow (below).
-      return ThemeProvider.of(context).config.glass == GlassStyle.liquid
+      return glassStyleOf(context) == GlassStyle.liquid
           ? _Press.glass
           : _Press.none;
     }

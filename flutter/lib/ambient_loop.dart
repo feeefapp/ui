@@ -95,7 +95,11 @@ class AmbientLoop extends Animation<double>
   static bool allowed(BuildContext context, {Performance? performance}) {
     final tier = performance == null
         ? performanceOf(context)
-        : resolvePerformance(performance, DeviceTraits.current);
+        : resolvePerformance(
+            performance,
+            DeviceTraits.current,
+            slow: measuredSlowOf(context),
+          );
     return !reducedMotionOf(context) &&
         TickerMode.valuesOf(context).enabled &&
         tier.ambientMotion;
