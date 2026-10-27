@@ -706,9 +706,12 @@ class _ModelLadderCardState extends State<ModelLadderCard> {
                           }
                         : null,
                     disabled: !opens,
+                    // A title with no model list to open is a label, not a disabled button.
+                    inert: !opens,
                     focusNode: _title,
-                    label:
-                        '${copy.pickModel}. $title${title == name ? '' : ', $name'}',
+                    label: opens
+                        ? '${copy.pickModel}. $title${title == name ? '' : ', $name'}'
+                        : '$title${title == name ? '' : ', $name'}',
                     height: s.controlHeight,
                     radius: 10,
                     padding: const EdgeInsetsDirectional.symmetric(
@@ -1510,6 +1513,7 @@ class _LadderControl extends StatefulWidget {
     required this.radius,
     required this.padding,
     this.bordered = false,
+    this.inert = false,
     required this.fill,
     required this.hover,
     required this.pressed,
@@ -1522,6 +1526,10 @@ class _LadderControl extends StatefulWidget {
   /// options set `border: 0`.
   final bool bordered;
   final bool disabled;
+
+  /// Not a control right now (the ladder title with no model list): full ink, the default
+  /// cursor, and not announced as a button, instead of the dimmed disabled look.
+  final bool inert;
   final FocusNode? focusNode;
   final String? label;
   final bool? expanded, selected;
@@ -1590,8 +1598,8 @@ class _LadderControlState extends State<_LadderControl> {
     );
     return Semantics(
       container: true,
-      button: true,
-      enabled: _interactive,
+      button: !widget.inert,
+      enabled: widget.inert ? null : _interactive,
       expanded: widget.expanded,
       selected: widget.selected,
       label: widget.label,
@@ -1600,6 +1608,8 @@ class _LadderControlState extends State<_LadderControl> {
         enabled: !widget.disabled,
         mouseCursor: _interactive
             ? SystemMouseCursors.click
+            : widget.inert
+            ? MouseCursor.defer
             : SystemMouseCursors.forbidden,
         onShowHoverHighlight: (value) => setState(() => _hovered = value),
         onShowFocusHighlight: (value) => setState(() => _focusVisible = value),
@@ -1617,7 +1627,7 @@ class _LadderControlState extends State<_LadderControl> {
               : null,
           onTap: _interactive ? widget.onTap : null,
           child: AnimatedOpacity(
-            opacity: widget.disabled ? 0.42 : 1,
+            opacity: widget.disabled && !widget.inert ? 0.42 : 1,
             duration: MotionTokens.durationFast,
             child: TweenAnimationBuilder<Color?>(
               tween: PaintColorTween(end: fill),

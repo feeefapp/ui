@@ -154,8 +154,10 @@ html[data-lab-theme] .lab-control.lab-ladder-title[data-variant] {
 .lab-ladder-title:hover:not(:disabled) {
   background: color-mix(in srgb, var(--ladder-ink) 6%, transparent);
 }
-.lab-ladder-title:disabled {
+/* A title with no model list to open is a label, not a dimmed disabled button. */
+html[data-lab-theme] .lab-control.lab-ladder-title:disabled {
   cursor: default;
+  opacity: 1;
 }
 .lab-ladder-title:focus-visible,
 .lab-ladder-reset:focus-visible,

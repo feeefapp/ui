@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'performance.dart';
@@ -139,16 +141,40 @@ class AmbientLoop extends Animation<double>
   }
 }
 
-/// The web's one clock for every running [AmbientLoop].
+/// The web's one clock for every running [AmbientLoop]. It rests after [idleAfter] without input
+/// (pointer, wheel or key), holding every loop still, and starts again on the next input: ambient
+/// motion is for someone looking at the page, and each web frame re-draws all of it.
 abstract final class _AmbientBeat {
   static const _step = Duration(microseconds: 1000000 ~/ 30);
+  static const idleAfter = Duration(seconds: 10);
   static final _loops = <AmbientLoop>{};
   static Timer? _timer;
   static int _beat = 0;
+  static final _sinceInput = Stopwatch()..start();
+  static bool _listening = false;
 
   static void add(AmbientLoop loop) {
     _loops.add(loop);
-    _timer ??= Timer.periodic(_step, (_) {
+    _listen();
+    _start();
+  }
+
+  static void remove(AmbientLoop loop) {
+    _loops.remove(loop);
+    if (_loops.isEmpty) _stop();
+  }
+
+  static void _start() {
+    if (_timer != null || _loops.isEmpty) return;
+    _timer = Timer.periodic(_step, (_) {
+      if (_sinceInput.elapsed > idleAfter) {
+        // Resting: the loops' clocks stop too, so they resume where they were.
+        for (final loop in _loops) {
+          loop._watch.stop();
+        }
+        _stop();
+        return;
+      }
       _beat++;
       for (final loop in _loops.toList()) {
         if (_beat % loop.webStride == 0) loop._advance();
@@ -156,11 +182,30 @@ abstract final class _AmbientBeat {
     });
   }
 
-  static void remove(AmbientLoop loop) {
-    _loops.remove(loop);
-    if (_loops.isEmpty) {
-      _timer?.cancel();
-      _timer = null;
+  static void _stop() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  static void _listen() {
+    if (_listening) return;
+    _listening = true;
+    GestureBinding.instance.pointerRouter.addGlobalRoute((_) => _input());
+    HardwareKeyboard.instance.addHandler((_) {
+      _input();
+      return false;
+    });
+  }
+
+  static void _input() {
+    _sinceInput
+      ..reset()
+      ..start();
+    if (_timer == null && _loops.isNotEmpty) {
+      for (final loop in _loops) {
+        if (loop._running) loop._watch.start();
+      }
+      _start();
     }
   }
 }

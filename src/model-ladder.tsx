@@ -308,6 +308,8 @@ export function ModelLadderCard({
   const name = displayName(stop, safe, count, copy)
   const showName = name !== title
   const safeDefault = clamp(defaultIndex, 0, count - 1)
+  /** Whether the title opens the model list; otherwise it is a plain label. */
+  const opens = pickable && (count > 1 || !!catalog?.length || !!onBrowseModels)
 
   if (view === 'pick')
     return (
@@ -337,9 +339,9 @@ export function ModelLadderCard({
           appearance="toolbar"
           controlSize="regular"
           className="lab-ladder-title"
-          onClick={pickable && (count > 1 || !!catalog?.length || !!onBrowseModels) ? () => onBrowseModels ? onBrowseModels() : setView('pick') : undefined}
-          disabled={!pickable || (count <= 1 && !catalog?.length && !onBrowseModels)}
-          aria-label={`${copy.pickModel}. ${title}${title === name ? '' : `, ${name}`}`}
+          onClick={opens ? () => onBrowseModels ? onBrowseModels() : setView('pick') : undefined}
+          disabled={!opens}
+          aria-label={`${opens ? `${copy.pickModel}. ` : ''}${title}${title === name ? '' : `, ${name}`}`}
         >
           <span className="lab-ladder-title-text">
             <span className="lab-ladder-tier-row">
@@ -354,7 +356,7 @@ export function ModelLadderCard({
             </span>
             {showName && <span className="lab-ladder-name">{name}</span>}
           </span>
-          {pickable && (count > 1 || !!catalog?.length || !!onBrowseModels) && (
+          {opens && (
             <ChevronDown size={14} aria-hidden="true" />
           )}
         </Button>
