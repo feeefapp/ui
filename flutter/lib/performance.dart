@@ -85,8 +85,9 @@ PerformanceTier resolvePerformance(Performance mode, DeviceTraits traits) {
   }
 }
 
-/// The tier the theme around [context] resolves to on this device.
+/// The tier the theme around [context] resolves to on this device (`auto` outside every
+/// [ThemeProvider]).
 PerformanceTier performanceOf(BuildContext context) => resolvePerformance(
-  ThemeProvider.of(context).config.performance,
+  ThemeProvider.maybeOf(context)?.config.performance ?? Performance.auto,
   DeviceTraits.current,
 );

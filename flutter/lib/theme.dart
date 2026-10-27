@@ -110,6 +110,10 @@ class ThemeProvider extends StatelessWidget {
 
   final Widget child;
 
+  /// The theme above [context], or null outside every [ThemeProvider].
+  static ThemeData? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_ThemeScope>()?.data;
+
   static ThemeData of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<_ThemeScope>();
     assert(scope != null, 'ThemeProvider.of requires a ThemeProvider above it');

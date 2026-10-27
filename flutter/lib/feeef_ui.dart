@@ -6,6 +6,7 @@
 /// Material can prefix this library: `import 'package:feeef_ui/feeef_ui.dart' as ui;`.
 library;
 
+export 'ambient_loop.dart';
 export 'performance.dart';
 export 'actions/actions_bar.dart';
 export 'actions/layout.dart';

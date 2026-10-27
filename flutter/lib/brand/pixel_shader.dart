@@ -6,7 +6,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
-import '../performance.dart';
+import '../ambient_loop.dart';
 import '../theme.dart';
 
 const _bayer = [
@@ -65,11 +65,11 @@ const _bayer = [
 
 /// An animated, transparent pixel field painted with ordered (8×8 Bayer) dithering in the theme's
 /// pixel ink: the twin of `PixelShader` in `@feeef.dev/ui/pixel-art`. A wave band drifts at up to
-/// 18 fps, presses send ripples through it, and reduced motion draws one still frame. Like the
+/// 15 fps, presses send ripples through it, and reduced motion draws one still frame. Like the
 /// web canvas, it lays its cells out at CSS resolution (at most 1200px wide) and scales them up.
 ///
-/// It only asks for a frame when a step is due (18 a second, not every display frame) and paints
-/// in its own layer, so the page around it never repaints. The field is computed per pixel by a
+/// It only asks for a frame when a step is due (15 a second on the kit's shared ambient beat,
+/// not every display frame) and paints in its own layer, so the page around it never repaints. The field is computed per pixel by a
 /// fragment shader (`shaders/pixel_field.frag`); until that has loaded, the same cells are drawn
 /// on the CPU in a few batched calls.
 class PixelShader extends StatefulWidget {
@@ -94,15 +94,18 @@ class PixelShader extends StatefulWidget {
   State<PixelShader> createState() => _PixelShaderState();
 }
 
-/// One animation step every 1/18 s, like the web canvas's frame limiter.
-const _step = Duration(microseconds: 1000000 ~/ 18);
-
-class _PixelShaderState extends State<PixelShader> {
-  Timer? _timer;
-  final _watch = Stopwatch();
+class _PixelShaderState extends State<PixelShader>
+    with SingleTickerProviderStateMixin {
+  /// The field steps 15 times a second on the kit's ambient beat (shared with every other
+  /// ambient loop on the web), like the web canvas's frame limiter.
+  late final _loop = AmbientLoop(
+    vsync: this,
+    period: const Duration(hours: 1),
+    maxFps: 15,
+  )..addListener(_tick);
+  Duration _last = Duration.zero;
   double _time = 1.7;
   final _ripples = <({double x, double y, double time})>[];
-  final _clock = ValueNotifier<int>(0);
   Size _size = Size.zero;
 
   /// The GPU field once its program has loaded; until then (and where it can't load) the cells
@@ -127,47 +130,31 @@ class _PixelShaderState extends State<PixelShader> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Still under reduced motion, and paused where tickers are (an offstage route or tab).
-    // Also still on devices that keep ambient decoration still (PerformanceTier.light).
-    final run =
-        !reducedMotionOf(context) &&
-        performanceOf(context).ambientMotion &&
-        TickerMode.valuesOf(context).enabled;
-    if (!run) {
-      _timer?.cancel();
-      _timer = null;
-      _watch.stop();
-    } else if (_timer == null) {
-      _watch
-        ..reset()
-        ..start();
-      _timer = Timer.periodic(_step, (_) => _tick());
-    }
+    // Still under reduced motion, on devices that keep ambient motion still, and where tickers
+    // are muted (an offstage route or tab).
+    _loop.run(AmbientLoop.allowed(context));
   }
 
   @override
   void dispose() {
     GestureBinding.instance.pointerRouter.removeGlobalRoute(_onPointer);
-    _timer?.cancel();
-    _clock.dispose();
+    _loop.dispose();
     _shader?.dispose();
     super.dispose();
   }
 
   void _tick() {
-    final dt = _watch.elapsedMicroseconds / 1e6;
-    _watch
-      ..reset()
-      ..start();
+    final now = _loop.elapsed;
+    final dt = (now - _last).inMicroseconds / 1e6;
+    _last = now;
     _time += math.min(dt, 0.1) * widget.speed;
     while (_ripples.isNotEmpty && _time - _ripples.first.time > 3) {
       _ripples.removeAt(0);
     }
-    _clock.value++;
   }
 
   void _onPointer(PointerEvent event) {
-    if (event is! PointerDownEvent || _timer == null) return;
+    if (event is! PointerDownEvent || !_loop.running) return;
     final box = context.findRenderObject() as RenderBox?;
     if (box == null || !box.attached || _size.isEmpty) return;
     final local = box.globalToLocal(event.position);
@@ -186,7 +173,7 @@ class _PixelShaderState extends State<PixelShader> {
           child: CustomPaint(
             size: Size.infinite,
             painter: _ShaderPainter(
-              repaint: _clock,
+              repaint: _loop,
               state: this,
               ink: ink.withValues(
                 alpha: ink.a * widget.opacity.clamp(0.0, 1.0),
