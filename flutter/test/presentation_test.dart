@@ -622,7 +622,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(Sheet), findsOneWidget);
       final fields = tester.getRect(find.text('Fields'));
-      expect(fields.left, closeTo(16, 0.5), reason: 'full width, 16 inside');
+      expect(
+        fields.left,
+        closeTo(8 + 16, 0.5),
+        reason: 'a fit sheet floats: the gap G, then 16 inside',
+      );
       expect(
         fields.top,
         greaterThan(800 - 300),

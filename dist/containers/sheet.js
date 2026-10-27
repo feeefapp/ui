@@ -9,7 +9,7 @@ import { attachPan, canChildPan } from '../physics/gesture.js';
 import { MotionValue, motionOf, prefersReducedMotion } from '../physics/motion-value.js';
 import { motionFade } from '../theme-config.js';
 import { SPRINGS, projectMomentum, rubberBand } from '../physics/spring.js';
-import { detentHeight, detentHeights, dragHeight, focusRaise, releaseTarget, sheetDim, sheetFrame, sheetMorphFrame, sheetRecede, } from './sheet-model.js';
+import { detentHeight, detentHeights, dragHeight, flingStep, focusRaise, freeTarget, nearestDetent, releaseTarget, sheetDim, sheetFrame, sheetMorphFrame, sheetRecede, sheetScrollStep, } from './sheet-model.js';
 import { cn } from '../utils.js';
 import { GLASS_INSTANT_ATTRIBUTE, settleGlass } from '../glass/transitions.js';
 import { POP_MOTION } from '../presentation/motion.js';
@@ -40,8 +40,12 @@ export function Sheet(props) {
         return null;
     return _jsx(SheetPresentation, { ...props, onExited: exited });
 }
+/** Rendered px per layout px of `el` (a sheet inside a scaled demo frame). */
+function scaleOf(el) {
+    return el.getBoundingClientRect().width / (el.offsetWidth || 1) || 1;
+}
 const EDITABLE = 'input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]), textarea, [contenteditable=""], [contenteditable="true"]';
-function SheetPresentation({ open, onOpenChange, label, children, detents = DEFAULT_DETENTS, detent: controlledDetent, defaultDetent, onDetentChange, dismissible = true, grabber, title, leading, trailing, showClose = true, header, dock, modal = true, backgroundInteraction, floating, source, focusDetent, regular = 'dialog', regularBreakpoint = 720, cardWidth = 380, container, recede = true, contentPadding, initialFocusRef, returnFocusRef, className, onExited, }) {
+function SheetPresentation({ open, onOpenChange, label, children, detents = DEFAULT_DETENTS, detent: controlledDetent, defaultDetent, onDetentChange, dismissible = true, snap = true, grabber, title, leading, trailing, showClose = true, header, dock, modal = true, backgroundInteraction, floating, source, focusDetent, regular = 'dialog', regularBreakpoint = 720, cardWidth = 380, container, recede = true, contentPadding, initialFocusRef, returnFocusRef, className, onExited, }) {
     const { t } = useI18n();
     const host = React.useRef(null);
     const panel = React.useRef(null);
@@ -72,6 +76,14 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
     const showGrabber = presentation !== 'dialog' && (grabber ?? detents.length > 1);
     const [localIndex, setLocalIndex] = React.useState(() => Math.max(0, detents.indexOf(defaultDetent ?? detents[0])));
     const index = controlledDetent !== undefined ? Math.max(0, detents.indexOf(controlledDetent)) : Math.min(localIndex, detents.length - 1);
+    /** A free sheet's rest height, and the detent reported with it (a controlled host echoes it back). */
+    const [freeHeight, setFreeHeight] = React.useState(null);
+    const reported = React.useRef(null);
+    const minHeight = heights.length ? Math.min(...heights) : 0;
+    const maxHeight = heights.length ? Math.max(...heights) : 0;
+    const free = !snap && freeHeight !== null && detents[index] === reported.current;
+    /** A sheet that changes height: its content gestures grow it before they scroll, and back. */
+    const resizable = presentation !== 'dialog' && (!snap || new Set(heights).size > 1);
     // Motion: `visible` is the sheet's visible height (sheet, card); `shown` 0–1 and `lift` px
     // (dialog); `morph` 0–1 the growth out of the source; `expansion` mirrors the frame for content.
     const visible = React.useRef(new MotionValue(0, 0.5)).current;
@@ -100,6 +112,8 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
         onOpenChange,
     });
     live.current = { heights, large, metrics, presentation, mode, index, open, dismissible, dims, hostModal, undimmed, onOpenChange };
+    const gesture = React.useRef({ snap, resizable, minHeight, maxHeight });
+    gesture.current = { snap, resizable, minHeight, maxHeight };
     const backdrop = React.useMemo(() => {
         if (typeof document === 'undefined')
             return null;
@@ -346,7 +360,7 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
     // The column inset (and with it fit and peek) follows the presentation and floating mode.
     React.useLayoutEffect(() => measureRef.current(), [columnInset]);
     // Present, follow detent and size changes, and leave.
-    const target = heights[index] ?? 0;
+    const target = free ? Math.max(minHeight, Math.min(maxHeight, freeHeight)) : (heights[index] ?? 0);
     const dialogHeight = metrics ? Math.min(metrics.natural, metrics.hostHeight - 64) : 0;
     React.useLayoutEffect(() => {
         if (!metrics)
@@ -515,6 +529,8 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
             void moveTo(target);
     }, [open, metrics, presentation, mode, target, dialogHeight]);
     const setDetentIndex = (next) => {
+        setFreeHeight(null);
+        reported.current = null;
         if (controlledDetent === undefined)
             setLocalIndex(next);
         if (next !== live.current.index)
@@ -522,32 +538,144 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
     };
     const setDetentRef = React.useRef(setDetentIndex);
     setDetentRef.current = setDetentIndex;
-    // Drag: the grabber and chrome always; the content when it is scrolled to the top (down) or the
-    // sheet can still grow (up). Touch claims early so the browser does not start scrolling first.
+    /** A free sheet rests at `height`; the nearest detent is reported as its detent. */
+    const settleFree = (height) => {
+        const next = nearestDetent(height, live.current.heights);
+        reported.current = detents[next];
+        setFreeHeight(height);
+        if (controlledDetent === undefined)
+            setLocalIndex(next);
+        if (next !== live.current.index)
+            onDetentChange?.(detents[next]);
+    };
+    const settleFreeRef = React.useRef(settleFree);
+    settleFreeRef.current = settleFree;
+    /** Where a released sheet goes (snap or free) at `velocity`; false when it was dismissed. */
+    const releaseSheet = (velocity, cancelled) => {
+        const L = live.current;
+        const G = gesture.current;
+        if (!G.snap) {
+            const landing = freeTarget(visible.get(), velocity, L.heights, L.dismissible);
+            if (landing.dismiss && !cancelled)
+                return dismissAway(velocity);
+            const height = landing.dismiss ? visible.get() : landing.height;
+            settleFreeRef.current(height);
+            void moveTo(height, SPRINGS.release, velocity);
+            return;
+        }
+        const landing = releaseTarget(visible.get(), velocity, L.heights, L.dismissible);
+        if (landing.dismiss && !cancelled)
+            return dismissAway(velocity);
+        const next = landing.dismiss ? L.index : landing.index;
+        setDetentRef.current(next);
+        void moveTo(L.heights[next] ?? landing.height, SPRINGS.release, velocity);
+    };
+    /** Leave at the finger's speed; the close that follows continues this same motion. */
+    const dismissAway = (velocity) => {
+        draggedAway.current = true;
+        void visible.animateTo(0, { spring: SPRINGS.smooth, velocity });
+        live.current.onOpenChange(false);
+        // A host that keeps the sheet open gets it back at its detent.
+        window.setTimeout(() => {
+            draggedAway.current = false;
+            if (live.current.open && !visible.isAnimating())
+                void moveTo(live.current.heights[live.current.index] ?? 0);
+        }, 400);
+    };
+    const releaseRef = React.useRef(releaseSheet);
+    releaseRef.current = releaseSheet;
+    // Drag: the grabber and chrome always move the sheet. On a resizable sheet a gesture over the
+    // content is split between the sheet and its scroll (grow, then scroll; scroll back, then
+    // shrink), the way iOS sheets and Flutter's DraggableScrollableSheet behave, so the sheet drives
+    // the content's scroll and momentum itself for touch. On a fixed sheet the content scrolls
+    // natively and drags the sheet down only from its top. Touch claims early so the browser does
+    // not start scrolling first.
     React.useEffect(() => {
         const el = panel.current;
         if (!el)
             return;
         let start = 0;
         let scale = 1;
-        const isChrome = (target) => !!target && (!viewport.current?.contains(target) || !!target.closest('[data-lab-sheet-handle]'));
-        return attachPan(el, () => ({
+        /** A content gesture on a resizable sheet: the split state and the last finger offset. */
+        let content = null;
+        let fling = 0;
+        const stopFling = () => {
+            if (fling)
+                cancelAnimationFrame(fling);
+            fling = 0;
+        };
+        /** The element that scrolls (the scroll area's viewport, inside its frame with the floats). */
+        const scroller = () => viewport.current?.querySelector(':scope > .lab-scroll-viewport') ?? viewport.current;
+        // The grabber, the floating header and dock, and anything marked as a handle move the sheet.
+        const isChrome = (target) => !!target && (!scroller()?.contains(target) || !!target.closest('[data-lab-sheet-handle]'));
+        /** How far the content can scroll once the sheet is at `max` (measured at the current rest height). */
+        const scrollMaxAt = (max) => {
+            const v = scroller();
+            if (!v)
+                return 0;
+            return Math.max(0, v.scrollHeight - v.clientHeight - Math.max(0, max - visible.get()));
+        };
+        /** The content keeps moving after a flick; reaching its top going down, it hands on to the sheet. */
+        const flingContent = (velocity) => {
+            const v = scroller();
+            if (!v)
+                return;
+            stopFling();
+            let speed = velocity;
+            let scroll = v.scrollTop;
+            let last = performance.now();
+            const max = v.scrollHeight - v.clientHeight;
+            const frame = (now) => {
+                const step = flingStep(scroll, speed, Math.min(64, now - last));
+                last = now;
+                scroll = step.scroll;
+                speed = step.velocity;
+                if (scroll <= 0 && speed < 0) {
+                    v.scrollTop = 0;
+                    fling = 0;
+                    // What is left of the flick carries the sheet down (and may close it).
+                    if (speed < -80) {
+                        beginMotion();
+                        releaseRef.current(speed, false);
+                    }
+                    return;
+                }
+                v.scrollTop = Math.min(max, scroll);
+                if (scroll >= max || Math.abs(speed) < 12) {
+                    fling = 0;
+                    return;
+                }
+                fling = requestAnimationFrame(frame);
+            };
+            fling = requestAnimationFrame(frame);
+        };
+        const stopPan = attachPan(el, () => ({
             axis: 'y',
             touch: 'claim',
-            canBegin: ({ target, pointerType }) => live.current.open &&
-                !target?.closest(EDITABLE) &&
-                (pointerType !== 'mouse' || isChrome(target) || !!target?.closest('.lab-sheet-grabber')),
+            canBegin: ({ target, pointerType }) => {
+                stopFling();
+                // A field keeps the mouse (text selection) and its own drags while focused; a finger
+                // dragging across an unfocused field moves the sheet (a tap still focuses it), as in Maps.
+                const field = target?.closest(EDITABLE);
+                if (field && (pointerType === 'mouse' || field === document.activeElement))
+                    return false;
+                return (live.current.open &&
+                    (pointerType !== 'mouse' || isChrome(target) || !!target?.closest('.lab-sheet-grabber')));
+            },
             shouldStart: ({ direction, target }) => {
                 const L = live.current;
                 if (L.presentation === 'dialog')
                     return direction === 1 && L.dismissible && isChrome(target);
                 if (isChrome(target))
                     return true;
+                // A nested scroller or draggable control inside the content keeps its own gesture.
+                if (gesture.current.resizable)
+                    return !canChildPan(target, scroller() ?? el, 'y', direction);
                 if (direction === 1)
                     return !canChildPan(target, el, 'y', 1);
                 return visible.get() < Math.max(...L.heights) - 1;
             },
-            onStart: () => {
+            onStart: ({ pointerType }) => {
                 dragging.current = true;
                 scale = el.getBoundingClientRect().width / (el.offsetWidth || 1) || 1;
                 if (live.current.presentation === 'dialog') {
@@ -556,8 +684,20 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
                     return;
                 }
                 visible.stop();
-                beginMotion();
+                content = null;
                 start = visible.get();
+                const target = lastTarget;
+                if (gesture.current.resizable && !isChrome(target) && pointerType !== 'mouse') {
+                    // Lay the content out at the height it shows, so its scroll range is the real one.
+                    if (motionHeight.current)
+                        rest(start);
+                    const max = gesture.current.maxHeight;
+                    content = { state: { raw: start, scroll: scroller()?.scrollTop ?? 0 }, last: 0, scrollMax: scrollMaxAt(max) };
+                    if (start < max - 0.5)
+                        beginMotion();
+                    return;
+                }
+                beginMotion();
             },
             onMove: ({ dy, time }) => {
                 const L = live.current;
@@ -565,6 +705,23 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
                 if (L.presentation === 'dialog') {
                     const y = start + move;
                     lift.track(y < 0 ? -rubberBand(-y, 300) * 0.5 : y, time);
+                    return;
+                }
+                const c = content;
+                if (c) {
+                    const max = gesture.current.maxHeight;
+                    c.state = sheetScrollStep(c.state, -(move - c.last), max, c.scrollMax);
+                    c.last = move;
+                    const atTop = Math.abs(c.state.raw - max) < 0.5;
+                    // At its full height the sheet rests (exact layout) and only the content scrolls.
+                    if (atTop && motionHeight.current)
+                        rest(max);
+                    if (!atTop && !motionHeight.current)
+                        beginMotion();
+                    const v = scroller();
+                    if (v)
+                        v.scrollTop = c.state.scroll;
+                    visible.track(dragHeight(c.state.raw, L.heights, L.metrics?.hostHeight ?? 800, L.dismissible), time);
                     return;
                 }
                 visible.track(dragHeight(start - move, L.heights, L.metrics?.hostHeight ?? 800, L.dismissible), time);
@@ -582,26 +739,83 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
                         void lift.animateTo(0, { spring: SPRINGS.release, velocity: lift.getVelocity(time) });
                     return;
                 }
-                const velocity = visible.getVelocity(time);
-                const landing = releaseTarget(visible.get(), velocity, L.heights, L.dismissible);
-                if (landing.dismiss && !cancelled) {
-                    // Leave at the finger's speed; the close that follows continues this same motion.
-                    draggedAway.current = true;
-                    void visible.animateTo(0, { spring: SPRINGS.smooth, velocity });
-                    L.onOpenChange(false);
-                    // A host that keeps the sheet open gets it back at its detent.
-                    window.setTimeout(() => {
-                        draggedAway.current = false;
-                        if (live.current.open && !visible.isAnimating())
-                            void moveTo(live.current.heights[live.current.index] ?? 0);
-                    }, 400);
+                const c = content;
+                content = null;
+                const max = gesture.current.maxHeight;
+                if (c && c.state.raw >= max - 0.5 && !cancelled) {
+                    // At full height: settle any stretch, and let the content carry the flick.
+                    const speed = -vy / scale;
+                    if (c.state.raw > max + 0.5)
+                        void moveTo(max, SPRINGS.release, visible.getVelocity(time));
+                    else if (motionHeight.current)
+                        rest(max);
+                    // It rests at its highest detent: report it.
+                    if (gesture.current.snap)
+                        setDetentRef.current(L.heights.indexOf(max));
+                    else
+                        settleFreeRef.current(max);
+                    const scroll = c.state.scroll;
+                    if ((speed > 0 && scroll < c.scrollMax - 0.5) || (speed < 0 && scroll > 0.5))
+                        flingContent(speed);
                     return;
                 }
-                const next = landing.dismiss ? L.index : landing.index;
-                setDetentRef.current(next);
-                void moveTo(L.heights[next] ?? landing.height, SPRINGS.release, velocity);
+                releaseRef.current(visible.getVelocity(time), cancelled);
             },
         }));
+        // The element the current pointer went down on (attachPan reports it to shouldStart only).
+        let lastTarget = null;
+        const remember = (event) => {
+            lastTarget = event.target instanceof Element ? event.target : null;
+        };
+        el.addEventListener('pointerdown', remember, true);
+        el.addEventListener('touchstart', remember, { capture: true, passive: true });
+        // Wheel and trackpad: grow before scrolling down, shrink once scrolled back to the top. A
+        // snapping sheet settles on a detent when the wheel stops.
+        let idle = 0;
+        const onWheel = (event) => {
+            const L = live.current;
+            const G = gesture.current;
+            const v = scroller();
+            if (!G.resizable || !v || !L.open || event.ctrlKey || dragging.current)
+                return;
+            const target = event.target instanceof Element ? event.target : null;
+            if (!target || target.closest(EDITABLE))
+                return;
+            const delta = (event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? v.clientHeight : 1)) / scaleOf(el);
+            // A nested scroller inside the content keeps its own wheel.
+            if (!delta || (v.contains(target) && canChildPan(target, v, 'y', delta > 0 ? -1 : 1)))
+                return;
+            const height = visible.get();
+            const grow = delta > 0 && height < G.maxHeight - 0.5;
+            const shrink = delta < 0 && v.scrollTop <= 0 && height > G.minHeight + 0.5;
+            if (!grow && !shrink)
+                return;
+            event.preventDefault();
+            stopFling();
+            visible.stop();
+            beginMotion();
+            visible.set(Math.max(G.minHeight, Math.min(G.maxHeight, height + delta)));
+            window.clearTimeout(idle);
+            idle = window.setTimeout(() => {
+                if (dragging.current || visible.isAnimating())
+                    return;
+                if (gesture.current.snap)
+                    releaseRef.current(0, true);
+                else {
+                    settleFreeRef.current(visible.get());
+                    rest(visible.get());
+                }
+            }, 160);
+        };
+        el.addEventListener('wheel', onWheel, { passive: false });
+        return () => {
+            stopPan();
+            stopFling();
+            window.clearTimeout(idle);
+            el.removeEventListener('pointerdown', remember, true);
+            el.removeEventListener('touchstart', remember, { capture: true });
+            el.removeEventListener('wheel', onWheel);
+        };
         // A sheet open before its container exists gets its panel when the container arrives.
     }, [container]);
     const cycle = (step) => {
@@ -623,6 +837,7 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
     const sheetState = React.useMemo(() => ({
         detent: detents[index],
         expansion,
+        height: visible,
         presentation,
         setDetent: (d) => {
             const i = detents.indexOf(d);

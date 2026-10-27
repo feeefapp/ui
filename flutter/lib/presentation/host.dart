@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../glass/container.dart';
+import '../platform/pointer_shield.dart';
 
 /// What a presentation surface (Alert, Modal, Pane, Sheet) reads when [showModal], [showAlert],
 /// [showPane] or [showSheet] hosts it in a route: whether the route is still open, and how to
@@ -200,7 +201,10 @@ class _PresentationHostState extends State<PresentationHost> {
           role: widget.alert ? SemanticsRole.alertDialog : SemanticsRole.dialog,
           explicitChildNodes: true,
           label: widget.label,
-          child: widget.child,
+          // A modal surface owns the whole area, over any embedded web page too.
+          child: widget.modal
+              ? PointerShield(child: widget.child)
+              : widget.child,
         ),
       ),
     ),

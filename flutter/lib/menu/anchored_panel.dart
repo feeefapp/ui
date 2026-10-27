@@ -9,6 +9,7 @@ import '../glass/container.dart';
 import '../glass/member.dart';
 import 'morph_model.dart' show menuAlign;
 import 'placement.dart';
+import '../platform/pointer_shield.dart';
 
 export 'placement.dart';
 
@@ -292,9 +293,13 @@ class _AnchoredPanelState extends State<AnchoredPanel>
                   Positioned.fill(
                     child: IgnorePointer(
                       ignoring: !open,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onTap: widget.onDismiss,
+                      // Over an embedded web page too: a tap there closes the panel.
+                      child: PointerShield(
+                        enabled: open,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onTap: widget.onDismiss,
+                        ),
                       ),
                     ),
                   ),
@@ -317,7 +322,7 @@ class _AnchoredPanelState extends State<AnchoredPanel>
                 state: this,
                 child: Directionality(
                   textDirection: direction,
-                  child: Builder(builder: widget.panel),
+                  child: PointerShield(child: Builder(builder: widget.panel)),
                 ),
               ),
             ),

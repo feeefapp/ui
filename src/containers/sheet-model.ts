@@ -218,3 +218,78 @@ function smooth(t: number) {
 function round(value: number) {
   return Math.round(value * 100) / 100
 }
+
+/**
+ * Where a released free sheet (`snap={false}`) comes to rest: the flick's momentum projected and
+ * kept between the lowest and highest detents, or dismissed when it is flung below half the lowest
+ * one and the sheet is dismissible.
+ */
+export function freeTarget(
+  visible: number,
+  velocity: number,
+  heights: readonly number[],
+  dismissible: boolean
+): { height: number; dismiss: boolean } {
+  const min = Math.min(...heights),
+    max = Math.max(...heights)
+  const projected = projectMomentum(visible, velocity, 0.99)
+  if (dismissible && projected < min / 2) return { height: 0, dismiss: true }
+  return { height: Math.max(min, Math.min(max, projected)), dismiss: false }
+}
+
+/** The nearest detent index to a free height. */
+export function nearestDetent(height: number, heights: readonly number[]) {
+  let best = 0
+  heights.forEach((h, i) => {
+    if (Math.abs(h - height) < Math.abs(heights[best] - height)) best = i
+  })
+  return best
+}
+
+/** One gesture over a resizable sheet's content: the sheet's unclamped height and the scroll. */
+export type SheetScrollState = { raw: number; scroll: number }
+
+/**
+ * Splits one finger movement over the content between the sheet and its scroll, like iOS sheets
+ * and Flutter's DraggableScrollableSheet. `delta` > 0 moves the content up (finger up): the sheet
+ * grows to `max` first, then the content scrolls to `scrollMax` and stops there; content that does
+ * not scroll lets the sheet stretch past `max`. `delta` < 0 undoes that in reverse: the stretch, then the scroll back to the top, then the
+ * sheet shrinks (below its lowest detent the caller's `dragHeight` applies). `raw` is the height
+ * before rubber-banding.
+ */
+export function sheetScrollStep(state: SheetScrollState, delta: number, max: number, scrollMax: number): SheetScrollState {
+  let { raw, scroll } = state
+  let d = delta
+  if (d > 0) {
+    const grow = Math.max(0, Math.min(d, max - raw))
+    raw += grow
+    d -= grow
+    const scrolled = Math.max(0, Math.min(d, scrollMax - scroll))
+    scroll += scrolled
+    d -= scrolled
+    // Content that scrolls stops at its end, like a list; a sheet with nothing to scroll stretches.
+    if (scrollMax <= 0) raw += d
+  } else if (d < 0) {
+    const unstretch = Math.max(0, Math.min(-d, raw - max))
+    raw -= unstretch
+    d += unstretch
+    const back = Math.max(0, Math.min(-d, scroll))
+    scroll -= back
+    d += back
+    raw += d
+  }
+  return { raw, scroll }
+}
+
+/** iOS UIScrollView's normal deceleration per ms, for content flung inside a sheet. */
+export const SCROLL_DECELERATION = 0.998
+
+/**
+ * One step of a content fling: `velocity` (px/s, positive = content moving up / scroll growing)
+ * decays by `rate` per ms. Returns the scroll after `ms` and the velocity left.
+ */
+export function flingStep(scroll: number, velocity: number, ms: number, rate = SCROLL_DECELERATION) {
+  const decay = Math.pow(rate, ms)
+  const travel = ((velocity / 1000) * rate * (1 - decay)) / (1 - rate)
+  return { scroll: scroll + travel, velocity: velocity * decay }
+}

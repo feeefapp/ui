@@ -106,4 +106,39 @@ export type SheetMorphFrame = {
 export declare function sheetMorphFrame(p: number, panel: SheetRect, source: SheetRect, sourceRadius: number, radius: number): SheetMorphFrame;
 /** The detent a text field focused at `index` should raise the sheet to, or null to stay. */
 export declare function focusRaise(detents: readonly SheetDetent[], heights: readonly number[], index: number, focusDetent: SheetDetent | null | undefined): number | null;
+/**
+ * Where a released free sheet (`snap={false}`) comes to rest: the flick's momentum projected and
+ * kept between the lowest and highest detents, or dismissed when it is flung below half the lowest
+ * one and the sheet is dismissible.
+ */
+export declare function freeTarget(visible: number, velocity: number, heights: readonly number[], dismissible: boolean): {
+    height: number;
+    dismiss: boolean;
+};
+/** The nearest detent index to a free height. */
+export declare function nearestDetent(height: number, heights: readonly number[]): number;
+/** One gesture over a resizable sheet's content: the sheet's unclamped height and the scroll. */
+export type SheetScrollState = {
+    raw: number;
+    scroll: number;
+};
+/**
+ * Splits one finger movement over the content between the sheet and its scroll, like iOS sheets
+ * and Flutter's DraggableScrollableSheet. `delta` > 0 moves the content up (finger up): the sheet
+ * grows to `max` first, then the content scrolls to `scrollMax` and stops there; content that does
+ * not scroll lets the sheet stretch past `max`. `delta` < 0 undoes that in reverse: the stretch, then the scroll back to the top, then the
+ * sheet shrinks (below its lowest detent the caller's `dragHeight` applies). `raw` is the height
+ * before rubber-banding.
+ */
+export declare function sheetScrollStep(state: SheetScrollState, delta: number, max: number, scrollMax: number): SheetScrollState;
+/** iOS UIScrollView's normal deceleration per ms, for content flung inside a sheet. */
+export declare const SCROLL_DECELERATION = 0.998;
+/**
+ * One step of a content fling: `velocity` (px/s, positive = content moving up / scroll growing)
+ * decays by `rate` per ms. Returns the scroll after `ms` and the velocity left.
+ */
+export declare function flingStep(scroll: number, velocity: number, ms: number, rate?: number): {
+    scroll: number;
+    velocity: number;
+};
 //# sourceMappingURL=sheet-model.d.ts.map

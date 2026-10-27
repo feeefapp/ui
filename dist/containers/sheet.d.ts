@@ -23,6 +23,12 @@ export type SheetProps = PresentationChromeProps & {
     defaultDetent?: SheetDetent;
     /** Called when the person drags, taps the grabber, focuses a field or taps the dimmed page. */
     onDetentChange?: (detent: SheetDetent) => void;
+    /**
+     * `true` (default): a released sheet snaps to the detent its flick projects to. `false`: it rests
+     * wherever it is let go (after the flick's momentum), anywhere between its lowest and highest
+     * detents, like Flutter's DraggableScrollableSheet without snapping.
+     */
+    snap?: boolean;
     /** Whether dragging down, the scrim and Escape close it. Default true. The close bubble always does. */
     dismissible?: boolean;
     /** Shows the grabber. Default: when there is more than one detent. */
@@ -83,6 +89,8 @@ export type SheetState = {
     detent: SheetDetent;
     /** 0 at the lowest partial height … 1 at full height, every frame (subscribe to paint with it). */
     expansion: MotionValue;
+    /** The visible height in px, every frame (a free sheet rests between detents). */
+    height: MotionValue;
     /** Moves the sheet to another of its detents. */
     setDetent: (detent: SheetDetent) => void;
     /** How the sheet is presented right now. */

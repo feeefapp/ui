@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 
 import '../motion.dart';
 import 'container.dart';
+import '../platform/pointer_shield.dart';
 
 /// Joins the nearest [GlassContainer] with [child], so the container paints its glass (the twin of
 /// `useGlassMember` in `@feeef.dev/ui/glass`). Inside a container the child's content rides with
@@ -173,26 +174,31 @@ class _GlassMemberBoxState extends State<GlassMemberBox> {
     );
     if (_inContainer) {
       // Content rides with its glass while the bubble moves, and swells with a press. The tree
-      // keeps one shape whether or not the bubble is hidden, so its content keeps its state.
-      return KeyedSubtree(
-        key: _box,
-        child: ValueListenableBuilder<(Offset, double)>(
-          valueListenable: _handle?.content ?? _still,
-          builder: (context, value, child) => Transform.translate(
-            offset: value.$1,
-            child: Transform.scale(scale: value.$2, child: child),
+      // keeps one shape whether or not the bubble is hidden, so its content keeps its state. A
+      // bubble over an embedded web page keeps the pointer ([PointerShield]).
+      return PointerShield(
+        child: KeyedSubtree(
+          key: _box,
+          child: ValueListenableBuilder<(Offset, double)>(
+            valueListenable: _handle?.content ?? _still,
+            builder: (context, value, child) => Transform.translate(
+              offset: value.$1,
+              child: Transform.scale(scale: value.$2, child: child),
+            ),
+            child: widget.origin == null
+                ? content
+                : ClipPath(
+                    clipper: _GlassClipper(_clip ?? _unclipped),
+                    child: content,
+                  ),
           ),
-          child: widget.origin == null
-              ? content
-              : ClipPath(
-                  clipper: _GlassClipper(_clip ?? _unclipped),
-                  child: content,
-                ),
         ),
       );
     }
     if (_nested) return KeyedSubtree(key: _box, child: content);
-    return KeyedSubtree(key: _box, child: widget.standalone(content));
+    return PointerShield(
+      child: KeyedSubtree(key: _box, child: widget.standalone(content)),
+    );
   }
 }
 

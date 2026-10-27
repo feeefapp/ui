@@ -14,6 +14,7 @@ import 'body.dart';
 import 'header.dart';
 import 'host.dart';
 import 'motion.dart';
+import '../platform/pointer_shield.dart';
 
 /// The side a [Pane] slides in from.
 enum PaneSide {
@@ -389,7 +390,7 @@ class _DesktopPaneState extends State<_DesktopPane>
                     // While it slides or fades, its glass rides it as is and leaves with it.
                     child: GlassInstant(
                       instant: _shownValue.isAnimating || _fade.isAnimating,
-                      child: row!,
+                      child: PointerShield(child: row!),
                     ),
                   ),
                 ),

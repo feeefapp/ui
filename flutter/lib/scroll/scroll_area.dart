@@ -83,9 +83,40 @@ class ScrollArea extends StatefulWidget {
   State<ScrollArea> createState() => _ScrollAreaState();
 }
 
+/// Hands a scroll controller to the first [ScrollArea] below it that has none of its own: a
+/// [Sheet] built with `builder` gives its content's scroll to it, so a drag over the content grows
+/// the sheet before it scrolls. Areas nested inside that one keep their own.
+class ScrollAreaPrimary extends InheritedWidget {
+  const ScrollAreaPrimary({
+    super.key,
+    required this.controller,
+    required super.child,
+  });
+
+  /// The controller to take, or null to stop handing one down.
+  final ScrollController? controller;
+
+  /// The controller handed to a [ScrollArea] at [context], if any.
+  static ScrollController? of(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<ScrollAreaPrimary>()
+      ?.controller;
+
+  @override
+  bool updateShouldNotify(ScrollAreaPrimary old) =>
+      old.controller != controller;
+}
+
 class _ScrollAreaState extends State<ScrollArea> {
   late final _own = ScrollController();
-  ScrollController get _controller => widget.controller ?? _own;
+  ScrollController? _primary;
+  ScrollController get _controller => widget.controller ?? _primary ?? _own;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _primary = ScrollAreaPrimary.of(context);
+  }
+
   double _top = 0, _bottom = 0;
 
   /// Ticks when the scroll view's size or content changes, so the washes follow it.
@@ -343,7 +374,11 @@ class _ScrollAreaState extends State<ScrollArea> {
                           value: 0,
                           child: ScrollTopReserve(
                             value: topReserve + safe.top,
-                            child: widget.child,
+                            // Areas inside this one keep their own controllers.
+                            child: ScrollAreaPrimary(
+                              controller: null,
+                              child: widget.child,
+                            ),
                           ),
                         ),
                       ),

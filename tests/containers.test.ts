@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { projectMomentum } from '../src/physics/spring.ts'
 import { diffStack, dragDismissRect, mixRect, slideFrame, zoomFrame } from '../src/containers/stack-model.ts'
 import {
   detentHeight,
@@ -7,6 +8,10 @@ import {
   dragHeight,
   releaseTarget,
   focusRaise,
+  freeTarget,
+  flingStep,
+  nearestDetent,
+  sheetScrollStep,
   sheetDim,
   sheetFrame,
   sheetMorphFrame,
@@ -155,4 +160,39 @@ test('a focused field raises a peek sheet to its top detent', () => {
   assert.equal(focusRaise(detents, heights, 0, 'medium'), 1)
   assert.equal(focusRaise(detents, heights, 2, 'medium'), null)
   assert.equal(focusRaise(detents, heights, 0, null), null)
+})
+
+test('free release: momentum, kept between the lowest and highest detents', () => {
+  const heights = [84, 400, 790]
+  assert.deepEqual(freeTarget(500, 0, heights, true), { height: 500, dismiss: false })
+  assert.ok(Math.abs(freeTarget(500, 1000, heights, true).height - 599) < 1e-9)
+  assert.deepEqual(freeTarget(700, 4000, heights, true), { height: 790, dismiss: false })
+  assert.deepEqual(freeTarget(120, -3000, heights, true), { height: 0, dismiss: true })
+  assert.deepEqual(freeTarget(120, -3000, heights, false), { height: 84, dismiss: false })
+  assert.equal(nearestDetent(560, heights), 1)
+  assert.equal(nearestDetent(600, heights), 2)
+  assert.equal(nearestDetent(10, heights), 0)
+})
+
+test('scroll handoff: grow, then scroll, then stretch; back in reverse', () => {
+  // Growing from medium: 300 to the top, the rest scrolls; content that scrolls stops at its end.
+  assert.deepEqual(sheetScrollStep({ raw: 400, scroll: 0 }, 500, 700, 1000), { raw: 700, scroll: 200 })
+  assert.deepEqual(sheetScrollStep({ raw: 700, scroll: 950 }, 100, 700, 1000), { raw: 700, scroll: 1000 })
+  // Down: the stretch goes first, then the scroll back to the top, then the sheet shrinks.
+  assert.deepEqual(sheetScrollStep({ raw: 750, scroll: 1000 }, -60, 700, 1000), { raw: 700, scroll: 990 })
+  assert.deepEqual(sheetScrollStep({ raw: 700, scroll: 200 }, -500, 700, 1000), { raw: 400, scroll: 0 })
+  assert.deepEqual(sheetScrollStep({ raw: 400, scroll: 0 }, -500, 700, 1000), { raw: -100, scroll: 0 })
+  // Content that does not scroll: everything moves the sheet.
+  assert.deepEqual(sheetScrollStep({ raw: 690, scroll: 0 }, 30, 700, 0), { raw: 720, scroll: 0 })
+  assert.deepEqual(sheetScrollStep({ raw: 400, scroll: 0 }, 0, 700, 0), { raw: 400, scroll: 0 })
+})
+
+test('content fling decays like UIScrollView and reports what is left', () => {
+  const a = flingStep(0, 2000, 16)
+  assert.ok(a.scroll > 30 && a.scroll < 32)
+  assert.ok(Math.abs(a.velocity - 2000 * Math.pow(0.998, 16)) < 1e-9)
+  // Over a long time it reaches the projected distance.
+  const far = flingStep(0, 2000, 100000)
+  assert.ok(Math.abs(far.scroll - projectMomentum(0, 2000, 0.998)) < 1e-6)
+  assert.ok(far.velocity < 1e-6)
 })
