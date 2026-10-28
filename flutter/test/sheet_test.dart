@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:feeef_ui/containers/sheet.dart';
 import 'package:feeef_ui/platform/pointer_shield.dart';
 import 'package:feeef_ui/scroll/scroll_area.dart';
+import 'package:feeef_ui/primitives/segmented.dart';
 import 'package:feeef_ui/primitives/text_field.dart';
 import 'package:feeef_ui/theme.dart';
 import 'package:flutter/gestures.dart';
@@ -1572,6 +1573,59 @@ void main() {
           host(const PointerShield(child: Text('Chrome'))),
         );
         expect(find.byType(Stack), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'a vertical drag that starts on a segmented control moves the sheet',
+      (tester) async {
+        _phone(tester);
+        var detent = SheetDetent.medium;
+        var choice = 'a';
+        await tester.pumpWidget(
+          page(
+            sheet: (set) => Sheet(
+              label: 'Route',
+              container: true,
+              detents: const [SheetDetent.medium, SheetDetent.large],
+              detent: detent,
+              onDetentChange: (d) => set(() => detent = d),
+              showClose: false,
+              child: Column(
+                children: [
+                  SegmentedControl<String>(
+                    label: 'Stops',
+                    value: choice,
+                    onChange: (v) => set(() => choice = v),
+                    options: const [
+                      SegmentOption(value: 'a', label: 'Three'),
+                      SegmentOption(value: 'b', label: 'Six'),
+                    ],
+                  ),
+                  for (var i = 0; i < 30; i++)
+                    SizedBox(height: 44, child: Text('Stop $i')),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(visible(tester), closeTo(400, 0.5));
+        await tester.timedDragFrom(
+          tester.getCenter(find.byType(SegmentedControl<String>)),
+          const Offset(0, -320),
+          const Duration(milliseconds: 900),
+        );
+        await tester.pumpAndSettle();
+        expect(detent, SheetDetent.large);
+        expect(choice, 'a', reason: 'the drag was not a choice');
+        await tester.timedDragFrom(
+          tester.getCenter(find.byType(SegmentedControl<String>)),
+          const Offset(0, 320),
+          const Duration(milliseconds: 900),
+        );
+        await tester.pumpAndSettle();
+        expect(detent, SheetDetent.medium);
       },
     );
   });
