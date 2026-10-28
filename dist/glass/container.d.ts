@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { type GlassMemberOptions } from './context.js';
 import { type GlassKind } from './material.js';
 import type { GlassStyle } from '../theme-config.js';
 import './glass.css';
@@ -63,6 +64,13 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
      * ignores `tint` and never adapts its tone. MenuSurface uses it.
      */
     material?: GlassKind;
+    /**
+     * The container is also its only bubble: a GlassGroup with no container around it paints the
+     * same material this way instead of a fallback of its own.
+     */
+    solo?: {
+        id?: string;
+    } & GlassMemberOptions;
 };
 /**
  * Draws ONE glass material for every bubble inside it (GlassGroup, ToolbarGroup, Dock, …), like
@@ -123,6 +131,13 @@ export declare const GlassContainer: React.ForwardRefExoticComponent<React.HTMLA
      * ignores `tint` and never adapts its tone. MenuSurface uses it.
      */
     material?: GlassKind;
+    /**
+     * The container is also its only bubble: a GlassGroup with no container around it paints the
+     * same material this way instead of a fallback of its own.
+     */
+    solo?: {
+        id?: string;
+    } & GlassMemberOptions;
 } & React.RefAttributes<HTMLElement>>;
 /**
  * A GlassContainer unless one already encloses it, then a plain element. Kit rows (app bar,
@@ -177,6 +192,13 @@ export declare const GlassScope: React.ForwardRefExoticComponent<React.HTMLAttri
      * ignores `tint` and never adapts its tone. MenuSurface uses it.
      */
     material?: GlassKind;
+    /**
+     * The container is also its only bubble: a GlassGroup with no container around it paints the
+     * same material this way instead of a fallback of its own.
+     */
+    solo?: {
+        id?: string;
+    } & GlassMemberOptions;
 } & React.RefAttributes<HTMLElement>>;
 /**
  * Glass bars floating over scrolling content (a ScrollArea's app bar and dock, a TabView's tab

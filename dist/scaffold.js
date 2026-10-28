@@ -4,6 +4,8 @@ import * as React from 'react';
 import { createPortal, flushSync } from 'react-dom';
 import { cn } from './utils.js';
 import { useGlassMember } from './glass/member.js';
+import { GlassContext } from './glass/context.js';
+import { GlassContainer } from './glass/container.js';
 import './scaffold.css';
 import { prefersReducedMotion } from './physics/motion-value.js';
 import { useShellGap } from './scroll/shell-gap.js';
@@ -225,6 +227,16 @@ export function FloatingLayer({ children, slot, active = true, edge = 'auto', ga
  * the container paints it, so neighbouring bubbles can merge, split and share light.
  */
 export const GlassGroup = React.forwardRef(({ as = 'div', className, children, glassId, glassUnion, glassMotion, ...props }, ref) => {
+    // No container around it: it is its own container, so it paints exactly the same glass (one
+    // material, moving light, hairline) as bubbles in a row, never a CSS fallback of its own.
+    const container = React.useContext(GlassContext);
+    if (!container)
+        return (_jsx(GlassContainer, { ...props, as: as, ref: ref, className: cn('lab-glass-group lab-light-edge', className), "data-lab-corners": "", solo: { id: glassId, union: glassUnion, motion: glassMotion }, children: children }));
+    return _jsx(GlassGroupMember, { as: as, ref: ref, className: className, glassId: glassId, glassUnion: glassUnion, glassMotion: glassMotion, ...props, children: children });
+});
+GlassGroup.displayName = 'GlassGroup';
+/** A GlassGroup inside a container: it registers there and the container paints its glass. */
+const GlassGroupMember = React.forwardRef(({ as = 'div', className, children, glassId, glassUnion, glassMotion, ...props }, ref) => {
     const element = React.useRef(null);
     const setRef = React.useCallback((node) => {
         element.current = node;
@@ -242,7 +254,7 @@ export const GlassGroup = React.forwardRef(({ as = 'div', className, children, g
         'data-glass-member': member ? '' : undefined,
     }, children);
 });
-GlassGroup.displayName = 'GlassGroup';
+GlassGroupMember.displayName = 'GlassGroupMember';
 let currentTransition = null;
 let navigationSerial = 0;
 /** Keep the media engine mounted while navigation crossfades only the content surface. */

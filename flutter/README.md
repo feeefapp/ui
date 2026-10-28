@@ -27,7 +27,7 @@ pixels per docs page: median / worst variant. Almost all of what remains is glyp
 | `presentation` | `Alert`, `Modal`, `PresentationHeader`, `PresentationBody`, `PresentationDock`, `showAlert`, `showModal`, `showSheet` (a `PopupRoute`, so they work in a plain `WidgetsApp`) | modal 0.13–0.50%, pane 0.13–0.43%, sheet 0.06–0.49% (docs examples and open scenes) |
 | `popover-surface`, tooltip | `PopoverSurface`, `Popover`, `Tooltip` | popover-surface 0.23 / 0.44% |
 | `menu` | `MenuSurface`, `MenuRow`, `MenuSeparator`, `MenuLabel`, `MenuTokens`, `FloatingBoundary`, `AnchoredPanel` (the Radix Popper twin every popup lays out in) | menu (new) |
-| `glass` | `GlassContainer`, `GlassScope`, `GlassLayer`, `GlassSurface`, `GlassBackdrop`, refraction shader | glass-container 1.82 / 4.77% (Chrome bends the backdrop; Flutter web can't), glass-group 0.30 / 2.09% |
+| `glass` | `GlassContainer`, `GlassScope`, `GlassLayer`, `GlassBackdrop`, refraction shader | glass-container 1.82 / 4.77% (Chrome bends the backdrop; Flutter web can't), glass-group 0.30 / 2.09% |
 | `scaffold` (`GlassGroup`), `toolbar`, `toolbar-search` | `GlassGroup`, `Toolbar`, `ToolbarGroup`, `ToolbarSearch`, `ScaffoldProvider`, `FloatingLayer` | toolbar 0.32 / 0.77% |
 | `filter-bar` | `FilterBar`, `FilterOption` | filter-bar 0.59 / 1.48% |
 | `dock`, `actions` | `Dock`, `DockContentSwap`, `ActionsBar`, `ActionsMenuAnchor` | dock 0.85 / 1.84%, actions-bar 0.55 / 1.54% |

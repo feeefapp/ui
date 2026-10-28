@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { cn } from '../utils'
 import { useReducedMotion } from '../physics/react'
-import { GlassContext, GlassBarContext, type GlassRegistry } from './context'
+import { GlassContext, GlassBarContext, type GlassMemberOptions, type GlassRegistry } from './context'
 import { GlassScene } from './scene'
 import { clampGlassTint, GLASS_BAR_TINT, type GlassKind } from './material'
 import type { GlassStyle } from '../theme-config'
@@ -97,6 +97,11 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
    * ignores `tint` and never adapts its tone. MenuSurface uses it.
    */
   material?: GlassKind
+  /**
+   * The container is also its only bubble: a GlassGroup with no container around it paints the
+   * same material this way instead of a fallback of its own.
+   */
+  solo?: { id?: string } & GlassMemberOptions
 }
 
 /**
@@ -110,7 +115,7 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
  * JavaScript, or in forced colors, every bubble paints its own glass as before.
  */
 export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>(function GlassContainer(
-  { as = 'div', spacing = 8, cornerShape = 'superellipse', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 1, highlightProfile = 'rim', highlightStrength = 1, refractionStrength = 1, refractionProfile = 'gentle', tint, backdropSource, material = 'regular', className, children, ...props },
+  { as = 'div', spacing = 8, cornerShape = 'superellipse', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 1, highlightProfile = 'rim', highlightStrength = 1, refractionStrength = 1, refractionProfile = 'gentle', tint, backdropSource, material = 'regular', solo, className, children, ...props },
   ref
 ) {
   const host = React.useRef<HTMLElement | null>(null)
@@ -120,6 +125,8 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
   const scene = React.useRef<GlassScene | null>(null)
   const pending = React.useRef<(() => void)[]>([])
   const uid = React.useId()
+  const autoSoloId = React.useId()
+  const soloId = solo?.id ?? autoSoloId
   const reduced = useReducedMotion()
   const style = useGlassStyle()
   // The light effects tier (ThemeProvider, performance.ts): bubbles never merge, so no union
@@ -168,9 +175,13 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
     if (!host.current || !backdrop.current || !paint.current || !shadow.current) return
     const created = new GlassScene(host.current, backdrop.current, paint.current, shadow.current, uid)
     scene.current = created
+    const own = solo ? created.register(soloId, host.current, { union: solo.union, motion: solo.motion, origin: solo.origin }) : null
     for (const register of pending.current.splice(0)) register()
     created.measure()
+    // Paint before the browser does, so the bubbles never show a frame of their own fallback.
+    created.draw()
     return () => {
+      own?.()
       created.dispose()
       scene.current = null
       host.current?.removeAttribute('data-glass-ready')
@@ -229,7 +240,7 @@ export const GlassContainer = React.forwardRef<HTMLElement, GlassContainerProps>
 
   return React.createElement(
     as,
-    { ...props, 'ref': setHost, 'className': cn('lab-glass-container', className), 'data-glass-container': '', 'data-glass-corners': cornerShape, 'data-glass-material': material, 'data-glass-local-tint': '', style: { ...props.style, ...(tint === undefined ? {} : { '--lab-glass-tint': clampGlassTint(tint) }) } as React.CSSProperties },
+    { ...props, 'ref': setHost, 'className': cn('lab-glass-container', className), 'data-glass-container': '', 'data-glass-member': solo ? '' : undefined, 'data-glass-corners': cornerShape, 'data-glass-material': material, 'data-glass-local-tint': '', style: { ...props.style, ...(tint === undefined ? {} : { '--lab-glass-tint': clampGlassTint(tint) }) } as React.CSSProperties },
     <div className="lab-glass-material" aria-hidden="true">
       <svg ref={shadow} className="lab-glass-shadow" />
       <div ref={backdrop} className="lab-glass-backdrops" />

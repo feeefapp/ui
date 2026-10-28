@@ -3,21 +3,16 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/widgets.dart';
 
-import 'brand/geometry.dart';
-import 'glass/material.dart';
 import 'glass/container.dart';
 import 'glass/member.dart';
-import 'glass/refraction_filter.dart';
-import 'layout/size_reporter.dart';
 import 'theme.dart';
-import 'theme/light_edge.dart';
-import 'theme/surfaces.dart';
 
 /// One glass bubble for related floating controls: the twin of `GlassGroup` in
 /// `@feeef.dev/ui/scaffold`. Inside a [GlassContainer] it hands its shape to the container's
-/// single material (and merges, splits and morphs with its neighbours); on its own it paints the
-/// web kit's glass: fill, 1px line edge, inner light, the 135° specular rim and a soft shadow.
-/// Lays out [child] inside a 1px border, like the CSS box.
+/// single material (and merges, splits and morphs with its neighbours); with no container around
+/// it, it is the only bubble of a container of its own, so it always paints the same glass (one
+/// material, moving light, hairline), never a look of its own. Lays out [child] inside a 1px
+/// border, like the CSS box.
 class GlassGroup extends StatefulWidget {
   const GlassGroup({
     super.key,
@@ -72,6 +67,23 @@ class GlassGroup extends StatefulWidget {
 class _GlassGroupState extends State<GlassGroup> {
   @override
   Widget build(BuildContext context) {
+    // No container around it: become the only bubble of one.
+    if (GlassMember.of(context) == null) {
+      return GlassContainer(
+        child: GlassGroup(
+          glassId: widget.glassId,
+          glassUnion: widget.glassUnion,
+          glassMotion: widget.glassMotion,
+          glassHidden: widget.glassHidden,
+          singleRim: widget.singleRim,
+          radius: widget.radius,
+          padding: widget.padding,
+          as: widget.as,
+          label: widget.label,
+          child: widget.child,
+        ),
+      );
+    }
     final s = ThemeProvider.of(context).sizes;
     final narrow = (MediaQuery.maybeSizeOf(context)?.width ?? 1000) <= 720;
     final radius =
@@ -90,11 +102,8 @@ class _GlassGroupState extends State<GlassGroup> {
       hidden: widget.glassHidden,
       radius: radius,
       singleRim: widget.singleRim,
-      standalone: (child) => GlassSurface(
-        radius: radius,
-        singleRim: widget.singleRim,
-        child: child,
-      ),
+      // Never used: a GlassGroup is always inside a container (its own when alone).
+      standalone: (child) => child,
       // The CSS border stays in the layout even when the container paints the glass.
       child: Padding(
         padding: const EdgeInsets.all(1),
@@ -116,161 +125,6 @@ class _GlassGroupState extends State<GlassGroup> {
 
 /// The element a [GlassGroup] stands for (the web kit's `as`).
 enum SurfaceTag { div, header, aside, nav, section, footer }
-
-/// The kit's glass material on one surface of its own (outside a [GlassContainer]): blur,
-/// saturation, veil, rim and shadow from the measured model (`glass/material.dart`). It picks
-/// control-sized or panel-sized glass from its shorter side, like the web scene. [GlassGroup]
-/// uses it for a lone bubble; use it for any floating glass surface (a composer card, a rail).
-class GlassSurface extends StatefulWidget {
-  const GlassSurface({
-    super.key,
-    required this.radius,
-    this.singleRim = false,
-    required this.child,
-  });
-
-  /// Corner radius (the kit's continuous corners).
-  final double radius;
-
-  /// A toolbar uses one reflective rim regardless of its label width.
-  final bool singleRim;
-  final Widget child;
-
-  @override
-  State<GlassSurface> createState() => _GlassSurfaceState();
-}
-
-class _GlassSurfaceState extends State<GlassSurface> {
-  double _side = 0;
-
-  @override
-  Widget build(BuildContext context) => SizeReporter(
-    onSize: (size) {
-      final side = math.min(size.width, size.height);
-      if ((side - _side).abs() >= 1) setState(() => _side = side);
-    },
-    child: _material(context),
-  );
-
-  Widget _material(BuildContext context) {
-    final radius = widget.radius;
-    final child = widget.child;
-    // A toolbar's glass (single rim) stays control-sized however wide its label makes it.
-    final side = widget.singleRim ? math.min(_side, glassSmallSide) : _side;
-    final size = glassSize(side);
-    final theme = ThemeProvider.of(context);
-    final c = theme.colors;
-    final style = glassStyleOf(context);
-    final translucent = style != GlassStyle.solid;
-    final veil = size == GlassSize.small ? c.glassFill : c.glassFillLarge;
-    // Nothing bends plain glass, so it keeps the flat floor where blur alone can't carry it.
-    final fill = !translucent
-        ? c.surface
-        : GlassRefraction.supported
-        ? veil
-        : glassFlatFill(veil, c.surface);
-    final painted = CustomPaint(
-      painter: _GlassGroupPainter(
-        fill: fill,
-        line: glassHighContrastOf(context) ? c.ink : c.line,
-        edgeLight: c.glassEdgeLight,
-        edgeLow: c.glassEdgeLow,
-        shadow: glassShadowColor(theme.brightness),
-        radius: radius,
-        rim: translucent,
-        singleRim: widget.singleRim,
-      ),
-      child: child,
-    );
-    if (!translucent || !glassFiltersBackdropOf(context)) return painted;
-    // `--lab-glass-saturate` and `--lab-glass-lift` at the tint, after `--lab-glass-blur` when
-    // ThemeConfig glassBlur is on. (Refraction needs a GlassContainer.)
-    final material = glassMaterial(
-      theme.colors.glassTint,
-      dark: theme.brightness == Brightness.dark,
-      size: size,
-    );
-    final colour = ColorFilter.matrix(glassBackdropMatrix(material));
-    // Liquid glass that can't bend here frosts (glassFrostsOf), blur setting or not.
-    final frosted = glassFrostsOf(context);
-    final blur = frosted ? glassFrostedBlur(side) : glassBlur(side);
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Positioned.fill(
-          child: ClipPath(
-            clipper: _SuperellipseClipper(radius),
-            child: BackdropFilter(
-              filter: theme.config.glassBlur || frosted
-                  ? ui.ImageFilter.compose(
-                      outer: colour,
-                      inner: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-                    )
-                  : colour,
-              child: const SizedBox.expand(),
-            ),
-          ),
-        ),
-        painted,
-      ],
-    );
-  }
-}
-
-class _SuperellipseClipper extends CustomClipper<Path> {
-  _SuperellipseClipper(this.radius);
-  final double radius;
-  @override
-  Path getClip(Size size) =>
-      superellipsePath(Offset.zero & size, [radius, radius, radius, radius]);
-  @override
-  bool shouldReclip(_SuperellipseClipper old) => old.radius != radius;
-}
-
-class _GlassGroupPainter extends CustomPainter {
-  _GlassGroupPainter({
-    required this.fill,
-    required this.line,
-    required this.edgeLight,
-    required this.edgeLow,
-    required this.shadow,
-    required this.radius,
-    required this.rim,
-    required this.singleRim,
-  });
-  final Color fill, line, edgeLight, edgeLow, shadow;
-  final double radius;
-  final bool rim, singleRim;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final compactGlass =
-        rim && (singleRim || glassSize(size.shortestSide) == GlassSize.small);
-    paintFloatingSurface(
-      canvas,
-      size,
-      radius,
-      fill: fill,
-      line: compactGlass ? const Color(0x00000000) : line,
-      edgeLow: edgeLow,
-      shadow: shadow,
-      innerLight: !compactGlass,
-    );
-    if (rim) {
-      paintLightEdge(canvas, size, radius, light: edgeLight, low: edgeLow);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_GlassGroupPainter old) =>
-      old.fill != fill ||
-      old.line != line ||
-      old.radius != radius ||
-      old.rim != rim ||
-      old.singleRim != singleRim ||
-      old.edgeLight != edgeLight ||
-      old.shadow != shadow;
-}
 
 /// Named floating regions (the web kit's `FloatingSlot`). `header` reserves from the top, `rail`
 /// from the start, `player` and `notice` from the bottom; notices stack above the other bottom

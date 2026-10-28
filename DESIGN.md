@@ -39,6 +39,8 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
      actions (clear, unpin) live in what it opens.
    - **Selection lines up.** A list's select-all checkbox sits in its top bar, and every row's
      checkbox sits in one column right under it.
+   - **One glass.** Every bubble paints the same material, edge and light. A bubble on its own is
+     its own container; never give one a look of its own.
    - **Selected runs read as one block.** Selected rows next to each other alternate between two
      tints (14 % / 9 % primary) so each row stays distinct, lose the hairline between them, and
      only the run's outer corners are rounded: the first row rounds its top, the last its bottom,

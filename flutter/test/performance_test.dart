@@ -205,7 +205,7 @@ void main() {
   );
 
   testWidgets(
-    'a glass surface filters its backdrop only above the light tier',
+    'a lone glass bubble filters its backdrop only above the light tier',
     (tester) async {
       Future<int> backdrops(Performance performance) async {
         await tester.pumpWidget(
@@ -217,7 +217,7 @@ void main() {
                 child: SizedBox(
                   width: 120,
                   height: 44,
-                  child: GlassSurface(radius: 22, child: SizedBox.expand()),
+                  child: GlassGroup(radius: 22, child: SizedBox.expand()),
                 ),
               ),
             ),

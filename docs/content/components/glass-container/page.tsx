@@ -48,7 +48,7 @@ function Overview() {
       <Section title="Using it">
         <p>
           Make the container the row itself (it keeps your <C>className</C> and layout) and put{' '}
-          <C>ToolbarGroup</C>, <C>GlassGroup</C> or <C>Dock</C> inside (a <C>SegmentedControl</C> goes in one of them). A standalone <C>ToolbarSearch</C> is its own container. Give a bubble a <C>glassId</C> when
+          <C>ToolbarGroup</C>, <C>GlassGroup</C> or <C>Dock</C> inside (a <C>SegmentedControl</C> goes in one of them). A standalone <C>ToolbarSearch</C> is its own container, and so is a <C>GlassGroup</C> with no container around it, so every bubble paints the same glass. Give a bubble a <C>glassId</C> when
           the same bubble can be rendered from different places, so it moves instead of reappearing. Use{' '}
           <C>glassUnion</C> to draw separate groups as one shape.
         </p>

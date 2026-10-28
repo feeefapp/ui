@@ -210,7 +210,11 @@ view or ClipRect) paints only inside it, cut straight at the edge (`clippedGlass
 bubbles sharing a clip merge; a scroll there moves the glass exactly. One container per floating row;
 never nest containers or put one inside a bubble.
 Kit rows (ScaffoldAppBar, ScaffoldTopBar, Toolbar, Dock host, ToolbarSearch) are GlassScopes:
-a container unless one encloses them. Wrap any other standalone ToolbarGroup row in GlassScope.
+a container unless one encloses them. Wrap any other row of bubbles in GlassScope so they share
+one material. A GlassGroup with no container around it is the only bubble of its own container
+(web `GlassContainer solo`, Flutter wraps itself), so every bubble paints the same glass; there is
+no standalone glass look (Flutter's `GlassSurface` is gone). Containers draw their first frame
+before the browser paints, so a bubble never shows its CSS fallback while JavaScript runs.
 Bubbles leave the glass when they or an ancestor are `inert`, `hidden` or `data-glass-hidden`
 (use it for a bubble that fades out but stays mounted).
 The material (blur, saturation, veil, rim, shadow), the refraction profile and the merge width are

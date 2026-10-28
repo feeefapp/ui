@@ -5,6 +5,8 @@ import { createPortal, flushSync } from 'react-dom'
 import { cn } from './utils'
 import type { GlassMotion } from './glass/context'
 import { useGlassMember } from './glass/member'
+import { GlassContext } from './glass/context'
+import { GlassContainer } from './glass/container'
 import './scaffold.css'
 import { prefersReducedMotion } from './physics/motion-value'
 import { useShellGap } from './scroll/shell-gap'
@@ -334,6 +336,31 @@ export const GlassGroup = React.forwardRef<
     glassMotion?: GlassMotion
   }
 >(({ as = 'div', className, children, glassId, glassUnion, glassMotion, ...props }, ref) => {
+  // No container around it: it is its own container, so it paints exactly the same glass (one
+  // material, moving light, hairline) as bubbles in a row, never a CSS fallback of its own.
+  const container = React.useContext(GlassContext)
+  if (!container)
+    return (
+      <GlassContainer
+        {...props}
+        as={as}
+        ref={ref}
+        className={cn('lab-glass-group lab-light-edge', className)}
+        data-lab-corners=""
+        solo={{ id: glassId, union: glassUnion, motion: glassMotion }}
+      >
+        {children}
+      </GlassContainer>
+    )
+  return <GlassGroupMember as={as} ref={ref} className={className} glassId={glassId} glassUnion={glassUnion} glassMotion={glassMotion} {...props}>{children}</GlassGroupMember>
+})
+GlassGroup.displayName = 'GlassGroup'
+
+/** A GlassGroup inside a container: it registers there and the container paints its glass. */
+const GlassGroupMember = React.forwardRef<
+  HTMLElement,
+  React.HTMLAttributes<HTMLElement> & { as?: SurfaceTag; glassId?: string; glassUnion?: string; glassMotion?: GlassMotion }
+>(({ as = 'div', className, children, glassId, glassUnion, glassMotion, ...props }, ref) => {
   const element = React.useRef<HTMLElement | null>(null)
   const setRef = React.useCallback(
     (node: HTMLElement | null) => {
@@ -356,7 +383,7 @@ export const GlassGroup = React.forwardRef<
     children
   )
 })
-GlassGroup.displayName = 'GlassGroup'
+GlassGroupMember.displayName = 'GlassGroupMember'
 
 type NativeViewTransition = {
   ready: Promise<void>

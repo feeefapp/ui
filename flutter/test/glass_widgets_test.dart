@@ -30,9 +30,10 @@ void main() {
                 child: Center(
                   child: RepaintBoundary(
                     key: boundary,
-                    child: const GlassSurface(
+                    // A lone bubble: the only bubble of its own container.
+                    child: const GlassGroup(
                       radius: 22,
-                      child: SizedBox(width: 160, height: 44),
+                      child: SizedBox(width: 158, height: 42),
                     ),
                   ),
                 ),
@@ -61,6 +62,20 @@ void main() {
       },
     );
   }
+
+  testWidgets('a lone bubble is the only bubble of its own container', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(Center(child: bubble('lone'))));
+    await tester.pump();
+    // One container, created by the bubble itself; inside a container it adds none.
+    expect(find.byType(GlassContainer), findsOneWidget);
+    await tester.pumpWidget(
+      host(Center(child: GlassContainer(child: bubble('row')))),
+    );
+    await tester.pump();
+    expect(find.byType(GlassContainer), findsOneWidget);
+  });
 
   testWidgets(
     'a container draws close bubbles as one shape and far ones apart',

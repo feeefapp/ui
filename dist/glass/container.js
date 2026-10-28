@@ -43,7 +43,7 @@ export function useGlassOptions() {
  * bubble materializes. Bubbles keep their layout, focus and semantics; only the paint moves here. Without
  * JavaScript, or in forced colors, every bubble paints its own glass as before.
  */
-export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'div', spacing = 8, cornerShape = 'superellipse', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 1, highlightProfile = 'rim', highlightStrength = 1, refractionStrength = 1, refractionProfile = 'gentle', tint, backdropSource, material = 'regular', className, children, ...props }, ref) {
+export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'div', spacing = 8, cornerShape = 'superellipse', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 1, highlightProfile = 'rim', highlightStrength = 1, refractionStrength = 1, refractionProfile = 'gentle', tint, backdropSource, material = 'regular', solo, className, children, ...props }, ref) {
     const host = React.useRef(null);
     const backdrop = React.useRef(null);
     const paint = React.useRef(null);
@@ -51,6 +51,8 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
     const scene = React.useRef(null);
     const pending = React.useRef([]);
     const uid = React.useId();
+    const autoSoloId = React.useId();
+    const soloId = solo?.id ?? autoSoloId;
     const reduced = useReducedMotion();
     const style = useGlassStyle();
     // The light effects tier (ThemeProvider, performance.ts): bubbles never merge, so no union
@@ -96,10 +98,14 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
             return;
         const created = new GlassScene(host.current, backdrop.current, paint.current, shadow.current, uid);
         scene.current = created;
+        const own = solo ? created.register(soloId, host.current, { union: solo.union, motion: solo.motion, origin: solo.origin }) : null;
         for (const register of pending.current.splice(0))
             register();
         created.measure();
+        // Paint before the browser does, so the bubbles never show a frame of their own fallback.
+        created.draw();
         return () => {
+            own?.();
             created.dispose();
             scene.current = null;
             host.current?.removeAttribute('data-glass-ready');
@@ -157,7 +163,7 @@ export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'd
             document.documentElement.removeEventListener('pointerleave', leave);
         };
     }, [light, reduced, liquid]);
-    return React.createElement(as, { ...props, 'ref': setHost, 'className': cn('lab-glass-container', className), 'data-glass-container': '', 'data-glass-corners': cornerShape, 'data-glass-material': material, 'data-glass-local-tint': '', style: { ...props.style, ...(tint === undefined ? {} : { '--lab-glass-tint': clampGlassTint(tint) }) } }, _jsxs("div", { className: "lab-glass-material", "aria-hidden": "true", children: [_jsx("svg", { ref: shadow, className: "lab-glass-shadow" }), _jsx("div", { ref: backdrop, className: "lab-glass-backdrops" }), _jsx("svg", { ref: paint, className: "lab-glass-paint" })] }), _jsx(GlassContext.Provider, { value: registry, children: children }));
+    return React.createElement(as, { ...props, 'ref': setHost, 'className': cn('lab-glass-container', className), 'data-glass-container': '', 'data-glass-member': solo ? '' : undefined, 'data-glass-corners': cornerShape, 'data-glass-material': material, 'data-glass-local-tint': '', style: { ...props.style, ...(tint === undefined ? {} : { '--lab-glass-tint': clampGlassTint(tint) }) } }, _jsxs("div", { className: "lab-glass-material", "aria-hidden": "true", children: [_jsx("svg", { ref: shadow, className: "lab-glass-shadow" }), _jsx("div", { ref: backdrop, className: "lab-glass-backdrops" }), _jsx("svg", { ref: paint, className: "lab-glass-paint" })] }), _jsx(GlassContext.Provider, { value: registry, children: children }));
 });
 /**
  * A GlassContainer unless one already encloses it, then a plain element. Kit rows (app bar,
