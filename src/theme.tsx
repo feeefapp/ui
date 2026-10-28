@@ -68,12 +68,13 @@ export function ThemeProvider({
   // Metrics are an object, often written inline: compare them by value, not identity.
   const metricsKey = JSON.stringify(metrics ?? {})
   const tier = usePerformanceTier(performance ?? 'auto')
-  // The light tier paints glass solid: no backdrop blur or refraction to re-filter every frame.
+  // The light tier keeps the glass look (tint, rim, shadow) as transparent glass: a fixed light,
+  // no press lens, no bend, and nothing filtered behind it (theme.css).
   const light = tier === 'light'
   layoutEffect(() => {
     applyThemeConfig(document.documentElement, {
       palette, density, radius, primary, glassTint, motion,
-      glass: light ? 'solid' : glass,
+      glass: light && glass !== 'solid' ? 'transparent' : glass,
       glassBlur: light ? false : glassBlur,
       glassRefraction: light ? false : glassRefraction,
       metrics: JSON.parse(metricsKey),

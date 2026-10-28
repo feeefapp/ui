@@ -203,4 +203,32 @@ void main() {
       expect(seen.length, 2);
     },
   );
+
+  testWidgets(
+    'a glass surface filters its backdrop only above the light tier',
+    (tester) async {
+      Future<int> backdrops(Performance performance) async {
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: ThemeProvider(
+              config: ThemeConfig(performance: performance),
+              child: const Center(
+                child: SizedBox(
+                  width: 120,
+                  height: 44,
+                  child: GlassSurface(radius: 22, child: SizedBox.expand()),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+        return find.byType(BackdropFilter).evaluate().length;
+      }
+
+      expect(await backdrops(Performance.full), greaterThan(0));
+      expect(await backdrops(Performance.light), 0);
+    },
+  );
 }
