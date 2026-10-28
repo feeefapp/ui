@@ -200,6 +200,7 @@ class Sheet extends StatefulWidget {
     this.detent,
     this.defaultDetent,
     this.onDetentChange,
+    this.onHeightChange,
     this.dismissible = true,
     this.snap = true,
     this.grabber,
@@ -272,6 +273,11 @@ class Sheet extends StatefulWidget {
 
   /// Called when the person drags, taps the grabber, focuses a field or taps the dimmed page.
   final ValueChanged<SheetDetent>? onDetentChange;
+
+  /// Called on every frame the sheet's visible height (px above the host's bottom edge) changes,
+  /// while it is dragged, settles, opens or closes (0 when closed). For chrome that rides on top of
+  /// a [container] sheet, like a toolbar that sits on its top edge.
+  final ValueChanged<double>? onHeightChange;
 
   /// Whether dragging down, the scrim and Escape close it. Default true. The close bubble always
   /// does.
@@ -522,7 +528,10 @@ class _SheetState extends State<Sheet> {
     if (frame != null && _expansion.value != frame.expansion) {
       _expansion.value = frame.expansion;
     }
-    if (_height.value != _visible.get()) _height.value = _visible.get();
+    if (_height.value != _visible.get()) {
+      _height.value = _visible.get();
+      widget.onHeightChange?.call(math.max(0.0, _height.value));
+    }
     final m = _morphing;
     // The source hides once the sheet covers it, and shows again as the sheet lands back in it.
     if (m != null) m.state?.hidden = _morph.get() > 0.08;

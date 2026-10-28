@@ -654,6 +654,36 @@ void main() {
       expect(tester.getTopLeft(find.text('at large')).dx, greaterThan(8));
     });
 
+    testWidgets('reports its visible height for chrome riding on top', (
+      tester,
+    ) async {
+      _phone(tester);
+      var detent = SheetDetent.medium;
+      final heights = <double>[];
+      await tester.pumpWidget(
+        page(
+          sheet: (set) => Sheet(
+            label: 'Places',
+            container: true,
+            showClose: false,
+            detents: const [SheetDetent.medium, SheetDetent.large],
+            detent: detent,
+            onDetentChange: (d) => set(() => detent = d),
+            onHeightChange: heights.add,
+            child: const Text('places'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      // Medium: the sheet's top edge sits 400 px above the host's bottom (800 − 400).
+      expect(heights.last, 400);
+      await tester.tap(find.bySemanticsLabel(RegExp('Drag to resize')));
+      await tester.pumpAndSettle();
+      expect(heights.last, 790);
+      // It reports every frame of the move, not just where it lands.
+      expect(heights.where((h) => h > 400 && h < 790), isNotEmpty);
+    });
+
     testWidgets(
       'background interaction: the page works at peek, the dim lowers it',
       (tester) async {
