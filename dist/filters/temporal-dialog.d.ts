@@ -8,7 +8,7 @@ import './temporal-dialog.css';
  * Escape and the backdrop close it. Wrap your own submit handling with `onSubmit`; the hidden
  * `date` or `from`/`to` inputs are inside its form for `readTemporalForm`.
  */
-export declare function TemporalDialog({ open, label, close, returnFocusRef, formId, onSubmit, onClear, clearLabel, clearDisabled, applyLabel, showApply, error, intro, dir, className, ...options }: TemporalEditorOptions & {
+export declare function TemporalDialog({ open, label, close, returnFocusRef, formId, onSubmit, onClear, clearLabel, actions, clearDisabled, applyLabel, showApply, error, intro, dir, className, ...options }: TemporalEditorOptions & {
     /** Shows the dialog. Changing it also resets the editor's month and active end. */
     open: boolean;
     /** Accessible name of the dialog. */
@@ -25,6 +25,8 @@ export declare function TemporalDialog({ open, label, close, returnFocusRef, for
     onClear?: () => void;
     clearLabel?: string;
     clearDisabled?: boolean;
+    /** More actions before Clear (a filter's Unpin). */
+    actions?: ReactNode;
     applyLabel?: string;
     /** False for pickers that commit on pick (a single date). */
     showApply?: boolean;

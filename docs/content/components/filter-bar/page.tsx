@@ -88,8 +88,9 @@ function Overview() {
             text field.
           </li>
           <li>
-            <strong>Pinned chips</strong> (<C>pinned</C>): one group per pinned filter with its value, a
-            clear button and an unpin button. Clicking the chip opens its editor.
+            <strong>Pinned chips</strong> (<C>pinned</C>): one bubble per pinned filter showing its name and
+            value. Clicking the chip opens its editor, whose actions clear the value or unpin the chip. The
+            chips stay on one row: those that don't fit fold into a <em>…</em> bubble whose menu opens them.
           </li>
           <li>
             <strong>Trailing</strong> (<C>trailing</C>, optional): view or list actions at the end.
@@ -188,14 +189,15 @@ function Overview() {
       <Section title="Accessibility">
         <p>
           The bar is a <C>group</C> named by <C>label</C>; each chip is its own named group (“Wilaya
-          filter”) with “Edit Wilaya filter”, “Clear Wilaya value” and “Unpin Wilaya” buttons. Opening the
-          catalog focuses its search; enum editors focus their choice search. Closing an editor returns focus
-          to the chip that opened it, and unpinning the focused chip moves focus to the catalog button.
+          filter”) with an “Edit Wilaya filter” button; its editor holds Unpin and Clear value. The fold
+          button says how many filters it holds (“2 more filters”). Opening the catalog focuses its search;
+          enum editors focus their choice search. Closing an editor returns focus to the chip that opened it
+          (or to the fold button), and unpinning moves focus to the catalog button.
           Selected choices use <C>aria-pressed</C>, and validation errors use <C>role="alert"</C>.
         </p>
         <Keys
           rows={[
-            ['Tab', 'Moves between the catalog button, chips and their actions.'],
+            ['Tab', 'Moves between the catalog button, the chips and the fold button.'],
             ['Enter / Space', 'Opens the focused chip’s editor or toggles a catalog row.'],
             ['Escape', 'Closes the open popover or dialog.'],
           ]}

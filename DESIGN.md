@@ -27,9 +27,18 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
    - **One row, one height.** Every bubble, button, field and checkbox in a row (a toolbar, a dock)
      is as tall as the others. A checkbox in a dock or bar takes its count or name as `label` so
      the whole thing is one control of button height, never a bare mark beside loose text.
+   - **One row, one icon size.** Icon buttons in a row are all the same size: the toolbar's
+     (`appearance="toolbar"`, regular), never a smaller one beside a bigger one.
+   - **Back leads.** A back button is the first control of the leading group; when the app shows a
+     navigation bubble (menu toggle, logo) back joins that bubble at its start.
    - **Search ends the row.** `ToolbarSearch` is the last bubble of its toolbar: filters start the
      row (`children`), views and tools sit just before the search (`trailing`), and the open field
      grows toward the start over them.
+   - **Rows don't wrap; they fold.** Chips and actions that don't fit go into a "…" bubble whose
+     menu holds them (`ActionsBar`, `FilterBar` chips). A chip is one control; its secondary
+     actions (clear, unpin) live in what it opens.
+   - **Selection lines up.** A list's select-all checkbox sits in its top bar, and every row's
+     checkbox sits in one column right under it.
 4. **Navigation, work, details: in that order.** Sidebar → content → inspector. As the screen shrinks:
    inspector → pane → sheet, sidebar → rail → hidden → drawer, the logo rises into the app bar, page
    views drop to a bottom `Dock` on phones, the page title collapses into the bar on scroll.

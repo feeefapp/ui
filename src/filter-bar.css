@@ -1,6 +1,7 @@
+/* One row: chips that don't fit fold into "…" instead of wrapping. */
 .lab-filter-bar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: flex-start;
   /* Bubbles and pinned chips sit --lab-toolbar-gap (the shell gap G by default) apart. */
   gap: var(--lab-toolbar-gap);
@@ -99,11 +100,37 @@ html[data-lab-theme] .lab-control.lab-filter-row-main {
   color: var(--lab-primary);
 }
 .lab-filter-pins {
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
+  flex: 1 1 0;
+  flex-wrap: nowrap;
   gap: var(--lab-toolbar-gap);
   min-width: 0;
-  max-width: 100%;
+  pointer-events: none;
+}
+.lab-filter-pins > .lab-toolbar-group {
+  flex: none;
+  pointer-events: auto;
+}
+/* Every chip at full width, hidden and taking no room: what the fit measures. */
+.lab-filter-pins-measure {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  display: flex;
+  gap: var(--lab-toolbar-gap);
+  inline-size: 0;
+  block-size: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+.lab-filter-pins-measure > * {
+  flex: none;
+}
+.lab-filter-menu-value {
+  margin-inline-start: 6px;
+  color: var(--lab-muted);
 }
 .lab-filter-chip-value {
   color: var(--lab-muted);

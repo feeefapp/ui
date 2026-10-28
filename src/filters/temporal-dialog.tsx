@@ -32,6 +32,7 @@ export function TemporalDialog({
   onSubmit,
   onClear,
   clearLabel = 'Clear',
+  actions,
   clearDisabled,
   applyLabel = 'Apply',
   showApply = true,
@@ -57,6 +58,8 @@ export function TemporalDialog({
   onClear?: () => void
   clearLabel?: string
   clearDisabled?: boolean
+  /** More actions before Clear (a filter's Unpin). */
+  actions?: ReactNode
   applyLabel?: string
   /** False for pickers that commit on pick (a single date). */
   showApply?: boolean
@@ -114,6 +117,7 @@ export function TemporalDialog({
               Cancel
             </Button>
             <span className="lab-temporal-dialog-spacer" />
+            {actions}
             {onClear && (
               <Button
                 variant="text"
