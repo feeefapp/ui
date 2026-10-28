@@ -41,6 +41,7 @@ const reserveProperties = [
   '--lab-floating-right',
   '--lab-viewport-bottom',
   '--lab-viewport-height',
+  '--lab-viewport-top',
 ] as const
 
 /**
@@ -73,6 +74,8 @@ export function ScaffoldProvider({
     const values = Object.fromEntries(reserveProperties.map((name) => [name, 0]))
     values['--lab-viewport-bottom'] = bottom
     values['--lab-viewport-height'] = visual?.height ?? height
+    // iOS pans the page up under a keyboard instead of shrinking it: the visible area starts here.
+    values['--lab-viewport-top'] = visual ? Math.max(0, visual.offsetTop) : 0
 
     regions.current.forEach(({ slot, edge, rect, gap }) => {
       const visible =

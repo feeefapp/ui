@@ -112,8 +112,13 @@ html[data-lab-theme] .lab-app[data-tool-scaffold] .lab-tool-scaffold .lab-voice-
   padding: 4px;
   box-sizing: border-box;
 }
-/* The provider tracks the visual viewport, keeping editor actions above phone keyboards. */
+/* The provider tracks the visual viewport, keeping editor actions above phone keyboards. The host
+   is pinned to the visible area: iOS pans the page up under a keyboard (`--lab-viewport-top`), and
+   an in-flow host would slide up with it, hiding the app bar until the user scrolls back. */
 .lab-tool-host {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-start: var(--lab-viewport-top, 0px);
   height: min(100dvh, var(--lab-viewport-height, 100dvh));
 }
 
