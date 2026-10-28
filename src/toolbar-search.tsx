@@ -35,9 +35,9 @@ export type ToolbarSearchProps = {
   onValueChange: (value: string) => void
   /** Placeholder text. Defaults to `label`. */
   placeholder?: string
-  /** Controls shown next to the collapsed search button; hidden while the field is open. */
+  /** Controls at the start of the row (filters); absorbed into the search glass while the field is open. */
   children?: ReactNode
-  /** Content after the search, always visible (it keeps its width while the field expands). */
+  /** Controls at the end of the row, just before the search button (views, tools); absorbed like `children`. */
   trailing?: ReactNode
   disabled?: boolean
   className?: string
@@ -54,10 +54,10 @@ export type ToolbarSearchProps = {
 }
 
 /**
- * Search button that springs open into a field inside the same glass pill, taking the free width
- * of its row. Persistent material, stable control geometry and a velocity-preserving spring.
- * Neighbouring bubbles in `children` are absorbed into the search glass as it opens and grow back
- * out of it when it closes.
+ * Search button at the end of its row that springs open into a field inside the same glass pill,
+ * growing toward the start across the whole row. Persistent material, stable control geometry and
+ * a velocity-preserving spring. The row's other bubbles (`children`, `trailing`) are absorbed into
+ * the search glass as it opens and grow back out of it when it closes.
  */
 export function ToolbarSearch({ label, value, onValueChange, placeholder, children, trailing, disabled, className, defaultExpanded = false, inputRef, renderInput, onInputKeyDown, onExpandedChange }: ToolbarSearchProps) {
   const { t } = useI18n()
@@ -113,7 +113,11 @@ export function ToolbarSearch({ label, value, onValueChange, placeholder, childr
     const media = reducedMotionQuery()
     reduced.current = media.matches
     const measure = (initial = false) => {
-      compact.current = (Number.parseFloat(getComputedStyle(material).getPropertyValue('--lab-toolbar-control')) || 38) + 6
+      // The closed pill is the trigger plus the pill's own padding and border, measured: the
+      // control-size tokens are calc() strings, which a computed-style read can't turn into px.
+      const box = getComputedStyle(material)
+      const edges = ['paddingInlineStart', 'paddingInlineEnd', 'borderInlineStartWidth', 'borderInlineEndWidth'] as const
+      compact.current = (trigger.current?.offsetWidth ?? 0) + edges.reduce((sum, edge) => sum + (Number.parseFloat(box[edge]) || 0), 0)
       host.style.setProperty('--lab-search-compact-width', `${compact.current}px`)
       wide.current = Math.max(compact.current, host.clientWidth)
       target.current = requested.current ? wide.current : compact.current
@@ -158,6 +162,11 @@ export function ToolbarSearch({ label, value, onValueChange, placeholder, childr
   // bar or toolbar it joins that one.
   return <GlassScope className={cn('lab-toolbar-search', className)} role="group" aria-label={label} data-expanded={expanded} data-moving={moving}>
     <div ref={main} className="lab-toolbar-search-main">
+      {/* Before the search in reading and tab order: the search ends the row. */}
+      <div className="lab-toolbar-search-controls" inert={expanded || moving} aria-hidden={expanded || moving}>
+        {children && <div className="lab-toolbar-search-leading">{children}</div>}
+        {trailing && <div className="lab-toolbar-search-trailing">{trailing}</div>}
+      </div>
       <ToolbarGroup ref={surface} label={label} className="lab-toolbar-search-surface" glassMotion="follow">
         <IconButton ref={trigger} variant="text" appearance="toolbar" controlSize="regular" aria-label={expanded ? t('lab.search.collapse') : label} aria-expanded={expanded} aria-controls={id} disabled={disabled} onClick={() => change(!expanded)}>
           <span className="lab-toolbar-search-glyph" data-expanded={expanded}><Search/><ArrowLeft className="lab-dir-flip"/></span>
@@ -167,8 +176,6 @@ export function ToolbarSearch({ label, value, onValueChange, placeholder, childr
           <IconButton variant="text" appearance="toolbar" controlSize="regular" aria-label={t('lab.search.clear')} disabled={!value || disabled} onClick={() => { if (value) onValueChange(''); field.current?.focus({preventScroll:true}) }}><X/></IconButton>
         </div>
       </ToolbarGroup>
-      <div className="lab-toolbar-search-controls" inert={expanded || moving} aria-hidden={expanded || moving}>{children}</div>
     </div>
-    {trailing && <div className="lab-toolbar-search-trailing">{trailing}</div>}
   </GlassScope>
 }

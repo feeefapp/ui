@@ -24,9 +24,9 @@ export type ToolbarSearchProps = {
     onValueChange: (value: string) => void;
     /** Placeholder text. Defaults to `label`. */
     placeholder?: string;
-    /** Controls shown next to the collapsed search button; hidden while the field is open. */
+    /** Controls at the start of the row (filters); absorbed into the search glass while the field is open. */
     children?: ReactNode;
-    /** Content after the search, always visible (it keeps its width while the field expands). */
+    /** Controls at the end of the row, just before the search button (views, tools); absorbed like `children`. */
     trailing?: ReactNode;
     disabled?: boolean;
     className?: string;
@@ -42,10 +42,10 @@ export type ToolbarSearchProps = {
     onExpandedChange?: (expanded: boolean) => void;
 };
 /**
- * Search button that springs open into a field inside the same glass pill, taking the free width
- * of its row. Persistent material, stable control geometry and a velocity-preserving spring.
- * Neighbouring bubbles in `children` are absorbed into the search glass as it opens and grow back
- * out of it when it closes.
+ * Search button at the end of its row that springs open into a field inside the same glass pill,
+ * growing toward the start across the whole row. Persistent material, stable control geometry and
+ * a velocity-preserving spring. The row's other bubbles (`children`, `trailing`) are absorbed into
+ * the search glass as it opens and grow back out of it when it closes.
  */
 export declare function ToolbarSearch({ label, value, onValueChange, placeholder, children, trailing, disabled, className, defaultExpanded, inputRef, renderInput, onInputKeyDown, onExpandedChange }: ToolbarSearchProps): import("react").JSX.Element;
 //# sourceMappingURL=toolbar-search.d.ts.map

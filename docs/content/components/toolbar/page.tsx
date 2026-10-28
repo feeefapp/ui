@@ -127,11 +127,11 @@ function Overview() {
 
       <Section title="Search">
         <p>
-          <C>ToolbarSearch</C> starts as a search button the size of a toolbar bubble (44px). Opening it moves focus into the field and
-          springs the pill to the full width of its row (so use it as the row itself, or give it a
-          full-width parent, rather than placing it in a content-sized slot); the controls passed as <C>children</C> (filters,
-          sort) hide while it is open and come back when it closes. <C>trailing</C> stays visible
-          throughout. Closing clears the query. It starts open when <C>defaultExpanded</C> is set or{' '}
+          <C>ToolbarSearch</C> starts as a round search button the size of a toolbar bubble, at the end of its row. Opening it
+          moves focus into the field and springs the pill toward the start, across the full width of its row (so use it as the
+          row itself, or give it a full-width parent, rather than placing it in a content-sized slot). <C>children</C> (filters,
+          sort) sit at the start of the row and <C>trailing</C> (views, tools) just before the search; both are absorbed into
+          the search glass while it is open and come back when it closes. Closing clears the query. It starts open when <C>defaultExpanded</C> is set or{' '}
           <C>value</C> is not empty. Use <C>renderInput</C> to swap in your own input (for example a
           combobox with suggestions); spread the props it receives onto it.
         </p>

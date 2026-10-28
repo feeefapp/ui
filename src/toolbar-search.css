@@ -14,9 +14,11 @@
   flex: 1;
   min-width: 0;
 }
+/* The search ends the row and opens toward its start (DESIGN: search is the last bubble). */
 .lab-toolbar-search .lab-toolbar-search-surface {
   grid-area: 1 / 1;
   align-self: start;
+  justify-self: end;
   box-sizing: border-box;
   width: var(--lab-search-width, calc(var(--lab-toolbar-control) + 6px));
   z-index: 1;
@@ -59,17 +61,19 @@ html[data-lab-theme] .lab-toolbar-search input.lab-toolbar-search-input {
 }
 .lab-toolbar-search-input::-webkit-search-cancel-button { display: none; }
 .lab-toolbar-search-input::placeholder { color: var(--lab-muted); }
- .lab-toolbar-search-controls {
+.lab-toolbar-search-controls {
   grid-area: 1 / 1;
   display: flex;
+  align-items: flex-start;
+  gap: var(--lab-toolbar-gap, var(--lab-space-2));
   min-width: 0;
-  margin-inline-start: calc(var(--lab-search-compact-width, var(--lab-toolbar-item)) + var(--lab-space-2));
+  margin-inline-end: calc(var(--lab-search-compact-width, var(--lab-toolbar-item)) + var(--lab-toolbar-gap, var(--lab-space-2)));
   opacity: var(--lab-search-controls-opacity, 1);
-  pointer-events: auto;
+  pointer-events: none;
 }
-.lab-toolbar-search[data-expanded='true'] .lab-toolbar-search-controls,
-.lab-toolbar-search[data-moving='true'] .lab-toolbar-search-controls { pointer-events: none; }
-.lab-toolbar-search-trailing { flex: none; pointer-events: auto; }
+.lab-toolbar-search-leading { display: flex; flex: 1; min-width: 0; pointer-events: auto; }
+.lab-toolbar-search-trailing { display: flex; flex: none; margin-inline-start: auto; pointer-events: auto; }
+.lab-toolbar-search:is([data-expanded='true'], [data-moving='true']) :is(.lab-toolbar-search-leading, .lab-toolbar-search-trailing) { pointer-events: none; }
 @media (prefers-reduced-motion: reduce) {
   .lab-toolbar-search-glyph > svg, .lab-toolbar-search-editor, .lab-toolbar-search-controls { transition: none; }
 }

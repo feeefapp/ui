@@ -16,7 +16,8 @@
 .lab-choice[data-control-size='small'] {
   min-height: var(--lab-control-small);
   gap: 8px;
-  padding: 4px 8px;
+  /* As tall as a small button at every density (one 20px line in the middle). */
+  padding: max(0px, calc((var(--lab-control-small) - 20px) / 2)) 8px;
 }
 /* No label, description or error: only the mark (it fits a list row's leading slot). Touch still
 reaches 44px through the coarse-pointer hit area (system.css), without changing layout. Name it

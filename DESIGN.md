@@ -24,6 +24,12 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
    Two levels at most: a surface, then the bubbles on it, never a bubble inside a bubble. Content on a
    surface stays flat (a calendar heading is a plain row); bubbles on one surface share height and
    line up with its content. Example: `TemporalDialog` (top bar · calendars · action bar).
+   - **One row, one height.** Every bubble, button, field and checkbox in a row (a toolbar, a dock)
+     is as tall as the others. A checkbox in a dock or bar takes its count or name as `label` so
+     the whole thing is one control of button height, never a bare mark beside loose text.
+   - **Search ends the row.** `ToolbarSearch` is the last bubble of its toolbar: filters start the
+     row (`children`), views and tools sit just before the search (`trailing`), and the open field
+     grows toward the start over them.
 4. **Navigation, work, details: in that order.** Sidebar → content → inspector. As the screen shrinks:
    inspector → pane → sheet, sidebar → rail → hidden → drawer, the logo rises into the app bar, page
    views drop to a bottom `Dock` on phones, the page title collapses into the bar on scroll.
