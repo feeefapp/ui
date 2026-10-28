@@ -30,8 +30,14 @@ export function MovingBrand({ host, }) {
         const tick = (time) => {
             frame = 0;
             const anchor = target();
+            // No visible anchor (a narrow bar hides its logo): hide the visual instead of leaving it
+            // where the logo last was, on top of whatever took that place.
+            const hide = () => {
+                layer.style.visibility = 'hidden';
+                position.current = null;
+            };
             if (!anchor)
-                return;
+                return hide();
             const modal = anchor.closest('dialog');
             if (modal !== portal) {
                 setPortal(modal);
@@ -39,7 +45,7 @@ export function MovingBrand({ host, }) {
             }
             const rect = anchor.getBoundingClientRect();
             if (!rect.width || !rect.height)
-                return;
+                return hide();
             // Take the size of the logo the anchor holds (72×18 in a header, 104×26 in the sidebar), so
             // the visual never outgrows the bubble it sits in.
             const mark = anchor.querySelector('.fo-logo')?.getBoundingClientRect();
