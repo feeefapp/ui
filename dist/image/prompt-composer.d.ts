@@ -23,7 +23,7 @@ export type RecentImage = {
  * with text or focus, a second row shows the model ladder and the output settings chip, and the
  * AI button turns into "Improve my prompt".
  */
-export declare function ImagePromptComposer({ prompt, onPrompt, placeholder, maxLength, references, referenceLimit, onAddFiles, onRemoveReference, recent, onUseRecent, onEditPhoto, templates, templatesLabel, onTemplate, mode, templateName, onClearTemplate, onBrowseTemplates, ladder, settings, settingsLabel, settingsDisabled, onSettings, settingsActive, referenceNoun, wandLabel, enhancing, onEnhance, onSubmit, submitDisabled, submitting, submitLabel, onStop, stopLabel, caption, above, onKeyDown, }: {
+export declare function ImagePromptComposer({ prompt, onPrompt, placeholder, maxLength, references, referenceLimit, onAddFiles, onRemoveReference, recent, onUseRecent, onBrowseFiles, onEditPhoto, templates, templatesLabel, onTemplate, mode, templateName, onClearTemplate, onBrowseTemplates, ladder, settings, settingsLabel, settingsDisabled, onSettings, settingsActive, referenceNoun, wandLabel, enhancing, onEnhance, onSubmit, submitDisabled, submitting, submitLabel, onStop, stopLabel, caption, above, onKeyDown, }: {
     /** The prompt text (controlled). */
     prompt: string;
     /** Called with the new text on every edit. */
@@ -47,6 +47,9 @@ export declare function ImagePromptComposer({ prompt, onPrompt, placeholder, max
     recent: RecentImage[];
     /** Called with the id of a recent image picked as a reference. */
     onUseRecent(id: string): void;
+    /** Opens the host's file library ("From your files" after Paste); the host adds the chosen
+     * images with its own `onAddFiles`. Absent hides the item. */
+    onBrowseFiles?(): void;
     /** Called with the photo chosen from "Edit a photo…". */
     onEditPhoto(file: File): void;
     /** Prompt ideas for the + menu (first 10). Empty hides the submenu. */
