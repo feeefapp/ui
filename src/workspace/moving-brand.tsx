@@ -7,6 +7,9 @@ import { useScaffold } from './scaffold'
 import './moving-brand.css'
 import { reducedMotionQuery } from '../physics/motion-value'
 
+const BRAND_WIDTH = 104
+const BRAND_HEIGHT = 26
+
 /** One persistent visual follows the real, accessible logo links as navigation changes. */
 export function MovingBrand({
   host,
@@ -17,7 +20,7 @@ export function MovingBrand({
   const state = useScaffold()
   const visual = useRef<HTMLDivElement>(null)
   const [portal, setPortal] = useState<HTMLDialogElement | null>(null)
-  const position = useRef<{ x: number; y: number } | null>(null)
+  const position = useRef<{ x: number; y: number; scale: number } | null>(null)
   useEffect(() => {
     const root = host.current
     const layer = visual.current
@@ -43,10 +46,15 @@ export function MovingBrand({
       }
       const rect = anchor.getBoundingClientRect()
       if (!rect.width || !rect.height) return
+      // Take the size of the logo the anchor holds (72×18 in a header, 104×26 in the sidebar), so
+      // the visual never outgrows the bubble it sits in.
+      const mark = anchor.querySelector('.fo-logo')?.getBoundingClientRect()
+      const scale = mark?.height ? mark.height / BRAND_HEIGHT : 1
       const drawerTransform = modal ? new DOMMatrix(getComputedStyle(modal).transform) : null
       const goal = {
-        x: rect.left + (rect.width - 104) / 2 - (drawerTransform?.m41 ?? 0),
-        y: rect.top + (rect.height - 26) / 2 - (drawerTransform?.m42 ?? 0),
+        x: rect.left + (rect.width - BRAND_WIDTH * scale) / 2 - (drawerTransform?.m41 ?? 0),
+        y: rect.top + (rect.height - BRAND_HEIGHT * scale) / 2 - (drawerTransform?.m42 ?? 0),
+        scale,
       }
       const current = position.current ?? goal
       const dt = Math.min(40, Math.max(1, time - (last || time - 16)))
@@ -55,6 +63,7 @@ export function MovingBrand({
       const next = {
         x: current.x + (goal.x - current.x) * blend,
         y: current.y + (goal.y - current.y) * blend,
+        scale: current.scale + (goal.scale - current.scale) * blend,
       }
       position.current = next
       // Native dialogs form a top layer; keep the moving visual in that same layer.
@@ -64,10 +73,10 @@ export function MovingBrand({
         bounds && portal
           ? { left: bounds.left + portal.clientLeft, top: bounds.top + portal.clientTop }
           : { left: 0, top: 0 }
-      layer.style.transform = `translate3d(${next.x - origin.left}px, ${next.y - origin.top}px, 0)`
+      layer.style.transform = `translate3d(${next.x - origin.left}px, ${next.y - origin.top}px, 0) scale(${next.scale})`
       layer.style.visibility = 'visible'
       root.dataset.movingBrand = 'ready'
-      if (time < followUntil || Math.abs(next.x - goal.x) + Math.abs(next.y - goal.y) > 0.1)
+      if (time < followUntil || Math.abs(next.x - goal.x) + Math.abs(next.y - goal.y) + Math.abs(next.scale - goal.scale) * 100 > 0.1)
         frame = requestAnimationFrame(tick)
     }
     const wake = () => {
@@ -96,7 +105,7 @@ export function MovingBrand({
   )
   const logo = (
     <div ref={visual} className="lab-tool-moving-brand" aria-hidden="true">
-      <FoAnimatedLogo width={104} height={26} />
+      <FoAnimatedLogo width={BRAND_WIDTH} height={BRAND_HEIGHT} />
     </div>
   )
   return portal ? createPortal(logo, portal) : logo

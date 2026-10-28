@@ -7,6 +7,7 @@
   pointer-events: none;
   visibility: hidden;
   color: var(--lab-ink);
+  transform-origin: 0 0;
   will-change: transform;
 }
 [data-moving-brand='ready'] [data-tool-brand-anchor] .fo-logo { visibility: hidden; }
