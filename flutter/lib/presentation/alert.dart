@@ -376,7 +376,7 @@ class _AlertMaterial extends StatelessWidget {
         child: Stack(
           children: [
             Positioned.fill(
-              child: glass.solid
+              child: glass.solid || !glassFiltersBackdropOf(context)
                   ? fill
                   : BackdropFilter(filter: glass.filter, child: fill),
             ),

@@ -129,50 +129,53 @@ void main() {
     });
   });
 
-  testWidgets('light glass is opaque and the theme follows a slow device', (
-    tester,
-  ) async {
-    addTearDown(MeasuredPerformance.forget);
-    late BuildContext inner;
-    await tester.pumpWidget(
-      ThemeProvider(
-        config: const ThemeConfig(performance: Performance.light),
-        child: Builder(
-          builder: (context) {
-            inner = context;
-            return const SizedBox();
-          },
-        ),
-      ),
-    );
-    expect(glassStyleOf(inner), GlassStyle.solid);
-
-    late BuildContext autoContext;
-    await tester.pumpWidget(
-      ThemeProvider(
-        config: const ThemeConfig(performance: Performance.full),
-        child: ThemeProvider(
+  testWidgets(
+    'light glass keeps its look, filters nothing, and follows a slow device',
+    (tester) async {
+      addTearDown(MeasuredPerformance.forget);
+      late BuildContext inner;
+      await tester.pumpWidget(
+        ThemeProvider(
+          config: const ThemeConfig(performance: Performance.light),
           child: Builder(
             builder: (context) {
-              autoContext = context;
+              inner = context;
               return const SizedBox();
             },
           ),
         ),
-      ),
-    );
-    final before = performanceOf(autoContext);
-    MeasuredPerformance.debugReport(
-      List.filled(
-        MeasuredPerformance.window * 2,
-        const Duration(milliseconds: 40),
-      ),
-    );
-    await tester.pump();
-    expect(before, isNot(PerformanceTier.light));
-    expect(performanceOf(autoContext), PerformanceTier.light);
-    expect(glassStyleOf(autoContext), GlassStyle.solid);
-  });
+      );
+      expect(glassStyleOf(inner), GlassStyle.transparent);
+      expect(glassFiltersBackdropOf(inner), isFalse);
+
+      late BuildContext autoContext;
+      await tester.pumpWidget(
+        ThemeProvider(
+          config: const ThemeConfig(performance: Performance.full),
+          child: ThemeProvider(
+            child: Builder(
+              builder: (context) {
+                autoContext = context;
+                return const SizedBox();
+              },
+            ),
+          ),
+        ),
+      );
+      final before = performanceOf(autoContext);
+      MeasuredPerformance.debugReport(
+        List.filled(
+          MeasuredPerformance.window * 2,
+          const Duration(milliseconds: 40),
+        ),
+      );
+      await tester.pump();
+      expect(before, isNot(PerformanceTier.light));
+      expect(performanceOf(autoContext), PerformanceTier.light);
+      expect(glassStyleOf(autoContext), GlassStyle.transparent);
+      expect(glassFiltersBackdropOf(autoContext), isFalse);
+    },
+  );
 
   testWidgets(
     'outside a theme, a scope rebuilds readers when the device measures slow',

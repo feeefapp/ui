@@ -591,7 +591,7 @@ class _GlassLayers extends StatelessWidget {
       ),
       size: Size.infinite,
     );
-    if (!material.translucent) return paint;
+    if (!material.translucent || !glassFiltersBackdropOf(context)) return paint;
     return Stack(
       clipBehavior: Clip.none,
       children: [

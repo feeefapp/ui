@@ -1781,7 +1781,7 @@ class SheetSurface extends StatelessWidget {
             children: [
               // Fully opaque: the backdrop under it is never seen, so it is not filtered.
               if (opaque < 1)
-                glass.solid
+                glass.solid || !glassFiltersBackdropOf(context)
                     ? fill
                     : BackdropFilter(filter: glass.filter, child: fill),
               if (opaque < 1)

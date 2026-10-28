@@ -180,13 +180,24 @@ class _ThemeScope extends InheritedWidget {
 
 /// The glass style to paint with: the app's [ThemeConfig.glass], or `solid` when the platform asks
 /// for more contrast (`MediaQuery.highContrast`, the web kit's `prefers-contrast: more`; the kit
-/// then also outlines glass in the ink colour, see [glassHighContrastOf]), or on a device whose
-/// effects tier can't afford backdrop filters ([PerformanceTier.backdrop]). Flutter exposes no
+/// then also outlines glass in the ink colour, see [glassHighContrastOf]). On the light effects
+/// tier liquid glass is `transparent`: the same tint, rim and shadow with a fixed light and no
+/// press lens, and nothing filtered behind it ([PerformanceTier.backdrop]). Flutter exposes no
 /// reduce-transparency setting: apps that read one from the platform pass `GlassStyle.solid`.
-GlassStyle glassStyleOf(BuildContext context) =>
-    glassHighContrastOf(context) || !performanceOf(context).backdrop
-    ? GlassStyle.solid
-    : ThemeProvider.of(context).config.glass;
+GlassStyle glassStyleOf(BuildContext context) {
+  if (glassHighContrastOf(context)) return GlassStyle.solid;
+  final style = ThemeProvider.of(context).config.glass;
+  return style == GlassStyle.liquid && !performanceOf(context).backdrop
+      ? GlassStyle.transparent
+      : style;
+}
+
+/// Whether glass here filters what is behind it (saturation, lift, blur): not when solid, and not
+/// on the light effects tier, where it keeps its tint and rim over an unfiltered backdrop. A
+/// backdrop filter reads the page back on every frame anything under the glass moves.
+bool glassFiltersBackdropOf(BuildContext context) =>
+    glassStyleOf(context) != GlassStyle.solid &&
+    performanceOf(context).backdrop;
 
 /// True when the platform asks for more contrast: glass turns opaque with an ink outline.
 bool glassHighContrastOf(BuildContext context) =>

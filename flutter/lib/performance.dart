@@ -66,9 +66,10 @@ enum PerformanceTier {
   /// gradient or fill takes their place: on the web every frame repaints every shader pixel.
   bool get decoration => this != light;
 
-  /// Floating glass filters what is behind it (saturation, lift, blur). Below that it is painted
-  /// opaque (`GlassStyle.solid`): a backdrop filter reads the page back and filters it again on
-  /// every frame anything under the glass moves, which is what weak GPUs drop frames on.
+  /// Floating glass filters what is behind it (saturation, lift, blur). Below that it keeps its
+  /// tint, rim and shadow over an unfiltered backdrop (`glassFiltersBackdropOf`): a backdrop
+  /// filter reads the page back and filters it again on every frame anything under the glass
+  /// moves, which is what weak GPUs drop frames on. A still rim costs nothing per frame.
   bool get backdrop => this != light;
 }
 

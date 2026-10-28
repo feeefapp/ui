@@ -182,7 +182,7 @@ class _GlassSurfaceState extends State<GlassSurface> {
       ),
       child: child,
     );
-    if (!translucent) return painted;
+    if (!translucent || !glassFiltersBackdropOf(context)) return painted;
     // `--lab-glass-saturate` and `--lab-glass-lift` at the tint, after `--lab-glass-blur` when
     // ThemeConfig glassBlur is on. (Refraction needs a GlassContainer.)
     final material = glassMaterial(
