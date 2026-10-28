@@ -4,9 +4,8 @@ import '../containers/sheet.dart';
 import 'alert.dart';
 import 'host.dart';
 import 'modal.dart';
-import 'pane.dart';
 
-/// A route that hosts one presentation surface (the [Alert], [Modal], [Pane] or [Sheet] its
+/// A route that hosts one presentation surface (the [Alert], [Modal] or [Sheet] its
 /// builder returns) and completes with the value it is popped with. The surface draws its own
 /// scrim and motion: the route only keeps it on screen until its exit has played
 /// ([exitDuration]). A [PopupRoute], so it works in a plain [WidgetsApp].
@@ -114,18 +113,6 @@ Future<T?> showModal<T>(
 Future<T?> showAlert<T>(
   BuildContext context, {
   required Alert Function(BuildContext context) builder,
-  bool useRootNavigator = false,
-  RouteSettings? settings,
-}) => Navigator.of(
-  context,
-  rootNavigator: useRootNavigator,
-).push(PresentationRoute<T>(builder: builder, settings: settings));
-
-/// Shows a [Pane] in a route (a bottom sheet below its compact breakpoint) and completes with
-/// the value it is closed with. Always modal; declare a non-modal pane with `open` instead.
-Future<T?> showPane<T>(
-  BuildContext context, {
-  required Pane Function(BuildContext context) builder,
   bool useRootNavigator = false,
   RouteSettings? settings,
 }) => Navigator.of(

@@ -20,7 +20,7 @@ export const POP_MOTION = {
     /** The fade's curve, in and out: quick at first and exactly done at its length, with no tail. */
     fadeEasing: 'cubic-bezier(0, 0, 0.58, 1)',
 };
-/** How a Pane slides in and out (the scrim dims on the same timing). */
+/** How a sheet's pane presentation slides in and out (the scrim dims on the same timing). */
 export const SLIDE_MOTION = {
     spring: SPRINGS.smooth,
     /** Reduced-motion crossfade length in seconds. */
@@ -79,7 +79,7 @@ export function popPlan(open, motion, now) {
     return { surface, scrim: timing.duration > 0 ? track('opacity', scrim, 0, timing) : null };
 }
 /**
- * The slide motion (Pane): in from `offset` (a transform that puts it off screen) and back out,
+ * The slide motion (a sheet's pane): in from `offset` (a transform that puts it off screen) and back out,
  * on one spring, with the scrim on the same timing. Reduced motion crossfades instead.
  */
 export function slidePlan(open, motion, now, offset) {

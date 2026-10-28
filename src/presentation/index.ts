@@ -1,11 +1,9 @@
-/** Presentation surfaces: Alert, Modal and Pane (Sheet lives in containers), and their shared parts. */
+/** Presentation surfaces: Alert and Modal (Sheet lives in containers), and their shared parts. */
 export { Alert } from './alert'
 export type { AlertAction, AlertActionRole, AlertProps } from './alert'
 export { alertActionOrder, alertActionsFit } from './alert-model'
 export { Modal } from './modal'
 export type { ModalProps, PresentationChromeProps } from './modal'
-export { Pane } from './pane'
-export type { PaneProps } from './pane'
 export { PresentationHeader } from './header'
 export type { PresentationHeaderProps } from './header'
 export { PresentationBody } from './body'

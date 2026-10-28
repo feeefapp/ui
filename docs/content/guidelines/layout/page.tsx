@@ -277,7 +277,7 @@ function BadScattered() {
 const STEPS: { min: number; text: string }[] = [
   { min: 1200, text: 'Sidebar expanded with the logo. Page views and tools in the app bar, inspector beside the content.' },
   { min: 1024, text: 'Sidebar becomes a rail; the logo rises into a navigation bubble in the app bar. The inspector still fits.' },
-  { min: 720, text: 'The inspector moves into a Pane behind the “Order details” tool (a sheet on phones). Everything else stays put.' },
+  { min: 720, text: 'The inspector moves into a pane sheet behind the “Order details” tool (a sheet on phones). Everything else stays put.' },
   { min: 0, text: 'Phone: the sidebar opens as a drawer, page views join the main action in the bottom dock, and “Call customer” moves into the tools bubble.' },
 ]
 

@@ -97,7 +97,6 @@ export 'presentation/header.dart';
 export 'presentation/host.dart';
 export 'presentation/modal.dart';
 export 'presentation/motion.dart';
-export 'presentation/pane.dart';
 export 'presentation/routes.dart';
 export 'scaffold.dart';
 export 'scroll/gradient_overlay.dart';

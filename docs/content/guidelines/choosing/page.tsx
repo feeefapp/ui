@@ -554,7 +554,7 @@ function Overview() {
             [
               'Does the person need the page in view while working: the details of the order or customer the page is about?',
               <>
-                A <Link to="/components/pane">Pane</Link>: an inspector that slides in beside the page on
+                A <Link to="/components/sheet">Sheet</Link> with <C>{'regular="pane"'}</C>: an inspector that slides in beside the page on
                 wide screens and becomes a bottom sheet on phones.
               </>,
             ],
@@ -609,7 +609,7 @@ function Overview() {
           rows={[
             ['A decision that blocks the rest', <C>Alert</C>, 'Two or three choices on glass; Escape runs Cancel; focus returns.'],
             ['A short form that blocks the rest', <C>Modal</C>, 'Page is inert; the actions float in a dock; focus returns.'],
-            ['Details of the thing the page is about', <C>Pane</C>, 'Beside the page when wide, a sheet on phones.'],
+            ['Details of the thing the page is about', <C>{'<Sheet regular="pane">'}</C>, 'Beside the page when wide, a sheet on phones.'],
             ['A short task about the page, mostly on phones', <C>Sheet</C>, 'Detents, drag and flick; a dialog on wide screens.'],
             ['Going deeper and coming back', <C>NavigationStack</C>, 'Push and pop, swipe back, pages stay mounted.'],
             ['Many items from one list', <C>SplitView</C>, 'Side by side when wide, a stack on phones.'],
@@ -618,7 +618,7 @@ function Overview() {
             ['Fresh data in a list people keep open', <><C>ScrollArea onRefresh</C> + a Refresh button</>, 'Pull at the top on touch; the button runs the same RefreshController.'],
             ['A glance or a quick control on one element', <>Popover on <C>PopoverSurface</C></>, 'Anchored, light, dismissed by clicking away.'],
             ['A few more lines about the same thing', <>Inline, in <C>AutoHeight</C></>, 'Stays in context; nothing covers the page.'],
-            ['Properties of the selected item', <>Inspector column, or a <C>Pane</C></>, 'List and details visible together; a sheet on phones.'],
+            ['Properties of the selected item', <>Inspector column, or a <C>{'<Sheet regular="pane">'}</C></>, 'List and details visible together; a sheet on phones.'],
             ['Long or shareable content', 'New page', 'Own URL, back button, bookmarks.'],
           ]}
         />

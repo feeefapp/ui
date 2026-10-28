@@ -28,7 +28,7 @@ export type PresentationHeaderProps = {
 }
 
 /**
- * The floating header of a presentation surface (Modal, Pane, Sheet): a title bubble at the start,
+ * The floating header of a presentation surface (Modal, Sheet): a title bubble at the start,
  * optional trailing bubbles and a close bubble at the end, all glass in one `GlassScope` so they
  * merge and share light. Put it in a `PresentationBody` `top` slot; it renders nothing when it has
  * nothing to show.
@@ -63,7 +63,7 @@ export function PresentationHeader({
   )
 }
 
-/** The close bubble: one glass group holding the close button. Kit-internal (header and Pane). */
+/** The close bubble: one glass group holding the close button. Kit-internal (header and a sheet's pane). */
 export function CloseBubble({
   label,
   disabled = false,

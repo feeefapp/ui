@@ -18,7 +18,7 @@ export declare const POP_MOTION: {
     /** The fade's curve, in and out: quick at first and exactly done at its length, with no tail. */
     readonly fadeEasing: "cubic-bezier(0, 0, 0.58, 1)";
 };
-/** How a Pane slides in and out (the scrim dims on the same timing). */
+/** How a sheet's pane presentation slides in and out (the scrim dims on the same timing). */
 export declare const SLIDE_MOTION: {
     readonly spring: Spring;
     /** Reduced-motion crossfade length in seconds. */
@@ -61,7 +61,7 @@ export declare function springEasing(spring: Spring): Timing;
  */
 export declare function popPlan(open: boolean, motion: Motion, now: SurfaceNow | null): SurfacePlan;
 /**
- * The slide motion (Pane): in from `offset` (a transform that puts it off screen) and back out,
+ * The slide motion (a sheet's pane): in from `offset` (a transform that puts it off screen) and back out,
  * on one spring, with the scrim on the same timing. Reduced motion crossfades instead.
  */
 export declare function slidePlan(open: boolean, motion: Motion, now: SurfaceNow | null, offset: string): SurfacePlan;

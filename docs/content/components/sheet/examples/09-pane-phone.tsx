@@ -3,7 +3,8 @@ import { Phone } from 'lucide-react'
 import { NavigationPage, NavigationStack } from '@feeef.dev/ui/containers'
 import { ListRow, ListSection } from '@feeef.dev/ui/primitives/list'
 import { Button } from '@feeef.dev/ui/primitives/button'
-import { Pane, PresentationDock } from '@feeef.dev/ui/presentation'
+import { Sheet } from '@feeef.dev/ui/containers'
+import { PresentationDock } from '@feeef.dev/ui/presentation'
 import { Device } from '../../../../src/blocks/device'
 
 const ORDERS = [
@@ -39,7 +40,8 @@ export default function PhonePane() {
               </NavigationPage>
             </NavigationStack>
           </div>
-          <Pane
+          <Sheet
+            regular="pane"
             open={open}
             onOpenChange={setOpen}
             container={screen}
@@ -61,7 +63,7 @@ export default function PhonePane() {
               <ListRow static title="Wilaya" trailing={order.city} />
               <ListRow static title="Total" trailing={order.total} />
             </ListSection>
-          </Pane>
+          </Sheet>
         </>
       )}
     </Device>
@@ -69,7 +71,7 @@ export default function PhonePane() {
 }
 
 export const meta = {
-  title: 'On a phone it is a sheet',
+  title: 'Pane on a phone',
   description:
-    'The same Pane inside a 390px phone: below the compact breakpoint it presents as a bottom Sheet that fits its content, with the title and close in its header and the dock at the bottom. Drag it down to close.',
+    'The same pane sheet inside a 390px phone: below the breakpoint it rises from the bottom and fits its content, with the title and close in its header and the dock at the bottom. Drag it down to close.',
 }

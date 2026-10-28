@@ -35,7 +35,8 @@ export type SheetProps = PresentationChromeProps & {
     grabber?: boolean;
     /**
      * `true` (default) dims and blocks the page. `false` leaves the page usable behind the sheet at
-     * every height, with no scrim and no Escape dismissal.
+     * every height, with no scrim and no Escape dismissal (a `pane` still closes on Escape while focus
+     * is inside it).
      */
     modal?: boolean;
     /**
@@ -63,18 +64,26 @@ export type SheetProps = PresentationChromeProps & {
     focusDetent?: SheetDetent | null;
     /**
      * What the sheet becomes on wide screens: a centered `dialog` (default), still a bottom `sheet`,
-     * or a floating glass `card` at the leading edge with the same detents (iPad Maps).
+     * a floating glass `card` at the leading edge with the same detents (iPad Maps), or a `pane`: an
+     * inspector beside the page, a full-height opaque panel sliding in from `paneSide` with the close
+     * bubble floating beside it. Use `pane` for the details of the thing the page is about; with it
+     * the phone sheet fits its content by default (`detents` `['fit']`) and pads 16 (a card's
+     * inside), and `useSheet()` is null in the wide panel.
      */
-    regular?: 'dialog' | 'sheet' | 'card';
+    regular?: 'dialog' | 'sheet' | 'card' | 'pane';
     /** Width in px from which the sheet is “regular” (wide). Default 720. */
     regularBreakpoint?: number;
     /** Width of the `card` presentation in px. Default 380. */
     cardWidth?: number;
+    /** Width of the `pane` presentation in px. Default 420, at most 60% of the window. */
+    paneWidth?: number;
+    /** The side the `pane` presentation slides in from: `end` (default; the right in LTR) or `start`. */
+    paneSide?: 'end' | 'start';
     /** Renders inside this element (absolutely positioned) instead of the top layer: for embedded previews. */
     container?: HTMLElement | null;
     /** On phones, let the page behind recede (scale back) as a large modal sheet rises. Default true. */
     recede?: boolean;
-    /** Content padding in px. Default: the shell gap G (list sections bring their own inset). */
+    /** Content padding in px. Default: the shell gap G (list sections bring their own inset); 16 with `regular: 'pane'`. */
     contentPadding?: number;
     /** Focused when the sheet opens. Default: the sheet itself. */
     initialFocusRef?: React.RefObject<HTMLElement | null>;
@@ -106,7 +115,8 @@ export declare function useSheet(): SheetState | null;
  * full, fit or custom heights), follows the finger, snaps where a flick projects and closes when
  * flicked down. Below full height it floats inset from the edges on glass; rising, it reaches the
  * edges and turns opaque in one continuous motion. It can grow out of the button that opened it,
- * leave the page usable at low detents, and becomes a dialog or a floating card on wide screens.
+ * leave the page usable at low detents, and becomes a dialog, a floating card or an inspector pane
+ * on wide screens, so you write the content once.
  */
-export declare function Sheet(props: SheetProps): React.JSX.Element | null;
+export declare function Sheet(props: SheetProps): React.JSX.Element;
 //# sourceMappingURL=sheet.d.ts.map

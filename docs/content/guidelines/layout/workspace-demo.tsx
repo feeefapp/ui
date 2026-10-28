@@ -13,7 +13,7 @@ import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
 import { Dock } from '@feeef.dev/ui/dock'
 import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
 import { SegmentedControl } from '@feeef.dev/ui/primitives/segmented'
-import { Pane } from '@feeef.dev/ui/presentation'
+import { Sheet } from '@feeef.dev/ui/containers'
 import { Presence } from '@feeef.dev/ui/motion'
 import { Marker } from './frame'
 import './layout.css'
@@ -333,9 +333,9 @@ export function OrderWorkspace({
           )}
         </div>
       </Scaffold>
-      <Pane open={detailsOpen && !inspectorInline} onOpenChange={setDetailsOpen} label="Order details" title="Details">
+      <Sheet regular="pane" open={detailsOpen && !inspectorInline} onOpenChange={setDetailsOpen} label="Order details" title="Details">
         <Inspector markers={false} />
-      </Pane>
+      </Sheet>
     </>
   )
 }

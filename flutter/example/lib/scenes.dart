@@ -271,11 +271,7 @@ final Map<String, List<Widget> Function()> scenes = {
       align: .start,
       content: const Text('2 selected'),
       children: [
-        IconButton(
-          ariaLabel: 'Clear',
-          onClick: _noop,
-          icon: const LucideX(),
-        ),
+        IconButton(ariaLabel: 'Clear', onClick: _noop, icon: const LucideX()),
       ],
     ),
   ],
@@ -320,9 +316,7 @@ final Map<String, List<Widget> Function()> scenes = {
             const SizedBox(
               width: 200,
               height: 120,
-              child: PopoverSurface(
-                child: SizedBox.expand(),
-              ),
+              child: PopoverSurface(child: SizedBox.expand()),
             ),
           ],
         );
@@ -1011,7 +1005,9 @@ final Map<String, List<Widget> Function()> scenes = {
   'modal': () => [
     Alert(
       title: 'Delete order #1042?',
-      message: const Text("The customer won't be notified. You can't undo this."),
+      message: const Text(
+        "The customer won't be notified. You can't undo this.",
+      ),
       actions: const [
         AlertAction(label: 'Cancel', role: AlertActionRole.cancel),
         AlertAction(label: 'Delete', role: AlertActionRole.destructive),
@@ -1020,7 +1016,8 @@ final Map<String, List<Widget> Function()> scenes = {
   ],
   'pane': () => [
     Builder(
-      builder: (context) => Pane(
+      builder: (context) => Sheet(
+        regular: SheetRegular.pane,
         label: 'Order #1042',
         title: const Text('Order #1042'),
         dock: PresentationDock(
@@ -1171,10 +1168,7 @@ final Map<String, List<Widget> Function()> scenes = {
         offText: 'Off',
       ),
       SlideSwitch(label: 'Auto ship', onText: 'On', offText: 'Off'),
-      SlideSwitch(
-        label: 'Compact',
-        defaultChecked: true,
-      ),
+      SlideSwitch(label: 'Compact', defaultChecked: true),
       SlideSwitch(label: 'Disabled', disabled: true, defaultChecked: true),
       SlideSwitch(label: 'Thin', trackStyle: .thin, defaultChecked: true),
     ]),

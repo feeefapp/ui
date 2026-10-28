@@ -66,7 +66,8 @@ void main() {
                       dock: _dock(),
                       child: const SizedBox(height: 200),
                     ),
-                    'pane' => Pane(
+                    'pane' => Sheet(
+                      regular: SheetRegular.pane,
                       open: open,
                       onOpenChange: change,
                       label: 'Edit',
@@ -160,7 +161,8 @@ void main() {
                           dock: content,
                           child: const SizedBox(height: 120),
                         )
-                      : Pane(
+                      : Sheet(
+                          regular: SheetRegular.pane,
                           open: open,
                           onOpenChange: change,
                           label: 'Edit',

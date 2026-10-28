@@ -31,7 +31,8 @@ class _InspectorState extends State<Inspector> {
         const SizedBox(height: 16),
         Semantics(liveRegion: true, child: Text(_status)),
         // Draws nothing in place (it presents in the overlay), so it sits outside the spacing.
-        Pane(
+        Sheet(
+          regular: SheetRegular.pane,
           open: _open,
           onOpenChange: (open) => setState(() => _open = open),
           label: 'Edit customer',

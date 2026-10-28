@@ -17,7 +17,7 @@ function Overview() {
           head={['Area', 'Commitment']}
           rows={[
             ['Native elements', <>Buttons are <C>{'<button>'}</C>, checkboxes and radios are native inputs, dialogs are the native <C>{'<dialog>'}</C>. Browser keyboard behavior, form submission and validity come for free.</>],
-            ['Names', <>Fields take a <C>hint</C>, their visible floating label. <C>IconButton</C> requires an <C>aria-label</C>. <C>Modal</C>, <C>Pane</C> and <C>Sheet</C> require a <C>label</C>; <C>Alert</C> is named by its <C>title</C>. Kit-generated labels (close, search, theme, language) are translated.</>],
+            ['Names', <>Fields take a <C>hint</C>, their visible floating label. <C>IconButton</C> requires an <C>aria-label</C>. <C>Modal</C> and <C>Sheet</C> require a <C>label</C>; <C>Alert</C> is named by its <C>title</C>. Kit-generated labels (close, search, theme, language) are translated.</>],
             ['Focus', <>Keyboard focus (<C>:focus-visible</C>; in Flutter, traditional highlight mode) shows a thin ring that hugs the control, 2px at 1px out, in the focus color at reduced strength, plus the control’s hover fill. Fields show it on their own edge instead. Pointer and touch focus show nothing. Increased contrast and forced colors get a strong 3px ring. See <a href="#focus">Focus</a>.</>],
             ['Dialogs', <>Focus is trapped while open, Escape closes, and focus returns to the opener (or to <C>returnFocusRef</C> if the opener is gone). <C>initialFocusRef</C> picks the first focused element.</>],
             ['State', <>Loading buttons set <C>aria-busy</C> and block activation; pressed toggle buttons are styled from <C>aria-pressed</C>; segmented controls use radio semantics.</>],

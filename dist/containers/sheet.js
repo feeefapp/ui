@@ -13,6 +13,7 @@ import { detentHeight, detentHeights, dragHeight, flingStep, focusRaise, freeTar
 import { cn } from '../utils.js';
 import { GLASS_INSTANT_ATTRIBUTE, settleGlass } from '../glass/transitions.js';
 import { POP_MOTION } from '../presentation/motion.js';
+import { SheetPane, useHostWidth } from './sheet-pane.js';
 import '../presentation/presentation.css';
 import './sheet.css';
 const SheetContext = React.createContext(null);
@@ -24,6 +25,7 @@ export function useSheet() {
     return React.useContext(SheetContext);
 }
 const DEFAULT_DETENTS = ['large'];
+const PANE_DETENTS = ['fit'];
 /** The sheet growing out of its source, and flying back into it. */
 const MORPH_OPEN = { duration: 0.46, bounce: 0.16 };
 const MORPH_CLOSE = { duration: 0.36, bounce: 0.08 };
@@ -32,13 +34,24 @@ const MORPH_CLOSE = { duration: 0.36, bounce: 0.08 };
  * full, fit or custom heights), follows the finger, snaps where a flick projects and closes when
  * flicked down. Below full height it floats inset from the edges on glass; rising, it reaches the
  * edges and turns opaque in one continuous motion. It can grow out of the button that opened it,
- * leave the page usable at low detents, and becomes a dialog or a floating card on wide screens.
+ * leave the page usable at low detents, and becomes a dialog, a floating card or an inspector pane
+ * on wide screens, so you write the content once.
  */
 export function Sheet(props) {
+    return props.regular === 'pane' ? _jsx(PaneSheet, { ...props }) : _jsx(BottomSheet, { ...props });
+}
+function BottomSheet(props) {
     const { mounted, exited } = usePresented(props.open);
     if (!mounted)
         return null;
     return _jsx(SheetPresentation, { ...props, onExited: exited });
+}
+/** `regular: 'pane'`: the side panel from the breakpoint, a bottom sheet below it. */
+function PaneSheet(props) {
+    const width = useHostWidth(props.container);
+    if (width >= (props.regularBreakpoint ?? 720))
+        return _jsx(SheetPane, { ...props });
+    return (_jsx(BottomSheet, { ...props, regular: "sheet", detents: props.detents ?? PANE_DETENTS, contentPadding: props.contentPadding ?? 16 }));
 }
 /** Rendered px per layout px of `el` (a sheet inside a scaled demo frame). */
 function scaleOf(el) {
@@ -63,7 +76,7 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
     const bodyNatural = React.useRef(0);
     const measureRef = React.useRef(() => { });
     const wide = !!metrics && metrics.width >= regularBreakpoint;
-    const presentation = wide && regular !== 'sheet' ? regular : 'sheet';
+    const presentation = wide && regular !== 'sheet' && regular !== 'pane' ? regular : 'sheet';
     const heights = metrics ? detentHeights(detents, metrics) : [];
     const large = metrics ? detentHeight('large', metrics) : 0;
     const hasPartial = heights.some((h) => h < large - 0.5);

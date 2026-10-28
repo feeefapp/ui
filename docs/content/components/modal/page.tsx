@@ -74,7 +74,7 @@ ${actionsFor(v.actions, v.destructive)
           ]}
         />
         <p>
-          When the person needs the page in view, use a <Link to="/components/pane">pane</Link>; for a
+          When the person needs the page in view, use a <Link to="/components/sheet">sheet</Link> with <C>{'regular="pane"'}</C>; for a
           short task on a phone, a <Link to="/components/sheet">sheet</Link>. Don’t open one dialog from
           another.
         </p>
@@ -138,7 +138,7 @@ ${actionsFor(v.actions, v.destructive)
         <p>
           The header, body and dock are the shared parts every presentation surface is made of:{' '}
           <C>PresentationHeader</C>, <C>PresentationBody</C> (a scroll area that hugs its content up to the
-          room it has) and <C>PresentationDock</C>. <C>Pane</C> and <C>Sheet</C> use the same ones.
+          room it has) and <C>PresentationDock</C>. <C>Sheet</C> uses the same ones.
         </p>
       </Section>
 

@@ -5,8 +5,8 @@ import 'package:flutter/widgets.dart';
 import '../glass/container.dart';
 import '../platform/pointer_shield.dart';
 
-/// What a presentation surface (Alert, Modal, Pane, Sheet) reads when [showModal], [showAlert],
-/// [showPane] or [showSheet] hosts it in a route: whether the route is still open, and how to
+/// What a presentation surface (Alert, Modal, Sheet) reads when [showModal], [showAlert] or
+/// [showSheet] hosts it in a route: whether the route is still open, and how to
 /// close it (pop the route). Surfaces then render in place, fill the route, and ignore their own
 /// `open` / `onOpenChange`. Each surface hides the scope from its own content, so a surface
 /// declared inside a routed one is never driven by that route.

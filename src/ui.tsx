@@ -6,7 +6,8 @@ export { SquareSlot } from './primitives/square-slot'
 export type { SquareSlotProps } from './primitives/square-slot'
 export { Input, Textarea, Label, Image } from './primitives/fields'
 export { Select, Option } from './primitives/select'
-export { Alert, Modal, Pane } from './presentation'
+export { Alert, Modal } from './presentation'
+export { Sheet, useSheet } from './containers/sheet'
 export { ProBadge } from './primitives/badge'
 export {
   Box,

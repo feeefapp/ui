@@ -31,6 +31,7 @@ import {
 import { cn } from '../utils'
 import { GLASS_INSTANT_ATTRIBUTE, settleGlass } from '../glass/transitions'
 import { POP_MOTION } from '../presentation/motion'
+import { SheetPane, useHostWidth } from './sheet-pane'
 import '../presentation/presentation.css'
 import './sheet.css'
 
@@ -66,7 +67,8 @@ export type SheetProps = PresentationChromeProps & {
   grabber?: boolean
   /**
    * `true` (default) dims and blocks the page. `false` leaves the page usable behind the sheet at
-   * every height, with no scrim and no Escape dismissal.
+   * every height, with no scrim and no Escape dismissal (a `pane` still closes on Escape while focus
+   * is inside it).
    */
   modal?: boolean
   /**
@@ -94,18 +96,26 @@ export type SheetProps = PresentationChromeProps & {
   focusDetent?: SheetDetent | null
   /**
    * What the sheet becomes on wide screens: a centered `dialog` (default), still a bottom `sheet`,
-   * or a floating glass `card` at the leading edge with the same detents (iPad Maps).
+   * a floating glass `card` at the leading edge with the same detents (iPad Maps), or a `pane`: an
+   * inspector beside the page, a full-height opaque panel sliding in from `paneSide` with the close
+   * bubble floating beside it. Use `pane` for the details of the thing the page is about; with it
+   * the phone sheet fits its content by default (`detents` `['fit']`) and pads 16 (a card's
+   * inside), and `useSheet()` is null in the wide panel.
    */
-  regular?: 'dialog' | 'sheet' | 'card'
+  regular?: 'dialog' | 'sheet' | 'card' | 'pane'
   /** Width in px from which the sheet is “regular” (wide). Default 720. */
   regularBreakpoint?: number
   /** Width of the `card` presentation in px. Default 380. */
   cardWidth?: number
+  /** Width of the `pane` presentation in px. Default 420, at most 60% of the window. */
+  paneWidth?: number
+  /** The side the `pane` presentation slides in from: `end` (default; the right in LTR) or `start`. */
+  paneSide?: 'end' | 'start'
   /** Renders inside this element (absolutely positioned) instead of the top layer: for embedded previews. */
   container?: HTMLElement | null
   /** On phones, let the page behind recede (scale back) as a large modal sheet rises. Default true. */
   recede?: boolean
-  /** Content padding in px. Default: the shell gap G (list sections bring their own inset). */
+  /** Content padding in px. Default: the shell gap G (list sections bring their own inset); 16 with `regular: 'pane'`. */
   contentPadding?: number
   /** Focused when the sheet opens. Default: the sheet itself. */
   initialFocusRef?: React.RefObject<HTMLElement | null>
@@ -140,6 +150,7 @@ export function useSheet() {
 }
 
 const DEFAULT_DETENTS: readonly SheetDetent[] = ['large']
+const PANE_DETENTS: readonly SheetDetent[] = ['fit']
 /** The sheet growing out of its source, and flying back into it. */
 const MORPH_OPEN: Spring = { duration: 0.46, bounce: 0.16 }
 const MORPH_CLOSE: Spring = { duration: 0.36, bounce: 0.08 }
@@ -149,12 +160,31 @@ const MORPH_CLOSE: Spring = { duration: 0.36, bounce: 0.08 }
  * full, fit or custom heights), follows the finger, snaps where a flick projects and closes when
  * flicked down. Below full height it floats inset from the edges on glass; rising, it reaches the
  * edges and turns opaque in one continuous motion. It can grow out of the button that opened it,
- * leave the page usable at low detents, and becomes a dialog or a floating card on wide screens.
+ * leave the page usable at low detents, and becomes a dialog, a floating card or an inspector pane
+ * on wide screens, so you write the content once.
  */
 export function Sheet(props: SheetProps) {
+  return props.regular === 'pane' ? <PaneSheet {...props} /> : <BottomSheet {...props} />
+}
+
+function BottomSheet(props: SheetProps) {
   const { mounted, exited } = usePresented(props.open)
   if (!mounted) return null
   return <SheetPresentation {...props} onExited={exited} />
+}
+
+/** `regular: 'pane'`: the side panel from the breakpoint, a bottom sheet below it. */
+function PaneSheet(props: SheetProps) {
+  const width = useHostWidth(props.container)
+  if (width >= (props.regularBreakpoint ?? 720)) return <SheetPane {...props} />
+  return (
+    <BottomSheet
+      {...props}
+      regular="sheet"
+      detents={props.detents ?? PANE_DETENTS}
+      contentPadding={props.contentPadding ?? 16}
+    />
+  )
 }
 
 type Metrics = {
@@ -227,7 +257,7 @@ function SheetPresentation({
   const measureRef = React.useRef<() => void>(() => {})
 
   const wide = !!metrics && metrics.width >= regularBreakpoint
-  const presentation: 'sheet' | 'card' | 'dialog' = wide && regular !== 'sheet' ? regular : 'sheet'
+  const presentation: 'sheet' | 'card' | 'dialog' = wide && regular !== 'sheet' && regular !== 'pane' ? regular : 'sheet'
   const heights = metrics ? detentHeights(detents, metrics) : []
   const large = metrics ? detentHeight('large', metrics) : 0
   const hasPartial = heights.some((h) => h < large - 0.5)

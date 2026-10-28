@@ -8,7 +8,7 @@ import '../theme.dart';
 import '../theme/css_text.dart';
 import '../toolbar.dart';
 
-/// The floating header of a presentation surface (Modal, Pane, Sheet): a title bubble at the
+/// The floating header of a presentation surface (Modal, Sheet): a title bubble at the
 /// start, optional [trailing] bubbles and a close bubble at the end, glass in one [GlassScope]
 /// so they merge and share light. The twin of `PresentationHeader` in
 /// `@feeef.dev/ui/presentation`. Put it in a [PresentationBody]'s `top`; it draws nothing when it
@@ -117,7 +117,7 @@ class PresentationTitle extends StatelessWidget {
 }
 
 /// The close bubble: one glass group holding the close button (the header's, and the one
-/// floating beside a [Pane]).
+/// floating beside a sheet's pane).
 class CloseBubble extends StatelessWidget {
   const CloseBubble({
     super.key,

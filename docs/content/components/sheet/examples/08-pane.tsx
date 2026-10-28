@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Pencil } from 'lucide-react'
 import { Button } from '@feeef.dev/ui/primitives/button'
 import { TextField } from '@feeef.dev/ui/primitives/text-field'
-import { Pane, PresentationDock } from '@feeef.dev/ui/presentation'
+import { Sheet } from '@feeef.dev/ui/containers'
+import { PresentationDock } from '@feeef.dev/ui/presentation'
 
 export default function Inspector() {
   const [open, setOpen] = useState(false)
@@ -14,7 +15,8 @@ export default function Inspector() {
         <Pencil size={18} /> Edit customer
       </Button>
       <p role="status">{status}</p>
-      <Pane
+      <Sheet
+        regular="pane"
         open={open}
         onOpenChange={setOpen}
         label="Edit customer"
@@ -43,13 +45,13 @@ export default function Inspector() {
           <TextField hint="Commune" defaultValue="Bab Ezzouar" />
           <TextField hint="Note for the courier" defaultValue="Call before coming." />
         </div>
-      </Pane>
+      </Sheet>
     </div>
   )
 }
 
 export const meta = {
-  title: 'Inspector with a form',
+  title: 'Pane: an inspector with a form',
   description:
-    'A full-height pane slides in from the end side with its close bubble beside it; the actions float in a dock. Narrow the window below 720px and the same pane opens as a bottom sheet.',
+    'With regular=\"pane\" a wide screen gets a full-height inspector that slides in from the end side, its close bubble beside it and the actions in a dock. Narrow the window below 720px and the same sheet opens from the bottom.',
 }

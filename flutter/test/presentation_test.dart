@@ -512,14 +512,15 @@ void main() {
     }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
   });
 
-  group('Pane', () {
+  group('Sheet pane', () {
     /// [state] holds `open`; the pane's onOpenChange writes it back through the overlay's setState.
     Widget pane(
       List<bool> state, {
       TextDirection direction = TextDirection.ltr,
     }) => _overlay(
       direction: direction,
-      (setState) => Pane(
+      (setState) => Sheet(
+        regular: SheetRegular.pane,
         open: state[0],
         onOpenChange: (v) => setState(() => state[0] = v),
         label: 'Edit customer',
@@ -597,7 +598,8 @@ void main() {
                   children: const [Text('Row')],
                 ),
               ),
-              Pane(
+              Sheet(
+                regular: SheetRegular.pane,
                 open: true,
                 modal: false,
                 label: 'Inspector',
@@ -801,9 +803,7 @@ void main() {
       },
     );
 
-    testWidgets('showPane and showSheet return the popped value', (
-      tester,
-    ) async {
+    testWidgets('showSheet returns the popped value', (tester) async {
       final results = <Object?>[];
       _size(tester, const Size(1200, 800));
       await tester.pumpWidget(
@@ -814,9 +814,10 @@ void main() {
               children: [
                 Button(
                   onClick: () async => results.add(
-                    await showPane<int>(
+                    await showSheet<int>(
                       context,
-                      builder: (context) => Pane(
+                      builder: (context) => Sheet(
+                        regular: SheetRegular.pane,
                         label: 'Pick',
                         child: Button(
                           onClick: () => Navigator.pop(context, 7),

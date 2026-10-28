@@ -28,6 +28,8 @@ import '../scroll/scroll_area.dart';
 
 export 'sheet_model.dart';
 
+part 'sheet_pane.dart';
+
 /// What a [Sheet] becomes on wide screens.
 enum SheetRegular {
   /// A centered dialog (the default).
@@ -38,6 +40,22 @@ enum SheetRegular {
 
   /// A floating glass card at the leading edge with the same detents (iPad Maps).
   card,
+
+  /// An inspector beside the page: a full-height opaque panel sliding in from [Sheet.paneSide],
+  /// with the close bubble floating beside it. Use it for the details of the thing the page is
+  /// about. With it the phone sheet fits its content by default ([Sheet.detents] `[fit]`) and pads
+  /// 16 (a card's inside); the wide panel shows [Sheet.child] (not [Sheet.builder]) and has no
+  /// [SheetScope].
+  pane,
+}
+
+/// The side a [SheetRegular.pane] slides in from.
+enum SheetPaneSide {
+  /// The inline end: the right in LTR, the left in RTL (the default).
+  end,
+
+  /// The inline start.
+  start,
 }
 
 /// How a [Sheet] is presented right now ([SheetScope.presentation]).
@@ -178,11 +196,12 @@ class SheetScope extends InheritedWidget {
 /// when flicked down. Below full height it floats inset from the edges on glass; rising, it
 /// reaches the edges and turns opaque in one continuous motion. It can grow out of the button
 /// that opened it ([source]), leave the page usable at low detents ([backgroundInteraction]), and
-/// becomes a dialog or a floating card on wide screens. Scrolling inside hands off to dragging the
+/// becomes a dialog, a floating card or an inspector pane on wide screens ([regular]), so you write
+/// the content once. Scrolling inside hands off to dragging the
 /// sheet at the top. Under a full-height modal sheet a [SheetBackdrop] recedes. Keep it mounted
 /// and toggle [open] so the exit can run, or show it with [showSheet] and close it with
 /// `Navigator.pop(context, value)`.
-class Sheet extends StatefulWidget {
+class Sheet extends StatelessWidget {
   const Sheet({
     super.key,
     this.open = true,
@@ -196,7 +215,7 @@ class Sheet extends StatefulWidget {
     this.dock,
     this.child = const SizedBox.shrink(),
     this.builder,
-    this.detents = const [SheetDetent.large],
+    this.detents,
     this.detent,
     this.defaultDetent,
     this.onDetentChange,
@@ -213,6 +232,8 @@ class Sheet extends StatefulWidget {
     this.regular = SheetRegular.dialog,
     this.regularBreakpoint = 720,
     this.cardWidth = 380,
+    this.paneWidth = 420,
+    this.paneSide = SheetPaneSide.end,
     this.container = false,
     this.recede = true,
     this.contentPadding,
@@ -260,10 +281,10 @@ class Sheet extends StatefulWidget {
   final Widget Function(BuildContext context, ScrollController controller)?
   builder;
 
-  /// Heights the sheet rests at, in any order. Default `[SheetDetent.large]`. [SheetDetent.peek]
-  /// is just the header (a search field, like Maps), so a sheet with `[peek, medium, large]` lives
-  /// on the page.
-  final List<SheetDetent> detents;
+  /// Heights the sheet rests at, in any order. Default `[SheetDetent.large]` (`[SheetDetent.fit]`
+  /// with [SheetRegular.pane]). [SheetDetent.peek] is just the header (a search field, like Maps),
+  /// so a sheet with `[peek, medium, large]` lives on the page.
+  final List<SheetDetent>? detents;
 
   /// Controlled detent. Pair with [onDetentChange].
   final SheetDetent? detent;
@@ -292,7 +313,8 @@ class Sheet extends StatefulWidget {
   final bool? grabber;
 
   /// `true` (default) dims and blocks the page. `false` leaves the page usable behind the sheet at
-  /// every height, with no scrim.
+  /// every height, with no scrim (a wide [SheetRegular.pane] still closes on Escape while focus is
+  /// inside it).
   final bool modal;
 
   /// The page stays usable (no dim) while the sheet rests at or below this detent, and dims as it
@@ -326,6 +348,12 @@ class Sheet extends StatefulWidget {
   /// Width of the [SheetRegular.card] presentation in px. Default 380.
   final double cardWidth;
 
+  /// Width of the [SheetRegular.pane] presentation in px. Default 420, at most 60% of the window.
+  final double paneWidth;
+
+  /// The side the [SheetRegular.pane] presentation slides in from. Default [SheetPaneSide.end].
+  final SheetPaneSide paneSide;
+
   /// Renders in place, filling its parent (for example a `Positioned.fill` in a [Stack]), instead
   /// of in the nearest [Overlay]: for embedded previews.
   final bool container;
@@ -333,7 +361,8 @@ class Sheet extends StatefulWidget {
   /// On phones, let a [SheetBackdrop] behind recede as a large modal sheet rises. Default true.
   final bool recede;
 
-  /// Content padding (the shell gap G when null; list sections bring their own inset).
+  /// Content padding (the shell gap G when null, 16 with [SheetRegular.pane]; list sections bring
+  /// their own inset).
   final double? contentPadding;
 
   /// Focused when the sheet opens. Default: the sheet itself.
@@ -343,7 +372,18 @@ class Sheet extends StatefulWidget {
   final FocusNode? returnFocus;
 
   @override
-  State<Sheet> createState() => _SheetState();
+  Widget build(BuildContext context) => regular == SheetRegular.pane
+      ? _PaneSwitch(sheet: this)
+      : _BottomSheet(sheet: this);
+}
+
+/// The bottom sheet (every presentation but a wide pane).
+class _BottomSheet extends StatefulWidget {
+  const _BottomSheet({required this.sheet});
+  final Sheet sheet;
+
+  @override
+  State<_BottomSheet> createState() => _SheetState();
 }
 
 typedef _Key = (
@@ -367,7 +407,13 @@ const _morphClose = Spring(duration: 0.36, bounce: 0.08);
 /// The source of a running morph, in host pixels.
 typedef _Source = ({Rect rect, double radius, _SheetSourceState? state});
 
-class _SheetState extends State<Sheet> {
+class _SheetState extends State<_BottomSheet> {
+  List<SheetDetent> get _detents =>
+      widget.sheet.detents ??
+      (widget.sheet.regular == SheetRegular.pane
+          ? const [SheetDetent.fit]
+          : const [SheetDetent.large]);
+
   /// Feeds content drags, flings and wheels to the sheet before the scroll (see
   /// [_SheetScrollPosition]).
   late final _scroll = _SheetScrollController(this);
@@ -441,7 +487,7 @@ class _SheetState extends State<Sheet> {
     super.initState();
     _localIndex = math.max(
       0,
-      widget.detents.indexOf(widget.defaultDetent ?? widget.detents.first),
+      _detents.indexOf(widget.sheet.defaultDetent ?? _detents.first),
     );
     _unsubscribe = [
       _visible.subscribe(_paint),
@@ -454,7 +500,7 @@ class _SheetState extends State<Sheet> {
   }
 
   /// Open: the hosting route's state when [showSheet] hosts it, otherwise [Sheet.open].
-  bool get _open => _route?.open ?? widget.open;
+  bool get _open => _route?.open ?? widget.sheet.open;
 
   /// Asks to close: pops the hosting route, or calls `onOpenChange(false)`.
   void _close() {
@@ -463,7 +509,7 @@ class _SheetState extends State<Sheet> {
     if (route != null) {
       route.dismiss();
     } else {
-      widget.onOpenChange?.call(false);
+      widget.sheet.onOpenChange?.call(false);
     }
   }
 
@@ -481,7 +527,7 @@ class _SheetState extends State<Sheet> {
   }
 
   @override
-  void didUpdateWidget(Sheet old) {
+  void didUpdateWidget(_BottomSheet old) {
     super.didUpdateWidget(old);
     _syncOpen();
   }
@@ -530,7 +576,7 @@ class _SheetState extends State<Sheet> {
     }
     if (_height.value != _visible.get()) {
       _height.value = _visible.get();
-      widget.onHeightChange?.call(math.max(0.0, _height.value));
+      widget.sheet.onHeightChange?.call(math.max(0.0, _height.value));
     }
     final m = _morphing;
     // The source hides once the sheet covers it, and shows again as the sheet lands back in it.
@@ -541,19 +587,20 @@ class _SheetState extends State<Sheet> {
 
   EdgeInsets get _safe => MediaQuery.maybePaddingOf(context) ?? EdgeInsets.zero;
   bool get _ready =>
-      _host != null && (_bodyNatural != null || widget.builder != null);
+      _host != null && (_bodyNatural != null || widget.sheet.builder != null);
   bool get _showGrabber =>
       _presentation != SheetPresentation.dialog &&
-      (widget.grabber ?? widget.detents.length > 1);
+      (widget.sheet.grabber ?? _detents.length > 1);
 
-  bool get _wide => _host != null && _host!.width >= widget.regularBreakpoint;
+  bool get _wide =>
+      _host != null && _host!.width >= widget.sheet.regularBreakpoint;
 
   SheetPresentation get _presentation => !_wide
       ? SheetPresentation.sheet
-      : switch (widget.regular) {
+      : switch (widget.sheet.regular) {
           SheetRegular.dialog => SheetPresentation.dialog,
           SheetRegular.card => SheetPresentation.card,
-          SheetRegular.sheet => SheetPresentation.sheet,
+          SheetRegular.sheet || SheetRegular.pane => SheetPresentation.sheet,
         };
 
   SizeTokens get _sizes => ThemeProvider.of(context).sizes;
@@ -572,7 +619,7 @@ class _SheetState extends State<Sheet> {
     if (_presentation == SheetPresentation.card) return SheetFrameMode.card;
     final large = _large;
     final hasPartial = _heightsFor(_metricsWith(0)).any((h) => h < large - 0.5);
-    return (widget.floating ?? hasPartial)
+    return (widget.sheet.floating ?? hasPartial)
         ? SheetFrameMode.float
         : SheetFrameMode.attached;
   }
@@ -591,7 +638,7 @@ class _SheetState extends State<Sheet> {
     final grab = _showGrabber ? 20.0 : 0.0;
     // The grabber row and the body (content, float reservations and safe area).
     // A builder's content scrolls on its own: `fit` takes all the room.
-    final natural = widget.builder != null
+    final natural = widget.sheet.builder != null
         ? double.infinity
         : grab + (_bodyNatural ?? 0) + gap;
     // Peek: the grabber, the floating header at its offset, the same gap again below it.
@@ -609,23 +656,23 @@ class _SheetState extends State<Sheet> {
   SheetMetrics? get _metrics => _metricsWith(_columnInset);
 
   List<double> _heightsFor(SheetMetrics? m) =>
-      m == null ? const [] : detentHeights(widget.detents, m);
+      m == null ? const [] : detentHeights(_detents, m);
 
   List<double> get _heights => _heightsFor(_metrics);
 
   int get _index {
-    final controlled = widget.detent;
+    final controlled = widget.sheet.detent;
     if (controlled != null) {
-      return math.max(0, widget.detents.indexOf(controlled));
+      return math.max(0, _detents.indexOf(controlled));
     }
-    return math.min(_localIndex, widget.detents.length - 1);
+    return math.min(_localIndex, _detents.length - 1);
   }
 
   double get _target {
     final h = _heights;
     final i = _index;
     final free = _freeHeight;
-    if (free != null && !widget.snap && widget.detents[i] == _reported) {
+    if (free != null && !widget.sheet.snap && _detents[i] == _reported) {
       return free.clamp(_minHeight, _maxHeight);
     }
     return i < h.length ? h[i] : 0;
@@ -645,16 +692,18 @@ class _SheetState extends State<Sheet> {
   bool get _resizable =>
       _ready &&
       _presentation != SheetPresentation.dialog &&
-      (!widget.snap || _heights.toSet().length > 1);
+      (!widget.sheet.snap || _heights.toSet().length > 1);
 
   /// The height up to which the page stays usable, or null.
   double? get _undimmed {
-    final d = widget.backgroundInteraction, m = _metrics;
+    final d = widget.sheet.backgroundInteraction, m = _metrics;
     return d == null || m == null ? null : detentHeight(d, m);
   }
 
-  bool get _dims => widget.modal || widget.backgroundInteraction != null;
-  bool get _hostModal => widget.modal && widget.backgroundInteraction == null;
+  bool get _dims =>
+      widget.sheet.modal || widget.sheet.backgroundInteraction != null;
+  bool get _hostModal =>
+      widget.sheet.modal && widget.sheet.backgroundInteraction == null;
 
   double get _dialogHeight {
     final m = _metrics;
@@ -678,7 +727,7 @@ class _SheetState extends State<Sheet> {
     final backdrop = _backdrop, m = _metrics;
     if (backdrop == null || m == null) return;
     final q =
-        widget.recede &&
+        widget.sheet.recede &&
             _hostModal &&
             _mounted &&
             _presentation == SheetPresentation.sheet &&
@@ -721,7 +770,7 @@ class _SheetState extends State<Sheet> {
 
   /// The source to grow out of, in host pixels, or null when there is none to see.
   _Source? _sourceRect() {
-    final key = widget.source;
+    final key = widget.sheet.source;
     final origin = key?.currentContext;
     final host = _hostKey.currentContext?.findRenderObject();
     final box = origin?.findRenderObject();
@@ -909,9 +958,9 @@ class _SheetState extends State<Sheet> {
     setState(() {
       _freeHeight = null;
       _reported = null;
-      if (widget.detent == null) _localIndex = next;
+      if (widget.sheet.detent == null) _localIndex = next;
     });
-    if (next != current) widget.onDetentChange?.call(widget.detents[next]);
+    if (next != current) widget.sheet.onDetentChange?.call(_detents[next]);
   }
 
   /// A free sheet rests at [height]; the nearest detent is reported as its detent.
@@ -919,23 +968,23 @@ class _SheetState extends State<Sheet> {
     final current = _index;
     final next = nearestDetent(height, _heights);
     setState(() {
-      _reported = widget.detents[next];
+      _reported = _detents[next];
       _freeHeight = height;
-      if (widget.detent == null) _localIndex = next;
+      if (widget.sheet.detent == null) _localIndex = next;
     });
-    if (next != current) widget.onDetentChange?.call(widget.detents[next]);
+    if (next != current) widget.sheet.onDetentChange?.call(_detents[next]);
   }
 
   /// Where a released sheet goes (snap or free) at [velocity] (px/s, positive = growing).
   void _release(double velocity, bool cancelled) {
     final heights = _heights;
     if (heights.isEmpty) return;
-    if (!widget.snap) {
+    if (!widget.sheet.snap) {
       final landing = freeTarget(
         _visible.get(),
         velocity,
         heights,
-        widget.dismissible,
+        widget.sheet.dismissible,
       );
       if (landing.dismiss && !cancelled) return _dismissAway(velocity);
       final height = landing.dismiss ? _visible.get() : landing.height;
@@ -947,7 +996,7 @@ class _SheetState extends State<Sheet> {
       _visible.get(),
       velocity,
       heights,
-      widget.dismissible,
+      widget.sheet.dismissible,
     );
     if (landing.dismiss && !cancelled) return _dismissAway(velocity);
     final next = landing.dismiss ? _index : landing.index;
@@ -999,7 +1048,12 @@ class _SheetState extends State<Sheet> {
     final next = sheetScrollStep(state, delta, _maxHeight, scrollMax);
     _content = next;
     _visible.set(
-      dragHeight(next.raw, _heights, _host?.height ?? 800, widget.dismissible),
+      dragHeight(
+        next.raw,
+        _heights,
+        _host?.height ?? 800,
+        widget.sheet.dismissible,
+      ),
     );
     return next.scroll;
   }
@@ -1021,7 +1075,7 @@ class _SheetState extends State<Sheet> {
     if (state.raw >= max - 0.5) {
       if (state.raw > max + 0.5) _moveTo(max, Springs.release);
       // It rests at its highest detent: report it.
-      if (widget.snap) {
+      if (widget.sheet.snap) {
         _setDetentIndex(_heights.indexOf(max));
       } else {
         _settleFree(max);
@@ -1068,7 +1122,7 @@ class _SheetState extends State<Sheet> {
     _wheelIdle?.cancel();
     _wheelIdle = Timer(const Duration(milliseconds: 160), () {
       if (!mounted || _dragging || _visible.isAnimating) return;
-      if (widget.snap) {
+      if (widget.sheet.snap) {
         _release(0, true);
       } else {
         _settleFree(_visible.get());
@@ -1087,15 +1141,15 @@ class _SheetState extends State<Sheet> {
 
   /// Back down to where the page is usable, or closed.
   void _collapse() {
-    final through = widget.backgroundInteraction, undimmed = _undimmed;
+    final through = widget.sheet.backgroundInteraction, undimmed = _undimmed;
     if (through != null && undimmed != null && _target > undimmed + 0.5) {
-      final i = widget.detents.indexOf(through);
+      final i = _detents.indexOf(through);
       if (i >= 0) {
         _setDetentIndex(i);
         return;
       }
     }
-    if (widget.dismissible) _close();
+    if (widget.sheet.dismissible) _close();
   }
 
   /// A text field focused inside raises the sheet ([Sheet.focusDetent]).
@@ -1110,11 +1164,11 @@ class _SheetState extends State<Sheet> {
       return;
     }
     final next = focusRaise(
-      widget.detents,
+      _detents,
       _heights,
       _index,
-      widget.focusDetent,
-      raise: widget.raiseOnFocus,
+      widget.sheet.focusDetent,
+      raise: widget.sheet.raiseOnFocus,
     );
     if (next != null) _setDetentIndex(next);
   }
@@ -1175,7 +1229,7 @@ class _SheetState extends State<Sheet> {
 
   bool _shouldStart(int direction, Offset global) {
     if (_presentation == SheetPresentation.dialog) {
-      return direction == 1 && widget.dismissible && _isChrome(global);
+      return direction == 1 && widget.sheet.dismissible && _isChrome(global);
     }
     if (_isChrome(global)) return true;
     // Down: only when the content is scrolled to the top. Up: while the sheet can still grow.
@@ -1211,7 +1265,7 @@ class _SheetState extends State<Sheet> {
         _dragStart - move,
         _heights,
         _host?.height ?? 800,
-        widget.dismissible,
+        widget.sheet.dismissible,
       ),
     );
     _valueTracker?.addPosition(event.timeStamp, Offset(0, _visible.get()));
@@ -1225,7 +1279,7 @@ class _SheetState extends State<Sheet> {
     if (_presentation == SheetPresentation.dialog) {
       final away =
           !cancelled &&
-          widget.dismissible &&
+          widget.sheet.dismissible &&
           projectMomentum(_lift.get(), vy, 0.99) > 160;
       if (away) {
         _close();
@@ -1245,7 +1299,7 @@ class _SheetState extends State<Sheet> {
     _scheduleSync();
     return PresentationLayer(
       mounted: _mounted,
-      inPlace: widget.container || _route != null,
+      inPlace: widget.sheet.container || _route != null,
       builder: _hostView,
     );
   }
@@ -1276,13 +1330,13 @@ class _SheetState extends State<Sheet> {
     }
     return PresentationRouteScope.none(
       child: PresentationHost(
-        label: widget.label,
+        label: widget.sheet.label,
         modal: _hostModal,
         onEscape: () {
           if (_open) _collapse();
         },
-        initialFocus: widget.initialFocus,
-        returnFocus: widget.returnFocus,
+        initialFocus: widget.sheet.initialFocus,
+        returnFocus: widget.sheet.returnFocus,
         child: DefaultTextStyle.merge(
           style: TextStyle(color: c.ink),
           child: view,
@@ -1399,7 +1453,7 @@ class _SheetState extends State<Sheet> {
     // width, a phone sheet edge to edge.
     double left = 0, panelWidth = width;
     if (presentation == SheetPresentation.card) {
-      panelWidth = math.min(width, widget.cardWidth + 2 * inset);
+      panelWidth = math.min(width, widget.sheet.cardWidth + 2 * inset);
       left = rtl ? width - panelWidth : 0;
     } else if (width >= 720) {
       left = math.max(0.0, (width - 680) / 2);
@@ -1476,24 +1530,24 @@ class _SheetState extends State<Sheet> {
     final r = dialog ? s.radiusPanel : _radius;
     final radii = [r, r, attached ? 0.0 : r, attached ? 0.0 : r];
     final header =
-        widget.header ??
+        widget.sheet.header ??
         PresentationHeader(
-          title: widget.title,
-          leading: widget.leading,
-          trailing: widget.trailing,
-          onClose: widget.showClose ? _close : null,
+          title: widget.sheet.title,
+          leading: widget.sheet.leading,
+          trailing: widget.sheet.trailing,
+          onClose: widget.sheet.showClose ? _close : null,
           closeLabel: I18n.of(context)
-              .t('lab.composer.closeLabel', {'label': widget.label}),
+              .t('lab.composer.closeLabel', {'label': widget.sheet.label}),
         );
-    final dock = widget.dock;
+    final dock = widget.sheet.dock;
     final index = _index;
     final content = SheetScope._(
-      detent: widget.detents[index],
+      detent: _detents[index],
       expansion: _expansion,
       height: _height,
       presentation: presentation,
       setDetent: (d) {
-        final i = widget.detents.indexOf(d);
+        final i = _detents.indexOf(d);
         if (i >= 0) _setDetentIndex(i);
       },
       child: Column(
@@ -1507,15 +1561,17 @@ class _SheetState extends State<Sheet> {
                 onPrevious: () => _cycle(-1),
               ),
             ),
-          if (widget.builder != null)
+          if (widget.sheet.builder != null)
             ..._builtContent(context, header, dock)
           else
             Expanded(
               child: PresentationBody(
-                label: widget.label,
+                label: widget.sheet.label,
                 controller: _scroll,
                 fill: true,
-                contentPadding: widget.contentPadding,
+                contentPadding:
+                    widget.sheet.contentPadding ??
+                    (widget.sheet.regular == SheetRegular.pane ? 16 : null),
                 // Glass under the floats' washes until the surface turns opaque.
                 surface: c.surface,
                 radius: r,
@@ -1539,7 +1595,7 @@ class _SheetState extends State<Sheet> {
                     setState(() => _bodyNatural = height);
                   }
                 },
-                child: widget.child,
+                child: widget.sheet.child,
               ),
             ),
         ],
@@ -1604,7 +1660,9 @@ class _SheetState extends State<Sheet> {
     child: PrimaryScrollController(
       controller: _scroll,
       automaticallyInheritForPlatforms: TargetPlatform.values.toSet(),
-      child: Builder(builder: (context) => widget.builder!(context, _scroll)),
+      child: Builder(
+        builder: (context) => widget.sheet.builder!(context, _scroll),
+      ),
     ),
   );
 

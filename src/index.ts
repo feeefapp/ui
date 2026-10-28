@@ -25,7 +25,8 @@ export {
   Label,
   Alert,
   Modal,
-  Pane,
+  Sheet,
+  useSheet,
   Box,
   Text,
   Link,
@@ -51,12 +52,12 @@ export {
   PresentationDock,
   PresentationHeader,
 } from './presentation'
+export type { SheetDetent, SheetProps, SheetState } from './containers/sheet'
 export type {
   AlertAction,
   AlertActionRole,
   AlertProps,
   ModalProps,
-  PaneProps,
   PresentationBodyProps,
   PresentationChromeProps,
   PresentationDockProps,

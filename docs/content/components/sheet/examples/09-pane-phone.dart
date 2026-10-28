@@ -54,7 +54,8 @@ class _PhonePaneState extends State<PhonePane> {
           ),
         ),
         Positioned.fill(
-          child: Pane(
+          child: Sheet(
+            regular: SheetRegular.pane,
             open: _open,
             onOpenChange: (open) => setState(() => _open = open),
             container: true,

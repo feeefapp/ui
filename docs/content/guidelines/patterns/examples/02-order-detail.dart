@@ -138,7 +138,8 @@ class _OrderDetailState extends State<OrderDetail> {
                 ),
               ),
             ),
-            Pane(
+            Sheet(
+              regular: SheetRegular.pane,
               open: _detailsOpen && narrow,
               onOpenChange: (open) => setState(() => _detailsOpen = open),
               label: 'Order details',

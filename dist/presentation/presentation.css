@@ -1,6 +1,6 @@
-/* Presentation surfaces (Alert, Modal, Pane; Sheet's host too). One host covers the viewport in
+/* Presentation surfaces (Alert, Modal; Sheet's host and pane too). One host covers the viewport in
 the top layer (or a container): a scrim dims the page and the surface sits on top. Motion writes
-transform/opacity from JS (presentation/motion.ts, pane.tsx, sheet.tsx). Alert metrics are iOS 26
+transform/opacity from JS (presentation/motion.ts, containers/sheet.tsx, sheet-pane.tsx). Alert metrics are iOS 26
 alerts (research/liquid-glass/CONTROLS-MEASURED.md §9): 320 wide, ~35 corners, 48px capsule
 buttons 8 apart and 16 from the edges, 17 semibold title, 15 regular message, 20% dimming. */
 html[data-lab-theme] {
@@ -234,7 +234,7 @@ html[data-lab-theme] .lab-alert .lab-alert-action {
   white-space: nowrap;
 }
 
-/* ---- Pane ---- */
+/* ---- Sheet's pane presentation (regular: 'pane') ---- */
 .lab-pane-frame {
   position: absolute;
   inset-block: 0;

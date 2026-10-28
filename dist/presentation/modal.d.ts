@@ -1,6 +1,6 @@
 import * as React from 'react';
 import './presentation.css';
-/** Header and dock props shared by every presentation surface (Modal, Pane, Sheet). */
+/** Header and dock props shared by every presentation surface (Modal, Sheet). */
 export type PresentationChromeProps = {
     /** Accessible name. Also names the close button (“Close Edit delivery address”). */
     label: string;
@@ -47,7 +47,7 @@ export type ModalProps = PresentationChromeProps & {
  * A centred dialog for a short task with a form: content on an opaque card that hugs it (or
  * fills the height), a floating glass header with the title and a close bubble, and the actions
  * in a floating dock. It opens with a small spring and fades out; focus is trapped inside and
- * returns to the opener. Use `Alert` for a plain decision, `Pane` for details beside the page.
+ * returns to the opener. Use `Alert` for a plain decision, a `Sheet` with `regular: 'pane'` for details beside the page.
  */
 export declare function Modal(props: ModalProps): React.JSX.Element | null;
 //# sourceMappingURL=modal.d.ts.map

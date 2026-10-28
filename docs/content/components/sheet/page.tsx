@@ -97,14 +97,57 @@ function Overview() {
             [<C>'dialog'</C>, 'A centered dialog (default). For tasks: forms, filters, confirmations.'],
             [<C>'card'</C>, 'A floating glass card at the leading edge with the same detents and dragging, like Maps on iPad. For sheets that live on the page.'],
             [<C>'sheet'</C>, 'Still a bottom sheet, kept a readable width.'],
+            [<C>'pane'</C>, 'An inspector beside the page: a full-height panel that slides in from the end side. For the details of the thing the page is about.'],
           ]}
+        />
+      </Section>
+
+      <Section title="Inspector pane">
+        <p>
+          <C>{'regular="pane"'}</C> shows the details of the order, customer or product the page is about,
+          often with a form to change them. On a wide screen it slides in from the end side as a full-height
+          opaque panel the shell gap G from the edges, with its close bubble floating beside it, so the page
+          stays visible next to it. Below the breakpoint the same content rises from the bottom, so you write
+          it once. As a phone sheet it fits its content (<C>{"detents={['fit']}"}</C>; pass{' '}
+          <C>{"['large']"}</C> for long lists) and pads 16, a card’s inside.
+        </p>
+        <Table
+          head={['Prop', 'Effect']}
+          rows={[
+            [<C>paneWidth</C>, 'Width in px, default 420, at most 60% of the window.'],
+            [<C>paneSide</C>, <>'end' (default) slides in from the inline end: the right in English, the left in Arabic. 'start' from the other side.</>],
+            [<C>{'modal={false}'}</C>, 'No dimming and no focus trap: the page stays usable beside the pane, like an inspector you keep open while picking rows. Escape still closes it while focus is inside.'],
+            [<C>container</C>, 'Present inside an element instead of the window (previews). The breakpoint then reads that element’s width.'],
+          ]}
+        />
+        <Callout title="Panes float">
+          <p>
+            A pane floats over the end of the page; it does not push the page aside. When the details belong in
+            the layout (a list and its record side by side), use a <Link to="/components/split-view">split view</Link>{' '}
+            or the scaffold’s inspector column instead. Never open a pane from a pane.
+          </p>
+        </Callout>
+        <Code
+          lang="dart"
+          code={`final saved = await showSheet<Customer>(
+  context,
+  builder: (context) => Sheet(
+    regular: SheetRegular.pane,
+    label: 'Edit customer',
+    title: const Text('Edit customer'),
+    dock: PresentationDock(children: [
+      Button(onClick: () => Navigator.pop(context), children: const [Text('Cancel')]),
+      Button(variant: .filled, onClick: () => Navigator.pop(context, draft), children: const [Text('Save customer')]),
+    ]),
+    child: form,
+  ),
+);`}
         />
       </Section>
 
       <Section title="Header and dock">
         <p>
-          A sheet is made of the same parts as <Link to="/components/modal">Modal</Link> and{' '}
-          <Link to="/components/pane">Pane</Link>: a floating glass header (<C>title</C>, <C>trailing</C>{' '}
+          A sheet is made of the same parts as <Link to="/components/modal">Modal</Link>: a floating glass header (<C>title</C>, <C>trailing</C>{' '}
           bubbles and a close bubble, or your own <C>header</C>), the scrolling body, and a <C>dock</C> of
           actions floating at the bottom. Set <C>{'showClose={false}'}</C> when a visible Done or Cancel
           already closes it.
@@ -191,7 +234,7 @@ export default definePage({
   importLine: "import { Sheet } from '@feeef.dev/ui/containers'",
   source: 'src/containers/sheet.tsx',
   api: ['Sheet', 'useSheet'],
-  keywords: ['maps', 'floating', 'liquid glass', 'morph', 'peek', 'bottom sheet', 'drawer', 'detent', 'action sheet', 'half sheet', 'panel', 'ios'],
+  keywords: ['inspector', 'side panel', 'pane', 'details', 'maps', 'floating', 'liquid glass', 'morph', 'peek', 'bottom sheet', 'drawer', 'detent', 'action sheet', 'half sheet', 'panel', 'ios'],
   Overview,
   examples: examplesFrom(
     import.meta.glob('./examples/*.tsx', { eager: true }),
