@@ -37,7 +37,7 @@ class _SearchState extends State<Search> {
             placeholder: 'Search by name or SKU',
             value: _query,
             onValueChange: (value) => setState(() => _query = value),
-            // Always visible after the search.
+            // At the end of the row, just before the search.
             trailing: ToolbarGroup(
               label: 'View',
               children: [
@@ -52,8 +52,8 @@ class _SearchState extends State<Search> {
                 ),
               ],
             ),
-            // Children sit beside the closed search button; their glass is absorbed while the
-            // field is open.
+            // Children start the row; their glass (and trailing's) is absorbed while the field is
+            // open.
             children: [
               ToolbarGroup(
                 label: 'Filters',

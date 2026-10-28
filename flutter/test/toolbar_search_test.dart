@@ -11,13 +11,18 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Widget _host(Widget child, {double width = 400, bool reduced = false}) =>
+Widget _host(
+  Widget child, {
+  double width = 400,
+  bool reduced = false,
+  TextDirection direction = TextDirection.ltr,
+}) =>
     WidgetsApp(
       color: const Color(0xFF000000),
       builder: (context, _) => MediaQuery(
         data: MediaQuery.of(context).copyWith(disableAnimations: reduced),
         child: Directionality(
-          textDirection: TextDirection.ltr,
+          textDirection: direction,
           child: FocusScope(
             autofocus: true,
             child: ThemeProvider(
@@ -77,7 +82,7 @@ class _HarnessState extends State<_Harness> {
     defaultExpanded: widget.defaultExpanded,
     onValueChange: (v) => setState(() => value = v),
     onExpandedChange: widget.onExpanded,
-    trailing: const SizedBox(width: 50, height: 46),
+    trailing: const SizedBox(key: Key('trailing'), width: 50, height: 46),
     children: [
       ToolbarGroup(
         label: 'Filters',
@@ -169,8 +174,9 @@ void main() {
 
     await tester.tap(trigger());
     await frames(tester);
-    // 400 - trailing 50 - gap 12.
-    expect(capsuleWidth(tester), closeTo(338, 1e-6));
+    // The whole row: filters and trailing are absorbed too.
+    expect(capsuleWidth(tester), closeTo(400, 1e-6));
+    expect(find.semantics.byLabel('Search orders'), findsWidgets);
     expect(changes, [true]);
     // The absorbed neighbour leaves the semantics tree while the field is open.
     expect(find.semantics.byLabel('Filter'), findsNothing);
@@ -199,7 +205,7 @@ void main() {
   ) async {
     await tester.pumpWidget(_host(const _Harness(defaultExpanded: true)));
     await frames(tester, 5);
-    expect(capsuleWidth(tester), closeTo(338, 1e-6));
+    expect(capsuleWidth(tester), closeTo(400, 1e-6));
     await tester.enterText(find.byType(EditableText), 'xyz');
     await tester.pump();
     await tester.tap(
@@ -209,7 +215,7 @@ void main() {
     final state =
         tester.state<State<_Harness>>(find.byType(_Harness)) as _HarnessState;
     expect(state.value, '');
-    expect(capsuleWidth(tester), closeTo(338, 1e-6));
+    expect(capsuleWidth(tester), closeTo(400, 1e-6));
     await finish(tester);
   }, variant: macOS);
 
@@ -218,7 +224,7 @@ void main() {
     await tester.pump();
     await tester.tap(trigger());
     await tester.pump();
-    expect(capsuleWidth(tester), closeTo(338, 1e-6));
+    expect(capsuleWidth(tester), closeTo(400, 1e-6));
     await finish(tester);
   }, variant: macOS);
 
@@ -229,9 +235,38 @@ void main() {
     await frames(tester, 3);
     await tester.pumpWidget(at(300));
     await frames(tester);
-    expect(capsuleWidth(tester), closeTo(238, 1e-6));
+    expect(capsuleWidth(tester), closeTo(300, 1e-6));
     await finish(tester);
   }, variant: macOS);
+
+  for (final direction in TextDirection.values) {
+    testWidgets('search ends the row, trailing just before it ($direction)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_host(const _Harness(), direction: direction));
+      await tester.pump();
+      final rtl = direction == TextDirection.rtl;
+      final search = tester.getRect(capsule());
+      final trailing = tester.getRect(find.byKey(const Key('trailing')));
+      final filter = tester.getRect(
+        find.byWidgetPredicate((w) => w is IconButton && w.ariaLabel == 'Filter'),
+      );
+      // End edge of the row; trailing one gap before it; filters at the start.
+      expect(rtl ? search.left : search.right, rtl ? 0 : 400);
+      expect(
+        rtl ? trailing.left - search.right : search.left - trailing.right,
+        8,
+      );
+      expect(rtl ? filter.right : filter.left, greaterThanOrEqualTo(rtl ? 390 : 0));
+      expect(rtl ? filter.right <= 400 : filter.left < 10, isTrue);
+
+      await tester.tap(trigger());
+      await frames(tester);
+      // Open, the field grows toward the start and covers the row.
+      expect(tester.getRect(capsule()), const Rect.fromLTWH(0, 0, 400, 44));
+      await finish(tester);
+    }, variant: macOS);
+  }
 }
 
 typedef StepSpringStateLike = ({double position, double velocity});

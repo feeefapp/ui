@@ -59,11 +59,11 @@ class ToolbarSearchInputProps {
   final KeyEventResult Function(KeyEvent event) onKeyDown;
 }
 
-/// Search button that springs open into a field inside the same glass pill, taking the free width
-/// of its row: the twin of `ToolbarSearch` in `@feeef.dev/ui/toolbar-search`. Persistent
-/// material, stable control geometry and a velocity-preserving spring. Neighbouring bubbles in
-/// [children] are absorbed into the search glass as it opens and grow back out of it when it
-/// closes.
+/// Search button at the end of its row that springs open into a field inside the same glass pill,
+/// growing toward the start across the whole row: the twin of `ToolbarSearch` in
+/// `@feeef.dev/ui/toolbar-search`. Persistent material, stable control geometry and a
+/// velocity-preserving spring. The row's other bubbles ([children], [trailing]) are absorbed into
+/// the search glass as it opens and grow back out of it when it closes.
 class ToolbarSearch extends StatefulWidget {
   const ToolbarSearch({
     super.key,
@@ -93,10 +93,12 @@ class ToolbarSearch extends StatefulWidget {
   /// Placeholder text. Defaults to [label].
   final String? placeholder;
 
-  /// Controls shown next to the collapsed search button; hidden while the field is open.
+  /// Controls at the start of the row (filters); absorbed into the search glass while the field
+  /// is open.
   final List<Widget> children;
 
-  /// Content after the search, always visible (it keeps its width while the field expands).
+  /// Controls at the end of the row, just before the search button (views, tools); absorbed like
+  /// [children].
   final Widget? trailing;
 
   /// Blocks the trigger, the field and the clear button.
@@ -258,12 +260,7 @@ class _ToolbarSearchState extends State<ToolbarSearch>
     final s = theme.sizes;
     final size = _controlSize(context, theme);
     final space1 = s.density == Density.thin ? 2.0 : 4.0;
-    final space2 = s.density == Density.thin ? 6.0 : 8.0;
-    final space3 = switch (s.density) {
-      Density.comfortable => 12.0,
-      Density.compact => 10.0,
-      Density.thin => 8.0,
-    };
+    final gap = s.toolbarGap;
     final shownValue = _expanded
         ? widget.value
         : _moving
@@ -366,32 +363,53 @@ class _ToolbarSearchState extends State<ToolbarSearch>
             ),
           ),
         );
-        return Stack(
-          alignment: AlignmentDirectional.topStart,
-          clipBehavior: Clip.none,
-          children: [
-            if (widget.children.isNotEmpty)
-              Padding(
-                padding: EdgeInsetsDirectional.only(start: _compact + space2),
-                child: IgnorePointer(
-                  ignoring: inert,
-                  child: ExcludeFocus(
-                    excluding: inert,
-                    child: ExcludeSemantics(
-                      excluding: inert,
-                      child: Opacity(
-                        opacity: opacity.controls,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: widget.children,
-                        ),
-                      ),
-                    ),
+        final hasControls = widget.children.isNotEmpty || widget.trailing != null;
+        // Before the search in reading and focus order: the search ends the row.
+        final controls = Padding(
+          padding: EdgeInsetsDirectional.only(end: _compact + gap),
+          child: IgnorePointer(
+            ignoring: inert,
+            child: ExcludeFocus(
+              excluding: inert,
+              child: ExcludeSemantics(
+                excluding: inert,
+                child: Opacity(
+                  opacity: opacity.controls,
+                  child: Row(
+                    mainAxisSize: constraints.hasBoundedWidth
+                        ? MainAxisSize.max
+                        : MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: gap,
+                    children: [
+                      // The filters take the free width (start-aligned), pushing trailing to the end.
+                      if (constraints.hasBoundedWidth)
+                        Expanded(
+                          child: Align(
+                            alignment: AlignmentDirectional.topStart,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: widget.children,
+                            ),
+                          ),
+                        )
+                      else
+                        ...widget.children,
+                      ?widget.trailing,
+                    ],
                   ),
                 ),
               ),
-            // z-index 1: the capsule grows over the neighbours it absorbs.
+            ),
+          ),
+        );
+        // The capsule sits at the end and grows toward the start, over the neighbours it absorbs.
+        return Stack(
+          alignment: AlignmentDirectional.topEnd,
+          clipBehavior: Clip.none,
+          children: [
+            if (hasControls) controls else SizedBox(width: _wide),
             surface,
           ],
         );
@@ -402,16 +420,7 @@ class _ToolbarSearchState extends State<ToolbarSearch>
       container: true,
       explicitChildNodes: true,
       label: widget.label,
-      child: GlassScope(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: space3,
-          children: [
-            Expanded(child: main),
-            ?widget.trailing,
-          ],
-        ),
-      ),
+      child: GlassScope(child: main),
     );
   }
 }

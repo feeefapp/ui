@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' show SemanticsRole;
 
 import 'package:flutter/services.dart';
@@ -536,8 +537,12 @@ class _ChoiceState extends State<_Choice> {
                 shape: SuperellipseBorder(radius: s.radiusControl),
               ),
               child: Padding(
+                // Small is as tall as a small button at every density (one 20px line in the middle).
                 padding: compact
-                    ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
+                    ? EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: math.max(0, (s.controlSmall - 20) / 2),
+                      )
                     : const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
