@@ -186,7 +186,9 @@ class _GlassSurfaceState extends State<GlassSurface> {
       size: size,
     );
     final colour = ColorFilter.matrix(glassBackdropMatrix(material));
-    final blur = glassBlur(side);
+    // Liquid glass that can't bend here frosts (glassFrostsOf), blur setting or not.
+    final frosted = glassFrostsOf(context);
+    final blur = frosted ? glassFrostedBlur(side) : glassBlur(side);
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -194,7 +196,7 @@ class _GlassSurfaceState extends State<GlassSurface> {
           child: ClipPath(
             clipper: _SuperellipseClipper(radius),
             child: BackdropFilter(
-              filter: theme.config.glassBlur
+              filter: theme.config.glassBlur || frosted
                   ? ui.ImageFilter.compose(
                       outer: colour,
                       inner: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),

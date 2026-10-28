@@ -352,12 +352,25 @@ GlassMaterial glassMenuMaterial({required bool dark}) {
   );
 }
 
-/// Backdrop blur (std dev, px) of [kind] glass whose shorter side is [side] px ([glassBlurAt]).
+/// How much more frosted glass blurs than the measured blur (the web kit's
+/// `GLASS_FROSTED_BLUR_SCALE`).
+const double glassFrostedBlurScale = 2;
+
+/// Blur (std dev, px) of liquid glass that should bend but can't (no shader filters: Flutter web,
+/// Skia): clear glass over busy content all but vanishes, so it frosts instead.
+double glassFrostedBlur(double side) => glassBlur(side) * glassFrostedBlurScale;
+
+/// Backdrop blur (std dev, px) of [kind] glass whose shorter side is [side] px ([glassBlurAt]);
+/// at least [glassFrostedBlur] when [frosted].
 double glassKindBlur(
   GlassKind kind,
   double side,
   double tint, {
   required bool blurOn,
-}) => kind == GlassKind.menu
-    ? math.max(glassBlur(side), glassMenuBlur)
-    : glassBlurAt(side, tint, blurOn: blurOn);
+  bool frosted = false,
+}) {
+  final blur = kind == GlassKind.menu
+      ? math.max(glassBlur(side), glassMenuBlur)
+      : glassBlurAt(side, tint, blurOn: blurOn);
+  return frosted ? math.max(blur, glassFrostedBlur(side)) : blur;
+}

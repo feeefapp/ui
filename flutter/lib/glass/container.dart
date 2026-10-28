@@ -406,6 +406,8 @@ class _GlassContainerState extends State<GlassContainer> {
       blur: theme.config.glassBlur,
       // The bend is part of the liquid effect: transparent glass stays unbent.
       refraction: theme.config.glassRefraction && liquid,
+      // Liquid glass that can't bend here (no shader filters) frosts instead.
+      frosted: glassFrostsOf(context),
       refractionStrength: theme.config.refractionStrength,
       highlight: theme.config.highlight,
       highlightWidth: theme.config.highlightWidth,
@@ -443,6 +445,17 @@ class _GlassContainerState extends State<GlassContainer> {
   }
 }
 
+/// Whether glass under [context] frosts: the theme wants liquid glass that bends, but this engine
+/// can't run shader filters (Flutter web, Skia), so it blurs at [glassFrostedBlur] instead of
+/// showing a nearly invisible clear veil. The twin of the web kit's `data-lab-glass-bends='off'`.
+bool glassFrostsOf(BuildContext context) {
+  final config = ThemeProvider.of(context).config;
+  return glassStyleOf(context) == GlassStyle.liquid &&
+      config.glassRefraction &&
+      config.refractionStrength > 0 &&
+      !GlassRefraction.supported;
+}
+
 /// Colours and choices the material paints with.
 class _GlassMaterial {
   const _GlassMaterial({
@@ -452,6 +465,7 @@ class _GlassMaterial {
     required this.tint,
     required this.blur,
     required this.refraction,
+    required this.frosted,
     required this.refractionStrength,
     required this.highlight,
     required this.highlightWidth,
@@ -463,6 +477,9 @@ class _GlassMaterial {
   final GlassKind kind;
   final double tint;
   final bool blur, refraction, highContrast;
+
+  /// Whether the glass frosts in place of the bend it can't draw ([glassFrostsOf]).
+  final bool frosted;
 
   /// ThemeConfig's lens strength, rim light strength and rim light width (shares of the measured).
   final double refractionStrength, highlight, highlightWidth;
@@ -505,7 +522,8 @@ class _GlassMaterial {
       : glassMaterial(tint, dark: dark, size: glassSize(side));
 
   /// Blur (std dev, px) for a cluster whose smallest bubble's shorter side is [side] px.
-  double blurFor(double side) => glassKindBlur(kind, side, tint, blurOn: blur);
+  double blurFor(double side) =>
+      glassKindBlur(kind, side, tint, blurOn: blur, frosted: frosted);
 
   /// The edge terms (veil thinning, dark clear light) for that cluster.
   ({double k1, double k3}) edgeFor(double side) {
