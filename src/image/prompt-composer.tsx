@@ -18,6 +18,7 @@ import * as Menu from '@radix-ui/react-dropdown-menu'
 import {
   Brush,
   ClipboardPaste,
+  HardDrive,
   History,
   LayoutTemplate,
   Lightbulb,
@@ -52,6 +53,7 @@ export function ImagePromptComposer({
   onRemoveReference,
   recent,
   onUseRecent,
+  onBrowseFiles,
   onEditPhoto,
   templates,
   templatesLabel,
@@ -100,6 +102,9 @@ export function ImagePromptComposer({
   recent: RecentImage[]
   /** Called with the id of a recent image picked as a reference. */
   onUseRecent(id: string): void
+  /** Opens the host's file library ("From your files" after Paste); the host adds the chosen
+   * images with its own `onAddFiles`. Absent hides the item. */
+  onBrowseFiles?(): void
   /** Called with the photo chosen from "Edit a photo…". */
   onEditPhoto(file: File): void
   /** Prompt ideas for the + menu (first 10). Empty hides the submenu. */
@@ -309,6 +314,15 @@ export function ImagePromptComposer({
             >
               <ClipboardPaste size={15} /> {t('lab.imgcomposer.pasteClipboard')}
             </Menu.Item>
+            {onBrowseFiles && (
+              <Menu.Item
+                className="lab-pc-menu-item"
+                disabled={!canReference || full}
+                onSelect={onBrowseFiles}
+              >
+                <HardDrive size={15} /> {t('lab.imgcomposer.fromFiles')}
+              </Menu.Item>
+            )}
             <Menu.Separator className="lab-pc-menu-sep" />
             {recent.length > 0 && (
               <Menu.Sub>
