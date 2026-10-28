@@ -89,6 +89,15 @@ for row sides, headers and hairlines. */
 .lab-list-row[data-selected] {
   background: color-mix(in srgb, var(--lab-primary) 14%, var(--lab-surface));
 }
+/* Selected rows next to each other read as one block: neighbours alternate two tints so each
+   row stays distinct, and no hairline cuts between them (the card rounds only the block's
+   outer corners). DESIGN: selected runs. */
+.lab-list-item:nth-child(even) > .lab-list-row[data-selected] {
+  background: color-mix(in srgb, var(--lab-primary) 9%, var(--lab-surface));
+}
+.lab-list-item:has(> .lab-list-row[data-selected]) + .lab-list-item:has(> .lab-list-row[data-selected])::before {
+  opacity: 0;
+}
 .lab-list-row:focus-visible {
   outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
   outline-offset: calc(-1 * var(--lab-focus-ring-width));

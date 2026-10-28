@@ -39,6 +39,11 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
      actions (clear, unpin) live in what it opens.
    - **Selection lines up.** A list's select-all checkbox sits in its top bar, and every row's
      checkbox sits in one column right under it.
+   - **Selected runs read as one block.** Selected rows next to each other alternate between two
+     tints (14 % / 9 % primary) so each row stays distinct, lose the hairline between them, and
+     only the run's outer corners are rounded: the first row rounds its top, the last its bottom,
+     the ones between none. `ListSection` does this (its card supplies the outer corners); lists
+     with their own rounded rows follow the same rule.
 4. **Navigation, work, details: in that order.** Sidebar → content → inspector. As the screen shrinks:
    inspector → pane → sheet, sidebar → rail → hidden → drawer, the logo rises into the app bar, page
    views drop to a bottom `Dock` on phones, the page title collapses into the bar on scroll.

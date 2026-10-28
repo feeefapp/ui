@@ -139,6 +139,7 @@ class _ListSectionState extends State<ListSection> {
     final s = theme.sizes;
     final reorder = widget.onReorder != null;
     bool leading(Widget w) => w is ListRow && w.leading != null;
+    bool selected(Widget w) => w is ListRow && w.selected;
     final card = ClipPath(
       clipBehavior: _drag != null ? Clip.none : Clip.antiAlias,
       clipper: _drag != null
@@ -157,7 +158,11 @@ class _ListSectionState extends State<ListSection> {
                 key: _key(i),
                 index: i,
                 // Hairline above every row but the first, after the leading icon (inset + 32 + 14).
-                hairline: i == 0
+                // Selected neighbours read as one block: no hairline between them.
+                hairline:
+                    i == 0 ||
+                        (selected(widget.children[i]) &&
+                            selected(widget.children[i - 1]))
                     ? null
                     : (leading(widget.children[i]) ||
                               leading(widget.children[i - 1])
@@ -253,7 +258,11 @@ class _RowSlot extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
-    Widget row = _RowScope(reorder: reorder != null, child: child);
+    Widget row = _RowScope(
+      reorder: reorder != null,
+      alternate: index.isOdd,
+      child: child,
+    );
     if (reorder != null) {
       final title = child is ListRow ? (child as ListRow).title : null;
       final name = child is ListRow ? (child as ListRow).reorderLabel : null;
@@ -327,10 +336,19 @@ class _RowSlot extends StatelessWidget {
 }
 
 class _RowScope extends InheritedWidget {
-  const _RowScope({required this.reorder, required super.child});
+  const _RowScope({
+    required this.reorder,
+    required this.alternate,
+    required super.child,
+  });
   final bool reorder;
+
+  /// Every second row of its section (CSS `:nth-child(even)`): selected, it takes the lighter
+  /// tint, so selected neighbours alternate.
+  final bool alternate;
   @override
-  bool updateShouldNotify(_RowScope old) => old.reorder != reorder;
+  bool updateShouldNotify(_RowScope old) =>
+      old.reorder != reorder || old.alternate != alternate;
 }
 
 class _Grip extends StatefulWidget {
@@ -631,9 +649,8 @@ class _ListRowState extends State<ListRow> {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
     final s = theme.sizes;
-    final reorder =
-        context.dependOnInheritedWidgetOfExactType<_RowScope>()?.reorder ??
-        false;
+    final scope = context.dependOnInheritedWidgetOfExactType<_RowScope>();
+    final reorder = scope?.reorder ?? false;
     final padEnd = reorder ? 52.0 : s.listInset;
     // `max-width: 45%` of the row's content box (inside its inline padding).
     final trailingCap = width.isFinite
@@ -641,8 +658,9 @@ class _ListRowState extends State<ListRow> {
         : double.infinity;
     final interactive = widget.onClick != null && !widget.disabled;
     final card = mixSrgb(c.ink, 0.04, c.surface);
+    // Selected neighbours alternate two tints so each row stays distinct (DESIGN: selected runs).
     final fill = widget.selected
-        ? mixSrgb(c.primary, 0.14, c.surface)
+        ? mixSrgb(c.primary, scope?.alternate == true ? 0.09 : 0.14, c.surface)
         : interactive && _down
         ? c.controlPressed
         : interactive && (_hovered || _focus)

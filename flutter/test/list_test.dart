@@ -67,6 +67,46 @@ void main() {
     expect(await trailingWidth(360), closeTo((360 - 32) * 0.45, 0.01));
   });
 
+  testWidgets('selected neighbours alternate tints with no hairline between', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        const SizedBox(
+          width: 360,
+          child: ListSection(
+            children: [
+              ListRow(title: Text('A'), selected: true),
+              ListRow(title: Text('B'), selected: true),
+              ListRow(title: Text('C'), selected: true),
+              ListRow(title: Text('D')),
+            ],
+          ),
+        ),
+      ),
+    );
+    Color? fill(String title) {
+      final box = tester.widget<DecoratedBox>(
+        find
+            .ancestor(of: find.text(title), matching: find.byType(DecoratedBox))
+            .first,
+      );
+      return (box.decoration as BoxDecoration).color;
+    }
+
+    // Each row stays distinct inside the run; the pattern alternates.
+    expect(fill('A'), isNot(fill('B')));
+    expect(fill('A'), fill('C'));
+    // Hairlines: none inside the selected run, one before the unselected row.
+    final line = ThemeProvider.of(
+      tester.element(find.text('A')),
+    ).colors.line;
+    expect(
+      find.byWidgetPredicate((w) => w is ColoredBox && w.color == line),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('a long swipe runs the first trailing action', (tester) async {
     var archived = 0;
     await tester.pumpWidget(
