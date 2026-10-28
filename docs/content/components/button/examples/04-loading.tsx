@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Save } from 'lucide-react'
 import { Button } from '@feeef.dev/ui/primitives/button'
 
 export default function Loading() {
@@ -10,6 +11,7 @@ export default function Loading() {
   return (
     <div className="demo-row">
       <Button variant="filled" loading={saving} onClick={save}>
+        <Save />
         {saving ? 'Saving…' : 'Save'}
       </Button>
       <Button variant="elevated" disabled>
@@ -22,5 +24,5 @@ export default function Loading() {
 export const meta = {
   title: 'Loading and disabled',
   description:
-    'loading shows a pixel loader, sets aria-busy and blocks clicks until it clears, so a request is never sent twice.',
+    'loading shows a pixel loader in the leading icon\'s place, sets aria-busy and blocks clicks until it clears, so a request is never sent twice.',
 }

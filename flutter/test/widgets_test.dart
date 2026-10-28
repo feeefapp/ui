@@ -295,6 +295,29 @@ void main() {
       expect(clicks, 2);
     });
 
+    testWidgets('loading: the loader takes the leading icon\'s place', (
+      tester,
+    ) async {
+      Widget button({required bool loading}) => host(
+        Button(
+          loading: loading,
+          onClick: () {},
+          children: const [
+            SizedBox(key: Key('icon'), width: 18, height: 18),
+            Text('Ship order'),
+          ],
+        ),
+      );
+      await tester.pumpWidget(button(loading: true));
+      expect(find.byType(PixelLoader), findsOneWidget);
+      expect(find.byKey(const Key('icon')), findsNothing);
+      expect(find.text('Ship order'), findsOneWidget);
+
+      await tester.pumpWidget(button(loading: false));
+      expect(find.byType(PixelLoader), findsNothing);
+      expect(find.byKey(const Key('icon')), findsOneWidget);
+    });
+
     testWidgets(
       'semantics: a named, enabled button; icon buttons carry their label',
       (tester) async {

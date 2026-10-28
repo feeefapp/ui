@@ -35,7 +35,7 @@ class _LoadingState extends State<Loading> {
         variant: .filled,
         loading: saving,
         onClick: save,
-        children: [Text(saving ? 'Saving…' : 'Save')],
+        children: [const LucideSave(), Text(saving ? 'Saving…' : 'Save')],
       ),
       const Button(variant: .elevated, disabled: true, children: [Text('Disabled')]),
     ],

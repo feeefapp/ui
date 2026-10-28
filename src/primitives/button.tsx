@@ -155,7 +155,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           <>
             {filled && <PixelTexture variant="corner" seed={className || 'control'} />}
             {loading && <PixelLoader size={16} decorative />}
-            {loading && controlSize === 'icon' ? null : withLabels(children)}
+            {loading && controlSize === 'icon' ? null : withLabels(loading ? withoutLeadingIcon(children) : children)}
           </>
         )}
       </Component>
@@ -164,6 +164,21 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 )
 
 Button.displayName = 'Button'
+
+/**
+ * While loading, the loader takes the leading icon's place: the first child goes when it is an
+ * icon (an svg, a component such as a lucide icon, or an `aria-hidden` wrapper) before more
+ * content, never a label. The Flutter Button does the same.
+ */
+function withoutLeadingIcon(children: React.ReactNode) {
+  const [first, ...rest] = React.Children.toArray(children)
+  const icon =
+    rest.length > 0 &&
+    React.isValidElement<{ 'aria-hidden'?: unknown }>(first) &&
+    first.type !== React.Fragment &&
+    (first.type === 'svg' || typeof first.type !== 'string' || Boolean(first.props['aria-hidden']))
+  return icon ? rest : children
+}
 
 /**
  * Wraps each run of text children (strings and numbers, like `Save {count}`) in one

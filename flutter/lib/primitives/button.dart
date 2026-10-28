@@ -441,13 +441,21 @@ class _ButtonState extends State<Button> {
     // Text labels give way when the button's width is bounded (a dock, a toolbar, a narrow
     // phone) and end in an ellipsis; icons keep their size. Loose flex shrink-wraps when the
     // width is unbounded, so nothing changes where the label fits.
+    // While loading, the loader takes the leading icon's place (a first child that is not text,
+    // before more content), like the web kit's button.
+    final leadingIcon =
+        widget.loading &&
+        widget.children.length > 1 &&
+        widget.children.first is! Text &&
+        widget.children.first is! RichText;
+    final shown = leadingIcon ? widget.children.skip(1) : widget.children;
     final content = Row(
       mainAxisSize: MainAxisSize.min,
       spacing: widget.gap,
       children: [
         if (widget.loading) PixelLoader(size: 16, decorative: true, color: ink),
         if (!(widget.loading && icon))
-          for (final child in widget.children)
+          for (final child in shown)
             child is Text || child is RichText ? Flexible(child: child) : child,
       ],
     );
