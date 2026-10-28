@@ -144,8 +144,8 @@ opposite tone. Neutral tokens and that tone's measured anchors, then every token
 is declared again here, because custom properties derived on <html> keep the values computed there.
 The material formulas are system.css's (glass/material.ts glassMaterial). */
 .lab-glass-container[data-glass-backdrop] {
-  --lab-glass-fill: color-mix(in srgb, var(--lab-surface) calc(var(--lab-glass-tint) * var(--lab-glass-veil) * 100%), transparent);
-  --lab-glass-fill-large: color-mix(in srgb, var(--lab-surface) calc(var(--lab-glass-tint) * var(--lab-glass-veil-large) * 100%), transparent);
+  --lab-glass-fill: color-mix(in srgb, var(--lab-surface) calc(max(var(--lab-glass-tint) * var(--lab-glass-veil), var(--lab-glass-floor, 0)) * 100%), transparent);
+  --lab-glass-fill-large: color-mix(in srgb, var(--lab-surface) calc(max(var(--lab-glass-tint) * var(--lab-glass-veil-large), var(--lab-glass-floor, 0)) * 100%), transparent);
   --lab-glass-saturate: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil)));
   --lab-glass-saturate-large: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss-large)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil-large)));
   --lab-glass-shadow-color: rgb(0 0 0 / var(--lab-glass-shadow-alpha));
@@ -228,8 +228,8 @@ The material formulas are system.css's (glass/material.ts glassMaterial). */
 
 /* Recompute derived colours locally: root custom-property formulas otherwise keep root tint. */
 .lab-glass-container[data-glass-local-tint] {
-  --lab-glass-fill: color-mix(in srgb, var(--lab-surface) calc(var(--lab-glass-tint) * var(--lab-glass-veil) * 100%), transparent);
-  --lab-glass-fill-large: color-mix(in srgb, var(--lab-surface) calc(var(--lab-glass-tint) * var(--lab-glass-veil-large) * 100%), transparent);
+  --lab-glass-fill: color-mix(in srgb, var(--lab-surface) calc(max(var(--lab-glass-tint) * var(--lab-glass-veil), var(--lab-glass-floor, 0)) * 100%), transparent);
+  --lab-glass-fill-large: color-mix(in srgb, var(--lab-surface) calc(max(var(--lab-glass-tint) * var(--lab-glass-veil-large), var(--lab-glass-floor, 0)) * 100%), transparent);
   --lab-glass-saturate: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil)));
   --lab-glass-saturate-large: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss-large)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil-large)));
   --lab-glass-lift: contrast(calc((1.03 + (var(--lab-glass-lift-gain) - 1.03) * var(--lab-glass-tint)) / (1.182 + (var(--lab-glass-lift-gain) + 2 * var(--lab-glass-lift-offset) - 1.182) * var(--lab-glass-tint)))) brightness(calc(1.182 + (var(--lab-glass-lift-gain) + 2 * var(--lab-glass-lift-offset) - 1.182) * var(--lab-glass-tint)));

@@ -7,6 +7,7 @@ import 'brand/geometry.dart';
 import 'glass/material.dart';
 import 'glass/container.dart';
 import 'glass/member.dart';
+import 'glass/refraction_filter.dart';
 import 'layout/size_reporter.dart';
 import 'theme.dart';
 import 'theme/light_edge.dart';
@@ -161,9 +162,13 @@ class _GlassSurfaceState extends State<GlassSurface> {
     final c = theme.colors;
     final style = glassStyleOf(context);
     final translucent = style != GlassStyle.solid;
-    final fill = translucent
-        ? (size == GlassSize.small ? c.glassFill : c.glassFillLarge)
-        : c.surface;
+    final veil = size == GlassSize.small ? c.glassFill : c.glassFillLarge;
+    // Nothing bends plain glass, so it keeps the flat floor where blur alone can't carry it.
+    final fill = !translucent
+        ? c.surface
+        : GlassRefraction.supported
+        ? veil
+        : glassFlatFill(veil, c.surface);
     final painted = CustomPaint(
       painter: _GlassGroupPainter(
         fill: fill,

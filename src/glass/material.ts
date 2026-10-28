@@ -349,6 +349,13 @@ export function glassMenuMaterial(scheme: 'light' | 'dark'): GlassMaterial {
 export const GLASS_FROSTED_BLUR_SCALE = 2
 
 /**
+ * The least share of the surface every glass fill keeps where the browser can't bend the backdrop
+ * (or can't blur it at all), as `--lab-glass-floor`: the measured veil (5 % in dark) is made for a
+ * lens; without one, glass would stay see-through, so it reads as a mostly opaque frosted surface, veiled like a menu (`GLASS_MENU`).
+ */
+export const GLASS_FLAT_FLOOR = 0.88
+
+/**
  * The blur (std dev, px) of frosted glass whose shorter side is `side` px, whatever the tint:
  * about 5.8 px on a control, up to 10.4 px on a panel.
  */

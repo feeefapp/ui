@@ -356,6 +356,11 @@ GlassMaterial glassMenuMaterial({required bool dark}) {
 /// `GLASS_FROSTED_BLUR_SCALE`).
 const double glassFrostedBlurScale = 2;
 
+/// The least share of the surface a glass fill keeps where the engine can't bend the backdrop
+/// (no shader filters: Flutter web, Skia), the web kit's `GLASS_FLAT_FLOOR`: the measured veil
+/// (5 % in dark) is made for a lens; without one, glass would stay see-through.
+const double glassFlatFloor = 0.88;
+
 /// Blur (std dev, px) of liquid glass that should bend but can't (no shader filters: Flutter web,
 /// Skia): clear glass over busy content all but vanishes, so it frosts instead.
 double glassFrostedBlur(double side) => glassBlur(side) * glassFrostedBlurScale;

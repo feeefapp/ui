@@ -445,6 +445,10 @@ class _GlassContainerState extends State<GlassContainer> {
   }
 }
 
+/// [fill] raised to at least [glassFlatFloor] of [surface] (see there).
+Color glassFlatFill(Color fill, Color surface) =>
+    fill.a >= glassFlatFloor ? fill : surface.withValues(alpha: glassFlatFloor);
+
 /// Whether glass under [context] frosts: the theme wants liquid glass that bends, but this engine
 /// can't run shader filters (Flutter web, Skia), so it blurs at [glassFrostedBlur] instead of
 /// showing a nearly invisible clear veil. The twin of the web kit's `data-lab-glass-bends='off'`.
@@ -489,14 +493,20 @@ class _GlassMaterial {
   bool get translucent => style != GlassStyle.solid;
   bool get dark => brightness == Brightness.dark;
 
-  /// The veil over a cluster whose smallest bubble's shorter side is [side] px.
-  Color fillFor(double side) => style == GlassStyle.solid
-      ? colors.surface
-      : kind == GlassKind.menu
-      ? colors.surface.withValues(alpha: glassMenuMaterial(dark: dark).veil)
-      : glassSize(side) == GlassSize.small
-      ? colors.glassFill
-      : colors.glassFillLarge;
+  /// The veil over a cluster whose smallest bubble's shorter side is [side] px; where nothing
+  /// bends the backdrop, at least [glassFlatFloor] of the surface ([glassFlatFill]).
+  Color fillFor(double side) {
+    if (style == GlassStyle.solid) return colors.surface;
+    final fill = kind == GlassKind.menu
+        ? colors.surface.withValues(alpha: glassMenuMaterial(dark: dark).veil)
+        : glassSize(side) == GlassSize.small
+        ? colors.glassFill
+        : colors.glassFillLarge;
+    return GlassRefraction.supported
+        ? fill
+        : glassFlatFill(fill, colors.surface);
+  }
+
   bool get rim => style != GlassStyle.solid;
 
   /// The drawn outline: only solid glass keeps it; liquid glass is defined by rim light and shadow.
