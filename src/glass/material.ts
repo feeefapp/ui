@@ -341,7 +341,27 @@ export function glassMenuMaterial(scheme: 'light' | 'dark'): GlassMaterial {
   return { ...regular, veil: Math.max(regular.veil, GLASS_MENU.veil) }
 }
 
-/** Backdrop blur (std dev, px) of `kind` glass whose shorter side is `side` px (see `glassBlurAt`). */
-export function glassKindBlur(kind: GlassKind, side: number, tint: number, blurOn: boolean) {
-  return kind === 'menu' ? Math.max(glassBlur(side), GLASS_MENU.blur) : glassBlurAt(side, tint, blurOn)
+/**
+ * How much more than the measured blur glass takes where the browser can't bend the backdrop
+ * (Firefox and Safari have no SVG backdrop filters). Liquid glass is a lens plus a light veil:
+ * without the lens, clear glass over busy content all but vanishes, so it frosts instead.
+ */
+export const GLASS_FROSTED_BLUR_SCALE = 2
+
+/**
+ * The blur (std dev, px) of frosted glass whose shorter side is `side` px, whatever the tint:
+ * about 5.8 px on a control, up to 10.4 px on a panel.
+ */
+export function glassFrostedBlur(side: number) {
+  return glassBlur(side) * GLASS_FROSTED_BLUR_SCALE
+}
+
+/**
+ * Backdrop blur (std dev, px) of `kind` glass whose shorter side is `side` px (see `glassBlurAt`).
+ * `frosted`: the theme wants refraction this browser can't draw, so the glass frosts
+ * (`glassFrostedBlur`) rather than turning into a bare veil.
+ */
+export function glassKindBlur(kind: GlassKind, side: number, tint: number, blurOn: boolean, frosted = false) {
+  const blur = kind === 'menu' ? Math.max(glassBlur(side), GLASS_MENU.blur) : glassBlurAt(side, tint, blurOn)
+  return frosted ? Math.max(blur, glassFrostedBlur(side)) : blur
 }

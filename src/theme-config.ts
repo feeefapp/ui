@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { clampGlassTint, GLASS_TINT_DEFAULT } from './glass/material'
+import { supportsRefraction } from './glass/refraction'
 import type { Performance } from './performance'
 
 /**
@@ -348,6 +349,9 @@ export function applyThemeConfig(element: HTMLElement, config?: ThemeConfig): vo
   element.setAttribute('data-lab-glass', theme.glass)
   element.setAttribute('data-lab-glass-blur', theme.glassBlur ? 'on' : 'off')
   element.setAttribute('data-lab-glass-refraction', theme.glassRefraction ? 'on' : 'off')
+  // Whether this browser can bend the backdrop (SVG backdrop filters: Chromium). Where it can't,
+  // liquid glass frosts instead (system.css); only the client knows, so SSR leaves it out.
+  element.setAttribute('data-lab-glass-bends', supportsRefraction() ? 'on' : 'off')
   element.setAttribute('data-lab-motion', theme.motion)
   if (theme.primary) element.setAttribute('data-lab-primary', '')
   else element.removeAttribute('data-lab-primary')

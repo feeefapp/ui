@@ -12,6 +12,8 @@ import {
   GLASS_TINT_DEFAULT,
   GLASS_VEIL,
   clampGlassTint,
+  glassBlur,
+  glassFrostedBlur,
   glassKindBlur,
   glassMaterial,
   glassMenuMaterial,
@@ -163,4 +165,20 @@ test('menu glass is regular glass veiled at least 88 % and blurred at least 20px
   assert.match(css, new RegExp(`--lab-menu-blur: max\\(var\\(--lab-glass-blur-large\\), ${GLASS_MENU.blur}px\\)`))
   const { dy, blur, inset, alpha } = GLASS_MENU.shadow
   assert.ok(css.includes(`--lab-menu-shadow: 0 ${dy}px ${blur * 2}px -${inset}px rgb(0 0 0 / ${alpha * 100}%)`))
+})
+
+test('glass the browser cannot bend frosts: twice the measured blur, whatever the tint, as the CSS', () => {
+  close(glassFrostedBlur(44), glassBlur(44) * 2, 'control')
+  close(glassFrostedBlur(44), 5.8, 'control px')
+  close(glassFrostedBlur(400), 10.4, 'panel px')
+  for (const tint of [0, 0.5, 1]) {
+    close(glassKindBlur('regular', 44, tint, false, true), 5.8, `frosted control at tint ${tint}`)
+    assert.ok(glassKindBlur('regular', 44, tint, false) < 5.8, `unfrosted control at tint ${tint} stays light`)
+  }
+  // Frosting never thins glass that already blurs more (menus).
+  assert.equal(glassKindBlur('menu', 44, 0.5, false, true), GLASS_MENU.blur)
+  const system = readFileSync(new URL('../src/system.css', import.meta.url), 'utf8')
+  const rule = system.slice(system.indexOf("[data-lab-glass-bends='off']"))
+  assert.ok(rule.includes(`--lab-glass-blur: ${glassFrostedBlur(44)}px;`), 'CSS control blur')
+  assert.ok(rule.includes(`--lab-glass-blur-large: ${glassFrostedBlur(400)}px;`), 'CSS panel blur')
 })

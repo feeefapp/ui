@@ -952,7 +952,8 @@ export class GlassScene {
       const size = glassSize(side)
       if (piece.dataset.glassSize !== size) piece.dataset.glassSize = size
       // Clear glass always softens a little (1.6 px); the regular blur joins with the tint when on.
-      setPropertyIfChanged(style, '--lab-glass-blur', `${glassKindBlur(this.material, side, this.tint, this.blur).toFixed(2)}px`)
+      // Where the theme wants refraction this browser can't draw, the glass frosts instead.
+      setPropertyIfChanged(style, '--lab-glass-blur', `${glassKindBlur(this.material, side, this.tint, this.blur, this.frosted()).toFixed(2)}px`)
       setStyleIfChanged(style, 'left', `${x}px`)
       setStyleIfChanged(style, 'top', `${y}px`)
       setStyleIfChanged(style, 'width', `${width}px`)
@@ -1019,6 +1020,17 @@ export class GlassScene {
       setAttributeIfChanged(line.ring, 'fill-opacity', strength.ring.toFixed(4))
       setAttributeIfChanged(line.sliver, 'fill-opacity', strength.sliver.toFixed(4))
     })
+  }
+
+  /**
+   * Whether the glass frosts: the theme asks for refraction (liquid glass) but this browser can't
+   * bend the backdrop (no SVG backdrop filters, and no backdrop source for Firefox's lens).
+   */
+  private frosted() {
+    return (
+      this.refraction && this.refractionStrength > 0 &&
+      !(supportsRefraction() || (supportsElementRefraction() && !!this.elementSource()))
+    )
   }
 
   /** Keep the same optical layer alive through motion, merges and adaptive tone changes. */

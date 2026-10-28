@@ -670,6 +670,14 @@ html[data-lab-theme][data-lab-glass-blur='on'] {
   --lab-glass-blur: 2.9px;
   --lab-glass-blur-large: 5.2px;
 }
+/* Liquid glass is a lens plus a light veil. Where the browser can't bend the backdrop (no SVG
+backdrop filters: Firefox, Safari; applyThemeConfig sets data-lab-glass-bends), clear glass over busy
+content all but vanishes, so it frosts instead: twice the measured blur (material.ts
+GLASS_FROSTED_BLUR_SCALE), whatever the tint. Transparent and solid glass are unbent everywhere. */
+html[data-lab-theme][data-lab-glass-bends='off'][data-lab-glass-refraction='on']:not([data-lab-glass='transparent'], [data-lab-glass='solid']) {
+  --lab-glass-blur: 5.8px;
+  --lab-glass-blur-large: 10.4px;
+}
 /* ThemeConfig glass: 'solid' makes every glass group an opaque surface without the light rim. */
 html[data-lab-theme][data-lab-glass='solid'] .lab-glass-group {
   background: var(--lab-surface);

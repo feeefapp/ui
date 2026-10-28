@@ -1,4 +1,5 @@
 import { clampGlassTint, GLASS_TINT_DEFAULT } from './glass/material.js';
+import { supportsRefraction } from './glass/refraction.js';
 /**
  * How long (seconds) the short crossfade that replaces a movement under reduced motion lasts:
  * `seconds` under `reduced`, 0 under `none`, which animates nothing at all. Every reduced-motion
@@ -168,6 +169,9 @@ export function applyThemeConfig(element, config) {
     element.setAttribute('data-lab-glass', theme.glass);
     element.setAttribute('data-lab-glass-blur', theme.glassBlur ? 'on' : 'off');
     element.setAttribute('data-lab-glass-refraction', theme.glassRefraction ? 'on' : 'off');
+    // Whether this browser can bend the backdrop (SVG backdrop filters: Chromium). Where it can't,
+    // liquid glass frosts instead (system.css); only the client knows, so SSR leaves it out.
+    element.setAttribute('data-lab-glass-bends', supportsRefraction() ? 'on' : 'off');
     element.setAttribute('data-lab-motion', theme.motion);
     if (theme.primary)
         element.setAttribute('data-lab-primary', '');

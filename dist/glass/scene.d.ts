@@ -146,6 +146,11 @@ export declare class GlassScene {
      * per cluster shape and follow merged outlines.
      */
     private syncHairlines;
+    /**
+     * Whether the glass frosts: the theme asks for refraction (liquid glass) but this browser can't
+     * bend the backdrop (no SVG backdrop filters, and no backdrop source for Firefox's lens).
+     */
+    private frosted;
     /** Keep the same optical layer alive through motion, merges and adaptive tone changes. */
     private updateRefraction;
     /** Sampling a separate paint layer avoids Firefox's recursive element-image prohibition. */
