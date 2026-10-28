@@ -64,8 +64,9 @@ export interface ThemeConfig {
     /**
      * How much the effects may cost (`Performance`, performance.ts). `auto` (default) keeps the full
      * look and steps down to `light` on weak devices (little memory, few cores, no hardware GPU) and
-     * on devices whose frames measure slow; `light` paints floating glass `solid` (no backdrop blur
-     * or refraction) and bubbles never merge. Resolved in the browser by `ThemeProvider`; server-rendered attributes show
+     * on devices whose frames measure slow; `light` keeps the glass look (tint, rim, shadow) as
+     * `transparent` glass that filters nothing behind it (no backdrop blur or refraction), and
+     * bubbles never merge. Resolved in the browser by `ThemeProvider`; server-rendered attributes show
      * the configured glass until it runs.
      */
     performance?: Performance;
