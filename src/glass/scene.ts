@@ -578,11 +578,14 @@ export class GlassScene {
       const box = element.getBoundingClientRect()
       if (!box.width || !box.height) continue
       const shape = this.shapes.get(id)
-      const offset = shape?.offset ?? { x: 0, y: 0 }
+      // A solo container (GlassContainer `solo`) is its own bubble: its glass is its own box,
+      // wherever the page moves it, and its content never rides (that would move the glass too).
+      const solo = element === this.host
+      const offset = solo ? { x: 0, y: 0 } : (shape?.offset ?? { x: 0, y: 0 })
       const animated = this.animatedBetween(element)
       if (animated) tracking = true
       // In the container's own pixels (ancestors may scale it), minus our own content offset.
-      const local = toLocalRect(frame, box)
+      const local = solo ? { x: 0, y: 0, width: size.width, height: size.height } : toLocalRect(frame, box)
       // A broken layout (an error box overflowing by thousands of px) is not glass, and nothing
       // is ever drawn past the material's reach around the container.
       const rect = glassMemberRect(glassLayoutRect(local, offset, shape?.contentScale), size, viewport, GLASS_MARGIN)
@@ -860,6 +863,8 @@ export class GlassScene {
       visuals.push({ ...visual, id })
       clips.push(shape.clip)
       const member = this.members.get(id)
+      // A solo container's content is the container: it never rides with its own glass.
+      if (member?.element === this.host) continue
       // A surface out of its origin shows its content only inside its glass while it travels.
       if (member && shape.origin) {
         const home = shape.layout ?? shape.home
