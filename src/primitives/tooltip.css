@@ -1,0 +1,32 @@
+/* Tooltip: a small opaque label beside a control. */
+.lab-tooltip {
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--lab-surface);
+  color: var(--lab-ink);
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-small);
+  font: 500 12px/18px var(--lab-font);
+  box-shadow: var(--lab-glass-shadow);
+  pointer-events: none;
+  user-select: none;
+}
+.lab-tooltip-shortcut {
+  color: var(--lab-muted);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .lab-tooltip[data-state='delayed-open'] {
+    animation: lab-tooltip-in 140ms ease-out;
+  }
+}
+@keyframes lab-tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+}
