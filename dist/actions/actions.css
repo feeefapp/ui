@@ -134,3 +134,28 @@ html[data-lab-theme]
   margin: 0;
   pointer-events: none;
 }
+
+/* Toolbar tooltip: a small opaque label under the control. */
+.lab-actions-tooltip {
+  z-index: 100;
+  padding: 6px 10px;
+  background: var(--lab-surface);
+  color: var(--lab-ink);
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius-small);
+  font: 500 12px/18px var(--lab-font);
+  box-shadow: var(--lab-glass-shadow);
+  pointer-events: none;
+  user-select: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .lab-actions-tooltip[data-state='delayed-open'] {
+    animation: lab-actions-tooltip-in 140ms ease-out;
+  }
+}
+@keyframes lab-actions-tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+}

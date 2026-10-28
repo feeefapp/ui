@@ -1,48 +1,59 @@
-'use client'
+"use client";
 
-import * as React from 'react'
-import { useI18n } from '../i18n'
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { Check, ChevronDown, ChevronRight, MoreHorizontal, Square, SquareCheck } from 'lucide-react'
-import { cn } from '../utils'
-import { Button } from '../ui'
-import { PixelLoader } from '../pixel-art'
-import { computeActionsLayout, menuHasLeading } from './layout'
-import type { Action, GroupAction } from './types'
-import { useMeasuredActions } from './use_measured_actions'
-import { useActionsWidth } from './width-context'
-import './actions.css'
-import { useOverflowMotion } from './overflow-motion'
-import { MenuSurface } from '../menu/menu-surface'
-import { useFloatingBoundary } from '../menu/boundary'
+import * as React from "react";
+import { useI18n } from "../i18n";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import * as Tooltip from "@radix-ui/react-tooltip";
+import {
+  Check,
+  ChevronDown,
+  ChevronRight,
+  MoreHorizontal,
+  Square,
+  SquareCheck,
+} from "lucide-react";
+import { cn } from "../utils";
+import { Button } from "../ui";
+import { PixelLoader } from "../pixel-art";
+import { computeActionsLayout, menuHasLeading } from "./layout";
+import type { Action, GroupAction } from "./types";
+import { useMeasuredActions } from "./use_measured_actions";
+import { useActionsWidth } from "./width-context";
+import "./actions.css";
+import { useOverflowMotion } from "./overflow-motion";
+import { MenuSurface } from "../menu/menu-surface";
+import { useFloatingBoundary } from "../menu/boundary";
 
 export interface ActionsBarProps {
   /** The action tree, in display order. Top-level entries spill into the overflow menu by `priority`. */
-  actions: readonly Action[]
+  actions: readonly Action[];
   /** Accessible name of the toolbar group. */
-  label: string
+  label: string;
   /** Which side the row hugs inside a wider host. */
-  align?: 'start' | 'end'
+  align?: "start" | "end";
   /** Control height: `regular` (36px, or the host's control height in a Dock or toolbar) or `small` (30px). */
-  size?: 'small' | 'regular'
+  size?: "small" | "regular";
   /** Space between controls, in pixels. Included in the fit. */
-  gap?: number
+  gap?: number;
   /** Accessible name of the overflow trigger. Defaults to the localized "More actions". */
-  overflowLabel?: string
+  overflowLabel?: string;
   /** Class name for the bar. */
-  className?: string
+  className?: string;
   /** Where menus render. Defaults to the nearest dialog, else the nearest `FloatingBoundary`, else document.body. */
-  portalContainer?: HTMLElement | null
+  portalContainer?: HTMLElement | null;
   /** Application effects are injected; this primitive never calls business APIs. */
-  onActionError?: (error: unknown, action: Action) => void
+  onActionError?: (error: unknown, action: Action) => void;
 }
 
-type ExecuteAction = (action: Exclude<Action, GroupAction>, checked?: boolean) => void
+type ExecuteAction = (
+  action: Exclude<Action, GroupAction>,
+  checked?: boolean,
+) => void;
 interface MenuContext {
-  ownerId: string
-  container: HTMLElement | null | undefined
-  pending: ReadonlySet<string>
-  execute: ExecuteAction
+  ownerId: string;
+  container: HTMLElement | null | undefined;
+  pending: ReadonlySet<string>;
+  execute: ExecuteAction;
 }
 
 /**
@@ -52,45 +63,52 @@ interface MenuContext {
 export function ActionsBar({
   actions,
   label,
-  align = 'end',
-  size = 'regular',
+  align = "end",
+  size = "regular",
   gap = 4,
   overflowLabel,
   className,
   portalContainer,
   onActionError,
 }: ActionsBarProps) {
-  const { t } = useI18n()
-  const resolvedOverflowLabel = overflowLabel ?? t('lab.common.moreActions')
-  const ownerId = React.useId()
-  const host = React.useRef<HTMLDivElement>(null)
-  const measuringRow = React.useRef<HTMLDivElement>(null)
-  const overflowTrigger = React.useRef<HTMLButtonElement>(null)
-  const row = React.useRef<HTMLDivElement>(null)
-  const [container, setContainer] = React.useState<HTMLElement | null>()
-  const [pending, setPending] = React.useState<ReadonlySet<string>>(new Set())
-  const pendingRef = React.useRef(new Set<string>())
-  const alive = React.useRef(true)
-  const [errorLabel, setErrorLabel] = React.useState('')
-  const [overflowOpen, setOverflowOpen] = React.useState(false)
-  const inheritedWidth = useActionsWidth()
-  const boundary = useFloatingBoundary()
-  const revision = React.useMemo(() => ({ actions, size, pending }), [actions, size, pending])
-  const { measurements, focusAfterFit } = useMeasuredActions(host, measuringRow, revision)
+  const { t } = useI18n();
+  const resolvedOverflowLabel = overflowLabel ?? t("lab.common.moreActions");
+  const ownerId = React.useId();
+  const host = React.useRef<HTMLDivElement>(null);
+  const measuringRow = React.useRef<HTMLDivElement>(null);
+  const overflowTrigger = React.useRef<HTMLButtonElement>(null);
+  const row = React.useRef<HTMLDivElement>(null);
+  const [container, setContainer] = React.useState<HTMLElement | null>();
+  const [pending, setPending] = React.useState<ReadonlySet<string>>(new Set());
+  const pendingRef = React.useRef(new Set<string>());
+  const alive = React.useRef(true);
+  const [errorLabel, setErrorLabel] = React.useState("");
+  const [overflowOpen, setOverflowOpen] = React.useState(false);
+  const inheritedWidth = useActionsWidth();
+  const boundary = useFloatingBoundary();
+  const revision = React.useMemo(
+    () => ({ actions, size, pending }),
+    [actions, size, pending],
+  );
+  const { measurements, focusAfterFit } = useMeasuredActions(
+    host,
+    measuringRow,
+    revision,
+  );
 
   React.useEffect(() => {
-    alive.current = true
+    alive.current = true;
     return () => {
-      alive.current = false
-    }
-  }, [])
+      alive.current = false;
+    };
+  }, []);
   React.useLayoutEffect(() => {
     setContainer(
       portalContainer === undefined
-        ? (host.current?.closest('dialog') ?? boundary)
-        : portalContainer
-    )
-  }, [portalContainer, boundary])
+        ? (host.current?.closest("dialog") ?? boundary)
+        : portalContainer,
+    );
+  }, [portalContainer, boundary]);
 
   const layout = React.useMemo(
     () =>
@@ -98,147 +116,235 @@ export function ActionsBar({
         ? computeActionsLayout({
             actions,
             maxWidth: inheritedWidth ?? measurements.availableWidth,
-            measure: (action) => measurements.widths.get(action.id) ?? measurements.overflowWidth,
+            measure: (action) =>
+              measurements.widths.get(action.id) ?? measurements.overflowWidth,
             overflowWidth: measurements.overflowWidth,
             gap,
           })
         : { visible: [...actions], overflow: [], requiredWidth: 0 },
-    [actions, gap, inheritedWidth, measurements]
-  )
+    [actions, gap, inheritedWidth, measurements],
+  );
 
-  useOverflowMotion(row, overflowTrigger, layout.visible.map((action) => action.id))
+  useOverflowMotion(
+    row,
+    overflowTrigger,
+    layout.visible.map((action) => action.id),
+  );
 
   React.useLayoutEffect(() => {
-    const actionId = focusAfterFit.current
-    focusAfterFit.current = null
+    const actionId = focusAfterFit.current;
+    focusAfterFit.current = null;
     if (
       actionId &&
       layout.overflow.some((action) => action.id === actionId) &&
       !host.current?.contains(document.activeElement)
     ) {
-      overflowTrigger.current?.focus()
+      overflowTrigger.current?.focus();
     }
-    if (!layout.overflow.length) setOverflowOpen(false)
-  }, [layout, focusAfterFit])
+    if (!layout.overflow.length) setOverflowOpen(false);
+  }, [layout, focusAfterFit]);
 
   const execute: ExecuteAction = (action, checked) => {
-    if (action.disabled || action.loading || pendingRef.current.has(action.id)) return
-    pendingRef.current.add(action.id)
-    setPending(new Set(pendingRef.current))
-    setErrorLabel('')
+    if (action.disabled || action.loading || pendingRef.current.has(action.id))
+      return;
+    pendingRef.current.add(action.id);
+    setPending(new Set(pendingRef.current));
+    setErrorLabel("");
     void (async () => {
       try {
-        if (action.type === 'toggle') await action.onCheckedChange(checked ?? !action.checked)
-        else await action.onAction()
+        if (action.type === "toggle")
+          await action.onCheckedChange(checked ?? !action.checked);
+        else await action.onAction();
       } catch (error) {
-        if (alive.current) setErrorLabel(`${action.label} could not complete. Try again.`)
-        onActionError?.(error, action)
+        if (alive.current)
+          setErrorLabel(`${action.label} could not complete. Try again.`);
+        onActionError?.(error, action);
       } finally {
-        pendingRef.current.delete(action.id)
-        if (alive.current) setPending(new Set(pendingRef.current))
+        pendingRef.current.delete(action.id);
+        if (alive.current) setPending(new Set(pendingRef.current));
       }
-    })()
-  }
-  const menu: MenuContext = { container, pending, execute, ownerId }
+    })();
+  };
+  const menu: MenuContext = { container, pending, execute, ownerId };
 
   return (
-    <div
-      ref={host}
-      data-lab-actions-owner={ownerId}
-      className={cn('lab-actions-bar', className)}
-      role="group"
-      aria-label={label}
-      hidden={!actions.length}
-      data-align={align}
-      data-size={size}
-      data-measured={!!measurements}
-      style={
-        {
-          '--lab-actions-gap': `${gap}px`,
-          ...(inheritedWidth === undefined
-            ? {}
-            : { inlineSize: layout.requiredWidth, flex: 'none' }),
-        } as React.CSSProperties
-      }
-    >
-      <div ref={row} className="lab-actions-bar__row">
-        {layout.visible.map((action) => (
-          <span key={action.id} className="lab-actions-bar__entry" data-lab-action-id={action.id}>
-            {action.type === 'group' ? (
-              <GroupControl action={action} size={size} menu={menu} />
-            ) : (
+    // Its own provider: bars work in any host, and moving along a row skips the hover delay.
+    <Tooltip.Provider delayDuration={350} skipDelayDuration={300}>
+      <div
+        ref={host}
+        data-lab-actions-owner={ownerId}
+        className={cn("lab-actions-bar", className)}
+        role="group"
+        aria-label={label}
+        hidden={!actions.length}
+        data-align={align}
+        data-size={size}
+        data-measured={!!measurements}
+        style={
+          {
+            "--lab-actions-gap": `${gap}px`,
+            ...(inheritedWidth === undefined
+              ? {}
+              : { inlineSize: layout.requiredWidth, flex: "none" }),
+          } as React.CSSProperties
+        }
+      >
+        <div ref={row} className="lab-actions-bar__row">
+          {layout.visible.map((action) => (
+            <span
+              key={action.id}
+              className="lab-actions-bar__entry"
+              data-lab-action-id={action.id}
+            >
+              {action.type === "group" ? (
+                <GroupControl action={action} size={size} menu={menu} />
+              ) : (
+                <ActionHint action={action}>
+                  <ActionControl
+                    action={action}
+                    size={size}
+                    loading={pending.has(action.id)}
+                    hinted
+                    onClick={() => execute(action)}
+                  />
+                </ActionHint>
+              )}
+            </span>
+          ))}
+          {!!layout.overflow.length && (
+            <DropdownMenu.Root
+              modal={false}
+              open={overflowOpen}
+              onOpenChange={setOverflowOpen}
+            >
+              <Hint text={overflowOpen ? undefined : resolvedOverflowLabel}>
+                <DropdownMenu.Trigger asChild>
+                  <Button
+                    ref={overflowTrigger}
+                    className="lab-actions-bar__control"
+                    variant="ghost"
+                    appearance="toolbar"
+                    controlSize="icon"
+                    iconSize={size}
+                    aria-label={resolvedOverflowLabel}
+                  >
+                    <MoreHorizontal size={20} aria-hidden="true" />
+                  </Button>
+                </DropdownMenu.Trigger>
+              </Hint>
+              <ActionsMenu menu={menu} label={resolvedOverflowLabel}>
+                <MenuActions actions={layout.overflow} menu={menu} />
+              </ActionsMenu>
+            </DropdownMenu.Root>
+          )}
+        </div>
+        {/* Real controls, inert and hidden, keep font/zoom/loading measurement exact. */}
+        <div
+          ref={measuringRow}
+          className="lab-actions-bar__measure"
+          aria-hidden="true"
+          inert
+        >
+          {actions.map((action) => (
+            <span
+              key={action.id}
+              className="lab-actions-bar__entry"
+              data-lab-action-id={action.id}
+            >
               <ActionControl
                 action={action}
                 size={size}
                 loading={pending.has(action.id)}
-                onClick={() => execute(action)}
               />
-            )}
+            </span>
+          ))}
+          <span className="lab-actions-bar__entry" data-lab-overflow-measure>
+            <Button
+              className="lab-actions-bar__control"
+              variant="ghost"
+              appearance="toolbar"
+              controlSize="icon"
+              iconSize={size}
+              tabIndex={-1}
+            >
+              <MoreHorizontal size={20} aria-hidden="true" />
+            </Button>
           </span>
-        ))}
-        {!!layout.overflow.length && (
-          <DropdownMenu.Root modal={false} open={overflowOpen} onOpenChange={setOverflowOpen}>
-            <DropdownMenu.Trigger asChild>
-              <Button
-                ref={overflowTrigger}
-                className="lab-actions-bar__control"
-                variant="ghost"
-                appearance="toolbar"
-                controlSize="icon"
-                iconSize={size}
-                aria-label={resolvedOverflowLabel}
-                title={resolvedOverflowLabel}
-              >
-                <MoreHorizontal size={20} aria-hidden="true" />
-              </Button>
-            </DropdownMenu.Trigger>
-            <ActionsMenu menu={menu} label={resolvedOverflowLabel}>
-              <MenuActions actions={layout.overflow} menu={menu} />
-            </ActionsMenu>
-          </DropdownMenu.Root>
+        </div>
+        {errorLabel && (
+          <span className="lab-actions-bar__error" role="alert">
+            {errorLabel}
+          </span>
         )}
       </div>
-      {/* Real controls, inert and hidden, keep font/zoom/loading measurement exact. */}
-      <div ref={measuringRow} className="lab-actions-bar__measure" aria-hidden="true" inert>
-        {actions.map((action) => (
-          <span key={action.id} className="lab-actions-bar__entry" data-lab-action-id={action.id}>
-            <ActionControl action={action} size={size} loading={pending.has(action.id)} />
-          </span>
-        ))}
-        <span className="lab-actions-bar__entry" data-lab-overflow-measure>
-          <Button
-            className="lab-actions-bar__control"
-            variant="ghost"
-            appearance="toolbar"
-            controlSize="icon"
-            iconSize={size}
-            tabIndex={-1}
-          >
-            <MoreHorizontal size={20} aria-hidden="true" />
-          </Button>
-        </span>
-      </div>
-      {errorLabel && (
-        <span className="lab-actions-bar__error" role="alert">
-          {errorLabel}
-        </span>
-      )}
-    </div>
-  )
+    </Tooltip.Provider>
+  );
 }
 
 interface ActionControlProps {
-  action: Action
-  size: 'small' | 'regular'
-  loading?: boolean
+  action: Action;
+  size: "small" | "regular";
+  loading?: boolean;
+  /** A styled tooltip wraps the control, so it drops the native `title`. */
+  hinted?: boolean;
+}
+
+/** Tooltip text of a control: its own `tooltip`, else the label when only the icon shows. */
+function hintOf(action: Action) {
+  const iconOnly =
+    action.display === "icon" && (action.type === "toggle" || !!action.icon);
+  return action.tooltip ?? (iconOnly ? action.label : undefined);
+}
+
+/** The kit tooltip: shown on hover and keyboard focus, never on touch taps. */
+function Hint({
+  text,
+  children,
+}: {
+  text?: string;
+  children: React.ReactElement;
+}) {
+  const boundary = useFloatingBoundary();
+  if (!text) return children;
+  return (
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>
+      <Tooltip.Portal container={boundary ?? undefined}>
+        <Tooltip.Content
+          className="lab-actions-tooltip"
+          side="bottom"
+          sideOffset={8}
+          collisionPadding={12}
+          collisionBoundary={boundary ?? undefined}
+        >
+          {text}
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+  );
+}
+
+function ActionHint({
+  action,
+  children,
+}: {
+  action: Action;
+  children: React.ReactElement;
+}) {
+  return <Hint text={hintOf(action)}>{children}</Hint>;
 }
 
 const ActionControl = React.forwardRef<
   HTMLButtonElement,
   ActionControlProps & React.ButtonHTMLAttributes<HTMLButtonElement>
->(function ActionControl({ action, size, loading, ...buttonProps }, ref) {
-  const iconOnly = action.display === 'icon' && (action.type === 'toggle' || !!action.icon)
-  const blocked = action.disabled || (action.type === 'group' && !action.actions.length)
+>(function ActionControl(
+  { action, size, loading, hinted, ...buttonProps },
+  ref,
+) {
+  const iconOnly =
+    action.display === "icon" && (action.type === "toggle" || !!action.icon);
+  const blocked =
+    action.disabled || (action.type === "group" && !action.actions.length);
   return (
     <Button
       {...buttonProps}
@@ -246,28 +352,29 @@ const ActionControl = React.forwardRef<
       className="lab-actions-bar__control"
       variant={
         action.destructive
-          ? 'destructive'
-          : (action.variant ?? (action.type === 'toggle' && action.checked ? 'elevated' : 'ghost'))
+          ? "destructive"
+          : (action.variant ??
+            (action.type === "toggle" && action.checked ? "elevated" : "ghost"))
       }
-      controlSize={iconOnly ? 'icon' : size}
+      controlSize={iconOnly ? "icon" : size}
       iconSize={size}
       appearance={
         action.appearance ??
-        (!action.destructive && (!action.variant || action.variant === 'ghost')
-          ? 'toolbar'
-          : 'default')
+        (!action.destructive && (!action.variant || action.variant === "ghost")
+          ? "toolbar"
+          : "default")
       }
       disabled={blocked}
       loading={loading || action.loading}
       aria-label={action.label}
-      aria-pressed={action.type === 'toggle' ? action.checked : undefined}
-      title={action.tooltip ?? (iconOnly ? action.label : undefined)}
+      aria-pressed={action.type === "toggle" ? action.checked : undefined}
+      title={hinted ? undefined : hintOf(action)}
     >
       {action.icon ? (
         <span className="lab-actions-bar__icon" aria-hidden="true">
           {action.icon}
         </span>
-      ) : action.type === 'toggle' ? (
+      ) : action.type === "toggle" ? (
         action.checked ? (
           <SquareCheck size={18} aria-hidden="true" />
         ) : (
@@ -275,38 +382,42 @@ const ActionControl = React.forwardRef<
         )
       ) : null}
       {!iconOnly && <span>{action.label}</span>}
-      {action.type === 'group' && !iconOnly && <ChevronDown size={14} aria-hidden="true" />}
+      {action.type === "group" && !iconOnly && (
+        <ChevronDown size={14} aria-hidden="true" />
+      )}
     </Button>
-  )
-})
+  );
+});
 
 function GroupControl({
   action,
   size,
   menu,
 }: {
-  action: GroupAction
-  size: 'small' | 'regular'
-  menu: MenuContext
+  action: GroupAction;
+  size: "small" | "regular";
+  menu: MenuContext;
 }) {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(false);
   return (
     <DropdownMenu.Root
       modal={false}
       open={open}
       onOpenChange={(next) => {
-        if (next && action.onOpen?.() === false) return
-        setOpen(next)
+        if (next && action.onOpen?.() === false) return;
+        setOpen(next);
       }}
     >
-      <DropdownMenu.Trigger asChild>
-        <ActionControl action={action} size={size} />
-      </DropdownMenu.Trigger>
+      <Hint text={open ? undefined : hintOf(action)}>
+        <DropdownMenu.Trigger asChild>
+          <ActionControl action={action} size={size} hinted />
+        </DropdownMenu.Trigger>
+      </Hint>
       <ActionsMenu menu={menu} label={action.label}>
         <MenuActions actions={action.actions} menu={menu} />
       </ActionsMenu>
     </DropdownMenu.Root>
-  )
+  );
 }
 
 function ActionsMenu({
@@ -314,9 +425,9 @@ function ActionsMenu({
   label,
   children,
 }: {
-  menu: MenuContext
-  label: string
-  children: React.ReactNode
+  menu: MenuContext;
+  label: string;
+  children: React.ReactNode;
 }) {
   return (
     <DropdownMenu.Portal container={menu.container}>
@@ -331,31 +442,50 @@ function ActionsMenu({
         </DropdownMenu.Content>
       </MenuSurface>
     </DropdownMenu.Portal>
-  )
+  );
 }
 
 /** One menu's rows. The 18px leading slot is reserved only when some row has an icon, check or loader. */
-function MenuActions({ actions, menu }: { actions: readonly Action[]; menu: MenuContext }) {
-  const leading = menuHasLeading(actions, menu.pending)
+function MenuActions({
+  actions,
+  menu,
+}: {
+  actions: readonly Action[];
+  menu: MenuContext;
+}) {
+  const leading = menuHasLeading(actions, menu.pending);
   return (
     <>
       {actions.map((action) => (
-        <MenuAction key={action.id} action={action} menu={menu} leading={leading} />
+        <MenuAction
+          key={action.id}
+          action={action}
+          menu={menu}
+          leading={leading}
+        />
       ))}
     </>
-  )
+  );
 }
 
-function MenuAction({ action, menu, leading }: { action: Action; menu: MenuContext; leading: boolean }) {
-  const loading = action.loading || menu.pending.has(action.id)
-  const disabled = action.disabled || loading
+function MenuAction({
+  action,
+  menu,
+  leading,
+}: {
+  action: Action;
+  menu: MenuContext;
+  leading: boolean;
+}) {
+  const loading = action.loading || menu.pending.has(action.id);
+  const disabled = action.disabled || loading;
   const content = (
     <>
       {leading && (
         <span className="lab-actions-menu__leading" aria-hidden="true">
           {loading ? (
             <PixelLoader size={17} decorative />
-          ) : action.type === 'toggle' ? (
+          ) : action.type === "toggle" ? (
             <DropdownMenu.ItemIndicator>
               <Check size={18} />
             </DropdownMenu.ItemIndicator>
@@ -366,14 +496,17 @@ function MenuAction({ action, menu, leading }: { action: Action; menu: MenuConte
       )}
       <span className="lab-actions-menu__label">{action.label}</span>
     </>
-  )
-  if (action.type === 'group') return <SubmenuAction action={action} menu={menu} leading={leading} />
-  if (action.type === 'toggle')
+  );
+  if (action.type === "group")
+    return <SubmenuAction action={action} menu={menu} leading={leading} />;
+  if (action.type === "toggle")
     return (
       <DropdownMenu.CheckboxItem
         className="lab-actions-menu__item"
         data-lab-corners
-        data-destructive={action.destructive || action.variant === 'destructive' || undefined}
+        data-destructive={
+          action.destructive || action.variant === "destructive" || undefined
+        }
         disabled={disabled}
         checked={action.checked}
         onCheckedChange={(checked) => menu.execute(action, checked === true)}
@@ -382,12 +515,14 @@ function MenuAction({ action, menu, leading }: { action: Action; menu: MenuConte
       >
         {content}
       </DropdownMenu.CheckboxItem>
-    )
+    );
   return (
     <DropdownMenu.Item
       className="lab-actions-menu__item"
       data-lab-corners
-      data-destructive={action.destructive || action.variant === 'destructive' || undefined}
+      data-destructive={
+        action.destructive || action.variant === "destructive" || undefined
+      }
       disabled={disabled}
       onSelect={() => menu.execute(action)}
       aria-busy={loading || undefined}
@@ -395,7 +530,7 @@ function MenuAction({ action, menu, leading }: { action: Action; menu: MenuConte
     >
       {content}
     </DropdownMenu.Item>
-  )
+  );
 }
 
 function SubmenuAction({
@@ -403,17 +538,17 @@ function SubmenuAction({
   menu,
   leading,
 }: {
-  action: GroupAction
-  menu: MenuContext
-  leading: boolean
+  action: GroupAction;
+  menu: MenuContext;
+  leading: boolean;
 }) {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(false);
   return (
     <DropdownMenu.Sub
       open={open}
       onOpenChange={(next) => {
-        if (next && action.onOpen?.() === false) return
-        setOpen(next)
+        if (next && action.onOpen?.() === false) return;
+        setOpen(next);
       }}
     >
       <DropdownMenu.SubTrigger
@@ -421,12 +556,18 @@ function SubmenuAction({
         data-lab-corners
         disabled={action.disabled || action.loading || !action.actions.length}
         aria-busy={action.loading || undefined}
-        data-destructive={action.destructive || action.variant === 'destructive' || undefined}
+        data-destructive={
+          action.destructive || action.variant === "destructive" || undefined
+        }
         textValue={action.label}
       >
         {leading && (
           <span className="lab-actions-menu__leading" aria-hidden="true">
-            {action.loading ? <PixelLoader size={17} decorative /> : action.icon}
+            {action.loading ? (
+              <PixelLoader size={17} decorative />
+            ) : (
+              action.icon
+            )}
           </span>
         )}
         <span className="lab-actions-menu__label">{action.label}</span>
@@ -449,5 +590,5 @@ function SubmenuAction({
         </MenuSurface>
       </DropdownMenu.Portal>
     </DropdownMenu.Sub>
-  )
+  );
 }

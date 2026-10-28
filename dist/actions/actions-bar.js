@@ -1,26 +1,27 @@
-'use client';
+"use client";
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
-import * as React from 'react';
-import { useI18n } from '../i18n.js';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Check, ChevronDown, ChevronRight, MoreHorizontal, Square, SquareCheck } from 'lucide-react';
-import { cn } from '../utils.js';
-import { Button } from '../ui.js';
-import { PixelLoader } from '../pixel-art.js';
-import { computeActionsLayout, menuHasLeading } from './layout.js';
-import { useMeasuredActions } from './use_measured_actions.js';
-import { useActionsWidth } from './width-context.js';
-import './actions.css';
-import { useOverflowMotion } from './overflow-motion.js';
-import { MenuSurface } from '../menu/menu-surface.js';
-import { useFloatingBoundary } from '../menu/boundary.js';
+import * as React from "react";
+import { useI18n } from "../i18n.js";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import * as Tooltip from "@radix-ui/react-tooltip";
+import { Check, ChevronDown, ChevronRight, MoreHorizontal, Square, SquareCheck, } from "lucide-react";
+import { cn } from "../utils.js";
+import { Button } from "../ui.js";
+import { PixelLoader } from "../pixel-art.js";
+import { computeActionsLayout, menuHasLeading } from "./layout.js";
+import { useMeasuredActions } from "./use_measured_actions.js";
+import { useActionsWidth } from "./width-context.js";
+import "./actions.css";
+import { useOverflowMotion } from "./overflow-motion.js";
+import { MenuSurface } from "../menu/menu-surface.js";
+import { useFloatingBoundary } from "../menu/boundary.js";
 /**
  * Responsive, priority-based actions. Measures its real controls and moves the lowest-priority
  * ones into a "More actions" menu when they don't fit. Place inside a dock or any bounded slot.
  */
-export function ActionsBar({ actions, label, align = 'end', size = 'regular', gap = 4, overflowLabel, className, portalContainer, onActionError, }) {
+export function ActionsBar({ actions, label, align = "end", size = "regular", gap = 4, overflowLabel, className, portalContainer, onActionError, }) {
     const { t } = useI18n();
-    const resolvedOverflowLabel = overflowLabel ?? t('lab.common.moreActions');
+    const resolvedOverflowLabel = overflowLabel ?? t("lab.common.moreActions");
     const ownerId = React.useId();
     const host = React.useRef(null);
     const measuringRow = React.useRef(null);
@@ -30,7 +31,7 @@ export function ActionsBar({ actions, label, align = 'end', size = 'regular', ga
     const [pending, setPending] = React.useState(new Set());
     const pendingRef = React.useRef(new Set());
     const alive = React.useRef(true);
-    const [errorLabel, setErrorLabel] = React.useState('');
+    const [errorLabel, setErrorLabel] = React.useState("");
     const [overflowOpen, setOverflowOpen] = React.useState(false);
     const inheritedWidth = useActionsWidth();
     const boundary = useFloatingBoundary();
@@ -44,7 +45,7 @@ export function ActionsBar({ actions, label, align = 'end', size = 'regular', ga
     }, []);
     React.useLayoutEffect(() => {
         setContainer(portalContainer === undefined
-            ? (host.current?.closest('dialog') ?? boundary)
+            ? (host.current?.closest("dialog") ?? boundary)
             : portalContainer);
     }, [portalContainer, boundary]);
     const layout = React.useMemo(() => measurements
@@ -73,10 +74,10 @@ export function ActionsBar({ actions, label, align = 'end', size = 'regular', ga
             return;
         pendingRef.current.add(action.id);
         setPending(new Set(pendingRef.current));
-        setErrorLabel('');
+        setErrorLabel("");
         void (async () => {
             try {
-                if (action.type === 'toggle')
+                if (action.type === "toggle")
                     await action.onCheckedChange(checked ?? !action.checked);
                 else
                     await action.onAction();
@@ -94,22 +95,40 @@ export function ActionsBar({ actions, label, align = 'end', size = 'regular', ga
         })();
     };
     const menu = { container, pending, execute, ownerId };
-    return (_jsxs("div", { ref: host, "data-lab-actions-owner": ownerId, className: cn('lab-actions-bar', className), role: "group", "aria-label": label, hidden: !actions.length, "data-align": align, "data-size": size, "data-measured": !!measurements, style: {
-            '--lab-actions-gap': `${gap}px`,
-            ...(inheritedWidth === undefined
-                ? {}
-                : { inlineSize: layout.requiredWidth, flex: 'none' }),
-        }, children: [_jsxs("div", { ref: row, className: "lab-actions-bar__row", children: [layout.visible.map((action) => (_jsx("span", { className: "lab-actions-bar__entry", "data-lab-action-id": action.id, children: action.type === 'group' ? (_jsx(GroupControl, { action: action, size: size, menu: menu })) : (_jsx(ActionControl, { action: action, size: size, loading: pending.has(action.id), onClick: () => execute(action) })) }, action.id))), !!layout.overflow.length && (_jsxs(DropdownMenu.Root, { modal: false, open: overflowOpen, onOpenChange: setOverflowOpen, children: [_jsx(DropdownMenu.Trigger, { asChild: true, children: _jsx(Button, { ref: overflowTrigger, className: "lab-actions-bar__control", variant: "ghost", appearance: "toolbar", controlSize: "icon", iconSize: size, "aria-label": resolvedOverflowLabel, title: resolvedOverflowLabel, children: _jsx(MoreHorizontal, { size: 20, "aria-hidden": "true" }) }) }), _jsx(ActionsMenu, { menu: menu, label: resolvedOverflowLabel, children: _jsx(MenuActions, { actions: layout.overflow, menu: menu }) })] }))] }), _jsxs("div", { ref: measuringRow, className: "lab-actions-bar__measure", "aria-hidden": "true", inert: true, children: [actions.map((action) => (_jsx("span", { className: "lab-actions-bar__entry", "data-lab-action-id": action.id, children: _jsx(ActionControl, { action: action, size: size, loading: pending.has(action.id) }) }, action.id))), _jsx("span", { className: "lab-actions-bar__entry", "data-lab-overflow-measure": true, children: _jsx(Button, { className: "lab-actions-bar__control", variant: "ghost", appearance: "toolbar", controlSize: "icon", iconSize: size, tabIndex: -1, children: _jsx(MoreHorizontal, { size: 20, "aria-hidden": "true" }) }) })] }), errorLabel && (_jsx("span", { className: "lab-actions-bar__error", role: "alert", children: errorLabel }))] }));
+    return (
+    // Its own provider: bars work in any host, and moving along a row skips the hover delay.
+    _jsx(Tooltip.Provider, { delayDuration: 350, skipDelayDuration: 300, children: _jsxs("div", { ref: host, "data-lab-actions-owner": ownerId, className: cn("lab-actions-bar", className), role: "group", "aria-label": label, hidden: !actions.length, "data-align": align, "data-size": size, "data-measured": !!measurements, style: {
+                "--lab-actions-gap": `${gap}px`,
+                ...(inheritedWidth === undefined
+                    ? {}
+                    : { inlineSize: layout.requiredWidth, flex: "none" }),
+            }, children: [_jsxs("div", { ref: row, className: "lab-actions-bar__row", children: [layout.visible.map((action) => (_jsx("span", { className: "lab-actions-bar__entry", "data-lab-action-id": action.id, children: action.type === "group" ? (_jsx(GroupControl, { action: action, size: size, menu: menu })) : (_jsx(ActionHint, { action: action, children: _jsx(ActionControl, { action: action, size: size, loading: pending.has(action.id), hinted: true, onClick: () => execute(action) }) })) }, action.id))), !!layout.overflow.length && (_jsxs(DropdownMenu.Root, { modal: false, open: overflowOpen, onOpenChange: setOverflowOpen, children: [_jsx(Hint, { text: overflowOpen ? undefined : resolvedOverflowLabel, children: _jsx(DropdownMenu.Trigger, { asChild: true, children: _jsx(Button, { ref: overflowTrigger, className: "lab-actions-bar__control", variant: "ghost", appearance: "toolbar", controlSize: "icon", iconSize: size, "aria-label": resolvedOverflowLabel, children: _jsx(MoreHorizontal, { size: 20, "aria-hidden": "true" }) }) }) }), _jsx(ActionsMenu, { menu: menu, label: resolvedOverflowLabel, children: _jsx(MenuActions, { actions: layout.overflow, menu: menu }) })] }))] }), _jsxs("div", { ref: measuringRow, className: "lab-actions-bar__measure", "aria-hidden": "true", inert: true, children: [actions.map((action) => (_jsx("span", { className: "lab-actions-bar__entry", "data-lab-action-id": action.id, children: _jsx(ActionControl, { action: action, size: size, loading: pending.has(action.id) }) }, action.id))), _jsx("span", { className: "lab-actions-bar__entry", "data-lab-overflow-measure": true, children: _jsx(Button, { className: "lab-actions-bar__control", variant: "ghost", appearance: "toolbar", controlSize: "icon", iconSize: size, tabIndex: -1, children: _jsx(MoreHorizontal, { size: 20, "aria-hidden": "true" }) }) })] }), errorLabel && (_jsx("span", { className: "lab-actions-bar__error", role: "alert", children: errorLabel }))] }) }));
 }
-const ActionControl = React.forwardRef(function ActionControl({ action, size, loading, ...buttonProps }, ref) {
-    const iconOnly = action.display === 'icon' && (action.type === 'toggle' || !!action.icon);
-    const blocked = action.disabled || (action.type === 'group' && !action.actions.length);
+/** Tooltip text of a control: its own `tooltip`, else the label when only the icon shows. */
+function hintOf(action) {
+    const iconOnly = action.display === "icon" && (action.type === "toggle" || !!action.icon);
+    return action.tooltip ?? (iconOnly ? action.label : undefined);
+}
+/** The kit tooltip: shown on hover and keyboard focus, never on touch taps. */
+function Hint({ text, children, }) {
+    const boundary = useFloatingBoundary();
+    if (!text)
+        return children;
+    return (_jsxs(Tooltip.Root, { children: [_jsx(Tooltip.Trigger, { asChild: true, children: children }), _jsx(Tooltip.Portal, { container: boundary ?? undefined, children: _jsx(Tooltip.Content, { className: "lab-actions-tooltip", side: "bottom", sideOffset: 8, collisionPadding: 12, collisionBoundary: boundary ?? undefined, children: text }) })] }));
+}
+function ActionHint({ action, children, }) {
+    return _jsx(Hint, { text: hintOf(action), children: children });
+}
+const ActionControl = React.forwardRef(function ActionControl({ action, size, loading, hinted, ...buttonProps }, ref) {
+    const iconOnly = action.display === "icon" && (action.type === "toggle" || !!action.icon);
+    const blocked = action.disabled || (action.type === "group" && !action.actions.length);
     return (_jsxs(Button, { ...buttonProps, ref: ref, className: "lab-actions-bar__control", variant: action.destructive
-            ? 'destructive'
-            : (action.variant ?? (action.type === 'toggle' && action.checked ? 'elevated' : 'ghost')), controlSize: iconOnly ? 'icon' : size, iconSize: size, appearance: action.appearance ??
-            (!action.destructive && (!action.variant || action.variant === 'ghost')
-                ? 'toolbar'
-                : 'default'), disabled: blocked, loading: loading || action.loading, "aria-label": action.label, "aria-pressed": action.type === 'toggle' ? action.checked : undefined, title: action.tooltip ?? (iconOnly ? action.label : undefined), children: [action.icon ? (_jsx("span", { className: "lab-actions-bar__icon", "aria-hidden": "true", children: action.icon })) : action.type === 'toggle' ? (action.checked ? (_jsx(SquareCheck, { size: 18, "aria-hidden": "true" })) : (_jsx(Square, { size: 18, "aria-hidden": "true" }))) : null, !iconOnly && _jsx("span", { children: action.label }), action.type === 'group' && !iconOnly && _jsx(ChevronDown, { size: 14, "aria-hidden": "true" })] }));
+            ? "destructive"
+            : (action.variant ??
+                (action.type === "toggle" && action.checked ? "elevated" : "ghost")), controlSize: iconOnly ? "icon" : size, iconSize: size, appearance: action.appearance ??
+            (!action.destructive && (!action.variant || action.variant === "ghost")
+                ? "toolbar"
+                : "default"), disabled: blocked, loading: loading || action.loading, "aria-label": action.label, "aria-pressed": action.type === "toggle" ? action.checked : undefined, title: hinted ? undefined : hintOf(action), children: [action.icon ? (_jsx("span", { className: "lab-actions-bar__icon", "aria-hidden": "true", children: action.icon })) : action.type === "toggle" ? (action.checked ? (_jsx(SquareCheck, { size: 18, "aria-hidden": "true" })) : (_jsx(Square, { size: 18, "aria-hidden": "true" }))) : null, !iconOnly && _jsx("span", { children: action.label }), action.type === "group" && !iconOnly && (_jsx(ChevronDown, { size: 14, "aria-hidden": "true" }))] }));
 });
 function GroupControl({ action, size, menu, }) {
     const [open, setOpen] = React.useState(false);
@@ -117,25 +136,25 @@ function GroupControl({ action, size, menu, }) {
             if (next && action.onOpen?.() === false)
                 return;
             setOpen(next);
-        }, children: [_jsx(DropdownMenu.Trigger, { asChild: true, children: _jsx(ActionControl, { action: action, size: size }) }), _jsx(ActionsMenu, { menu: menu, label: action.label, children: _jsx(MenuActions, { actions: action.actions, menu: menu }) })] }));
+        }, children: [_jsx(Hint, { text: open ? undefined : hintOf(action), children: _jsx(DropdownMenu.Trigger, { asChild: true, children: _jsx(ActionControl, { action: action, size: size, hinted: true }) }) }), _jsx(ActionsMenu, { menu: menu, label: action.label, children: _jsx(MenuActions, { actions: action.actions, menu: menu }) })] }));
 }
 function ActionsMenu({ menu, label, children, }) {
     return (_jsx(DropdownMenu.Portal, { container: menu.container, children: _jsx(MenuSurface, { asChild: true, children: _jsx(DropdownMenu.Content, { className: "lab-actions-menu", "data-lab-actions-owner": menu.ownerId, ...(menu.container ? { collisionBoundary: menu.container } : {}), "aria-label": label, children: children }) }) }));
 }
 /** One menu's rows. The 18px leading slot is reserved only when some row has an icon, check or loader. */
-function MenuActions({ actions, menu }) {
+function MenuActions({ actions, menu, }) {
     const leading = menuHasLeading(actions, menu.pending);
     return (_jsx(_Fragment, { children: actions.map((action) => (_jsx(MenuAction, { action: action, menu: menu, leading: leading }, action.id))) }));
 }
-function MenuAction({ action, menu, leading }) {
+function MenuAction({ action, menu, leading, }) {
     const loading = action.loading || menu.pending.has(action.id);
     const disabled = action.disabled || loading;
-    const content = (_jsxs(_Fragment, { children: [leading && (_jsx("span", { className: "lab-actions-menu__leading", "aria-hidden": "true", children: loading ? (_jsx(PixelLoader, { size: 17, decorative: true })) : action.type === 'toggle' ? (_jsx(DropdownMenu.ItemIndicator, { children: _jsx(Check, { size: 18 }) })) : (action.icon) })), _jsx("span", { className: "lab-actions-menu__label", children: action.label })] }));
-    if (action.type === 'group')
+    const content = (_jsxs(_Fragment, { children: [leading && (_jsx("span", { className: "lab-actions-menu__leading", "aria-hidden": "true", children: loading ? (_jsx(PixelLoader, { size: 17, decorative: true })) : action.type === "toggle" ? (_jsx(DropdownMenu.ItemIndicator, { children: _jsx(Check, { size: 18 }) })) : (action.icon) })), _jsx("span", { className: "lab-actions-menu__label", children: action.label })] }));
+    if (action.type === "group")
         return _jsx(SubmenuAction, { action: action, menu: menu, leading: leading });
-    if (action.type === 'toggle')
-        return (_jsx(DropdownMenu.CheckboxItem, { className: "lab-actions-menu__item", "data-lab-corners": true, "data-destructive": action.destructive || action.variant === 'destructive' || undefined, disabled: disabled, checked: action.checked, onCheckedChange: (checked) => menu.execute(action, checked === true), "aria-busy": loading || undefined, textValue: action.label, children: content }));
-    return (_jsx(DropdownMenu.Item, { className: "lab-actions-menu__item", "data-lab-corners": true, "data-destructive": action.destructive || action.variant === 'destructive' || undefined, disabled: disabled, onSelect: () => menu.execute(action), "aria-busy": loading || undefined, textValue: action.label, children: content }));
+    if (action.type === "toggle")
+        return (_jsx(DropdownMenu.CheckboxItem, { className: "lab-actions-menu__item", "data-lab-corners": true, "data-destructive": action.destructive || action.variant === "destructive" || undefined, disabled: disabled, checked: action.checked, onCheckedChange: (checked) => menu.execute(action, checked === true), "aria-busy": loading || undefined, textValue: action.label, children: content }));
+    return (_jsx(DropdownMenu.Item, { className: "lab-actions-menu__item", "data-lab-corners": true, "data-destructive": action.destructive || action.variant === "destructive" || undefined, disabled: disabled, onSelect: () => menu.execute(action), "aria-busy": loading || undefined, textValue: action.label, children: content }));
 }
 function SubmenuAction({ action, menu, leading, }) {
     const [open, setOpen] = React.useState(false);
@@ -143,6 +162,6 @@ function SubmenuAction({ action, menu, leading, }) {
             if (next && action.onOpen?.() === false)
                 return;
             setOpen(next);
-        }, children: [_jsxs(DropdownMenu.SubTrigger, { className: "lab-actions-menu__item", "data-lab-corners": true, disabled: action.disabled || action.loading || !action.actions.length, "aria-busy": action.loading || undefined, "data-destructive": action.destructive || action.variant === 'destructive' || undefined, textValue: action.label, children: [leading && (_jsx("span", { className: "lab-actions-menu__leading", "aria-hidden": "true", children: action.loading ? _jsx(PixelLoader, { size: 17, decorative: true }) : action.icon })), _jsx("span", { className: "lab-actions-menu__label", children: action.label }), _jsx(ChevronRight, { className: "lab-actions-menu__chevron lab-dir-flip", size: 16, "aria-hidden": "true" })] }), _jsx(DropdownMenu.Portal, { container: menu.container, children: _jsx(MenuSurface, { asChild: true, cover: false, children: _jsx(DropdownMenu.SubContent, { className: "lab-actions-menu", "data-lab-actions-owner": menu.ownerId, ...(menu.container ? { collisionBoundary: menu.container } : {}), "aria-label": action.label, children: _jsx(MenuActions, { actions: action.actions, menu: menu }) }) }) })] }));
+        }, children: [_jsxs(DropdownMenu.SubTrigger, { className: "lab-actions-menu__item", "data-lab-corners": true, disabled: action.disabled || action.loading || !action.actions.length, "aria-busy": action.loading || undefined, "data-destructive": action.destructive || action.variant === "destructive" || undefined, textValue: action.label, children: [leading && (_jsx("span", { className: "lab-actions-menu__leading", "aria-hidden": "true", children: action.loading ? (_jsx(PixelLoader, { size: 17, decorative: true })) : (action.icon) })), _jsx("span", { className: "lab-actions-menu__label", children: action.label }), _jsx(ChevronRight, { className: "lab-actions-menu__chevron lab-dir-flip", size: 16, "aria-hidden": "true" })] }), _jsx(DropdownMenu.Portal, { container: menu.container, children: _jsx(MenuSurface, { asChild: true, cover: false, children: _jsx(DropdownMenu.SubContent, { className: "lab-actions-menu", "data-lab-actions-owner": menu.ownerId, ...(menu.container ? { collisionBoundary: menu.container } : {}), "aria-label": action.label, children: _jsx(MenuActions, { actions: action.actions, menu: menu }) }) }) })] }));
 }
 //# sourceMappingURL=actions-bar.js.map
