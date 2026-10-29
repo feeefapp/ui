@@ -43,7 +43,7 @@ function summary(option, value, locale, t) {
  * Filter toolbar: a searchable catalog button, an optional natural-language button, pinned filter
  * chips and trailing actions. Pinning controls shortcuts, clearing controls query values.
  */
-export function FilterBar({ label, options, value, onChange, values: controlledValues, onValuesChange, pinned: controlledPins, onPinnedChange, onNaturalFilter, onBack, trailing, }) {
+export function FilterBar({ label, options, value, onChange, values: controlledValues, onValuesChange, pinned: controlledPins, onPinnedChange, onNaturalFilter, naturalSuggestions, onBack, trailing, }) {
     const formId = useId();
     const i18n = useI18n();
     const t = i18n.t;
@@ -245,7 +245,11 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
                                                                 .filter((option) => !option.type || option.type === 'boolean')
                                                                 .map((option) => option.label)
                                                                 .join(', '),
-                                                        }) })] }) }) }) }) })] }))] }), !!pinnedOptions.length && (
+                                                        }) }), naturalSuggestions?.length ? (_jsx("div", { className: "lab-filter-suggestions", role: "group", "aria-label": t('lab.filter.naturalSuggestions'), children: naturalSuggestions.map((suggestion) => (_jsx(Button, { type: "button", variant: "tonal", controlSize: "small", onClick: () => {
+                                                                setText(suggestion);
+                                                                setError('');
+                                                                naturalInput.current?.focus();
+                                                            }, children: suggestion }, suggestion))) })) : null] }) }) }) }) })] }))] }), !!pinnedOptions.length && (
             // One bubble per chip: name and value. Clearing and unpinning live in the chip's editor.
             // Chips that don't fit fold into a "…" bubble whose menu opens their editors.
             _jsxs("div", { ref: pinsRow, className: "lab-filter-pins", role: "group", "aria-label": t('lab.filter.pinned'), children: [pinnedOptions

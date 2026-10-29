@@ -43,6 +43,18 @@ html[data-lab-theme] .lab-filter-catalog {
   display: grid;
   gap: 16px;
 }
+.lab-filter-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.lab-filter-suggestions > .lab-control {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .lab-filter-panel .lab-scroll-area {
   --lab-scroll-surface: var(--lab-surface);
 }

@@ -62,6 +62,8 @@ export type FilterBarProps = {
      * all) or throw an Error whose message is shown under the field. You supply the parser or model.
      */
     onNaturalFilter?: (text: string) => Promise<readonly string[]> | readonly string[];
+    /** Example descriptions under the natural-language field; choosing one fills the field. */
+    naturalSuggestions?: readonly string[];
     /** Shows a back button before the filter controls, e.g. to leave a filtered view. */
     onBack?: () => void;
     /** Content at the end of the bar, usually a ToolbarGroup of view actions. */
@@ -71,5 +73,5 @@ export type FilterBarProps = {
  * Filter toolbar: a searchable catalog button, an optional natural-language button, pinned filter
  * chips and trailing actions. Pinning controls shortcuts, clearing controls query values.
  */
-export declare function FilterBar({ label, options, value, onChange, values: controlledValues, onValuesChange, pinned: controlledPins, onPinnedChange, onNaturalFilter, onBack, trailing, }: FilterBarProps): import("react").JSX.Element;
+export declare function FilterBar({ label, options, value, onChange, values: controlledValues, onValuesChange, pinned: controlledPins, onPinnedChange, onNaturalFilter, naturalSuggestions, onBack, trailing, }: FilterBarProps): import("react").JSX.Element;
 //# sourceMappingURL=filter-bar.d.ts.map
