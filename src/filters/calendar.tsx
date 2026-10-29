@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { IconButton, Button } from '../primitives/button'
+import { useI18n } from '../i18n'
 import { calendarDate, monthDays, parseCalendarDate } from './calendar-model'
 
 /**
@@ -18,7 +19,7 @@ export function CalendarMonth({
   max,
   onSelect,
   locale = 'en',
-  label = 'Calendar',
+  label,
   navigation = 'both',
 }: {
   /** Visible month as `YYYY-MM`. */
@@ -42,6 +43,8 @@ export function CalendarMonth({
   /** Which paging arrows this month shows; two side-by-side months show one each. */
   navigation?: 'both' | 'previous' | 'next'
 }) {
+  const { t } = useI18n()
+  const name = label ?? t('lab.temporal.calendar')
   const date = parseCalendarDate(`${month}-01`),
     year = date.getFullYear(),
     monthIndex = date.getMonth()
@@ -72,14 +75,14 @@ export function CalendarMonth({
     hi = from && to ? (from < to ? to : from) : ''
 
   return (
-    <div ref={root} className="lab-calendar-month" role="group" aria-label={label}>
-      <div role="group" aria-label={`${label} navigation`} className="lab-calendar-heading">
+    <div ref={root} className="lab-calendar-month" role="group" aria-label={name}>
+      <div role="group" aria-label={t('lab.calendar.navigation', { label: name })} className="lab-calendar-heading">
         {navigation !== 'next' && (
           <IconButton
             variant="text"
             controlSize="small"
             data-nav="previous"
-            aria-label="Previous month"
+            aria-label={t('lab.calendar.previous')}
             disabled={
               picking ? !!minMonth && `${pickYear - 1}-12` < minMonth : outOfBounds(year, monthIndex - 1)
             }
@@ -93,7 +96,7 @@ export function CalendarMonth({
           controlSize="small"
           className="lab-calendar-title"
           aria-expanded={picking}
-          aria-label={picking ? `Choose a month in ${pickYear}` : `${title}, choose month and year`}
+          aria-label={picking ? t('lab.calendar.chooseMonthIn', { year: pickYear }) : t('lab.calendar.chooseMonth', { title })}
           onClick={() => {
             setPickYear(year)
             setPicking(!picking)
@@ -106,7 +109,7 @@ export function CalendarMonth({
             variant="text"
             controlSize="small"
             data-nav="next"
-            aria-label="Next month"
+            aria-label={t('lab.calendar.next')}
             disabled={
               picking ? !!maxMonth && `${pickYear + 1}-01` > maxMonth : outOfBounds(year, monthIndex + 1)
             }
@@ -118,7 +121,7 @@ export function CalendarMonth({
       </div>
 
       {picking ? (
-        <div className="lab-calendar-months" role="group" aria-label={`Months of ${pickYear}`}>
+        <div className="lab-calendar-months" role="group" aria-label={t('lab.calendar.monthsOf', { year: pickYear })}>
           {Array.from({ length: 12 }, (_, m) => (
             <Button
               key={m}

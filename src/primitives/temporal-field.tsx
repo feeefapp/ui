@@ -117,7 +117,7 @@ export const TemporalField = React.forwardRef<HTMLButtonElement, TemporalFieldPr
       disabled,
       readOnly,
       required,
-      requiredMessage = 'Choose a value.',
+      requiredMessage,
       placeholder,
       clearable = false,
       validator,
@@ -155,12 +155,12 @@ export const TemporalField = React.forwardRef<HTMLButtonElement, TemporalFieldPr
         const normalized = normalizeTemporal(next)
         return (
           (required && normalized == null
-            ? requiredMessage
-            : validateTemporal({ type, min, max, step, allowOvernight }, normalized) ||
+            ? (requiredMessage ?? i18n.t('lab.temporal.required'))
+            : validateTemporal({ type, min, max, step, allowOvernight }, normalized, i18n.t) ||
               validator?.(normalized)) || null
         )
       },
-      [required, requiredMessage, type, min, max, step, allowOvernight, validator, readOnly]
+      [required, requiredMessage, type, min, max, step, allowOvernight, validator, readOnly, i18n.t]
     )
     const publish = React.useCallback(
       (next: string | null) => {
@@ -222,12 +222,12 @@ export const TemporalField = React.forwardRef<HTMLButtonElement, TemporalFieldPr
       }
       commit(normalized)
     }
-    const formatted = (formatValue || ((next: TemporalValue) => formatTemporalValue(type, next, locale)))(
+    const formatted = (formatValue || ((next: TemporalValue) => formatTemporalValue(type, next, locale, i18n.t)))(
       value
     )
     const populated = normalizeTemporal(value) != null
     const floatingHint = hint ?? label
-    const title = floatingHint || ariaLabel || 'Choose date and time'
+    const title = floatingHint || ariaLabel || i18n.t('lab.temporal.chooseDateTime')
     // A date is complete with one tap: pick it and the field closes. Everything else has parts
     // (time, two ends), so it keeps one Apply.
     const instant = type === 'date'
@@ -255,7 +255,7 @@ export const TemporalField = React.forwardRef<HTMLButtonElement, TemporalFieldPr
     const actions =
       instant && normalizeTemporal(draft) == null ? null : (
         <GlassScope className="lab-temporal-actions-row">
-        <ToolbarGroup label={`${title} actions`} className="lab-temporal-actions">
+        <ToolbarGroup label={i18n.t('lab.temporal.actionsOf', { label: title })} className="lab-temporal-actions">
           <Button
             variant="text"
             appearance="toolbar"
@@ -263,11 +263,11 @@ export const TemporalField = React.forwardRef<HTMLButtonElement, TemporalFieldPr
             disabled={normalizeTemporal(draft) == null}
             onClick={clear}
           >
-            Clear
+            {i18n.t('lab.temporal.clear')}
           </Button>
           {!instant && (
             <Button variant="filled" appearance="toolbar" controlSize="regular" type="submit" form={formId}>
-              Apply
+              {i18n.t('lab.temporal.apply')}
             </Button>
           )}
         </ToolbarGroup>

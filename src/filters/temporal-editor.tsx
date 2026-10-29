@@ -35,6 +35,7 @@ function TimeInput({
   /** Seconds between allowed values; minutes snap to it, seconds appear below one minute. */
   step?: number
 }) {
+  const { t } = useI18n()
   const [h = 9, m = 0, s = 0] = (value || '09:00').split(':').map(Number)
   const seconds = step < 60
   const minuteStep = seconds ? 1 : Math.max(1, Math.min(30, Math.round(step / 60)))
@@ -47,7 +48,7 @@ function TimeInput({
       </span>
       <div className="lab-time-input-fields" dir="ltr">
         <NumberField
-          label="Hour"
+          label={t('lab.temporal.hour')}
           controlSize="small"
           min={0}
           max={23}
@@ -60,7 +61,7 @@ function TimeInput({
           :
         </span>
         <NumberField
-          label="Minute"
+          label={t('lab.temporal.minute')}
           controlSize="small"
           min={0}
           max={60 - minuteStep}
@@ -76,7 +77,7 @@ function TimeInput({
               :
             </span>
             <NumberField
-              label="Second"
+              label={t('lab.temporal.second')}
               controlSize="small"
               min={0}
               max={59}
@@ -150,8 +151,9 @@ export function useTemporalEditor({
     setMonth(initialMonth())
     setManual(false)
   }
-  const presets = (config.presets ?? temporalPresets(config.type)).filter(
-    (p) => !validateTemporal(config, p.value)
+  const t = i18n.t
+  const presets = (config.presets ?? temporalPresets(config.type, undefined, t)).filter(
+    (p) => !validateTemporal(config, p.value, t)
   )
   const dayOnly = (text: string) => text.slice(0, 10)
 
@@ -180,7 +182,7 @@ export function useTemporalEditor({
   const endpointText = (text: string) =>
     text && hasCalendar
       ? new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(parseCalendarDate(text))
-      : text || 'Any'
+      : text || t('lab.filter.any')
   const setTime = (part: 'from' | 'to', time: string) => {
     const original = part === 'from' ? from : to
     setPart(
@@ -192,6 +194,7 @@ export function useTemporalEditor({
     config,
     value,
     locale,
+    t,
     type,
     range,
     hasCalendar,
@@ -228,7 +231,7 @@ export function TemporalPresets({
 }) {
   if (!editor.presets.length) return null
   return (
-    <div className="lab-temporal-presets" data-layout={layout} role="group" aria-label="Quick choices">
+    <div className="lab-temporal-presets" data-layout={layout} role="group" aria-label={editor.t('lab.temporal.presets')}>
       {editor.presets.map((p) => (
         <Button
           key={p.label}
@@ -253,14 +256,14 @@ export function TemporalEdges({ editor }: { editor: TemporalEditorState }) {
   if (!editor.range || !editor.hasCalendar) return null
   return (
     <SegmentedControl<'from' | 'to'>
-      label="Which end you are choosing"
+      label={editor.t('lab.temporal.whichEnd')}
       className="lab-temporal-edges"
       equalWidth
       value={editor.edge}
       onChange={editor.setEdge}
       options={[
-        { value: 'from', label: `Start · ${editor.endpointText(editor.dayOnly(editor.from))}` },
-        { value: 'to', label: `End · ${editor.endpointText(editor.dayOnly(editor.to))}` },
+        { value: 'from', label: editor.t('lab.temporal.startAt', { value: editor.endpointText(editor.dayOnly(editor.from)) }) },
+        { value: 'to', label: editor.t('lab.temporal.endAt', { value: editor.endpointText(editor.dayOnly(editor.to)) }) },
       ]}
     />
   )
@@ -271,7 +274,7 @@ export function TemporalEdges({ editor }: { editor: TemporalEditorState }) {
  * `readTemporalForm` reads back.
  */
 export function TemporalBody({ editor, footer }: { editor: TemporalEditorState; footer?: ReactNode }) {
-  const { config, range, hasCalendar, hasTime, type, from, to, month, setMonth, locale, dayOnly } = editor
+  const { config, range, hasCalendar, hasTime, type, from, to, month, setMonth, locale, dayOnly, t } = editor
   const nextMonth = () => {
     const d = parseCalendarDate(`${month}-01`)
     d.setMonth(d.getMonth() + 1)
@@ -296,7 +299,7 @@ export function TemporalBody({ editor, footer }: { editor: TemporalEditorState; 
       {hasCalendar && (
         <div className="lab-calendar-pair" data-pair={range || undefined}>
           <CalendarMonth
-            label={range ? 'First month' : 'Calendar'}
+            label={range ? t('lab.temporal.firstMonth') : t('lab.temporal.calendar')}
             month={month}
             onMonthChange={setMonth}
             from={dayOnly(from)}
@@ -310,7 +313,7 @@ export function TemporalBody({ editor, footer }: { editor: TemporalEditorState; 
           {range && (
             <div className="lab-calendar-second">
               <CalendarMonth
-                label="Second month"
+                label={t('lab.temporal.secondMonth')}
                 month={nextMonth()}
                 onMonthChange={shiftFromSecond}
                 from={dayOnly(from)}
@@ -329,21 +332,21 @@ export function TemporalBody({ editor, footer }: { editor: TemporalEditorState; 
       {hasTime && (
         <div className="lab-temporal-times">
           <TimeInput
-            label={range ? 'Start time' : 'Time'}
+            label={range ? t('lab.temporal.startTime') : t('lab.temporal.time')}
             value={hasCalendar ? from.split('T')[1] || '' : from}
             step={config.step}
             onChange={(time) => editor.setTime('from', time)}
           />
           {range && (
             <TimeInput
-              label="End time"
+              label={t('lab.temporal.endTime')}
               value={hasCalendar ? to.split('T')[1] || '' : to}
               step={config.step}
               onChange={(time) => editor.setTime('to', time)}
             />
           )}
           {range && config.allowOvernight && (
-            <p className="lab-temporal-note">An end time before the start time continues into the next day.</p>
+            <p className="lab-temporal-note">{t('lab.temporal.overnight')}</p>
           )}
         </div>
       )}
@@ -358,14 +361,14 @@ export function TemporalBody({ editor, footer }: { editor: TemporalEditorState; 
         >
           <Keyboard size={16} />
           {editor.manual
-            ? 'Hide typed entry'
+            ? t('lab.temporal.hideTyped')
             : range
               ? hasCalendar
-                ? 'Type the dates'
-                : 'Type the times'
+                ? t('lab.temporal.typeDates')
+                : t('lab.temporal.typeTimes')
               : hasCalendar
-                ? 'Type a date'
-                : 'Type a time'}
+                ? t('lab.temporal.typeDate')
+                : t('lab.temporal.typeTime')}
         </Button>
         {footer}
       </div>
@@ -376,7 +379,11 @@ export function TemporalBody({ editor, footer }: { editor: TemporalEditorState; 
               key={part}
               type={type}
               controlSize="small"
-              hint={part === 'date' ? (hasCalendar ? 'Date' : 'Time') : part === 'from' ? 'Start' : 'End'}
+              hint={
+                part === 'date'
+                  ? t(hasCalendar ? 'lab.temporal.date' : 'lab.temporal.time')
+                  : t(part === 'from' ? 'lab.temporal.start' : 'lab.temporal.end')
+              }
               value={part === 'to' ? to : from}
               min={config.min}
               max={config.max}

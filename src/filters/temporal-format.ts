@@ -1,3 +1,4 @@
+import { englishText, type Translate } from '../i18n-core'
 import { parseCalendarDate } from './calendar-model'
 import {
   normalizeTemporal,
@@ -8,18 +9,19 @@ import {
   type TemporalType,
   type TemporalValue,
 } from './temporal'
-/** Display only; canonical form values remain local ISO strings. */
+/** Display only; canonical form values remain local ISO strings. An open range end reads "Any" in `t`'s language. */
 export function formatTemporalValue(
   type: TemporalType,
   value: TemporalValue,
-  locale?: string
+  locale?: string,
+  t: Translate = englishText
 ): string {
   if (value == null || !normalizeTemporal(value)) return ''
   const input = temporalInputType(type)
   const part = (text: string) => {
-    if (!text) return 'Any'
+    if (!text) return t('lab.filter.any')
     const singleType = type.replace('Range', '') as TemporalType
-    if (validateTemporal({ type: singleType }, text)) return text
+    if (validateTemporal({ type: singleType }, text, t)) return text
     if (input === 'time') return text
     const date = new Intl.DateTimeFormat(locale, {
       year: 'numeric',
@@ -38,13 +40,14 @@ export function temporalSummary(
   config: TemporalConfig,
   value: TemporalValue,
   locale?: string,
-  now = new Date()
+  now = new Date(),
+  t: Translate = englishText
 ): string {
-  if (normalizeTemporal(value) == null) return 'Any'
-  const preset = (config.presets ?? temporalPresets(config.type, now)).find(
+  if (normalizeTemporal(value) == null) return t('lab.filter.any')
+  const preset = (config.presets ?? temporalPresets(config.type, now, t)).find(
     (p) =>
       JSON.stringify(normalizeTemporal(p.value)) === JSON.stringify(value) &&
-      !validateTemporal(config, p.value)
+      !validateTemporal(config, p.value, t)
   )
-  return preset?.label ?? formatTemporalValue(config.type, value, locale)
+  return preset?.label ?? formatTemporalValue(config.type, value, locale, t)
 }

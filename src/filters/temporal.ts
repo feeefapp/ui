@@ -1,3 +1,5 @@
+import { englishText, type Translate } from '../i18n-core'
+
 /** What a temporal field or editor picks: a single value or a `from`/`to` range. */
 export type TemporalType =
   'date' | 'time' | 'datetime' | 'dateRange' | 'timeRange' | 'datetimeRange'
@@ -37,11 +39,13 @@ export function normalizeTemporal(value: TemporalValue): TemporalValue {
 }
 /**
  * Checks a value against a config: ISO format and real calendar dates, `step`, `min`/`max`, and
- * range order. Returns an English error message, or `null` when the value (or `null`) is valid.
+ * range order. Returns an error message in `t`'s language (English by default), or `null` when
+ * the value (or `null`) is valid.
  */
 export function validateTemporal(
   config: TemporalConfig,
-  value: TemporalValue
+  value: TemporalValue,
+  t: Translate = englishText
 ): string | null {
   if (value == null) return null
   const parts = typeof value === 'string' ? [value] : [value.from, value.to].filter(Boolean)
@@ -59,7 +63,7 @@ export function validateTemporal(
       date.getDate() === Number(day)
     )
   }
-  if (parts.some((part) => !valid(part))) return 'Enter a valid date or time.'
+  if (parts.some((part) => !valid(part))) return t('lab.temporal.invalid')
   if (config.step && config.step > 0) {
     const units = (part: string) =>
       input === 'time'
@@ -77,15 +81,15 @@ export function validateTemporal(
       })
     )
       return input === 'date'
-        ? `Choose a date in ${config.step}-day steps.`
-        : `Choose a time in ${config.step}-second steps.`
+        ? t('lab.temporal.dayStep', { step: config.step })
+        : t('lab.temporal.secondStep', { step: config.step })
   }
   const comparable = (part: string) =>
     input !== 'date' && /^\d{2}:\d{2}$/.test(part.split('T').at(-1) || '') ? `${part}:00` : part
   if (config.min && parts.some((part) => comparable(part) < comparable(config.min!)))
-    return `Use a value on or after ${config.min}.`
+    return t('lab.temporal.min', { min: config.min })
   if (config.max && parts.some((part) => comparable(part) > comparable(config.max!)))
-    return `Use a value on or before ${config.max}.`
+    return t('lab.temporal.max', { max: config.max })
   if (
     typeof value === 'object' &&
     value.from &&
@@ -94,8 +98,8 @@ export function validateTemporal(
     !(config.type === 'timeRange' && config.allowOvernight)
   )
     return config.type === 'timeRange'
-      ? 'The end time must be on or after the start time.'
-      : 'The end must be on or after the start.'
+      ? t('lab.temporal.endTimeBeforeStart')
+      : t('lab.temporal.endBeforeStart')
   return null
 }
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -103,42 +107,46 @@ const dateText = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad
 const datetimeText = (d: Date) => `${dateText(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 /**
  * Default presets for a type, computed from `now` in local wall-clock time (Today, Last 7 days,
- * Morning…). Feature owners choose timezone and query conversion.
+ * Morning…), labelled in `t`'s language. Feature owners choose timezone and query conversion.
  */
-export function temporalPresets(type: TemporalType, now = new Date()): TemporalPreset[] {
+export function temporalPresets(
+  type: TemporalType,
+  now = new Date(),
+  t: Translate = englishText
+): TemporalPreset[] {
   const today = dateText(now),
     yesterday = new Date(now)
   yesterday.setDate(now.getDate() - 1)
   if (type === 'date')
     return [
-      { label: 'Today', value: today },
-      { label: 'Yesterday', value: dateText(yesterday) },
+      { label: t('lab.temporal.today'), value: today },
+      { label: t('lab.temporal.yesterday'), value: dateText(yesterday) },
     ]
   if (type === 'time')
     return [
-      { label: 'Now', value: `${pad(now.getHours())}:${pad(now.getMinutes())}` },
+      { label: t('lab.temporal.now'), value: `${pad(now.getHours())}:${pad(now.getMinutes())}` },
       { label: '09:00', value: '09:00' },
       { label: '17:00', value: '17:00' },
     ]
   if (type === 'datetime')
     return [
-      { label: 'Now', value: datetimeText(now) },
+      { label: t('lab.temporal.now'), value: datetimeText(now) },
       {
-        label: 'Tomorrow at 09:00',
+        label: t('lab.temporal.tomorrowAt', { time: '09:00' }),
         value: `${dateText(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1))}T09:00`,
       },
     ]
   if (type === 'timeRange')
     return [
-      { label: 'Morning', value: { from: '09:00', to: '12:00' } },
-      { label: 'Afternoon', value: { from: '13:00', to: '17:00' } },
+      { label: t('lab.temporal.morning'), value: { from: '09:00', to: '12:00' } },
+      { label: t('lab.temporal.afternoon'), value: { from: '13:00', to: '17:00' } },
     ]
   if (type === 'datetimeRange') {
     const past = new Date(now)
     past.setHours(now.getHours() - 24)
     return [
-      { label: 'Last 24 hours', value: { from: datetimeText(past), to: datetimeText(now) } },
-      { label: 'Today', value: { from: `${today}T00:00`, to: `${today}T23:59` } },
+      { label: t('lab.temporal.last24Hours'), value: { from: datetimeText(past), to: datetimeText(now) } },
+      { label: t('lab.temporal.today'), value: { from: `${today}T00:00`, to: `${today}T23:59` } },
     ]
   }
   const lastDays = (count: number) => {
@@ -149,14 +157,14 @@ export function temporalPresets(type: TemporalType, now = new Date()): TemporalP
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
   const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0)
   return [
-    { label: 'All time', value: null },
-    { label: 'Today', value: { from: today, to: today } },
-    { label: 'Yesterday', value: { from: dateText(yesterday), to: dateText(yesterday) } },
-    { label: 'Last 7 days', value: lastDays(7) },
-    { label: 'Last 14 days', value: lastDays(14) },
-    { label: 'Last 30 days', value: lastDays(30) },
-    { label: 'This month', value: { from: `${today.slice(0, 7)}-01`, to: today } },
-    { label: 'Last month', value: { from: dateText(lastMonthStart), to: dateText(lastMonthEnd) } },
+    { label: t('lab.temporal.allTime'), value: null },
+    { label: t('lab.temporal.today'), value: { from: today, to: today } },
+    { label: t('lab.temporal.yesterday'), value: { from: dateText(yesterday), to: dateText(yesterday) } },
+    { label: t('lab.temporal.lastDays', { count: 7 }), value: lastDays(7) },
+    { label: t('lab.temporal.lastDays', { count: 14 }), value: lastDays(14) },
+    { label: t('lab.temporal.lastDays', { count: 30 }), value: lastDays(30) },
+    { label: t('lab.temporal.thisMonth'), value: { from: `${today.slice(0, 7)}-01`, to: today } },
+    { label: t('lab.temporal.lastMonth'), value: { from: dateText(lastMonthStart), to: dateText(lastMonthEnd) } },
   ]
 }
 /** Reads the value of a `TemporalFilterEditor` from its form's data (`date`, or `from`/`to`). */

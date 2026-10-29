@@ -31,10 +31,10 @@ export function TemporalDialog({
   formId,
   onSubmit,
   onClear,
-  clearLabel = 'Clear',
+  clearLabel,
   actions,
   clearDisabled,
-  applyLabel = 'Apply',
+  applyLabel,
   showApply = true,
   error,
   intro,
@@ -71,6 +71,7 @@ export function TemporalDialog({
   className?: string
 }) {
   const editor = useTemporalEditor({ ...options, resetKey: open })
+  const { t } = editor
   const bar = !!editor.presets.length || (editor.range && editor.hasCalendar)
   const gap = useShellGap()
   return (
@@ -92,19 +93,19 @@ export function TemporalDialog({
         bar ? (
           <GlassScope className="lab-temporal-dialog-bar" dir={dir}>
             {editor.range && editor.hasCalendar && (
-              <ToolbarGroup label="Range ends" className="lab-temporal-dialog-edges">
+              <ToolbarGroup label={t('lab.temporal.rangeEnds')} className="lab-temporal-dialog-edges">
                 <TemporalEdges editor={editor} />
               </ToolbarGroup>
             )}
             {!!editor.presets.length && (
-              <ToolbarGroup label="Quick choices" className="lab-temporal-dialog-presets">
+              <ToolbarGroup label={t('lab.temporal.presets')} className="lab-temporal-dialog-presets">
                 <TemporalPresets editor={editor} layout="bar" />
               </ToolbarGroup>
             )}
           </GlassScope>
         ) : (
           <GlassScope className="lab-temporal-dialog-bar" dir={dir}>
-            <ToolbarGroup label="Dialog title" className="lab-temporal-dialog-title">
+            <ToolbarGroup label={t('lab.presentation.title')} className="lab-temporal-dialog-title">
               <h2 className="lab-presentation-title">{label}</h2>
             </ToolbarGroup>
           </GlassScope>
@@ -112,9 +113,9 @@ export function TemporalDialog({
       }
       dock={
         <GlassScope className="lab-temporal-dialog-bar" dir={dir}>
-          <ToolbarGroup label={`${label} actions`} className="lab-temporal-dialog-actions">
+          <ToolbarGroup label={t('lab.temporal.actionsOf', { label })} className="lab-temporal-dialog-actions">
             <Button variant="text" appearance="toolbar" controlSize="regular" onClick={close}>
-              Cancel
+              {t('lab.temporal.cancel')}
             </Button>
             <span className="lab-temporal-dialog-spacer" />
             {actions}
@@ -126,12 +127,12 @@ export function TemporalDialog({
                 disabled={clearDisabled}
                 onClick={onClear}
               >
-                {clearLabel}
+                {clearLabel ?? t('lab.temporal.clear')}
               </Button>
             )}
             {showApply && (
               <Button variant="filled" appearance="toolbar" controlSize="regular" type="submit" form={formId}>
-                {applyLabel}
+                {applyLabel ?? t('lab.temporal.apply')}
               </Button>
             )}
           </ToolbarGroup>

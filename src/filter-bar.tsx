@@ -29,6 +29,7 @@ import { TemporalFilterEditor } from './filters/temporal-editor'
 import { TemporalDialog } from './filters/temporal-dialog'
 import { temporalSummary } from './filters/temporal-format'
 import { useI18n } from './i18n'
+import type { Translate } from './i18n-core'
 import {
   isTemporalType,
   isTemporalRange,
@@ -106,15 +107,16 @@ export type FilterBarProps = {
   /** Content at the end of the bar, usually a ToolbarGroup of view actions. */
   trailing?: ReactNode
 }
-function summary(option: FilterOption, value: FilterValue, locale: string) {
-  if (value == null) return 'Any'
+function summary(option: FilterOption, value: FilterValue, locale: string, t: Translate) {
+  if (value == null) return t('lab.filter.any')
   if (option.type === 'custom' && option.formatValue) return option.formatValue(value)
   if (isTemporalType(option.type) && typeof value !== 'boolean')
-    return temporalSummary(option as FilterOption & TemporalConfig, value, locale)
-  if (typeof value === 'object') return `${value.from || 'Any date'} → ${value.to || 'Any date'}`
+    return temporalSummary(option as FilterOption & TemporalConfig, value, locale, undefined, t)
+  if (typeof value === 'object')
+    return `${value.from || t('lab.filter.anyDate')} → ${value.to || t('lab.filter.anyDate')}`
   if (option.type === 'enum')
-    return option.choices.find((choice) => choice.value === value)?.label || 'Any'
-  if (typeof value === 'boolean') return value ? 'On' : 'Off'
+    return option.choices.find((choice) => choice.value === value)?.label || t('lab.filter.any')
+  if (typeof value === 'boolean') return value ? t('lab.filter.on') : t('lab.filter.off')
   return value
 }
 /**
@@ -136,6 +138,7 @@ export function FilterBar({
 }: FilterBarProps) {
   const formId = useId()
   const i18n = useI18n()
+  const t = i18n.t
   const host = useRef<HTMLDivElement>(null),
     search = useRef<HTMLInputElement>(null)
   const enumSearch = useRef<HTMLInputElement>(null)
@@ -183,7 +186,7 @@ export function FilterBar({
     const activeElement = host.current?.ownerDocument.activeElement
     if (
       activeElement instanceof HTMLElement &&
-      activeElement.getAttribute('aria-label')?.startsWith('Unpin ')
+      activeElement.hasAttribute('data-filter-unpin')
     )
       host.current
         ?.querySelector<HTMLButtonElement>('[aria-haspopup="dialog"]')
@@ -208,7 +211,7 @@ export function FilterBar({
     returnFocus.current =
       Array.from(host.current?.querySelectorAll<HTMLButtonElement>('button') || []).find(
         (button) =>
-          button.getAttribute('aria-label') === `Edit ${option.label} filter` &&
+          button.getAttribute('data-filter-edit') === option.id &&
           !button.closest('.lab-filter-pins-measure')
       ) ??
       host.current?.querySelector<HTMLButtonElement>('[aria-haspopup="dialog"]') ??
@@ -286,9 +289,16 @@ export function FilterBar({
   }
   const unpinButton = (option: FilterOption | undefined, appearance?: 'toolbar') =>
     option && pins.includes(option.id) ? (
-      <Button variant="text" appearance={appearance} controlSize="regular" aria-label={`Unpin ${option.label}`} onClick={() => unpin(option)}>
+      <Button
+        variant="text"
+        appearance={appearance}
+        controlSize="regular"
+        aria-label={t('lab.filter.unpinNamed', { name: option.label })}
+        data-filter-unpin=""
+        onClick={() => unpin(option)}
+      >
         <PinOff />
-        Unpin
+        {t('lab.filter.unpin')}
       </Button>
     ) : null
   const chip = (option: FilterOption) => (
@@ -296,29 +306,30 @@ export function FilterBar({
       variant="text"
       appearance="toolbar"
       controlSize="regular"
-      aria-label={`Edit ${option.label} filter`}
+      aria-label={t('lab.filter.edit', { name: option.label })}
+      data-filter-edit={option.id}
       onClick={(event) => edit(option, event.currentTarget)}
     >
       {option.label}
-      <span className="lab-filter-chip-value">{summary(option, read(option), i18n.locale)}</span>
+      <span className="lab-filter-chip-value">{summary(option, read(option), i18n.locale, t)}</span>
     </Button>
   )
   return (
     <GlassScope ref={host} className="lab-filter-bar" role="group" aria-label={label}>
       {onBack && (
-        <ToolbarGroup label="Filter navigation">
+        <ToolbarGroup label={t('lab.filter.navigation')}>
           <IconButton
             variant="text"
             appearance="toolbar"
             controlSize="regular"
-            aria-label="Back from filtered view"
+            aria-label={t('lab.filter.back')}
             onClick={onBack}
           >
             <ArrowLeft className="lab-dir-flip" />
           </IconButton>
         </ToolbarGroup>
       )}
-      <ToolbarGroup label="Filter controls">
+      <ToolbarGroup label={t('lab.filter.controls')}>
         <Popover.Root
           open={catalog}
           onOpenChange={(open) => {
@@ -332,7 +343,7 @@ export function FilterBar({
               variant="text"
               appearance="toolbar"
               controlSize="regular"
-              aria-label={`Choose filters${active ? ` (${active} active)` : ''}`}
+              aria-label={active ? t('lab.filter.chooseActive', { count: active }) : t('lab.filter.choose')}
             >
               <ListFilter />
             </IconButton>
@@ -342,7 +353,7 @@ export function FilterBar({
               <Popover.Content
                 dir={dir}
                 className="lab-filter-panel lab-filter-catalog"
-                aria-label="Available filters"
+                aria-label={t('lab.filter.available')}
                 sideOffset={8}
                 collisionPadding={12}
                 collisionBoundary={container}
@@ -356,18 +367,16 @@ export function FilterBar({
                 }}
               >
                 <ScrollArea
-                  label="Filter catalog rows"
+                  label={t('lab.filter.catalogRows')}
                   top={
-                    <ToolbarSearch label="Find a filter" value={query} onValueChange={setQuery} inputRef={search} defaultExpanded/>
+                    <ToolbarSearch label={t('lab.filter.find')} value={query} onValueChange={setQuery} inputRef={search} defaultExpanded/>
 
                   }
                   bottom={
                     <Dock
-                      label="Filter catalog actions"
+                      label={t('lab.filter.catalogActions')}
                       content={
-                        <span>
-                          {active} active · {pins.length} pinned
-                        </span>
+                        <span>{t('lab.filter.catalogStatus', { active, pinned: pins.length })}</span>
                       }
                     >
                       <Button
@@ -376,7 +385,7 @@ export function FilterBar({
                         disabled={!active}
                         onClick={clearAll}
                       >
-                        Clear values
+                        {t('lab.filter.clearValues')}
                       </Button>
                     </Dock>
                   }
@@ -417,20 +426,20 @@ export function FilterBar({
                               <small>
                                 {option.description ||
                                   (!option.type || option.type === 'boolean'
-                                    ? 'On / off'
+                                    ? t('lab.filter.kindBoolean')
                                     : option.type === 'enum'
-                                      ? 'Choose a value'
-                                      : 'Open editor')}
+                                      ? t('lab.filter.kindEnum')
+                                      : t('lab.filter.kindEditor'))}
                               </small>
                             </span>
                             <span className="lab-filter-row-value">
-                              {summary(option, read(option), i18n.locale)}
+                              {summary(option, read(option), i18n.locale, t)}
                             </span>
                           </Button>
                           <IconButton
                             variant="text"
                             controlSize="regular"
-                            aria-label={`${pins.includes(option.id) ? 'Unpin' : 'Pin'} ${option.label}`}
+                            aria-label={t(pins.includes(option.id) ? 'lab.filter.unpinNamed' : 'lab.filter.pinNamed', { name: option.label })}
                             aria-pressed={pins.includes(option.id)}
                             onClick={() =>
                               pins.includes(option.id)
@@ -446,7 +455,7 @@ export function FilterBar({
                       `${option.label} ${option.description || ''} ${option.keywords?.join(' ') || ''}`
                         .toLowerCase()
                         .includes(query.toLowerCase())
-                    ) && <p role="status">No matching filters.</p>}
+                    ) && <p role="status">{t('lab.filter.noFilters')}</p>}
                   </div>
                 </ScrollArea>
               </Popover.Content>
@@ -467,7 +476,7 @@ export function FilterBar({
                 variant="text"
                 appearance="toolbar"
                 controlSize="regular"
-                aria-label="Create filter from natural language"
+                aria-label={t('lab.filter.naturalOpen')}
               >
                 <Sparkles />
               </IconButton>
@@ -477,7 +486,7 @@ export function FilterBar({
                 <Popover.Content
                   dir={dir}
                   className="lab-filter-panel lab-filter-natural"
-                  aria-label="Describe a filter"
+                  aria-label={t('lab.filter.naturalTitle')}
                   sideOffset={8}
                   collisionPadding={12}
                   collisionBoundary={container}
@@ -489,10 +498,10 @@ export function FilterBar({
                   }}
                 >
                   <ScrollArea
-                    label="Natural filter description"
+                    label={t('lab.filter.naturalBody')}
                     contentPadding={12}
                     bottom={
-                      <Dock label="Natural filter actions">
+                      <Dock label={t('lab.filter.naturalActions')}>
                         <Button
                           type="submit"
                           form={`${formId}-natural`}
@@ -501,7 +510,7 @@ export function FilterBar({
                           loading={busy}
                           disabled={busy || !text.trim()}
                         >
-                          Apply filters
+                          {t('lab.filter.applyFilters')}
                         </Button>
                       </Dock>
                     }
@@ -524,7 +533,7 @@ export function FilterBar({
                                 )
                             )
                           )
-                            throw new Error('Choose a supported on/off filter.')
+                            throw new Error(t('lab.filter.naturalUnsupported'))
                           if (!ids.length) clearAll()
                           else onChange([...new Set(ids)])
                           setPins([...new Set([...pins, ...ids])])
@@ -533,25 +542,27 @@ export function FilterBar({
                           setError(
                             reason instanceof Error
                               ? reason.message
-                              : 'Could not create this filter.'
+                              : t('lab.filter.naturalFailed')
                           )
                         } finally {
                           setBusy(false)
                         }
                       }}
                     >
-                      <strong>Describe what you want</strong>
+                      <strong>{t('lab.filter.naturalPrompt')}</strong>
                       <TextField
                         ref={naturalInput}
-                        hint="Filter description"
+                        hint={t('lab.filter.naturalHint')}
                         leadingIcon={<Sparkles />}
                         value={text}
                         onChange={(event) => setText(event.target.value)}
                         error={error}
-                        supportingText={`Available: ${options
-                          .filter((option) => !option.type || option.type === 'boolean')
-                          .map((option) => option.label)
-                          .join(', ')}.`}
+                        supportingText={t('lab.filter.naturalAvailable', {
+                          names: options
+                            .filter((option) => !option.type || option.type === 'boolean')
+                            .map((option) => option.label)
+                            .join(', '),
+                        })}
                       />
                     </form>
                   </ScrollArea>
@@ -564,19 +575,19 @@ export function FilterBar({
       {!!pinnedOptions.length && (
         // One bubble per chip: name and value. Clearing and unpinning live in the chip's editor.
         // Chips that don't fit fold into a "…" bubble whose menu opens their editors.
-        <div ref={pinsRow} className="lab-filter-pins" role="group" aria-label="Pinned filters">
+        <div ref={pinsRow} className="lab-filter-pins" role="group" aria-label={t('lab.filter.pinned')}>
           {pinnedOptions
             .filter((option) => !folded.has(option.id))
             .map((option) => (
-              <ToolbarGroup key={option.id} label={`${option.label} filter`}>
+              <ToolbarGroup key={option.id} label={t('lab.filter.named', { name: option.label })}>
                 {chip(option)}
               </ToolbarGroup>
             ))}
           {folded.size > 0 && (
-            <ToolbarGroup label="More filters">
+            <ToolbarGroup label={t('lab.filter.more')}>
               <DropdownMenu.Root modal={false}>
                 <DropdownMenu.Trigger asChild>
-                  <IconButton ref={moreTrigger} variant="text" appearance="toolbar" controlSize="regular" aria-label={folded.size === 1 ? '1 more filter' : `${folded.size} more filters`}>
+                  <IconButton ref={moreTrigger} variant="text" appearance="toolbar" controlSize="regular" aria-label={t('lab.filter.moreCount', { count: folded.size })}>
                     <MoreHorizontal />
                   </IconButton>
                 </DropdownMenu.Trigger>
@@ -584,7 +595,7 @@ export function FilterBar({
                   <MenuSurface asChild>
                     <DropdownMenu.Content
                       className="lab-actions-menu"
-                      aria-label="More filters"
+                      aria-label={t('lab.filter.more')}
                       align="end"
                       sideOffset={8}
                       collisionPadding={12}
@@ -610,7 +621,7 @@ export function FilterBar({
                           >
                             <span className="lab-actions-menu__label">
                               {option.label}
-                              <span className="lab-filter-menu-value">{summary(option, read(option), i18n.locale)}</span>
+                              <span className="lab-filter-menu-value">{summary(option, read(option), i18n.locale, t)}</span>
                             </span>
                           </DropdownMenu.Item>
                         ))}
@@ -628,7 +639,7 @@ export function FilterBar({
               </span>
             ))}
             <span data-filter-more="">
-              <IconButton variant="text" appearance="toolbar" controlSize="regular" aria-label="More filters" tabIndex={-1}>
+              <IconButton variant="text" appearance="toolbar" controlSize="regular" aria-label={t('lab.filter.more')} tabIndex={-1}>
                 <MoreHorizontal />
               </IconButton>
             </span>
@@ -648,7 +659,7 @@ export function FilterBar({
             <Popover.Content
               dir={dir}
               className="lab-filter-panel lab-filter-value-menu"
-              aria-label={smallSelected ? `Edit ${smallSelected.label} filter` : 'Edit filter'}
+              aria-label={smallSelected ? t('lab.filter.edit', { name: smallSelected.label }) : t('lab.filter.editAny')}
               align="start"
               sideOffset={8}
               collisionPadding={12}
@@ -670,15 +681,15 @@ export function FilterBar({
             >
               {smallSelected && (
                 <ScrollArea
-                  label={`${smallSelected.label} options`}
+                  label={t('lab.filter.options', { name: smallSelected.label })}
                   top={
                     smallSelected.type === 'enum' ? (
-                      <ToolbarSearch label={`Search ${smallSelected.label.toLowerCase()}`} value={choiceQuery} onValueChange={setChoiceQuery} inputRef={enumSearch} defaultExpanded/>
+                      <ToolbarSearch label={t('lab.filter.search', { name: smallSelected.label })} value={choiceQuery} onValueChange={setChoiceQuery} inputRef={enumSearch} defaultExpanded/>
 
                     ) : undefined
                   }
                   bottom={
-                    <Dock label="Filter value actions">
+                    <Dock label={t('lab.filter.valueActions')}>
                       {unpinButton(smallSelected)}
                       <Button
                         variant="text"
@@ -689,7 +700,7 @@ export function FilterBar({
                           setEditing(null)
                         }}
                       >
-                        Clear value
+                        {t('lab.filter.clearValue')}
                       </Button>
                       {isTemporalType(smallSelected.type) && (
                         <Button
@@ -698,7 +709,7 @@ export function FilterBar({
                           form={`${formId}-date`}
                           controlSize="regular"
                         >
-                          Apply
+                          {t('lab.filter.apply')}
                         </Button>
                       )}
                     </Dock>
@@ -708,7 +719,7 @@ export function FilterBar({
                     <div
                       className="lab-filter-options"
                       role="group"
-                      aria-label={`${smallSelected.label} choices`}
+                      aria-label={t('lab.filter.choices', { name: smallSelected.label })}
                     >
                       {smallSelected.choices
                         .filter((choice) =>
@@ -734,7 +745,7 @@ export function FilterBar({
                         ))}
                       {!smallSelected.choices.some((choice) =>
                         choice.label.toLowerCase().includes(choiceQuery.toLowerCase())
-                      ) && <p role="status">No matching options.</p>}
+                      ) && <p role="status">{t('lab.filter.noOptions')}</p>}
                     </div>
                   ) : !smallSelected.type || smallSelected.type === 'boolean' ? (
                     <div className="lab-filter-options">
@@ -749,7 +760,7 @@ export function FilterBar({
                             setEditing(null)
                           }}
                         >
-                          {next ? 'On' : 'Any'}
+                          {next ? t('lab.filter.on') : t('lab.filter.any')}
                         </Button>
                       ))}
                     </div>
@@ -764,7 +775,7 @@ export function FilterBar({
                           new FormData(event.currentTarget)
                         )
                         const message =
-                          validateTemporal(config, next) || smallSelected.validate?.(next)
+                          validateTemporal(config, next, t) || smallSelected.validate?.(next)
                         if (message) {
                           setEditError(message)
                           return
@@ -798,7 +809,7 @@ export function FilterBar({
       {dialogSelected && selected && isTemporalType(selected.type) && (
         <TemporalDialog
           open
-          label={`Edit ${dialogSelected.label} filter`}
+          label={t('lab.filter.edit', { name: dialogSelected.label })}
           close={() => setEditing(null)}
           returnFocusRef={returnFocus}
           formId={`${formId}-editor`}
@@ -810,19 +821,19 @@ export function FilterBar({
           }}
           intro={selected.description}
           error={editError || undefined}
-          clearLabel="Clear value"
+          clearLabel={t('lab.filter.clearValue')}
           actions={unpinButton(selected, 'toolbar')}
           onClear={() => {
             change(selected, null)
             pin(selected.id)
             setEditing(null)
           }}
-          applyLabel="Apply filter"
+          applyLabel={t('lab.filter.applyFilter')}
           onSubmit={(event) => {
             event.preventDefault()
             const config = selected as FilterOption & TemporalConfig
             const next = readTemporalForm(config.type, new FormData(event.currentTarget))
-            const message = validateTemporal(config, next) || selected.validate?.(next)
+            const message = validateTemporal(config, next, t) || selected.validate?.(next)
             if (message) {
               setDraft(next)
               setEditError(message)
@@ -837,12 +848,12 @@ export function FilterBar({
       <Modal
         returnFocusRef={returnFocus}
         open={!!dialogSelected && !(selected && isTemporalType(selected.type))}
-        label={dialogSelected ? `Edit ${dialogSelected.label} filter` : 'Edit filter'}
-        title={dialogSelected ? `Edit ${dialogSelected.label} filter` : 'Edit filter'}
+        label={dialogSelected ? t('lab.filter.edit', { name: dialogSelected.label }) : t('lab.filter.editAny')}
+        title={dialogSelected ? t('lab.filter.edit', { name: dialogSelected.label }) : t('lab.filter.editAny')}
         onOpenChange={() => setEditing(null)}
         className="lab-filter-editor-dialog"
         dock={
-          <PresentationDock label="Filter editor actions">
+          <PresentationDock label={t('lab.filter.editorActions')}>
             {unpinButton(dialogSelected)}
             <Button
               variant="text"
@@ -854,10 +865,10 @@ export function FilterBar({
                 setEditing(null)
               }}
             >
-              Clear value
+              {t('lab.filter.clearValue')}
             </Button>
             <Button variant="filled" type="submit" form={`${formId}-editor`}>
-              Apply filter
+              {t('lab.filter.applyFilter')}
             </Button>
           </PresentationDock>
         }
@@ -879,7 +890,7 @@ export function FilterBar({
             }}
           >
             <p>
-              {selected.description || 'Set a value, or clear it while keeping this filter pinned.'}
+              {selected.description || t('lab.filter.editorHint')}
             </p>
             {selected.type === 'custom' ? selected.renderEditor(draft, setDraft) : null}
             {editError && <p role="alert">{editError}</p>}

@@ -1,4 +1,5 @@
 import { IntlMessageFormat } from 'intl-messageformat'
+import { UI_MESSAGES } from './messages'
 
 /**
  * Pure i18n helpers (no React, no browser globals) so unit tests and the
@@ -53,6 +54,15 @@ export function translateLab(
   if (message === undefined) return key
   return formatMessage(message, locale, params)
 }
+
+/** A `t()` function: the `useI18n().t` of a component, or `englishText` outside React. */
+export type Translate = (key: string, params?: Record<string, string | number | Date>) => string
+
+/**
+ * The kit's built-in English strings, for pure helpers called without a translator (tests, server
+ * code). Kit widgets pass `useI18n().t` instead, so the reader's language wins.
+ */
+export const englishText: Translate = (key, params) => translateLab(UI_MESSAGES.en!, 'en', key, params)
 
 /** Flatten nested lab JSON (`{voice:{title:"…"}}`) into `lab.voice.title` keys. */
 export function flattenTranslations(
