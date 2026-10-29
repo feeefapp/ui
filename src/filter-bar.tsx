@@ -560,12 +560,17 @@ export function FilterBar({
                         value={text}
                         onChange={(event) => setText(event.target.value)}
                         error={error}
-                        supportingText={t('lab.filter.naturalAvailable', {
-                          names: options
-                            .filter((option) => !option.type || option.type === 'boolean')
-                            .map((option) => option.label)
-                            .join(', '),
-                        })}
+                        // Examples say more than the list of switches, so they replace it.
+                        supportingText={
+                          naturalSuggestions?.length
+                            ? undefined
+                            : t('lab.filter.naturalAvailable', {
+                                names: options
+                                  .filter((option) => !option.type || option.type === 'boolean')
+                                  .map((option) => option.label)
+                                  .join(', '),
+                              })
+                        }
                       />
                       {naturalSuggestions?.length ? (
                         <div className="lab-filter-suggestions" role="group" aria-label={t('lab.filter.naturalSuggestions')}>
