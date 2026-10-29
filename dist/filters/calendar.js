@@ -3,12 +3,15 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useLayoutEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { IconButton, Button } from '../primitives/button.js';
+import { useI18n } from '../i18n.js';
 import { calendarDate, monthDays, parseCalendarDate } from './calendar-model.js';
 /**
  * One month grid. The heading is a plain row on the host surface: previous, a title that opens a
  * month/year grid, next. Days support arrow, Home/End and Page Up/Down navigation; a range paints one continuous band.
  */
-export function CalendarMonth({ month, onMonthChange, from, to, min, max, onSelect, locale = 'en', label = 'Calendar', navigation = 'both', }) {
+export function CalendarMonth({ month, onMonthChange, from, to, min, max, onSelect, locale = 'en', label, navigation = 'both', }) {
+    const { t } = useI18n();
+    const name = label ?? t('lab.temporal.calendar');
     const date = parseCalendarDate(`${month}-01`), year = date.getFullYear(), monthIndex = date.getMonth();
     const root = useRef(null);
     const [focusDate, setFocusDate] = useState('');
@@ -30,10 +33,10 @@ export function CalendarMonth({ month, onMonthChange, from, to, min, max, onSele
         days.find((day) => day && inBounds(day));
     const title = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(date);
     const lo = from && to ? (from < to ? from : to) : '', hi = from && to ? (from < to ? to : from) : '';
-    return (_jsxs("div", { ref: root, className: "lab-calendar-month", role: "group", "aria-label": label, children: [_jsxs("div", { role: "group", "aria-label": `${label} navigation`, className: "lab-calendar-heading", children: [navigation !== 'next' && (_jsx(IconButton, { variant: "text", controlSize: "small", "data-nav": "previous", "aria-label": "Previous month", disabled: picking ? !!minMonth && `${pickYear - 1}-12` < minMonth : outOfBounds(year, monthIndex - 1), onClick: () => (picking ? setPickYear(pickYear - 1) : go(year, monthIndex - 1)), children: _jsx(ChevronLeft, { className: "lab-dir-flip" }) })), _jsx(Button, { variant: "text", controlSize: "small", className: "lab-calendar-title", "aria-expanded": picking, "aria-label": picking ? `Choose a month in ${pickYear}` : `${title}, choose month and year`, onClick: () => {
+    return (_jsxs("div", { ref: root, className: "lab-calendar-month", role: "group", "aria-label": name, children: [_jsxs("div", { role: "group", "aria-label": t('lab.calendar.navigation', { label: name }), className: "lab-calendar-heading", children: [navigation !== 'next' && (_jsx(IconButton, { variant: "text", controlSize: "small", "data-nav": "previous", "aria-label": t('lab.calendar.previous'), disabled: picking ? !!minMonth && `${pickYear - 1}-12` < minMonth : outOfBounds(year, monthIndex - 1), onClick: () => (picking ? setPickYear(pickYear - 1) : go(year, monthIndex - 1)), children: _jsx(ChevronLeft, { className: "lab-dir-flip" }) })), _jsx(Button, { variant: "text", controlSize: "small", className: "lab-calendar-title", "aria-expanded": picking, "aria-label": picking ? t('lab.calendar.chooseMonthIn', { year: pickYear }) : t('lab.calendar.chooseMonth', { title }), onClick: () => {
                             setPickYear(year);
                             setPicking(!picking);
-                        }, children: picking ? pickYear : title }), navigation !== 'previous' && (_jsx(IconButton, { variant: "text", controlSize: "small", "data-nav": "next", "aria-label": "Next month", disabled: picking ? !!maxMonth && `${pickYear + 1}-01` > maxMonth : outOfBounds(year, monthIndex + 1), onClick: () => (picking ? setPickYear(pickYear + 1) : go(year, monthIndex + 1)), children: _jsx(ChevronRight, { className: "lab-dir-flip" }) }))] }), picking ? (_jsx("div", { className: "lab-calendar-months", role: "group", "aria-label": `Months of ${pickYear}`, children: Array.from({ length: 12 }, (_, m) => (_jsx(Button, { variant: m === monthIndex && pickYear === year ? 'tonal' : 'text', controlSize: "small", "aria-pressed": m === monthIndex && pickYear === year, disabled: outOfBounds(pickYear, m), onClick: () => {
+                        }, children: picking ? pickYear : title }), navigation !== 'previous' && (_jsx(IconButton, { variant: "text", controlSize: "small", "data-nav": "next", "aria-label": t('lab.calendar.next'), disabled: picking ? !!maxMonth && `${pickYear + 1}-01` > maxMonth : outOfBounds(year, monthIndex + 1), onClick: () => (picking ? setPickYear(pickYear + 1) : go(year, monthIndex + 1)), children: _jsx(ChevronRight, { className: "lab-dir-flip" }) }))] }), picking ? (_jsx("div", { className: "lab-calendar-months", role: "group", "aria-label": t('lab.calendar.monthsOf', { year: pickYear }), children: Array.from({ length: 12 }, (_, m) => (_jsx(Button, { variant: m === monthIndex && pickYear === year ? 'tonal' : 'text', controlSize: "small", "aria-pressed": m === monthIndex && pickYear === year, disabled: outOfBounds(pickYear, m), onClick: () => {
                         go(pickYear, m);
                         setPicking(false);
                     }, children: new Intl.DateTimeFormat(locale, { month: 'short' }).format(new Date(pickYear, m, 1, 12)) }, m))) })) : (_jsxs("table", { className: "lab-calendar-grid", "aria-label": title, children: [_jsx("thead", { children: _jsx("tr", { children: Array.from({ length: 7 }, (_, index) => (_jsx("th", { scope: "col", abbr: new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(new Date(2026, 0, 5 + index)), children: new Intl.DateTimeFormat(locale, { weekday: 'narrow' }).format(new Date(2026, 0, 5 + index)) }, index))) }) }), _jsx("tbody", { children: Array.from({ length: 6 }, (_, week) => (_jsx("tr", { children: days.slice(week * 7, week * 7 + 7).map((day, index) => {

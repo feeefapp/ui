@@ -27,6 +27,7 @@ export declare function useTemporalEditor({ config, value, onChange, onPick, loc
     config: TemporalConfig;
     value: TemporalValue;
     locale: string;
+    t: (key: string, params?: Record<string, string | number | Date>) => string;
     type: string;
     range: boolean;
     hasCalendar: boolean;

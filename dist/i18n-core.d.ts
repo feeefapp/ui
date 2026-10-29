@@ -30,6 +30,13 @@ export declare function formatMessage(message: string, locale: string, params?: 
  * unknown, mirroring the server and the global React `LanguageProvider`.
  */
 export declare function translateLab(translations: Record<string, string>, locale: string, key: string, params?: Record<string, string | number | Date>): string;
+/** A `t()` function: the `useI18n().t` of a component, or `englishText` outside React. */
+export type Translate = (key: string, params?: Record<string, string | number | Date>) => string;
+/**
+ * The kit's built-in English strings, for pure helpers called without a translator (tests, server
+ * code). Kit widgets pass `useI18n().t` instead, so the reader's language wins.
+ */
+export declare const englishText: Translate;
 /** Flatten nested lab JSON (`{voice:{title:"…"}}`) into `lab.voice.title` keys. */
 export declare function flattenTranslations(nested: Record<string, unknown>, prefix?: string): Record<string, string>;
 //# sourceMappingURL=i18n-core.d.ts.map

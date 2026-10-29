@@ -32,7 +32,8 @@ export type { ButtonProps, ButtonVariant, ControlSize, ButtonAppearance, SquareS
 export { SegmentedControl } from './ui.js';
 export type { SegmentOption, SegmentTone } from './ui.js';
 export { UI_MESSAGES } from './messages.js';
-export { flattenTranslations, translateLab } from './i18n-core.js';
+export { englishText, flattenTranslations, translateLab } from './i18n-core.js';
+export type { Translate } from './i18n-core.js';
 export { localeUrl } from './i18n.js';
 export { cn } from './utils.js';
 export { ToolbarSearch } from './toolbar-search.js';

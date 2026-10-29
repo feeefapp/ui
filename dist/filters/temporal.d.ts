@@ -1,3 +1,4 @@
+import { type Translate } from '../i18n-core.js';
 /** What a temporal field or editor picks: a single value or a `from`/`to` range. */
 export type TemporalType = 'date' | 'time' | 'datetime' | 'dateRange' | 'timeRange' | 'datetimeRange';
 /** Local ISO string, `{ from, to }` range (either end may be `''`), or `null` for no value. */
@@ -35,14 +36,15 @@ export declare const temporalInputType: (type: TemporalType) => "time" | "date" 
 export declare function normalizeTemporal(value: TemporalValue): TemporalValue;
 /**
  * Checks a value against a config: ISO format and real calendar dates, `step`, `min`/`max`, and
- * range order. Returns an English error message, or `null` when the value (or `null`) is valid.
+ * range order. Returns an error message in `t`'s language (English by default), or `null` when
+ * the value (or `null`) is valid.
  */
-export declare function validateTemporal(config: TemporalConfig, value: TemporalValue): string | null;
+export declare function validateTemporal(config: TemporalConfig, value: TemporalValue, t?: Translate): string | null;
 /**
  * Default presets for a type, computed from `now` in local wall-clock time (Today, Last 7 days,
- * Morning…). Feature owners choose timezone and query conversion.
+ * Morning…), labelled in `t`'s language. Feature owners choose timezone and query conversion.
  */
-export declare function temporalPresets(type: TemporalType, now?: Date): TemporalPreset[];
+export declare function temporalPresets(type: TemporalType, now?: Date, t?: Translate): TemporalPreset[];
 /** Reads the value of a `TemporalFilterEditor` from its form's data (`date`, or `from`/`to`). */
 export declare function readTemporalForm(type: TemporalType, data: FormData): TemporalValue;
 //# sourceMappingURL=temporal.d.ts.map

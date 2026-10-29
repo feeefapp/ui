@@ -33,7 +33,7 @@ function useCompactViewport() {
  * (a dialog on phones), ranges in a dialog. A date commits on the day you pick; times, datetimes and
  * ranges commit on Apply.
  */
-export const TemporalField = React.forwardRef(function TemporalField({ type, value, onValueChange, min, max, step, allowOvernight, presets, hint, label, labelStyle = 'outlined', leadingIcon, leading, trailing, supportingText, error, containerClassName, variant = 'outlined', controlSize = 'regular', dir, id, name, rangeNames, disabled, readOnly, required, requiredMessage = 'Choose a value.', placeholder, clearable = false, validator, validationMode = 'blur', onValidationChange, onBlur, locale: localeProp, formatValue, className, 'aria-label': ariaLabel, 'aria-describedby': ariaDescription, }, forwardedRef) {
+export const TemporalField = React.forwardRef(function TemporalField({ type, value, onValueChange, min, max, step, allowOvernight, presets, hint, label, labelStyle = 'outlined', leadingIcon, leading, trailing, supportingText, error, containerClassName, variant = 'outlined', controlSize = 'regular', dir, id, name, rangeNames, disabled, readOnly, required, requiredMessage, placeholder, clearable = false, validator, validationMode = 'blur', onValidationChange, onBlur, locale: localeProp, formatValue, className, 'aria-label': ariaLabel, 'aria-describedby': ariaDescription, }, forwardedRef) {
     const trigger = React.useRef(null);
     React.useImperativeHandle(forwardedRef, () => trigger.current, []);
     const i18n = useI18n();
@@ -52,10 +52,10 @@ export const TemporalField = React.forwardRef(function TemporalField({ type, val
             return null;
         const normalized = normalizeTemporal(next);
         return ((required && normalized == null
-            ? requiredMessage
-            : validateTemporal({ type, min, max, step, allowOvernight }, normalized) ||
+            ? (requiredMessage ?? i18n.t('lab.temporal.required'))
+            : validateTemporal({ type, min, max, step, allowOvernight }, normalized, i18n.t) ||
                 validator?.(normalized)) || null);
-    }, [required, requiredMessage, type, min, max, step, allowOvernight, validator, readOnly]);
+    }, [required, requiredMessage, type, min, max, step, allowOvernight, validator, readOnly, i18n.t]);
     const publish = React.useCallback((next) => {
         setMessage(next);
         onValidationChange?.(next);
@@ -116,10 +116,10 @@ export const TemporalField = React.forwardRef(function TemporalField({ type, val
         }
         commit(normalized);
     };
-    const formatted = (formatValue || ((next) => formatTemporalValue(type, next, locale)))(value);
+    const formatted = (formatValue || ((next) => formatTemporalValue(type, next, locale, i18n.t)))(value);
     const populated = normalizeTemporal(value) != null;
     const floatingHint = hint ?? label;
-    const title = floatingHint || ariaLabel || 'Choose date and time';
+    const title = floatingHint || ariaLabel || i18n.t('lab.temporal.chooseDateTime');
     // A date is complete with one tap: pick it and the field closes. Everything else has parts
     // (time, two ends), so it keeps one Apply.
     const instant = type === 'date';
@@ -148,7 +148,7 @@ export const TemporalField = React.forwardRef(function TemporalField({ type, val
     };
     // Popovers end their footer row with one glass group. A date with nothing to clear has no
     // actions at all: the day itself is the action.
-    const actions = instant && normalizeTemporal(draft) == null ? null : (_jsx(GlassScope, { className: "lab-temporal-actions-row", children: _jsxs(ToolbarGroup, { label: `${title} actions`, className: "lab-temporal-actions", children: [_jsx(Button, { variant: "text", appearance: "toolbar", controlSize: "regular", disabled: normalizeTemporal(draft) == null, onClick: clear, children: "Clear" }), !instant && (_jsx(Button, { variant: "filled", appearance: "toolbar", controlSize: "regular", type: "submit", form: formId, children: "Apply" }))] }) }));
+    const actions = instant && normalizeTemporal(draft) == null ? null : (_jsx(GlassScope, { className: "lab-temporal-actions-row", children: _jsxs(ToolbarGroup, { label: i18n.t('lab.temporal.actionsOf', { label: title }), className: "lab-temporal-actions", children: [_jsx(Button, { variant: "text", appearance: "toolbar", controlSize: "regular", disabled: normalizeTemporal(draft) == null, onClick: clear, children: i18n.t('lab.temporal.clear') }), !instant && (_jsx(Button, { variant: "filled", appearance: "toolbar", controlSize: "regular", type: "submit", form: formId, children: i18n.t('lab.temporal.apply') }))] }) }));
     const popoverEditor = (_jsxs("form", { id: formId, className: "lab-temporal-field-editor", onSubmit: apply, children: [_jsx(TemporalFilterEditor, { config: config, locale: locale, value: draft, resetKey: open, onChange: changeDraft, footer: actions, onPick: pick }), draftError && (_jsx("p", { role: "alert", className: "lab-filter-error", children: draftError }))] }));
     return (_jsxs(Popover.Root, { open: open && !asDialog, onOpenChange: (next) => (next ? begin() : close()), children: [_jsx(FieldShell, { id: id, hint: hint, label: label, labelStyle: labelStyle, leadingIcon: leadingIcon === undefined ? type.startsWith('time') ? _jsx(Clock, {}) : _jsx(CalendarDays, {}) : leadingIcon, leading: leading, trailing: _jsxs(_Fragment, { children: [trailing, clearable && populated && !disabled && !readOnly && (_jsx(IconButton, { variant: "text", controlSize: "small", className: "lab-temporal-field-clear", "aria-label": `Clear ${title}`, onClick: () => {
                                 trigger.current?.focus();
