@@ -102,6 +102,8 @@ export type FilterBarProps = {
    * all) or throw an Error whose message is shown under the field. You supply the parser or model.
    */
   onNaturalFilter?: (text: string) => Promise<readonly string[]> | readonly string[]
+  /** Example descriptions under the natural-language field; choosing one fills the field. */
+  naturalSuggestions?: readonly string[]
   /** Shows a back button before the filter controls, e.g. to leave a filtered view. */
   onBack?: () => void
   /** Content at the end of the bar, usually a ToolbarGroup of view actions. */
@@ -133,6 +135,7 @@ export function FilterBar({
   pinned: controlledPins,
   onPinnedChange,
   onNaturalFilter,
+  naturalSuggestions,
   onBack,
   trailing,
 }: FilterBarProps) {
@@ -564,6 +567,25 @@ export function FilterBar({
                             .join(', '),
                         })}
                       />
+                      {naturalSuggestions?.length ? (
+                        <div className="lab-filter-suggestions" role="group" aria-label={t('lab.filter.naturalSuggestions')}>
+                          {naturalSuggestions.map((suggestion) => (
+                            <Button
+                              key={suggestion}
+                              type="button"
+                              variant="tonal"
+                              controlSize="small"
+                              onClick={() => {
+                                setText(suggestion)
+                                setError('')
+                                naturalInput.current?.focus()
+                              }}
+                            >
+                              {suggestion}
+                            </Button>
+                          ))}
+                        </div>
+                      ) : null}
                     </form>
                   </ScrollArea>
                 </Popover.Content>
