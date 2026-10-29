@@ -759,11 +759,7 @@ class _SurfacePainter extends CustomPainter {
     if (raised) {
       // inset 0 1px 0 highlight: the band between the padding box and itself moved down 1px.
       canvas.drawPath(
-        Path.combine(
-          PathOperation.difference,
-          inner,
-          inner.shift(const Offset(0, 1)),
-        ),
+        outlineBand(rect, radii, inset: 1, by: const Offset(0, 1)),
         Paint()..color = highlight,
       );
     }

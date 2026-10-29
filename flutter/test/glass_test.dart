@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:feeef_ui/brand/geometry.dart' show superellipsePoints;
 import 'package:feeef_ui/glass/geometry.dart';
 import 'package:feeef_ui/glass/hairline.dart';
 import 'package:feeef_ui/glass/light.dart';
@@ -232,5 +233,80 @@ void main() {
     expect(clippedGlassPaths(near, const [box, null], 8), hasLength(2));
     expect(clippedGlassPaths(near, const [box, box], 8), hasLength(1));
     expect(clippedGlassPaths(near, const [null, null], 8), hasLength(1));
+  });
+
+  test(
+    'a cluster walks its contour once: lone shapes are their exact polygon',
+    () {
+      const lone = GlassShape(x: 30, y: 12, width: 120, height: 44, radius: 22);
+      final outline = clusterOutline([lone], 8);
+      expect(outline.loops, hasLength(1));
+      final expected = [
+        for (final p in superellipsePoints(120, 44, const [22, 22, 22, 22]))
+          p + const Offset(30, 12),
+      ];
+      expect(outline.loops.single, expected);
+      expect(outline.path.getBounds(), lone.rect);
+      // Blended shapes: the same loops the union walk gives, and the same hairline from them.
+      const a = GlassShape(x: 0, y: 0, width: 80, height: 40, radius: 20);
+      const b = GlassShape(x: 86, y: 0, width: 80, height: 40, radius: 20);
+      final blended = clusterOutline([a, b], 16);
+      expect(blended.loops, unionLoops([a, b], 16, 2));
+      final walked = hairlineBands([a, b], 16);
+      final fromLoops = hairlineBandsOfLoops(blended.loops, [a, b], 16);
+      expect(fromLoops.ring, walked.ring);
+      expect(fromLoops.sliver, walked.sliver);
+    },
+  );
+
+  test(
+    'a lone shape\'s hairline sits half a pixel outside its exact outline',
+    () {
+      const lone = GlassShape(x: 30, y: 12, width: 120, height: 44, radius: 22);
+      final outline = clusterOutline([lone], 8);
+      final bands = hairlineBandsOfLoops(
+        outline.loops,
+        [lone],
+        8,
+        settle: false,
+      );
+      expect(bands.ring, hasLength(2));
+      final outer = bands.ring[0], inner = bands.ring[1];
+      expect(inner, outline.loops.single);
+      expect(outer, hasLength(inner.length));
+      for (var i = 0; i < inner.length; i++) {
+        expect((outer[i] - inner[i]).distance, closeTo(0.5, 1e-9));
+        // Outward: past the outline, not into the glass.
+        expect(
+          unionDistance(outer[i].dx, outer[i].dy, [lone], 8),
+          greaterThan(0.3),
+        );
+      }
+      // The slivers reach past the outline only at the sides.
+      expect(bands.sliver, hasLength(2));
+      final sliver = bands.sliver[0];
+      final reach = [
+        for (var i = 0; i < inner.length; i++) (sliver[i] - inner[i]).distance,
+      ];
+      expect(reach.reduce(math.max), greaterThan(0.3));
+      expect(reach.reduce(math.min), lessThan(1e-6));
+    },
+  );
+
+  test('loop normals point out of the loop whichever way it winds', () {
+    const clockwise = [
+      Offset(0, 0),
+      Offset(10, 0),
+      Offset(10, 10),
+      Offset(0, 10),
+    ];
+    final out = loopNormals(clockwise);
+    // The top-left corner's normal bisects its two edges, pointing up and left.
+    expect(out[0], closeTo(-math.sqrt1_2, 1e-12));
+    expect(out[1], closeTo(-math.sqrt1_2, 1e-12));
+    final reversed = loopNormals(clockwise.reversed.toList());
+    // Same corner, last in the reversed loop: still up and left.
+    expect(reversed[6], closeTo(-math.sqrt1_2, 1e-12));
+    expect(reversed[7], closeTo(-math.sqrt1_2, 1e-12));
   });
 }

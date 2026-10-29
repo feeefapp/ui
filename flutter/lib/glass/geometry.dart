@@ -389,22 +389,93 @@ double loopArea(List<Offset> loop) {
   return area / 2;
 }
 
-/// One cluster's outline: the exact shape when alone, the blended union when several.
-Path clusterPath(List<GlassShape> shapes, double spacing, [double cell = 2]) {
-  if (shapes.length == 1) return shapePath(shapes.first);
+/// The outward unit normal at each vertex of a closed [loop] (the mean of its two edges'
+/// normals), as x, y pairs. Which side is out follows the loop's winding ([loopArea]), so it holds
+/// for outer outlines and holes alike.
+Float64List loopNormals(List<Offset> loop) {
+  final n = loop.length;
+  final normals = Float64List(n * 2);
+  if (n < 2) return normals;
+  final outward = loopArea(loop) > 0 ? 1.0 : -1.0;
+  for (var i = 0; i < n; i++) {
+    final p = loop[i];
+    final before = loop[(i + n - 1) % n];
+    final after = loop[(i + 1) % n];
+    var nx = 0.0, ny = 0.0;
+    final ax = p.dx - before.dx, ay = p.dy - before.dy;
+    final al = math.sqrt(ax * ax + ay * ay);
+    if (al > 0) {
+      nx += ay / al;
+      ny -= ax / al;
+    }
+    final bx = after.dx - p.dx, by = after.dy - p.dy;
+    final bl = math.sqrt(bx * bx + by * by);
+    if (bl > 0) {
+      nx += by / bl;
+      ny -= bx / bl;
+    }
+    final l = math.sqrt(nx * nx + ny * ny);
+    if (l > 0) {
+      nx /= l;
+      ny /= l;
+    }
+    normals[i * 2] = nx * outward;
+    normals[i * 2 + 1] = ny * outward;
+  }
+  return normals;
+}
+
+/// One cluster's outline, as a path and as the closed polygons it is made of: the exact shape
+/// when alone ([superellipsePoints]), the blended union when several ([unionLoops]). The rim and
+/// the hairline sample the polygons, so the contour is walked once per cluster.
+({Path path, List<List<Offset>> loops}) clusterOutline(
+  List<GlassShape> shapes,
+  double spacing, [
+  double cell = 2,
+]) {
+  if (shapes.length == 1) {
+    final shape = shapes.first;
+    final r = clampRadius(shape);
+    final radii = [r, r, r, r];
+    final origin = Offset(shape.x, shape.y);
+    return (
+      path: superellipsePath(shape.rect, radii),
+      loops: [
+        [
+          for (final p in superellipsePoints(shape.width, shape.height, radii))
+            p + origin,
+        ],
+      ],
+    );
+  }
+  final loops = unionLoops(shapes, spacing, cell);
   final path = Path()..fillType = PathFillType.nonZero;
-  for (final loop in unionLoops(shapes, spacing, cell)) {
+  for (final loop in loops) {
     path.addPolygon(loop, true);
   }
-  return path;
+  return (path: path, loops: loops);
 }
+
+/// One cluster's outline: the exact shape when alone, the blended union when several.
+Path clusterPath(List<GlassShape> shapes, double spacing, [double cell = 2]) =>
+    clusterOutline(shapes, spacing, cell).path;
 
 /// One cluster of blended bubbles and its outline.
 class GlassPath {
-  GlassPath(this.shapes, this.bounds, this.path, [this.clip]);
+  GlassPath(
+    this.shapes,
+    this.bounds,
+    this.path, [
+    this.clip,
+    this.loops = const [],
+  ]);
   final List<GlassShape> shapes;
   final Rect bounds;
   final Path path;
+
+  /// The outline's closed polygons (the vertices [path] is drawn from), when known: the rim light
+  /// and the hairline sample them instead of walking the path again.
+  final List<List<Offset>> loops;
 
   /// The scissor its paint (material, rim, shadow, refraction) is cut to, in the container's
   /// pixels: the visible part of the scroll view or clip around its bubbles; null when none is.
@@ -466,7 +537,7 @@ List<GlassPath> clippedGlassPaths(
         if (clip == null)
           path
         else if (clip.overlaps(path.bounds))
-          GlassPath(path.shapes, path.bounds, path.path, clip),
+          GlassPath(path.shapes, path.bounds, path.path, clip, path.loops),
   ];
 }
 
@@ -486,5 +557,16 @@ List<GlassPath> glassPaths(
     shapes.where((s) => s.width > 0.5 && s.height > 0.5).toList(),
     spacing,
   ))
-    GlassPath(cluster, boundsOf(cluster), clusterPath(cluster, spacing, cell)),
+    _glassPath(cluster, spacing, cell),
 ];
+
+GlassPath _glassPath(List<GlassShape> cluster, double spacing, double cell) {
+  final outline = clusterOutline(cluster, spacing, cell);
+  return GlassPath(
+    cluster,
+    boundsOf(cluster),
+    outline.path,
+    null,
+    outline.loops,
+  );
+}

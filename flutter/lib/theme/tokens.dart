@@ -169,6 +169,24 @@ class ColorTokens {
     Color? primary,
   }) {
     final tint = clampGlassTint(glassTint);
+    // Every ThemeProvider build resolves its tokens (glass bars and adaptive glass put one around
+    // each bubble): the same inputs always give the same tokens, so they are kept.
+    final key = (palette, brightness, tint, primary);
+    final cached = _resolved[key];
+    if (cached != null) return cached;
+    if (_resolved.length >= 64) _resolved.clear();
+    return _resolved[key] = _resolve(palette, brightness, tint, primary);
+  }
+
+  static final _resolved =
+      <(Palette, Brightness, double, Color?), ColorTokens>{};
+
+  static ColorTokens _resolve(
+    Palette palette,
+    Brightness brightness,
+    double tint,
+    Color? primary,
+  ) {
     final dark = brightness == Brightness.dark;
     final shared = (
       // Glass material fitted to iOS 27 (glass/material.dart).

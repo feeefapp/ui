@@ -357,19 +357,30 @@ class _MenuSurfaceState extends State<MenuSurface>
             child: ValueListenableBuilder<MenuContentFrame>(
               valueListenable: _content,
               builder: (context, frame, child) {
-                Widget out = child!;
-                if (frame.blur > 0.05) {
-                  out = ImageFiltered(
-                    imageFilter: ui.ImageFilter.blur(
-                      sigmaX: frame.blur,
-                      sigmaY: frame.blur,
-                    ),
-                    child: out,
-                  );
+                final opacity = frame.opacity.clamp(0.0, 1.0);
+                if (frame.blur <= 0.05 || opacity <= 0.001) {
+                  return Opacity(opacity: opacity, child: child);
                 }
-                return Opacity(
-                  opacity: frame.opacity.clamp(0.0, 1.0),
-                  child: out,
+                // Blur and fade in one offscreen pass: the opacity rides on the blur's filter as
+                // an alpha scale (the matrix works on straight alpha), rather than a second
+                // layer over it on every frame of the morph.
+                final blur = ui.ImageFilter.blur(
+                  sigmaX: frame.blur,
+                  sigmaY: frame.blur,
+                );
+                return ImageFiltered(
+                  imageFilter: opacity >= 0.999
+                      ? blur
+                      : ui.ImageFilter.compose(
+                          outer: ColorFilter.matrix([
+                            1, 0, 0, 0, 0, //
+                            0, 1, 0, 0, 0, //
+                            0, 0, 1, 0, 0, //
+                            0, 0, 0, opacity, 0, //
+                          ]),
+                          inner: blur,
+                        ),
+                  child: child!,
                 );
               },
               child: content,

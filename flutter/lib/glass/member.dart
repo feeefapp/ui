@@ -78,6 +78,7 @@ class _InsideBubble extends InheritedWidget {
 
 class _GlassMemberBoxState extends State<GlassMemberBox> {
   final _box = GlobalKey();
+  final _contentKey = GlobalKey();
   GlassMemberHandle? _handle;
   GlassMemberRegistry? _registry;
   bool _nested = false;
@@ -176,6 +177,16 @@ class _GlassMemberBoxState extends State<GlassMemberBox> {
       // Content rides with its glass while the bubble moves, and swells with a press. The tree
       // keeps one shape whether or not the bubble is hidden, so its content keeps its state. A
       // bubble over an embedded web page keeps the pointer ([PointerShield]).
+      // The content is its own layer: the container's glass repaints on every frame its light
+      // turns or a bubble springs, and must not re-record every button and icon in the bubble
+      // to do so; a control's hover or press repaints the control, not the glass and its
+      // backdrop filters. The box the container measures sits above the transform, so the
+      // layer changes nothing it reads. A bubble out of the glass (hidden, squeezed away,
+      // closing) paints with its container instead: a layer of its own would still paint once
+      // in the frame an ancestor takes it offstage (dirty layers paint deepest first), and its
+      // content keeps its element and state across the change through its key.
+      final keyed = KeyedSubtree(key: _contentKey, child: content);
+      final layered = _handle == null ? keyed : RepaintBoundary(child: keyed);
       return PointerShield(
         child: KeyedSubtree(
           key: _box,
@@ -186,10 +197,10 @@ class _GlassMemberBoxState extends State<GlassMemberBox> {
               child: Transform.scale(scale: value.$2, child: child),
             ),
             child: widget.origin == null
-                ? content
+                ? layered
                 : ClipPath(
                     clipper: _GlassClipper(_clip ?? _unclipped),
-                    child: content,
+                    child: layered,
                   ),
           ),
         ),

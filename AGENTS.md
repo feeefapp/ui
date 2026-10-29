@@ -209,6 +209,18 @@ clip-path, contain: paint; Flutter: any render object's `describeApproximatePain
 view or ClipRect) paints only inside it, cut straight at the edge (`clippedGlassPaths`), and only
 bubbles sharing a clip merge; a scroll there moves the glass exactly. One container per floating row;
 never nest containers or put one inside a bubble.
+Flutter glass stays cheap by contract (`flutter/lib/glass`, tested in `test/glass_test.dart` and
+`test/glass_widgets_test.dart`; timings in `test/dev/glass_bench_test.dart --dart-define=bench=true`):
+a container's outlines are rebuilt at most once per frame (`_GlassScene.paths` is lazy; springs,
+presses and measures only mark it stale, and compare to a tenth of a pixel), a cluster walks its
+contour once (`clusterOutline`: a lone shape is its exact superellipse polygon, a blend the marching
+squares loops) and its rim light and hairline sample those polygons (`loopNormals`,
+`hairlineBandsOfLoops`) rather than walking the field or the path again; the pointer light is kept to
+2° steps and notifies a separate `light` listenable, so a mouse far from the glass repaints it only
+when the rim can show the turn and never reclips its backdrops; every bubble's content paints in its
+own layer under the glass transform (dropped while the bubble is out of the glass, so an offstage
+bubble never paints), and `superellipsePath`/`superellipsePoints`/`outlineBand` are cached per
+geometry and shared, so never mutate a path they return. Keep these when touching the scene.
 Kit rows (ScaffoldAppBar, ScaffoldTopBar, Toolbar, Dock host, ToolbarSearch) are GlassScopes:
 a container unless one encloses them. Wrap any other row of bubbles in GlassScope so they share
 one material. A GlassGroup with no container around it is the only bubble of its own container

@@ -52,19 +52,11 @@ void paintFloatingSurface(
     canvas.save();
     canvas.clipPath(inner);
     canvas.drawPath(
-      Path.combine(
-        PathOperation.difference,
-        inner,
-        inner.shift(const Offset(0, 1)),
-      ),
+      outlineBand(rect, r(radius), inset: 1, by: const Offset(0, 1)),
       Paint()..color = edgeLow,
     );
     canvas.drawPath(
-      Path.combine(
-        PathOperation.difference,
-        inner,
-        inner.shift(const Offset(0, -1)),
-      ),
+      outlineBand(rect, r(radius), inset: 1, by: const Offset(0, -1)),
       Paint()..color = const Color.from(alpha: 0.06, red: 0, green: 0, blue: 0),
     );
     canvas.restore();

@@ -14,7 +14,9 @@ final double cornerExponent = math.pow(2, 1.5).toDouble();
 const double cornerSmoothingFade = 0.75;
 
 double _finite(double value) => value.isFinite ? math.max(0, value) : 0;
-double _coordinate(double value) => double.parse(value.toStringAsFixed(3));
+// Rounded to the third decimal like the web kit's `Number(value.toFixed(3))`, without going
+// through a string: this runs for every point of every outline the kit draws.
+double _coordinate(double value) => (value * 1000).roundToDouble() / 1000;
 
 /// Smoothing for a corner filling [fill] of the box's largest radius (1 = half the shorter side).
 double _smoothingAt(double fill) {
@@ -53,6 +55,59 @@ double cornerExponentFor(double radius, double width, double height) => math
 /// corner takes its clamped exponent ([cornerSmoothing], measured on the box after the inset and
 /// the CSS overlap scaling); a given exponent applies to all four.
 List<Offset> superellipsePoints(
+  double width,
+  double height,
+  List<double> radii, {
+  double inset = 0,
+  double? exponent,
+}) {
+  final key = _outlineKey(width, height, radii, inset, exponent);
+  final cached = _outlinePoints[key];
+  if (cached != null) return cached;
+  if (_outlinePoints.length >= _outlineCacheLimit) _outlinePoints.clear();
+  final points = List<Offset>.unmodifiable(
+    _superellipsePoints(width, height, radii, inset: inset, exponent: exponent),
+  );
+  _outlinePoints[key] = points;
+  return points;
+}
+
+/// The same outline is asked for over and over with the same geometry (every paint of a button,
+/// a wash, a bubble at rest, a pill), so the last few hundred are kept by box, corners, inset and
+/// exponent. Cached points and paths are shared: callers never mutate them.
+typedef _OutlineKey = (
+  double,
+  double,
+  double,
+  double,
+  double,
+  double,
+  double,
+  double?,
+);
+
+const _outlineCacheLimit = 256;
+final _outlinePoints = <_OutlineKey, List<Offset>>{};
+final _outlinePaths = <_OutlineKey, Path>{};
+
+_OutlineKey _outlineKey(
+  double width,
+  double height,
+  List<double> radii,
+  double inset,
+  double? exponent,
+) => (
+  width,
+  height,
+  radii.isNotEmpty ? radii[0] : 0,
+  radii.length > 1 ? radii[1] : 0,
+  radii.length > 2 ? radii[2] : 0,
+  radii.length > 3 ? radii[3] : 0,
+  inset,
+  exponent,
+);
+
+List<Offset> _superellipsePoints(
   double width,
   double height,
   List<double> radii, {
@@ -126,14 +181,49 @@ List<Offset> superellipsePoints(
 
 /// The outline as a closed path, offset to [origin].
 Path superellipsePath(Rect rect, List<double> radii, {double inset = 0}) {
-  final points = superellipsePoints(
-    rect.width,
-    rect.height,
-    radii,
-    inset: inset,
-  );
-  return Path()..addPolygon([for (final p in points) p + rect.topLeft], true);
+  final key = _outlineKey(rect.width, rect.height, radii, inset, null);
+  var path = _outlinePaths[key];
+  if (path == null) {
+    if (_outlinePaths.length >= _outlineCacheLimit) _outlinePaths.clear();
+    path = Path()
+      ..addPolygon(
+        superellipsePoints(rect.width, rect.height, radii, inset: inset),
+        true,
+      );
+    _outlinePaths[key] = path;
+  }
+  // The cached outline sits at the origin; a box elsewhere gets a moved copy.
+  final origin = rect.topLeft;
+  return origin == Offset.zero ? path : path.shift(origin);
 }
+
+/// The band an outline leaves uncovered when moved by [by] (a CSS `inset dx dy` shadow of no
+/// blur): the outline of [rect] with [radii] (inset by [inset]) minus the same outline shifted.
+/// A path operation, so kept like the outlines themselves: a lens's rim and a button's inner
+/// light ask for the same bands on every paint.
+Path outlineBand(
+  Rect rect,
+  List<double> radii, {
+  double inset = 0,
+  required Offset by,
+}) {
+  final key = (_outlineKey(rect.width, rect.height, radii, inset, null), by);
+  var band = _outlineBands[key];
+  if (band == null) {
+    if (_outlineBands.length >= _outlineCacheLimit) _outlineBands.clear();
+    final outline = superellipsePath(
+      Rect.fromLTWH(0, 0, rect.width, rect.height),
+      radii,
+      inset: inset,
+    );
+    band = Path.combine(PathOperation.difference, outline, outline.shift(by));
+    _outlineBands[key] = band;
+  }
+  final origin = rect.topLeft;
+  return origin == Offset.zero ? band : band.shift(origin);
+}
+
+final _outlineBands = <(_OutlineKey, Offset), Path>{};
 
 /// A shape border drawing the kit's clamped continuous corners ([cornerSmoothing]: superellipse(1.5),
 /// round at full radius, so a capsule-radius border is a true capsule).

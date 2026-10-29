@@ -128,7 +128,11 @@ class GlassLens extends StatelessWidget {
                     ),
                   ),
                 CustomPaint(
-                  painter: _LensPainter(outline: outline, material: material),
+                  painter: _LensPainter(
+                    outline: outline,
+                    radius: r,
+                    material: material,
+                  ),
                 ),
               ],
             ),
@@ -154,8 +158,15 @@ class _PathClip extends CustomClipper<Path> {
 /// the shadow outside, the veil and the shade inside, the rim light by side and a thumb's dark
 /// top and bottom lines.
 class _LensPainter extends CustomPainter {
-  _LensPainter({required this.outline, required this.material});
+  _LensPainter({
+    required this.outline,
+    required this.radius,
+    required this.material,
+  });
   final Path outline;
+
+  /// The corner radius [outline] was drawn with, for the cached bands along it.
+  final double radius;
   final LensMaterial material;
 
   static const _black = Color(0xFF000000);
@@ -168,13 +179,10 @@ class _LensPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final m = material;
     final bounds = Offset.zero & size;
-    // `inset dx dy`: what of the outline the outline moved by (dx, dy) leaves uncovered.
-    final bands = <Offset, Path>{};
-    Path band(Offset by) => bands[by] ??= Path.combine(
-      PathOperation.difference,
-      outline,
-      outline.shift(by),
-    );
+    // `inset dx dy`: what of the outline the outline moved by (dx, dy) leaves uncovered (kept
+    // per size and shift: a pressed pill asks for the same bands on every frame).
+    Path band(Offset by) =>
+        outlineBand(bounds, [radius, radius, radius, radius], by: by);
     void fill(Path path, Color colour, double alpha) {
       if (alpha <= 0.001) return;
       canvas.drawPath(path, Paint()..color = colour.withValues(alpha: alpha));
