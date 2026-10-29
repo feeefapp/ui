@@ -240,12 +240,16 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
                                                     finally {
                                                         setBusy(false);
                                                     }
-                                                }, children: [_jsx("strong", { children: t('lab.filter.naturalPrompt') }), _jsx(TextField, { ref: naturalInput, hint: t('lab.filter.naturalHint'), leadingIcon: _jsx(Sparkles, {}), value: text, onChange: (event) => setText(event.target.value), error: error, supportingText: t('lab.filter.naturalAvailable', {
-                                                            names: options
-                                                                .filter((option) => !option.type || option.type === 'boolean')
-                                                                .map((option) => option.label)
-                                                                .join(', '),
-                                                        }) }), naturalSuggestions?.length ? (_jsx("div", { className: "lab-filter-suggestions", role: "group", "aria-label": t('lab.filter.naturalSuggestions'), children: naturalSuggestions.map((suggestion) => (_jsx(Button, { type: "button", variant: "tonal", controlSize: "small", onClick: () => {
+                                                }, children: [_jsx("strong", { children: t('lab.filter.naturalPrompt') }), _jsx(TextField, { ref: naturalInput, hint: t('lab.filter.naturalHint'), leadingIcon: _jsx(Sparkles, {}), value: text, onChange: (event) => setText(event.target.value), error: error, 
+                                                        // Examples say more than the list of switches, so they replace it.
+                                                        supportingText: naturalSuggestions?.length
+                                                            ? undefined
+                                                            : t('lab.filter.naturalAvailable', {
+                                                                names: options
+                                                                    .filter((option) => !option.type || option.type === 'boolean')
+                                                                    .map((option) => option.label)
+                                                                    .join(', '),
+                                                            }) }), naturalSuggestions?.length ? (_jsx("div", { className: "lab-filter-suggestions", role: "group", "aria-label": t('lab.filter.naturalSuggestions'), children: naturalSuggestions.map((suggestion) => (_jsx(Button, { type: "button", variant: "tonal", controlSize: "small", onClick: () => {
                                                                 setText(suggestion);
                                                                 setError('');
                                                                 naturalInput.current?.focus();
