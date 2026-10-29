@@ -9,6 +9,7 @@ import '../theme.dart';
 import '../theme/surfaces.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
+import '../theme/raster.dart';
 import 'button.dart' show ControlOverrides, ControlSize;
 
 /// Where the floated hint rests: on the border (`outlined`) or inside the field above the value.
@@ -227,6 +228,7 @@ class _FieldShellState extends State<FieldShell> {
 
     Widget frame = CustomPaint(
       painter: _FieldPainter(
+        dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
         fill: paint.fill,
         edge: edge,
         radius: radius,
@@ -479,6 +481,7 @@ class _FloatingLabel extends StatelessWidget {
 
 class _FieldPainter extends CustomPainter {
   _FieldPainter({
+    required this.dpr,
     required this.fill,
     required this.edge,
     required this.radius,
@@ -495,6 +498,9 @@ class _FieldPainter extends CustomPainter {
   final double radius, depth, ringWidth;
   final bool raised;
 
+  /// The device pixel ratio the still shadow is rendered at.
+  final double dpr;
+
   /// Where a hint floated onto the border cuts the edge and ring: its inline start and width.
   final ({double start, double width})? notch;
   final bool rtl;
@@ -505,11 +511,18 @@ class _FieldPainter extends CustomPainter {
     final radii = [radius, radius, radius, radius];
     final shape = superellipsePath(rect, radii);
     if (raised) {
-      canvas.drawPath(
-        shape.shift(const Offset(0, 2)),
-        Paint()
-          ..color = Color.from(alpha: depth, red: 0, green: 0, blue: 0)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+      // The soft drop shadow, rendered once per size ([paintStill]).
+      paintStill(
+        canvas,
+        key: ('raised', size.width, size.height, radius, depth),
+        bounds: rect.shift(const Offset(0, 2)).inflate(9),
+        dpr: dpr,
+        draw: (canvas) => canvas.drawPath(
+          shape.shift(const Offset(0, 2)),
+          Paint()
+            ..color = Color.from(alpha: depth, red: 0, green: 0, blue: 0)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+        ),
       );
     }
     if (fill.a > 0) canvas.drawPath(shape, Paint()..color = fill);
@@ -563,6 +576,7 @@ class _FieldPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_FieldPainter old) =>
+      old.dpr != dpr ||
       old.fill != fill ||
       old.edge != edge ||
       old.ring != ring ||

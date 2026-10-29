@@ -220,7 +220,13 @@ squares loops) and its rim light and hairline sample those polygons (`loopNormal
 when the rim can show the turn and never reclips its backdrops; every bubble's content paints in its
 own layer under the glass transform (dropped while the bubble is out of the glass, so an offstage
 bubble never paints), and `superellipsePath`/`superellipsePoints`/`outlineBand` are cached per
-geometry and shared, so never mutate a path they return. Keep these when touching the scene.
+geometry and shared, so never mutate a path they return. The hairline is painted by the glass
+painter as black at its strength (as the web does), never as a backdrop filter: a cluster has one
+backdrop pass, the material's. Still shadows (buttons, pills, thumbs, fields, tooltips, alerts,
+sheets) go through `paintStill` (`theme/raster.dart`), rendered once per geometry at the device
+pixel ratio and drawn as an image: Impeller keeps no raster cache, so a `MaskFilter.blur` drawn
+live is a Gaussian pass on every frame. Any new blurred shadow at rest uses it; a shadow that
+changes shape every frame (a lens, a transition) stays live. Keep these when touching the scene.
 Kit rows (ScaffoldAppBar, ScaffoldTopBar, Toolbar, Dock host, ToolbarSearch) are GlassScopes:
 a container unless one encloses them. Wrap any other row of bubbles in GlassScope so they share
 one material. A GlassGroup with no container around it is the only bubble of its own container

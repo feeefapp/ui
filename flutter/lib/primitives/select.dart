@@ -497,6 +497,7 @@ class _PlainTrigger extends StatelessWidget {
         variant == ControlVariant.elevated || variant == ControlVariant.filled;
     return CustomPaint(
       painter: ControlSurfacePainter(
+        dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
         fill: open
             ? paint.pressed
             : (hovered || focus ? paint.hover : paint.fill),

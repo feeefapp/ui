@@ -503,6 +503,7 @@ class _NumberFieldState extends State<NumberField>
     final invalid = message != null;
     Widget field = CustomPaint(
       painter: ControlSurfacePainter(
+        dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
         fill: fill,
         // The glass draws the outline; the edge only marks editing and errors.
         edge: invalid ? c.danger : (editing ? c.focus : clear),

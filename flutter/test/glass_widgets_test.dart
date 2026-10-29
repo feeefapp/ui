@@ -128,9 +128,9 @@ void main() {
       for (final layer in tester.layers.whereType<BackdropFilterLayer>())
         layer.backdropKey,
     ];
-    // Three apart bubbles per container, each with its backdrop and its two hairline bands
-    // (ring and slivers), all sharing one backdrop read per container.
-    expect(keys, hasLength(18));
+    // Three apart bubbles per container, each with its backdrop (the hairline is painted, not
+    // filtered), all sharing one backdrop read per container.
+    expect(keys, hasLength(6));
     expect(keys, everyElement(isNotNull));
     expect(keys.toSet(), hasLength(2));
   });
@@ -153,8 +153,8 @@ void main() {
       ),
     );
     await tester.pump();
-    // One backdrop for each shape, plus its two exterior bands (ring and slivers).
-    expect(tester.layers.whereType<BackdropFilterLayer>(), hasLength(6));
+    // One backdrop for each shape; the exterior hairline is painted over it, not filtered.
+    expect(tester.layers.whereType<BackdropFilterLayer>(), hasLength(2));
     expect(tester.takeException(), isNull);
   });
 
@@ -187,13 +187,13 @@ void main() {
         ),
       );
       await tester.pump();
-      // Each shape: its backdrop and the two exterior hairline bands, nothing more.
-      expect(tester.layers.whereType<BackdropFilterLayer>(), hasLength(6));
+      // Each shape: its backdrop, nothing more (the hairline is painted).
+      expect(tester.layers.whereType<BackdropFilterLayer>(), hasLength(2));
       update(() => width = 120);
       for (var i = 0; i < 30; i++) {
         await tester.pump(const Duration(milliseconds: 50));
       }
-      expect(tester.layers.whereType<BackdropFilterLayer>(), hasLength(6));
+      expect(tester.layers.whereType<BackdropFilterLayer>(), hasLength(2));
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump(const Duration(seconds: 1));
@@ -468,6 +468,55 @@ void main() {
       expect(turns, greaterThan(far));
       expect(turns, lessThan(400));
       await mouse.removePointer();
+    },
+  );
+  testWidgets(
+    'the hairline is painted just outside the outline, no backdrop pass',
+    (tester) async {
+      final boundary = GlobalKey();
+      await tester.pumpWidget(
+        host(
+          Center(
+            child: RepaintBoundary(
+              key: boundary,
+              // The white sits inside the captured layer: the pixels around the glass are it.
+              child: const ColoredBox(
+                color: Color(0xFFFFFFFF),
+                child: Padding(
+                  padding: EdgeInsets.all(8),
+                  child: GlassGroup(
+                    radius: 22,
+                    child: SizedBox(width: 158, height: 42),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          config: const ThemeConfig(performance: Performance.full),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      // One backdrop pass: the material's. The hairline costs none.
+      expect(tester.layers.whereType<BackdropFilterLayer>(), hasLength(1));
+      await tester.runAsync(() async {
+        final render =
+            boundary.currentContext!.findRenderObject()
+                as RenderRepaintBoundary;
+        final image = await render.toImage();
+        final bytes = (await image.toByteData(
+          format: ui.ImageByteFormat.rawRgba,
+        ))!;
+        int red(int x, int y) => bytes.getUint8((y * image.width + x) * 4);
+        // Far outside: white but for the faint glass shadow. Just outside the left edge (ring
+        // and sliver) and just above the top edge (ring only): darkened by the hairline.
+        expect(red(2, 29), greaterThanOrEqualTo(250));
+        expect(red(87, 2), greaterThanOrEqualTo(250));
+        expect(red(7, 29), lessThan(235));
+        expect(red(87, 7), lessThan(245));
+        expect(red(7, 29), lessThan(red(87, 7)));
+        image.dispose();
+      });
     },
   );
 }

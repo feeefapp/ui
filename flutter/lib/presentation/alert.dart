@@ -8,6 +8,7 @@ import '../menu/menu_surface.dart';
 import '../primitives/button.dart';
 import '../theme.dart';
 import '../theme/color_mix.dart';
+import '../theme/raster.dart';
 import 'alert_model.dart';
 import 'host.dart';
 import 'motion.dart';
@@ -365,7 +366,11 @@ class _AlertMaterial extends StatelessWidget {
     final clipper = _RadiiClipper(radii);
     final fill = ColoredBox(color: glass.fill);
     return CustomPaint(
-      painter: _ShadowPainter(radii, glass.contrast ? null : menuShadowColor),
+      painter: _ShadowPainter(
+        radii,
+        glass.contrast ? null : menuShadowColor,
+        MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
+      ),
       foregroundPainter: _RimPainter(
         radii,
         line: glass.contrast ? c.ink : c.line,
@@ -399,9 +404,12 @@ class _RadiiClipper extends CustomClipper<Path> {
 
 /// `--lab-menu-shadow` outside the shape only (a box shadow is never drawn under its box).
 class _ShadowPainter extends CustomPainter {
-  const _ShadowPainter(this.radii, this.color);
+  const _ShadowPainter(this.radii, this.color, this.dpr);
   final List<double> radii;
   final Color? color;
+
+  /// The device pixel ratio the still shadow is rendered at.
+  final double dpr;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -409,25 +417,41 @@ class _ShadowPainter extends CustomPainter {
     final box = Offset.zero & size;
     final spread = box.deflate(12);
     if (color == null || spread.isEmpty) return;
-    canvas.saveLayer(box.inflate(80), Paint());
-    canvas.drawPath(
-      superellipsePath(spread, [
-        for (final r in radii) math.max(0.0, r - 12),
-      ]).shift(const Offset(0, 14)),
-      Paint()
-        ..color = color
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20),
+    // Rendered once per size ([paintStill]): a 20 px blur over the whole alert otherwise costs
+    // a Gaussian pass on every frame while it is up.
+    paintStill(
+      canvas,
+      key: (
+        'alert-shadow',
+        size.width,
+        size.height,
+        radii.first,
+        color.toARGB32(),
+      ),
+      bounds: box.inflate(80),
+      dpr: dpr,
+      draw: (canvas) {
+        canvas.saveLayer(box.inflate(80), Paint());
+        canvas.drawPath(
+          superellipsePath(spread, [
+            for (final r in radii) math.max(0.0, r - 12),
+          ]).shift(const Offset(0, 14)),
+          Paint()
+            ..color = color
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20),
+        );
+        canvas.drawPath(
+          superellipsePath(box, radii),
+          Paint()..blendMode = BlendMode.clear,
+        );
+        canvas.restore();
+      },
     );
-    canvas.drawPath(
-      superellipsePath(box, radii),
-      Paint()..blendMode = BlendMode.clear,
-    );
-    canvas.restore();
   }
 
   @override
   bool shouldRepaint(_ShadowPainter old) =>
-      old.color != color || old.radii.first != radii.first;
+      old.dpr != dpr || old.color != color || old.radii.first != radii.first;
 }
 
 /// The rim: `--lab-glass-light` (edge-low along the top, 6 % black along the bottom) inside a 1px

@@ -12,6 +12,7 @@ import '../physics/spring.dart';
 import '../theme.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
+import '../theme/raster.dart';
 import '../theme/surfaces.dart';
 import 'lens.dart';
 import 'lens_model.dart';
@@ -694,6 +695,7 @@ class _ButtonPaint extends StatelessWidget {
       curve: const Cubic(0.2, 0.8, 0.2, 1),
       builder: (context, animated, child) => CustomPaint(
         painter: _SurfacePainter(
+          dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
           fill: animated ?? fill,
           edge: edge,
           radius: radius,
@@ -715,6 +717,7 @@ class _ButtonPaint extends StatelessWidget {
 
 class _SurfacePainter extends CustomPainter {
   _SurfacePainter({
+    required this.dpr,
     required this.fill,
     required this.edge,
     required this.radius,
@@ -729,6 +732,9 @@ class _SurfacePainter extends CustomPainter {
   });
 
   final Color fill, edge, highlight, shadow;
+
+  /// The device pixel ratio the still shadows are rendered at.
+  final double dpr;
   final double radius, depth;
   final bool raised, pressedInset, prominent;
   final FocusRingStyle? focus;
@@ -742,11 +748,18 @@ class _SurfacePainter extends CustomPainter {
     final radii = [radius, radius, radius, radius];
     final shape = superellipsePath(rect, radii);
     if (raised) {
-      canvas.drawPath(
-        shape.shift(const Offset(0, 2)),
-        Paint()
-          ..color = Color.from(alpha: depth, red: 0, green: 0, blue: 0)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+      // The soft drop shadow, rendered once per size ([paintStill]).
+      paintStill(
+        canvas,
+        key: ('raised', size.width, size.height, radius, depth),
+        bounds: rect.shift(const Offset(0, 2)).inflate(9),
+        dpr: dpr,
+        draw: (canvas) => canvas.drawPath(
+          shape.shift(const Offset(0, 2)),
+          Paint()
+            ..color = Color.from(alpha: depth, red: 0, green: 0, blue: 0)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+        ),
       );
     }
     if (prominent) _paintProminentBehind(canvas, rect, radii, shape);
@@ -764,16 +777,27 @@ class _SurfacePainter extends CustomPainter {
       );
     }
     if (pressedInset) {
-      // inset 0 1px 2px rgb(0 0 0 / 10%).
-      canvas.drawPath(
-        Path.combine(
-          PathOperation.difference,
-          Path()..addRect(rect.inflate(8)),
-          inner.shift(const Offset(0, 1)),
-        ),
-        Paint()
-          ..color = const Color.from(alpha: 0.10, red: 0, green: 0, blue: 0)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1),
+      // inset 0 1px 2px rgb(0 0 0 / 10%), rendered once per size.
+      paintStill(
+        canvas,
+        key: ('button-pressed', size.width, size.height, radius),
+        bounds: rect,
+        dpr: dpr,
+        draw: (canvas) {
+          canvas.save();
+          canvas.clipPath(inner);
+          canvas.drawPath(
+            Path.combine(
+              PathOperation.difference,
+              Path()..addRect(rect.inflate(8)),
+              inner.shift(const Offset(0, 1)),
+            ),
+            Paint()
+              ..color = const Color.from(alpha: 0.10, red: 0, green: 0, blue: 0)
+              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1),
+          );
+          canvas.restore();
+        },
       );
     }
     canvas.restore();
@@ -812,24 +836,26 @@ class _SurfacePainter extends CustomPainter {
     List<double> radii,
     Path shape,
   ) {
-    canvas.drawPath(
-      shape.shift(const Offset(0, 8)),
-      Paint()
-        ..color = shadow
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7.5),
-    );
-    final pulled = superellipsePath(rect, radii, inset: 0.75);
-    final slivers = Path.combine(
-      PathOperation.difference,
-      Path.combine(
-        PathOperation.union,
-        pulled.shift(const Offset(1.25, 0)),
-        pulled.shift(const Offset(-1.25, 0)),
+    paintStill(
+      canvas,
+      key: (
+        'button-prominent',
+        rect.width,
+        rect.height,
+        radii.first,
+        shadow.toARGB32(),
       ),
-      shape,
+      bounds: rect.shift(const Offset(0, 8)).inflate(23),
+      dpr: dpr,
+      draw: (canvas) => canvas.drawPath(
+        shape.shift(const Offset(0, 8)),
+        Paint()
+          ..color = shadow
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7.5),
+      ),
     );
     canvas.drawPath(
-      slivers,
+      _prominentSlivers(rect, radii, shape),
       Paint()
         ..color = const Color.from(alpha: 0.098, red: 0, green: 0, blue: 0),
     );
@@ -862,33 +888,34 @@ class _SurfacePainter extends CustomPainter {
         ).createShader(rect),
     );
     canvas.restore();
-    canvas.save();
-    canvas.clipPath(inner);
-    final outside = Path()..addRect(rect.inflate(24));
-    // A CSS inset shadow: paint outside the padding box grown by -spread, moved by offset.
-    void insetShadow(Offset offset, double spread, double sigma, Color color) {
-      final hole = superellipsePath(
-        rect,
-        radii,
-        inset: 1 + spread,
-      ).shift(offset);
-      canvas.drawPath(
-        Path.combine(PathOperation.difference, outside, hole),
-        Paint()
-          ..color = color
-          ..maskFilter = sigma > 0
-              ? MaskFilter.blur(BlurStyle.normal, sigma)
-              : null,
-      );
-    }
-
-    insetShadow(
-      const Offset(0, -8),
-      -4,
-      4,
-      const Color.from(alpha: 0.06, red: 1, green: 1, blue: 1),
+    // A CSS inset shadow (inset 0 -8px 8px -4px white 6 %): paint outside the padding box
+    // grown by -spread, moved by offset, inside the padding box. Rendered once per size.
+    paintStill(
+      canvas,
+      key: ('button-prominent-inset', rect.width, rect.height, radii.first),
+      bounds: rect,
+      dpr: dpr,
+      draw: (canvas) {
+        canvas.save();
+        canvas.clipPath(inner);
+        final hole = superellipsePath(
+          rect,
+          radii,
+          inset: 1 - 4,
+        ).shift(const Offset(0, -8));
+        canvas.drawPath(
+          Path.combine(
+            PathOperation.difference,
+            Path()..addRect(rect.inflate(24)),
+            hole,
+          ),
+          Paint()
+            ..color = const Color.from(alpha: 0.06, red: 1, green: 1, blue: 1)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+        );
+        canvas.restore();
+      },
     );
-    canvas.restore();
     // The rim: the 1px border ring (a stroke at 0.5px, like the edge), its top and bottom
     // quarters brighter: on a capsule the CSS border's sides meet at the 45° point of each end
     // arc, whose centre is half the height in from the end.
@@ -922,6 +949,7 @@ class _SurfacePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_SurfacePainter old) =>
+      old.dpr != dpr ||
       old.fill != fill ||
       old.edge != edge ||
       old.prominent != prominent ||
@@ -933,6 +961,26 @@ class _SurfacePainter extends CustomPainter {
       old.highlight != highlight ||
       old.texture != texture ||
       old.depth != depth;
+}
+
+/// The prominent face's side slivers per size: two path operations otherwise run on every paint.
+final _slivers = <(double, double, double), Path>{};
+
+Path _prominentSlivers(Rect rect, List<double> radii, Path shape) {
+  final key = (rect.width, rect.height, radii.first);
+  final kept = _slivers[key];
+  if (kept != null) return kept;
+  if (_slivers.length >= 128) _slivers.clear();
+  final pulled = superellipsePath(rect, radii, inset: 0.75);
+  return _slivers[key] = Path.combine(
+    PathOperation.difference,
+    Path.combine(
+      PathOperation.union,
+      pulled.shift(const Offset(1.25, 0)),
+      pulled.shift(const Offset(-1.25, 0)),
+    ),
+    shape,
+  );
 }
 
 /// Icon-only actions reuse the button emphasis, loading and surface engines (the web kit's

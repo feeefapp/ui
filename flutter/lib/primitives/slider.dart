@@ -15,6 +15,7 @@ import '../theme.dart';
 import '../theme/surfaces.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
+import '../theme/raster.dart';
 import 'button.dart' show ControlSize;
 import '../glass/lens_glass.dart';
 import '../glass/refraction.dart' show LensKind;
@@ -1018,6 +1019,7 @@ class _Thumb extends StatelessWidget {
     children: [
       CustomPaint(
         painter: _ThumbPainter(
+          dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
           fill: fill,
           radius: radius,
           shadows: thin
@@ -1043,6 +1045,7 @@ class _Thumb extends StatelessWidget {
 
 class _ThumbPainter extends CustomPainter {
   _ThumbPainter({
+    required this.dpr,
     required this.fill,
     required this.radius,
     required this.shadows,
@@ -1054,6 +1057,9 @@ class _ThumbPainter extends CustomPainter {
   /// CSS box-shadows as (x, y, blur, black alpha); sigma = blur / 2.
   final List<(double, double, double, double)> shadows;
 
+  /// The device pixel ratio the still shadows are rendered at.
+  final double dpr;
+
   @override
   void paint(Canvas canvas, Size size) {
     final r = math.min(radius, math.min(size.width, size.height) / 2);
@@ -1061,12 +1067,20 @@ class _ThumbPainter extends CustomPainter {
     final shape = superellipsePath(rect, [r, r, r, r]);
     final rest = 1 - lens;
     if (rest > 0.001) {
+      // Each rendered once per thumb size and faded as the lens takes over ([paintStill]).
       for (final (x, y, blur, alpha) in shadows) {
-        canvas.drawPath(
-          shape.shift(Offset(x, y)),
-          Paint()
-            ..color = Color.from(alpha: alpha * rest, red: 0, green: 0, blue: 0)
-            ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur / 2),
+        paintStill(
+          canvas,
+          key: ('thumb-shadow', size.width, size.height, r, x, y, blur, alpha),
+          bounds: rect.shift(Offset(x, y)).inflate(blur * 1.5),
+          dpr: dpr,
+          opacity: rest,
+          draw: (canvas) => canvas.drawPath(
+            shape.shift(Offset(x, y)),
+            Paint()
+              ..color = Color.from(alpha: alpha, red: 0, green: 0, blue: 0)
+              ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur / 2),
+          ),
         );
       }
     }
@@ -1081,6 +1095,7 @@ class _ThumbPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ThumbPainter old) =>
+      old.dpr != dpr ||
       old.fill != fill ||
       old.radius != radius ||
       old.shadows != shadows ||

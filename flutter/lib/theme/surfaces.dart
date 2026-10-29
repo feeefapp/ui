@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
 import '../theme.dart';
+import 'raster.dart';
 
 /// `--lab-glass-shadow`'s colour: 18% black in light themes, 40% in dark.
 Color glassShadowColor(Brightness brightness) => Color.from(
@@ -172,6 +173,7 @@ class _FocusRingPainter extends CustomPainter {
 /// inset top highlight, the 1px edge and an optional keyboard focus ring hugging it.
 class ControlSurfacePainter extends CustomPainter {
   ControlSurfacePainter({
+    required this.dpr,
     required this.fill,
     required this.edge,
     required this.radius,
@@ -186,17 +188,27 @@ class ControlSurfacePainter extends CustomPainter {
   final bool raised;
   final FocusRingStyle? focus;
 
+  /// The device pixel ratio the still shadow is rendered at.
+  final double dpr;
+
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
     final r = [radius, radius, radius, radius];
     final shape = superellipsePath(rect, r);
     if (raised) {
-      canvas.drawPath(
-        shape.shift(const Offset(0, 2)),
-        Paint()
-          ..color = Color.from(alpha: depth, red: 0, green: 0, blue: 0)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+      // The soft drop shadow, rendered once per size ([paintStill]).
+      paintStill(
+        canvas,
+        key: ('raised', size.width, size.height, radius, depth),
+        bounds: rect.shift(const Offset(0, 2)).inflate(9),
+        dpr: dpr,
+        draw: (canvas) => canvas.drawPath(
+          shape.shift(const Offset(0, 2)),
+          Paint()
+            ..color = Color.from(alpha: depth, red: 0, green: 0, blue: 0)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+        ),
       );
     }
     canvas.drawPath(shape, Paint()..color = fill);
@@ -228,6 +240,7 @@ class ControlSurfacePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(ControlSurfacePainter old) =>
+      old.dpr != dpr ||
       old.fill != fill ||
       old.edge != edge ||
       old.focus != focus ||

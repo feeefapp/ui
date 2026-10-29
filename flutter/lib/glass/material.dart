@@ -145,13 +145,14 @@ const double glassShadowBlur = 7.5;
 /// The dark hairline iOS 27 draws outside every glass shape (the web kit's `GLASS_HAIRLINE`): a
 /// ring [glassHairlineRingWidth] px wide, plus slivers where the shape moved
 /// [glassHairlineSliverShift] px left and right and shrunk by [glassHairlineSliverInset] px reaches
-/// past its outline. Both subtract from the backdrop (plus-darker), by [glassHairline].
+/// past its outline. Both are filled black at their strength ([glassHairline]), as the web kit
+/// paints them: on white exactly iOS 27's plus-darker, and no backdrop pass.
 const double glassHairlineRingWidth = 0.5;
 const double glassHairlineSliverShift = 1.25;
 const double glassHairlineSliverInset = 0.75;
 
-/// The hairline's ring and sliver strengths (0–1 subtracted) at one tint and brightness: clear
-/// light 0.2 / 0.184, regular light 0.09 / 0.184, dark 0.349 / 0.349.
+/// The hairline's ring and sliver strengths (the black fill's alpha) at one tint and brightness:
+/// clear light 0.2 / 0.184, regular light 0.09 / 0.184, dark 0.349 / 0.349.
 ({double ring, double sliver}) glassHairline(
   double tint, {
   required bool dark,

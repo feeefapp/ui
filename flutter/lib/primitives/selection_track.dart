@@ -24,6 +24,7 @@ import '../scroll/reveal.dart';
 import '../theme.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
+import '../theme/raster.dart';
 import '../theme/surfaces.dart';
 import 'button.dart' show ControlOverrides;
 import '../glass/lens_glass.dart';
@@ -1030,6 +1031,7 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
       child: CustomPaint(
         key: _trackKey,
         painter: _PillPainter(
+          dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
           state: this,
           fill: pillFill,
           radiusScale: s.radiusScale,
@@ -1688,6 +1690,7 @@ class _RenderInkHole extends RenderProxyBox {
 /// styles keep the fill.
 class _PillPainter extends CustomPainter {
   _PillPainter({
+    required this.dpr,
     required this.state,
     required this.fill,
     required this.radiusScale,
@@ -1698,6 +1701,9 @@ class _PillPainter extends CustomPainter {
   final Color fill;
   final double radiusScale;
   final bool solid, disabled;
+
+  /// The device pixel ratio the still shadows are rendered at.
+  final double dpr;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1718,21 +1724,24 @@ class _PillPainter extends CustomPainter {
       );
     }
     if (lens < 0.999) {
-      // The switch thumb's rest shadows (slider.dart): CSS (x, y, blur, black alpha).
+      // The switch thumb's rest shadows (slider.dart): CSS (x, y, blur, black alpha), each
+      // rendered once per pill size and faded as the lens takes over ([paintStill]).
       for (final (x, y, blur, a) in const [
         (0.0, 1.0, 2.0, 0.20),
         (0.0, 3.0, 8.0, 0.12),
       ]) {
-        canvas.drawPath(
-          shape.shift(Offset(x, y)),
-          Paint()
-            ..color = Color.from(
-              alpha: a * (1 - lens),
-              red: 0,
-              green: 0,
-              blue: 0,
-            )
-            ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur / 2),
+        paintStill(
+          canvas,
+          key: ('pill-shadow', rect.width, rect.height, radius, x, y, blur, a),
+          bounds: rect.shift(Offset(x, y)).inflate(blur * 1.5),
+          dpr: dpr,
+          opacity: 1 - lens,
+          draw: (canvas) => canvas.drawPath(
+            shape.shift(Offset(x, y)),
+            Paint()
+              ..color = Color.from(alpha: a, red: 0, green: 0, blue: 0)
+              ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur / 2),
+          ),
         );
       }
       canvas.drawPath(
@@ -1745,6 +1754,7 @@ class _PillPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_PillPainter old) =>
+      old.dpr != dpr ||
       old.state != state ||
       old.fill != fill ||
       old.radiusScale != radiusScale ||

@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import '../brand/geometry.dart';
 import '../theme.dart';
 import '../theme/css_text.dart';
+import '../theme/raster.dart';
 import '../theme/surfaces.dart';
 import '../menu/anchored_panel.dart';
 
@@ -111,6 +112,7 @@ class _TooltipSurface extends StatelessWidget {
     final radius = theme.sizes.radiusSmall;
     return CustomPaint(
       painter: _TooltipPainter(
+        dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
         fill: c.surface,
         line: c.line,
         shadow: glassShadowColor(theme.brightness),
@@ -136,6 +138,7 @@ class _TooltipSurface extends StatelessWidget {
 
 class _TooltipPainter extends CustomPainter {
   _TooltipPainter({
+    required this.dpr,
     required this.fill,
     required this.line,
     required this.shadow,
@@ -144,20 +147,35 @@ class _TooltipPainter extends CustomPainter {
   final Color fill, line, shadow;
   final double radius;
 
+  /// The device pixel ratio the still shadow is rendered at.
+  final double dpr;
+
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
     final r = [radius, radius, radius, radius];
-    // --lab-glass-shadow: 0 8px 24px -14px.
+    // --lab-glass-shadow: 0 8px 24px -14px, rendered once per size ([paintStill]).
     final spread = rect.deflate(14);
     if (!spread.isEmpty) {
-      canvas.drawPath(
-        superellipsePath(spread, [
-          for (final v in r) (v - 14).clamp(0, v),
-        ]).shift(const Offset(0, 8)),
-        Paint()
-          ..color = shadow
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
+      paintStill(
+        canvas,
+        key: (
+          'tooltip-shadow',
+          size.width,
+          size.height,
+          radius,
+          shadow.toARGB32(),
+        ),
+        bounds: spread.shift(const Offset(0, 8)).inflate(36),
+        dpr: dpr,
+        draw: (canvas) => canvas.drawPath(
+          superellipsePath(spread, [
+            for (final v in r) (v - 14).clamp(0, v),
+          ]).shift(const Offset(0, 8)),
+          Paint()
+            ..color = shadow
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
+        ),
       );
     }
     canvas.drawPath(superellipsePath(rect, r), Paint()..color = fill);
@@ -172,5 +190,9 @@ class _TooltipPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_TooltipPainter old) =>
-      old.fill != fill || old.line != line || old.radius != radius;
+      old.dpr != dpr ||
+      old.fill != fill ||
+      old.line != line ||
+      old.shadow != shadow ||
+      old.radius != radius;
 }
