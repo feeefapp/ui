@@ -265,8 +265,8 @@ export declare const LENS_MATERIAL: {
     readonly pill: {
         readonly veil: 0;
         readonly shade: {
-            readonly top: 0.105;
-            readonly middle: 0.035;
+            readonly top: 0.03;
+            readonly middle: 0;
         };
         readonly rim: {
             readonly light: {

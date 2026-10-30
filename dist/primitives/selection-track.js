@@ -17,7 +17,7 @@ import { GLASS_FOLLOW_ATTRIBUTE } from '../glass/transitions.js';
 import { useMotionValue, useReducedMotion } from '../physics/react.js';
 import { SPRINGS, springTiming } from '../physics/spring.js';
 import { SEGMENTED_FADE, SEGMENTED_SLOP, segmentIndexAt, segmentedAutoScrollSpeed, segmentedDragCenter, segmentedPillWidth, segmentedSnapIndex, selectionKeyTarget, } from './segmented-model.js';
-import { lensCoverage, lensInkZoom, lensPillShape, lensStretch } from './lens-model.js';
+import { lensCoverage, lensInkAlpha, lensInkZoom, lensPillShape, lensPlainAlpha, lensStretch } from './lens-model.js';
 import { GlassLensLayer, lensBends, lensMode } from '../glass/lens-layer.js';
 import '../actions/actions.css';
 import './lens.css';
@@ -224,10 +224,8 @@ export function SelectionTrack({ value, onSelect, options, label, semantics = 'r
         // it the pill covers: its content and its ink copy scale together (the copy's clip mapped back so
         // it still matches the pill), so nothing tears and its badge stays whole.
         const amount = mode === 'off' ? 0 : lensAmount;
-        // The ink shows where the pill is, and under the lens wherever the lens is.
-        const mix = (a, z) => a + (z - a) * amount;
-        const drop = { x: mix(shape.x, glass.x), y: mix(shape.y, glass.y), width: mix(shape.width, glass.width), height: mix(shape.height, glass.height) };
-        const dropRadius = mix(radius, glass.radius);
+        // The ink is cut to the pill as it passes; under the lens the cut opens to the whole option and
+        // the ink fades with the lens's coverage instead (lensInkAlpha), so labels never split.
         buttons().forEach((button, i) => {
             const box = boxes[i];
             if (!box)
@@ -235,15 +233,19 @@ export function SelectionTrack({ value, onSelect, options, label, semantics = 'r
             const b = box.border;
             const innerW = box.w - 2 * b;
             const innerH = box.h - 2 * b;
-            const zoom = lensInkZoom(amount, lensCoverage(shape.x, shape.width, box.x, box.w));
+            const coverage = lensCoverage(shape.x, shape.width, box.x, box.w);
+            const zoom = lensInkZoom(amount, coverage);
             // The copy scales around its content's centre and moves onto the plain content's.
             const o = box.content?.ink ?? { x: innerW / 2, y: innerH / 2 };
             const t = box.content ? { x: box.content.plain.x - o.x, y: box.content.plain.y - o.y } : { x: 0, y: 0 };
-            // The drop in the copy's own (unmoved, unscaled) pixels, then the clip there.
-            const local = { x: drop.x - (box.x + b) - t.x, y: drop.y - (box.y + b) - t.y, w: drop.width, h: drop.height };
+            // The pill in the copy's own (unmoved, unscaled) pixels, then the clip there, opened toward the
+            // whole option as the lens comes in.
+            const local = { x: shape.x - (box.x + b) - t.x, y: shape.y - (box.y + b) - t.y, w: shape.width, h: shape.height };
             const cut = { x: o.x + (local.x - o.x) / zoom, y: o.y + (local.y - o.y) / zoom, w: local.w / zoom, h: local.h / zoom };
-            const inset = [cut.y, innerW - (cut.x + cut.w), innerH - (cut.y + cut.h), cut.x].map((v) => `${Math.max(0, v)}px`);
-            button.style.setProperty('--lab-segmented-clip', `inset(${inset.join(' ')} round ${dropRadius / zoom}px)`);
+            const inset = [cut.y, innerW - (cut.x + cut.w), innerH - (cut.y + cut.h), cut.x].map((v) => `${Math.max(0, v) * (1 - amount)}px`);
+            button.style.setProperty('--lab-segmented-clip', `inset(${inset.join(' ')} round ${(radius / zoom) * (1 - amount)}px)`);
+            button.style.setProperty('--lab-segmented-ink-alpha', String(lensInkAlpha(amount, coverage)));
+            button.style.setProperty('--lab-segmented-plain-alpha', String(lensPlainAlpha(amount, coverage)));
             button.style.setProperty('--lab-segmented-zoom', String(zoom));
             button.style.setProperty('--lab-segmented-ink-at', `${o.x}px ${o.y}px`);
             button.style.setProperty('--lab-segmented-ink-shift', `${t.x}px ${t.y}px`);

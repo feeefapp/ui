@@ -107,6 +107,10 @@ html[data-lab-theme] {
   --lab-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --lab-danger: #a02b2b;
   --lab-on-danger: #fff;
+  /* A count that needs action (a tab's badge): iOS's system red with white figures, vivid in both
+  appearances (the dark error tone is a pastel meant for text, not for a badge). */
+  --lab-badge: #ff3b30;
+  --lab-on-badge: #fff;
   /* Derived control materials use the theme palette. Glass belongs to the
   enclosing toolbar or dock, never to each control independently. */
   --lab-control-surface: var(--lab-surface);
@@ -171,6 +175,8 @@ html[data-lab-theme='dark'] {
   --lab-glass-glow: rgb(255 255 255 / 16%);
   --lab-danger: #ffb4ab;
   --lab-on-danger: #571812;
+  --lab-badge: #ff453a;
+  --lab-on-badge: #fff;
   --lab-control-highlight: rgb(255 255 255 / 20%);
   --lab-control-depth: 0 2px 6px rgb(0 0 0 / 18%);
 }
