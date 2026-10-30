@@ -67,29 +67,30 @@ export declare function liveDisplacementMap(width: number, height: number, clust
 /** A control lens's kind: a pill (segmented control, tab bar), a slider thumb or a switch thumb. */
 export type LensKind = 'pill' | 'thumb' | 'switch';
 /**
- * How iOS 26.2's control lenses bend what is behind them, measured with phase-shifted fringes under
- * held stock controls (research/liquid-glass/LENS-MEASURED.md §2). The shift (px, positive = the
- * pixel shows the backdrop from further inside) at depth `d` px from the outline:
- * - pill: a 1 px inward rim, then outward (it shows the backdrop from outside its edge, so lines
- *   crowd toward the rim): rising 1 px per px to 4.3 px at 5 px deep, then fading as
- *   `exp(-(d - 5) / 10.5)`, leaning away from the centre (`radial`: the direction is the outline's
- *   normal plus `radial` × the offset from the centre over the half size), so lines bow along its
- *   top and bottom. The flat middle neither bends nor magnifies.
+ * How control lenses bend what is behind them. The shift (px, positive = the pixel shows the backdrop
+ * from further inside) at depth `d` px from the outline:
+ * - pill (the selection of a segmented control or a tab bar, lifted out of its rest pill by
+ *   `LENS_PILL_LIFT`): a convex rim that only ever shows what lies inside its rest pill, so the
+ *   track's edge and whatever is past it never show inside the lens. With `gap` = how far the lens
+ *   reaches past its rest pill there (`G = gap + margin`), the shift is `G · (1 - d / (reach · G))²`
+ *   to nothing at `reach · G` px deep: lines near the rim are magnified (most at the rim, at most
+ *   `1 / (1 - 2 / reach)` times), the middle stays put, and nothing folds (`reach` ≥ 2). iOS 26.2's
+ *   tab bar pill shows the bar's own edge and the page past it through its rim
+ *   (research/liquid-glass/LENS-MEASURED.md §6); the kit keeps one clean capsule instead.
  * - thumb (slider): inward, 7.1 px over the outer 1 px, then `7.1 · (1 - (d - 1) / 6.5)^2.2` to
- *   nothing at 7.5 px; its outer `soft` px are softened (`LENS_SOFT`).
- * - switch: the pill's profile at `scale` (outward, 2.9 px at 5 px deep), and its whole middle zoomed
- *   out (`zoom`: it shows the backdrop `zoom` × the offset from the centre further out, so it looks
- *   about 13 % smaller across).
+ *   nothing at 7.5 px; its outer `soft` px are softened (`LENS_SOFT`). Measured on iOS 26.2 (§2).
+ * - switch: iOS 26.2's measured lip (§2, the segmented pill's profile at two thirds): a 0.6 px inward
+ *   rim of `rim` px, then outward (it shows the backdrop from outside its edge, so lines crowd toward
+ *   the rim) rising 1 px per px to `peak` px at `at` px deep, then fading as `exp(-(d - at) / decay)`,
+ *   leaning away from the centre (`radial`: the direction is the outline's normal plus `radial` × the
+ *   offset from the centre over the half size), and its whole middle zoomed out (`zoom`: it shows the
+ *   backdrop `zoom` × the offset from the centre further out, so it looks about 13 % smaller across).
  * All are the same in light and dark appearance.
  */
 export declare const LENS_BEND: {
     readonly pill: {
-        readonly rim: 6;
-        readonly rimWidth: 0.6;
-        readonly peak: 4.3;
-        readonly at: 5;
-        readonly decay: 10.5;
-        readonly radial: 1.5;
+        readonly margin: 1;
+        readonly reach: 2.5;
     };
     readonly thumb: {
         readonly peak: 7.1;
@@ -99,7 +100,12 @@ export declare const LENS_BEND: {
         readonly soft: 5;
     };
     readonly switch: {
-        readonly scale: 0.67;
+        readonly rim: 4.02;
+        readonly rimWidth: 0.6;
+        readonly peak: 2.881;
+        readonly at: 5;
+        readonly decay: 10.5;
+        readonly radial: 1.5;
         readonly zoom: {
             readonly x: 0.04;
             readonly y: 0;
@@ -114,21 +120,27 @@ export declare const LENS_BEND: {
 export declare const LENS_SOFT: {
     readonly blur: 2;
 };
-/** Colour split of a control lens's bend: red bends this much less than green and blue this much
- * more (iOS 26.2: 0.94 and 1.05 across the pill's strongest band), the rainbow along its rim. */
-export declare const LENS_DISPERSION = 0.06;
 /** Raster work allowed for one lens map: up to 3 samples per px on a control lens. */
 export declare const LENS_MAP_PIXELS = 65536;
-/** The bend (px, positive inward) of a `kind` lens at depth `d` px inside its outline. */
-export declare function lensBend(kind: LensKind, d: number): number;
+/**
+ * The bend (px, positive inward) of a `kind` lens at depth `d` px inside its outline. A pill's
+ * depends on `gap`: how far (px) the lens reaches past its rest pill at that point (0 when it hasn't
+ * lifted).
+ */
+export declare function lensBend(kind: LensKind, d: number, gap?: number): number;
 /**
  * The map of a control's lens (lens-layer.ts): one `shape` (its own box, at 0, 0) bending by
- * `lensBend` along its outline's normal (a switch also zooms out). Same encoding as
+ * `lensBend` along its outline's normal (a switch also leans and zooms out). A pill passes `lift`,
+ * how far it reaches past its rest pill on each side (its rest pill is the shape inset by it, the
+ * corner smaller by `lift.y`): its bend follows the gap between the two outlines. Same encoding as
  * `displacementMap` (red/green = shift as a share of `scale / 2`, alpha = the shape, blue = how much
  * of the softened copy shows: the thumb's `LENS_SOFT` band), sampled at most `LENS_MAP_PIXELS`. The
- * bend is linear in `scale`, so an owner eases the lens in by scaling `scale` alone.
+ * bend is linear in `scale`, so an owner can ease a thumb's lens in by scaling `scale` alone.
  */
-export declare function lensDisplacementMap(shape: GlassShape, kind: LensKind): {
+export declare function lensDisplacementMap(shape: GlassShape, kind: LensKind, lift?: {
+    x: number;
+    y: number;
+}): {
     width: number;
     height: number;
     data: Uint8ClampedArray<ArrayBuffer>;

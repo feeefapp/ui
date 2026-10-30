@@ -3,8 +3,8 @@ turns into glass while pressed or dragged, as iOS 26.2 draws it (research/liquid
 LENS-MEASURED.md; glass/lens-layer.ts writes the bend and the material, Flutter's GlassLens is the
 twin). .lab-lens is the glass: clear, never blurred, lifted or magnified, with the measured veil
 and shade (its background), the rim light and its shadow (its shadows); no touch glow, as on iOS.
-The owner places the lens above what it bends and writes --lab-lens (0 rest … 1 glass) on an
-ancestor. Owners keep their rest paint where the lens is off: reduced transparency, more contrast,
+The owner places the lens (a thumb above what it bends, a selection pill under its options) and
+writes --lab-lens (0 rest … 1 glass) on an ancestor. Owners keep their rest paint where the lens is off: reduced transparency, more contrast,
 forced colours and glass: 'solid'. */
 .lab-lens {
   position: absolute;

@@ -24,8 +24,10 @@ export declare const LENS_PILL_LIFT: {
  * `lensLabelScale` matches. */
 export declare const LENS_LABEL_SCALE = 1.2;
 /**
- * The glass a pill turns into at `lens` (0 rest … 1 glass): liquid glass lifts it out by
- * `LENS_PILL_LIFT` (corners grow with it), transparent glass keeps the pill's own box. `radius` is
+ * The glass a pill turns into at `lens` (0 rest … 1 glass): a lens that bends what is behind it
+ * (`lifts`: liquid glass where refraction runs) lifts out by `LENS_PILL_LIFT` (corners grow with
+ * it), its convex rim filling the overhang with what lies inside the rest pill; a lens that can't
+ * bend keeps the pill's own box, so it never shows the track's edge or what is past it. `radius` is
  * the pill's corner radius.
  */
 export declare function lensPillShape(pill: {
@@ -33,9 +35,18 @@ export declare function lensPillShape(pill: {
     y: number;
     width: number;
     height: number;
-}, radius: number, lens: number, liquid: boolean): GlassShape;
-/** The scale of the selected option under the lens: `LENS_LABEL_SCALE` eased in with it. */
-export declare function lensInkZoom(lens: number): number;
+}, radius: number, lens: number, lifts: boolean): GlassShape;
+/**
+ * The scale of an option under the lens, around the option's own centre: `LENS_LABEL_SCALE` eased in
+ * with the lens and by how much of the option it covers (`lensCoverage`; 1 for the option it rests
+ * on), so a dragged lens grows the options it passes and never tears their content.
+ */
+export declare function lensInkZoom(lens: number, coverage?: number): number;
+/**
+ * How much of an option (`start`, `width` along the track) the pill (`pillStart`, `pillWidth`)
+ * covers, 0 … 1: 1 when their centres meet, 0 an option's width apart, eased (smoothstep) between.
+ */
+export declare function lensCoverage(pillStart: number, pillWidth: number, start: number, width: number): number;
 /** The lens stretches by the distance the pointer covers in this many seconds (rubber-banded). */
 export declare const LENS_STRETCH_TIME = 0.1;
 /** How far (px) a switch thumb can be pulled past either end, with rubber-band resistance. */

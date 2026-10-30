@@ -17,11 +17,39 @@ import { GLASS_FOLLOW_ATTRIBUTE } from '../glass/transitions.js';
 import { useMotionValue, useReducedMotion } from '../physics/react.js';
 import { SPRINGS, springTiming } from '../physics/spring.js';
 import { SEGMENTED_FADE, SEGMENTED_SLOP, segmentIndexAt, segmentedAutoScrollSpeed, segmentedDragCenter, segmentedPillWidth, segmentedSnapIndex, selectionKeyTarget, } from './segmented-model.js';
-import { lensInkZoom, lensPillShape, lensStretch } from './lens-model.js';
-import { GlassLensLayer, lensMode } from '../glass/lens-layer.js';
+import { lensCoverage, lensInkZoom, lensPillShape, lensStretch } from './lens-model.js';
+import { GlassLensLayer, lensBends, lensMode } from '../glass/lens-layer.js';
 import '../actions/actions.css';
 import './lens.css';
 import './segmented.css';
+/**
+ * Where an option's content sits, in its padding box: the plain content's centre (fractional px;
+ * offset* rounds) and the centre the ink copy lays its content out on (its padding-box copy, inside
+ * the option's padding). They can differ by a fraction of a pixel, which the copy is moved by, or
+ * the two would read as a ghost. Null before the content renders. `scale` is the track's scale on
+ * screen; the content's zoom (around its centre) is undone.
+ */
+function contentCentres(button, scale) {
+    const plain = button.firstElementChild;
+    if (!plain || !plain.offsetWidth)
+        return null;
+    const outer = button.getBoundingClientRect();
+    const inner = plain.getBoundingClientRect();
+    const style = getComputedStyle(button);
+    const pad = (side) => Number.parseFloat(style.getPropertyValue(`padding-${side}`)) || 0;
+    const innerW = button.clientWidth;
+    const innerH = button.clientHeight;
+    return {
+        plain: {
+            x: (inner.left + inner.width / 2 - outer.left) / scale - button.clientLeft,
+            y: (inner.top + inner.height / 2 - outer.top) / scale - button.clientTop,
+        },
+        ink: {
+            x: pad('left') + (innerW - pad('left') - pad('right')) / 2,
+            y: pad('top') + (innerH - pad('top') - pad('bottom')) / 2,
+        },
+    };
+}
 const COLLAPSE = springTiming(SPRINGS.snappy);
 /**
  * One row of options and one moving pill: measuring, the pill and its glass lens, drag with rubber band and momentum snap, auto-scroll, one-row overflow with edge fades and
@@ -132,6 +160,7 @@ export function SelectionTrack({ value, onSelect, options, label, semantics = 'r
                 w: r.width / scale,
                 h: r.height / scale,
                 border: button.clientLeft,
+                content: contentCentres(button, scale),
             };
         });
         const state = layoutState.current;
@@ -172,25 +201,33 @@ export function SelectionTrack({ value, onSelect, options, label, semantics = 'r
         // A tile-shaped pill (e.g. the ladder's shape tiles) is rounder than it is wide: clipping the
         // ink to a full capsule there cut the label off, so the clip follows the pill as drawn.
         const radius = Math.min((Math.min(shape.width, shape.height) / 2) * corner, pillRadius * scale);
-        // Pressed or dragged, the pill is real glass over the options; a liquid one lifts out of the
-        // pill (from its rest size: the lift is iOS's whole growth), past the track.
+        // Pressed or dragged, the pill turns into glass under the options (their labels, icons and badges
+        // stay crisp above it). One that bends lifts out of the pill (from its rest size: the lift is
+        // iOS's whole growth), past the track; its convex rim fills the overhang with what lies inside
+        // the rest pill, so the track's edge and what is past it never show inside it.
         const mode = lensMode();
-        const liquid = mode === 'liquid';
+        const lifts = mode === 'liquid' && lensBends();
         const rest = pressedShape({ x: center.get() - w / 2, y: top.get(), width: w, height, radius: 0 }, 1, stretch.get(), 0);
-        const glass = lensPillShape(rest, (Math.min(rest.width, rest.height) / 2) * corner, lensAmount, liquid);
+        const glass = lensPillShape(rest, (Math.min(rest.width, rest.height) / 2) * corner, lensAmount, lifts);
         const lensEl = lensRef.current;
         if (lensEl) {
             lensEl.style.transform = `translate(${glass.x}px, ${glass.y}px)`;
             lensEl.style.width = `${glass.width}px`;
             lensEl.style.height = `${glass.height}px`;
             lensEl.style.borderRadius = `${glass.radius}px`;
-            lensLayer.current?.update(lensAmount, glass);
+            lensLayer.current?.update(lensAmount, glass, { x: rest.x - glass.x, y: rest.y - glass.y });
         }
-        // Selected ink shows exactly where the pill is, so a label turns over as the pill crosses it.
-        // Under the lens the selected option grows (lensInkZoom, like iOS's tab item): the ink copy
-        // scales up around the drop's centre (its clip mapped back so it still fills the drop) and the
-        // plain content underneath is cut out where the drop is.
-        const zoom = lensInkZoom(mode === 'off' ? 0 : lensAmount);
+        // The glass is the press feedback: no focus ring around the option while it shows.
+        el.toggleAttribute('data-lens', mode !== 'off' && lensAmount > 0.01);
+        // Selected ink shows exactly where the pill is, so a label turns over as the pill crosses it. Under
+        // the lens an option grows (lensInkZoom, like iOS's tab item) around its own centre by how much of
+        // it the pill covers: its content and its ink copy scale together (the copy's clip mapped back so
+        // it still matches the pill), so nothing tears and its badge stays whole.
+        const amount = mode === 'off' ? 0 : lensAmount;
+        // The ink shows where the pill is, and under the lens wherever the lens is.
+        const mix = (a, z) => a + (z - a) * amount;
+        const drop = { x: mix(shape.x, glass.x), y: mix(shape.y, glass.y), width: mix(shape.width, glass.width), height: mix(shape.height, glass.height) };
+        const dropRadius = mix(radius, glass.radius);
         buttons().forEach((button, i) => {
             const box = boxes[i];
             if (!box)
@@ -198,30 +235,26 @@ export function SelectionTrack({ value, onSelect, options, label, semantics = 'r
             const b = box.border;
             const innerW = box.w - 2 * b;
             const innerH = box.h - 2 * b;
-            // The drop in the option's padding box, then where the scaled ink copy must be cut.
-            const local = { x: shape.x - (box.x + b), y: shape.y - (box.y + b), w: shape.width, h: shape.height };
-            const ox = local.x + local.w / 2;
-            const oy = local.y + local.h / 2;
-            const cut = { x: ox + (local.x - ox) / zoom, y: oy + (local.y - oy) / zoom, w: local.w / zoom, h: local.h / zoom };
+            const zoom = lensInkZoom(amount, lensCoverage(shape.x, shape.width, box.x, box.w));
+            // The copy scales around its content's centre and moves onto the plain content's.
+            const o = box.content?.ink ?? { x: innerW / 2, y: innerH / 2 };
+            const t = box.content ? { x: box.content.plain.x - o.x, y: box.content.plain.y - o.y } : { x: 0, y: 0 };
+            // The drop in the copy's own (unmoved, unscaled) pixels, then the clip there.
+            const local = { x: drop.x - (box.x + b) - t.x, y: drop.y - (box.y + b) - t.y, w: drop.width, h: drop.height };
+            const cut = { x: o.x + (local.x - o.x) / zoom, y: o.y + (local.y - o.y) / zoom, w: local.w / zoom, h: local.h / zoom };
             const inset = [cut.y, innerW - (cut.x + cut.w), innerH - (cut.y + cut.h), cut.x].map((v) => `${Math.max(0, v)}px`);
-            button.style.setProperty('--lab-segmented-clip', `inset(${inset.join(' ')} round ${radius / zoom}px)`);
-            button.style.setProperty('--lab-segmented-lens-at', `${ox}px ${oy}px`);
+            button.style.setProperty('--lab-segmented-clip', `inset(${inset.join(' ')} round ${dropRadius / zoom}px)`);
             button.style.setProperty('--lab-segmented-zoom', String(zoom));
-            const plain = button.firstElementChild;
-            if (!plain)
-                return;
-            const crosses = zoom > 1 && lensAmount > 0.01 && local.x < innerW && local.x + local.w > 0;
-            plain.style.maskImage = crosses
-                ? `radial-gradient(ellipse ${local.w / 2}px ${local.h / 2}px at ${ox - plain.offsetLeft}px ${oy - plain.offsetTop}px, transparent 94%, #000 100%)`
-                : '';
+            button.style.setProperty('--lab-segmented-ink-at', `${o.x}px ${o.y}px`);
+            button.style.setProperty('--lab-segmented-ink-shift', `${t.x}px ${t.y}px`);
         });
     };
     useLayoutEffect(() => {
         const el = lensRef.current;
         if (!el)
             return;
-        // The switch thumb's lens: the selection is that thumb, sliding between options.
-        const layer = new GlassLensLayer(el, 'switch');
+        // The selection's own lens: a clear capsule whose rim magnifies what lies inside its rest pill.
+        const layer = new GlassLensLayer(el, 'pill');
         lensLayer.current = layer;
         return () => {
             layer.dispose();

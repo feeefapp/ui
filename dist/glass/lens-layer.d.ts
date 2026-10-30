@@ -5,9 +5,10 @@ import { type LensKind } from './refraction.js';
  * a tab bar, pressed or dragged (lens.css `.lab-lens`), as iOS 26.2 draws it (research/liquid-glass/
  * LENS-MEASURED.md). The twin of Flutter's `GlassLens`. Clear: never blurred, lifted or magnified;
  * the measured veil and shade (`lensMaterial`), the rim light, the shadow and the touch glow, all
- * eased in by the lens amount. Liquid glass also bends what is behind it by the measured profile
- * (`lensBend`) through an SVG backdrop filter where the browser can (`supportsRefraction`,
- * Chromium). Transparent glass and other browsers keep the clear lens unbent. Solid glass, reduced
+ * eased in by the lens amount. Liquid glass also bends what is behind it (`lensBend`) through an
+ * SVG backdrop filter where the browser can (`supportsRefraction`, Chromium), every colour by the
+ * same shift: Chromium samples whole device pixels, so a per-channel split turns into coloured
+ * fringes on everything behind the lens. Transparent glass and other browsers keep the clear lens unbent. Solid glass, reduced
  * transparency, more contrast and forced colours show no lens: owners keep their rest paint.
  *
  * The element must sit above what it should bend (the track, the labels).
@@ -36,10 +37,15 @@ export declare class GlassLensLayer {
     private measure;
     /**
      * Shows the lens at `lens` (0 rest … 1 glass). `shape` is the lens's box in its own pixels (only
-     * its size and radius count; owners place the element) unless the layer measures itself.
+     * its size and radius count; owners place the element) unless the layer measures itself. A pill
+     * passes `lift`, how far it reaches past its rest pill on each side: its bend follows that gap
+     * (so it already eases in with the lift), a thumb's is scaled by `lens`.
      */
-    update(lens: number, shape?: GlassShape): void;
-    /** The SVG backdrop filter: the measured bend per colour channel (LENS_DISPERSION), cut to the shape. */
+    update(lens: number, shape?: GlassShape, lift?: {
+        x: number;
+        y: number;
+    }): void;
+    /** The SVG backdrop filter: the bend, cut to the shape. */
     private refraction;
     private hide;
     private dropFilter;
