@@ -49,11 +49,13 @@ class ListSection extends StatefulWidget {
 
 class _ListSectionState extends State<ListSection> {
   final _keys = <int, GlobalKey>{};
+  final _contentKeys = <int, GlobalKey>{};
   final _offsets = <int, MotionValue>{};
   int? _lifted;
   _Drag? _drag;
 
   GlobalKey _key(int i) => _keys.putIfAbsent(i, GlobalKey.new);
+  GlobalKey _contentKey(int i) => _contentKeys.putIfAbsent(i, GlobalKey.new);
   MotionValue _offset(int i) => _offsets.putIfAbsent(i, () {
     final value = MotionValue(0, 0.25);
     value.subscribe((_) => setState(() {}));
@@ -156,6 +158,7 @@ class _ListSectionState extends State<ListSection> {
             for (var i = 0; i < widget.children.length; i++)
               _RowSlot(
                 key: _key(i),
+                contentKey: _contentKey(i),
                 index: i,
                 // Hairline above every row but the first, after the leading icon (inset + 32 + 14).
                 // Selected neighbours read as one block: no hairline between them.
@@ -238,6 +241,7 @@ class _Drag {
 class _RowSlot extends StatelessWidget {
   const _RowSlot({
     super.key,
+    required this.contentKey,
     required this.index,
     required this.hairline,
     required this.hairlineColor,
@@ -246,6 +250,9 @@ class _RowSlot extends StatelessWidget {
     required this.reorder,
     required this.child,
   });
+
+  /// Keeps the row's element (and the grip's drag) while a move wraps it in a layer.
+  final GlobalKey contentKey;
   final int index;
   final double? hairline;
   final Color? hairlineColor;
@@ -294,6 +301,7 @@ class _RowSlot extends StatelessWidget {
         ],
       );
     }
+    row = KeyedSubtree(key: contentKey, child: row);
     if (lifted) {
       row = DecoratedBox(
         decoration: ShapeDecoration(
@@ -312,9 +320,13 @@ class _RowSlot extends StatelessWidget {
       );
     }
     if (offset != 0 || lifted) {
+      // A moving row is its own layer: every frame of a reorder shifts the rows around the
+      // lifted one, and shifting a layer costs nothing where repainting the row would.
       row = Transform.translate(
         offset: Offset(0, offset),
-        child: lifted ? Transform.scale(scale: 1.02, child: row) : row,
+        child: RepaintBoundary(
+          child: lifted ? Transform.scale(scale: 1.02, child: row) : row,
+        ),
       );
     }
     final line = hairline;

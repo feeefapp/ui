@@ -80,6 +80,14 @@ class GlassContainer extends StatefulWidget {
           ._scene
           .paths;
 
+  /// Notifies each time a container's light turns (a pointer move the rim can show), i.e. each
+  /// time the glass repaints for the pointer.
+  @visibleForTesting
+  static Listenable debugLightOf(BuildContext container) =>
+      ((container as StatefulElement).state as _GlassContainerState)
+          ._scene
+          .light;
+
   /// Whether any of a container's glass springs on its own this frame (moving, growing in,
   /// leaving), rather than resting where its bubbles are.
   @visibleForTesting
@@ -618,14 +626,13 @@ class _GlassBackdrops extends StatefulWidget {
 }
 
 class _GlassBackdropsState extends State<_GlassBackdrops> {
-  List<GlassPath>? _built;
-
   bool get _refract => widget.material.refraction && GlassRefraction.supported;
 
   @override
   void initState() {
     super.initState();
     widget.scene.addListener(_changed);
+    widget.scene.light.addListener(_lightChanged);
   }
 
   @override
@@ -633,18 +640,26 @@ class _GlassBackdropsState extends State<_GlassBackdrops> {
     super.didUpdateWidget(old);
     if (old.scene != widget.scene) {
       old.scene.removeListener(_changed);
+      old.scene.light.removeListener(_lightChanged);
       widget.scene.addListener(_changed);
+      widget.scene.light.addListener(_lightChanged);
     }
   }
 
   @override
   void dispose() {
     widget.scene.removeListener(_changed);
+    widget.scene.light.removeListener(_lightChanged);
     super.dispose();
   }
 
-  void _changed() {
-    if (_refract || !identical(widget.scene.paths, _built)) setState(() {});
+  // The clusters are read while building (once per frame, after every spring of the frame has
+  // moved), never here: a scene notifies several times a frame.
+  void _changed() => setState(() {});
+
+  /// Only the lens reads the light (its edge mask); plain backdrops don't move with it.
+  void _lightChanged() {
+    if (_refract) setState(() {});
   }
 
   @override
@@ -652,7 +667,6 @@ class _GlassBackdropsState extends State<_GlassBackdrops> {
     final scene = widget.scene;
     final material = widget.material;
     final refract = _refract;
-    _built = scene.paths;
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -746,18 +760,54 @@ _HairlinePaths _hairlinePaths(GlassPath path, double spacing) =>
 
 class _HairlinePaths {
   _HairlinePaths(GlassPath path, double spacing) {
-    final bands = hairlineBands(path.shapes, spacing);
+    // Along the outline the cluster already walked; a lone shape's exact polygon needs no field
+    // walk, a blended one settles its grid points on the field.
+    final bands = path.loops.isEmpty
+        ? hairlineBands(path.shapes, spacing)
+        : hairlineBandsOfLoops(
+            path.loops,
+            path.shapes,
+            spacing,
+            settle: path.shapes.length > 1,
+          );
     final clip = path.clip;
     Path cut(Path band) => clip == null
         ? band
         : Path.combine(PathOperation.intersect, band, Path()..addRect(clip));
     ring = cut(bandPath(bands.ring));
     sliver = cut(bandPath(bands.sliver));
+    // Ring and slivers as one band: both reach out from the same outline points along the same
+    // normals, so their union is the outline with the farther of the two outer loops, with no
+    // path operation.
+    final loops = <List<Offset>>[];
+    for (var i = 0; i + 1 < bands.ring.length; i += 2) {
+      final outer = bands.ring[i];
+      final outline = bands.ring[i + 1];
+      List<Offset>? sliverOuter;
+      for (var j = 0; j + 1 < bands.sliver.length; j += 2) {
+        if (identical(bands.sliver[j + 1], outline)) {
+          sliverOuter = bands.sliver[j];
+          break;
+        }
+      }
+      if (sliverOuter == null || sliverOuter.length != outer.length) {
+        loops.addAll([outer, outline]);
+        continue;
+      }
+      loops.addAll([
+        [
+          for (var k = 0; k < outer.length; k++)
+            (sliverOuter[k] - outline[k]).distanceSquared >
+                    (outer[k] - outline[k]).distanceSquared
+                ? sliverOuter[k]
+                : outer[k],
+        ],
+        outline,
+      ]);
+    }
+    both = cut(bandPath(loops));
   }
-  late final Path ring, sliver;
-
-  /// Ring and slivers as one area, built only when asked for.
-  late final Path both = Path.combine(PathOperation.union, ring, sliver);
+  late final Path ring, sliver, both;
 }
 
 /// The outline of cluster [index], cut to its clip, read while painting: a scroll moves the
@@ -778,7 +828,8 @@ class _PathClipper extends CustomClipper<Path> {
 }
 
 class _GlassPainter extends CustomPainter {
-  _GlassPainter(this.scene, this.material, this.dpr) : super(repaint: scene);
+  _GlassPainter(this.scene, this.material, this.dpr)
+    : super(repaint: Listenable.merge([scene, scene.light]));
   final _GlassScene scene;
   final _GlassMaterial material;
   final double dpr;
@@ -828,7 +879,7 @@ class _GlassPainter extends CustomPainter {
   bool _cachedShadows(Canvas canvas, List<GlassPath> paths, Rect region) {
     final c = material.colors;
     final key =
-        '${scene._key}|${material.kind}|${c.glassShadowColor.toARGB32()}|$dpr';
+        '${scene._generation}|${material.kind}|${c.glassShadowColor.toARGB32()}|$dpr';
     final still = key == scene._shadowKey;
     scene._shadowKey = key;
     final cached = scene._shadowImage;
@@ -971,24 +1022,22 @@ class _GlassPainter extends CustomPainter {
     }
     final glow = scene.glow;
     if (glow != null && glow.opacity.get() > 0.01 && material.rim) {
-      // Light from under the finger, spilling onto every bubble it reaches.
+      // Light from under the finger, spilling onto every bubble it reaches (clusters never
+      // overlap, so each takes its share of the one gradient).
       final radius = math.max(1.0, glow.radius.get());
-      final visible = Path();
+      final paint = Paint()
+        ..shader = ui.Gradient.radial(glow.at, radius, [
+          c.glassGlow.withValues(alpha: c.glassGlow.a * glow.opacity.get()),
+          c.glassGlow.withValues(alpha: 0),
+        ]);
+      final reach = Rect.fromCircle(center: glow.at, radius: radius);
       for (final p in paths) {
-        visible.addPath(p.visiblePath, Offset.zero);
+        if (!p.bounds.overlaps(reach)) continue;
+        scissor(p);
+        canvas.clipPath(p.path);
+        canvas.drawCircle(glow.at, radius, paint);
+        canvas.restore();
       }
-      canvas.save();
-      canvas.clipPath(visible);
-      canvas.drawCircle(
-        glow.at,
-        radius,
-        Paint()
-          ..shader = ui.Gradient.radial(glow.at, radius, [
-            c.glassGlow.withValues(alpha: c.glassGlow.a * glow.opacity.get()),
-            c.glassGlow.withValues(alpha: 0),
-          ]),
-      );
-      canvas.restore();
     }
   }
 
@@ -1181,12 +1230,35 @@ class _GlassScene extends ChangeNotifier {
   /// Content offsets set while painting, applied after the frame unless a newer value lands first.
   final _pendingContent = <String, (Offset, double)>{};
   final _unsubscribe = <String, List<void Function()>>{};
-  List<GlassPath> paths = const [];
+  List<GlassPath> _paths = const [];
+
+  /// The clusters for the shapes as they are now. Springs, presses and measures only mark them
+  /// stale ([_changed]); they are rebuilt here, at most once per frame, when paint or the
+  /// backdrops read them, after every spring of the frame has moved.
+  List<GlassPath> get paths {
+    if (_pathsDirty) _rebuildPaths();
+    return _paths;
+  }
+
+  bool _pathsDirty = false;
+
+  /// Counts the outlines' changes: the shadow image is keyed by it.
+  int _generation = 0;
+
+  /// What the outlines were last built from, to a tenth of a pixel: nothing is rebuilt while
+  /// it holds.
+  Float64List? _geometryKey;
   Map<GlassShape, bool> _singleRims = {};
 
   bool singleRim(GlassPath path) =>
       path.shapes.every((shape) => _singleRims[shape] == true);
-  String _key = '';
+
+  /// Notifies when the light turns (the pointer moving): the painter and the lens listen, the
+  /// clips and the plain backdrops don't, since nothing of theirs moves.
+  final light = _LightNotifier();
+
+  /// Each cluster's light as last painted, to tell a turn from a pointer move that changes none.
+  List<Offset> _lights = const [];
   bool _measured = false;
   bool _measureQueued = false;
   bool _painting = false;
@@ -1284,7 +1356,8 @@ class _GlassScene extends ChangeNotifier {
 
   void _changed() {
     if (_disposed) return;
-    _rebuildPaths();
+    _pathsDirty = true;
+    _syncContent();
     if (!_painting) {
       notifyListeners();
     } else if (!_notifyQueued) {
@@ -1577,21 +1650,47 @@ class _GlassScene extends ChangeNotifier {
     if (dirty) _changed();
   }
 
+  /// The outlines for the shapes as they are now, unless nothing moved by a tenth of a pixel.
   void _rebuildPaths() {
-    final visuals = <GlassShape>[
-      for (final shape in _shapes.values) shape.visual(),
-    ];
-    final clips = <Rect?>[for (final shape in _shapes.values) shape.clip];
-    final key =
-        '${_shapes.values.map((s) => s.singleRim).join(',')}|$spacing|${visuals.map((v) => '${v.x.toStringAsFixed(1)},${v.y.toStringAsFixed(1)},${v.width.toStringAsFixed(1)},${v.height.toStringAsFixed(1)},${v.radius.toStringAsFixed(1)}').join(';')}|${clips.map((c) => c == null ? '' : '${c.left.toStringAsFixed(1)},${c.top.toStringAsFixed(1)},${c.right.toStringAsFixed(1)},${c.bottom.toStringAsFixed(1)}').join(';')}';
-    if (key != _key) {
-      _key = key;
-      _singleRims = {
-        for (final (index, shape) in _shapes.values.indexed)
-          visuals[index]: shape.singleRim,
-      };
-      paths = clippedGlassPaths(visuals, clips, spacing);
+    _pathsDirty = false;
+    final shapes = _shapes.values.toList(growable: false);
+    final visuals = <GlassShape>[for (final shape in shapes) shape.visual()];
+    final clips = <Rect?>[for (final shape in shapes) shape.clip];
+    final key = Float64List(1 + shapes.length * 10);
+    key[0] = spacing;
+    var at = 1;
+    double tenth(double v) => (v * 10).roundToDouble();
+    for (var i = 0; i < shapes.length; i++) {
+      final v = visuals[i];
+      final c = clips[i];
+      key[at++] = shapes[i].singleRim ? 1 : 0;
+      key[at++] = tenth(v.x);
+      key[at++] = tenth(v.y);
+      key[at++] = tenth(v.width);
+      key[at++] = tenth(v.height);
+      key[at++] = tenth(v.radius);
+      key[at++] = c == null ? double.negativeInfinity : tenth(c.left);
+      key[at++] = c == null ? double.negativeInfinity : tenth(c.top);
+      key[at++] = c == null ? double.negativeInfinity : tenth(c.right);
+      key[at++] = c == null ? double.negativeInfinity : tenth(c.bottom);
     }
+    final last = _geometryKey;
+    var same = last != null && last.length == key.length;
+    for (var i = 0; same && i < key.length; i++) {
+      same = last![i] == key[i];
+    }
+    if (same) return;
+    _geometryKey = key;
+    _generation++;
+    _singleRims = {
+      for (var i = 0; i < shapes.length; i++) visuals[i]: shapes[i].singleRim,
+    };
+    _paths = clippedGlassPaths(visuals, clips, spacing);
+  }
+
+  /// Moves every bubble's content with its glass and clips a travelling surface's content to
+  /// it. Cheap, so it runs on every change; the outlines wait for the frame ([paths]).
+  void _syncContent() {
     // A surface out of its origin shows its content only inside its glass while it travels.
     for (final MapEntry(key: id, value: shape) in _shapes.entries) {
       final notifier = _clips[id];
@@ -1659,11 +1758,23 @@ class _GlassScene extends ChangeNotifier {
   }
 
   /// Light for a cluster: the default, turned toward a fine pointer when the light follows it.
+  /// Kept to [_lightSteps] directions: a one-pixel rim can't show a finer turn, and the glass
+  /// then repaints when the light visibly moves rather than on every pointer event.
   Offset lightFor(Rect bounds) {
     if (!followPointer || reduceMotion || _pointer == null) {
       return defaultGlassLight;
     }
-    return glassLightToward(bounds.center, _pointer);
+    return _quantizeLight(glassLightToward(bounds.center, _pointer));
+  }
+
+  /// Directions per turn the light is kept to (2° apart).
+  static const _lightSteps = 180;
+
+  static Offset _quantizeLight(Offset light) {
+    final step = (math.atan2(light.dy, light.dx) * _lightSteps / (2 * math.pi))
+        .round();
+    final angle = step * 2 * math.pi / _lightSteps;
+    return Offset(math.cos(angle), math.sin(angle));
   }
 
   void setPointer(Offset? point) {
@@ -1674,7 +1785,19 @@ class _GlassScene extends ChangeNotifier {
       return;
     }
     _pointer = point;
-    if (!_painting) notifyListeners();
+    if (_painting) return;
+    // Outlines gone stale mean something moved: a repaint is on its way and will read the light
+    // then (never rebuild them here, on every pointer event of a drag).
+    if (_pathsDirty) return;
+    // Only a move that turns some cluster's light by a step repaints anything.
+    final paths = _paths;
+    var turned = _lights.length != paths.length;
+    final lights = <Offset>[for (final path in paths) lightFor(path.bounds)];
+    for (var i = 0; !turned && i < lights.length; i++) {
+      turned = lights[i] != _lights[i];
+    }
+    _lights = lights;
+    if (turned) light.notify();
   }
 
   String? _memberAt(Offset local) {
@@ -1767,8 +1890,13 @@ class _GlassScene extends ChangeNotifier {
     }
     _shadowImage?.image.dispose();
     _shadowImage = null;
+    light.dispose();
     super.dispose();
   }
+}
+
+class _LightNotifier extends ChangeNotifier {
+  void notify() => notifyListeners();
 }
 
 /// Glass bars floating over scrolling content (a ScrollArea's app bar and dock, a TabView's tab
@@ -1805,13 +1933,64 @@ class GlassBar extends StatelessWidget {
 /// the vertices once per light: a light that turns with the pointer only recomputes colours, and
 /// glass that repaints for anything else reuses everything.
 class _RimBand {
-  _RimBand(Path outline) {
-    final contours = outline.computeMetrics().toList();
-    final total = contours.fold(0.0, (sum, m) => sum + m.length);
-    // Every vertex has a 16-bit index: a huge outline is sampled less densely.
-    final step = math.max(1.5, total * 3 / 60000);
+  _RimBand(GlassPath path) {
     final samples = <double>[];
     final rows = <int>[];
+    if (path.loops.isNotEmpty) {
+      // The outline's own vertices and their normals: along a straight edge the two ends are
+      // enough (the band between them is one quad of one colour), and an arc's vertices sit
+      // about a pixel apart. Every vertex has a 16-bit index: a huge outline takes every n-th.
+      final total = path.loops.fold(0, (sum, loop) => sum + loop.length + 1);
+      final stride = math.max(1, (total * 3 / 60000).ceil());
+      for (final loop in path.loops) {
+        final n = loop.length;
+        if (n < 3) continue;
+        final normals = loopNormals(loop);
+        var taken = 0;
+        // Closed by repeating the first vertex.
+        for (var i = 0; i <= n; i += stride) {
+          final k = i % n;
+          samples
+            ..add(loop[k].dx)
+            ..add(loop[k].dy)
+            ..add(normals[k * 2])
+            ..add(normals[k * 2 + 1]);
+          taken++;
+        }
+        if (stride > 1 && (n % stride) != 0) {
+          samples
+            ..add(loop[0].dx)
+            ..add(loop[0].dy)
+            ..add(normals[0])
+            ..add(normals[1]);
+          taken++;
+        }
+        rows.add(taken);
+      }
+    } else {
+      _walk(path.path, samples, rows);
+    }
+    _samples = Float32List.fromList(samples);
+    final indices = <int>[];
+    var first = 0;
+    for (final count in rows) {
+      for (var i = 0; i + 1 < count; i++) {
+        for (var k = 0; k + 1 < _depths.length; k++) {
+          final a = (first + i) * _depths.length + k;
+          final b = a + _depths.length;
+          indices.addAll([a, b, a + 1, a + 1, b, b + 1]);
+        }
+      }
+      first += count;
+    }
+    _indices = Uint16List.fromList(indices);
+  }
+
+  /// Samples along a path whose polygons aren't known (every 1.5 px along its contours).
+  static void _walk(Path outline, List<double> samples, List<int> rows) {
+    final contours = outline.computeMetrics().toList();
+    final total = contours.fold(0.0, (sum, m) => sum + m.length);
+    final step = math.max(1.5, total * 3 / 60000);
     for (final metric in contours) {
       final count = math.max(3, (metric.length / step).ceil());
       // The outward side: probe once per contour (union outlines are simple closed loops).
@@ -1832,20 +2011,6 @@ class _RimBand {
       }
       rows.add(taken);
     }
-    _samples = Float32List.fromList(samples);
-    final indices = <int>[];
-    var first = 0;
-    for (final count in rows) {
-      for (var i = 0; i + 1 < count; i++) {
-        for (var k = 0; k + 1 < _depths.length; k++) {
-          final a = (first + i) * _depths.length + k;
-          final b = a + _depths.length;
-          indices.addAll([a, b, a + 1, a + 1, b, b + 1]);
-        }
-      }
-      first += count;
-    }
-    _indices = Uint16List.fromList(indices);
   }
 
   static const _depths = [0.0, 2 / 3, 1.0];
@@ -1862,7 +2027,7 @@ class _RimBand {
   static final _bands = Expando<_RimBand>();
 
   /// The band along [path]'s outline.
-  static _RimBand of(GlassPath path) => _bands[path] ??= _RimBand(path.path);
+  static _RimBand of(GlassPath path) => _bands[path] ??= _RimBand(path);
 
   ui.Vertices? vertices(Offset light, GlassRim rim) {
     if (_indices.isEmpty) return null;

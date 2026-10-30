@@ -2,6 +2,7 @@ import 'package:feeef_ui/feeef_ui.dart';
 
 import 'dart:ui' as ui;
 
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/rendering.dart'
     show BackdropFilterLayer, RenderRepaintBoundary;
 import 'package:flutter/widgets.dart' hide RadioGroup;
@@ -385,4 +386,101 @@ void main() {
     );
     expect(inside, 1);
   });
+
+  testWidgets(
+    'a bubble paints in its own layer; out of the glass it paints with the container, keeping its state',
+    (tester) async {
+      Widget page({required bool squeezed}) => host(
+        Center(
+          child: GlassContainer(
+            child: GlassHidden(
+              hidden: squeezed,
+              child: const GlassGroup(
+                glassId: 'title',
+                child: SizedBox(width: 120, height: 38, child: _Keep()),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpWidget(page(squeezed: false));
+      await tester.pump();
+      final layer = find.descendant(
+        of: find.byType(GlassGroup),
+        matching: find.byType(RepaintBoundary),
+      );
+      expect(layer, findsOneWidget);
+      final state = tester.state<_KeepState>(find.byType(_Keep));
+      state.count = 3;
+      await tester.pumpWidget(page(squeezed: true));
+      await tester.pump();
+      expect(layer, findsNothing);
+      expect(tester.state<_KeepState>(find.byType(_Keep)), same(state));
+      await tester.pumpWidget(page(squeezed: false));
+      await tester.pump();
+      expect(layer, findsOneWidget);
+      expect(tester.state<_KeepState>(find.byType(_Keep)), same(state));
+      expect(state.count, 3);
+    },
+  );
+
+  testWidgets(
+    'the light turns in steps: a far pointer repaints the glass only now and then',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 800));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        host(
+          const Center(
+            child: GlassContainer(
+              child: GlassGroup(
+                glassId: 'a',
+                child: SizedBox(width: 160, height: 44),
+              ),
+            ),
+          ),
+          config: const ThemeConfig(performance: Performance.full),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      var turns = 0;
+      GlassContainer.debugLightOf(find.byType(GlassContainer).evaluate().single)
+          .addListener(() => turns++);
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: const Offset(0, 60));
+      await tester.pump();
+      turns = 0;
+      // 400 moves along the top edge, 340 px above the glass.
+      for (var x = 0; x <= 1200; x += 3) {
+        await mouse.moveTo(Offset(x.toDouble(), 60));
+        await tester.pump();
+      }
+      final far = turns;
+      expect(far, greaterThan(0));
+      expect(far, lessThan(60));
+      turns = 0;
+      // The same sweep 30 px below the glass turns it far more often.
+      for (var x = 0; x <= 1200; x += 3) {
+        await mouse.moveTo(Offset(x.toDouble(), 452));
+        await tester.pump();
+      }
+      expect(turns, greaterThan(far));
+      expect(turns, lessThan(400));
+      await mouse.removePointer();
+    },
+  );
+}
+
+/// A widget whose state must survive its bubble leaving and rejoining the glass.
+class _Keep extends StatefulWidget {
+  const _Keep();
+  @override
+  State<_Keep> createState() => _KeepState();
+}
+
+class _KeepState extends State<_Keep> {
+  int count = 0;
+  @override
+  Widget build(BuildContext context) => const SizedBox.expand();
 }
