@@ -1494,7 +1494,10 @@ class _InkClip {
       return null;
     }
     final glass = state._glass;
-    return (rect: glass.rect.shift(-boxes[index].topLeft), radius: glass.radius);
+    return (
+      rect: glass.rect.shift(-boxes[index].topLeft),
+      radius: glass.radius,
+    );
   }
 }
 
@@ -1926,7 +1929,14 @@ class _SegmentState<T> extends State<_Segment<T>> {
         old.sizes != widget.sizes ||
         (widget.foldable && old.naturalWidth == null);
     _min.animateTo(t.min, spring: Springs.snappy, instant: instant);
-    _max.animateTo(t.max, spring: Springs.snappy, instant: instant);
+    // Natural width is temporarily unknown when the option catalog changes.
+    // Keep the same finite unconstrained sentinel used by initState: a spring
+    // toward infinity produces NaN before the next measurement arrives.
+    _max.animateTo(
+      t.max.isFinite ? t.max : 1e6,
+      spring: Springs.snappy,
+      instant: instant,
+    );
     _pad.animateTo(t.pad, spring: Springs.snappy, instant: instant);
   }
 
