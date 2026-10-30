@@ -636,7 +636,7 @@ class _SheetState extends State<_BottomSheet> {
     final host = _host;
     if (host == null) return null;
     final safe = _safe;
-    final grab = _showGrabber ? 20.0 : 0.0;
+    final grab = _showGrabber ? sheetGrabberBand : 0.0;
     // The grabber row and the body (content, float reservations and safe area).
     // A builder's content scrolls on its own: `fit` takes all the room.
     final natural = widget.sheet.builder != null
@@ -1097,10 +1097,15 @@ class _SheetState extends State<_BottomSheet> {
   /// Whether a wheel or trackpad scroll of [delta] (> 0 = scrolling down) moves the sheet, with
   /// the content at [scroll].
   bool _wheelMoves(double delta, double scroll) {
-    if (!_resizable || !_open || _dragging) return false;
+    if (!_ready || !_open || _dragging) return false;
+    if (_presentation == SheetPresentation.dialog) return false;
     final height = _visible.get();
-    return (delta > 0 && height < _maxHeight - 0.5) ||
-        (delta < 0 && scroll <= 0 && height > _minHeight + 0.5);
+    // A fixed sheet only moves to close.
+    if (delta > 0) return _resizable && height < _maxHeight - 0.5;
+    if (delta >= 0 || scroll > 0) return false;
+    return widget.sheet.dismissible
+        ? height > 0.5
+        : _resizable && height > _minHeight + 0.5;
   }
 
   void _onPointerSignal(PointerSignalEvent event) {
@@ -1114,21 +1119,45 @@ class _SheetState extends State<_BottomSheet> {
     );
   }
 
-  /// Grows (scrolling down) or shrinks (scrolling up at the content's top) the sheet; a snapping
-  /// sheet settles on a detent when the wheel stops.
+  /// Grows (scrolling down) or shrinks (scrolling up at the content's top) the sheet, and a
+  /// dismissible one on below its lowest height until it closes ([wheelHeight]); a snapping sheet
+  /// settles on a detent when the wheel stops.
   void _wheel(double delta) {
     _stopMorph();
     _visible.stop();
-    _visible.set((_visible.get() + delta).clamp(_minHeight, _maxHeight));
+    _visible.set(
+      wheelHeight(
+        _visible.get(),
+        delta,
+        _minHeight,
+        _maxHeight,
+        widget.sheet.dismissible,
+      ),
+    );
     _wheelIdle?.cancel();
-    _wheelIdle = Timer(const Duration(milliseconds: 160), () {
-      if (!mounted || _dragging || _visible.isAnimating) return;
-      if (widget.sheet.snap) {
-        _release(0, true);
-      } else {
-        _settleFree(_visible.get());
+    _wheelIdle = Timer(const Duration(milliseconds: 160), _settleWheel);
+  }
+
+  void _settleWheel() {
+    if (!mounted || !_open || _dragging || _visible.isAnimating) return;
+    final height = _visible.get(), min = _minHeight;
+    if (height < min - 0.5) {
+      if (widget.sheet.dismissible && wheelDismisses(height, min)) {
+        return _dismissAway(0);
       }
-    });
+      if (widget.sheet.snap) {
+        _setDetentIndex(_heights.indexOf(min));
+      } else {
+        _settleFree(min);
+      }
+      _moveTo(min, Springs.release);
+      return;
+    }
+    if (widget.sheet.snap) {
+      _release(0, true);
+    } else {
+      _settleFree(height);
+    }
   }
 
   void _cycle(int step) {
@@ -1551,52 +1580,70 @@ class _SheetState extends State<_BottomSheet> {
         final i = _detents.indexOf(d);
         if (i >= 0) _setDetentIndex(i);
       },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      // The grabber takes an 8 px band and its button reaches over the body's top gap, above the
+      // floats, so the floating header sits 16 px from the edge.
+      child: Stack(
         children: [
-          if (_showGrabber)
-            KeyedSubtree(
-              key: _grabberKey,
-              child: SheetGrabber(
-                onNext: () => _cycle(1),
-                onPrevious: () => _cycle(-1),
-              ),
+          Positioned.fill(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_showGrabber) const SizedBox(height: sheetGrabberBand),
+                if (widget.sheet.builder != null)
+                  ..._builtContent(context, header, dock)
+                else
+                  Expanded(
+                    child: PresentationBody(
+                      label: widget.sheet.label,
+                      controller: _scroll,
+                      fill: true,
+                      contentPadding:
+                          widget.sheet.contentPadding ??
+                          (widget.sheet.regular == SheetRegular.pane
+                              ? 16
+                              : null),
+                      // Glass under the floats' washes until the surface turns opaque.
+                      surface: c.surface,
+                      radius: r,
+                      // Keyed so a drag that starts on the chrome is told from one on the content.
+                      top: KeyedSubtree(
+                        key: _topKey,
+                        child: SizeReporter(
+                          onSize: (size) {
+                            if (mounted && size.height != _headerHeight) {
+                              setState(() => _headerHeight = size.height);
+                            }
+                          },
+                          child: header,
+                        ),
+                      ),
+                      bottom: dock == null
+                          ? null
+                          : KeyedSubtree(key: _bottomKey, child: dock),
+                      onNaturalHeight: (height) {
+                        if (height != _bodyNatural) {
+                          setState(() => _bodyNatural = height);
+                        }
+                      },
+                      child: widget.sheet.child,
+                    ),
+                  ),
+              ],
             ),
-          if (widget.sheet.builder != null)
-            ..._builtContent(context, header, dock)
-          else
-            Expanded(
-              child: PresentationBody(
-                label: widget.sheet.label,
-                controller: _scroll,
-                fill: true,
-                contentPadding:
-                    widget.sheet.contentPadding ??
-                    (widget.sheet.regular == SheetRegular.pane ? 16 : null),
-                // Glass under the floats' washes until the surface turns opaque.
-                surface: c.surface,
-                radius: r,
-                // Keyed so a drag that starts on the chrome is told from one on the content.
-                top: KeyedSubtree(
-                  key: _topKey,
-                  child: SizeReporter(
-                    onSize: (size) {
-                      if (mounted && size.height != _headerHeight) {
-                        setState(() => _headerHeight = size.height);
-                      }
-                    },
-                    child: header,
+          ),
+          if (_showGrabber)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: KeyedSubtree(
+                  key: _grabberKey,
+                  child: SheetGrabber(
+                    onNext: () => _cycle(1),
+                    onPrevious: () => _cycle(-1),
                   ),
                 ),
-                bottom: dock == null
-                    ? null
-                    : KeyedSubtree(key: _bottomKey, child: dock),
-                onNaturalHeight: (height) {
-                  if (height != _bodyNatural) {
-                    setState(() => _bodyNatural = height);
-                  }
-                },
-                child: widget.sheet.child,
               ),
             ),
         ],
@@ -1688,7 +1735,7 @@ class _SheetState extends State<_BottomSheet> {
                 builder: (context, constraints) {
                   final rest =
                       _target -
-                      (_showGrabber ? 20 : 0) -
+                      (_showGrabber ? sheetGrabberBand : 0) -
                       _columnInset -
                       (_headerHeight > 0 ? g + _headerHeight : 0);
                   final height = math.max(constraints.maxHeight, rest);
@@ -1731,8 +1778,12 @@ class _SheetState extends State<_BottomSheet> {
   }
 }
 
-/// The sheet's grabber (`.lab-sheet-grabber`): a 20 px row whose short pill is a button that
-/// changes the height ([onNext] on a tap, Enter or Arrow Up; [onPrevious] on Arrow Down), with the
+/// How much of the sheet's height the grabber takes; its 16 px button reaches over the body's top
+/// gap (`.lab-sheet-grabber-row`).
+const double sheetGrabberBand = 8;
+
+/// The sheet's grabber (`.lab-sheet-grabber`): a 64×16 button at the top edge that changes the
+/// height ([onNext] on a tap, Enter or Arrow Up; [onPrevious] on Arrow Down), with the
 /// keyboard focus ring just inside. [Sheet] draws one when it has more than one detent; use it in
 /// your own sheet-like surfaces.
 class SheetGrabber extends StatefulWidget {
@@ -1759,7 +1810,8 @@ class _SheetGrabberState extends State<SheetGrabber> {
   Widget build(BuildContext context) {
     final c = ThemeProvider.of(context).colors;
     return SizedBox(
-      height: 20,
+      width: 64,
+      height: 16,
       child: Center(
         child: Semantics(
           button: true,
@@ -1792,7 +1844,7 @@ class _SheetGrabberState extends State<SheetGrabber> {
               behavior: HitTestBehavior.opaque,
               onTap: widget.onNext,
               child: CustomPaint(
-                size: const Size(64, 20),
+                size: const Size(64, 16),
                 painter: _GrabberPainter(
                   pill: mixSrgb(c.ink, 0.22, transparent),
                   focus: _focusVisible
@@ -2095,7 +2147,7 @@ bool _sameRadii(List<double> a, List<double> b) {
   return true;
 }
 
-/// `.lab-sheet-grabber::before`: 36×5 at (14, 7), radius 3; the keyboard focus ring just inside,
+/// `.lab-sheet-grabber::before`: 36×5 at (14, 6), radius 3; the keyboard focus ring just inside,
 /// radius 10.
 class _GrabberPainter extends CustomPainter {
   const _GrabberPainter({required this.pill, this.focus});
@@ -2105,7 +2157,7 @@ class _GrabberPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     canvas.drawPath(
-      superellipsePath(const Rect.fromLTWH(14, 7, 36, 5), [3, 3, 3, 3]),
+      superellipsePath(const Rect.fromLTWH(14, 6, 36, 5), [3, 3, 3, 3]),
       Paint()..color = pill,
     );
     final f = focus;

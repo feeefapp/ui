@@ -117,6 +117,20 @@ void main() {
       }
     });
 
+    test('wheelHeight: free above the lowest height, half speed below it', () {
+      expect(wheelHeight(500, 60, 400, 790, true), 560);
+      expect(wheelHeight(780, 60, 400, 790, true), 790);
+      expect(wheelHeight(500, -60, 400, 790, true), 440);
+      expect(wheelHeight(420, -60, 400, 790, true), 380);
+      expect(wheelHeight(380, -60, 400, 790, true), 350);
+      expect(wheelHeight(10, -60, 400, 790, true), 0);
+      expect(wheelHeight(420, -60, 400, 790, false), 400);
+      expect(wheelDismisses(350, 400), isFalse);
+      expect(wheelDismisses(336, 400), isTrue);
+      expect(wheelDismisses(60, 100), isTrue);
+      expect(wheelDismisses(70, 100), isFalse);
+    });
+
     test('drag, release and dim', () {
       for (final s in fixture['sets'] as List) {
         final detents = [for (final d in s['detents'] as List) _detent(d)];
@@ -408,7 +422,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     // Medium = 400px: grabber row (20) + padding (G, 8) above the first row.
-    expect(_sheetTop(tester), closeTo(400 + 20 + 8, 0.5));
+    expect(_sheetTop(tester), closeTo(400 + 8 + 8, 0.5));
 
     // A slow drag up past the middle lands on large.
     await tester.timedDrag(
@@ -418,7 +432,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(h.changes, [SheetDetent.large]);
-    expect(_sheetTop(tester), closeTo(10 + 20 + 8, 0.5));
+    expect(_sheetTop(tester), closeTo(10 + 8 + 8, 0.5));
 
     // A small slow drag down settles back on large.
     await tester.timedDrag(
@@ -428,7 +442,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(h.changes, [SheetDetent.large]);
-    expect(_sheetTop(tester), closeTo(38, 0.5));
+    expect(_sheetTop(tester), closeTo(26, 0.5));
 
     // A slow drag down to near the middle lands on medium.
     await tester.timedDrag(
@@ -438,7 +452,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(h.changes, [SheetDetent.large, SheetDetent.medium]);
-    expect(_sheetTop(tester), closeTo(428, 0.5));
+    expect(_sheetTop(tester), closeTo(416, 0.5));
 
     // A flick down from medium dismisses.
     await tester.fling(find.text('Row 1'), const Offset(0, 300), 2000);
@@ -474,12 +488,45 @@ void main() {
     await tester.tap(grabber);
     await tester.pumpAndSettle();
     expect(h.changes, [SheetDetent.large]);
-    expect(_sheetTop(tester), closeTo(38, 0.5));
+    expect(_sheetTop(tester), closeTo(26, 0.5));
     // Cycling wraps around to the lowest detent.
     await tester.tap(grabber);
     await tester.pumpAndSettle();
     expect(h.changes, [SheetDetent.large, SheetDetent.medium]);
     handle.dispose();
+  });
+
+  testWidgets('the wheel keeps pulling past the lowest height and closes', (
+    tester,
+  ) async {
+    _phone(tester);
+    final h = _Harness()..open = true;
+    await tester.pumpWidget(
+      h.app(detents: const [SheetDetent.medium, SheetDetent.large]),
+    );
+    await tester.pumpAndSettle();
+    final at = tester.getCenter(find.text('Row 1'));
+    final mouse = TestPointer(1, PointerDeviceKind.mouse);
+    Future<void> wheel(double dy) async {
+      await tester.sendEventToBinding(mouse.hover(at));
+      await tester.sendEventToBinding(mouse.scroll(Offset(0, dy)));
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+
+    // A small pull below medium springs back.
+    await wheel(-40);
+    expect(_sheetTop(tester), closeTo(416 + 20, 0.5), reason: 'half speed');
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+    expect(h.open, isTrue);
+    expect(_sheetTop(tester), closeTo(416, 0.5));
+    // A longer one closes it.
+    for (var i = 0; i < 4; i++) {
+      await wheel(-40);
+    }
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+    expect(h.open, isFalse);
   });
 
   testWidgets('reduced motion jumps to the detent and fades out', (
@@ -712,8 +759,8 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        // Peek = grabber 20 + float offset 8 + header 48 + gap 8 + column gap 8.
-        expect(surface(tester).top, closeTo(800 - 92, 0.5));
+        // Peek = grabber band 8 + float offset 8 + header 48 + gap 8 + column gap 8.
+        expect(surface(tester).top, closeTo(800 - 80, 0.5));
         await tester.tapAt(const Offset(200, 300));
         expect(pageTaps, 1, reason: 'the page stays usable at peek');
 
@@ -886,9 +933,9 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        const heights = [92.0, 400.0, 790.0];
+        const heights = [80.0, 400.0, 790.0];
         final start = 800 - surface(tester).top;
-        expect(start, closeTo(92, 0.5));
+        expect(start, closeTo(80, 0.5));
         final headerWidth = tester
             .getSize(find.byKey(const ValueKey('header')))
             .width;
@@ -956,7 +1003,7 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(detent, SheetDetent.peek);
-        expect(800 - surface(tester).top, closeTo(92, 0.5));
+        expect(800 - surface(tester).top, closeTo(80, 0.5));
 
         // projectMomentum: ~390 px + 5 px/ms × 99 ≈ 885 px, nearest to large. A 2500 px/s flick
         // released near 290 px projects to ~540 px and lands on medium, as on the web.
@@ -1006,7 +1053,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(pans, lessThan(-100), reason: 'the map got the drag');
       expect(detent, SheetDetent.peek);
-      expect(800 - surface(tester).top, closeTo(92, 0.5));
+      expect(800 - surface(tester).top, closeTo(80, 0.5));
     });
 
     testWidgets(
@@ -1258,7 +1305,7 @@ void main() {
         page(sheet: (set) => free(set, rows: 30, onDetent: reported.add)),
       );
       await tester.pumpAndSettle();
-      expect(visible(tester), closeTo(92, 0.5));
+      expect(visible(tester), closeTo(80, 0.5));
       final grabber = find.bySemanticsLabel(RegExp('Drag to resize'));
       await tester.timedDrag(
         grabber,
@@ -1268,8 +1315,8 @@ void main() {
       await tester.pumpAndSettle();
       final rest = visible(tester);
       // Wherever it was let go (plus the release's own momentum), not at peek or fit.
-      expect(rest, inInclusiveRange(92 + 230, 92 + 300), reason: 'no snap');
-      // Nearest detent reported: peek (92) vs fit (790).
+      expect(rest, inInclusiveRange(80 + 230, 80 + 300), reason: 'no snap');
+      // Nearest detent reported: peek (80) vs fit (790).
       expect(reported, isEmpty);
       await tester.timedDrag(
         grabber,
@@ -1480,7 +1527,7 @@ void main() {
         }
         // The mouse never drags the sheet (it selects text; focusing the field raises a peek sheet
         // to its top on its own, which is not following the pointer 1:1).
-        expect(visible(tester), isNot(inInclusiveRange(92 + 150, 92 + 250)));
+        expect(visible(tester), isNot(inInclusiveRange(80 + 150, 80 + 250)));
         await mouse.up();
         await tester.pumpAndSettle();
         FocusManager.instance.primaryFocus?.unfocus();

@@ -24,6 +24,8 @@ import {
   sheetMorphFrame,
   sheetRecede,
   sheetScrollStep,
+  wheelDismisses,
+  wheelHeight,
   type SheetDetent,
   type SheetFrame,
   type SheetRect,
@@ -905,14 +907,33 @@ function SheetPresentation({
     el.addEventListener('pointerdown', remember, true)
     el.addEventListener('touchstart', remember, { capture: true, passive: true })
 
-    // Wheel and trackpad: grow before scrolling down, shrink once scrolled back to the top. A
-    // snapping sheet settles on a detent when the wheel stops.
+    // Wheel and trackpad: grow before scrolling down, shrink once scrolled back to the top, and on
+    // a dismissible sheet go on below the lowest height until it closes. A snapping sheet settles
+    // on a detent when the wheel stops.
     let idle = 0
+    const settleWheel = () => {
+      if (dragging.current || visible.isAnimating()) return
+      const L = live.current
+      const G = gesture.current
+      const height = visible.get()
+      if (height < G.minHeight - 0.5) {
+        if (L.dismissible && wheelDismisses(height, G.minHeight)) return dismissAway(0)
+        if (G.snap) setDetentRef.current(L.heights.indexOf(G.minHeight))
+        else settleFreeRef.current(G.minHeight)
+        void moveTo(G.minHeight, SPRINGS.release)
+        return
+      }
+      if (G.snap) releaseRef.current(0, true)
+      else {
+        settleFreeRef.current(height)
+        rest(height)
+      }
+    }
     const onWheel = (event: WheelEvent) => {
       const L = live.current
       const G = gesture.current
       const v = scroller()
-      if (!G.resizable || !v || !L.open || event.ctrlKey || dragging.current) return
+      if (!v || !L.open || L.presentation === 'dialog' || event.ctrlKey || dragging.current) return
       const target = event.target instanceof Element ? event.target : null
       if (!target || target.closest(EDITABLE)) return
       const delta =
@@ -920,23 +941,18 @@ function SheetPresentation({
       // A nested scroller inside the content keeps its own wheel.
       if (!delta || (v.contains(target) && canChildPan(target, v, 'y', delta > 0 ? -1 : 1))) return
       const height = visible.get()
-      const grow = delta > 0 && height < G.maxHeight - 0.5
-      const shrink = delta < 0 && v.scrollTop <= 0 && height > G.minHeight + 0.5
+      // A fixed sheet only moves to close.
+      const grow = G.resizable && delta > 0 && height < G.maxHeight - 0.5
+      const shrink =
+        delta < 0 && v.scrollTop <= 0 && (L.dismissible ? height > 0.5 : G.resizable && height > G.minHeight + 0.5)
       if (!grow && !shrink) return
       event.preventDefault()
       stopFling()
       visible.stop()
       beginMotion()
-      visible.set(Math.max(G.minHeight, Math.min(G.maxHeight, height + delta)))
+      visible.set(wheelHeight(height, delta, G.minHeight, G.maxHeight, L.dismissible))
       window.clearTimeout(idle)
-      idle = window.setTimeout(() => {
-        if (dragging.current || visible.isAnimating()) return
-        if (gesture.current.snap) releaseRef.current(0, true)
-        else {
-          settleFreeRef.current(visible.get())
-          rest(visible.get())
-        }
-      }, 160)
+      idle = window.setTimeout(settleWheel, 160)
     }
     el.addEventListener('wheel', onWheel, { passive: false })
     return () => {

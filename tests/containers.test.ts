@@ -6,6 +6,8 @@ import {
   detentHeight,
   detentHeights,
   dragHeight,
+  wheelDismisses,
+  wheelHeight,
   releaseTarget,
   focusRaise,
   freeTarget,
@@ -77,6 +79,20 @@ test('dragging a sheet: 1:1 inside, rubber band above, free below only when dism
   assert.equal(dragHeight(200, heights, 800, true), 200)
   const held = dragHeight(200, heights, 800, false)
   assert.ok(held < 400 && held > 200)
+})
+
+test('the wheel moves a sheet freely above its lowest height and at half speed below it', () => {
+  assert.equal(wheelHeight(500, 60, 400, 790, true), 560)
+  assert.equal(wheelHeight(780, 60, 400, 790, true), 790)
+  assert.equal(wheelHeight(500, -60, 400, 790, true), 440)
+  assert.equal(wheelHeight(420, -60, 400, 790, true), 380)
+  assert.equal(wheelHeight(380, -60, 400, 790, true), 350)
+  assert.equal(wheelHeight(10, -60, 400, 790, true), 0)
+  assert.equal(wheelHeight(420, -60, 400, 790, false), 400)
+  assert.equal(wheelDismisses(350, 400), false)
+  assert.equal(wheelDismisses(336, 400), true)
+  assert.equal(wheelDismisses(60, 100), true)
+  assert.equal(wheelDismisses(70, 100), false)
 })
 
 test('release: momentum picks the detent; a downward flick dismisses', () => {

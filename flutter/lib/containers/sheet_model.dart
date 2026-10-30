@@ -124,6 +124,30 @@ double dragHeight(
   return raw;
 }
 
+/// The height after one wheel or trackpad step of [delta] px (> 0 grows): up to [max], down to
+/// [min], and on a dismissible sheet on below [min] at half speed, so scrolling up at the content's
+/// top keeps pulling the sheet down until it can close ([wheelDismisses]).
+double wheelHeight(
+  double visible,
+  double delta,
+  double min,
+  double max,
+  bool dismissible,
+) {
+  if (delta > 0) return math.min(max, visible + delta);
+  if (!dismissible) return math.max(min, math.min(visible, max) + delta);
+  // Above [min] 1:1, the part of the step below it at half speed.
+  final above = math.max(0.0, visible - min);
+  final step = -delta;
+  return step <= above
+      ? visible - step
+      : math.max(0.0, math.min(visible, min) - (step - above) * 0.5);
+}
+
+/// A sheet the wheel pulled to [visible], below its lowest height [min], closes when it stops.
+bool wheelDismisses(double visible, double min) =>
+    min - visible >= math.min(64.0, min * 0.35);
+
 /// Where a released sheet goes. [velocity] is upward speed in px/s (positive = growing). The
 /// height is projected with the flick's momentum and snapped to the nearest detent, or to 0
 /// (dismiss) when that is nearer and the sheet is dismissible.
