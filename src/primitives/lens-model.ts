@@ -55,6 +55,26 @@ export function lensInkZoom(lens: number, coverage = 1) {
 }
 
 /**
+ * How strongly an option shows the selected ink, 0 … 1. At rest the ink is cut to the pill as it
+ * passes (a label turns over where the opaque pill covers it, 1 inside it); under the lens the cut
+ * opens to the whole option (`lens` of the way) and the ink fades with how much of the option the
+ * lens covers, so a label changes colour as one piece, never split down a word.
+ */
+export function lensInkAlpha(lens: number, coverage: number) {
+  return 1 - clampLens(lens) * (1 - clampLens(coverage))
+}
+
+/**
+ * How much of an option's plain (unselected) content shows under its ink: all of it at rest (the
+ * ink is cut to the pill and the plain content shows around it); under the lens it fades out as the
+ * ink fades in, so the two copies crossfade and never show both at full strength (a scaled copy is
+ * rasterized on its own pixel grid, which would leave a ghost edge).
+ */
+export function lensPlainAlpha(lens: number, coverage: number) {
+  return 1 - clampLens(lens) * lensInkAlpha(lens, coverage)
+}
+
+/**
  * How much of an option (`start`, `width` along the track) the pill (`pillStart`, `pillWidth`)
  * covers, 0 … 1: 1 when their centres meet, 0 an option's width apart, eased (smoothstep) between.
  */

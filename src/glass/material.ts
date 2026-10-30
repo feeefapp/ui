@@ -266,9 +266,12 @@ export function liftFilter(gain: number, offset: number) {
  * There is no hairline: iOS draws none around control lenses.
  */
 export const LENS_MATERIAL = {
+  // The selection pill: clear, a faint shade at the top only (held iOS 26.2 tab bar, LENS-MEASURED §6:
+  // ≈ 2–3 % darker than the bar near the top, none by the middle; the segmented pill's measured
+  // 0.105 → 0.035 read as grey glass over a light bar), the measured rim.
   pill: {
     veil: 0,
-    shade: { top: 0.105, middle: 0.035 },
+    shade: { top: 0.03, middle: 0 },
     rim: {
       light: { band: { top: 0.27, side: 0.27, bottom: 0.27 }, edge: { top: 0.45, side: 0.45, bottom: 0.45 } },
       dark: { band: { top: 0.2, side: 0.2, bottom: 0.2 }, edge: { top: 1, side: 1, bottom: 1 } },

@@ -1487,18 +1487,6 @@ class _InkClip {
   double radius(Rect drop) =>
       math.min(drop.width, drop.height) / 2 * radiusScale;
 
-  /// The lens's glass in the option's own pixels and its corner radius, or null before placement.
-  ({Rect rect, double radius})? glass() {
-    final boxes = state._boxes;
-    if (!state._placed || state._selected < 0 || index >= boxes.length) {
-      return null;
-    }
-    final glass = state._glass;
-    return (
-      rect: glass.rect.shift(-boxes[index].topLeft),
-      radius: glass.radius,
-    );
-  }
 }
 
 /// Paints its child, then paints it again in the selected ink inside [ink]'s drop: the selected
@@ -1602,12 +1590,12 @@ class _RenderInkOverlay extends RenderProxyBox {
     final amount = lens().clamp(0.0, 1.0);
     // The option grows around its own centre by how much of it the pill covers; its plain content
     // and its ink copy take the same transform, so nothing tears and its badge stays whole.
+    final coverage = drop == null || drop.isEmpty
+        ? 0.0
+        : lensCoverage(drop.left, drop.width, 0, size.width);
     final zoom = drop == null || drop.isEmpty
         ? 1.0
-        : lensInkZoom(
-            amount,
-            lensCoverage(drop.left, drop.width, 0, size.width),
-          );
+        : lensInkZoom(amount, coverage);
     final centre = bounds.center;
     final transform = Matrix4.identity()
       ..translateByDouble(centre.dx, centre.dy, 0, 1)
@@ -1625,26 +1613,44 @@ class _RenderInkOverlay extends RenderProxyBox {
       }
     }
 
-    paintScaled(context, offset, (context, offset) {
-      context.paintChild(child, offset);
-    });
+    // Under the lens the plain content fades out as its ink fades in ([lensPlainAlpha]).
+    final plain = drop == null || drop.isEmpty
+        ? 1.0
+        : lensPlainAlpha(amount, coverage);
+    if (plain >= 0.999) {
+      paintScaled(context, offset, (context, offset) {
+        context.paintChild(child, offset);
+      });
+    } else if (plain > 0.001) {
+      context.pushOpacity(
+        offset,
+        (plain * 255).round(),
+        (context, offset) => paintScaled(
+          context,
+          offset,
+          (context, offset) => context.paintChild(child, offset),
+        ),
+      );
+    }
 
-    // Where the ink shows (final pixels): the pill, and under the lens wherever the lens is.
+    // Where the ink shows (final pixels): cut to the pill as it passes; under the lens the cut opens
+    // to the whole option and the ink fades with the lens's coverage ([lensInkAlpha]), so a label
+    // changes colour as one piece.
     final RRect clip;
+    var alpha = 1.0;
     if (drop == null) {
       clip = RRect.fromRectXY(bounds, 0, 0);
     } else {
       if (drop.isEmpty) return;
-      final glass = ink.glass();
-      var rect = drop;
-      var radius = ink.radius(drop);
-      if (glass != null && amount > 0) {
-        rect = Rect.lerp(drop, glass.rect, amount)!;
-        radius = radius + (glass.radius - radius) * amount;
-      }
-      final cut = rect.intersect(bounds.inflate(rect.height));
+      final cut = drop.intersect(bounds.inflate(drop.height));
       if (cut.width <= 0 || cut.height <= 0) return;
-      clip = RRect.fromRectAndRadius(cut, Radius.circular(radius));
+      final open = Rect.lerp(cut, bounds.inflate(drop.height), amount)!;
+      clip = RRect.fromRectAndRadius(
+        open,
+        Radius.circular(ink.radius(drop) * (1 - amount)),
+      );
+      alpha = lensInkAlpha(amount, coverage);
+      if (alpha <= 0.001) return;
     }
     final inkColor = Color.lerp(_color, _lensColor, amount)!;
     final live = [
@@ -1669,7 +1675,15 @@ class _RenderInkOverlay extends RenderProxyBox {
     }
 
     context.pushClipRRect(true, offset, bounds, clip, (context, offset) {
-      paintScaled(context, offset, paintInk);
+      if (alpha >= 0.999) {
+        paintScaled(context, offset, paintInk);
+      } else {
+        context.pushOpacity(
+          offset,
+          (alpha * 255).round(),
+          (context, offset) => paintScaled(context, offset, paintInk),
+        );
+      }
     });
   }
 }
@@ -2315,8 +2329,8 @@ class _Badge extends StatelessWidget {
   );
 }
 
-/// A tab's count on its icon's corner (stacked `.lab-segmented-badge`): a danger pill, 18px tall,
-/// 11px semibold surface-coloured text, that needs action.
+/// A tab's count on its icon's corner (stacked `.lab-segmented-badge`): a badge-red pill, 18px tall,
+/// 11px semibold white figures, that needs action.
 class _IconBadge extends StatelessWidget {
   const _IconBadge({required this.text, required this.radiusScale});
   final String text;
@@ -2331,7 +2345,7 @@ class _IconBadge extends StatelessWidget {
         height: 18,
         padding: const EdgeInsets.symmetric(horizontal: 5),
         decoration: ShapeDecoration(
-          color: c.danger,
+          color: c.badge,
           shape: SuperellipseBorder(radius: 9 * radiusScale),
         ),
         alignment: Alignment.center,
@@ -2347,7 +2361,7 @@ class _IconBadge extends StatelessWidget {
               fontWeight: FontWeight.w600,
               height: 18 / 11,
               leadingDistribution: TextLeadingDistribution.even,
-              color: c.surface,
+              color: c.onBadge,
             ),
           ),
         ),

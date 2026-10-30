@@ -288,8 +288,9 @@ LensMaterial lensMaterial({
   switch (kind) {
     case LensKind.pill:
       veil = 0;
-      top = 0.105;
-      middle = 0.035;
+      // A faint shade at the top only (held iOS tab bar, LENS-MEASURED.md §6).
+      top = 0.03;
+      middle = 0;
       band = dark ? _sides(0.2, 0.2, 0.2) : _sides(0.27, 0.27, 0.27);
       edge = dark ? _sides(1, 1, 1) : _sides(0.45, 0.45, 0.45);
       inner = 0;

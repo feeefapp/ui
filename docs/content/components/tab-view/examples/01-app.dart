@@ -36,6 +36,9 @@ class _StoreAppState extends State<StoreApp> {
       label: 'A phone showing a store app with four tabs',
       child: TabView(
         label: 'Store',
+        // Keep this TabView mounted when moving navigation into a wide sidebar.
+        // Set showBar: false there; changing the shell must not discard drafts.
+        showBar: true,
         value: _tab,
         onChange: (tab) => setState(() => _tab = tab),
         // `.demo-call`: a call in progress as the bar's accessory.

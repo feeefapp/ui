@@ -65,6 +65,25 @@ double lensInkZoom(double lens, [double coverage = 1]) {
       (lensLabelScale - 1) * lens.clamp(0.0, 1.0) * coverage.clamp(0.0, 1.0);
 }
 
+/// How strongly an option shows the selected ink, 0 … 1. At rest the ink is cut to the pill as it
+/// passes (1 inside it); under the lens the cut opens to the whole option ([lens] of the way) and
+/// the ink fades with how much of the option the lens covers ([coverage]), so a label changes
+/// colour as one piece. The twin of the web kit's `lensInkAlpha`.
+double lensInkAlpha(double lens, double coverage) {
+  final l = lens.isFinite ? lens.clamp(0.0, 1.0) : 0.0;
+  final c = coverage.isFinite ? coverage.clamp(0.0, 1.0) : 0.0;
+  return 1 - l * (1 - c);
+}
+
+/// How much of an option's plain (unselected) content shows under its ink: all of it at rest (the
+/// ink is cut to the pill and the plain content shows around it); under the lens it fades out as
+/// the ink fades in, so the two copies crossfade and never stack at full strength. The twin of the
+/// web kit's `lensPlainAlpha`.
+double lensPlainAlpha(double lens, double coverage) {
+  final l = lens.isFinite ? lens.clamp(0.0, 1.0) : 0.0;
+  return 1 - l * lensInkAlpha(lens, coverage);
+}
+
 /// How much of an option ([start], [width] along the track) the pill ([pillStart], [pillWidth])
 /// covers, 0 … 1: 1 when their centres meet, 0 an option's width apart, eased (smoothstep) between.
 /// The twin of the web kit's `lensCoverage`.

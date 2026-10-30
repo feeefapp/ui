@@ -75,6 +75,7 @@ class TabView extends StatefulWidget {
     this.minimize = TabMinimize.scroll,
     this.accessory,
     this.label = 'Tabs',
+    this.showBar = true,
   });
 
   /// 2–5 top-level destinations.
@@ -100,6 +101,10 @@ class TabView extends StatefulWidget {
 
   /// Accessible name of the tab bar.
   final String label;
+
+  /// Shows the floating phone tab bar. Set false when the same destinations live in a
+  /// wide scaffold sidebar; mounted panels and their state stay intact, with no bar reservation.
+  final bool showBar;
 
   @override
   State<TabView> createState() => _TabViewState();
@@ -247,6 +252,7 @@ class _TabViewState extends State<TabView> {
   /// Scrolling the visible tab drives the progress: down shrinks, up (or reaching the top)
   /// restores.
   bool _onScroll(String id, ScrollUpdateNotification n) {
+    if (!widget.showBar) return false;
     if (widget.minimize != TabMinimize.scroll || id != widget.value) {
       return false;
     }
@@ -476,33 +482,34 @@ class _TabViewState extends State<TabView> {
                 ...panels,
                 // A floating bar: --lab-toolbar-inset (the shell gap G by default) from the panel,
                 // the accessory --lab-toolbar-gap above it.
-                Positioned(
-                  left: inset,
-                  right: inset,
-                  bottom: inset + safe.bottom,
-                  child: SizeReporter(
-                    onSize: (size) {
-                      // Measured only while full: shrinking the reserve would clamp scroll
-                      // positions and read as a scroll up, expanding the bar again.
-                      if (!mounted ||
-                          _progress.get() > 0 ||
-                          size.height == _chrome) {
-                        return;
-                      }
-                      setState(() => _chrome = size.height);
-                    },
-                    child: GlassBar(
-                      child: GlassScope(
-                        child: Builder(
-                          builder: (context) {
-                            _glass = GlassMember.of(context);
-                            return chrome;
-                          },
+                if (widget.showBar)
+                  Positioned(
+                    left: inset,
+                    right: inset,
+                    bottom: inset + safe.bottom,
+                    child: SizeReporter(
+                      onSize: (size) {
+                        // Measured only while full: shrinking the reserve would clamp scroll
+                        // positions and read as a scroll up, expanding the bar again.
+                        if (!mounted ||
+                            _progress.get() > 0 ||
+                            size.height == _chrome) {
+                          return;
+                        }
+                        setState(() => _chrome = size.height);
+                      },
+                      child: GlassBar(
+                        child: GlassScope(
+                          child: Builder(
+                            builder: (context) {
+                              _glass = GlassMember.of(context);
+                              return chrome;
+                            },
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
@@ -517,7 +524,9 @@ class _TabViewState extends State<TabView> {
     Widget content = NotificationListener<ScrollUpdateNotification>(
       onNotification: (n) => _onScroll(tab.id, n),
       child: ScrollExtraBottom(
-        value: _chrome + ThemeProvider.of(context).sizes.toolbarInset,
+        value: widget.showBar
+            ? _chrome + ThemeProvider.of(context).sizes.toolbarInset
+            : 0,
         child: tab.content,
       ),
     );

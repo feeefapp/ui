@@ -9,7 +9,9 @@ import {
   SWITCH_OVERDRAG,
   SWITCH_SLOP,
   lensCoverage,
+  lensInkAlpha,
   lensInkZoom,
+  lensPlainAlpha,
   lensStretch,
   switchDragPosition,
   switchSnap,
@@ -57,5 +59,6 @@ export function lensFixture() {
     thumbBend: DEPTHS.map((d) => [d, round(lensBend('thumb', d))]),
     coverage: PILLS.map((start) => [start, 90, 0, 90, round(lensCoverage(start, 90, 0, 90))]),
     inkZoom: AMOUNTS.flatMap((lens) => [0, 0.5, 1].map((coverage) => [lens, coverage, round(lensInkZoom(lens, coverage))])),
+    inkAlpha: AMOUNTS.flatMap((lens) => [0, 0.5, 1].map((coverage) => [lens, coverage, round(lensInkAlpha(lens, coverage)), round(lensPlainAlpha(lens, coverage))])),
   }
 }

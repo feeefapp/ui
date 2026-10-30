@@ -328,6 +328,7 @@ class _ScaffoldWidgetState extends State<Scaffold> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _SideBoundary(
+                        immediate: compact,
                         mode: visibleSide ? _sideMode : ScaffoldSideMode.hidden,
                         density: theme.config.density,
                         rtl: direction == TextDirection.rtl,
@@ -375,12 +376,14 @@ class _ScaffoldWidgetState extends State<Scaffold> {
 /// visible width while the column closes, clipped, so it never squeezes.
 class _SideBoundary extends StatefulWidget {
   const _SideBoundary({
+    required this.immediate,
     required this.mode,
     required this.density,
     required this.rtl,
     required this.child,
   });
   final ScaffoldSideMode mode;
+  final bool immediate;
   final Density density;
   final bool rtl;
   final Widget child;
@@ -406,7 +409,9 @@ class _SideBoundaryState extends State<_SideBoundary> {
       ScaffoldSideMode.hidden => 0.0,
     };
     if (!hidden) _lastVisible = target;
-    final duration = reduced
+    // A window becoming compact must get its full viewport immediately. Animating
+    // the obsolete desktop column would squeeze a phone form during the transition.
+    final duration = reduced || widget.immediate
         ? Duration.zero
         : const Duration(milliseconds: 220);
     return TweenAnimationBuilder<double>(
@@ -414,7 +419,7 @@ class _SideBoundaryState extends State<_SideBoundary> {
       duration: duration,
       curve: MotionTokens.ease,
       builder: (context, width, child) => SizedBox(
-        width: math.max(0, width),
+        width: widget.immediate ? target : math.max(0, width),
         child: ClipRect(
           child: OverflowBox(
             alignment: AlignmentDirectional.centerStart,

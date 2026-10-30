@@ -164,6 +164,69 @@ Future<void> drag(
 }
 
 void main() {
+  testWidgets(
+    'sidebar mode removes chrome reserve without remounting the panel',
+    (tester) async {
+      var show = true;
+      late StateSetter update;
+      double reserve = -1;
+      final draft = GlobalKey();
+      await tester.pumpWidget(
+        host(
+          StatefulBuilder(
+            builder: (context, setState) {
+              update = setState;
+              return SizedBox(
+                width: 900,
+                height: 700,
+                child: TabView(
+                  showBar: show,
+                  value: 'home',
+                  onChange: (_) {},
+                  tabs: [
+                    Tab(
+                      id: 'home',
+                      label: 'Home',
+                      icon: const LucideIcon(LucideIcons.house),
+                      content: Builder(
+                        key: draft,
+                        builder: (context) {
+                          reserve = ScrollExtraBottom.of(context);
+                          return const Counter(name: 'Preserved draft');
+                        },
+                      ),
+                    ),
+                    const Tab(
+                      id: 'other',
+                      label: 'Other',
+                      icon: LucideIcon(LucideIcons.package),
+                      content: SizedBox(),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Preserved draft 0'));
+      await tester.pumpAndSettle();
+      final element = draft.currentContext;
+      expect(reserve, greaterThan(0));
+      update(() => show = false);
+      await tester.pumpAndSettle();
+      expect(reserve, 0);
+      expect(find.text('Preserved draft 1'), findsOneWidget);
+      expect(identical(element, draft.currentContext), isTrue);
+      expect(find.byType(GlassGroup), findsNothing);
+      update(() => show = true);
+      await tester.pumpAndSettle();
+      expect(reserve, greaterThan(0));
+      expect(find.text('Preserved draft 1'), findsOneWidget);
+    },
+  );
+
   setUp(Counter.built.clear);
 
   testWidgets('tabs mount on first visit and stay alive', (tester) async {

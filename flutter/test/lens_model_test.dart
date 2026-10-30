@@ -82,6 +82,11 @@ void main() {
       final v = (row as List<dynamic>).map(n).toList();
       expect(lensCoverage(v[0], v[1], v[2], v[3]), closeTo(v[4], 1e-6));
     }
+    for (final row in fixture['inkAlpha'] as List<dynamic>) {
+      final v = (row as List<dynamic>).map(n).toList();
+      expect(lensInkAlpha(v[0], v[1]), closeTo(v[2], 1e-6));
+      expect(lensPlainAlpha(v[0], v[1]), closeTo(v[3], 1e-6));
+    }
     for (final row in fixture['inkZoom'] as List<dynamic>) {
       final v = (row as List<dynamic>).map(n).toList();
       expect(lensInkZoom(v[0], v[1]), closeTo(v[2], 1e-6));
@@ -109,7 +114,7 @@ void main() {
   test('lensMaterial eases the measured material in', () {
     final pill = lensMaterial(kind: LensKind.pill, lens: 1, dark: false);
     expect(pill.veil, 0);
-    expect(pill.shade, (top: 0.105, middle: 0.035));
+    expect(pill.shade, (top: 0.03, middle: 0.0));
     expect(pill.band, (top: 0.27, side: 0.27, bottom: 0.27));
     expect(pill.edge, (top: 0.45, side: 0.45, bottom: 0.45));
     expect(pill.shadow, lensShadowAlpha);

@@ -14,7 +14,7 @@ function Overview() {
           where the person was.
         </p>
         <p>
-          On wide screens the same destinations usually belong in the scaffold’s sidebar. To switch
+          On wide screens the same destinations usually belong in the scaffold’s sidebar. In Flutter, set showBar: false on the same TabView instance so its visited panels, navigation stacks and drafts stay mounted while the floating bar and its scroll reservation disappear. To switch
           views of one thing (list or board, overview or API), use a segmented control instead.
         </p>
       </Section>

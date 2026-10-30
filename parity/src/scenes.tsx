@@ -15,7 +15,7 @@ import { GlassContainer, GlassScope } from '@feeef.dev/ui/glass'
 import { Dock } from '@feeef.dev/ui/dock'
 import { PopoverSurface } from '@feeef.dev/ui/primitives/popover-surface'
 import { ScrollArea } from '@feeef.dev/ui/scroll'
-import { Alert, Pane, PresentationDock } from '@feeef.dev/ui/presentation'
+import { Alert, PresentationDock } from '@feeef.dev/ui/presentation'
 import { Carousel, NavigationPage, NavigationStack, Sheet, SplitView, TabView } from '@feeef.dev/ui/containers'
 import { LucidePackage, LucideUsers, LucideSettings } from 'lucide-react'
 import { Select, Option } from '@feeef.dev/ui/primitives/select'
@@ -447,7 +447,8 @@ export const SCENES: Record<string, () => ReactNode> = {
     />
   ),
   pane: () => (
-    <Pane
+    <Sheet
+      regular="pane"
       open
       onOpenChange={() => {}}
       label="Order #1042"
@@ -460,7 +461,7 @@ export const SCENES: Record<string, () => ReactNode> = {
       }
     >
       <div style={{ font: "15px/22px 'Parity Plex'", color: 'var(--lab-muted)' }}>3 items · 4,500 DZD · Oran</div>
-    </Pane>
+    </Sheet>
   ),
   text: () => (
     <div className="row">

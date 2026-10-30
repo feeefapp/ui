@@ -7,7 +7,9 @@ import {
   LENS_THUMB_SCALE,
   SWITCH_OVERDRAG,
   lensCoverage,
+  lensInkAlpha,
   lensInkZoom,
+  lensPlainAlpha,
   lensPillShape,
   lensStretch,
   switchDragPosition,
@@ -92,6 +94,20 @@ test('an option grows by how much of it the pill covers', () => {
   assert.equal(lensCoverage(0, 90, 0, 0), 0, 'no width')
   assert.equal(lensInkZoom(1, 0), 1, 'an option the lens is not over keeps its size')
   assert.equal(lensInkZoom(1, 0.5), 1 + (LENS_LABEL_SCALE - 1) / 2)
+})
+
+test('under the lens a label changes colour as one piece, plain and ink crossfading', () => {
+  // At rest the ink is cut to the pill (full strength) and the plain content shows around it.
+  assert.equal(lensInkAlpha(0, 0), 1)
+  assert.equal(lensPlainAlpha(0, 0), 1)
+  // Held on an option: only the ink shows; an option the lens is not over keeps its plain content.
+  assert.equal(lensInkAlpha(1, 1), 1)
+  assert.equal(lensPlainAlpha(1, 1), 0)
+  assert.equal(lensInkAlpha(1, 0), 0)
+  assert.equal(lensPlainAlpha(1, 0), 1)
+  // Half way between two options: both halves fade evenly.
+  assert.equal(lensInkAlpha(1, 0.5), 0.5)
+  assert.equal(lensPlainAlpha(1, 0.5), 0.5)
 })
 
 test('the pill\'s convex rim only ever shows what lies inside its rest pill', () => {

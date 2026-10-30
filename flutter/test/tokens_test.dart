@@ -77,6 +77,8 @@ void main() {
         'warning': tokens.warning,
         'danger': tokens.danger,
         'on-danger': tokens.onDanger,
+        'badge': tokens.badge,
+        'on-badge': tokens.onBadge,
         'control-surface': tokens.controlSurface,
         'control-border': tokens.controlBorder,
         'control-hover': tokens.controlHover,

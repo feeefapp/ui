@@ -154,6 +154,8 @@ html[data-lab-theme] .lab-segmented[data-dragging] .lab-segmented-track > .lab-s
   /* At rest the pill's ink; as a drop, the lens ink (its fill is gone, the glass is clear). */
   color: color-mix(in srgb, var(--lab-segmented-pill-ink) calc((1 - var(--lab-lens)) * 100%), var(--lab-segmented-lens-ink));
   clip-path: var(--lab-segmented-clip);
+  /* Under the lens the ink fades with the lens's coverage (lens-model.ts lensInkAlpha). */
+  opacity: var(--lab-segmented-ink-alpha, 1);
   pointer-events: none;
 }
 /* Under the lens an option grows (lens-model.ts lensInkZoom) around its own centre, its content and
@@ -165,6 +167,10 @@ nothing tears and the badge stays whole. */
 }
 .lab-segmented-option > .lab-segmented-ink {
   transform-origin: var(--lab-segmented-ink-at, 50% 50%);
+}
+/* Under the lens the plain content fades out as its ink fades in (lens-model.ts lensPlainAlpha). */
+.lab-segmented-option > .lab-segmented-content:not(.lab-segmented-ink) {
+  opacity: var(--lab-segmented-plain-alpha, 1);
 }
 /* The copy's box is the padding box, which a stacked tab's content can overflow: its parts keep their
 size there (as in the plain content) instead of shrinking, or the copy's label would sit off the
@@ -247,8 +253,8 @@ size and type (tab-view.css). */
   z-index: 1;
   top: -5px;
   inset-inline-start: 14px;
-  background: var(--lab-danger);
-  color: var(--lab-surface);
+  background: var(--lab-badge);
+  color: var(--lab-on-badge);
   font-variant-numeric: normal;
 }
 

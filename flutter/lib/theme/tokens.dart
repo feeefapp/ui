@@ -26,6 +26,8 @@ class ColorTokens {
     required this.warning,
     required this.danger,
     required this.onDanger,
+    required this.badge,
+    required this.onBadge,
     required this.glassEdgeLight,
     required this.glassEdgeLow,
     required double glassShadowAlpha,
@@ -62,6 +64,10 @@ class ColorTokens {
       onPrimary,
       accent;
   final Color success, warning, danger, onDanger;
+
+  /// `--lab-badge` / `--lab-on-badge`: a count that needs action (a tab's badge), iOS's system red
+  /// with white figures in both appearances.
+  final Color badge, onBadge;
   final Color glassEdgeLight, glassEdgeLow, glassGlow, controlHighlight;
 
   /// `--lab-glass-shadow-color`: the faint shadow under every glass, clear included (iOS 27).
@@ -109,6 +115,8 @@ class ColorTokens {
       warning: warning,
       danger: danger,
       onDanger: onDanger,
+      badge: badge,
+      onBadge: onBadge,
       glassEdgeLight: white(dark ? 0.13 : 0.62),
       glassEdgeLow: white(dark ? 0.14 : 0.27),
       glassShadowAlpha: dark ? 0.04 : 0.02,
@@ -199,6 +207,8 @@ class ColorTokens {
       highlight: white(dark ? 0.20 : 0.76),
       danger: hex(dark ? 0xffb4ab : 0xa02b2b),
       onDanger: hex(dark ? 0x571812 : 0xffffff),
+      badge: hex(dark ? 0xff453a : 0xff3b30),
+      onBadge: hex(0xffffff),
     );
     ColorTokens make({
       required int ground,
@@ -230,6 +240,8 @@ class ColorTokens {
       warning: hex(warning),
       danger: shared.danger,
       onDanger: shared.onDanger,
+      badge: shared.badge,
+      onBadge: shared.onBadge,
       glassEdgeLight: shared.edgeLight,
       glassEdgeLow: shared.edgeLow,
       glassShadowAlpha: shared.shadow,
@@ -335,6 +347,8 @@ class ColorTokens {
       warning: warning,
       danger: danger,
       onDanger: onDanger,
+      badge: badge,
+      onBadge: onBadge,
       glassEdgeLight: glassEdgeLight,
       glassEdgeLow: glassEdgeLow,
       glassShadowAlpha: _shadow,
