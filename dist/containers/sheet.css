@@ -150,29 +150,34 @@ html[data-lab-glass='solid'] .lab-sheet-solid {
   border-radius: var(--lab-radius-panel);
 }
 
-/* Grabber: a short pill; the whole row is a drag handle, the pill is a button that cycles heights. */
+/* Grabber: a short pill at the top edge. It takes an 8 px band, so the floating header sits 16 px
+   from the edge; its 16 px button reaches over the body's top gap, above the floats. The whole row
+   is a drag handle, the pill is a button that cycles heights. */
 .lab-sheet-grabber-row {
-  display: grid;
+  position: relative;
+  z-index: 3;
   flex: none;
-  place-items: center;
-  height: 20px;
+  height: 8px;
   touch-action: none;
 }
 .lab-sheet-grabber {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 50%;
   width: 64px;
-  height: 20px;
-  margin: 0;
+  height: 16px;
+  margin: 0 0 0 -32px;
   padding: 0;
   border: 0;
   background: transparent;
   cursor: grab;
+  touch-action: none;
 }
 .lab-sheet-grabber::before {
   content: '';
   position: absolute;
   inset-inline: 14px;
-  top: 7px;
+  top: 6px;
   height: 5px;
   border-radius: 3px;
   background: color-mix(in srgb, var(--lab-ink) 22%, transparent);

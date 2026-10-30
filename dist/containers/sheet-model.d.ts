@@ -25,6 +25,14 @@ export declare function detentHeights(detents: readonly SheetDetent[], m: SheetM
  */
 export declare function dragHeight(raw: number, heights: readonly number[], hostHeight: number, dismissible: boolean): number;
 /**
+ * The height after one wheel or trackpad step of `delta` px (> 0 grows): up to `max`, down to
+ * `min`, and on a dismissible sheet on below `min` at half speed, so scrolling up at the content's
+ * top keeps pulling the sheet down until it can close ([wheelDismisses]).
+ */
+export declare function wheelHeight(visible: number, delta: number, min: number, max: number, dismissible: boolean): number;
+/** A sheet the wheel pulled to `visible`, below its lowest height `min`, closes when it stops. */
+export declare function wheelDismisses(visible: number, min: number): boolean;
+/**
  * Where a released sheet goes. `velocity` is upward speed in px/s (positive = growing). The
  * height is projected with the flick's momentum and snapped to the nearest detent, or to 0
  * (dismiss) when that is nearer and the sheet is dismissible.
