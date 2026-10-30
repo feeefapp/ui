@@ -8,11 +8,14 @@ import {
   SWITCH_DECELERATION,
   SWITCH_OVERDRAG,
   SWITCH_SLOP,
+  lensCoverage,
+  lensInkZoom,
   lensStretch,
   switchDragPosition,
   switchSnap,
   touchOutset,
 } from '../../src/primitives/lens-model'
+import { lensBend } from '../../src/glass/refraction'
 
 const round = (value: number) => Math.round(value * 1e6) / 1e6
 
@@ -24,6 +27,10 @@ const POSITIONS = [-0.1, 0, 0.2, 0.45, 0.5, 0.55, 0.8, 1, 1.1]
 const SPEEDS = [0, 1, -1, 3, -3, 8, -8, 20, -20]
 const SIZES = [0, 16, 24, 28, 30, 36, 44, 52]
 const TARGETS = [44, 38]
+const DEPTHS = [0, 0.5, 2, 5, 9, 14, 22.5, 30, 40]
+const GAPS = [0, 4, 8, 12]
+const PILLS = [-90, -60, -45, -20, 0, 10, 45, 89, 120]
+const AMOUNTS = [0, 0.5, 1]
 
 export function lensFixture() {
   return {
@@ -45,5 +52,10 @@ export function lensFixture() {
     ),
     snap: POSITIONS.flatMap((p) => SPEEDS.map((v) => [p, v, switchSnap(p, v)])),
     outset: SIZES.flatMap((size) => TARGETS.map((target) => [size, target, round(touchOutset(size, target))])),
+    pillBend: GAPS.flatMap((gap) => DEPTHS.map((d) => [d, gap, round(lensBend('pill', d, gap))])),
+    switchBend: DEPTHS.map((d) => [d, round(lensBend('switch', d))]),
+    thumbBend: DEPTHS.map((d) => [d, round(lensBend('thumb', d))]),
+    coverage: PILLS.map((start) => [start, 90, 0, 90, round(lensCoverage(start, 90, 0, 90))]),
+    inkZoom: AMOUNTS.flatMap((lens) => [0, 0.5, 1].map((coverage) => [lens, coverage, round(lensInkZoom(lens, coverage))])),
   }
 }

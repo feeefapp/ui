@@ -26,12 +26,14 @@ export const LENS_PILL_LIFT = { x: 12, y: 8 } as const
 export const LENS_LABEL_SCALE = 1.2
 
 /**
- * The glass a pill turns into at `lens` (0 rest … 1 glass): liquid glass lifts it out by
- * `LENS_PILL_LIFT` (corners grow with it), transparent glass keeps the pill's own box. `radius` is
+ * The glass a pill turns into at `lens` (0 rest … 1 glass): a lens that bends what is behind it
+ * (`lifts`: liquid glass where refraction runs) lifts out by `LENS_PILL_LIFT` (corners grow with
+ * it), its convex rim filling the overhang with what lies inside the rest pill; a lens that can't
+ * bend keeps the pill's own box, so it never shows the track's edge or what is past it. `radius` is
  * the pill's corner radius.
  */
-export function lensPillShape(pill: { x: number; y: number; width: number; height: number }, radius: number, lens: number, liquid: boolean): GlassShape {
-  const t = liquid ? clampLens(lens) : 0
+export function lensPillShape(pill: { x: number; y: number; width: number; height: number }, radius: number, lens: number, lifts: boolean): GlassShape {
+  const t = lifts ? clampLens(lens) : 0
   const x = LENS_PILL_LIFT.x * t
   const y = LENS_PILL_LIFT.y * t
   return {
@@ -43,9 +45,25 @@ export function lensPillShape(pill: { x: number; y: number; width: number; heigh
   }
 }
 
-/** The scale of the selected option under the lens: `LENS_LABEL_SCALE` eased in with it. */
-export function lensInkZoom(lens: number) {
-  return 1 + (LENS_LABEL_SCALE - 1) * clampLens(lens)
+/**
+ * The scale of an option under the lens, around the option's own centre: `LENS_LABEL_SCALE` eased in
+ * with the lens and by how much of the option it covers (`lensCoverage`; 1 for the option it rests
+ * on), so a dragged lens grows the options it passes and never tears their content.
+ */
+export function lensInkZoom(lens: number, coverage = 1) {
+  return 1 + (LENS_LABEL_SCALE - 1) * clampLens(lens) * clampLens(coverage)
+}
+
+/**
+ * How much of an option (`start`, `width` along the track) the pill (`pillStart`, `pillWidth`)
+ * covers, 0 … 1: 1 when their centres meet, 0 an option's width apart, eased (smoothstep) between.
+ */
+export function lensCoverage(pillStart: number, pillWidth: number, start: number, width: number) {
+  if (!(width > 0) || ![pillStart, pillWidth, start].every(Number.isFinite)) return 0
+  const t = 1 - Math.abs(pillStart + pillWidth / 2 - (start + width / 2)) / width
+  if (t <= 0) return 0
+  if (t >= 1) return 1
+  return t * t * (3 - 2 * t)
 }
 
 function clampLens(lens: number) {

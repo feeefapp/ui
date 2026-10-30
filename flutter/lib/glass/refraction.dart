@@ -59,25 +59,22 @@ double gentleRefractionShift(double side, [double bezel = glassBezel]) {
 /// thumb (they bend and edge differently on iOS 26.2).
 enum LensKind { pill, thumb, switchThumb }
 
-/// How iOS 26.2's control lenses bend what is behind them, measured with phase-shifted fringes
-/// under held stock controls (`research/liquid-glass/LENS-MEASURED.md` §2), the twin of the web
-/// kit's `LENS_BEND`. The pill: an inward rim of [lensPillRim] px over its outer
-/// [lensPillRimWidth] px, then outward (it shows the backdrop from outside its edge, so lines
-/// crowd toward the rim), rising to [lensPillPeak] px at [lensPillAt] px deep, then fading as
-/// `exp(-(d - at) / decay)`. The slider thumb: inward, [lensThumbPeak] px over its outer
-/// [lensThumbAt] px, then `peak · (1 - (d - at) / reach)^power`, its outer [lensThumbSoft] px
-/// softened ([lensSoftBlur], [lensSoftWeight]). The switch thumb: the pill's profile at
-/// [lensSwitchScale] (outward, 2.9 px at 5 px deep) with the pill's lean, and its whole middle
-/// zoomed out ([lensSwitchZoomX], [lensSwitchZoomY]). All the same in light and dark.
-const double lensPillRim = 6;
-const double lensPillRimWidth = 0.6;
-const double lensPillPeak = 4.3;
-const double lensPillAt = 5;
-const double lensPillDecay = 10.5;
-
-/// The pill bend's direction is the outline's normal plus this × the offset from the centre over
-/// the half size, normalised: vertical lines bow along its top and bottom.
-const double lensPillRadial = 1.5;
+/// How control lenses bend what is behind them, the twin of the web kit's `LENS_BEND`. The pill (the
+/// selection of a segmented control or a tab bar, lifted out of its rest pill by [lensPillLiftX] /
+/// [lensPillLiftY]): a convex rim that only ever shows what lies inside its rest pill, so the
+/// track's edge and whatever is past it never show inside the lens. With `gap` = how far the lens
+/// reaches past its rest pill there (`G = gap + lensPillMargin`), the shift is
+/// `G · (1 - d / (lensPillReach · G))²`: lines near the rim are magnified, the middle stays put and
+/// nothing folds. The slider thumb (measured on iOS 26.2, `research/liquid-glass/LENS-MEASURED.md`
+/// §2): inward, [lensThumbPeak] px over its outer [lensThumbAt] px, then
+/// `peak · (1 - (d - at) / reach)^power`, its outer [lensThumbSoft] px softened ([lensSoftBlur],
+/// [lensSoftWeight]). The switch thumb: iOS 26.2's measured lip, an inward rim of [lensSwitchRim] px
+/// over its outer [lensSwitchRimWidth] px, then outward rising to [lensSwitchPeak] px at
+/// [lensSwitchAt] px deep, fading as `exp(-(d - at) / decay)`, leaning away from the centre
+/// ([lensSwitchRadial]), its whole middle zoomed out ([lensSwitchZoomX], [lensSwitchZoomY]). All the
+/// same in light and dark. No lens splits colour (iOS 27's glass shows none).
+const double lensPillMargin = 1;
+const double lensPillReach = 2.5;
 const double lensThumbPeak = 7.1;
 const double lensThumbAt = 1;
 const double lensThumbReach = 6.5;
@@ -93,40 +90,49 @@ const double lensThumbSoft = 5;
 /// `LENS_SOFT`.
 const double lensSoftBlur = 2;
 
-/// The switch thumb's bend is the pill's ([lensBend]) times this.
-const double lensSwitchScale = 0.67;
+const double lensSwitchRim = 4.02;
+const double lensSwitchRimWidth = 0.6;
+const double lensSwitchPeak = 2.881;
+const double lensSwitchAt = 5;
+const double lensSwitchDecay = 10.5;
+
+/// The switch bend's direction is the outline's normal plus this × the offset from the centre over
+/// the half size, normalised: vertical lines bow along its top and bottom.
+const double lensSwitchRadial = 1.5;
 
 /// The switch thumb's middle is zoomed out: a point shows the backdrop this × its offset from the
 /// centre further out, per axis (it looks about 13 % smaller across).
 const double lensSwitchZoomX = 0.04;
 const double lensSwitchZoomY = 0;
 
-/// Colour split of a lens's bend: red bends this much less than green and blue this much more
-/// (the web kit's `LENS_DISPERSION`), the rainbow along its rim.
-const double lensDispersion = 0.06;
-
 /// The bend (px, positive inward) of a [kind] lens at depth [d] px inside its outline: the twin
-/// of the web kit's `lensBend`. `shaders/glass_refraction.frag` evaluates the same per pixel.
-double lensBend(LensKind kind, double d) {
+/// of the web kit's `lensBend`. A pill's depends on [gap], how far (px) it reaches past its rest pill
+/// there. `shaders/glass_refraction.frag` evaluates the same per pixel.
+double lensBend(LensKind kind, double d, {double gap = 0}) {
   if (!(d >= 0)) return 0;
-  if (kind == LensKind.thumb) {
-    if (d <= lensThumbAt) return lensThumbPeak;
-    final t = 1 - (d - lensThumbAt) / lensThumbReach;
-    return t > 0 ? lensThumbPeak * math.pow(t, lensThumbPower) : 0;
+  switch (kind) {
+    case LensKind.pill:
+      final g = (gap.isFinite ? math.max(0.0, gap) : 0.0) + lensPillMargin;
+      final t = 1 - d / (lensPillReach * g);
+      return t > 0 ? g * t * t : 0;
+    case LensKind.thumb:
+      if (d <= lensThumbAt) return lensThumbPeak;
+      final t = 1 - (d - lensThumbAt) / lensThumbReach;
+      return t > 0 ? lensThumbPeak * math.pow(t, lensThumbPower) : 0;
+    case LensKind.switchThumb:
+      if (d < lensSwitchRimWidth) {
+        return lensSwitchRim * (1 - d / lensSwitchRimWidth);
+      }
+      if (d < lensSwitchAt) {
+        return -lensSwitchPeak *
+            math.min(
+              1.0,
+              (d - lensSwitchRimWidth) / (lensSwitchAt - 1 - lensSwitchRimWidth),
+            );
+      }
+      return -lensSwitchPeak *
+          math.exp(-(d - lensSwitchAt) / lensSwitchDecay);
   }
-  final scale = kind == LensKind.switchThumb ? lensSwitchScale : 1.0;
-  if (d < lensPillRimWidth) {
-    return scale * lensPillRim * (1 - d / lensPillRimWidth);
-  }
-  if (d < lensPillAt) {
-    return -scale *
-        lensPillPeak *
-        math.min(
-          1.0,
-          (d - lensPillRimWidth) / (lensPillAt - 1 - lensPillRimWidth),
-        );
-  }
-  return -scale * lensPillPeak * math.exp(-(d - lensPillAt) / lensPillDecay);
 }
 
 /// How much of the softened (blurred, then bent) backdrop shows at depth [d] px inside a [kind]

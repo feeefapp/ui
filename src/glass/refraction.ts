@@ -197,25 +197,30 @@ function sampleDisplacementMap(
 export type LensKind = 'pill' | 'thumb' | 'switch'
 
 /**
- * How iOS 26.2's control lenses bend what is behind them, measured with phase-shifted fringes under
- * held stock controls (research/liquid-glass/LENS-MEASURED.md §2). The shift (px, positive = the
- * pixel shows the backdrop from further inside) at depth `d` px from the outline:
- * - pill: a 1 px inward rim, then outward (it shows the backdrop from outside its edge, so lines
- *   crowd toward the rim): rising 1 px per px to 4.3 px at 5 px deep, then fading as
- *   `exp(-(d - 5) / 10.5)`, leaning away from the centre (`radial`: the direction is the outline's
- *   normal plus `radial` × the offset from the centre over the half size), so lines bow along its
- *   top and bottom. The flat middle neither bends nor magnifies.
+ * How control lenses bend what is behind them. The shift (px, positive = the pixel shows the backdrop
+ * from further inside) at depth `d` px from the outline:
+ * - pill (the selection of a segmented control or a tab bar, lifted out of its rest pill by
+ *   `LENS_PILL_LIFT`): a convex rim that only ever shows what lies inside its rest pill, so the
+ *   track's edge and whatever is past it never show inside the lens. With `gap` = how far the lens
+ *   reaches past its rest pill there (`G = gap + margin`), the shift is `G · (1 - d / (reach · G))²`
+ *   to nothing at `reach · G` px deep: lines near the rim are magnified (most at the rim, at most
+ *   `1 / (1 - 2 / reach)` times), the middle stays put, and nothing folds (`reach` ≥ 2). iOS 26.2's
+ *   tab bar pill shows the bar's own edge and the page past it through its rim
+ *   (research/liquid-glass/LENS-MEASURED.md §6); the kit keeps one clean capsule instead.
  * - thumb (slider): inward, 7.1 px over the outer 1 px, then `7.1 · (1 - (d - 1) / 6.5)^2.2` to
- *   nothing at 7.5 px; its outer `soft` px are softened (`LENS_SOFT`).
- * - switch: the pill's profile at `scale` (outward, 2.9 px at 5 px deep), and its whole middle zoomed
- *   out (`zoom`: it shows the backdrop `zoom` × the offset from the centre further out, so it looks
- *   about 13 % smaller across).
+ *   nothing at 7.5 px; its outer `soft` px are softened (`LENS_SOFT`). Measured on iOS 26.2 (§2).
+ * - switch: iOS 26.2's measured lip (§2, the segmented pill's profile at two thirds): a 0.6 px inward
+ *   rim of `rim` px, then outward (it shows the backdrop from outside its edge, so lines crowd toward
+ *   the rim) rising 1 px per px to `peak` px at `at` px deep, then fading as `exp(-(d - at) / decay)`,
+ *   leaning away from the centre (`radial`: the direction is the outline's normal plus `radial` × the
+ *   offset from the centre over the half size), and its whole middle zoomed out (`zoom`: it shows the
+ *   backdrop `zoom` × the offset from the centre further out, so it looks about 13 % smaller across).
  * All are the same in light and dark appearance.
  */
 export const LENS_BEND = {
-  pill: { rim: 6, rimWidth: 0.6, peak: 4.3, at: 5, decay: 10.5, radial: 1.5 },
+  pill: { margin: 1, reach: 2.5 },
   thumb: { peak: 7.1, at: 1, reach: 6.5, power: 2.2, soft: 5 },
-  switch: { scale: 0.67, zoom: { x: 0.04, y: 0 } },
+  switch: { rim: 4.02, rimWidth: 0.6, peak: 2.881, at: 5, decay: 10.5, radial: 1.5, zoom: { x: 0.04, y: 0 } },
 } as const
 
 /**
@@ -225,37 +230,43 @@ export const LENS_BEND = {
  */
 export const LENS_SOFT = { blur: 2 } as const
 
-/** Colour split of a control lens's bend: red bends this much less than green and blue this much
- * more (iOS 26.2: 0.94 and 1.05 across the pill's strongest band), the rainbow along its rim. */
-export const LENS_DISPERSION = 0.06
-
 /** Raster work allowed for one lens map: up to 3 samples per px on a control lens. */
 export const LENS_MAP_PIXELS = 65536
 
-/** The bend (px, positive inward) of a `kind` lens at depth `d` px inside its outline. */
-export function lensBend(kind: LensKind, d: number) {
+/**
+ * The bend (px, positive inward) of a `kind` lens at depth `d` px inside its outline. A pill's
+ * depends on `gap`: how far (px) the lens reaches past its rest pill at that point (0 when it hasn't
+ * lifted).
+ */
+export function lensBend(kind: LensKind, d: number, gap = 0) {
   if (!(d >= 0)) return 0
+  if (kind === 'pill') {
+    const g = Math.max(0, Number.isFinite(gap) ? gap : 0) + LENS_BEND.pill.margin
+    const t = 1 - d / (LENS_BEND.pill.reach * g)
+    return t > 0 ? g * t * t : 0
+  }
   if (kind === 'thumb') {
     const { peak, at, reach, power } = LENS_BEND.thumb
     if (d <= at) return peak
     const t = 1 - (d - at) / reach
     return t > 0 ? peak * t ** power : 0
   }
-  const scale = kind === 'switch' ? LENS_BEND.switch.scale : 1
-  const { rim, rimWidth, peak, at, decay } = LENS_BEND.pill
-  if (d < rimWidth) return scale * rim * (1 - d / rimWidth)
-  if (d < at) return -scale * peak * Math.min(1, (d - rimWidth) / (at - 1 - rimWidth))
-  return -scale * peak * Math.exp(-(d - at) / decay)
+  const { rim, rimWidth, peak, at, decay } = LENS_BEND.switch
+  if (d < rimWidth) return rim * (1 - d / rimWidth)
+  if (d < at) return -peak * Math.min(1, (d - rimWidth) / (at - 1 - rimWidth))
+  return -peak * Math.exp(-(d - at) / decay)
 }
 
 /**
  * The map of a control's lens (lens-layer.ts): one `shape` (its own box, at 0, 0) bending by
- * `lensBend` along its outline's normal (a switch also zooms out). Same encoding as
+ * `lensBend` along its outline's normal (a switch also leans and zooms out). A pill passes `lift`,
+ * how far it reaches past its rest pill on each side (its rest pill is the shape inset by it, the
+ * corner smaller by `lift.y`): its bend follows the gap between the two outlines. Same encoding as
  * `displacementMap` (red/green = shift as a share of `scale / 2`, alpha = the shape, blue = how much
  * of the softened copy shows: the thumb's `LENS_SOFT` band), sampled at most `LENS_MAP_PIXELS`. The
- * bend is linear in `scale`, so an owner eases the lens in by scaling `scale` alone.
+ * bend is linear in `scale`, so an owner can ease a thumb's lens in by scaling `scale` alone.
  */
-export function lensDisplacementMap(shape: GlassShape, kind: LensKind) {
+export function lensDisplacementMap(shape: GlassShape, kind: LensKind, lift: { x: number; y: number } = { x: 0, y: 0 }) {
   const logicalWidth = Number.isFinite(shape.width) ? Math.max(1, shape.width) : 1
   const logicalHeight = Number.isFinite(shape.height) ? Math.max(1, shape.height) : 1
   // The pill's inward rim is under 1 px wide: sample up to 3 map pixels per px.
@@ -267,6 +278,19 @@ export function lensDisplacementMap(shape: GlassShape, kind: LensKind) {
   const coverageWidth = Math.max(pixelWidth, pixelHeight)
   const box = { x: 0, y: 0, width: logicalWidth, height: logicalHeight, radius: shape.radius, cornerExponent: shape.cornerExponent }
   const distance = prepareUnionDistance([box], 0)
+  // A pill's rest pill: the lens inset by its lift, the corner smaller by the vertical lift.
+  const liftX = kind === 'pill' ? Math.max(0, lift.x) : 0
+  const liftY = kind === 'pill' ? Math.max(0, lift.y) : 0
+  const rest = kind === 'pill'
+    ? prepareUnionDistance([{
+        x: liftX,
+        y: liftY,
+        width: Math.max(0, logicalWidth - 2 * liftX),
+        height: Math.max(0, logicalHeight - 2 * liftY),
+        radius: Math.max(0, shape.radius - liftY),
+        cornerExponent: shape.cornerExponent,
+      }], 0)
+    : null
   // A small lens can't bend further than half its shorter side.
   const limit = Math.min(logicalWidth, logicalHeight) / 2
   const shifts = new Float32Array(w * h * 2)
@@ -287,12 +311,14 @@ export function lensDisplacementMap(shape: GlassShape, kind: LensKind) {
       shifts[i * 2] = offsetX * LENS_BEND.switch.zoom.x
       shifts[i * 2 + 1] = offsetY * LENS_BEND.switch.zoom.y
     }
-    const bend = Math.max(-limit, Math.min(limit, lensBend(kind, Math.max(0, -d))))
+    // The gap between the lens's outline and its rest pill's, along the normal here.
+    const gap = rest ? Math.max(0, rest(px, py) - d) : 0
+    const bend = Math.max(-limit, Math.min(limit, lensBend(kind, Math.max(0, -d), gap)))
     if (bend) {
       const gx = distance(px + 1, py) - distance(px - 1, py)
       const gy = distance(px, py + 1) - distance(px, py - 1)
       const g = Math.hypot(gx, gy) || 1
-      const lean = kind === 'thumb' ? 0 : LENS_BEND.pill.radial
+      const lean = kind === 'switch' ? LENS_BEND.switch.radial : 0
       const nx = gx / g + (lean * offsetX) / (logicalWidth / 2)
       const ny = gy / g + (lean * offsetY) / (logicalHeight / 2)
       const length = Math.hypot(nx, ny) || 1

@@ -29,16 +29,18 @@ const double lensPillLiftY = 8;
 /// `LENS_LABEL_SCALE`.
 const double lensLabelScale = 1.2;
 
-/// The glass a pill [rect] at rest (corner [radius]) turns into at [lens] (0 rest … 1 glass):
-/// liquid glass lifts it out by [lensPillLiftX] / [lensPillLiftY] (corners grow with it),
-/// transparent glass keeps the pill's own box. The twin of the web kit's `lensPillShape`.
+/// The glass a pill [rect] at rest (corner [radius]) turns into at [lens] (0 rest … 1 glass): a
+/// lens that bends what is behind it ([lifts]: liquid glass where refraction runs) lifts out by
+/// [lensPillLiftX] / [lensPillLiftY] (corners grow with it), its convex rim filling the overhang with
+/// what lies inside the rest pill; one that can't bend keeps the pill's own box, so it never shows
+/// the track's edge or what is past it. The twin of the web kit's `lensPillShape`.
 ({Rect rect, double radius}) lensPillShape(
   Rect rect,
   double radius,
   double lens,
-  bool liquid,
+  bool lifts,
 ) {
-  final t = liquid && lens.isFinite ? lens.clamp(0.0, 1.0) : 0.0;
+  final t = lifts && lens.isFinite ? lens.clamp(0.0, 1.0) : 0.0;
   final x = lensPillLiftX * t;
   final y = lensPillLiftY * t;
   final r = math.min(radius, math.min(rect.width, rect.height) / 2);
@@ -53,10 +55,37 @@ const double lensLabelScale = 1.2;
   );
 }
 
-/// The scale of the selected option under the lens: [lensLabelScale] eased in by [lens]. The twin
-/// of the web kit's `lensInkZoom`.
-double lensInkZoom(double lens) =>
-    lens.isFinite ? 1 + (lensLabelScale - 1) * lens.clamp(0.0, 1.0) : 1;
+/// The scale of an option under the lens, around the option's own centre: [lensLabelScale] eased in
+/// with [lens] and by how much of the option it covers ([lensCoverage]; 1 for the option it rests
+/// on), so a dragged lens grows the options it passes and never tears their content. The twin of
+/// the web kit's `lensInkZoom`.
+double lensInkZoom(double lens, [double coverage = 1]) {
+  if (!lens.isFinite || !coverage.isFinite) return 1;
+  return 1 +
+      (lensLabelScale - 1) * lens.clamp(0.0, 1.0) * coverage.clamp(0.0, 1.0);
+}
+
+/// How much of an option ([start], [width] along the track) the pill ([pillStart], [pillWidth])
+/// covers, 0 … 1: 1 when their centres meet, 0 an option's width apart, eased (smoothstep) between.
+/// The twin of the web kit's `lensCoverage`.
+double lensCoverage(
+  double pillStart,
+  double pillWidth,
+  double start,
+  double width,
+) {
+  if (!(width > 0) ||
+      !pillStart.isFinite ||
+      !pillWidth.isFinite ||
+      !start.isFinite) {
+    return 0;
+  }
+  final t =
+      1 - (pillStart + pillWidth / 2 - (start + width / 2)).abs() / width;
+  if (t <= 0) return 0;
+  if (t >= 1) return 1;
+  return t * t * (3 - 2 * t);
+}
 
 /// The lens stretches by the distance the pointer covers in this many seconds (rubber-banded).
 const double lensStretchTime = 0.1;

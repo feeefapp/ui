@@ -6,6 +6,7 @@ import {
   LENS_LABEL_SCALE,
   LENS_THUMB_SCALE,
   SWITCH_OVERDRAG,
+  lensCoverage,
   lensInkZoom,
   lensPillShape,
   lensStretch,
@@ -61,14 +62,14 @@ test('the shared fixture is current', () => {
   assert.deepEqual(file, JSON.parse(JSON.stringify(lensFixture())), 'run npx tsx flutter/tool/generate_lens_fixture.ts')
 })
 
-test('a liquid pill lens grows by LENS_PILL_LIFT, as iOS 26.2: 96 × 28 → 120 × 44', () => {
+test('a bending pill lens grows by LENS_PILL_LIFT, as iOS 26.2: 96 × 28 → 120 × 44', () => {
   const pill = { x: 53, y: 184, width: 96, height: 28 }
   assert.deepEqual(lensPillShape(pill, 14, 0, true), { ...pill, radius: 14 }, 'no lens, no lift')
   assert.deepEqual(lensPillShape(pill, 14, 1, true), { x: 41, y: 176, width: 120, height: 44, radius: 22 })
   const half = lensPillShape(pill, 14, 0.5, true)
   assert.equal(half.width, 96 + LENS_PILL_LIFT.x)
   assert.equal(half.height, 28 + LENS_PILL_LIFT.y)
-  assert.deepEqual(lensPillShape(pill, 14, 1, false), { ...pill, radius: 14 }, 'transparent glass keeps the pill box')
+  assert.deepEqual(lensPillShape(pill, 14, 1, false), { ...pill, radius: 14 }, 'a lens that cannot bend keeps the pill box')
   assert.equal(lensPillShape(pill, 80, 0, true).radius, 14, 'the corner never passes half the shorter side')
 })
 
@@ -83,40 +84,64 @@ test('the selected option grows under the lens, eased in', () => {
   assert.equal(lensInkZoom(2), LENS_LABEL_SCALE, 'clamped')
 })
 
-test('the bend follows the measured iOS profiles', () => {
+test('an option grows by how much of it the pill covers', () => {
+  assert.equal(lensCoverage(0, 90, 0, 90), 1, 'centred')
+  assert.equal(lensCoverage(90, 90, 0, 90), 0, 'a whole option away')
+  assert.equal(lensCoverage(45, 90, 0, 90), 0.5, 'half way (smoothstep is symmetric)')
+  assert.ok(lensCoverage(20, 90, 0, 90) > 0.5 && lensCoverage(20, 90, 0, 90) < 1)
+  assert.equal(lensCoverage(0, 90, 0, 0), 0, 'no width')
+  assert.equal(lensInkZoom(1, 0), 1, 'an option the lens is not over keeps its size')
+  assert.equal(lensInkZoom(1, 0.5), 1 + (LENS_LABEL_SCALE - 1) / 2)
+})
+
+test('the pill\'s convex rim only ever shows what lies inside its rest pill', () => {
+  for (const gap of [0, 4, 8, 12]) {
+    const g = gap + LENS_BEND.pill.margin
+    assert.equal(lensBend('pill', 0, gap), g, 'the rim shows the backdrop the gap and a margin further in')
+    let last = -Infinity
+    for (let d = 0; d <= 40; d += 0.25) {
+      const shown = d + lensBend('pill', d, gap)
+      assert.ok(shown >= g - 1e-9, `d ${d}: shows ${shown}, inside the rest pill`)
+      assert.ok(shown >= last - 1e-9, 'never folds')
+      last = shown
+    }
+    assert.equal(lensBend('pill', LENS_BEND.pill.reach * g, gap), 0, 'the middle stays put')
+  }
+  assert.equal(lensBend('pill', -1, 8), 0, 'nothing outside')
+})
+
+test('the thumb and the switch keep the measured iOS profiles', () => {
   // research/liquid-glass/LENS-MEASURED.md §2 (positive = from further inside).
   const near = (a: number, b: number, tolerance: number) => assert.ok(Math.abs(a - b) <= tolerance, `${a} ≈ ${b}`)
-  assert.ok(lensBend('pill', 0.17) > 3, 'an inward rim')
-  near(lensBend('pill', 2.17), -2.0, 0.25)
-  near(lensBend('pill', 3.17), -3.0, 0.35)
-  near(lensBend('pill', 5), -4.3, 0.1)
-  near(lensBend('pill', 9.17), -3.0, 0.3)
-  near(lensBend('pill', 13.17), -2.0, 0.25)
-  near(lensBend('pill', 20.17), -1.0, 0.1)
   near(lensBend('thumb', 0.5), 7.1, 0.1)
   near(lensBend('thumb', 2.17), 4.6, 0.3)
   near(lensBend('thumb', 4.17), 1.6, 0.3)
   near(lensBend('thumb', 6.17), 0.3, 0.3)
   assert.equal(lensBend('thumb', 8), 0, 'flat beyond 7.5 px')
-  assert.equal(lensBend('pill', -1), 0, 'nothing outside')
+  // The Toggle's lip peaks at about 2.9 px outward, 5 px in, with an inward rim.
+  assert.ok(lensBend('switch', 0.2) > 0)
+  near(lensBend('switch', 5), -2.9, 0.1)
+  near(lensBend('switch', 20.17), -0.67, 0.1)
 })
 
-test('the lens map bends by lensBend and leans the pill away from its centre', () => {
-  const shape = { x: 0, y: 0, width: 120, height: 44, radius: 22 }
-  const map = lensDisplacementMap(shape, 'pill')
+test('the pill map fills its overhang from inside the rest pill', () => {
+  const shape = { x: 0, y: 0, width: 120, height: 70, radius: 35 }
+  const lift = { x: 12, y: 8 }
+  const map = lensDisplacementMap(shape, 'pill', lift)
   const density = map.width / 120
   const at = (x: number, y: number) => {
     const i = (Math.floor(y * density) * map.width + Math.floor(x * density)) * 4
     return { dx: ((map.data[i] - 128) / 127) * (map.scale / 2), dy: ((map.data[i + 1] - 128) / 127) * (map.scale / 2), alpha: map.data[i + 3] }
   }
-  assert.ok(density > 1, 'finer than 1 sample per px: the rim is under 1 px wide')
-  // 5 px under the top edge the pill shows the backdrop from further out (up)...
-  const top = at(60, 5)
-  assert.ok(Math.abs(top.dy + 4.3) < 0.3, `dy ${top.dy}`)
-  // ...and leans sideways away from the centre, 36 px off it (iOS: about 1.5 px).
-  assert.ok(at(24, 5).dx < -1 && at(96, 5).dx > 1)
-  assert.ok(Math.abs(at(60, 5).dx) < 0.2)
-  assert.equal(at(60, 22).alpha, 255)
+  // Just under the top edge it shows the backdrop from below the rest pill's top (8 px in).
+  const top = at(60, 0.5)
+  assert.ok(0.5 + top.dy > lift.y, `shows y ${0.5 + top.dy}`)
+  // At the left end, from inside the rest pill's end (12 px in).
+  const left = at(0.5, 35)
+  assert.ok(0.5 + left.dx > lift.x, `shows x ${0.5 + left.dx}`)
+  // The middle stays put, and every channel moves alike (no colour split exists to fringe).
+  assert.ok(Math.abs(at(60, 35).dx) < 0.1 && Math.abs(at(60, 35).dy) < 0.1)
+  assert.equal(at(60, 35).alpha, 255)
   assert.equal(at(0.5, 0.5).alpha, 0, 'the cut corner')
   const thumb = lensDisplacementMap({ x: 0, y: 0, width: 57, height: 37, radius: 18.5 }, 'thumb')
   const td = thumb.width / 57
@@ -143,10 +168,7 @@ test('the lens material: clear, a shade from the top, the measured rim and shado
   assert.ok(lensMaterial('pill', 1, 'dark').rimEdge.top > lensMaterial('pill', 1, 'light').rimEdge.top, 'dark appearance lights the rim more')
 })
 
-test('a switch bends like the pill at two thirds and zooms its middle out', () => {
-  // LENS-MEASURED.md §2: the Toggle's lens peaks at about 2.9 px outward, 5 px in.
-  assert.ok(Math.abs(lensBend('switch', 5) + 2.9) < 0.1)
-  assert.ok(lensBend('switch', 0.2) > 0, 'an inward rim')
+test('a switch leans its lip away from the centre and zooms its middle out', () => {
   const map = lensDisplacementMap({ x: 0, y: 0, width: 57, height: 37, radius: 18.5 }, 'switch')
   const density = map.width / 57
   const dx = (x: number, y: number) => ((map.data[(Math.floor(y * density) * map.width + Math.floor(x * density)) * 4] - 128) / 127) * (map.scale / 2)

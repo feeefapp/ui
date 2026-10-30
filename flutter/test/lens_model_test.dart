@@ -35,7 +35,7 @@ void main() {
     final half = lensPillShape(rest, 14, 0.5, true);
     expect(half.rect, const Rect.fromLTWH(47, 180, 108, 36));
     expect(half.radius, 18);
-    // Transparent glass keeps the pill's own box; corners clamp to the shorter side.
+    // A lens that can't bend keeps the pill's own box; corners clamp to the shorter side.
     final plain = lensPillShape(rest, 40, 1, false);
     expect(plain.rect, rest);
     expect(plain.radius, 14);
@@ -46,48 +46,55 @@ void main() {
     expect(lensInkZoom(0.5), closeTo(1.1, 1e-12));
     expect(lensInkZoom(2), closeTo(lensLabelScale, 1e-12));
   });
-  test('lensBend reproduces the web kit\'s measured profiles', () {
-    // research/liquid-glass/LENS-MEASURED.md §2, src/glass/refraction.ts lensBend.
-    final pill = {
-      0.17: 4.3,
-      2.17: -1.985588,
-      5.0: -4.3,
-      10.0: -2.670924,
-      20.0: -1.030499,
-    };
-    final thumb = {0.5: 7.1, 2.0: 4.916396, 4.0: 1.818857, 6.0: 0.282};
-    for (final MapEntry(key: d, value: shift) in pill.entries) {
-      expect(lensBend(LensKind.pill, d), closeTo(shift, 1e-5), reason: 'd $d');
+  test('lensBend matches the web kit on every vector', () {
+    for (final row in fixture['pillBend'] as List<dynamic>) {
+      final v = (row as List<dynamic>).map(n).toList();
+      expect(
+        lensBend(LensKind.pill, v[0], gap: v[1]),
+        closeTo(v[2], 1e-6),
+        reason: 'pill d ${v[0]} gap ${v[1]}',
+      );
     }
-    for (final MapEntry(key: d, value: shift) in thumb.entries) {
-      expect(lensBend(LensKind.thumb, d), closeTo(shift, 1e-5), reason: 'd $d');
-    }
-    expect(lensBend(LensKind.thumb, 7.5), 0);
-    expect(lensBend(LensKind.pill, -1), 0);
-  });
-  test(
-    'the switch thumb bends like a smaller pill and zooms its middle out',
-    () {
-      // The pill's profile × 0.67: inward at the rim, outward peaking at 2.9 px 5 px in.
-      expect(lensBend(LensKind.switchThumb, 5), closeTo(-2.881, 1e-3));
-      expect(lensBend(LensKind.switchThumb, 0.2), greaterThan(0));
-      expect(lensBend(LensKind.switchThumb, 0.2), closeTo(0.67 * 4, 1e-9));
-      for (final d in [0.1, 2.0, 5.0, 12.0]) {
-        expect(
-          lensBend(LensKind.switchThumb, d),
-          closeTo(lensBend(LensKind.pill, d) * lensSwitchScale, 1e-12),
-        );
+    for (final (key, kind) in [
+      ('switchBend', LensKind.switchThumb),
+      ('thumbBend', LensKind.thumb),
+    ]) {
+      for (final row in fixture[key] as List<dynamic>) {
+        final v = (row as List<dynamic>).map(n).toList();
+        expect(lensBend(kind, v[0]), closeTo(v[1], 1e-6), reason: '$key ${v[0]}');
       }
-      // The zoom grows with the offset from the centre, along x only; nothing at the centre.
-      expect(lensZoom(LensKind.switchThumb, 0, 0), (x: 0.0, y: 0.0));
-      expect(lensZoom(LensKind.switchThumb, 10, 8).x, closeTo(0.4, 1e-12));
-      expect(lensZoom(LensKind.switchThumb, 20, 8).x, closeTo(0.8, 1e-12));
-      expect(lensZoom(LensKind.switchThumb, -20, 8).x, closeTo(-0.8, 1e-12));
-      expect(lensZoom(LensKind.switchThumb, 20, 8).y, 0);
-      expect(lensZoom(LensKind.pill, 20, 8), (x: 0.0, y: 0.0));
-      expect(lensZoom(LensKind.thumb, 20, 8), (x: 0.0, y: 0.0));
-    },
-  );
+    }
+    expect(lensBend(LensKind.pill, -1, gap: 8), 0);
+  });
+  test('the pill rim only ever shows what lies inside its rest pill', () {
+    for (final gap in [0.0, 4.0, 8.0, 12.0]) {
+      var last = double.negativeInfinity;
+      for (var d = 0.0; d <= 40; d += 0.25) {
+        final shown = d + lensBend(LensKind.pill, d, gap: gap);
+        expect(shown, greaterThanOrEqualTo(gap + lensPillMargin - 1e-9));
+        expect(shown, greaterThanOrEqualTo(last - 1e-9), reason: 'no fold');
+        last = shown;
+      }
+    }
+  });
+  test('an option grows by how much of it the pill covers', () {
+    for (final row in fixture['coverage'] as List<dynamic>) {
+      final v = (row as List<dynamic>).map(n).toList();
+      expect(lensCoverage(v[0], v[1], v[2], v[3]), closeTo(v[4], 1e-6));
+    }
+    for (final row in fixture['inkZoom'] as List<dynamic>) {
+      final v = (row as List<dynamic>).map(n).toList();
+      expect(lensInkZoom(v[0], v[1]), closeTo(v[2], 1e-6));
+    }
+  });
+  test('the switch thumb zooms its middle out', () {
+    expect(lensZoom(LensKind.switchThumb, 0, 0), (x: 0.0, y: 0.0));
+    expect(lensZoom(LensKind.switchThumb, 10, 8).x, closeTo(0.4, 1e-12));
+    expect(lensZoom(LensKind.switchThumb, -20, 8).x, closeTo(-0.8, 1e-12));
+    expect(lensZoom(LensKind.switchThumb, 20, 8).y, 0);
+    expect(lensZoom(LensKind.pill, 20, 8), (x: 0.0, y: 0.0));
+    expect(lensZoom(LensKind.thumb, 20, 8), (x: 0.0, y: 0.0));
+  });
   test('only the slider thumb softens its band', () {
     expect(lensSoftBlur, 2);
     expect(lensSoftWeight(LensKind.thumb, 0), 1);

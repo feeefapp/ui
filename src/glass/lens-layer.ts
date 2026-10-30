@@ -1,15 +1,16 @@
 import type { GlassShape } from './geometry'
 import { lensMaterial } from './material'
-import { LENS_DISPERSION, LENS_SOFT, lensDisplacementMap, rgbaBmpDataUrl, supportsRefraction, type LensKind } from './refraction'
+import { LENS_SOFT, lensDisplacementMap, rgbaBmpDataUrl, supportsRefraction, type LensKind } from './refraction'
 
 /**
  * The real glass of a control's lens: the moving part of a slider, a switch, a segmented control or
  * a tab bar, pressed or dragged (lens.css `.lab-lens`), as iOS 26.2 draws it (research/liquid-glass/
  * LENS-MEASURED.md). The twin of Flutter's `GlassLens`. Clear: never blurred, lifted or magnified;
  * the measured veil and shade (`lensMaterial`), the rim light, the shadow and the touch glow, all
- * eased in by the lens amount. Liquid glass also bends what is behind it by the measured profile
- * (`lensBend`) through an SVG backdrop filter where the browser can (`supportsRefraction`,
- * Chromium). Transparent glass and other browsers keep the clear lens unbent. Solid glass, reduced
+ * eased in by the lens amount. Liquid glass also bends what is behind it (`lensBend`) through an
+ * SVG backdrop filter where the browser can (`supportsRefraction`, Chromium), every colour by the
+ * same shift: Chromium samples whole device pixels, so a per-channel split turns into coloured
+ * fringes on everything behind the lens. Transparent glass and other browsers keep the clear lens unbent. Solid glass, reduced
  * transparency, more contrast and forced colours show no lens: owners keep their rest paint.
  *
  * The element must sit above what it should bend (the track, the labels).
@@ -44,12 +45,12 @@ export function lensBends() {
 /** Lens maps by quantised geometry, shared by every lens (a drag revisits the same widths). */
 const MAPS_KEPT = 64
 const maps = new Map<string, { scale: number; href: string }>()
-function lensMap(width: number, height: number, radius: number, kind: LensKind) {
-  const key = `${width}|${height}|${radius}|${kind}`
+function lensMap(width: number, height: number, radius: number, kind: LensKind, lift: { x: number; y: number }) {
+  const key = `${width}|${height}|${radius}|${kind}|${lift.x}|${lift.y}`
   let map = maps.get(key)
   if (map) maps.delete(key)
   else {
-    const pixels = lensDisplacementMap({ x: 0, y: 0, width, height, radius }, kind)
+    const pixels = lensDisplacementMap({ x: 0, y: 0, width, height, radius }, kind, lift)
     map = { scale: pixels.scale, href: rgbaBmpDataUrl(pixels.width, pixels.height, pixels.data) }
   }
   maps.set(key, map)
@@ -112,9 +113,11 @@ export class GlassLensLayer {
 
   /**
    * Shows the lens at `lens` (0 rest … 1 glass). `shape` is the lens's box in its own pixels (only
-   * its size and radius count; owners place the element) unless the layer measures itself.
+   * its size and radius count; owners place the element) unless the layer measures itself. A pill
+   * passes `lift`, how far it reaches past its rest pill on each side: its bend follows that gap
+   * (so it already eases in with the lift), a thumb's is scaled by `lens`.
    */
-  update(lens: number, shape?: GlassShape) {
+  update(lens: number, shape?: GlassShape, lift?: { x: number; y: number }) {
     this.last = lens
     const el = this.el
     const t = Number.isFinite(lens) ? Math.max(0, Math.min(1, lens)) : 0
@@ -153,7 +156,7 @@ export class GlassLensLayer {
     setProperty(style, '--lab-lens-line-bottom', material.line.bottom.toFixed(4))
     setProperty(style, '--lab-lens-shadow', material.shadow.toFixed(4))
     const radius = Math.min(size.radius, size.width / 2, size.height / 2)
-    const value = mode === 'liquid' && lensBends() ? this.refraction(size.width, size.height, radius, t) : null
+    const value = mode === 'liquid' && lensBends() ? this.refraction(size.width, size.height, radius, t, lift) : null
     if (value) {
       setProperty(style, 'backdrop-filter', value)
       setProperty(style, '-webkit-backdrop-filter', value)
@@ -166,8 +169,8 @@ export class GlassLensLayer {
     }
   }
 
-  /** The SVG backdrop filter: the measured bend per colour channel (LENS_DISPERSION), cut to the shape. */
-  private refraction(width: number, height: number, radius: number, t: number) {
+  /** The SVG backdrop filter: the bend, cut to the shape. */
+  private refraction(width: number, height: number, radius: number, t: number, lift?: { x: number; y: number }) {
     if (!filterHost || !filterHost.isConnected) {
       filterHost = node('svg', { 'width': 0, 'height': 0, 'aria-hidden': 'true', 'class': 'lab-lens-filters' }) as SVGSVGElement
       filterHost.style.position = 'absolute'
@@ -177,22 +180,9 @@ export class GlassLensLayer {
     let filter = this.filter
     if (!filter || !filter.isConnected) {
       filter = node('filter', { 'id': this.id, 'color-interpolation-filters': 'sRGB', 'filterUnits': 'userSpaceOnUse', 'x': 0, 'y': 0 }) as SVGFilterElement
-      const bend = (result: string) => node('feDisplacementMap', { in: 'SourceGraphic', in2: 'map', xChannelSelector: 'R', yChannelSelector: 'G', scale: 0, result })
-      // One channel of a bent copy, opaque: the three add up to the colour.
-      const channel = (input: string, keep: number, result: string) => {
-        const rows = [0, 1, 2].map((row) => [0, 1, 2, 3, 4].map((column) => Number(row === keep && column === keep)).join(' '))
-        return node('feColorMatrix', { in: input, type: 'matrix', values: [...rows, '0 0 0 1 0'].join('  '), result })
-      }
       filter.append(
         node('feImage', { result: 'map', preserveAspectRatio: 'none', x: 0, y: 0 }),
-        bend('red'),
-        bend('green'),
-        bend('blue'),
-        channel('red', 0, 'r'),
-        channel('green', 1, 'g'),
-        channel('blue', 2, 'b'),
-        node('feComposite', { in: 'r', in2: 'g', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'rg' }),
-        node('feComposite', { in: 'rg', in2: 'b', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'bent' }),
+        node('feDisplacementMap', { in: 'SourceGraphic', in2: 'map', xChannelSelector: 'R', yChannelSelector: 'G', scale: 0, result: 'bent' }),
         // A slider thumb softens its edge band: the backdrop blurred, then bent like the rest (its band
         // magnifies, so blurring after the bend would soften nothing), where the map's blue says so.
         ...(this.kind === 'thumb'
@@ -213,19 +203,21 @@ export class GlassLensLayer {
     const grid = (value: number) => Math.max(MAP_GRID, Math.round(value / MAP_GRID) * MAP_GRID)
     const mapWidth = grid(width)
     const mapHeight = grid(height)
-    const map = lensMap(mapWidth, mapHeight, Math.round(Math.min(radius * (mapHeight / height), mapWidth / 2, mapHeight / 2)), this.kind)
-    const [image, red, green, blue] = Array.from(filter.children)
+    const pill = this.kind === 'pill'
+    // Quantised like the map's size: a moving lens reuses its neighbours' maps.
+    const gap = { x: pill ? Math.round(lift?.x ?? 0) : 0, y: pill ? Math.round(lift?.y ?? 0) : 0 }
+    const map = lensMap(mapWidth, mapHeight, Math.round(Math.min(radius * (mapHeight / height), mapWidth / 2, mapHeight / 2)), this.kind, gap)
+    const [image, bend] = Array.from(filter.children)
     for (const element of [filter, image]) {
       setAttribute(element, 'width', width.toFixed(2))
       setAttribute(element, 'height', height.toFixed(2))
     }
     setAttribute(image, 'href', map.href)
-    // The bend scales with the map's scale: the lens eases it in.
-    setAttribute(red, 'scale', (map.scale * t * (1 - LENS_DISPERSION)).toFixed(2))
-    setAttribute(green, 'scale', (map.scale * t).toFixed(2))
-    setAttribute(blue, 'scale', (map.scale * t * (1 + LENS_DISPERSION)).toFixed(2))
+    // A pill's bend eases in with its lift (in the map); a thumb's scales with the lens.
+    const scale = pill ? map.scale : map.scale * t
+    setAttribute(bend, 'scale', scale.toFixed(2))
     const soft = filter.querySelector('[data-lens-soft]')
-    if (soft) setAttribute(soft, 'scale', (map.scale * t).toFixed(2))
+    if (soft) setAttribute(soft, 'scale', scale.toFixed(2))
     return `url(#${this.id})`
   }
 

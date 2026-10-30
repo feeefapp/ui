@@ -34,11 +34,10 @@ uniform vec4 uBlendB;
 uniform vec2 uLight;
 uniform vec2 uEdge;
 // 0: container glass (the bezel profile above). 1, 2 or 3: a control lens over the first shape, a
-// pill (segmented control, tab bar), a slider thumb or a switch thumb, bent by the profile
-// measured on iOS 26.2 (glass/refraction.dart lensBend, LENS-MEASURED.md §2) eased in by uShift
-// (0 … 1), with the colour split lensDispersion; uBezel and the edge terms are unused. The slider
-// thumb also softens its band (lensSoftBlur, lensSoftWeight) and the switch thumb zooms its middle
-// out (lensSwitchZoomX/Y).
+// pill (segmented control, tab bar; its rest pill is the second shape), a slider thumb or a switch
+// thumb, bent by glass/refraction.dart lensBend eased in by uShift (0 … 1); uBezel and the edge
+// terms are unused. The slider thumb also softens its band (lensSoftBlur, lensSoftWeight) and the
+// switch thumb zooms its middle out (lensSwitchZoomX/Y).
 uniform float uLens;
 
 uniform sampler2D uTexture;
@@ -97,17 +96,23 @@ float unionDistance(vec2 p) {
   return d;
 }
 
-// The measured lens bend (px, positive inward) at depth d px: glass/refraction.dart lensBend. The
-// switch thumb's is the pill's at `scale` (lensSwitchScale 0.67).
-float lensBend(bool thumb, float scale, float d) {
-  if (thumb) {
+// The lens bend (px, positive inward) at depth d px: glass/refraction.dart lensBend. The pill's is
+// a convex rim bounded by its rest pill (`gap` = how far the lens reaches past it here); the slider
+// thumb's and the switch thumb's lip are iOS 26.2's measured profiles.
+float lensBend(float kind, float d, float gap) {
+  if (kind < 1.5) {
+    float g = max(gap, 0.0) + 1.0;
+    float t = 1.0 - d / (2.5 * g);
+    return t > 0.0 ? g * t * t : 0.0;
+  }
+  if (kind < 2.5) {
     if (d <= 1.0) return 7.1;
     float t = 1.0 - (d - 1.0) / 6.5;
     return t > 0.0 ? 7.1 * pow(t, 2.2) : 0.0;
   }
-  if (d < 0.6) return scale * 6.0 * (1.0 - d / 0.6);
-  if (d < 5.0) return -scale * 4.3 * min(1.0, (d - 0.6) / (5.0 - 1.0 - 0.6));
-  return -scale * 4.3 * exp(-(d - 5.0) / 10.5);
+  if (d < 0.6) return 4.02 * (1.0 - d / 0.6);
+  if (d < 5.0) return -2.881 * min(1.0, (d - 0.6) / (5.0 - 1.0 - 0.6));
+  return -2.881 * exp(-(d - 5.0) / 10.5);
 }
 
 vec4 sampleAt(vec2 frag) {
@@ -138,14 +143,15 @@ vec4 blurredAt(vec2 frag, float sigma) {
   return sum / total;
 }
 
-// A control lens: the measured bend along the outline's normal (the pill's and the switch's
-// leaning away from the centre; the switch's middle zoomed out), red bending 6 % less and blue
-// 6 % more than green. The slider thumb's band mixes in the backdrop blurred, then bent (blurring
-// after the bend would soften nothing: the band magnifies). No colour change: the lens's material
-// is painted over it.
+// A control lens: the bend along the outline's normal (the switch's leaning away from the centre,
+// its middle zoomed out; a pill's bounded by its rest pill in uRect1 / uRadiusA.y), every colour by
+// the same shift. The slider thumb's band mixes in the backdrop blurred, then bent (blurring after
+// the bend would soften nothing: the band magnifies). No colour change: the lens's material is
+// painted over it.
 vec4 lens(vec2 frag, vec2 p) {
   float d = boxDistance(p, uRect0, uRadiusA.x);
   if (d >= 0.0 || uShift <= 0.0) return sampleAt(frag);
+  bool pill = uLens < 1.5;
   bool thumb = uLens > 1.5 && uLens < 2.5;
   bool switchThumb = uLens > 2.5;
   vec2 hs = uRect0.zw * 0.5;
@@ -160,20 +166,18 @@ vec4 lens(vec2 frag, vec2 p) {
   float len = length(n);
   if (len > 1e-5) {
     vec2 dir = n / len;
-    if (!thumb) dir += 1.5 * fromCentre / max(hs, vec2(1e-5));
+    if (switchThumb) dir += 1.5 * fromCentre / max(hs, vec2(1e-5));
     float dirLen = length(dir);
     if (dirLen > 1e-5) {
       // A small lens can't bend further than half its shorter side.
       float limit = min(hs.x, hs.y);
-      float bend = clamp(lensBend(thumb, switchThumb ? 0.67 : 1.0, -d), -limit, limit);
+      float gap = pill ? boxDistance(p, uRect1, uRadiusA.y) - d : 0.0;
+      float bend = clamp(lensBend(uLens, -d, gap), -limit, limit);
       shift += -dir / dirLen * bend;
     }
   }
   vec2 offset = shift * uShift * uDpr;
-  vec4 r = sampleAt(frag + offset * 0.94);
-  vec4 g = sampleAt(frag + offset);
-  vec4 b = sampleAt(frag + offset * 1.06);
-  vec4 sharp = vec4(r.r, g.g, b.b, g.a);
+  vec4 sharp = sampleAt(frag + offset);
   // lensSoftWeight: 1 at the rim to 0 at lensThumbSoft (5 px) deep; blur lensSoftBlur (2 px).
   float soft = thumb ? max(0.0, 1.0 + d / 5.0) : 0.0;
   if (soft <= 0.0) return sharp;

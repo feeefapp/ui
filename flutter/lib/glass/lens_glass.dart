@@ -15,14 +15,16 @@ import 'refraction_filter.dart';
 /// LENS-MEASURED.md`), the twin of the web kit's `GlassLensLayer` and `lens.css`. Clear: never
 /// blurred, lifted, saturated or magnified; over the backdrop the measured veil and shade, the rim
 /// light, a thumb's dark lines and the shadow ([lensMaterial]), with no hairline and no touch
-/// glow. Liquid glass also bends what is behind it by the measured profile of its [kind]
-/// ([lensBend], with the colour split [lensDispersion]) on Impeller with the theme's refraction
-/// on; transparent glass keeps the clear lens unbent. [lens] (0 rest … 1 glass) eases every part
-/// in, so the owner's rest paint can fade out under it.
+/// glow. Liquid glass also bends what is behind it by the profile of its [kind] ([lensBend], every
+/// colour by the same shift) on Impeller with the theme's refraction on; transparent glass keeps
+/// the clear lens unbent. [lens] (0 rest … 1 glass) eases every part in, so the owner's rest paint
+/// can fade out under it.
 ///
-/// It fills its parent and draws over [rect] (in the parent's pixels) with corner [radius]. Put it
-/// above what the lens should bend (the track, the labels). Off for solid glass, more contrast
-/// and reduced transparency, where owners keep their rest paint.
+/// It fills its parent and draws over [rect] (in the parent's pixels) with corner [radius]. A pill
+/// passes its [rest] pill (the lens before it lifted): its convex rim shows only what lies inside
+/// it, and its bend eases in with the lift instead of [lens]. Put a thumb above what it should bend;
+/// a pill goes under its options, which draw crisp above it. Off for solid glass, more contrast and
+/// reduced transparency, where owners keep their rest paint.
 class GlassLens extends StatelessWidget {
   const GlassLens({
     super.key,
@@ -30,6 +32,7 @@ class GlassLens extends StatelessWidget {
     required this.rect,
     required this.radius,
     required this.lens,
+    this.rest,
   });
 
   /// A lens over the whole of its parent: a thumb's own box.
@@ -55,6 +58,9 @@ class GlassLens extends StatelessWidget {
 
   /// How much of the lens shows, 0 … 1.
   final double lens;
+
+  /// A pill's rest pill, in the parent's pixels; its corner is [radius] less the vertical lift.
+  final Rect? rest;
 
   /// Whether lenses under [context] are liquid: a pill lifts out bigger and lenses bend. False for
   /// transparent glass (a plain clear lens) and solid (none).
@@ -114,6 +120,14 @@ class GlassLens extends StatelessWidget {
                             height: rect.height,
                             radius: r,
                           ),
+                          if (rest case final rest?)
+                            GlassShape(
+                              x: rest.left - rect.left,
+                              y: rest.top - rect.top,
+                              width: rest.width,
+                              height: rest.height,
+                              radius: math.max(0, r - (rest.top - rect.top)),
+                            ),
                         ],
                         Offset.zero & rect.size,
                         outline,
@@ -123,7 +137,8 @@ class GlassLens extends StatelessWidget {
                       // through them.
                       blur: 0,
                       colour: _identity,
-                      strength: t,
+                      // A pill's bend eases in with its lift (its gap to the rest pill).
+                      strength: rest == null ? t : 1,
                       lens: kind,
                     ),
                   ),

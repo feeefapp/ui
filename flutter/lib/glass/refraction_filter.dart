@@ -37,7 +37,7 @@ class GlassRefraction extends StatefulWidget {
   });
 
   /// A control lens ([GlassLens]) over the first shape: bent by the measured [lensBend] profile
-  /// of its kind (with the colour split [lensDispersion]) instead of the container's bezel, eased
+  /// of its kind (a pill bounded by its rest pill, the second shape) instead of the container's bezel, eased
   /// in by [strength] (0 … 1). Null for container glass.
   final LensKind? lens;
 

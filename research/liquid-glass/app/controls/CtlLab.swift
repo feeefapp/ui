@@ -278,6 +278,8 @@ struct LensScene: View {
                         .padding(.leading, 51).padding(.top, 120)
                     }
                 }
+                // badge=N: the first tab carries a count (where iOS draws it while the lens is held).
+                .badge(i == 0 ? Int(spec.number("badge", 0)) : 0)
             }
         }
     }

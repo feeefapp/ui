@@ -129,3 +129,37 @@ corners. Slider thumb softness and the switch's bend: see §2. Not reproduced: i
 the Browser" derives the same kinds of field from a bezel surface and Snell's law; its "lip" surface
 (convex at the edge, concave inside, zoomed-out middle) is what iOS's pill and switch lenses
 measure as, and its convex squircle is the slider thumb.
+
+## 6. Tab bar, held (2026-10-29)
+
+Held stock `TabView` (4 tabs, `.badge(5)` on the first) in the iOS 26.2 simulator, dark over dark
+stripes and light over light stripes (`app/controls` lens scene, `badge=5`):
+`reference/lens-tabbar-ios-{dark,light}-held.png`.
+
+- One clear capsule ≈ 12 pt past the pill along, ≈ 9 pt across (73 pt tall over the 62 pt bar):
+  `LENS_PILL_LIFT` holds.
+- A thin bright rim all round (dark: 0.15 → 0.46 over the page on the top row, light: 0.88 → 0.96).
+- Its rim band (≈ 5–8 pt) shows the surroundings: past the bar, the page; the bar's own edge shows
+  ~1.5 pt in, soft. In light appearance that band is strongly iridescent; in dark it reads as a
+  slightly darker band (0.17 over the bar's 0.24).
+- The middle is flat; the tab item grows ×1.2 (§4) and stays sharp; the badge stays whole and crisp
+  on the icon, with a red smear where the rim bends it.
+
+What the kit keeps from it, and where it departs (owner's call, after the band read as "dark bands
+with notched ends" and a second outline in our renders):
+
+- The selection lens (`'pill'`) sits **under** the options: labels, icons and badges draw above it,
+  crisp, never tinted or bent by it (iOS's middle is flat, so only the badge smear is lost).
+- Its rim is **convex and bounded by the rest pill**: with `gap` = how far the lens reaches past its
+  rest pill (the lift), it shows the backdrop from `G = gap + 1` px in at the rim, falling as
+  `G · (1 - d / (2.5 G))²` to nothing (`lensBend('pill', d, gap)`). It magnifies near the rim, never
+  folds and never shows what lies past the rest pill, so the bar's edge, its hairline and the page
+  past the bar never show inside it: one capsule, no band, no second outline.
+- A lens only lifts out where it bends (Chromium, Impeller); elsewhere (Safari, Firefox, Flutter web)
+  it stays on the rest pill's box and is plain clear glass.
+- **No colour split** on any lens: Chromium samples `feDisplacementMap` at whole device pixels, so
+  a 6 % channel split became 1 px RGB fringes over everything behind the lens; iOS 27's regular and
+  clear glass show none either. The thumb keeps its measured bend (§2), the switch its measured lip.
+- Each option grows ×1.2 around its own centre by how much of it the pill covers
+  (`lensCoverage`, smoothstep over one option's width), its content and its ink copy together, so a
+  dragged lens never tears a label.

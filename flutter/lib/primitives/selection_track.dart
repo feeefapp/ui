@@ -293,29 +293,38 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
     return math.min(base, math.min(rect.width, rect.height) / 2);
   }
 
-  /// The glass over the pill while it is pressed or dragged.
+  /// Whether the lens bends what is behind it (and so lifts out of the pill), and the theme's corner
+  /// scale: read at build, used while painting.
+  bool _lifts = false;
+  double _radiusScale = 1;
+
+  /// The lens's glass now: the rest pill, lifted out by [lensPillShape] when the lens bends (the
+  /// lift is iOS's whole growth), over the track's edges.
+  ({Rect rect, double radius}) get _glass {
+    final rest = _restPill;
+    return lensPillShape(
+      rest,
+      math.min(rest.width, rest.height) / 2 * _radiusScale,
+      lens.get().clamp(0.0, 1.0),
+      _lifts,
+    );
+  }
+
+  /// The glass under the options while the pill is pressed or dragged.
   Widget _lensGlass() {
     if (!_placed || _boxes.isEmpty || _selected < 0) {
       return const SizedBox.shrink();
     }
     final t = lens.get().clamp(0.0, 1.0);
-    // A liquid lens lifts out of its pill by [lensPillLiftX] / [lensPillLiftY] from the pill's
-    // rest size (the lift is iOS's whole growth), over the track's edges.
-    final rest = _restPill;
-    final glass = lensPillShape(
-      rest,
-      math.min(rest.width, rest.height) /
-          2 *
-          ThemeProvider.of(context).sizes.radiusScale,
-      t,
-      GlassLens.liquidOf(context),
-    );
+    final glass = _glass;
     final fade = 1 - (widget.minimize?.progress ?? 0).clamp(0.0, 1.0);
     return GlassLens(
-      // The switch thumb's lens: the selection is that thumb, sliding between options.
-      kind: LensKind.switchThumb,
+      // The selection's own lens: a clear capsule whose convex rim shows only what lies inside its
+      // rest pill, so the track's edge and what is past it never show inside it.
+      kind: LensKind.pill,
       rect: glass.rect,
       radius: glass.radius,
+      rest: _restPill,
       lens: t * fade,
     );
   }
@@ -950,6 +959,8 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
     final touch = overrides?.touchTarget ?? s.touchTarget;
     final optionHeight = height - 2 * inset;
     final solid = glassStyleOf(context) == GlassStyle.solid;
+    _lifts = GlassLens.bendsOf(context);
+    _radiusScale = s.radiusScale;
     // The pill is the switch thumb: the surface (the ink in dark appearance) with the other one as
     // its ink; inside the drop (its fill gone, the glass clear) the ink is the ink colour.
     final dark = ThemeProvider.of(context).brightness == Brightness.dark;
@@ -1039,17 +1050,8 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            tab
-                // A tab list holds only its tabs (no scroll or focus nodes between them).
-                ? Semantics(
-                    container: true,
-                    role: ui.SemanticsRole.tabBar,
-                    label: widget.label,
-                    explicitChildNodes: true,
-                    child: row,
-                  )
-                : row,
-            // Pressed or dragged, the pill is real glass over the labels it slides across.
+            // Pressed or dragged, the pill is real glass under the options: their labels, icons
+            // and badges draw crisp above it.
             if (!solid)
               Positioned.fill(
                 child: ExcludeSemantics(
@@ -1061,6 +1063,16 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
                   ),
                 ),
               ),
+            tab
+                // A tab list holds only its tabs (no scroll or focus nodes between them).
+                ? Semantics(
+                    container: true,
+                    role: ui.SemanticsRole.tabBar,
+                    label: widget.label,
+                    explicitChildNodes: true,
+                    child: row,
+                  )
+                : row,
           ],
         ),
       ),
@@ -1472,14 +1484,24 @@ class _InkClip {
   /// The drop's corner radius.
   double radius(Rect drop) =>
       math.min(drop.width, drop.height) / 2 * radiusScale;
+
+  /// The lens's glass in the option's own pixels and its corner radius, or null before placement.
+  ({Rect rect, double radius})? glass() {
+    final boxes = state._boxes;
+    if (!state._placed || state._selected < 0 || index >= boxes.length) {
+      return null;
+    }
+    final glass = state._glass;
+    return (rect: glass.rect.shift(-boxes[index].topLeft), radius: glass.radius);
+  }
 }
 
 /// Paints its child, then paints it again in the selected ink inside [ink]'s drop: the selected
 /// ink of an option (the web kit's `.lab-segmented-ink` copy), without a second copy of the label
-/// in the tree. Pressed or dragged ([lens] > 0) its colour turns from [color] to [lensColor], the
-/// ink copy grows by [lensInkZoom] around the drop's centre, still cut to the drop, and the plain
-/// child is cut out under the drop (an elliptical hole the drop's size).
-/// [_InkHole]s below it (a tab's badge) are drawn over the copy in their own paint, scaled with it.
+/// in the tree. Pressed or dragged ([lens] > 0) its colour turns from [color] to [lensColor], the ink
+/// shows wherever the lens is, and the option (plain content and copy alike) grows by [lensInkZoom]
+/// around its own centre by how much of it the pill covers ([lensCoverage]). [_InkHole]s below it
+/// (a tab's badge) are drawn over the copy in their own paint, so the badge reads whole.
 class _InkOverlay extends SingleChildRenderObjectWidget {
   const _InkOverlay({
     required this.ink,
@@ -1573,53 +1595,53 @@ class _RenderInkOverlay extends RenderProxyBox {
     final bounds = Offset.zero & size;
     final drop = ink.drop();
     final amount = lens().clamp(0.0, 1.0);
-    final zoom = lensInkZoom(amount);
-    // The plain content, cut out where the drop shows it grown.
-    final crosses =
-        zoom > 1 &&
-        drop != null &&
-        amount > 0.01 &&
-        drop.left < size.width &&
-        drop.right > 0;
-    if (crosses) {
-      context.pushClipPath(
-        true,
-        offset,
-        bounds,
-        Path()
-          ..fillType = PathFillType.evenOdd
-          ..addRect(bounds.inflate(drop.height))
-          ..addOval(drop),
-        (context, offset) => context.paintChild(child, offset),
-      );
-    } else {
-      context.paintChild(child, offset);
-    }
-
-    // Where the ink shows (final pixels) and the scale around the drop's centre.
-    final RRect clip;
-    final Offset centre;
-    if (drop == null) {
-      clip = RRect.fromRectXY(bounds, 0, 0);
-      centre = bounds.center;
-    } else {
-      centre = drop.center;
-      final scaled = Rect.fromLTRB(
-        centre.dx + (bounds.left - centre.dx) * zoom,
-        centre.dy + (bounds.top - centre.dy) * zoom,
-        centre.dx + (bounds.right - centre.dx) * zoom,
-        centre.dy + (bounds.bottom - centre.dy) * zoom,
-      );
-      final cut = drop.intersect(scaled);
-      if (cut.width <= 0 || cut.height <= 0) return;
-      clip = RRect.fromRectAndRadius(cut, Radius.circular(ink.radius(drop)));
-    }
-    final inkColor = Color.lerp(_color, _lensColor, amount)!;
+    // The option grows around its own centre by how much of it the pill covers; its plain content
+    // and its ink copy take the same transform, so nothing tears and its badge stays whole.
+    final zoom = drop == null || drop.isEmpty
+        ? 1.0
+        : lensInkZoom(
+            amount,
+            lensCoverage(drop.left, drop.width, 0, size.width),
+          );
+    final centre = bounds.center;
     final transform = Matrix4.identity()
       ..translateByDouble(centre.dx, centre.dy, 0, 1)
       ..scaleByDouble(zoom, zoom, 1, 1)
       ..translateByDouble(-centre.dx, -centre.dy, 0, 1);
+    void paintScaled(
+      PaintingContext context,
+      Offset offset,
+      PaintingContextCallback paint,
+    ) {
+      if (zoom == 1) {
+        paint(context, offset);
+      } else {
+        context.pushTransform(true, offset, transform, paint);
+      }
+    }
 
+    paintScaled(context, offset, (context, offset) {
+      context.paintChild(child, offset);
+    });
+
+    // Where the ink shows (final pixels): the pill, and under the lens wherever the lens is.
+    final RRect clip;
+    if (drop == null) {
+      clip = RRect.fromRectXY(bounds, 0, 0);
+    } else {
+      if (drop.isEmpty) return;
+      final glass = ink.glass();
+      var rect = drop;
+      var radius = ink.radius(drop);
+      if (glass != null && amount > 0) {
+        rect = Rect.lerp(drop, glass.rect, amount)!;
+        radius = radius + (glass.radius - radius) * amount;
+      }
+      final cut = rect.intersect(bounds.inflate(rect.height));
+      if (cut.width <= 0 || cut.height <= 0) return;
+      clip = RRect.fromRectAndRadius(cut, Radius.circular(radius));
+    }
+    final inkColor = Color.lerp(_color, _lensColor, amount)!;
     final live = [
       for (final hole in holes)
         if (hole.attached && hole.hasSize) hole,
@@ -1630,7 +1652,7 @@ class _RenderInkOverlay extends RenderProxyBox {
         ColorFilter.mode(inkColor, BlendMode.srcIn),
         (context, offset) => context.paintChild(child, offset),
       );
-      // The badges show in the copy in their own colours, scaled with it.
+      // The badges show in the copy in their own colours.
       for (final hole in live) {
         context.pushTransform(
           true,
@@ -1642,11 +1664,7 @@ class _RenderInkOverlay extends RenderProxyBox {
     }
 
     context.pushClipRRect(true, offset, bounds, clip, (context, offset) {
-      if (zoom == 1) {
-        paintInk(context, offset);
-      } else {
-        context.pushTransform(true, offset, transform, paintInk);
-      }
+      paintScaled(context, offset, paintInk);
     });
   }
 }
@@ -1684,7 +1702,7 @@ class _RenderInkHole extends RenderProxyBox {
 
 /// The pill under the labels: the switch thumb at rest ([fill], the surface or the ink in dark
 /// appearance, with the thumb's soft shadows), fading out while pressed or dragged as the glass
-/// over the labels fades in ([GlassLens], laid by the track, which casts its own shadow). Solid
+/// under the labels fades in ([GlassLens], laid by the track, which casts its own shadow). Solid
 /// styles keep the fill.
 class _PillPainter extends CustomPainter {
   _PillPainter({

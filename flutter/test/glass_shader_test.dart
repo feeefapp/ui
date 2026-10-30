@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:feeef_ui/glass/geometry.dart';
@@ -76,7 +77,7 @@ void main() {
     },
   );
 
-  test('lens mode bends by the measured pill, thumb and switch profiles', () async {
+  test('lens mode bends by the pill, thumb and switch profiles', () async {
     final program = await ui.FragmentProgram.fromAsset(
       'shaders/glass_refraction.frag',
     );
@@ -107,8 +108,10 @@ void main() {
         width.toDouble(), height.toDouble(), // filter input size
         0, 0, 1, 0, 1, 1, // origin, DPR, bezel (unused), lens amount, count
         0, 0, width.toDouble(), height.toDouble(),
-        ...List.filled(20, 0.0), // unused rectangles
-        height / 2, ...List.filled(7, 0.0), // a capsule
+        // A pill's rest pill: the lens inset by its lift (12, 8), its corner 8 smaller.
+        12, 8, width - 24.0, height - 16.0,
+        ...List.filled(16, 0.0), // unused rectangles
+        height / 2, height / 2 - 8, ...List.filled(6, 0.0), // a capsule
         ...List.filled(8, 0.0), // blends
         0, -1, 0, 0, // light, no edge terms
         switch (kind) {
@@ -135,13 +138,18 @@ void main() {
       return (x, y) => bytes.getUint8((y * width + x) * 4 + 1) / 2;
     }
 
-    // Halfway down the capsule's left end the depth is x + 0.5 and the bend runs along x.
+    // Halfway down the capsule's left end the depth is x + 0.5 and the bend runs along x; the lens
+    // reaches 12 px past its rest pill there.
     final pill = await render(LensKind.pill);
-    // Outward at 10.5 px deep: the pixel shows the backdrop 2.7 px further out.
-    expect(
-      pill(10, height ~/ 2),
-      closeTo(10.5 + lensBend(LensKind.pill, 10.5), 1),
-    );
+    for (final x in [0, 4, 10, 20]) {
+      expect(
+        pill(x, height ~/ 2),
+        closeTo(x + 0.5 + lensBend(LensKind.pill, x + 0.5, gap: 12), 1),
+        reason: 'x $x',
+      );
+    }
+    // Never past the rest pill: even the rim shows what lies inside it.
+    expect(pill(0, height ~/ 2), greaterThan(12));
     // The flat middle stays put.
     expect(pill(width ~/ 2, height ~/ 2), closeTo(60.5, 1));
     final thumb = await render(LensKind.thumb);
@@ -152,25 +160,19 @@ void main() {
     );
     expect(thumb(width ~/ 2, height ~/ 2), closeTo(60.5, 1));
     final switchThumb = await render(LensKind.switchThumb);
-    // Two thirds of the pill's outward bend, plus the zoom-out: 4 % of the offset from the centre.
-    expect(
-      switchThumb(10, height ~/ 2),
-      closeTo(
-        10.5 +
-            lensBend(LensKind.switchThumb, 10.5) +
-            lensZoom(LensKind.switchThumb, 10.5 - width / 2, 0).x,
-        1,
-      ),
-    );
-    // In the flat part the bend is two thirds of the pill's there; the rest is the zoom-out.
-    for (final x in [30, 90]) {
+    // The measured lip, outward at 10.5 px deep, plus the zoom-out: 4 % of the offset from the
+    // centre.
+    for (final x in [10, 30, 90]) {
       expect(
-        switchThumb(x, height ~/ 2) - x,
+        switchThumb(x, height ~/ 2),
         closeTo(
-          lensSwitchScale * (pill(x, height ~/ 2) - x - 0.5) +
+          x +
               0.5 +
+              lensBend(LensKind.switchThumb, math.min(x + 0.5, width - x - 0.5)) *
+                  (x < width / 2 ? 1 : -1) +
               lensZoom(LensKind.switchThumb, x + 0.5 - width / 2, 0).x,
-          0.75,
+          // The shader steps its normal half a pixel each way: within a pixel and a half.
+          1.5,
         ),
         reason: 'x $x',
       );

@@ -167,7 +167,11 @@ SegmentedControl and TabView's tab bar are one engine, the internal selection tr
 or fold into a radio menu: `overflow="menu"`, fitted per row with the row's other foldable controls by
 `actions/fit-row.ts` + the pure `computeFitRow` in `actions/layout.ts`; Flutter folds by its own
 constraints), keyboard and badges live there, parameterised by semantics (radio | tab), layout and sizes. Extend
-it for a new selection control; never fork its selection code.
+it for a new selection control; never fork its selection code. Its lens (`'pill'`) sits under the
+options (labels, icons and badges draw crisp above it), lifts only where it bends, and its convex rim
+never shows past its rest pill (`research/liquid-glass/LENS-MEASURED.md` §6); no lens splits colour.
+Each option grows by `lensInkZoom(lens, lensCoverage(…))` around its own centre, content and ink copy
+together.
 
 Every slider/toggle uses Slider/SlideSwitch, including docs and specialized
 features. Menu indicators use noninteractive SlideSwitchIndicator while the
