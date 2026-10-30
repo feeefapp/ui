@@ -22,6 +22,15 @@ Performance, with no change to the look:
 * Menus: rows blur and fade in one offscreen pass while a menu opens or closes.
 * Lists: while a row is reordered, the rows it moves are layers shifted per frame, not repainted;
   each keeps its element and state across the move.
+* Glass: the hairline outside every shape is painted (black at its strength, as the web kit
+  paints it: on white exactly iOS 27's plus-darker) instead of filtered: a cluster now costs one
+  backdrop pass, the material's, instead of two or three. Over dark content it reads a touch
+  lighter than the old subtract and the same as on the web.
+* Still shadows (elevated and prominent buttons, segmented pills, slider thumbs, fields, tooltips,
+  alerts, sheets, lifted speech blocks) are rendered once per geometry at the device pixel ratio
+  and drawn as images (`paintStill`, `theme/raster.dart`, 24 MB kept, oldest dropped): Impeller
+  has no raster cache, so every blur on screen was a Gaussian pass on every frame anything moved.
+  A fading shadow scales the image's alpha; nothing is re-rendered.
 * `test/dev/glass_bench_test.dart` (`--dart-define=bench=true`) prints the glass costs.
 
 ## 0.0.1

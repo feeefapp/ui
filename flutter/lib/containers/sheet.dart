@@ -22,6 +22,7 @@ import '../presentation/motion.dart';
 import '../theme.dart';
 import '../theme/surfaces.dart';
 import '../theme/color_mix.dart';
+import '../theme/raster.dart';
 import 'sheet_model.dart';
 import '../platform/pointer_shield.dart';
 import '../scroll/scroll_area.dart';
@@ -1835,6 +1836,7 @@ class SheetSurface extends StatelessWidget {
       child: CustomPaint(
         // --lab-sheet-shadow: 0 -6px 36px -14px rgb(0 0 0 / 0.26), dark 0.7.
         painter: _ShadowPainter(
+          dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
           radii: radii,
           color: glass.contrast ? null : black(dark ? 0.7 : 0.26),
           offsetY: -6,
@@ -1884,6 +1886,7 @@ class _DialogSurface extends StatelessWidget {
     final radii = [r, r, r, r];
     return CustomPaint(
       painter: _ShadowPainter(
+        dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
         radii: radii,
         color: black(0.4),
         offsetY: 30,
@@ -1920,6 +1923,7 @@ class _InsetClipper extends CustomClipper<Path> {
 /// The surface's outer box-shadow (outside the shape only, like CSS), and an optional fill.
 class _ShadowPainter extends CustomPainter {
   const _ShadowPainter({
+    required this.dpr,
     required this.radii,
     required this.color,
     required this.offsetY,
@@ -1932,6 +1936,9 @@ class _ShadowPainter extends CustomPainter {
   final Color? color, fill;
   final double offsetY, blur, spread;
 
+  /// The device pixel ratio the still shadow is rendered at.
+  final double dpr;
+
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
@@ -1940,23 +1947,43 @@ class _ShadowPainter extends CustomPainter {
     final shadowRect = rect.inflate(spread);
     final color = this.color;
     if (color != null && !shadowRect.isEmpty) {
-      canvas.save();
-      canvas.clipPath(
-        Path.combine(
-          PathOperation.difference,
-          Path()..addRect(rect.inflate(blur * 2 + offsetY.abs())),
-          shape,
+      // Rendered once per size ([paintStill]): a wide blur under a sheet otherwise costs a
+      // Gaussian pass on every frame it is open.
+      final reach = rect.inflate(blur * 2 + offsetY.abs());
+      paintStill(
+        canvas,
+        key: (
+          'sheet-shadow',
+          size.width,
+          size.height,
+          radii.first,
+          color.toARGB32(),
+          offsetY,
+          blur,
+          spread,
         ),
+        bounds: reach,
+        dpr: dpr,
+        draw: (canvas) {
+          canvas.save();
+          canvas.clipPath(
+            Path.combine(
+              PathOperation.difference,
+              Path()..addRect(reach),
+              shape,
+            ),
+          );
+          canvas.drawPath(
+            superellipsePath(shadowRect, [
+              for (final r in radii) math.max(0.0, r + spread),
+            ]).shift(Offset(0, offsetY)),
+            Paint()
+              ..color = color
+              ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur / 2),
+          );
+          canvas.restore();
+        },
       );
-      canvas.drawPath(
-        superellipsePath(shadowRect, [
-          for (final r in radii) math.max(0.0, r + spread),
-        ]).shift(Offset(0, offsetY)),
-        Paint()
-          ..color = color
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur / 2),
-      );
-      canvas.restore();
     }
     final fill = this.fill;
     if (fill != null) canvas.drawPath(shape, Paint()..color = fill);
@@ -1964,6 +1991,7 @@ class _ShadowPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ShadowPainter old) =>
+      old.dpr != dpr ||
       !_sameRadii(old.radii, radii) ||
       old.color != color ||
       old.fill != fill ||

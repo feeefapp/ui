@@ -16,6 +16,7 @@ import '../theme.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
 import '../theme/light_edge.dart';
+import '../theme/raster.dart';
 import '../theme/tokens.dart';
 import 'reorder.dart';
 
@@ -326,6 +327,7 @@ class _BlockSurface extends StatelessWidget {
           curve: MotionTokens.ease,
           builder: (context, shift, child) => CustomPaint(
             painter: _BlockPainter(
+              dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
               radius: theme.sizes.radiusPanel,
               fill: mixSrgb(c.primary, tint, c.surface),
               border: dragging ? c.focus : c.line,
@@ -355,6 +357,7 @@ class _BlockSurface extends StatelessWidget {
 
 class _BlockPainter extends CustomPainter {
   _BlockPainter({
+    required this.dpr,
     required this.radius,
     required this.fill,
     required this.border,
@@ -372,24 +375,35 @@ class _BlockPainter extends CustomPainter {
   final String seed;
   final bool lifted, rim;
 
+  /// The device pixel ratio the still shadows are rendered at.
+  final double dpr;
+
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
     final radii = [radius, radius, radius, radius];
     final shape = superellipsePath(rect, radii);
     if (lifted) {
-      // 0 12px 28px rgb(0 0 0 / 12%), 0 2px 6px rgb(0 0 0 / 8%).
-      canvas.drawPath(
-        shape.shift(const Offset(0, 12)),
-        Paint()
-          ..color = const Color.from(alpha: 0.12, red: 0, green: 0, blue: 0)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
-      );
-      canvas.drawPath(
-        shape.shift(const Offset(0, 2)),
-        Paint()
-          ..color = const Color.from(alpha: 0.08, red: 0, green: 0, blue: 0)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+      // 0 12px 28px rgb(0 0 0 / 12%), 0 2px 6px rgb(0 0 0 / 8%), rendered once per size.
+      paintStill(
+        canvas,
+        key: ('speech-lift', size.width, size.height, radius),
+        bounds: rect.shift(const Offset(0, 12)).inflate(42),
+        dpr: dpr,
+        draw: (canvas) {
+          canvas.drawPath(
+            shape.shift(const Offset(0, 12)),
+            Paint()
+              ..color = const Color.from(alpha: 0.12, red: 0, green: 0, blue: 0)
+              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
+          );
+          canvas.drawPath(
+            shape.shift(const Offset(0, 2)),
+            Paint()
+              ..color = const Color.from(alpha: 0.08, red: 0, green: 0, blue: 0)
+              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+          );
+        },
       );
     }
     canvas.drawPath(shape, Paint()..color = fill);
@@ -420,6 +434,7 @@ class _BlockPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_BlockPainter old) =>
+      old.dpr != dpr ||
       old.radius != radius ||
       old.fill != fill ||
       old.border != border ||

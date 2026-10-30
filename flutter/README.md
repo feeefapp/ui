@@ -59,9 +59,12 @@ fitted to iOS 26 Liquid Glass measured from the outside: `../research/liquid-gla
 Glass is built to cost little per frame: outlines are cached per geometry (`superellipsePath`,
 `outlineBand`), a container rebuilds its clusters at most once per frame and walks each cluster's
 contour once for its outline, rim light and hairline, bubble contents paint in their own layers so a
-spring, a press or the moving light never re-records the buttons inside, and the pointer light turns
-in 2° steps so a mouse far from the glass seldom repaints it. `ThemeConfig(performance:)` still picks
-the tier (`auto` steps weak and measured-slow devices down; see `performance.dart`).
+spring, a press or the moving light never re-records the buttons inside, the pointer light turns
+in 2° steps so a mouse far from the glass seldom repaints it, the hairline is painted (black at its
+strength, as on the web) so a cluster has one backdrop pass, and still shadows across the kit are
+rendered once per geometry and drawn as images (`paintStill`, `theme/raster.dart`): Impeller has no
+raster cache, so a live blur is a Gaussian pass on every frame. `ThemeConfig(performance:)` still
+picks the tier (`auto` steps weak and measured-slow devices down; see `performance.dart`).
 `test/dev/glass_bench_test.dart --dart-define=bench=true` prints the costs.
 
 ## Use
