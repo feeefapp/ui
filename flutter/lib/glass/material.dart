@@ -253,16 +253,23 @@ typedef LensSides = ({double top, double side, double bottom});
 /// `shade.middle` by half the height (flat below); the rim, white along the inner edge per side,
 /// `band` over 1 px and `edge` over its outermost third; a thumb's dark lines, `line.inner` over
 /// its inner 1 px and `line.outer` over 0.5 px outside its top edge, `line.bottom` over the inner
-/// 1 px of its bottom edge; then the `shadow` ([lensShadowDy], [lensShadowBlur]). No hairline:
-/// iOS draws none around control lenses.
+/// 1 px of its bottom edge; the `glint`, white on both walls along the light axis (top-left and
+/// bottom-right), `line` over [lensGlintWidth] px and a faint `bleed` [lensGlintBleed] px deep, as
+/// the open iOS 27 renderers draw it; then the `shadow` ([lensShadowDy], [lensShadowBlur]). No
+/// hairline: iOS draws none around control lenses.
 typedef LensMaterial = ({
   double veil,
   ({double top, double middle}) shade,
   LensSides band,
   LensSides edge,
   ({double inner, double outer, double bottom}) line,
+  ({double line, double bleed}) glint,
   double shadow,
 });
+
+/// The glint's line width and how deep its bleed reaches, px (the web's `LENS_GLINT`).
+const double lensGlintWidth = 1.2;
+const double lensGlintBleed = 4.8;
 
 /// The shadow every control lens casts: black at [lensShadowAlpha], [lensShadowDy] px down,
 /// blurred by [lensShadowBlur] (a CSS blur radius: sigma is half of it). The web's `LENS_SHADOW`.
@@ -285,9 +292,12 @@ LensMaterial lensMaterial({
   final t = lens.isFinite ? lens.clamp(0.0, 1.0) : 0.0;
   final LensSides band, edge;
   final double veil, top, middle, inner, outer, bottom;
+  var glint = (line: 0.0, bleed: 0.0);
   switch (kind) {
     case LensKind.pill:
       veil = 0;
+      // Both walls along the light axis catch a glint (held iOS tab bar, LENS-MEASURED.md §6).
+      glint = dark ? (line: 0.5, bleed: 0.1) : (line: 0.6, bleed: 0.14);
       // A faint shade at the top only (held iOS tab bar, LENS-MEASURED.md §6).
       top = 0.03;
       middle = 0;
@@ -322,6 +332,7 @@ LensMaterial lensMaterial({
     band: eased(band),
     edge: eased(edge),
     line: (inner: inner * t, outer: outer * t, bottom: bottom * t),
+    glint: (line: glint.line * t, bleed: glint.bleed * t),
     shadow: lensShadowAlpha * t,
   );
 }

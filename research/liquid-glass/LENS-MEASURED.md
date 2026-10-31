@@ -163,3 +163,22 @@ with notched ends" and a second outline in our renders):
 - Each option grows ×1.2 around its own centre by how much of it the pill covers
   (`lensCoverage`, smoothstep over one option's width), its content and its ink copy together, so a
   dragged lens never tears a label.
+- Follow-up (2026-10-31), to match the held capture on web and Flutter alike:
+  - The pill's shade is `0.03` at the top and none by the middle (the tab capture: ≈ 2–3 % darker
+    than the bar near the top); the segmented pill's measured 0.105 → 0.035 read as grey glass.
+  - Under the lens a label changes colour as one piece: the ink copy's cut to the pill opens to the
+    whole option and the ink fades with the lens's coverage (`lensInkAlpha`), while the plain
+    content fades out as it fades in (`lensPlainAlpha`). Before, mid-drag labels split down a word,
+    and Chrome's own raster grid for the scaled copy left a ghost edge on the held icon.
+  - Count badges use `--lab-badge` / `--lab-on-badge` (iOS system red #ff3b30 / #ff453a, white
+    figures) in both appearances; the dark palette's error tone is a pastel for text.
+- Second pass (2026-10-31), after reading the open iOS 27 renderers' shaders
+  (whynotmake.it `liquid_glass_renderer` 1.0.0-dev.2, `liquid_glass_easy` 5.1.0):
+  - The pill bends by their dome bevel, `amount · (1 - √(1 - x²))`, `x = 1 - d / bevel`, bevel
+    20 px (≤ a quarter of the shorter side), amount 60 px (≤ half of it): a compressed, mirrored band
+    at the rim and a flat face. The rest-pill floor above stays under it.
+  - A glint on both walls along the light axis (top-left, bottom-right): a 1.2 px line and a bleed
+    four times deeper (`LENS_GLINT`), as those renderers fit iOS 27.
+  - Speed: a lens map computes one quadrant and mirrors it, and a pill (no sub-pixel rim) samples
+    1.5 per px: 15 → 1.6 ms for a 121 × 70 tab lens (Node), so easing in and stretching no longer
+    drop frames building maps. Like the renderers, nothing splits colour (their default too).

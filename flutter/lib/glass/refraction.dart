@@ -61,11 +61,12 @@ enum LensKind { pill, thumb, switchThumb }
 
 /// How control lenses bend what is behind them, the twin of the web kit's `LENS_BEND`. The pill (the
 /// selection of a segmented control or a tab bar, lifted out of its rest pill by [lensPillLiftX] /
-/// [lensPillLiftY]): a convex rim that only ever shows what lies inside its rest pill, so the
-/// track's edge and whatever is past it never show inside the lens. With `gap` = how far the lens
-/// reaches past its rest pill there (`G = gap + lensPillMargin`), the shift is
-/// `G · (1 - d / (lensPillReach · G))²`: lines near the rim are magnified, the middle stays put and
-/// nothing folds. The slider thumb (measured on iOS 26.2, `research/liquid-glass/LENS-MEASURED.md`
+/// [lensPillLiftY]): a dome bevel with a flat face, as the open liquid-glass renderers fit iOS 27:
+/// over a bevel of [lensPillHeight] px (at most a quarter of the shorter side) the shift is
+/// `amount · (1 - √(1 - x²))`, `x = 1 - d / bevel` ([lensPillAmount], at most half the shorter
+/// side), so the rim shows a compressed, mirrored band from deep inside. Under it a floor keeps the
+/// lens from ever showing past its rest pill: with `gap` = how far the lens reaches past its rest
+/// pill there (`G = gap + lensPillMargin`), at least `G · (1 - d / (lensPillReach · G))²`. The slider thumb (measured on iOS 26.2, `research/liquid-glass/LENS-MEASURED.md`
 /// §2): inward, [lensThumbPeak] px over its outer [lensThumbAt] px, then
 /// `peak · (1 - (d - at) / reach)^power`, its outer [lensThumbSoft] px softened ([lensSoftBlur],
 /// [lensSoftWeight]). The switch thumb: iOS 26.2's measured lip, an inward rim of [lensSwitchRim] px
@@ -73,6 +74,8 @@ enum LensKind { pill, thumb, switchThumb }
 /// [lensSwitchAt] px deep, fading as `exp(-(d - at) / decay)`, leaning away from the centre
 /// ([lensSwitchRadial]), its whole middle zoomed out ([lensSwitchZoomX], [lensSwitchZoomY]). All the
 /// same in light and dark. No lens splits colour (iOS 27's glass shows none).
+const double lensPillHeight = 20;
+const double lensPillAmount = 60;
 const double lensPillMargin = 1;
 const double lensPillReach = 2.5;
 const double lensThumbPeak = 7.1;
@@ -106,15 +109,27 @@ const double lensSwitchZoomX = 0.04;
 const double lensSwitchZoomY = 0;
 
 /// The bend (px, positive inward) of a [kind] lens at depth [d] px inside its outline: the twin
-/// of the web kit's `lensBend`. A pill's depends on [gap], how far (px) it reaches past its rest pill
-/// there. `shaders/glass_refraction.frag` evaluates the same per pixel.
-double lensBend(LensKind kind, double d, {double gap = 0}) {
+/// of the web kit's `lensBend`. A pill's depends on [halfMinor] (half its shorter side, which caps
+/// its bevel and shift) and [gap], how far (px) it reaches past its rest pill there. `shaders/glass_refraction.frag` evaluates the same per pixel.
+double lensBend(
+  LensKind kind,
+  double d, {
+  double gap = 0,
+  double halfMinor = double.infinity,
+}) {
   if (!(d >= 0)) return 0;
   switch (kind) {
     case LensKind.pill:
+      final half = halfMinor.isFinite && halfMinor > 0
+          ? halfMinor
+          : double.infinity;
+      final bevel = math.min(lensPillHeight, half / 2);
+      final most = math.min(lensPillAmount, half);
+      final x = 1 - d / bevel;
+      final dome = x > 0 ? most * (1 - math.sqrt(1 - x * x)) : 0.0;
       final g = (gap.isFinite ? math.max(0.0, gap) : 0.0) + lensPillMargin;
       final t = 1 - d / (lensPillReach * g);
-      return t > 0 ? g * t * t : 0;
+      return math.max(dome, t > 0 ? g * t * t : 0.0);
     case LensKind.thumb:
       if (d <= lensThumbAt) return lensThumbPeak;
       final t = 1 - (d - lensThumbAt) / lensThumbReach;

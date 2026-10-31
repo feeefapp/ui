@@ -96,14 +96,20 @@ float unionDistance(vec2 p) {
   return d;
 }
 
-// The lens bend (px, positive inward) at depth d px: glass/refraction.dart lensBend. The pill's is
-// a convex rim bounded by its rest pill (`gap` = how far the lens reaches past it here); the slider
-// thumb's and the switch thumb's lip are iOS 26.2's measured profiles.
-float lensBend(float kind, float d, float gap) {
+// The lens bend (px, positive inward) at depth d px: glass/refraction.dart lensBend. The pill's is a
+// dome bevel bounded below by its rest pill (`gap` = how far the lens reaches past it here,
+// `halfMinor` = half its shorter side); the slider thumb's and the switch thumb's lip are iOS 26.2's
+// measured profiles.
+float lensBend(float kind, float d, float gap, float halfMinor) {
   if (kind < 1.5) {
+    // A dome bevel (lensPillHeight 20, lensPillAmount 60, capped by the shorter side) over a floor
+    // that never shows past the rest pill.
+    float bevel = min(20.0, halfMinor * 0.5);
+    float x = 1.0 - d / max(bevel, 1e-3);
+    float dome = x > 0.0 ? min(60.0, halfMinor) * (1.0 - sqrt(1.0 - x * x)) : 0.0;
     float g = max(gap, 0.0) + 1.0;
     float t = 1.0 - d / (2.5 * g);
-    return t > 0.0 ? g * t * t : 0.0;
+    return max(dome, t > 0.0 ? g * t * t : 0.0);
   }
   if (kind < 2.5) {
     if (d <= 1.0) return 7.1;
@@ -172,7 +178,7 @@ vec4 lens(vec2 frag, vec2 p) {
       // A small lens can't bend further than half its shorter side.
       float limit = min(hs.x, hs.y);
       float gap = pill ? boxDistance(p, uRect1, uRadiusA.y) - d : 0.0;
-      float bend = clamp(lensBend(uLens, -d, gap), -limit, limit);
+      float bend = clamp(lensBend(uLens, -d, gap, limit), -limit, limit);
       shift += -dir / dirLen * bend;
     }
   }

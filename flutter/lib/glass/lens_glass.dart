@@ -269,6 +269,20 @@ class _LensPainter extends CustomPainter {
     rim(const Offset(0, _edge), _white, m.edge.top);
     rim(const Offset(0, -1), _black, m.line.bottom);
     rim(const Offset(0, 1), _black, m.line.inner);
+    // The glint: both walls along the light axis (top-left, bottom-right), a line and its bleed.
+    if (m.glint.line > 0.001) {
+      const w = lensGlintWidth;
+      rim(const Offset(w, w), _white, m.glint.line);
+      rim(const Offset(-w, -w), _white, m.glint.line);
+    }
+    if (m.glint.bleed > 0.001) {
+      const b = lensGlintBleed;
+      final soft = Paint()
+        ..color = _white.withValues(alpha: m.glint.bleed)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, b / 3);
+      canvas.drawPath(band(const Offset(b, b)), soft);
+      canvas.drawPath(band(const Offset(-b, -b)), soft);
+    }
     canvas.restore();
   }
 

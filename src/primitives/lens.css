@@ -27,6 +27,12 @@ forced colours and glass: 'solid'. */
   shadows (a masked rim layer would make Chromium sample the backdrop at low resolution). Then
   material.ts LENS_SHADOW. */
   box-shadow:
+    /* The glint (material.ts LENS_GLINT): both walls along the light axis, top-left and
+    bottom-right, a 1.2 px line and a faint bleed. */
+    inset 1.2px 1.2px rgb(255 255 255 / var(--lab-lens-glint, 0)),
+    inset -1.2px -1.2px rgb(255 255 255 / var(--lab-lens-glint, 0)),
+    inset 4.8px 4.8px 3.2px -1.6px rgb(255 255 255 / var(--lab-lens-glint-bleed, 0)),
+    inset -4.8px -4.8px 3.2px -1.6px rgb(255 255 255 / var(--lab-lens-glint-bleed, 0)),
     inset 0 1px rgb(0 0 0 / var(--lab-lens-line, 0)),
     inset 0 -1px rgb(0 0 0 / var(--lab-lens-line-bottom, 0)),
     inset 0 0.34px rgb(255 255 255 / var(--lab-lens-rim-edge-top, 0)),

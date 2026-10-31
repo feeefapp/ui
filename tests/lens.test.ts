@@ -110,20 +110,23 @@ test('under the lens a label changes colour as one piece, plain and ink crossfad
   assert.equal(lensPlainAlpha(1, 0.5), 0.5)
 })
 
-test('the pill\'s convex rim only ever shows what lies inside its rest pill', () => {
-  for (const gap of [0, 4, 8, 12]) {
-    const g = gap + LENS_BEND.pill.margin
-    assert.equal(lensBend('pill', 0, gap), g, 'the rim shows the backdrop the gap and a margin further in')
-    let last = -Infinity
-    for (let d = 0; d <= 40; d += 0.25) {
-      const shown = d + lensBend('pill', d, gap)
-      assert.ok(shown >= g - 1e-9, `d ${d}: shows ${shown}, inside the rest pill`)
-      assert.ok(shown >= last - 1e-9, 'never folds')
-      last = shown
+test('the pill bends by a dome bevel and never shows past its rest pill', () => {
+  const { height, amount, margin, reach } = LENS_BEND.pill
+  for (const half of [22, 35, 80]) {
+    const bevel = Math.min(height, half / 2)
+    // At the rim it shows the backdrop from as deep as the shift allows; the face stays put.
+    assert.equal(lensBend('pill', 0, 0, half), Math.max(Math.min(amount, half), margin))
+    assert.equal(lensBend('pill', Math.max(bevel, reach * margin) + 0.01, 0, half), 0)
+    // Dome: strongest at the rim, falling smoothly to nothing at the bevel's inner end.
+    assert.ok(lensBend('pill', bevel / 2, 0, half) < lensBend('pill', bevel / 4, 0, half))
+    for (const gap of [0, 4, 8, 12]) {
+      for (let d = 0; d <= 40; d += 0.25) {
+        const shown = d + lensBend('pill', d, gap, half)
+        assert.ok(shown >= gap + margin - 1e-9, `half ${half} gap ${gap} d ${d}: shows ${shown}, inside the rest pill`)
+      }
     }
-    assert.equal(lensBend('pill', LENS_BEND.pill.reach * g, gap), 0, 'the middle stays put')
   }
-  assert.equal(lensBend('pill', -1, 8), 0, 'nothing outside')
+  assert.equal(lensBend('pill', -1, 8, 35), 0, 'nothing outside')
 })
 
 test('the thumb and the switch keep the measured iOS profiles', () => {
@@ -163,6 +166,34 @@ test('the pill map fills its overhang from inside the rest pill', () => {
   const td = thumb.width / 57
   const ti = (Math.floor(2 * td) * thumb.width + Math.floor(28.5 * td)) * 4
   assert.ok(((thumb.data[ti + 1] - 128) / 127) * (thumb.scale / 2) > 4, 'a thumb bends inward (down) under its top edge')
+})
+
+test('a lens map is mirror-symmetric (one quadrant is computed, three mirrored)', () => {
+  for (const [kind, shape, lift] of [
+    ['pill', { x: 0, y: 0, width: 121, height: 70, radius: 35 }, { x: 12, y: 8 }],
+    ['switch', { x: 0, y: 0, width: 57, height: 37, radius: 18.5 }, undefined],
+    ['thumb', { x: 0, y: 0, width: 57, height: 37, radius: 18.5 }, undefined],
+  ] as const) {
+    const map = lensDisplacementMap(shape, kind, lift)
+    const at = (x: number, y: number) => (y * map.width + x) * 4
+    for (let y = 0; y < map.height; y += 3) for (let x = 0; x < map.width; x += 3) {
+      const i = at(x, y)
+      const j = at(map.width - 1 - x, map.height - 1 - y)
+      assert.equal(map.data[i + 3], map.data[j + 3], `${kind} alpha ${x},${y}`)
+      assert.ok(Math.abs(map.data[i] - 128 + (map.data[j] - 128)) <= 1, `${kind} dx flips ${x},${y}`)
+      assert.ok(Math.abs(map.data[i + 1] - 128 + (map.data[j + 1] - 128)) <= 1, `${kind} dy flips ${x},${y}`)
+    }
+  }
+})
+
+test('only the pill lens catches a glint on its light-facing walls', () => {
+  for (const scheme of ['light', 'dark'] as const) {
+    assert.ok(lensMaterial('pill', 1, scheme).glint.line > 0)
+    assert.ok(lensMaterial('pill', 1, scheme).glint.bleed < lensMaterial('pill', 1, scheme).glint.line)
+    assert.equal(lensMaterial('pill', 0, scheme).glint.line, 0, 'eased in with the lens')
+    assert.equal(lensMaterial('thumb', 1, scheme).glint.line, 0)
+    assert.equal(lensMaterial('switch', 1, scheme).glint.line, 0)
+  }
 })
 
 test('the lens material: clear, a shade from the top, the measured rim and shadow', () => {

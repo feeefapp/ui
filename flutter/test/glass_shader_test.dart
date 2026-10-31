@@ -144,7 +144,10 @@ void main() {
     for (final x in [0, 4, 10, 20]) {
       expect(
         pill(x, height ~/ 2),
-        closeTo(x + 0.5 + lensBend(LensKind.pill, x + 0.5, gap: 12), 1),
+        closeTo(
+          x + 0.5 + lensBend(LensKind.pill, x + 0.5, gap: 12, halfMinor: 22),
+          1,
+        ),
         reason: 'x $x',
       );
     }
@@ -168,7 +171,10 @@ void main() {
         closeTo(
           x +
               0.5 +
-              lensBend(LensKind.switchThumb, math.min(x + 0.5, width - x - 0.5)) *
+              lensBend(
+                    LensKind.switchThumb,
+                    math.min(x + 0.5, width - x - 0.5),
+                  ) *
                   (x < width / 2 ? 1 : -1) +
               lensZoom(LensKind.switchThumb, x + 0.5 - width / 2, 0).x,
           // The shader steps its normal half a pixel each way: within a pixel and a half.

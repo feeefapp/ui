@@ -50,9 +50,9 @@ void main() {
     for (final row in fixture['pillBend'] as List<dynamic>) {
       final v = (row as List<dynamic>).map(n).toList();
       expect(
-        lensBend(LensKind.pill, v[0], gap: v[1]),
-        closeTo(v[2], 1e-6),
-        reason: 'pill d ${v[0]} gap ${v[1]}',
+        lensBend(LensKind.pill, v[0], gap: v[1], halfMinor: v[2]),
+        closeTo(v[3], 1e-6),
+        reason: 'pill d ${v[0]} gap ${v[1]} half ${v[2]}',
       );
     }
     for (final (key, kind) in [
@@ -67,13 +67,13 @@ void main() {
     expect(lensBend(LensKind.pill, -1, gap: 8), 0);
   });
   test('the pill rim only ever shows what lies inside its rest pill', () {
-    for (final gap in [0.0, 4.0, 8.0, 12.0]) {
-      var last = double.negativeInfinity;
-      for (var d = 0.0; d <= 40; d += 0.25) {
-        final shown = d + lensBend(LensKind.pill, d, gap: gap);
-        expect(shown, greaterThanOrEqualTo(gap + lensPillMargin - 1e-9));
-        expect(shown, greaterThanOrEqualTo(last - 1e-9), reason: 'no fold');
-        last = shown;
+    for (final half in [22.0, 35.0, 80.0]) {
+      for (final gap in [0.0, 4.0, 8.0, 12.0]) {
+        for (var d = 0.0; d <= 40; d += 0.25) {
+          final shown =
+              d + lensBend(LensKind.pill, d, gap: gap, halfMinor: half);
+          expect(shown, greaterThanOrEqualTo(gap + lensPillMargin - 1e-9));
+        }
       }
     }
   });
@@ -115,6 +115,12 @@ void main() {
     final pill = lensMaterial(kind: LensKind.pill, lens: 1, dark: false);
     expect(pill.veil, 0);
     expect(pill.shade, (top: 0.03, middle: 0.0));
+    expect(pill.glint.line, greaterThan(0));
+    expect(pill.glint.bleed, lessThan(pill.glint.line));
+    expect(
+      lensMaterial(kind: LensKind.thumb, lens: 1, dark: false).glint,
+      (line: 0.0, bleed: 0.0),
+    );
     expect(pill.band, (top: 0.27, side: 0.27, bottom: 0.27));
     expect(pill.edge, (top: 0.45, side: 0.45, bottom: 0.45));
     expect(pill.shadow, lensShadowAlpha);

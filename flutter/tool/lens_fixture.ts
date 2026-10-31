@@ -54,7 +54,7 @@ export function lensFixture() {
     ),
     snap: POSITIONS.flatMap((p) => SPEEDS.map((v) => [p, v, switchSnap(p, v)])),
     outset: SIZES.flatMap((size) => TARGETS.map((target) => [size, target, round(touchOutset(size, target))])),
-    pillBend: GAPS.flatMap((gap) => DEPTHS.map((d) => [d, gap, round(lensBend('pill', d, gap))])),
+    pillBend: [22, 35, 80].flatMap((half) => GAPS.flatMap((gap) => DEPTHS.map((d) => [d, gap, half, round(lensBend('pill', d, gap, half))]))),
     switchBend: DEPTHS.map((d) => [d, round(lensBend('switch', d))]),
     thumbBend: DEPTHS.map((d) => [d, round(lensBend('thumb', d))]),
     coverage: PILLS.map((start) => [start, 90, 0, 90, round(lensCoverage(start, 90, 0, 90))]),
