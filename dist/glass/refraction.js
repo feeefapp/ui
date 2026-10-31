@@ -179,13 +179,13 @@ function sampleDisplacementMap(logicalWidth, logicalHeight, w, h, clusters, spac
  * How control lenses bend what is behind them. The shift (px, positive = the pixel shows the backdrop
  * from further inside) at depth `d` px from the outline:
  * - pill (the selection of a segmented control or a tab bar, lifted out of its rest pill by
- *   `LENS_PILL_LIFT`): a convex rim that only ever shows what lies inside its rest pill, so the
- *   track's edge and whatever is past it never show inside the lens. With `gap` = how far the lens
- *   reaches past its rest pill there (`G = gap + margin`), the shift is `G · (1 - d / (reach · G))²`
- *   to nothing at `reach · G` px deep: lines near the rim are magnified (most at the rim, at most
- *   `1 / (1 - 2 / reach)` times), the middle stays put, and nothing folds (`reach` ≥ 2). iOS 26.2's
- *   tab bar pill shows the bar's own edge and the page past it through its rim
- *   (research/liquid-glass/LENS-MEASURED.md §6); the kit keeps one clean capsule instead.
+ *   `LENS_PILL_LIFT`): a dome bevel, flat face, as the open liquid-glass renderers fit iOS 27
+ *   (whynotmake.it liquid_glass_renderer, liquid_glass_easy): over a bevel of `height` px (at most a
+ *   quarter of the shorter side) the shift is `amount · (1 - √(1 - x²))`, `x = 1 - d / bevel`
+ *   (`amount` at most half the shorter side): the rim shows a compressed, mirrored band from deep
+ *   inside, the face stays put. Under it a floor keeps the lens from ever showing past its rest pill
+ *   (the track's edge and what is past it): with `gap` = how far the lens reaches past its rest pill
+ *   there and `G = gap + margin`, the shift is at least `G · (1 - d / (reach · G))²`.
  * - thumb (slider): inward, 7.1 px over the outer 1 px, then `7.1 · (1 - (d - 1) / 6.5)^2.2` to
  *   nothing at 7.5 px; its outer `soft` px are softened (`LENS_SOFT`). Measured on iOS 26.2 (§2).
  * - switch: iOS 26.2's measured lip (§2, the segmented pill's profile at two thirds): a 0.6 px inward
@@ -197,7 +197,7 @@ function sampleDisplacementMap(logicalWidth, logicalHeight, w, h, clusters, spac
  * All are the same in light and dark appearance.
  */
 export const LENS_BEND = {
-    pill: { margin: 1, reach: 2.5 },
+    pill: { height: 20, amount: 60, margin: 1, reach: 2.5 },
     thumb: { peak: 7.1, at: 1, reach: 6.5, power: 2.2, soft: 5 },
     switch: { rim: 4.02, rimWidth: 0.6, peak: 2.881, at: 5, decay: 10.5, radial: 1.5, zoom: { x: 0.04, y: 0 } },
 };
@@ -211,16 +211,22 @@ export const LENS_SOFT = { blur: 2 };
 export const LENS_MAP_PIXELS = 65536;
 /**
  * The bend (px, positive inward) of a `kind` lens at depth `d` px inside its outline. A pill's
- * depends on `gap`: how far (px) the lens reaches past its rest pill at that point (0 when it hasn't
- * lifted).
+ * depends on `halfMinor` (half its shorter side, which caps its bevel and shift) and `gap`: how far
+ * (px) the lens reaches past its rest pill at that point (0 when it hasn't lifted).
  */
-export function lensBend(kind, d, gap = 0) {
+export function lensBend(kind, d, gap = 0, halfMinor = Infinity) {
     if (!(d >= 0))
         return 0;
     if (kind === 'pill') {
-        const g = Math.max(0, Number.isFinite(gap) ? gap : 0) + LENS_BEND.pill.margin;
-        const t = 1 - d / (LENS_BEND.pill.reach * g);
-        return t > 0 ? g * t * t : 0;
+        const { height, amount, margin, reach } = LENS_BEND.pill;
+        const half = Number.isFinite(halfMinor) && halfMinor > 0 ? halfMinor : Infinity;
+        const bevel = Math.min(height, half / 2);
+        const most = Math.min(amount, half);
+        const x = 1 - d / bevel;
+        const dome = x > 0 ? most * (1 - Math.sqrt(1 - x * x)) : 0;
+        const g = Math.max(0, Number.isFinite(gap) ? gap : 0) + margin;
+        const t = 1 - d / (reach * g);
+        return Math.max(dome, t > 0 ? g * t * t : 0);
     }
     if (kind === 'thumb') {
         const { peak, at, reach, power } = LENS_BEND.thumb;
@@ -248,8 +254,9 @@ export function lensBend(kind, d, gap = 0) {
 export function lensDisplacementMap(shape, kind, lift = { x: 0, y: 0 }) {
     const logicalWidth = Number.isFinite(shape.width) ? Math.max(1, shape.width) : 1;
     const logicalHeight = Number.isFinite(shape.height) ? Math.max(1, shape.height) : 1;
-    // The pill's inward rim is under 1 px wide: sample up to 3 map pixels per px.
-    const density = Math.min(3, Math.sqrt(LENS_MAP_PIXELS / logicalWidth / logicalHeight));
+    // A thumb's or switch's rim is under 1 px wide: up to 3 map pixels per px. A pill's dome is
+    // smooth: 1.5 (the browser stretches the map with filtering).
+    const density = Math.min(kind === 'pill' ? 1.5 : 3, Math.sqrt(LENS_MAP_PIXELS / logicalWidth / logicalHeight));
     const w = Math.max(1, Math.floor(logicalWidth * density));
     const h = Math.max(1, Math.floor(logicalHeight * density));
     const pixelWidth = logicalWidth / w;
@@ -275,8 +282,22 @@ export function lensDisplacementMap(shape, kind, lift = { x: 0, y: 0 }) {
     const shifts = new Float32Array(w * h * 2);
     const data = new Uint8ClampedArray(w * h * 4);
     let largest = 0;
-    for (let y = 0; y < h; y++)
-        for (let x = 0; x < w; x++) {
+    const halfMinor = limit;
+    // The lens is symmetric about both axes: work out one quadrant and mirror it (each shift flips
+    // its sign across the axis it crosses).
+    const mirror = (i, x, y, sx, sy) => {
+        const j = y * w + x;
+        if (j === i)
+            return;
+        shifts[j * 2] = sx * shifts[i * 2];
+        shifts[j * 2 + 1] = sy * shifts[i * 2 + 1];
+        data[j * 4 + 2] = data[i * 4 + 2];
+        data[j * 4 + 3] = data[i * 4 + 3];
+    };
+    const qw = Math.ceil(w / 2);
+    const qh = Math.ceil(h / 2);
+    for (let y = 0; y < qh; y++)
+        for (let x = 0; x < qw; x++) {
             const px = (x + 0.5) * pixelWidth;
             const py = (y + 0.5) * pixelHeight;
             const d = distance(px, py);
@@ -295,7 +316,7 @@ export function lensDisplacementMap(shape, kind, lift = { x: 0, y: 0 }) {
             }
             // The gap between the lens's outline and its rest pill's, along the normal here.
             const gap = rest ? Math.max(0, rest(px, py) - d) : 0;
-            const bend = Math.max(-limit, Math.min(limit, lensBend(kind, Math.max(0, -d), gap)));
+            const bend = Math.max(-limit, Math.min(limit, lensBend(kind, Math.max(0, -d), gap, halfMinor)));
             if (bend) {
                 const gx = distance(px + 1, py) - distance(px - 1, py);
                 const gy = distance(px, py + 1) - distance(px, py - 1);
@@ -309,6 +330,11 @@ export function lensDisplacementMap(shape, kind, lift = { x: 0, y: 0 }) {
                 shifts[i * 2 + 1] += (-ny / length) * bend;
             }
             largest = Math.max(largest, Math.abs(shifts[i * 2]), Math.abs(shifts[i * 2 + 1]));
+            const mx = w - 1 - x;
+            const my = h - 1 - y;
+            mirror(i, mx, y, -1, 1);
+            mirror(i, x, my, 1, -1);
+            mirror(i, mx, my, -1, -1);
         }
     for (let i = 0; i < w * h; i++) {
         data[i * 4] = largest > 0 ? Math.round(128 + (shifts[i * 2] / largest) * 127) : 128;

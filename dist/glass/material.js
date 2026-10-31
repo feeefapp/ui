@@ -221,6 +221,9 @@ export const LENS_MATERIAL = {
             dark: { band: { top: 0.2, side: 0.2, bottom: 0.2 }, edge: { top: 1, side: 1, bottom: 1 } },
         },
         line: { light: { inner: 0, outer: 0, bottom: 0 }, dark: { inner: 0, outer: 0, bottom: 0 } },
+        // Both walls along the light axis catch a glint (held iOS tab bar, LENS-MEASURED §6; the open iOS 27
+        // renderers draw a 1.2 pt line with a faint bleed four times deeper).
+        glint: { light: { line: 0.6, bleed: 0.14 }, dark: { line: 0.5, bleed: 0.1 } },
     },
     thumb: {
         veil: 0.09,
@@ -230,6 +233,7 @@ export const LENS_MATERIAL = {
             dark: { band: { top: 0, side: 0.15, bottom: 0.15 }, edge: { top: 0, side: 0.18, bottom: 0.18 } },
         },
         line: { light: { inner: 0.35, outer: 0.23, bottom: 0 }, dark: { inner: 0.24, outer: 0.31, bottom: 0 } },
+        glint: { light: { line: 0, bleed: 0 }, dark: { line: 0, bleed: 0 } },
     },
     // The switch thumb: the slider thumb's veil and shade, a dark line along its top and bottom edges
     // with the rim light over it (on white 0.4–0.55, on black 0.3–0.5 at those edges).
@@ -241,8 +245,11 @@ export const LENS_MATERIAL = {
             dark: { band: { top: 0.2, side: 0.2, bottom: 0.3 }, edge: { top: 0.25, side: 0.25, bottom: 0.45 } },
         },
         line: { light: { inner: 0.55, outer: 0, bottom: 0.6 }, dark: { inner: 0.5, outer: 0, bottom: 0.6 } },
+        glint: { light: { line: 0, bleed: 0 }, dark: { line: 0, bleed: 0 } },
     },
 };
+/** The glint's line width and how deep its bleed reaches (px): Flutter's `lensGlintWidth` / `lensGlintBleed`. */
+export const LENS_GLINT = { width: 1.2, bleed: 4.8 };
 /** The shadow every control lens casts (LENS-MEASURED.md §3): 0.89 on white just under its bottom
  * edge, gone ~12 px below, barely any above. */
 export const LENS_SHADOW = { dy: 6, blur: 11, alpha: 0.13 };
@@ -257,6 +264,7 @@ export function lensMaterial(kind, lens, scheme) {
         rim: { top: rim.band.top * t, side: rim.band.side * t, bottom: rim.band.bottom * t },
         rimEdge: { top: rim.edge.top * t, side: rim.edge.side * t, bottom: rim.edge.bottom * t },
         line: { inner: m.line[scheme].inner * t, outer: m.line[scheme].outer * t, bottom: m.line[scheme].bottom * t },
+        glint: { line: m.glint[scheme].line * t, bleed: m.glint[scheme].bleed * t },
         shadow: LENS_SHADOW.alpha * t,
     };
 }

@@ -70,13 +70,13 @@ export type LensKind = 'pill' | 'thumb' | 'switch';
  * How control lenses bend what is behind them. The shift (px, positive = the pixel shows the backdrop
  * from further inside) at depth `d` px from the outline:
  * - pill (the selection of a segmented control or a tab bar, lifted out of its rest pill by
- *   `LENS_PILL_LIFT`): a convex rim that only ever shows what lies inside its rest pill, so the
- *   track's edge and whatever is past it never show inside the lens. With `gap` = how far the lens
- *   reaches past its rest pill there (`G = gap + margin`), the shift is `G · (1 - d / (reach · G))²`
- *   to nothing at `reach · G` px deep: lines near the rim are magnified (most at the rim, at most
- *   `1 / (1 - 2 / reach)` times), the middle stays put, and nothing folds (`reach` ≥ 2). iOS 26.2's
- *   tab bar pill shows the bar's own edge and the page past it through its rim
- *   (research/liquid-glass/LENS-MEASURED.md §6); the kit keeps one clean capsule instead.
+ *   `LENS_PILL_LIFT`): a dome bevel, flat face, as the open liquid-glass renderers fit iOS 27
+ *   (whynotmake.it liquid_glass_renderer, liquid_glass_easy): over a bevel of `height` px (at most a
+ *   quarter of the shorter side) the shift is `amount · (1 - √(1 - x²))`, `x = 1 - d / bevel`
+ *   (`amount` at most half the shorter side): the rim shows a compressed, mirrored band from deep
+ *   inside, the face stays put. Under it a floor keeps the lens from ever showing past its rest pill
+ *   (the track's edge and what is past it): with `gap` = how far the lens reaches past its rest pill
+ *   there and `G = gap + margin`, the shift is at least `G · (1 - d / (reach · G))²`.
  * - thumb (slider): inward, 7.1 px over the outer 1 px, then `7.1 · (1 - (d - 1) / 6.5)^2.2` to
  *   nothing at 7.5 px; its outer `soft` px are softened (`LENS_SOFT`). Measured on iOS 26.2 (§2).
  * - switch: iOS 26.2's measured lip (§2, the segmented pill's profile at two thirds): a 0.6 px inward
@@ -89,6 +89,8 @@ export type LensKind = 'pill' | 'thumb' | 'switch';
  */
 export declare const LENS_BEND: {
     readonly pill: {
+        readonly height: 20;
+        readonly amount: 60;
         readonly margin: 1;
         readonly reach: 2.5;
     };
@@ -124,10 +126,10 @@ export declare const LENS_SOFT: {
 export declare const LENS_MAP_PIXELS = 65536;
 /**
  * The bend (px, positive inward) of a `kind` lens at depth `d` px inside its outline. A pill's
- * depends on `gap`: how far (px) the lens reaches past its rest pill at that point (0 when it hasn't
- * lifted).
+ * depends on `halfMinor` (half its shorter side, which caps its bevel and shift) and `gap`: how far
+ * (px) the lens reaches past its rest pill at that point (0 when it hasn't lifted).
  */
-export declare function lensBend(kind: LensKind, d: number, gap?: number): number;
+export declare function lensBend(kind: LensKind, d: number, gap?: number, halfMinor?: number): number;
 /**
  * The map of a control's lens (lens-layer.ts): one `shape` (its own box, at 0, 0) bending by
  * `lensBend` along its outline's normal (a switch also leans and zooms out). A pill passes `lift`,

@@ -131,6 +131,8 @@ export class GlassLensLayer {
         setProperty(style, '--lab-lens-line-outer', material.line.outer.toFixed(4));
         setProperty(style, '--lab-lens-line-bottom', material.line.bottom.toFixed(4));
         setProperty(style, '--lab-lens-shadow', material.shadow.toFixed(4));
+        setProperty(style, '--lab-lens-glint', material.glint.line.toFixed(4));
+        setProperty(style, '--lab-lens-glint-bleed', material.glint.bleed.toFixed(4));
         const radius = Math.min(size.radius, size.width / 2, size.height / 2);
         const value = mode === 'liquid' && lensBends() ? this.refraction(size.width, size.height, radius, t, lift) : null;
         if (value) {

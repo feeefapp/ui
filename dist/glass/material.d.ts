@@ -306,6 +306,16 @@ export declare const LENS_MATERIAL: {
                 readonly bottom: 0;
             };
         };
+        readonly glint: {
+            readonly light: {
+                readonly line: 0.6;
+                readonly bleed: 0.14;
+            };
+            readonly dark: {
+                readonly line: 0.5;
+                readonly bleed: 0.1;
+            };
+        };
     };
     readonly thumb: {
         readonly veil: 0.09;
@@ -349,6 +359,16 @@ export declare const LENS_MATERIAL: {
                 readonly inner: 0.24;
                 readonly outer: 0.31;
                 readonly bottom: 0;
+            };
+        };
+        readonly glint: {
+            readonly light: {
+                readonly line: 0;
+                readonly bleed: 0;
+            };
+            readonly dark: {
+                readonly line: 0;
+                readonly bleed: 0;
             };
         };
     };
@@ -396,7 +416,22 @@ export declare const LENS_MATERIAL: {
                 readonly bottom: 0.6;
             };
         };
+        readonly glint: {
+            readonly light: {
+                readonly line: 0;
+                readonly bleed: 0;
+            };
+            readonly dark: {
+                readonly line: 0;
+                readonly bleed: 0;
+            };
+        };
     };
+};
+/** The glint's line width and how deep its bleed reaches (px): Flutter's `lensGlintWidth` / `lensGlintBleed`. */
+export declare const LENS_GLINT: {
+    readonly width: 1.2;
+    readonly bleed: 4.8;
 };
 /** The shadow every control lens casts (LENS-MEASURED.md §3): 0.89 on white just under its bottom
  * edge, gone ~12 px below, barely any above. */
@@ -426,6 +461,10 @@ export declare function lensMaterial(kind: 'pill' | 'thumb' | 'switch', lens: nu
         inner: number;
         outer: number;
         bottom: number;
+    };
+    glint: {
+        line: number;
+        bleed: number;
     };
     shadow: number;
 };
