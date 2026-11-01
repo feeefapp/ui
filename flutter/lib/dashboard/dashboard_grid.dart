@@ -1,0 +1,509 @@
+import 'dart:async';
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+
+import '../brand/geometry.dart';
+import '../icons/lucide.dart';
+import '../theme.dart';
+import 'grid_layout.dart';
+
+/// One widget on a [DashboardGrid].
+@immutable
+class DashboardTile {
+  const DashboardTile({
+    required this.id,
+    required this.label,
+    required this.child,
+    this.limits = const GridSizeLimits(),
+  });
+
+  final String id;
+
+  /// Accessible name, also used by the edit controls ("Move Orders", "Remove Orders").
+  final String label;
+  final Widget child;
+  final GridSizeLimits limits;
+}
+
+/// A dashboard of widgets of different sizes on a column grid, the way gridstack.js lays
+/// them out: in [editing] mode a widget is dragged anywhere and resized from its bottom-end
+/// corner, the others make way and everything settles upward with no holes ([GridLayout]).
+/// Outside editing, a long press asks to edit ([onEditRequest]) and widgets behave normally.
+///
+/// [layout] is controlled: the grid reports each finished move or resize through
+/// [onLayoutChanged]. Columns start at the reading start, so the board mirrors in RTL.
+class DashboardGrid extends StatefulWidget {
+  const DashboardGrid({
+    super.key,
+    required this.tiles,
+    required this.layout,
+    required this.columns,
+    required this.onLayoutChanged,
+    this.editing = false,
+    this.rowHeight = 64,
+    this.gap = 12,
+    this.onEditRequest,
+    this.onRemove,
+    this.removeLabel = 'Remove',
+    this.resizeLabel = 'Resize',
+  });
+
+  final List<DashboardTile> tiles;
+
+  /// Where each tile sits. Tiles without a placement are not shown.
+  final List<GridPlacement> layout;
+  final int columns;
+  final ValueChanged<List<GridPlacement>> onLayoutChanged;
+  final bool editing;
+  final double rowHeight;
+  final double gap;
+  final VoidCallback? onEditRequest;
+
+  /// Shows a remove button on each tile while editing.
+  final ValueChanged<String>? onRemove;
+  final String removeLabel;
+  final String resizeLabel;
+
+  @override
+  State<DashboardGrid> createState() => _DashboardGridState();
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IterableProperty<DashboardTile>('tiles', tiles))
+      ..add(IntProperty('columns', columns))
+      ..add(DoubleProperty('rowHeight', rowHeight))
+      ..add(DoubleProperty('gap', gap))
+      ..add(FlagProperty('editing', value: editing, ifTrue: 'editing'))
+      ..add(IterableProperty<GridPlacement>('layout', layout))
+      ..add(
+        ObjectFlagProperty<ValueChanged<List<GridPlacement>>>.has(
+          'onLayoutChanged',
+          onLayoutChanged,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<VoidCallback>.has('onEditRequest', onEditRequest),
+      )
+      ..add(ObjectFlagProperty<ValueChanged<String>>.has('onRemove', onRemove))
+      ..add(StringProperty('removeLabel', removeLabel))
+      ..add(StringProperty('resizeLabel', resizeLabel));
+  }
+}
+
+enum _Gesture { move, resize }
+
+class _DashboardGridState extends State<DashboardGrid> {
+  final _boardKey = GlobalKey();
+
+  /// The tile being moved or resized, and how.
+  String? _active;
+  _Gesture? _gesture;
+
+  /// Pixel rect of the active tile while it follows the pointer.
+  Rect? _floating;
+
+  /// Where the board would settle if the gesture ended now.
+  List<GridPlacement>? _preview;
+
+  Timer? _scroll;
+  Offset? _lastGlobal;
+
+  @override
+  void dispose() {
+    _scroll?.cancel();
+    super.dispose();
+  }
+
+  List<GridPlacement> get _shown => _preview ?? widget.layout;
+
+  double _colWidth(double width) =>
+      (width - widget.gap * (widget.columns - 1)) / widget.columns;
+
+  /// Pixel rect of [p] on a board [width] wide.
+  Rect _rectOf(GridPlacement p, double width, bool rtl) {
+    final col = _colWidth(width);
+    final w = p.w * col + (p.w - 1) * widget.gap;
+    final h = p.h * widget.rowHeight + (p.h - 1) * widget.gap;
+    final start = p.x * (col + widget.gap);
+    final left = rtl ? width - start - w : start;
+    return Rect.fromLTWH(left, p.y * (widget.rowHeight + widget.gap), w, h);
+  }
+
+  /// The cell a floating [rect] is closest to, for [p]'s size.
+  GridPlacement _cellOf(Rect rect, GridPlacement p, double width, bool rtl) {
+    final step = _colWidth(width) + widget.gap;
+    final start = rtl ? width - rect.right : rect.left;
+    return p.copyWith(
+      x: (start / step).round(),
+      y: (rect.top / (widget.rowHeight + widget.gap)).round(),
+    );
+  }
+
+  DashboardTile? _tile(String id) {
+    for (final t in widget.tiles) {
+      if (t.id == id) return t;
+    }
+    return null;
+  }
+
+  GridPlacement? _placement(String id) {
+    for (final p in widget.layout) {
+      if (p.id == id) return p;
+    }
+    return null;
+  }
+
+  void _start(String id, _Gesture gesture, double width, bool rtl) {
+    final p = _placement(id);
+    if (p == null) return;
+    setState(() {
+      _active = id;
+      _gesture = gesture;
+      _floating = _rectOf(p, width, rtl);
+      _preview = widget.layout;
+    });
+  }
+
+  void _update(Offset delta, Offset global, double width, bool rtl) {
+    final id = _active, rect = _floating, p = _placement(id ?? '');
+    if (id == null || rect == null || p == null) return;
+    _lastGlobal = global;
+    final step = _colWidth(width) + widget.gap;
+    final rowStep = widget.rowHeight + widget.gap;
+    late final Rect next;
+    late final GridPlacement target;
+    if (_gesture == _Gesture.move) {
+      next = rect.shift(delta);
+      target = _cellOf(next, p, width, rtl);
+    } else {
+      // The grip sits on the bottom-end corner: in RTL it grows toward the left.
+      final dw = rtl ? -delta.dx : delta.dx;
+      final w = math.max(_colWidth(width) * 0.5, rect.width + dw);
+      final h = math.max(widget.rowHeight * 0.5, rect.height + delta.dy);
+      next = rtl
+          ? Rect.fromLTWH(rect.right - w, rect.top, w, h)
+          : Rect.fromLTWH(rect.left, rect.top, w, h);
+      final current = _preview?.firstWhere((e) => e.id == id) ?? p;
+      final (cw, ch) = (_tile(id)?.limits ?? const GridSizeLimits()).clamp(
+        ((w + widget.gap) / step).round(),
+        ((h + widget.gap) / rowStep).round(),
+        widget.columns,
+      );
+      target = current.copyWith(w: cw, h: ch);
+    }
+    final preview = GridLayout.move(
+      widget.layout,
+      id,
+      target,
+      columns: widget.columns,
+    );
+    setState(() {
+      _floating = next;
+      _preview = preview;
+    });
+    _autoScroll();
+  }
+
+  void _end() {
+    _scroll?.cancel();
+    _scroll = null;
+    final preview = _preview;
+    final changed = preview != null && !listEquals(preview, widget.layout);
+    setState(() {
+      _active = null;
+      _gesture = null;
+      _floating = null;
+      _preview = null;
+    });
+    if (changed) widget.onLayoutChanged(preview);
+  }
+
+  /// Near the top or bottom of the scroll view, keep scrolling while the pointer stays there.
+  void _autoScroll() {
+    final position = Scrollable.maybeOf(context)?.position;
+    final global = _lastGlobal;
+    final box = Scrollable.maybeOf(context)?.context.findRenderObject();
+    if (position == null || global == null || box is! RenderBox) return;
+    final local = box.globalToLocal(global);
+    const edge = 72.0;
+    final speed = local.dy < edge
+        ? -(edge - local.dy) / 4
+        : local.dy > box.size.height - edge
+        ? (local.dy - (box.size.height - edge)) / 4
+        : 0.0;
+    _scroll?.cancel();
+    if (speed == 0) return;
+    _scroll = Timer.periodic(const Duration(milliseconds: 16), (_) {
+      final to = (position.pixels + speed).clamp(
+        position.minScrollExtent,
+        position.maxScrollExtent,
+      );
+      if (to == position.pixels) return;
+      position.jumpTo(to);
+      if (_gesture == _Gesture.move) {
+        _update(Offset(0, speed), _lastGlobal!, _width, _rtl);
+      }
+    });
+  }
+
+  double _width = 0;
+  bool _rtl = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ThemeProvider.of(context);
+    final c = theme.colors;
+    final reduced = reducedMotionOf(context);
+    _rtl = Directionality.of(context) == TextDirection.rtl;
+    return LayoutBuilder(
+      builder: (context, box) {
+        final width = _width = box.maxWidth;
+        final shown = _shown;
+        var rows = GridLayout.height(shown);
+        final floating = _floating;
+        if (floating != null) {
+          rows = math.max(
+            rows,
+            ((floating.bottom + widget.gap) / (widget.rowHeight + widget.gap))
+                .ceil(),
+          );
+        }
+        final height = rows == 0
+            ? 0.0
+            : rows * (widget.rowHeight + widget.gap) - widget.gap;
+        final radius = theme.sizes.radiusPanel;
+        final children = <Widget>[];
+        String? activeTileId;
+        for (final p in shown) {
+          final tile = _tile(p.id);
+          if (tile == null) continue;
+          final rect = _rectOf(p, width, _rtl);
+          if (p.id == _active) {
+            activeTileId = p.id;
+            // Where it will land.
+            children.add(
+              AnimatedPositioned.fromRect(
+                key: ValueKey('slot:${p.id}'),
+                rect: rect,
+                duration: reduced
+                    ? Duration.zero
+                    : const Duration(milliseconds: 160),
+                curve: Curves.easeOutCubic,
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
+                    color: c.ink.withValues(alpha: 0.05),
+                    shape: SuperellipseBorder(
+                      radius: radius,
+                      side: BorderSide(color: c.ink.withValues(alpha: 0.25)),
+                    ),
+                  ),
+                ),
+              ),
+            );
+            continue;
+          }
+          children.add(
+            AnimatedPositioned.fromRect(
+              key: ValueKey(p.id),
+              rect: rect,
+              duration: reduced
+                  ? Duration.zero
+                  : const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              child: _framed(tile, width),
+            ),
+          );
+        }
+        if (activeTileId != null && floating != null) {
+          final tile = _tile(activeTileId)!;
+          children.add(
+            Positioned.fromRect(
+              key: ValueKey(activeTileId),
+              rect: floating,
+              child: DecoratedBox(
+                decoration: ShapeDecoration(
+                  shape: SuperellipseBorder(radius: radius),
+                  shadows: [
+                    BoxShadow(
+                      color: c.ink.withValues(alpha: 0.16),
+                      blurRadius: 28,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
+                ),
+                child: _framed(tile, width),
+              ),
+            ),
+          );
+        }
+        return SizedBox(
+          key: _boardKey,
+          height: height,
+          child: Stack(clipBehavior: Clip.none, children: children),
+        );
+      },
+    );
+  }
+
+  /// A tile's content with, while editing, its drag surface, remove button and resize grip.
+  Widget _framed(DashboardTile tile, double width) {
+    if (!widget.editing) {
+      if (widget.onEditRequest == null) return tile.child;
+      return GestureDetector(
+        onLongPress: widget.onEditRequest,
+        child: tile.child,
+      );
+    }
+    final c = ThemeProvider.of(context).colors;
+    final active = tile.id == _active;
+    return Semantics(
+      label: tile.label,
+      child: Stack(
+        fit: StackFit.expand,
+        clipBehavior: Clip.none,
+        children: [
+          // The content stays visible but doesn't take taps while arranging.
+          IgnorePointer(child: tile.child),
+          MouseRegion(
+            cursor: active
+                ? SystemMouseCursors.grabbing
+                : SystemMouseCursors.grab,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onPanStart: (_) => _start(tile.id, _Gesture.move, width, _rtl),
+              onPanUpdate: (d) =>
+                  _update(d.delta, d.globalPosition, width, _rtl),
+              onPanEnd: (_) => _end(),
+              onPanCancel: _end,
+            ),
+          ),
+          if (widget.onRemove != null)
+            // Over the corner, half outside, so it never covers the tile's own controls (taps
+            // land on the inner half: Flutter hit-tests within the tile).
+            PositionedDirectional(
+              top: -8,
+              end: -8,
+              child: _EditButton(
+                label: '${widget.removeLabel} ${tile.label}',
+                icon: const LucideX(),
+                onTap: () => widget.onRemove!(tile.id),
+                color: c,
+              ),
+            ),
+          PositionedDirectional(
+            bottom: 4,
+            end: 4,
+            child: MouseRegion(
+              cursor: _rtl
+                  ? SystemMouseCursors.resizeDownLeft
+                  : SystemMouseCursors.resizeDownRight,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onPanStart: (_) =>
+                    _start(tile.id, _Gesture.resize, width, _rtl),
+                onPanUpdate: (d) =>
+                    _update(d.delta, d.globalPosition, width, _rtl),
+                onPanEnd: (_) => _end(),
+                onPanCancel: _end,
+                child: Semantics(
+                  label: '${widget.resizeLabel} ${tile.label}',
+                  child: SizedBox.square(
+                    dimension: 28,
+                    child: CustomPaint(
+                      painter: _GripPainter(color: c.muted, rtl: _rtl),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EditButton extends StatelessWidget {
+  const _EditButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+    required this.color,
+  });
+
+  final String label;
+  final Widget icon;
+  final VoidCallback onTap;
+  final ColorTokens color;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onTap', onTap))
+      ..add(DiagnosticsProperty<ColorTokens>('color', color));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: onTap,
+          child: DecoratedBox(
+            decoration: ShapeDecoration(
+              color: color.surface,
+              shape: CircleBorder(side: BorderSide(color: color.line)),
+            ),
+            child: SizedBox.square(
+              dimension: 28,
+              child: Center(
+                child: IconTheme(
+                  data: IconThemeData(color: color.ink, size: 14),
+                  child: icon,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Three short diagonal strokes in the corner, the usual resize grip.
+class _GripPainter extends CustomPainter {
+  _GripPainter({required this.color, required this.rtl});
+
+  final Color color;
+  final bool rtl;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
+    final e = size.width - 7;
+    for (final d in [6.0, 11.0, 16.0]) {
+      final a = Offset(e - d, e);
+      final b = Offset(e, e - d);
+      canvas.drawLine(
+        rtl ? Offset(size.width - a.dx, a.dy) : a,
+        rtl ? Offset(size.width - b.dx, b.dy) : b,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_GripPainter old) => old.color != color || old.rtl != rtl;
+}
