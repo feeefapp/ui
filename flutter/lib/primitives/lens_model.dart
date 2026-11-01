@@ -99,8 +99,7 @@ double lensCoverage(
       !start.isFinite) {
     return 0;
   }
-  final t =
-      1 - (pillStart + pillWidth / 2 - (start + width / 2)).abs() / width;
+  final t = 1 - (pillStart + pillWidth / 2 - (start + width / 2)).abs() / width;
   if (t <= 0) return 0;
   if (t >= 1) return 1;
   return t * t * (3 - 2 * t);
