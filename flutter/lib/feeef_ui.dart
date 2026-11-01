@@ -19,6 +19,9 @@ export 'brand/geometry.dart'
 export 'brand/logo.dart' show FoAnimatedLogo;
 export 'brand/pixel_loader.dart';
 export 'brand/pixel_shader.dart';
+export 'charts/bar_chart.dart';
+export 'charts/scale.dart';
+export 'charts/stats.dart';
 export 'composer/composer.dart';
 export 'containers/adaptive.dart';
 export 'containers/adaptive_model.dart';
