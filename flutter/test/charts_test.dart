@@ -68,4 +68,55 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('ProportionBar reports the tapped part; FadedRule and frameless tiles lay out', (
+    tester,
+  ) async {
+    int? tapped;
+    await tester.pumpWidget(
+      ThemeProvider(
+        config: const ThemeConfig(),
+        brightness: Brightness.light,
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Center(
+            child: SizedBox(
+              width: 300,
+              child: Column(
+                children: [
+                  ProportionBar(
+                    parts: const [
+                      ProportionPart(label: 'open', value: 30, color: Color(0xFF777777)),
+                      ProportionPart(label: 'none', value: 0, color: Color(0xFF999999)),
+                      ProportionPart(label: 'done', value: 70, color: Color(0xFF2F7D46)),
+                    ],
+                    onTap: (i) => tapped = i,
+                  ),
+                  const IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(child: StatTile(label: 'a', value: '1', framed: false)),
+                        FadedRule(inset: 8),
+                        Expanded(child: StatTile(label: 'b', value: '2', framed: false)),
+                      ],
+                    ),
+                  ),
+                  const FadedRule(axis: Axis.horizontal),
+                  const ProportionBar(parts: []),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    // RTL: the first part sits at the right end; the empty part is left out.
+    final bar = tester.getRect(find.byType(ProportionBar).first);
+    await tester.tapAt(Offset(bar.right - 10, bar.center.dy));
+    expect(tapped, 0);
+    await tester.tapAt(Offset(bar.left + 10, bar.center.dy));
+    expect(tapped, 2);
+  });
 }

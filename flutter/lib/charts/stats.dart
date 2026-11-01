@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
@@ -28,6 +29,15 @@ class DeltaChip extends StatelessWidget {
 
   /// Arrow direction; null draws no arrow (flat or new).
   final bool? up;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('text', text))
+      ..add(EnumProperty<DeltaTone>('tone', tone))
+      ..add(DiagnosticsProperty<bool>('up', up, defaultValue: null));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +95,15 @@ class SegmentMeter extends StatelessWidget {
   final double decided;
   final double pending;
   final double height;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('decided', decided))
+      ..add(DoubleProperty('pending', pending))
+      ..add(DoubleProperty('height', height));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -172,6 +191,16 @@ class Sparkline extends StatelessWidget {
   final List<double>? compare;
   final Color? color;
   final double height;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IterableProperty<double>('values', values))
+      ..add(IterableProperty<double>('compare', compare, defaultValue: null))
+      ..add(ColorProperty('color', color, defaultValue: null))
+      ..add(DoubleProperty('height', height));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -268,6 +297,7 @@ class StatTile extends StatelessWidget {
     this.footer,
     this.onTap,
     this.selected = false,
+    this.framed = true,
   });
 
   final String label;
@@ -277,6 +307,22 @@ class StatTile extends StatelessWidget {
   final String? footer;
   final VoidCallback? onTap;
   final bool selected;
+
+  /// False drops the tile's own surface and edge, for tiles that share one surface split by
+  /// [FadedRule]s (a KPI band).
+  final bool framed;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(StringProperty('value', value))
+      ..add(StringProperty('footer', footer, defaultValue: null))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onTap', onTap))
+      ..add(FlagProperty('selected', value: selected, ifTrue: 'selected'))
+      ..add(FlagProperty('framed', value: framed, ifFalse: 'frameless'));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -290,7 +336,9 @@ class StatTile extends StatelessWidget {
       ),
     );
     Widget tile = DecoratedBox(
-      decoration: ShapeDecoration(color: c.surface, shape: shape),
+      decoration: framed
+          ? ShapeDecoration(color: c.surface, shape: shape)
+          : const BoxDecoration(),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
         child: Column(
@@ -380,6 +428,19 @@ class RankedRow extends StatelessWidget {
   final bool rateBad;
   final bool emphasis;
   final VoidCallback? onTap;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(StringProperty('value', value))
+      ..add(DoubleProperty('fraction', fraction))
+      ..add(StringProperty('rate', rate, defaultValue: null))
+      ..add(FlagProperty('rateBad', value: rateBad, ifTrue: 'rate bad'))
+      ..add(FlagProperty('emphasis', value: emphasis, ifTrue: 'emphasis'))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onTap', onTap));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -499,6 +560,12 @@ class ChartLegend extends StatelessWidget {
   final List<(String, Color, bool)> items;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(IterableProperty<(String, Color, bool)>('items', items));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final c = ThemeProvider.of(context).colors;
     return Wrap(
@@ -530,6 +597,187 @@ class ChartLegend extends StatelessWidget {
             ],
           ),
       ],
+    );
+  }
+}
+
+/// A hairline in the line colour that fades out toward both ends: splits cells that share one
+/// surface without boxing them in. Vertical rules stretch to their row's height.
+class FadedRule extends StatelessWidget {
+  const FadedRule({super.key, this.axis = Axis.vertical, this.inset = 0});
+
+  final Axis axis;
+
+  /// Empty space before and after the rule, along its length.
+  final double inset;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<Axis>('axis', axis))
+      ..add(DoubleProperty('inset', inset));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final line = ThemeProvider.of(context).colors.line;
+    final vertical = axis == Axis.vertical;
+    final rule = DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: vertical
+              ? Alignment.topCenter
+              : AlignmentDirectional.centerStart,
+          end: vertical
+              ? Alignment.bottomCenter
+              : AlignmentDirectional.centerEnd,
+          colors: [
+            line.withValues(alpha: 0),
+            line,
+            line,
+            line.withValues(alpha: 0),
+          ],
+          stops: const [0, 0.3, 0.7, 1],
+        ),
+      ),
+      child: vertical ? const SizedBox(width: 1) : const SizedBox(height: 1),
+    );
+    return Padding(
+      padding: vertical
+          ? EdgeInsets.symmetric(vertical: inset)
+          : EdgeInsetsDirectional.symmetric(horizontal: inset),
+      child: rule,
+    );
+  }
+}
+
+/// One part of a [ProportionBar].
+class ProportionPart {
+  const ProportionPart({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final double value;
+  final Color color;
+}
+
+/// Shares of a whole as one rounded bar of segments in reading order, 2px apart: orders by
+/// stage, a budget by category. Parts with no value are left out; a tap reports the part index.
+class ProportionBar extends StatelessWidget {
+  const ProportionBar({
+    super.key,
+    required this.parts,
+    this.height = 10,
+    this.selected,
+    this.onTap,
+    this.semanticLabel,
+  });
+
+  final List<ProportionPart> parts;
+  final double height;
+
+  /// Index of the part to stress; the others fade.
+  final int? selected;
+  final ValueChanged<int>? onTap;
+  final String? semanticLabel;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IterableProperty<ProportionPart>('parts', parts))
+      ..add(DoubleProperty('height', height))
+      ..add(IntProperty('selected', selected, defaultValue: null))
+      ..add(ObjectFlagProperty<ValueChanged<int>>.has('onTap', onTap))
+      ..add(StringProperty('semanticLabel', semanticLabel, defaultValue: null));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final total = parts.fold<double>(0, (a, p) => a + math.max(0, p.value));
+    final c = ThemeProvider.of(context).colors;
+    final radius = BorderRadius.circular(height / 2);
+    if (total <= 0) {
+      return SizedBox(
+        height: height,
+        child: DecoratedBox(
+          decoration: BoxDecoration(color: c.surfaceSoft, borderRadius: radius),
+        ),
+      );
+    }
+    final shown = [
+      for (var i = 0; i < parts.length; i++)
+        if (parts[i].value > 0) i,
+    ];
+    return Semantics(
+      label:
+          semanticLabel ??
+          [for (final i in shown) '${parts[i].label} ${parts[i].value.round()}']
+              .join(', '),
+      child: SizedBox(
+        height: height,
+        child: ClipRRect(
+          borderRadius: radius,
+          child: Row(
+            spacing: 2,
+            children: [
+              for (final i in shown)
+                Expanded(
+                  // Thin parts stay visible.
+                  flex: math.max(1, (parts[i].value / total * 1000).round()),
+                  child: _ProportionSegment(
+                    color: parts[i].color,
+                    faded: selected != null && selected != i,
+                    onTap: onTap == null ? null : () => onTap!(i),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProportionSegment extends StatelessWidget {
+  const _ProportionSegment({
+    required this.color,
+    required this.faded,
+    this.onTap,
+  });
+
+  final Color color;
+  final bool faded;
+  final VoidCallback? onTap;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(ColorProperty('color', color))
+      ..add(FlagProperty('faded', value: faded, ifTrue: 'faded'))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onTap', onTap));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final box = AnimatedOpacity(
+      opacity: faded ? 0.35 : 1,
+      duration: const Duration(milliseconds: 160),
+      child: ColoredBox(color: color, child: const SizedBox.expand()),
+    );
+    if (onTap == null) return box;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: box,
+      ),
     );
   }
 }
