@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -154,6 +155,134 @@ class TemporalField extends StatefulWidget {
 
   /// Focus node of the trigger.
   final FocusNode? focusNode;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<TemporalType>('type', type))
+      ..add(
+        DiagnosticsProperty<TemporalValue>('value', value, defaultValue: null),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<TemporalValue?>>.has(
+          'onValueChange',
+          onValueChange,
+        ),
+      )
+      ..add(StringProperty('min', min, defaultValue: null))
+      ..add(StringProperty('max', max, defaultValue: null))
+      ..add(DiagnosticsProperty<num>('step', step, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'allowOvernight',
+          value: allowOvernight,
+          ifTrue: 'overnight',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        IterableProperty<TemporalPreset>(
+          'presets',
+          presets,
+          defaultValue: null,
+        ),
+      )
+      ..add(StringProperty('hint', hint, defaultValue: null))
+      ..add(StringProperty('label', label, defaultValue: null))
+      ..add(
+        EnumProperty<FieldLabelStyle>(
+          'labelStyle',
+          labelStyle,
+          defaultValue: FieldLabelStyle.outlined,
+        ),
+      )
+      ..add(StringProperty('error', error, defaultValue: null))
+      ..add(
+        EnumProperty<ControlVariant>(
+          'variant',
+          variant,
+          defaultValue: ControlVariant.outlined,
+        ),
+      )
+      ..add(
+        EnumProperty<ControlSize>(
+          'controlSize',
+          controlSize,
+          defaultValue: ControlSize.regular,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'disabled',
+          value: disabled,
+          ifTrue: 'disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'readOnly',
+          value: readOnly,
+          ifTrue: 'read-only',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'required',
+          value: required,
+          ifTrue: 'required',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        StringProperty(
+          'requiredMessage',
+          requiredMessage,
+          defaultValue: 'Choose a value.',
+        ),
+      )
+      ..add(StringProperty('placeholder', placeholder, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'clearable',
+          value: clearable,
+          ifTrue: 'clearable',
+          defaultValue: false,
+        ),
+      )
+      ..add(ObjectFlagProperty<TemporalValidator?>.has('validator', validator))
+      ..add(
+        EnumProperty<ValidationMode>(
+          'validationMode',
+          validationMode,
+          defaultValue: ValidationMode.blur,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<String?>?>.has(
+          'onValidationChange',
+          onValidationChange,
+        ),
+      )
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onBlur', onBlur))
+      ..add(StringProperty('locale', locale, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<String Function(TemporalValue? value)?>.has(
+          'formatValue',
+          formatValue,
+        ),
+      )
+      ..add(StringProperty('ariaLabel', ariaLabel, defaultValue: null))
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      );
+  }
 
   @override
   State<TemporalField> createState() => _TemporalFieldState();
@@ -659,6 +788,124 @@ abstract class TemporalSingleField extends StatelessWidget {
   final FocusNode? focusNode;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<TemporalType>('type', type))
+      ..add(StringProperty('value', value, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<ValueChanged<String?>>.has(
+          'onValueChange',
+          onValueChange,
+        ),
+      )
+      ..add(StringProperty('min', min, defaultValue: null))
+      ..add(StringProperty('max', max, defaultValue: null))
+      ..add(DiagnosticsProperty<num>('step', step, defaultValue: null))
+      ..add(
+        IterableProperty<TemporalPreset>(
+          'presets',
+          presets,
+          defaultValue: null,
+        ),
+      )
+      ..add(StringProperty('hint', hint, defaultValue: null))
+      ..add(StringProperty('label', label, defaultValue: null))
+      ..add(
+        EnumProperty<FieldLabelStyle>(
+          'labelStyle',
+          labelStyle,
+          defaultValue: FieldLabelStyle.outlined,
+        ),
+      )
+      ..add(StringProperty('error', error, defaultValue: null))
+      ..add(
+        EnumProperty<ControlVariant>(
+          'variant',
+          variant,
+          defaultValue: ControlVariant.outlined,
+        ),
+      )
+      ..add(
+        EnumProperty<ControlSize>(
+          'controlSize',
+          controlSize,
+          defaultValue: ControlSize.regular,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'disabled',
+          value: disabled,
+          ifTrue: 'disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'readOnly',
+          value: readOnly,
+          ifTrue: 'read-only',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'required',
+          value: required,
+          ifTrue: 'required',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        StringProperty(
+          'requiredMessage',
+          requiredMessage,
+          defaultValue: 'Choose a value.',
+        ),
+      )
+      ..add(StringProperty('placeholder', placeholder, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'clearable',
+          value: clearable,
+          ifTrue: 'clearable',
+          defaultValue: false,
+        ),
+      )
+      ..add(ObjectFlagProperty<TemporalValidator?>.has('validator', validator))
+      ..add(
+        EnumProperty<ValidationMode>(
+          'validationMode',
+          validationMode,
+          defaultValue: ValidationMode.blur,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<String?>?>.has(
+          'onValidationChange',
+          onValidationChange,
+        ),
+      )
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onBlur', onBlur))
+      ..add(StringProperty('locale', locale, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<String Function(TemporalValue? value)?>.has(
+          'formatValue',
+          formatValue,
+        ),
+      )
+      ..add(StringProperty('ariaLabel', ariaLabel, defaultValue: null))
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      );
+  }
+
+  @override
   Widget build(BuildContext context) => TemporalField(
     type: type,
     value: value == null ? null : TemporalSingle(value!),
@@ -780,6 +1027,134 @@ abstract class TemporalRangeField extends StatelessWidget {
   final String Function(TemporalValue? value)? formatValue;
   final String? ariaLabel;
   final FocusNode? focusNode;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<TemporalType>('type', type))
+      ..add(
+        DiagnosticsProperty<TemporalRange>('value', value, defaultValue: null),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<TemporalRange?>>.has(
+          'onValueChange',
+          onValueChange,
+        ),
+      )
+      ..add(StringProperty('min', min, defaultValue: null))
+      ..add(StringProperty('max', max, defaultValue: null))
+      ..add(DiagnosticsProperty<num>('step', step, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'allowOvernight',
+          value: allowOvernight,
+          ifTrue: 'overnight',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        IterableProperty<TemporalPreset>(
+          'presets',
+          presets,
+          defaultValue: null,
+        ),
+      )
+      ..add(StringProperty('hint', hint, defaultValue: null))
+      ..add(StringProperty('label', label, defaultValue: null))
+      ..add(
+        EnumProperty<FieldLabelStyle>(
+          'labelStyle',
+          labelStyle,
+          defaultValue: FieldLabelStyle.outlined,
+        ),
+      )
+      ..add(StringProperty('error', error, defaultValue: null))
+      ..add(
+        EnumProperty<ControlVariant>(
+          'variant',
+          variant,
+          defaultValue: ControlVariant.outlined,
+        ),
+      )
+      ..add(
+        EnumProperty<ControlSize>(
+          'controlSize',
+          controlSize,
+          defaultValue: ControlSize.regular,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'disabled',
+          value: disabled,
+          ifTrue: 'disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'readOnly',
+          value: readOnly,
+          ifTrue: 'read-only',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'required',
+          value: required,
+          ifTrue: 'required',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        StringProperty(
+          'requiredMessage',
+          requiredMessage,
+          defaultValue: 'Choose a value.',
+        ),
+      )
+      ..add(StringProperty('placeholder', placeholder, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'clearable',
+          value: clearable,
+          ifTrue: 'clearable',
+          defaultValue: false,
+        ),
+      )
+      ..add(ObjectFlagProperty<TemporalValidator?>.has('validator', validator))
+      ..add(
+        EnumProperty<ValidationMode>(
+          'validationMode',
+          validationMode,
+          defaultValue: ValidationMode.blur,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<String?>?>.has(
+          'onValidationChange',
+          onValidationChange,
+        ),
+      )
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onBlur', onBlur))
+      ..add(StringProperty('locale', locale, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<String Function(TemporalValue? value)?>.has(
+          'formatValue',
+          formatValue,
+        ),
+      )
+      ..add(StringProperty('ariaLabel', ariaLabel, defaultValue: null))
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      );
+  }
 
   @override
   Widget build(BuildContext context) => TemporalField(

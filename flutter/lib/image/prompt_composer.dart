@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -278,6 +279,142 @@ class ImagePromptComposer extends StatefulWidget {
 
   /// Focus of the prompt field.
   final FocusNode? focusNode;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('prompt', prompt))
+      ..add(ObjectFlagProperty<ValueChanged<String>>.has('onPrompt', onPrompt))
+      ..add(StringProperty('placeholder', placeholder))
+      ..add(IntProperty('maxLength', maxLength))
+      ..add(IterableProperty<ComposerReference>('references', references))
+      ..add(
+        DiagnosticsProperty<ReferenceLimit>(
+          'referenceLimit',
+          referenceLimit,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<List<ComposerFile>>>.has(
+          'onAddFiles',
+          onAddFiles,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>>.has(
+          'onRemoveReference',
+          onRemoveReference,
+        ),
+      )
+      ..add(IterableProperty<RecentImage>('recent', recent))
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>>.has(
+          'onUseRecent',
+          onUseRecent,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<ComposerFile>>.has(
+          'onEditPhoto',
+          onEditPhoto,
+        ),
+      )
+      ..add(IterableProperty<ComposerTemplate>('templates', templates))
+      ..add(
+        StringProperty('templatesLabel', templatesLabel, defaultValue: null),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<ComposerTemplate>>.has(
+          'onTemplate',
+          onTemplate,
+        ),
+      )
+      ..add(EnumProperty<ImageComposerMode>('mode', mode))
+      ..add(StringProperty('templateName', templateName, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<VoidCallback>.has(
+          'onClearTemplate',
+          onClearTemplate,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<VoidCallback>.has(
+          'onBrowseTemplates',
+          onBrowseTemplates,
+        ),
+      )
+      ..add(StringProperty('settingsLabel', settingsLabel))
+      ..add(
+        FlagProperty(
+          'settingsDisabled',
+          value: settingsDisabled,
+          ifTrue: 'settings disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(ObjectFlagProperty<VoidCallback>.has('onSettings', onSettings))
+      ..add(
+        FlagProperty(
+          'settingsActive',
+          value: settingsActive,
+          ifTrue: 'settings active',
+          defaultValue: false,
+        ),
+      )
+      ..add(StringProperty('referenceNoun', referenceNoun, defaultValue: null))
+      ..add(StringProperty('wandLabel', wandLabel, defaultValue: null))
+      ..add(
+        EnumProperty<EnhanceMode>('enhancing', enhancing, defaultValue: null),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<EnhanceMode>>.has(
+          'onEnhance',
+          onEnhance,
+        ),
+      )
+      ..add(ObjectFlagProperty<VoidCallback>.has('onSubmit', onSubmit))
+      ..add(
+        FlagProperty(
+          'submitDisabled',
+          value: submitDisabled,
+          ifTrue: 'submit disabled',
+        ),
+      )
+      ..add(FlagProperty('submitting', value: submitting, ifTrue: 'submitting'))
+      ..add(StringProperty('submitLabel', submitLabel))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onStop', onStop))
+      ..add(StringProperty('stopLabel', stopLabel, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<KeyEventResult Function(KeyEvent event)>.has(
+          'onKeyEvent',
+          onKeyEvent,
+        ),
+      )
+      ..add(ObjectFlagProperty<ComposerFilePicker>.has('pickFiles', pickFiles))
+      ..add(
+        ObjectFlagProperty<Future<List<ComposerFile>> Function()>.has(
+          'readClipboard',
+          readClipboard,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'dropActive',
+          value: dropActive,
+          ifTrue: 'drop active',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      );
+  }
 
   @override
   State<ImagePromptComposer> createState() => _ImagePromptComposerState();
@@ -575,6 +712,33 @@ class _Anchored extends StatefulWidget {
   final Object? group;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(FlagProperty('open', value: open, ifTrue: 'open'))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onClose', onClose))
+      ..add(
+        ObjectFlagProperty<
+          Widget Function(BuildContext context, double maxHeight)
+        >.has('content', content),
+      )
+      ..add(
+        FlagProperty(
+          'inlineSide',
+          value: inlineSide,
+          ifTrue: 'inline side',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty('menu', value: menu, ifTrue: 'menu', defaultValue: false),
+      )
+      ..add(DoubleProperty('offset', offset, defaultValue: 8.0))
+      ..add(StringProperty('label', label, defaultValue: null))
+      ..add(DiagnosticsProperty<Object>('group', group, defaultValue: null));
+  }
+
+  @override
   State<_Anchored> createState() => _AnchoredState();
 }
 
@@ -700,6 +864,49 @@ class _MenuItem extends StatefulWidget {
   final String? label;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<FocusNode>('focusNode', focusNode))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onSelect', onSelect))
+      ..add(
+        DiagnosticsProperty<LucideIconData>('icon', icon, defaultValue: null),
+      )
+      ..add(
+        FlagProperty(
+          'disabled',
+          value: disabled,
+          ifTrue: 'disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'submenu',
+          value: submenu,
+          ifTrue: 'submenu',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty('open', value: open, ifTrue: 'open', defaultValue: false),
+      )
+      ..add(
+        FlagProperty(
+          'autoHeight',
+          value: autoHeight,
+          ifTrue: 'auto height',
+          defaultValue: false,
+        ),
+      )
+      ..add(ObjectFlagProperty<VoidCallback>.has('onHover', onHover))
+      ..add(
+        DiagnosticsProperty<EdgeInsets>('padding', padding, defaultValue: null),
+      )
+      ..add(StringProperty('label', label, defaultValue: null));
+  }
+
+  @override
   State<_MenuItem> createState() => _MenuItemState();
 }
 
@@ -798,6 +1005,20 @@ class _MenuKeys extends StatelessWidget {
   final VoidCallback? onCloseSub;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IterableProperty<FocusNode>('nodes', nodes))
+      ..add(
+        ObjectFlagProperty<bool Function(FocusNode focused)>.has(
+          'onOpenSub',
+          onOpenSub,
+        ),
+      )
+      ..add(ObjectFlagProperty<VoidCallback>.has('onCloseSub', onCloseSub));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final rtl = Directionality.of(context) == TextDirection.rtl;
     return Focus(
@@ -869,6 +1090,43 @@ class _AddMenu extends StatefulWidget {
   /// Called when the menu opens or closes (it keeps the composer's second row in place).
   final ValueChanged<bool> onOpenChange;
   final Future<void> Function() onUpload, onPaste, onEditPhoto;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<ImagePromptComposer>('composer', composer))
+      ..add(
+        FlagProperty(
+          'canReference',
+          value: canReference,
+          ifTrue: 'can reference',
+        ),
+      )
+      ..add(FlagProperty('full', value: full, ifTrue: 'full'))
+      ..add(
+        ObjectFlagProperty<Widget Function(bool open, VoidCallback toggle)>.has(
+          'trigger',
+          trigger,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<bool>>.has(
+          'onOpenChange',
+          onOpenChange,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<Future<void> Function()>.has('onUpload', onUpload),
+      )
+      ..add(ObjectFlagProperty<Future<void> Function()>.has('onPaste', onPaste))
+      ..add(
+        ObjectFlagProperty<Future<void> Function()>.has(
+          'onEditPhoto',
+          onEditPhoto,
+        ),
+      );
+  }
 
   @override
   State<_AddMenu> createState() => _AddMenuState();
@@ -1170,6 +1428,15 @@ class _RecentGrid extends StatelessWidget {
   final ValueChanged<String> onPick;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IterableProperty<RecentImage>('images', images))
+      ..add(IterableProperty<FocusNode>('nodes', nodes))
+      ..add(ObjectFlagProperty<ValueChanged<String>>.has('onPick', onPick));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final t = I18n.of(context).t;
     return SizedBox(
@@ -1204,6 +1471,16 @@ class _RecentItem extends StatefulWidget {
   final FocusNode node;
   final String label;
   final VoidCallback onPick;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<RecentImage>('image', image))
+      ..add(DiagnosticsProperty<FocusNode>('node', node))
+      ..add(StringProperty('label', label))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onPick', onPick));
+  }
 
   @override
   State<_RecentItem> createState() => _RecentItemState();

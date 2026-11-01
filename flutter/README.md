@@ -83,6 +83,31 @@ Import paths mirror the web kit (`package:feeef_ui/primitives/button.dart` ↔
 import when an app also imports Material, or `hide Action, RadioGroup` from `widgets.dart`. Always pass
 a `variant` to `Button`: the web kit's variant-less button is a legacy unstyled mode with no twin.
 
+## Flutter DevTools
+
+The kit is built to be read in DevTools (debug and profile builds; release builds pay nothing):
+
+- **Inspector:** every widget, State and render object describes its properties in
+  `debugFillProperties` (typed, defaults marked), and theme objects (`ThemeConfig`, `ThemeData`,
+  `ColorTokens`, `SizeTokens`, `Metrics`) are `Diagnosticable`. The `diagnostic_describe_all_properties`
+  lint keeps it that way for `lib/`: a new public field needs its property.
+- **feeef_ui tab:** the package ships a DevTools extension (`extension/devtools`). Enable it once
+  under DevTools → Extensions. It lists every `ThemeProvider` in the tree with its resolved config,
+  colours and sizes, shows the device traits and effects tier, and forces palette, brightness,
+  density, glass, motion, performance, radius, tint or primary on every provider at once
+  (nested providers with their own brightness keep it), or simulates a slow device.
+- **Service extensions** (what the tab calls): `ext.feeef_ui.getState`, `setThemeOverride`,
+  `setMeasuredSlow`, plus the `feeef_ui:stateChanged` event (`lib/devtools/devtools.dart`).
+- **Performance page:** expensive kit work shows as `feeef_ui: …` timeline events (glass outlines,
+  glass shadow raster, still raster). **Logging page:** shader load failures and a device measured
+  slow are logged under `feeef_ui.*`.
+- **Inspector summary tree:** to see the kit's own widgets as "your" code, add the `ui/flutter`
+  folder under Inspector settings → Package directories.
+
+The tab's source is `devtools_extension/` (a Flutter web app). After changing it run
+`devtools_extension/tool/build.sh` and commit `extension/devtools/build` (CanvasKit is left out
+and loads from Google's CDN, keeping the build 5.6 MB instead of 43 MB).
+
 ## Parity
 
 Numbers are tested against the web kit, not eyeballed:

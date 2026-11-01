@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
@@ -6,6 +7,14 @@ import 'package:flutter/widgets.dart';
 class SizeReporter extends SingleChildRenderObjectWidget {
   const SizeReporter({super.key, required this.onSize, super.child});
   final ValueChanged<Size> onSize;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      ObjectFlagProperty<ValueChanged<Size>>.has('onSize', onSize),
+    );
+  }
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
@@ -23,6 +32,16 @@ class RenderSizeReporter extends RenderProxyBox {
   RenderSizeReporter(this.onSize);
   ValueChanged<Size> onSize;
   Size? _reported;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(ObjectFlagProperty<ValueChanged<Size>>.has('onSize', onSize))
+      ..add(
+        DiagnosticsProperty<Size?>('reported', _reported, defaultValue: null),
+      );
+  }
 
   @override
   void performLayout() {

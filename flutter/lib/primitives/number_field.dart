@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -112,6 +113,99 @@ class NumberField extends StatefulWidget {
   /// Called with the visible validator message, or null when it clears.
   final ValueChanged<String?>? onValidationChange;
   final FocusNode? focusNode;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('name', name, defaultValue: null))
+      ..add(StringProperty('label', label))
+      ..add(DoubleProperty('value', value, defaultValue: null))
+      ..add(
+        DiagnosticsProperty<ValueNotifier<double>>(
+          'controller',
+          controller,
+          defaultValue: null,
+        ),
+      )
+      ..add(DoubleProperty('defaultValue', defaultValue, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<ValueChanged<double>?>.has(
+          'onValueChange',
+          onValueChange,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<double>?>.has(
+          'onValueCommit',
+          onValueCommit,
+        ),
+      )
+      ..add(DoubleProperty('min', min, defaultValue: null))
+      ..add(DoubleProperty('max', max, defaultValue: null))
+      ..add(DoubleProperty('step', step, defaultValue: 1))
+      ..add(StringProperty('unit', unit, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<String Function(double value)?>.has(
+          'format',
+          format,
+        ),
+      )
+      ..add(DiagnosticsProperty<bool>('fill', fill, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'steppers',
+          value: steppers,
+          ifTrue: 'steppers',
+          ifFalse: 'no steppers',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        EnumProperty<ControlVariant>(
+          'variant',
+          variant,
+          defaultValue: ControlVariant.elevated,
+        ),
+      )
+      ..add(
+        EnumProperty<ControlSize>(
+          'controlSize',
+          controlSize,
+          defaultValue: ControlSize.regular,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'disabled',
+          value: disabled,
+          ifTrue: 'disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(StringProperty('error', error, defaultValue: null))
+      ..add(ObjectFlagProperty<NumberValidator?>.has('validator', validator))
+      ..add(
+        EnumProperty<ValidationMode>(
+          'validationMode',
+          validationMode,
+          defaultValue: ValidationMode.blur,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<String?>?>.has(
+          'onValidationChange',
+          onValidationChange,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      );
+  }
 
   @override
   State<NumberField> createState() => _NumberFieldState();

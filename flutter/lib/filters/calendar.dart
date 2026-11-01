@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -64,6 +65,33 @@ class CalendarMonth extends StatefulWidget {
 
   /// Which paging arrows this month shows.
   final CalendarNavigation navigation;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('month', month))
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>>.has(
+          'onMonthChange',
+          onMonthChange,
+        ),
+      )
+      ..add(StringProperty('from', from))
+      ..add(StringProperty('to', to, defaultValue: null))
+      ..add(StringProperty('min', min, defaultValue: null))
+      ..add(StringProperty('max', max, defaultValue: null))
+      ..add(ObjectFlagProperty<ValueChanged<String>>.has('onSelect', onSelect))
+      ..add(StringProperty('locale', locale, defaultValue: null))
+      ..add(StringProperty('label', label, defaultValue: 'Calendar'))
+      ..add(
+        EnumProperty<CalendarNavigation>(
+          'navigation',
+          navigation,
+          defaultValue: CalendarNavigation.both,
+        ),
+      );
+  }
 
   @override
   State<CalendarMonth> createState() => _CalendarMonthState();
@@ -490,6 +518,27 @@ class _CalendarDay extends StatefulWidget {
   final bool tabbable, selected, today, disabled;
   final VoidCallback onSelect;
   final KeyEventResult Function(KeyEvent event) onKey;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('text', text))
+      ..add(StringProperty('label', label))
+      ..add(DoubleProperty('size', size))
+      ..add(DiagnosticsProperty<FocusNode>('focusNode', focusNode))
+      ..add(FlagProperty('tabbable', value: tabbable, ifTrue: 'tabbable'))
+      ..add(FlagProperty('selected', value: selected, ifTrue: 'selected'))
+      ..add(FlagProperty('today', value: today, ifTrue: 'today'))
+      ..add(FlagProperty('disabled', value: disabled, ifTrue: 'disabled'))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onSelect', onSelect))
+      ..add(
+        ObjectFlagProperty<KeyEventResult Function(KeyEvent event)>.has(
+          'onKey',
+          onKey,
+        ),
+      );
+  }
 
   @override
   State<_CalendarDay> createState() => _CalendarDayState();

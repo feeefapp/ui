@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:path_parsing/path_parsing.dart';
 
@@ -144,6 +145,14 @@ class FoAnimatedLogo extends StatelessWidget {
 
   /// Box height (default 32).
   final double height;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('width', width, defaultValue: 120))
+      ..add(DoubleProperty('height', height, defaultValue: 32));
+  }
 
   @override
   Widget build(BuildContext context) {

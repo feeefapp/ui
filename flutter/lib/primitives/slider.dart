@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart'
     show DeviceGestureSettings, DragStartBehavior;
 import 'package:flutter/scheduler.dart';
@@ -133,6 +134,78 @@ class Slider extends StatelessWidget {
   final FocusNode? focusNode;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(
+        EnumProperty<ControlSize>(
+          'controlSize',
+          controlSize,
+          defaultValue: ControlSize.regular,
+        ),
+      )
+      ..add(
+        EnumProperty<TrackStyle>(
+          'trackStyle',
+          trackStyle,
+          defaultValue: TrackStyle.thick,
+        ),
+      )
+      ..add(DoubleProperty('value', value, defaultValue: null))
+      ..add(DoubleProperty('defaultValue', defaultValue, defaultValue: null))
+      ..add(DoubleProperty('min', min, defaultValue: 0.0))
+      ..add(DoubleProperty('max', max, defaultValue: 100.0))
+      ..add(DoubleProperty('step', step, defaultValue: 1.0))
+      ..add(FlagProperty('disabled', value: disabled, ifTrue: 'disabled'))
+      ..add(
+        ObjectFlagProperty<ValueChanged<double>?>.has(
+          'onValueChange',
+          onValueChange,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<double>?>.has(
+          'onValueCommit',
+          onValueCommit,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<String Function(double value)?>.has(
+          'getValueText',
+          getValueText,
+        ),
+      )
+      ..add(FlagProperty('showStops', value: showStops, ifTrue: 'show stops'))
+      ..add(IterableProperty<SliderMark>('marks', marks, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<Widget Function(SliderState state)?>.has(
+          'renderTrack',
+          renderTrack,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<Widget Function(SliderState state)?>.has(
+          'renderFill',
+          renderFill,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<Widget Function(SliderState state)?>.has(
+          'renderThumb',
+          renderThumb,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      );
+  }
+
+  @override
   Widget build(BuildContext context) => _SliderControl(
     label: label,
     controlSize: controlSize,
@@ -205,6 +278,57 @@ class SlideSwitch extends StatelessWidget {
   final FocusNode? focusNode;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(DiagnosticsProperty<bool>('checked', checked, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'defaultChecked',
+          value: defaultChecked,
+          ifTrue: 'checked by default',
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<bool>?>.has(
+          'onCheckedChange',
+          onCheckedChange,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<bool>?>.has(
+          'onCheckedCommit',
+          onCheckedCommit,
+        ),
+      )
+      ..add(StringProperty('onText', onText, defaultValue: null))
+      ..add(StringProperty('offText', offText, defaultValue: null))
+      ..add(FlagProperty('loading', value: loading, ifTrue: 'loading'))
+      ..add(FlagProperty('disabled', value: disabled, ifTrue: 'disabled'))
+      ..add(
+        EnumProperty<TrackStyle>(
+          'trackStyle',
+          trackStyle,
+          defaultValue: TrackStyle.thick,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<Widget Function(SliderState state)?>.has(
+          'renderThumb',
+          renderThumb,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      );
+  }
+
+  @override
   Widget build(BuildContext context) => _SliderControl(
     label: label,
     switchMode: true,
@@ -242,6 +366,22 @@ class SlideSwitchIndicator extends StatelessWidget {
 
   /// Dims the indicator while a change is saving.
   final bool loading;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        FlagProperty(
+          'checked',
+          value: checked,
+          ifTrue: 'checked',
+          ifFalse: 'unchecked',
+          showName: true,
+        ),
+      )
+      ..add(FlagProperty('loading', value: loading, ifTrue: 'loading'));
+  }
 
   @override
   Widget build(BuildContext context) => ExcludeSemantics(
@@ -300,6 +440,87 @@ class _SliderControl extends StatefulWidget {
       renderThumb;
   final FocusNode? focusNode;
   final String? Function(double value)? checkedText;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(
+        EnumProperty<ControlSize>(
+          'controlSize',
+          controlSize,
+          defaultValue: ControlSize.regular,
+        ),
+      )
+      ..add(
+        EnumProperty<TrackStyle>(
+          'trackStyle',
+          trackStyle,
+          defaultValue: TrackStyle.thick,
+        ),
+      )
+      ..add(DoubleProperty('value', value, defaultValue: null))
+      ..add(DoubleProperty('defaultValue', defaultValue, defaultValue: null))
+      ..add(DoubleProperty('min', min, defaultValue: 0.0))
+      ..add(DoubleProperty('max', max, defaultValue: 100.0))
+      ..add(DoubleProperty('step', step, defaultValue: 1.0))
+      ..add(FlagProperty('disabled', value: disabled, ifTrue: 'disabled'))
+      ..add(FlagProperty('busy', value: busy, ifTrue: 'busy'))
+      ..add(FlagProperty('showStops', value: showStops, ifTrue: 'show stops'))
+      ..add(FlagProperty('switchMode', value: switchMode, ifTrue: 'switch'))
+      ..add(FlagProperty('indicator', value: indicator, ifTrue: 'indicator'))
+      ..add(
+        ObjectFlagProperty<ValueChanged<double>?>.has(
+          'onValueChange',
+          onValueChange,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<double>?>.has(
+          'onValueCommit',
+          onValueCommit,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<String Function(double value)?>.has(
+          'getValueText',
+          getValueText,
+        ),
+      )
+      ..add(IterableProperty<SliderMark>('marks', marks, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<Widget Function(SliderState state)?>.has(
+          'renderTrack',
+          renderTrack,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<Widget Function(SliderState state)?>.has(
+          'renderFill',
+          renderFill,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<Widget Function(SliderState state)?>.has(
+          'renderThumb',
+          renderThumb,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<String? Function(double value)?>.has(
+          'checkedText',
+          checkedText,
+        ),
+      );
+  }
 
   @override
   State<_SliderControl> createState() => _SliderControlState();
@@ -1013,6 +1234,18 @@ class _Thumb extends StatelessWidget {
   final Widget? child;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('radius', radius))
+      ..add(DoubleProperty('lens', lens))
+      ..add(ColorProperty('fill', fill))
+      ..add(ColorProperty('ink', ink))
+      ..add(FlagProperty('thin', value: thin, ifTrue: 'thin'))
+      ..add(EnumProperty<LensKind>('kind', kind));
+  }
+
+  @override
   Widget build(BuildContext context) => Stack(
     fit: StackFit.expand,
     clipBehavior: Clip.none,
@@ -1107,6 +1340,15 @@ class _Marks extends StatelessWidget {
   final double inset;
   final List<(double, Widget?)> marks;
   final Color color;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('inset', inset))
+      ..add(IterableProperty<(double, Widget?)>('marks', marks))
+      ..add(ColorProperty('color', color));
+  }
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(

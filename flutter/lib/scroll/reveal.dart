@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'metrics.dart';
@@ -22,6 +23,12 @@ class ScrollRevealPadding extends InheritedWidget {
 
   /// Reserved space, in the viewport's own top/bottom/left/right.
   final EdgeInsets padding;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<EdgeInsets>('padding', padding));
+  }
 
   /// The nearest reservation, or zero.
   static EdgeInsets of(BuildContext context) =>

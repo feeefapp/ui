@@ -142,11 +142,11 @@ double lensBend(
         return -lensSwitchPeak *
             math.min(
               1.0,
-              (d - lensSwitchRimWidth) / (lensSwitchAt - 1 - lensSwitchRimWidth),
+              (d - lensSwitchRimWidth) /
+                  (lensSwitchAt - 1 - lensSwitchRimWidth),
             );
       }
-      return -lensSwitchPeak *
-          math.exp(-(d - lensSwitchAt) / lensSwitchDecay);
+      return -lensSwitchPeak * math.exp(-(d - lensSwitchAt) / lensSwitchDecay);
   }
 }
 

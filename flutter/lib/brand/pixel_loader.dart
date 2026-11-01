@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../i18n/i18n.dart';
@@ -31,6 +32,31 @@ class PixelLoader extends StatefulWidget {
 
   /// Square colour; defaults to the icon colour, then the text colour.
   final Color? color;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('size', size, defaultValue: 20))
+      ..add(StringProperty('label', label, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'decorative',
+          value: decorative,
+          ifTrue: 'decorative',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        DoubleProperty(
+          'progress',
+          progress,
+          ifNull: 'wave',
+          defaultValue: null,
+        ),
+      )
+      ..add(ColorProperty('color', color, defaultValue: null));
+  }
 
   @override
   State<PixelLoader> createState() => _PixelLoaderState();

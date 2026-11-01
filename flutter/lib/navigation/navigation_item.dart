@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../primitives/button.dart';
@@ -43,6 +44,31 @@ class NavigationItem extends StatelessWidget {
 
   /// Icon-only rail mode with a tooltip label.
   final bool compact;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(StringProperty('href', href, defaultValue: null))
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onSelect', onSelect))
+      ..add(
+        FlagProperty(
+          'active',
+          value: active,
+          ifTrue: 'active',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'compact',
+          value: compact,
+          ifTrue: 'rail',
+          ifFalse: 'expanded',
+        ),
+      );
+  }
 
   @override
   Widget build(BuildContext context) {

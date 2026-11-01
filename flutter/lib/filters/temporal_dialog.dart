@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
@@ -92,6 +93,53 @@ class TemporalDialog extends StatelessWidget {
 
   /// Locale for names; the I18n locale when null.
   final String? locale;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(FlagProperty('open', value: open, ifTrue: 'open'))
+      ..add(StringProperty('label', label))
+      ..add(ObjectFlagProperty<VoidCallback>.has('close', close))
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'returnFocus',
+          returnFocus,
+          defaultValue: null,
+        ),
+      )
+      ..add(ObjectFlagProperty<VoidCallback>.has('onApply', onApply))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onClear', onClear))
+      ..add(
+        FlagProperty(
+          'clearDisabled',
+          value: clearDisabled,
+          ifTrue: 'clear disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'showApply',
+          value: showApply,
+          ifFalse: 'no apply',
+          defaultValue: true,
+        ),
+      )
+      ..add(EnumProperty<TextDirection>('dir', dir, defaultValue: null))
+      ..add(DiagnosticsProperty<TemporalConfig>('config', config))
+      ..add(DiagnosticsProperty<TemporalValue>('value', value))
+      ..add(
+        ObjectFlagProperty<ValueChanged<TemporalValue?>>.has(
+          'onChange',
+          onChange,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<TemporalValue?>>.has('onPick', onPick),
+      )
+      ..add(StringProperty('locale', locale, defaultValue: null));
+  }
 
   @override
   Widget build(BuildContext context) => TemporalEditorBuilder(
@@ -275,6 +323,14 @@ class _DialogBar extends MultiChildRenderObjectWidget {
   final List<double?> bases;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('gap', gap))
+      ..add(IterableProperty<double?>('bases', bases));
+  }
+
+  @override
   RenderObject createRenderObject(BuildContext context) =>
       _RenderDialogBar(gap, bases, Directionality.of(context));
 
@@ -313,6 +369,15 @@ class _RenderDialogBar extends RenderBox
     if (value == _textDirection) return;
     _textDirection = value;
     markNeedsLayout();
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('gap', _gap))
+      ..add(IterableProperty<double?>('bases', _bases))
+      ..add(EnumProperty<TextDirection>('textDirection', _textDirection));
   }
 
   @override

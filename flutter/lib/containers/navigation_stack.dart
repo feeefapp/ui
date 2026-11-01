@@ -161,6 +161,14 @@ class ZoomSource extends StatefulWidget {
   final Widget child;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('id', id))
+      ..add(DoubleProperty('radius', radius, defaultValue: 12.0));
+  }
+
+  @override
   State<ZoomSource> createState() => _ZoomSourceState();
 }
 
@@ -168,6 +176,21 @@ class _ZoomSourceState extends State<ZoomSource> {
   final opacity = ValueNotifier<double>(1);
   _PageScope? _scope;
   bool hidden = false;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('opacity', opacity.value, defaultValue: 1.0))
+      ..add(FlagProperty('hidden', value: hidden, ifTrue: 'hidden'))
+      ..add(
+        FlagProperty(
+          'registered',
+          value: _scope != null,
+          ifFalse: 'outside a stack',
+        ),
+      );
+  }
 
   @override
   void didChangeDependencies() {
@@ -222,6 +245,23 @@ class _PageScope extends InheritedWidget {
   final double stackWidth;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IntProperty('depth', page.depth))
+      ..add(FlagProperty('isTop', value: page.isTop, ifTrue: 'top'))
+      ..add(
+        FlagProperty('canGoBack', value: page.canGoBack, ifTrue: 'can go back'),
+      )
+      ..add(
+        StringProperty('previousTitle', page.previousTitle, defaultValue: null),
+      )
+      ..add(DiagnosticsProperty<Key>('pageKey', pageKey))
+      ..add(DiagnosticsProperty<_StackHooks>('hooks', hooks))
+      ..add(DoubleProperty('stackWidth', stackWidth, unit: 'px'));
+  }
+
+  @override
   bool updateShouldNotify(_PageScope old) =>
       old.page != page ||
       old.pageKey != pageKey ||
@@ -256,6 +296,21 @@ class NavigationStack extends StatefulWidget {
 
   /// Accessible name of the stack region.
   final String label;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onBack', onBack))
+      ..add(
+        EnumProperty<SwipeBack>(
+          'swipeBack',
+          swipeBack,
+          defaultValue: SwipeBack.content,
+        ),
+      )
+      ..add(StringProperty('label', label, defaultValue: 'Pages'));
+  }
 
   /// The nearest stack page's position and `back()`; outside a stack, a root page that cannot go
   /// back. The twin of `useNavigationStack()`.
@@ -328,6 +383,42 @@ class _NavigationStackState extends State<NavigationStack>
   _Session? _session;
   Timer? _restoreTimer;
   bool _inUpdate = false;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    final transition = _transition;
+    properties
+      ..add(IntProperty('depth', _keys.length - 1))
+      ..add(IterableProperty<Key>('pages', _keys))
+      ..add(
+        IterableProperty<Key>(
+          'leaving',
+          _leaving,
+          level: _leaving.isEmpty ? DiagnosticLevel.fine : DiagnosticLevel.info,
+        ),
+      )
+      ..add(DiagnosticsProperty<Key?>('front', _front, defaultValue: null))
+      ..add(
+        EnumProperty<_Kind>('transition', transition?.kind, defaultValue: null),
+      )
+      ..add(
+        EnumProperty<_Style>(
+          'transitionStyle',
+          transition?.style,
+          defaultValue: null,
+        ),
+      )
+      ..add(DoubleProperty('shown', _shown.get(), defaultValue: 1.0))
+      ..add(
+        FlagProperty(
+          'swiping',
+          value: _session != null,
+          ifTrue: 'drag in progress',
+        ),
+      )
+      ..add(DiagnosticsProperty<Size>('size', _size));
+  }
 
   @override
   void initState() {
@@ -1159,6 +1250,20 @@ class _SwipeBackRecognizer extends HorizontalDragGestureRecognizer {
   bool _decided = false;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        ObjectFlagProperty<bool Function(PointerDownEvent event)>.has(
+          'allow',
+          allow,
+        ),
+      )
+      ..add(ObjectFlagProperty<double Function()>.has('direction', direction))
+      ..add(FlagProperty('decided', value: _decided, ifTrue: 'decided'));
+  }
+
+  @override
   bool isPointerAllowed(PointerEvent event) =>
       (event is! PointerDownEvent || allow(event)) &&
       super.isPointerAllowed(event);
@@ -1216,6 +1321,20 @@ class _DismissRecognizer extends VerticalDragGestureRecognizer {
   bool Function() atStart = () => true;
   Offset _moved = Offset.zero;
   bool _decided = false;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        ObjectFlagProperty<bool Function(PointerDownEvent event)>.has(
+          'allow',
+          allow,
+        ),
+      )
+      ..add(ObjectFlagProperty<bool Function()>.has('atStart', atStart))
+      ..add(FlagProperty('decided', value: _decided, ifTrue: 'decided'));
+  }
 
   @override
   bool isPointerAllowed(PointerEvent event) =>
@@ -1309,6 +1428,35 @@ class NavigationPage extends StatefulWidget {
   final Widget? child;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('title', title))
+      ..add(
+        EnumProperty<TitleDisplay?>(
+          'titleDisplay',
+          titleDisplay,
+          defaultValue: null,
+        ),
+      )
+      ..add(IntProperty('leading', leading.length, defaultValue: 0))
+      ..add(StringProperty('backTitle', backTitle, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'hideBar',
+          value: hideBar,
+          ifTrue: 'bar hidden',
+          defaultValue: false,
+        ),
+      )
+      ..add(StringProperty('zoomSource', zoomSource, defaultValue: null))
+      ..add(
+        DoubleProperty('contentPadding', contentPadding, defaultValue: null),
+      )
+      ..add(StringProperty('contentLabel', contentLabel, defaultValue: null));
+  }
+
+  @override
   State<NavigationPage> createState() => _NavigationPageState();
 }
 
@@ -1320,6 +1468,14 @@ class _NavigationPageState extends State<NavigationPage> {
   final _titleNode = FocusNode(debugLabel: 'Page title', skipTraversal: true);
   bool _collapsed = false;
   _PageScope? _scope;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      FlagProperty('collapsed', value: _collapsed, ifTrue: 'title in bar'),
+    );
+  }
 
   @override
   void initState() {
@@ -1550,6 +1706,14 @@ class _BarTitle extends StatelessWidget {
   const _BarTitle({required this.shown, required this.child});
   final bool shown;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      FlagProperty('shown', value: shown, ifTrue: 'shown', ifFalse: 'hidden'),
+    );
+  }
 
   /// `.lab-nav-bar-title`: fades and drops 6px while hidden, over the normal duration.
   @override

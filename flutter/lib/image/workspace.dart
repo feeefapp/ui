@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../layout/size_reporter.dart';
@@ -26,6 +27,14 @@ class ImageWorkspace extends StatefulWidget {
 
   /// Renders the canvas behind the chrome; receives the room the chrome takes on each edge.
   final Widget Function(Insets insets) board;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      ObjectFlagProperty<Widget Function(Insets insets)>.has('board', board),
+    );
+  }
 
   @override
   State<ImageWorkspace> createState() => _ImageWorkspaceState();

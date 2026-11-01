@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -310,6 +311,48 @@ class FilterBar extends StatefulWidget {
 
   /// Content at the end of the bar, usually a ToolbarGroup of view actions.
   final Widget? trailing;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(IterableProperty<FilterOption>('options', options))
+      ..add(IterableProperty<String>('value', value))
+      ..add(
+        ObjectFlagProperty<ValueChanged<List<String>>>.has(
+          'onChange',
+          onChange,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<Map<String, FilterValue?>>(
+          'values',
+          values,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<Map<String, FilterValue?>>>.has(
+          'onValuesChange',
+          onValuesChange,
+        ),
+      )
+      ..add(IterableProperty<String>('pinned', pinned, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<ValueChanged<List<String>>>.has(
+          'onPinnedChange',
+          onPinnedChange,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<FutureOr<List<String>> Function(String text)>.has(
+          'onNaturalFilter',
+          onNaturalFilter,
+        ),
+      )
+      ..add(ObjectFlagProperty<VoidCallback>.has('onBack', onBack));
+  }
 
   @override
   State<FilterBar> createState() => _FilterBarState();
@@ -1186,6 +1229,20 @@ class _BarWrap extends MultiChildRenderObjectWidget {
   final bool pushLastToEnd;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('gap', gap))
+      ..add(
+        FlagProperty(
+          'pushLastToEnd',
+          value: pushLastToEnd,
+          ifTrue: 'last item at end',
+        ),
+      );
+  }
+
+  @override
   RenderObject createRenderObject(BuildContext context) =>
       _RenderBarWrap(gap, pushLastToEnd, Directionality.of(context));
 
@@ -1224,6 +1281,21 @@ class _RenderBarWrap extends RenderBox
     if (value == _direction) return;
     _direction = value;
     markNeedsLayout();
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('gap', _gap))
+      ..add(
+        FlagProperty(
+          'pushLastToEnd',
+          value: _pushLastToEnd,
+          ifTrue: 'last item at end',
+        ),
+      )
+      ..add(EnumProperty<TextDirection>('direction', _direction));
   }
 
   @override

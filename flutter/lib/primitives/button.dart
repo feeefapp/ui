@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind, kPrimaryButton;
 import 'package:flutter/widgets.dart';
 
@@ -67,6 +68,21 @@ class ControlOverrides extends InheritedWidget {
 
   /// Fill and edge of toggled-on (pressed) controls, such as an actions bar's checked toggle.
   final Color? pressedFill, pressedEdge;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('height', height, defaultValue: null))
+      ..add(DoubleProperty('radius', radius, defaultValue: null))
+      ..add(ColorProperty('fill', fill, defaultValue: null))
+      ..add(ColorProperty('hoverFill', hoverFill, defaultValue: null))
+      ..add(ColorProperty('activeFill', activeFill, defaultValue: null))
+      ..add(ColorProperty('ink', ink, defaultValue: null))
+      ..add(DoubleProperty('touchTarget', touchTarget, defaultValue: null))
+      ..add(ColorProperty('pressedFill', pressedFill, defaultValue: null))
+      ..add(ColorProperty('pressedEdge', pressedEdge, defaultValue: null));
+  }
 
   static ControlOverrides? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<ControlOverrides>();
@@ -189,6 +205,69 @@ class Button extends StatefulWidget {
   /// Content: icons and text, laid out in a row. A [Text] child is the label: in a bounded width
   /// it shrinks and ends in an ellipsis on one line, while icons keep their size.
   final List<Widget> children;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        EnumProperty<ButtonVariant>(
+          'variant',
+          variant,
+          defaultValue: ButtonVariant.text,
+        ),
+      )
+      ..add(
+        EnumProperty<ControlSize>(
+          'controlSize',
+          controlSize,
+          defaultValue: ControlSize.regular,
+        ),
+      )
+      ..add(
+        EnumProperty<ControlSize>(
+          'iconSize',
+          iconSize,
+          defaultValue: ControlSize.regular,
+        ),
+      )
+      ..add(
+        EnumProperty<ButtonAppearance>(
+          'appearance',
+          appearance,
+          defaultValue: ButtonAppearance.defaultAppearance,
+        ),
+      )
+      ..add(FlagProperty('loading', value: loading, ifTrue: 'loading'))
+      ..add(FlagProperty('disabled', value: disabled, ifTrue: 'disabled'))
+      ..add(DiagnosticsProperty<bool>('pressed', pressed, defaultValue: null))
+      ..add(FlagProperty('current', value: current, ifTrue: 'current'))
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onClick', onClick))
+      ..add(StringProperty('ariaLabel', ariaLabel, defaultValue: null))
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      )
+      ..add(FlagProperty('autofocus', value: autofocus, ifTrue: 'autofocus'))
+      ..add(
+        DiagnosticsProperty<EdgeInsetsDirectional>(
+          'padding',
+          padding,
+          defaultValue: null,
+        ),
+      )
+      ..add(DoubleProperty('gap', gap, defaultValue: 6.0))
+      ..add(
+        DiagnosticsProperty<AlignmentDirectional>(
+          'alignment',
+          alignment,
+          defaultValue: null,
+        ),
+      );
+  }
 
   @override
   State<Button> createState() => _ButtonState();
@@ -633,6 +712,19 @@ class _PressGlow extends StatelessWidget {
   final Widget child;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(FlagProperty('visible', value: visible, ifFalse: 'hidden'))
+      ..add(DiagnosticsProperty<Listenable>('motion', motion))
+      ..add(DoubleProperty('radius', radius))
+      ..add(ColorProperty('color', color))
+      ..add(ObjectFlagProperty<Offset Function()>.has('at', at))
+      ..add(ObjectFlagProperty<double Function()>.has('glowRadius', glowRadius))
+      ..add(ObjectFlagProperty<double Function()>.has('opacity', opacity));
+  }
+
+  @override
   Widget build(BuildContext context) => CustomPaint(
     painter: visible ? _PressGlowPainter(this) : null,
     child: child,
@@ -686,6 +778,33 @@ class _ButtonPaint extends StatelessWidget {
   final bool raised, pressedInset, prominent;
   final FocusRingStyle? focus;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(ColorProperty('fill', fill))
+      ..add(ColorProperty('edge', edge))
+      ..add(ColorProperty('highlight', highlight))
+      ..add(
+        ColorProperty('shadow', shadow, defaultValue: const Color(0x00000000)),
+      )
+      ..add(ColorProperty('texture', texture, defaultValue: null))
+      ..add(DoubleProperty('radius', radius))
+      ..add(DoubleProperty('depth', depth))
+      ..add(FlagProperty('raised', value: raised, ifTrue: 'raised'))
+      ..add(
+        FlagProperty(
+          'pressedInset',
+          value: pressedInset,
+          ifTrue: 'pressed inset',
+        ),
+      )
+      ..add(FlagProperty('prominent', value: prominent, ifTrue: 'prominent'))
+      ..add(
+        DiagnosticsProperty<FocusRingStyle>('focus', focus, defaultValue: null),
+      );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1012,6 +1131,45 @@ class IconButton extends StatelessWidget {
   final bool? pressed;
   final VoidCallback? onClick;
   final FocusNode? focusNode;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('ariaLabel', ariaLabel))
+      ..add(
+        EnumProperty<ButtonVariant>(
+          'variant',
+          variant,
+          defaultValue: ButtonVariant.text,
+        ),
+      )
+      ..add(
+        EnumProperty<ControlSize>(
+          'controlSize',
+          controlSize,
+          defaultValue: ControlSize.regular,
+        ),
+      )
+      ..add(
+        EnumProperty<ButtonAppearance>(
+          'appearance',
+          appearance,
+          defaultValue: ButtonAppearance.defaultAppearance,
+        ),
+      )
+      ..add(FlagProperty('loading', value: loading, ifTrue: 'loading'))
+      ..add(FlagProperty('disabled', value: disabled, ifTrue: 'disabled'))
+      ..add(DiagnosticsProperty<bool>('pressed', pressed, defaultValue: null))
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onClick', onClick))
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      );
+  }
 
   @override
   Widget build(BuildContext context) => Button(

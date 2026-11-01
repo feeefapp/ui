@@ -46,6 +46,14 @@ class _DesktopPaneState extends State<_DesktopPane>
   late Sheet _shown = widget.pane;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('progress', _shownValue.get()))
+      ..add(DoubleProperty('fade', _fade.get()));
+  }
+
+  @override
   bool get declaredOpen => widget.pane.open;
   @override
   ValueChanged<bool>? get declaredOnOpenChange => widget.pane.onOpenChange;
@@ -291,6 +299,14 @@ class _PaneFrame extends StatelessWidget {
   });
   final double progress, outward;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('progress', progress))
+      ..add(DoubleProperty('outward', outward));
+  }
 
   @override
   Widget build(BuildContext context) => SizedBox(

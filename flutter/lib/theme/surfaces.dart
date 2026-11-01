@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
@@ -146,6 +147,15 @@ class FocusRing extends StatelessWidget {
   final bool visible, inside;
   final double radius;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(FlagProperty('visible', value: visible, ifTrue: 'visible'))
+      ..add(FlagProperty('inside', value: inside, ifTrue: 'inside'))
+      ..add(DoubleProperty('radius', radius));
+  }
 
   // Always the same CustomPaint, so toggling the ring never remounts [child] (and its state).
   @override

@@ -23,6 +23,12 @@ class TouchTarget extends SingleChildRenderObjectWidget {
   /// surface is the target (a toolbar bubble) passes its control height, so nothing reaches out.
   final double? minSize;
 
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DoubleProperty('minSize', minSize, defaultValue: null));
+  }
+
   double _extent(BuildContext context) {
     final theme = ThemeProvider.of(context);
     return theme.coarsePointer(context)
@@ -57,6 +63,20 @@ class _RenderTouchTarget extends RenderProxyBox {
       value?.targets.add(this);
     }
     _registry = value;
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('extent', extent))
+      ..add(
+        FlagProperty(
+          'registered',
+          value: _registry != null,
+          ifFalse: 'no TouchTargetScope',
+        ),
+      );
   }
 
   @override
@@ -108,12 +128,24 @@ class _TouchTargetsScope extends InheritedWidget {
   final _TouchTargets registry;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(IntProperty('targets', registry.targets.length));
+  }
+
+  @override
   bool updateShouldNotify(_TouchTargetsScope old) => old.registry != registry;
 }
 
 class _TouchTargetResolver extends SingleChildRenderObjectWidget {
   const _TouchTargetResolver({required this.registry, required super.child});
   final _TouchTargets registry;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(IntProperty('targets', registry.targets.length));
+  }
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
@@ -139,6 +171,12 @@ typedef _Reach = ({
 class _RenderTouchTargetResolver extends RenderProxyBox {
   _RenderTouchTargetResolver(this.registry);
   _TouchTargets registry;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(IntProperty('targets', registry.targets.length));
+  }
 
   @override
   bool hitTest(BoxHitTestResult result, {required Offset position}) {

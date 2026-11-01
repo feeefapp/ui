@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
@@ -67,6 +68,39 @@ class BarChart extends StatefulWidget {
   final int? selected;
   final ValueChanged<int?>? onSelect;
   final String? semanticLabel;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IterableProperty<String>('labels', labels))
+      ..add(
+        IterableProperty<BarSeries>(
+          'bars',
+          bars,
+          defaultValue: const <BarSeries>[],
+        ),
+      )
+      ..add(
+        IterableProperty<LineSeries>(
+          'lines',
+          lines,
+          defaultValue: const <LineSeries>[],
+        ),
+      )
+      ..add(DoubleProperty('height', height, defaultValue: 200.0))
+      ..add(
+        DiagnosticsProperty<String Function(num)>(
+          'formatValue',
+          formatValue,
+          description: 'custom',
+          defaultValue: compactNumber,
+        ),
+      )
+      ..add(IntProperty('selected', selected, defaultValue: null))
+      ..add(ObjectFlagProperty<ValueChanged<int?>?>.has('onSelect', onSelect))
+      ..add(StringProperty('semanticLabel', semanticLabel, defaultValue: null));
+  }
 
   @override
   State<BarChart> createState() => _BarChartState();

@@ -7,6 +7,7 @@
 /// import it by path.
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
@@ -43,6 +44,14 @@ class Box extends StatelessWidget {
   /// Accessible name (`aria-label`).
   final String? label;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<BoxElement>('as', as, defaultValue: BoxElement.div))
+      ..add(StringProperty('label', label, defaultValue: null));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,6 +96,22 @@ class Link extends StatefulWidget {
   final String? ariaLabel;
   final FocusNode? focusNode;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('href', href, defaultValue: null))
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onClick', onClick))
+      ..add(StringProperty('ariaLabel', ariaLabel, defaultValue: null))
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      );
+  }
 
   @override
   State<Link> createState() => _LinkState();

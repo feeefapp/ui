@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -84,6 +85,14 @@ class _ComposerScope extends InheritedWidget {
   final bool expanded;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      FlagProperty('expanded', value: expanded, ifTrue: 'expanded'),
+    );
+  }
+
+  @override
   bool updateShouldNotify(_ComposerScope old) => old.expanded != expanded;
 }
 
@@ -133,6 +142,59 @@ class ComposerField extends StatelessWidget {
   /// Runs before the built-in Enter handling; return `handled` to skip it.
   final KeyEventResult Function(KeyEvent event)? onKeyEvent;
   final ValueChanged<bool>? onFocusChange;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('value', value))
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>>.has(
+          'onValueChange',
+          onValueChange,
+        ),
+      )
+      ..add(StringProperty('label', label))
+      ..add(StringProperty('placeholder', placeholder, defaultValue: null))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onSubmit', onSubmit))
+      ..add(IntProperty('maxLines', maxLines, defaultValue: 6))
+      ..add(IntProperty('maxLength', maxLength, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'disabled',
+          value: disabled,
+          ifTrue: 'disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'readOnly',
+          value: readOnly,
+          ifTrue: 'read only',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<KeyEventResult Function(KeyEvent event)>.has(
+          'onKeyEvent',
+          onKeyEvent,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<bool>>.has(
+          'onFocusChange',
+          onFocusChange,
+        ),
+      );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -251,6 +313,25 @@ class ComposerSend extends StatelessWidget {
   final String? stopLabel;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(FlagProperty('ready', value: ready, ifTrue: 'ready'))
+      ..add(
+        FlagProperty(
+          'submitting',
+          value: submitting,
+          ifTrue: 'submitting',
+          defaultValue: false,
+        ),
+      )
+      ..add(ObjectFlagProperty<VoidCallback>.has('onSend', onSend))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onStop', onStop))
+      ..add(StringProperty('stopLabel', stopLabel, defaultValue: null));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
@@ -321,6 +402,15 @@ class ComposerAttachments extends StatefulWidget {
 
   /// [ComposerAttachment] tiles.
   final List<ComposerAttachment> children;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(IntProperty('count', count, defaultValue: null))
+      ..add(IntProperty('max', max, defaultValue: null));
+  }
 
   @override
   State<ComposerAttachments> createState() => _ComposerAttachmentsState();
@@ -479,6 +569,18 @@ class ComposerAttachment extends StatelessWidget {
   final String? removeLabel;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('id', id))
+      ..add(StringProperty('title', title, defaultValue: null))
+      ..add(StringProperty('label', label))
+      ..add(StringProperty('badge', badge, defaultValue: null))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onRemove', onRemove))
+      ..add(StringProperty('removeLabel', removeLabel, defaultValue: null));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
@@ -625,6 +727,15 @@ class _RemoveBadge extends StatelessWidget {
   final VoidCallback onRemove;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('size', size))
+      ..add(StringProperty('label', label))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onRemove', onRemove));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final radius = size / 2 * theme.sizes.radiusScale;
@@ -706,6 +817,29 @@ class ComposerBar extends StatefulWidget {
 
   /// Dashed outline while a compatible file is dragged over the drop target.
   final bool dropActive;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(FlagProperty('hasText', value: hasText, ifTrue: 'has text'))
+      ..add(
+        FlagProperty(
+          'pinned',
+          value: pinned,
+          ifTrue: 'pinned',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'dropActive',
+          value: dropActive,
+          ifTrue: 'drop active',
+          defaultValue: false,
+        ),
+      );
+  }
 
   @override
   State<ComposerBar> createState() => _ComposerBarState();
@@ -961,6 +1095,61 @@ class PromptComposer extends StatelessWidget {
   /// Focus of the text field.
   final FocusNode? focusNode;
 
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('value', value))
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>>.has(
+          'onValueChange',
+          onValueChange,
+        ),
+      )
+      ..add(ObjectFlagProperty<VoidCallback>.has('onSubmit', onSubmit))
+      ..add(StringProperty('label', label))
+      ..add(StringProperty('placeholder', placeholder, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'disabled',
+          value: disabled,
+          ifTrue: 'disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty('busy', value: busy, ifTrue: 'busy', defaultValue: false),
+      )
+      ..add(ObjectFlagProperty<VoidCallback>.has('onStop', onStop))
+      ..add(StringProperty('submitLabel', submitLabel))
+      ..add(StringProperty('stopLabel', stopLabel, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'dropActive',
+          value: dropActive,
+          ifTrue: 'drop active',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'submitDisabled',
+          value: submitDisabled,
+          ifTrue: 'submit disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(IntProperty('maxLength', maxLength, defaultValue: null))
+      ..add(IntProperty('maxLines', maxLines, defaultValue: 6))
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      );
+  }
+
   bool get _canSubmit =>
       !disabled && !busy && !submitDisabled && value.trim().isNotEmpty;
 
@@ -1043,6 +1232,12 @@ class ComposerHint extends StatefulWidget {
 
   /// The hint text.
   final String text;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(StringProperty('text', text));
+  }
 
   @override
   State<ComposerHint> createState() => _ComposerHintState();

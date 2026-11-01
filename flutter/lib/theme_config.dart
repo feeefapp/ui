@@ -4,6 +4,9 @@ library;
 
 import 'dart:ui' show Color;
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart' show ColorProperty;
+
 /// Color palette: `lab` (Feeef green) or `mono` (black and white).
 enum Palette { lab, mono }
 
@@ -30,7 +33,7 @@ Duration motionFade(Motion motion, Duration fade) =>
     motion == Motion.none ? Duration.zero : fade;
 
 /// The look of an app. Unset options fall back to [ThemeConfig.defaults].
-class ThemeConfig {
+class ThemeConfig with Diagnosticable {
   const ThemeConfig({
     this.palette = Palette.lab,
     this.primary,
@@ -169,6 +172,81 @@ class ThemeConfig {
     performance: performance ?? this.performance,
     metrics: metrics ?? this.metrics,
   );
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    const d = defaults;
+    properties
+      ..add(EnumProperty<Palette>('palette', palette, defaultValue: d.palette))
+      ..add(ColorProperty('primary', primary, defaultValue: null))
+      ..add(EnumProperty<Density>('density', density, defaultValue: d.density))
+      ..add(DoubleProperty('radius', radius, defaultValue: d.radius))
+      ..add(EnumProperty<GlassStyle>('glass', glass, defaultValue: d.glass))
+      ..add(DoubleProperty('glassTint', glassTint, defaultValue: d.glassTint))
+      ..add(FlagProperty('glassBlur', value: glassBlur, ifTrue: 'glass blur'))
+      ..add(
+        FlagProperty(
+          'glassRefraction',
+          value: glassRefraction,
+          ifFalse: 'no glass refraction',
+        ),
+      )
+      ..add(
+        DoubleProperty(
+          'glassRefractionStrength',
+          glassRefractionStrength,
+          defaultValue: d.glassRefractionStrength,
+        ),
+      )
+      ..add(
+        DoubleProperty(
+          'glassHighlight',
+          glassHighlight,
+          defaultValue: d.glassHighlight,
+        ),
+      )
+      ..add(
+        DoubleProperty(
+          'glassHighlightWidth',
+          glassHighlightWidth,
+          defaultValue: d.glassHighlightWidth,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'glassBarBoost',
+          value: glassBarBoost,
+          ifFalse: 'no glass bar boost',
+        ),
+      )
+      ..add(EnumProperty<Motion>('motion', motion, defaultValue: d.motion))
+      ..add(
+        EnumProperty<Performance>(
+          'performance',
+          performance,
+          defaultValue: d.performance,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<Metrics>(
+          'metrics',
+          metrics,
+          expandableValue: true,
+          defaultValue: d.metrics,
+        ),
+      );
+    // What the components read: the options above clamped to their ranges.
+    for (final (name, value) in [
+      ('radiusScale', radiusScale),
+      ('tint', tint),
+      ('refractionStrength', refractionStrength),
+      ('highlight', highlight),
+      ('highlightWidth', highlightWidth),
+    ]) {
+      properties.add(DoubleProperty(name, value, level: DiagnosticLevel.fine));
+    }
+  }
 }
 
 const Object _keep = Object();
@@ -217,6 +295,10 @@ class MetricScale {
 
   @override
   int get hashCode => Object.hash(small, regular, large);
+
+  @override
+  String toString() =>
+      'MetricScale(small: $small, regular: $regular, large: $large)';
 }
 
 /// A width and height; either may be unset (`MetricSize` in the web kit).
@@ -230,13 +312,16 @@ class MetricSize {
 
   @override
   int get hashCode => Object.hash(width, height);
+
+  @override
+  String toString() => 'MetricSize($width × $height)';
 }
 
 /// Overrides for the size tokens, in logical pixels: the twin of `ThemeConfig.metrics` in the web
 /// kit (written there as `--lab-*` variables on `<html>`). The defaults ("comfortable") are the
 /// iOS 26 controls measured in `research/liquid-glass/CONTROLS-MEASURED.md`; `compact` and `thin`
 /// step down from them. A set value replaces the token for every density.
-class Metrics {
+class Metrics with Diagnosticable {
   const Metrics({
     this.controlHeight,
     this.controlPadding,
@@ -370,4 +455,37 @@ class Metrics {
     railWidth,
     shellGap,
   ]);
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    void scale(String name, MetricScale? value) => properties.add(
+      DiagnosticsProperty<MetricScale>(name, value, defaultValue: null),
+    );
+    void size(String name, MetricSize? value) => properties.add(
+      DiagnosticsProperty<MetricSize>(name, value, defaultValue: null),
+    );
+    void length(String name, double? value) =>
+        properties.add(DoubleProperty(name, value, defaultValue: null));
+    scale('controlHeight', controlHeight);
+    scale('controlPadding', controlPadding);
+    scale('controlFont', controlFont);
+    scale('fieldHeight', fieldHeight);
+    length('rowHeight', rowHeight);
+    length('toolbarItem', toolbarItem);
+    length('toolbarGap', toolbarGap);
+    length('toolbarInset', toolbarInset);
+    length('segmentedInset', segmentedInset);
+    size('switchSize', switchSize);
+    size('thumbSize', thumbSize);
+    length('sliderTrack', sliderTrack);
+    length('listRowHeight', listRowHeight);
+    length('listRadius', listRadius);
+    length('listInset', listInset);
+    length('focusRingWidth', focusRingWidth);
+    length('focusRingOffset', focusRingOffset);
+    length('sidebarWidth', sidebarWidth);
+    length('railWidth', railWidth);
+    length('shellGap', shellGap);
+  }
 }

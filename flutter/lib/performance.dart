@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart';
 import 'performance_device_io.dart'
     if (dart.library.js_interop) 'performance_device_web.dart'
     as device;
+import 'devtools/devtools.dart';
 import 'theme.dart';
 
 /// What the device can do, as far as the kit cares.
@@ -180,6 +181,12 @@ abstract final class MeasuredPerformance {
         _watching = false;
         SchedulerBinding.instance.removeTimingsCallback(_onTimings);
         device.rememberSlow();
+        kitLog(
+          'performance',
+          'Frames measured slow (median over ${slowFrame.inMilliseconds} ms, two windows in a '
+              'row): auto themes step down to the light tier for ${remember.inDays} days',
+          level: 900,
+        );
         slow.value = true;
         return;
       }

@@ -1,4 +1,6 @@
 import 'package:flutter/animation.dart' show Cubic;
+import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart' show ColorProperty;
 
 import 'dart:ui';
 
@@ -9,7 +11,7 @@ import 'color_mix.dart';
 /// Every colour the kit paints, resolved for one palette and brightness. Literal values come from
 /// `theme-tokens.css` and `system.css`; derived ones repeat their `color-mix()` formulas, and
 /// `test/tokens_test.dart` checks all of them against what the browser computes.
-class ColorTokens {
+class ColorTokens with Diagnosticable {
   const ColorTokens._({
     required this.ground,
     required this.pixelInk,
@@ -92,6 +94,54 @@ class ColorTokens {
   /// `--lab-glass-fill-large`: the lighter veil over panel-sized glass at the tint.
   Color get glassFillLarge =>
       mixSrgb(surface, glassTint * _veilLarge, transparent);
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('glassTint', glassTint))
+      ..add(
+        EnumProperty<Brightness>(
+          'backdropTone',
+          backdropTone,
+          defaultValue: null,
+        ),
+      );
+    for (final (name, color) in [
+      ('ground', ground),
+      ('pixelInk', pixelInk),
+      ('surface', surface),
+      ('surfaceSoft', surfaceSoft),
+      ('line', line),
+      ('ink', ink),
+      ('muted', muted),
+      ('focus', focus),
+      ('focusRing', focusRing),
+      ('primary', primary),
+      ('onPrimary', onPrimary),
+      ('accent', accent),
+      ('success', success),
+      ('warning', warning),
+      ('danger', danger),
+      ('onDanger', onDanger),
+      ('badge', badge),
+      ('onBadge', onBadge),
+      ('controlSurface', controlSurface),
+      ('controlBorder', controlBorder),
+      ('controlHover', controlHover),
+      ('controlPressed', controlPressed),
+      ('controlSelected', controlSelected),
+      ('controlHighlight', controlHighlight),
+      ('glassFill', glassFill),
+      ('glassFillLarge', glassFillLarge),
+      ('glassEdgeLight', glassEdgeLight),
+      ('glassEdgeLow', glassEdgeLow),
+      ('glassGlow', glassGlow),
+      ('glassShadowColor', glassShadowColor),
+    ]) {
+      properties.add(ColorProperty(name, color));
+    }
+  }
 
   /// The neutral glass and ink for small glass over content of [tone] (glass.css
   /// `[data-glass-backdrop]`): fixed greys rather than the palette's own dark or light theme, the
@@ -379,7 +429,7 @@ class VariantPaint {
 /// Sizes from `system.css`: the density's defaults (comfortable = iOS 26 controls measured in
 /// `research/liquid-glass/CONTROLS-MEASURED.md`; compact and thin one step down each), with
 /// [ThemeConfig.metrics] on top, and radii multiplied by the radius scale where the CSS does.
-class SizeTokens {
+class SizeTokens with Diagnosticable {
   const SizeTokens._(this.density, this.radiusScale, this.metrics);
   factory SizeTokens.of(ThemeConfig config) =>
       SizeTokens._(config.density, config.radiusScale, config.metrics);
@@ -506,6 +556,63 @@ class SizeTokens {
   double get radiusPanel => 24 * radiusScale;
   double get radiusGlass => 32 * radiusScale;
   double get radiusSmall => 12 * radiusScale;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<Density>('density', density))
+      ..add(DoubleProperty('radiusScale', radiusScale, defaultValue: 1.0))
+      ..add(
+        DiagnosticsProperty<Metrics>(
+          'metrics',
+          metrics,
+          expandableValue: true,
+          level: DiagnosticLevel.fine,
+        ),
+      );
+    for (final (name, value) in [
+      ('controlSmall', controlSmall),
+      ('controlHeight', controlHeight),
+      ('controlLarge', controlLarge),
+      ('controlPaddingSmall', controlPaddingSmall),
+      ('controlPadding', controlPadding),
+      ('controlPaddingLarge', controlPaddingLarge),
+      ('controlFontSmall', controlFontSmall),
+      ('controlFont', controlFont),
+      ('controlFontLarge', controlFontLarge),
+      ('fieldHeight', fieldHeight),
+      ('fieldHeightSmall', fieldHeightSmall),
+      ('rowHeight', rowHeight),
+      ('menuRowHeight', menuRowHeight),
+      ('toolbarItem', toolbarItem),
+      ('toolbarControl', toolbarControl),
+      ('toolbarGap', toolbarGap),
+      ('toolbarInset', toolbarInset),
+      ('shellGap', shellGap),
+      ('segmentedInset', segmentedInset),
+      ('switchWidth', switchWidth),
+      ('switchHeight', switchHeight),
+      ('thumbWidth', thumbWidth),
+      ('thumbHeight', thumbHeight),
+      ('sliderTrack', sliderTrack),
+      ('listRowHeight', listRowHeight),
+      ('listRadius', listRadius),
+      ('listInset', listInset),
+      ('focusRingWidth', focusRingWidth),
+      ('focusRingOffset', focusRingOffset),
+      ('space4', space4),
+      ('touchTarget', touchTarget),
+      ('radiusControl', radiusControl),
+      ('radiusControlSmall', radiusControlSmall),
+      ('radiusGroup', radiusGroup),
+      ('radiusPanel', radiusPanel),
+      ('radiusGlass', radiusGlass),
+      ('radiusSmall', radiusSmall),
+    ]) {
+      properties.add(DoubleProperty(name, value, unit: 'px'));
+    }
+  }
 }
 
 /// Motion tokens from `system.css`: `--lab-duration-fast`, `--lab-duration-normal`, `--lab-ease`.

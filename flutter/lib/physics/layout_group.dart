@@ -40,6 +40,34 @@ class LayoutGroup extends StatefulWidget {
   final bool animateEnter;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        DiagnosticsProperty<Object?>(
+          'layoutKey',
+          layoutKey,
+          defaultValue: _always,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<Spring>(
+          'spring',
+          spring,
+          defaultValue: Springs.snappy,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'animateEnter',
+          value: animateEnter,
+          ifFalse: 'no enter animation',
+          defaultValue: true,
+        ),
+      );
+  }
+
+  @override
   State<LayoutGroup> createState() => _LayoutGroupState();
 }
 
@@ -88,6 +116,12 @@ class _LayoutGroupScope extends InheritedWidget {
   const _LayoutGroupScope({required this.group, required super.child});
   final _LayoutGroupState group;
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<_LayoutGroupState>('group', group));
+  }
+
+  @override
   bool updateShouldNotify(_LayoutGroupScope old) => old.group != group;
 }
 
@@ -106,6 +140,21 @@ class LayoutGroupItem extends SingleChildRenderObjectWidget {
 
   /// Also animate the size (`data-lab-layout="size"`): it scales, so use it for media and shapes.
   final bool size;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<Object>('layoutId', layoutId))
+      ..add(
+        FlagProperty(
+          'size',
+          value: size,
+          ifTrue: 'animates size',
+          defaultValue: false,
+        ),
+      );
+  }
 
   @override
   RenderObject createRenderObject(BuildContext context) => _RenderItem(
@@ -185,6 +234,41 @@ class _RenderItem extends RenderProxyBox {
   Size get _scale => _track == null
       ? const Size(1, 1)
       : Size(_track!.sx.get(), _track!.sy.get());
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<Object>('layoutId', layoutId))
+      ..add(FlagProperty('sized', value: sized, ifTrue: 'animates size'))
+      ..add(
+        FlagProperty(
+          'reduceMotion',
+          value: reduceMotion,
+          ifTrue: 'reduced motion',
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'grouped',
+          value: _group != null,
+          ifFalse: 'no LayoutGroup',
+        ),
+      )
+      ..add(
+        FlagProperty('animating', value: _track != null, ifTrue: 'animating'),
+      )
+      ..add(
+        DiagnosticsProperty<Offset>('shift', _shift, defaultValue: Offset.zero),
+      )
+      ..add(
+        DiagnosticsProperty<Size>(
+          'scale',
+          _scale,
+          defaultValue: const Size(1, 1),
+        ),
+      );
+  }
 
   void _register() {
     final group = _group;

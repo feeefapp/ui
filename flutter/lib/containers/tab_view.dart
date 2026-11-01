@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
@@ -107,6 +108,34 @@ class TabView extends StatefulWidget {
   final bool showBar;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IterableProperty<String>('tabs', [for (final tab in tabs) tab.id]))
+      ..add(StringProperty('value', value))
+      ..add(ObjectFlagProperty<ValueChanged<String>>.has('onChange', onChange))
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>?>.has('onReselect', onReselect),
+      )
+      ..add(
+        EnumProperty<TabMinimize>(
+          'minimize',
+          minimize,
+          defaultValue: TabMinimize.scroll,
+        ),
+      )
+      ..add(StringProperty('label', label, defaultValue: 'Tabs'))
+      ..add(
+        FlagProperty(
+          'showBar',
+          value: showBar,
+          ifFalse: 'bar hidden',
+          defaultValue: true,
+        ),
+      );
+  }
+
+  @override
   State<TabView> createState() => _TabViewState();
 }
 
@@ -143,6 +172,17 @@ class _TabViewState extends State<TabView> {
   final _barKey = GlobalKey();
   final _trackKey = GlobalKey();
   final _accessoryKey = GlobalKey();
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IterableProperty<String>('visited', _visited))
+      ..add(DoubleProperty('minimizeProgress', _progress.get()))
+      ..add(FlagProperty('minimized', value: _minimized, ifTrue: 'minimized'))
+      ..add(DoubleProperty('chromeHeight', _chrome, unit: 'px'))
+      ..add(DoubleProperty('panelOpacity', _opacity.value, defaultValue: 1.0));
+  }
 
   @override
   void initState() {
@@ -605,6 +645,22 @@ class _Placed extends SingleChildRenderObjectWidget {
   final bool looseHeight;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<Rect?>('rest', rest, defaultValue: null))
+      ..add(DiagnosticsProperty<Rect?>('to', to, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'looseHeight',
+          value: looseHeight,
+          ifTrue: 'loose height',
+          defaultValue: false,
+        ),
+      );
+  }
+
+  @override
   RenderObject createRenderObject(BuildContext context) =>
       _RenderPlaced(rest, to, looseHeight);
 
@@ -642,6 +698,22 @@ class _RenderPlaced extends RenderShiftedBox {
   }
 
   bool get _placing => _rest != null && _to != null;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<Rect?>('rest', _rest, defaultValue: null))
+      ..add(DiagnosticsProperty<Rect?>('to', _to, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'looseHeight',
+          value: _looseHeight,
+          ifTrue: 'loose height',
+          defaultValue: false,
+        ),
+      );
+  }
 
   /// Placed, the child is hit where it is drawn, outside this box's resting bounds too.
   @override

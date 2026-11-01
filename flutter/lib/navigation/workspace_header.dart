@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/logo.dart';
@@ -74,6 +75,27 @@ class WorkspaceHeader extends StatelessWidget {
 
   /// Short product name after the logo, e.g. `lab`.
   final String? brandSuffix;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('title', title))
+      ..add(StringProperty('detail', detail, defaultValue: null))
+      ..add(StringProperty('toolsLabel', toolsLabel, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'embedded',
+          value: embedded,
+          ifTrue: 'embedded',
+          defaultValue: false,
+        ),
+      )
+      ..add(StringProperty('brandHref', brandHref, defaultValue: '/'))
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onBrandClick', onBrandClick))
+      ..add(StringProperty('brandLabel', brandLabel, defaultValue: 'Feeef'))
+      ..add(StringProperty('brandSuffix', brandSuffix, defaultValue: null));
+  }
 
   @override
   Widget build(BuildContext context) {

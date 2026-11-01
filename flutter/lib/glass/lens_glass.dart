@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui show Gradient;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
@@ -61,6 +62,17 @@ class GlassLens extends StatelessWidget {
 
   /// A pill's rest pill, in the parent's pixels; its corner is [radius] less the vertical lift.
   final Rect? rest;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<LensKind>('kind', kind))
+      ..add(DiagnosticsProperty<Rect>('rect', rect))
+      ..add(DoubleProperty('radius', radius))
+      ..add(DoubleProperty('lens', lens))
+      ..add(DiagnosticsProperty<Rect?>('rest', rest, defaultValue: null));
+  }
 
   /// Whether lenses under [context] are liquid: a pill lifts out bigger and lenses bend. False for
   /// transparent glass (a plain clear lens) and solid (none).

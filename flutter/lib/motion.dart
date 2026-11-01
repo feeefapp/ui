@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
@@ -37,6 +38,25 @@ class PresenceBuilder extends StatefulWidget {
   /// Draws the content for the current presence.
   final Widget Function(BuildContext context, bool mounted, PresenceState state)
   builder;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        FlagProperty('open', value: open, ifTrue: 'open', ifFalse: 'closed'),
+      )
+      ..add(IntProperty('exitMs', exitMs, defaultValue: 200))
+      ..add(
+        ObjectFlagProperty<
+          Widget Function(
+            BuildContext context,
+            bool mounted,
+            PresenceState state,
+          )
+        >.has('builder', builder),
+      );
+  }
 
   @override
   State<PresenceBuilder> createState() => _PresenceBuilderState();
@@ -115,6 +135,22 @@ class Presence extends StatefulWidget {
   /// Draws the content; called with `open` only, the closing frame reuses the last output.
   final Widget Function(PresenceState state) render;
 
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        FlagProperty('open', value: open, ifTrue: 'open', ifFalse: 'closed'),
+      )
+      ..add(IntProperty('exitMs', exitMs, defaultValue: 160))
+      ..add(
+        ObjectFlagProperty<Widget Function(PresenceState state)>.has(
+          'render',
+          render,
+        ),
+      );
+  }
+
   /// The presence state of the nearest [Presence] (`open` outside one).
   static PresenceState stateOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<_PresenceScope>()?.state ??
@@ -147,6 +183,12 @@ class _PresenceState extends State<Presence> {
 class _PresenceScope extends InheritedWidget {
   const _PresenceScope({required this.state, required super.child});
   final PresenceState state;
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(EnumProperty<PresenceState>('state', state));
+  }
+
   @override
   bool updateShouldNotify(_PresenceScope old) => old.state != state;
 }
@@ -213,6 +255,33 @@ class PresenceTransition extends StatefulWidget {
   /// Transform origin of the scale.
   final AlignmentGeometry alignment;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        EnumProperty<PresenceMotion>(
+          'motion',
+          motion,
+          defaultValue: PresenceMotion.dialog,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<PresenceFrame?>('enter', enter, defaultValue: null),
+      )
+      ..add(
+        DiagnosticsProperty<PresenceFrame?>('exit', exit, defaultValue: null),
+      )
+      ..add(EnumProperty<PresenceState?>('state', state, defaultValue: null))
+      ..add(
+        DiagnosticsProperty<AlignmentGeometry>(
+          'alignment',
+          alignment,
+          defaultValue: Alignment.center,
+        ),
+      );
+  }
 
   @override
   State<PresenceTransition> createState() => _PresenceTransitionState();
@@ -357,6 +426,17 @@ class StableText extends StatelessWidget {
   final TextStyle? style;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('value', value))
+      ..add(IterableProperty<String>('options', options))
+      ..add(
+        DiagnosticsProperty<TextStyle?>('style', style, defaultValue: null),
+      );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final all = options.contains(value) ? options : [...options, value];
     final base = const TextStyle(
@@ -387,6 +467,22 @@ class _StableOption extends StatelessWidget {
   final String text;
   final bool active;
   final TextStyle style;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('text', text))
+      ..add(
+        FlagProperty(
+          'active',
+          value: active,
+          ifTrue: 'active',
+          ifFalse: 'hidden',
+        ),
+      )
+      ..add(DiagnosticsProperty<TextStyle>('style', style));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -478,6 +574,19 @@ class _HeightBox extends SingleChildRenderObjectWidget {
   final ValueChanged<double> onChildHeight;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('height', height, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<ValueChanged<double>>.has(
+          'onChildHeight',
+          onChildHeight,
+        ),
+      );
+  }
+
+  @override
   RenderObject createRenderObject(BuildContext context) =>
       _RenderHeightBox(height, onChildHeight);
 
@@ -497,6 +606,27 @@ class _RenderHeightBox extends RenderProxyBox {
     if (value == _height) return;
     _height = value;
     markNeedsLayout();
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        DoubleProperty(
+          'height',
+          _height,
+          ifNull: 'natural',
+          defaultValue: null,
+        ),
+      )
+      ..add(DoubleProperty('reportedHeight', _reported, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<ValueChanged<double>>.has(
+          'onChildHeight',
+          onChildHeight,
+        ),
+      );
   }
 
   final _clip = LayerHandle<ClipRectLayer>();
@@ -568,6 +698,12 @@ class Swap extends StatefulWidget {
   /// The icon to show. Decorative: the cell is excluded from semantics, so label the control
   /// around it.
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(StringProperty('swapKey', swapKey));
+  }
 
   @override
   State<Swap> createState() => _SwapState();

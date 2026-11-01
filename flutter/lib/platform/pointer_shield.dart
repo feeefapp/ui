@@ -37,6 +37,29 @@ class PointerShield extends StatelessWidget {
   /// False lets the pointer through to the page again (a layer that stopped taking taps).
   final bool enabled;
 
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        FlagProperty(
+          'always',
+          value: always,
+          ifTrue: 'always',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'enabled',
+          value: enabled,
+          ifFalse: 'disabled',
+          defaultValue: true,
+        ),
+      )
+      ..add(IntProperty('retainedViews', _views.value, defaultValue: 0));
+  }
+
   static final ValueNotifier<int> _views = ValueNotifier(0);
 
   /// A platform view that takes the pointer is on screen: shields are on until the returned
@@ -85,6 +108,14 @@ class _Shielded extends StatelessWidget {
   const _Shielded({required this.on, required this.child});
   final bool on;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      FlagProperty('on', value: on, ifTrue: 'shielded', ifFalse: 'off'),
+    );
+  }
 
   @override
   Widget build(BuildContext context) => Stack(

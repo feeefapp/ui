@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -42,6 +43,19 @@ class ListSection extends StatefulWidget {
 
   /// ListRow widgets.
   final List<Widget> children;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<void Function(int from, int to)?>.has(
+          'onReorder',
+          onReorder,
+        ),
+      );
+  }
 
   @override
   State<ListSection> createState() => _ListSectionState();
@@ -262,6 +276,25 @@ class _RowSlot extends StatelessWidget {
   final Widget child;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<GlobalKey>('contentKey', contentKey))
+      ..add(IntProperty('index', index))
+      ..add(DoubleProperty('hairline', hairline, defaultValue: null))
+      ..add(ColorProperty('hairlineColor', hairlineColor, defaultValue: null))
+      ..add(DoubleProperty('offset', offset))
+      ..add(FlagProperty('lifted', value: lifted, ifTrue: 'lifted'))
+      ..add(
+        DiagnosticsProperty<_ListSectionState>(
+          'reorder',
+          reorder,
+          defaultValue: null,
+        ),
+      );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
@@ -358,6 +391,15 @@ class _RowScope extends InheritedWidget {
   /// Every second row of its section (CSS `:nth-child(even)`): selected, it takes the lighter
   /// tint, so selected neighbours alternate.
   final bool alternate;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(FlagProperty('reorder', value: reorder, ifTrue: 'reorderable'))
+      ..add(FlagProperty('alternate', value: alternate, ifTrue: 'alternate'));
+  }
+
   @override
   bool updateShouldNotify(_RowScope old) =>
       old.reorder != reorder || old.alternate != alternate;
@@ -376,6 +418,17 @@ class _Grip extends StatefulWidget {
   final ValueChanged<double> onUpdate;
   final VoidCallback onEnd;
   final ValueChanged<int> onStep;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onStart', onStart))
+      ..add(ObjectFlagProperty<ValueChanged<double>>.has('onUpdate', onUpdate))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onEnd', onEnd))
+      ..add(ObjectFlagProperty<ValueChanged<int>>.has('onStep', onStep));
+  }
 
   @override
   State<_Grip> createState() => _GripState();
@@ -512,6 +565,39 @@ class ListRow extends StatefulWidget {
 
   /// Accessible name of the reorder grip.
   final String? reorderLabel;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(FlagProperty('chevron', value: chevron, ifTrue: 'chevron'))
+      ..add(FlagProperty('selected', value: selected, ifTrue: 'selected'))
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onClick', onClick))
+      ..add(FlagProperty('disabled', value: disabled, ifTrue: 'disabled'))
+      ..add(
+        IterableProperty<RowAction>(
+          'leadingActions',
+          leadingActions,
+          defaultValue: const <RowAction>[],
+        ),
+      )
+      ..add(
+        IterableProperty<RowAction>(
+          'trailingActions',
+          trailingActions,
+          defaultValue: const <RowAction>[],
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'fullSwipe',
+          value: fullSwipe,
+          ifFalse: 'no full swipe',
+          defaultValue: true,
+        ),
+      )
+      ..add(StringProperty('reorderLabel', reorderLabel, defaultValue: null));
+  }
 
   @override
   State<ListRow> createState() => _ListRowState();
@@ -903,6 +989,19 @@ class _Actions extends StatelessWidget {
   final VoidCallback onEscape;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<SwipeSide>('side', side))
+      ..add(DoubleProperty('width', width))
+      ..add(FlagProperty('full', value: full, ifTrue: 'full swipe'))
+      ..add(FlagProperty('open', value: open, ifTrue: 'open'))
+      ..add(IterableProperty<RowAction>('actions', actions))
+      ..add(ObjectFlagProperty<ValueChanged<RowAction>>.has('onRun', onRun))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onEscape', onEscape));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final ordered = side == SwipeSide.leading
         ? actions
@@ -955,6 +1054,15 @@ class _ActionButton extends StatelessWidget {
   final RowAction action;
   final ValueChanged<RowAction> onRun;
   final VoidCallback onEscape;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<RowAction>('action', action))
+      ..add(ObjectFlagProperty<ValueChanged<RowAction>>.has('onRun', onRun))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onEscape', onEscape));
+  }
 
   @override
   Widget build(BuildContext context) {

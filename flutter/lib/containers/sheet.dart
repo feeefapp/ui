@@ -79,6 +79,12 @@ class _SheetBackdropState extends State<SheetBackdrop> {
   final _recede = _Recede();
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DoubleProperty('recede', _recede.value, defaultValue: 0.0));
+  }
+
+  @override
   void dispose() {
     _recede.dispose();
     super.dispose();
@@ -121,6 +127,13 @@ class _Recede extends ValueNotifier<double> {
 class _BackdropScope extends InheritedWidget {
   const _BackdropScope({required this.recede, required super.child});
   final ValueNotifier<double> recede;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DoubleProperty('recede', recede.value, defaultValue: 0.0));
+  }
+
   @override
   bool updateShouldNotify(_BackdropScope old) => old.recede != recede;
 }
@@ -140,6 +153,12 @@ class SheetSource extends StatefulWidget {
 
 class _SheetSourceState extends State<SheetSource> {
   bool _hidden = false;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(FlagProperty('hidden', value: _hidden, ifTrue: 'hidden'));
+  }
 
   set hidden(bool value) {
     if (value == _hidden || !mounted) return;
@@ -177,6 +196,22 @@ class SheetScope extends InheritedWidget {
 
   /// How the sheet is presented right now.
   final SheetPresentation presentation;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<SheetDetent>('detent', detent))
+      ..add(DoubleProperty('expansion', expansion.value))
+      ..add(DoubleProperty('height', height.value, unit: 'px'))
+      ..add(
+        ObjectFlagProperty<ValueChanged<SheetDetent>>.has(
+          'setDetent',
+          setDetent,
+        ),
+      )
+      ..add(EnumProperty<SheetPresentation>('presentation', presentation));
+  }
 
   /// The sheet [context] is inside, or null. Use it to show more at higher detents (Maps shows
   /// only its search bar at `peek`).
@@ -373,6 +408,190 @@ class Sheet extends StatelessWidget {
   final FocusNode? returnFocus;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        FlagProperty(
+          'open',
+          value: open,
+          ifTrue: 'open',
+          ifFalse: 'closed',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<bool>?>.has(
+          'onOpenChange',
+          onOpenChange,
+        ),
+      )
+      ..add(StringProperty('label', label))
+      ..add(IntProperty('trailing', trailing.length, defaultValue: 0))
+      ..add(
+        FlagProperty(
+          'showClose',
+          value: showClose,
+          ifFalse: 'no close bubble',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<
+          Widget Function(BuildContext context, ScrollController controller)?
+        >.has('builder', builder),
+      )
+      ..add(
+        IterableProperty<SheetDetent>('detents', detents, defaultValue: null),
+      )
+      ..add(
+        DiagnosticsProperty<SheetDetent?>('detent', detent, defaultValue: null),
+      )
+      ..add(
+        DiagnosticsProperty<SheetDetent?>(
+          'defaultDetent',
+          defaultDetent,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<SheetDetent>?>.has(
+          'onDetentChange',
+          onDetentChange,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<double>?>.has(
+          'onHeightChange',
+          onHeightChange,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'dismissible',
+          value: dismissible,
+          ifFalse: 'not dismissible',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'snap',
+          value: snap,
+          ifFalse: 'rests anywhere',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'grabber',
+          value: grabber,
+          ifTrue: 'grabber',
+          ifFalse: 'no grabber',
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'modal',
+          value: modal,
+          ifFalse: 'non-modal',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<SheetDetent?>(
+          'backgroundInteraction',
+          backgroundInteraction,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'floating',
+          value: floating,
+          ifTrue: 'floating',
+          ifFalse: 'attached',
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<GlobalKey?>('source', source, defaultValue: null),
+      )
+      ..add(
+        DiagnosticsProperty<SheetDetent?>(
+          'focusDetent',
+          focusDetent,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'raiseOnFocus',
+          value: raiseOnFocus,
+          ifFalse: 'never raises on focus',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        EnumProperty<SheetRegular>(
+          'regular',
+          regular,
+          defaultValue: SheetRegular.dialog,
+        ),
+      )
+      ..add(
+        DoubleProperty(
+          'regularBreakpoint',
+          regularBreakpoint,
+          defaultValue: 720.0,
+        ),
+      )
+      ..add(DoubleProperty('cardWidth', cardWidth, defaultValue: 380.0))
+      ..add(DoubleProperty('paneWidth', paneWidth, defaultValue: 420.0))
+      ..add(
+        EnumProperty<SheetPaneSide>(
+          'paneSide',
+          paneSide,
+          defaultValue: SheetPaneSide.end,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'container',
+          value: container,
+          ifTrue: 'in place',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'recede',
+          value: recede,
+          ifFalse: 'no recede',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        DoubleProperty('contentPadding', contentPadding, defaultValue: null),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode?>(
+          'initialFocus',
+          initialFocus,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode?>(
+          'returnFocus',
+          returnFocus,
+          defaultValue: null,
+        ),
+      );
+  }
+
+  @override
   Widget build(BuildContext context) => regular == SheetRegular.pane
       ? _PaneSwitch(sheet: this)
       : _BottomSheet(sheet: this);
@@ -482,6 +701,70 @@ class _SheetState extends State<_BottomSheet> {
   // Drag session.
   double _dragOrigin = 0, _dragStart = 0;
   VelocityTracker? _pointerTracker, _valueTracker;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    final detents = _detents;
+    properties
+      ..add(
+        FlagProperty('open', value: _open, ifTrue: 'open', ifFalse: 'closed'),
+      )
+      ..add(FlagProperty('presented', value: _mounted, ifTrue: 'presented'))
+      ..add(FlagProperty('routed', value: _route != null, ifTrue: 'routed'))
+      ..add(EnumProperty<SheetPresentation>('presentation', _presentation))
+      ..add(
+        DiagnosticsProperty<SheetDetent>(
+          'detent',
+          detents.isEmpty ? null : detents[_index],
+        ),
+      )
+      ..add(IterableProperty<SheetDetent>('detents', detents))
+      ..add(DoubleProperty('visibleHeight', _visible.get(), unit: 'px'))
+      ..add(DoubleProperty('expansion', _expansion.value))
+      ..add(
+        DoubleProperty(
+          'freeHeight',
+          _freeHeight,
+          unit: 'px',
+          defaultValue: null,
+        ),
+      )
+      ..add(DiagnosticsProperty<Size?>('host', _host, defaultValue: null))
+      ..add(
+        DoubleProperty(
+          'bodyNatural',
+          _bodyNatural,
+          unit: 'px',
+          defaultValue: null,
+        ),
+      )
+      ..add(DoubleProperty('headerHeight', _headerHeight, defaultValue: 0.0))
+      ..add(FlagProperty('dragging', value: _dragging, ifTrue: 'dragging'))
+      ..add(
+        FlagProperty(
+          'contentGesture',
+          value: _content != null,
+          ifTrue: 'content gesture',
+        ),
+      )
+      ..add(FlagProperty('held', value: _held, ifTrue: 'held'))
+      ..add(
+        FlagProperty(
+          'draggedAway',
+          value: _draggedAway,
+          ifTrue: 'dragged away',
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'morphing',
+          value: _morphing != null,
+          ifTrue: 'morphing from source',
+        ),
+      )
+      ..add(FlagProperty('fading', value: _fading, ifTrue: 'fading'));
+  }
 
   @override
   void initState() {
@@ -1800,11 +2083,27 @@ class SheetGrabber extends StatefulWidget {
   final VoidCallback onPrevious;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(ObjectFlagProperty<VoidCallback>.has('onNext', onNext))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onPrevious', onPrevious));
+  }
+
+  @override
   State<SheetGrabber> createState() => _SheetGrabberState();
 }
 
 class _SheetGrabberState extends State<SheetGrabber> {
   bool _focusVisible = false;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      FlagProperty('focusVisible', value: _focusVisible, ifTrue: 'focus ring'),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1873,6 +2172,14 @@ class SheetSurface extends StatelessWidget {
 
   /// Opacity 0–1 of the opaque surface over the glass ([SheetFrame.solid]).
   final double solid;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IterableProperty<double>('radii', radii))
+      ..add(DoubleProperty('solid', solid, defaultValue: 0.0));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2126,6 +2433,12 @@ class _OutlinePainter extends CustomPainter {
 class _CycleIntent extends Intent {
   const _CycleIntent(this.step);
   final int step;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(IntProperty('step', step));
+  }
 }
 
 class _SuperellipseClipper extends CustomClipper<Path> {
@@ -2268,15 +2581,30 @@ class _SheetScrollPosition extends ScrollPositionWithSingleContext {
 class _SheetDragRecognizer extends OneSequenceGestureRecognizer {
   _SheetDragRecognizer({super.debugOwner});
 
+  // ignore: diagnostic_describe_all_properties
   late bool Function(PointerDeviceKind kind, Offset global) canBegin;
+  // ignore: diagnostic_describe_all_properties
   late bool Function(int direction, Offset global) shouldStart;
+  // ignore: diagnostic_describe_all_properties
   late void Function(PointerEvent event) onStart;
+  // ignore: diagnostic_describe_all_properties
   late void Function(PointerEvent event) onMove;
+  // ignore: diagnostic_describe_all_properties
   late void Function(bool cancelled) onEnd;
 
   int? _pointer;
   Offset _down = Offset.zero;
   bool _decided = false, _started = false;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    // The callbacks are late and always set by the gesture factory: not read here.
+    properties
+      ..add(IntProperty('pointer', _pointer, defaultValue: null))
+      ..add(FlagProperty('decided', value: _decided, ifTrue: 'decided'))
+      ..add(FlagProperty('started', value: _started, ifTrue: 'dragging'));
+  }
 
   @override
   bool isPointerAllowed(PointerDownEvent event) =>

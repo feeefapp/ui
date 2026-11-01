@@ -93,6 +93,37 @@ class AnchoredPanelScope extends InheritedWidget {
   void hideTrigger(bool hide) => _state._triggerHidden.value = hide;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        FlagProperty(
+          'open',
+          value: open.value,
+          ifTrue: 'open',
+          ifFalse: 'closed',
+        ),
+      )
+      ..add(FlagProperty('cover', value: cover, ifTrue: 'covers trigger'))
+      ..add(
+        FlagProperty(
+          'placed',
+          value: geometry.placed,
+          ifFalse: 'not placed yet',
+        ),
+      )
+      ..add(EnumProperty<PanelSide>('placedSide', geometry.side))
+      ..add(DiagnosticsProperty<RenderBox?>('trigger', trigger))
+      ..add(
+        DiagnosticsProperty<RenderBox?>(
+          'triggerGlass',
+          triggerGlass,
+          defaultValue: null,
+        ),
+      );
+  }
+
+  @override
   bool updateShouldNotify(AnchoredPanelScope old) => false;
 }
 
@@ -153,6 +184,46 @@ class AnchoredPanel extends StatefulWidget {
   final double collisionPadding;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        FlagProperty('open', value: open, ifTrue: 'open', ifFalse: 'closed'),
+      )
+      ..add(ObjectFlagProperty<WidgetBuilder>.has('panel', panel))
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onDismiss', onDismiss))
+      ..add(
+        DiagnosticsProperty<GlobalKey?>('anchor', anchor, defaultValue: null),
+      )
+      ..add(
+        EnumProperty<PanelSide>('side', side, defaultValue: PanelSide.bottom),
+      )
+      ..add(
+        EnumProperty<PanelAlign?>(
+          'align',
+          align,
+          defaultValue: PanelAlign.center,
+        ),
+      )
+      ..add(DoubleProperty('sideOffset', sideOffset, defaultValue: 0.0))
+      ..add(
+        FlagProperty(
+          'cover',
+          value: cover,
+          ifTrue: 'covers trigger',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        DoubleProperty(
+          'collisionPadding',
+          collisionPadding,
+          defaultValue: menuCollisionPadding,
+        ),
+      );
+  }
+
+  @override
   State<AnchoredPanel> createState() => _AnchoredPanelState();
 }
 
@@ -171,6 +242,30 @@ class _AnchoredPanelState extends State<AnchoredPanel>
   /// attached for the widget's whole life: an [OverlayPortalController] can't be shown or hidden
   /// while the tree builds, and `open` arrives during a build.
   bool _visible = false;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(FlagProperty('visible', value: _visible, ifTrue: 'visible'))
+      ..add(
+        FlagProperty(
+          'open',
+          value: _openNotifier.value,
+          ifTrue: 'open',
+          ifFalse: 'closed',
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'triggerHidden',
+          value: _triggerHidden.value,
+          ifTrue: 'trigger hidden',
+        ),
+      )
+      ..add(IntProperty('exitHolds', _holds, defaultValue: 0))
+      ..add(IntProperty('scrollPositions', _positions.length, defaultValue: 0));
+  }
 
   @override
   void initState() {
@@ -371,6 +466,28 @@ class _AnchoredLayout extends SingleChildRenderObjectWidget {
   final Listenable relayout;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<GlobalKey>('anchor', anchor))
+      ..add(EnumProperty<PanelSide>('side', side))
+      ..add(EnumProperty<PanelAlign?>('align', align, defaultValue: null))
+      ..add(DoubleProperty('sideOffset', sideOffset))
+      ..add(FlagProperty('cover', value: cover, ifTrue: 'covers trigger'))
+      ..add(DiagnosticsProperty<EdgeInsets>('padding', padding))
+      ..add(EnumProperty<TextDirection>('direction', direction))
+      ..add(
+        FlagProperty(
+          'geometry',
+          value: geometry.placed,
+          ifTrue: 'placed',
+          ifFalse: 'not placed',
+        ),
+      )
+      ..add(DiagnosticsProperty<Listenable>('relayout', relayout));
+  }
+
+  @override
   RenderObject createRenderObject(BuildContext context) =>
       _RenderAnchoredLayout(
         anchor: anchor,
@@ -475,6 +592,29 @@ class _RenderAnchoredLayout extends RenderShiftedBox {
     }
     _relayout = v;
     markNeedsLayout();
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<GlobalKey>('anchor', _anchor))
+      ..add(EnumProperty<PanelSide>('side', _side))
+      ..add(EnumProperty<PanelAlign?>('align', _align, defaultValue: null))
+      ..add(DoubleProperty('sideOffset', _sideOffset))
+      ..add(FlagProperty('cover', value: _cover, ifTrue: 'covers trigger'))
+      ..add(DiagnosticsProperty<EdgeInsets>('padding', _padding))
+      ..add(EnumProperty<TextDirection>('direction', _direction))
+      ..add(
+        FlagProperty(
+          'placed',
+          value: geometry.placed,
+          ifFalse: 'not placed yet',
+        ),
+      )
+      ..add(DiagnosticsProperty<Rect>('anchorRect', geometry.anchor))
+      ..add(DiagnosticsProperty<Size>('panelSize', geometry.panel))
+      ..add(EnumProperty<PanelSide>('placedSide', geometry.side));
   }
 
   @override

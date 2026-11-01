@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart' show OverflowBoxFit;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -119,6 +120,61 @@ class ToolbarSearch extends StatefulWidget {
 
   /// Called when the field opens or collapses.
   final ValueChanged<bool>? onExpandedChange;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(StringProperty('value', value))
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>>.has(
+          'onValueChange',
+          onValueChange,
+        ),
+      )
+      ..add(StringProperty('placeholder', placeholder, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'disabled',
+          value: disabled,
+          ifTrue: 'disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'defaultExpanded',
+          value: defaultExpanded,
+          ifTrue: 'starts expanded',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'inputRef',
+          inputRef,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<
+          Widget Function(BuildContext context, ToolbarSearchInputProps props)
+        >.has('renderInput', renderInput),
+      )
+      ..add(
+        ObjectFlagProperty<KeyEventResult Function(KeyEvent event)>.has(
+          'onInputKeyDown',
+          onInputKeyDown,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<bool>>.has(
+          'onExpandedChange',
+          onExpandedChange,
+        ),
+      );
+  }
 
   @override
   State<ToolbarSearch> createState() => _ToolbarSearchState();
@@ -363,7 +419,8 @@ class _ToolbarSearchState extends State<ToolbarSearch>
             ),
           ),
         );
-        final hasControls = widget.children.isNotEmpty || widget.trailing != null;
+        final hasControls =
+            widget.children.isNotEmpty || widget.trailing != null;
         // Before the search in reading and focus order: the search ends the row.
         final controls = Padding(
           padding: EdgeInsetsDirectional.only(end: _compact + gap),
@@ -432,6 +489,14 @@ class _SearchGlyph extends StatelessWidget {
   final bool expanded, rtl;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(FlagProperty('expanded', value: expanded, ifTrue: 'expanded'))
+      ..add(FlagProperty('rtl', value: rtl, ifTrue: 'rtl'));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final reduced = reducedMotionOf(context);
     final fade = reduced ? Duration.zero : const Duration(milliseconds: 160);
@@ -482,6 +547,15 @@ class _Editor extends StatelessWidget {
   final List<Widget> children;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(FlagProperty('expanded', value: expanded, ifTrue: 'expanded'))
+      ..add(DoubleProperty('opacity', opacity))
+      ..add(DoubleProperty('minWidth', minWidth));
+  }
+
+  @override
   Widget build(BuildContext context) => IgnorePointer(
     ignoring: !expanded,
     child: ExcludeFocus(
@@ -521,6 +595,15 @@ class _SearchInput extends StatefulWidget {
   });
   final ToolbarSearchInputProps props;
   final double height, paddingInline;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<ToolbarSearchInputProps>('props', props))
+      ..add(DoubleProperty('height', height))
+      ..add(DoubleProperty('paddingInline', paddingInline));
+  }
 
   @override
   State<_SearchInput> createState() => _SearchInputState();

@@ -9,6 +9,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart' show superellipsePath;
+import '../devtools/devtools.dart';
 import '../performance.dart';
 import '../physics/motion_value.dart';
 import '../physics/spring.dart';
@@ -71,6 +72,43 @@ class GlassContainer extends StatefulWidget {
   final Widget child;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        EnumProperty<GlassKind>(
+          'material',
+          material,
+          defaultValue: GlassKind.regular,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'adaptive',
+          value: adaptive,
+          ifFalse: 'fixed tone',
+          defaultValue: true,
+        ),
+      )
+      ..add(DoubleProperty('spacing', spacing, defaultValue: 8))
+      ..add(
+        EnumProperty<GlassLightMode>(
+          'light',
+          light,
+          defaultValue: GlassLightMode.pointer,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'interactive',
+          value: interactive,
+          ifFalse: 'no press response',
+          defaultValue: true,
+        ),
+      );
+  }
+
+  @override
   State<GlassContainer> createState() => _GlassContainerState();
 
   /// The clusters a container (its element) paints this frame, with their clips.
@@ -120,6 +158,43 @@ class GlassScope extends StatelessWidget {
   final Widget child;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        EnumProperty<GlassKind>(
+          'material',
+          material,
+          defaultValue: GlassKind.regular,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'adaptive',
+          value: adaptive,
+          ifFalse: 'fixed tone',
+          defaultValue: true,
+        ),
+      )
+      ..add(DoubleProperty('spacing', spacing, defaultValue: 8))
+      ..add(
+        EnumProperty<GlassLightMode>(
+          'light',
+          light,
+          defaultValue: GlassLightMode.pointer,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'interactive',
+          value: interactive,
+          ifFalse: 'no press response',
+          defaultValue: true,
+        ),
+      );
+  }
+
+  @override
   Widget build(BuildContext context) =>
       context
               .dependOnInheritedWidgetOfExactType<_GlassRegistryScope>()
@@ -143,6 +218,19 @@ class GlassScope extends StatelessWidget {
 class GlassInstant extends InheritedWidget {
   const GlassInstant({super.key, required this.instant, required super.child});
   final bool instant;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      FlagProperty(
+        'instant',
+        value: instant,
+        ifTrue: 'instant',
+        ifFalse: 'springs',
+      ),
+    );
+  }
 
   /// Whether the glass at [context] sits on a surface that is moving as one piece.
   static bool of(BuildContext context) =>
@@ -169,6 +257,12 @@ const double glassAdaptMaxHeight = 72;
 class GlassBackdrop extends InheritedWidget {
   const GlassBackdrop({super.key, required this.tone, required super.child});
   final GlassTone tone;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(EnumProperty<GlassTone>('tone', tone));
+  }
 
   /// The tone of the nearest enclosing backdrop, or null.
   static GlassTone? maybeOf(BuildContext context) =>
@@ -294,6 +388,19 @@ class _GlassRegistryScope extends InheritedWidget {
   const _GlassRegistryScope({required this.registry, required super.child});
   final GlassMemberRegistry? registry;
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      DiagnosticsProperty<GlassMemberRegistry?>(
+        'registry',
+        registry,
+        ifNull: 'new glass layer',
+        defaultValue: null,
+      ),
+    );
+  }
+
+  @override
   bool updateShouldNotify(_GlassRegistryScope old) => old.registry != registry;
 }
 
@@ -301,6 +408,23 @@ class _GlassContainerState extends State<GlassContainer> {
   late final _scene = _GlassScene();
   late final _registry = GlassMemberRegistry._(_scene);
   final _hostKey = GlobalKey();
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IntProperty('members', _scene._members.length))
+      ..add(IntProperty('clusters', _scene._paths.length))
+      ..add(DoubleProperty('height', _height, defaultValue: null))
+      ..add(FlagProperty('instant', value: _scene.instant, ifTrue: 'instant'))
+      ..add(
+        FlagProperty(
+          'reduceMotion',
+          value: _scene.reduceMotion,
+          ifTrue: 'reduced motion',
+        ),
+      );
+  }
 
   @override
   void initState() {
@@ -590,6 +714,49 @@ class _GlassLayers extends StatelessWidget {
   final _GlassMaterial material;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        DiagnosticsProperty<_GlassScene>(
+          'scene',
+          scene,
+          level: DiagnosticLevel.hidden,
+        ),
+      )
+      ..add(IntProperty('clusters', scene._paths.length))
+      ..add(EnumProperty<GlassKind>('kind', material.kind))
+      ..add(EnumProperty<GlassStyle>('style', material.style))
+      ..add(EnumProperty<Brightness>('brightness', material.brightness))
+      ..add(DoubleProperty('tint', material.tint))
+      ..add(
+        FlagProperty(
+          'translucent',
+          value: material.translucent,
+          ifTrue: 'reads backdrop',
+          ifFalse: 'solid',
+        ),
+      )
+      ..add(FlagProperty('blur', value: material.blur, ifTrue: 'blurred'))
+      ..add(
+        FlagProperty(
+          'refraction',
+          value: material.refraction,
+          ifTrue: 'refracted',
+        ),
+      )
+      ..add(FlagProperty('frosted', value: material.frosted, ifTrue: 'frosted'))
+      ..add(
+        FlagProperty(
+          'highContrast',
+          value: material.highContrast,
+          ifTrue: 'high contrast',
+        ),
+      )
+      ..add(DoubleProperty('refractionStrength', material.refractionStrength));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final filtered = material.translucent && glassFiltersBackdropOf(context);
     final paint = CustomPaint(
@@ -622,6 +789,49 @@ class _GlassBackdrops extends StatefulWidget {
   const _GlassBackdrops({required this.scene, required this.material});
   final _GlassScene scene;
   final _GlassMaterial material;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        DiagnosticsProperty<_GlassScene>(
+          'scene',
+          scene,
+          level: DiagnosticLevel.hidden,
+        ),
+      )
+      ..add(IntProperty('clusters', scene._paths.length))
+      ..add(EnumProperty<GlassKind>('kind', material.kind))
+      ..add(EnumProperty<GlassStyle>('style', material.style))
+      ..add(EnumProperty<Brightness>('brightness', material.brightness))
+      ..add(DoubleProperty('tint', material.tint))
+      ..add(
+        FlagProperty(
+          'translucent',
+          value: material.translucent,
+          ifTrue: 'reads backdrop',
+          ifFalse: 'solid',
+        ),
+      )
+      ..add(FlagProperty('blur', value: material.blur, ifTrue: 'blurred'))
+      ..add(
+        FlagProperty(
+          'refraction',
+          value: material.refraction,
+          ifTrue: 'refracted',
+        ),
+      )
+      ..add(FlagProperty('frosted', value: material.frosted, ifTrue: 'frosted'))
+      ..add(
+        FlagProperty(
+          'highContrast',
+          value: material.highContrast,
+          ifTrue: 'high contrast',
+        ),
+      )
+      ..add(DoubleProperty('refractionStrength', material.refractionStrength));
+  }
 
   @override
   State<_GlassBackdrops> createState() => _GlassBackdropsState();
@@ -833,7 +1043,11 @@ class _GlassPainter extends CustomPainter {
       ..translate(-left, -top);
     _shadows(offscreen, paths);
     final picture = recorder.endRecording();
-    final image = picture.toImageSync(width, height);
+    final image = kitTimeline(
+      'glass shadow raster',
+      () => picture.toImageSync(width, height),
+      arguments: {'width': width, 'height': height},
+    );
     picture.dispose();
     scene._shadowImage?.image.dispose();
     final next = _ShadowImage(
@@ -1639,7 +1853,11 @@ class _GlassScene extends ChangeNotifier {
     _singleRims = {
       for (var i = 0; i < shapes.length; i++) visuals[i]: shapes[i].singleRim,
     };
-    _paths = clippedGlassPaths(visuals, clips, spacing);
+    _paths = kitTimeline(
+      'glass outlines',
+      () => clippedGlassPaths(visuals, clips, spacing),
+      arguments: {'shapes': visuals.length},
+    );
   }
 
   /// Moves every bubble's content with its glass and clips a travelling surface's content to

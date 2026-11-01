@@ -1,0 +1,5 @@
+name: feeef_ui
+issueTracker: https://github.com/feeefapp/ui/issues
+version: 0.1.0
+materialIconCodePoint: "0xe46b"
+requiresConnection: true

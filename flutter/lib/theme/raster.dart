@@ -3,6 +3,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 
+import '../devtools/devtools.dart';
+
 /// Paints [draw]'s output from an image rendered once per [key] and device pixel ratio, instead of
 /// drawing it again on every frame. For blurred shadows: Impeller keeps no raster cache, so a
 /// `MaskFilter.blur` on screen is a Gaussian pass on every frame anything moves, for every button,
@@ -111,7 +113,11 @@ abstract final class StillRasters {
       ..translate(-bounds.left, -bounds.top);
     draw(offscreen);
     final picture = recorder.endRecording();
-    final image = picture.toImageSync(width, height);
+    final image = kitTimeline(
+      'still raster',
+      () => picture.toImageSync(width, height),
+      arguments: {'key': '$key', 'width': width, 'height': height},
+    );
     picture.dispose();
     debugRendered++;
     final still = _Still(image, width * height * 4);

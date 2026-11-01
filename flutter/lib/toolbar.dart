@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'glass/container.dart';
@@ -25,6 +26,12 @@ class Toolbar extends StatelessWidget {
 
   /// End content; keeps its size.
   final Widget? trailing;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(StringProperty('label', label));
+  }
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -61,6 +68,12 @@ class ToolbarOrientation extends InheritedWidget {
 
   final Axis axis;
 
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(EnumProperty<Axis>('axis', axis));
+  }
+
   /// The surrounding axis, or null when none is provided (groups are then horizontal).
   static Axis? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<ToolbarOrientation>()?.axis;
@@ -94,6 +107,31 @@ class ToolbarGroup extends StatelessWidget {
   /// Leaves the container's glass while keeping its place (`data-glass-hidden`).
   final bool glassHidden;
   final List<Widget> children;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(EnumProperty<Axis>('axis', axis, defaultValue: null))
+      ..add(StringProperty('glassId', glassId, defaultValue: null))
+      ..add(StringProperty('glassUnion', glassUnion, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'glassHidden',
+          value: glassHidden,
+          ifTrue: 'glass hidden',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        EnumProperty<GlassMotion>(
+          'glassMotion',
+          glassMotion,
+          defaultValue: GlassMotion.spring,
+        ),
+      );
+  }
 
   @override
   Widget build(BuildContext context) {

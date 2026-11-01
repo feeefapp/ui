@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'segmented_model.dart' show SelectionSemantics;
@@ -96,6 +97,27 @@ class SegmentedControl<T> extends StatelessWidget {
   /// [SelectionOverflow.scroll] scrolls them inside the control (a status filter with many
   /// options). Ignored with [equalWidth].
   final SelectionOverflow overflow;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<T>('value', value))
+      ..add(ObjectFlagProperty<ValueChanged<T>>.has('onChange', onChange))
+      ..add(IterableProperty<SegmentOption<T>>('options', options))
+      ..add(StringProperty('label', label))
+      ..add(FlagProperty('disabled', value: disabled, ifTrue: 'disabled'))
+      ..add(
+        FlagProperty('equalWidth', value: equalWidth, ifTrue: 'equal width'),
+      )
+      ..add(
+        EnumProperty<SelectionOverflow>(
+          'overflow',
+          overflow,
+          defaultValue: SelectionOverflow.menu,
+        ),
+      );
+  }
 
   @override
   Widget build(BuildContext context) => SelectionTrack<T>(

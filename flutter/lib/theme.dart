@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import 'devtools/devtools.dart';
 import 'performance.dart';
 import 'primitives/touch_target.dart';
 import 'theme/focus_visible.dart';
@@ -18,7 +19,7 @@ const brandFontFamily = 'packages/feeef_ui/Outfit';
 
 /// The resolved theme: config, colours for the current brightness and sizes for the density.
 @immutable
-class ThemeData {
+class ThemeData with Diagnosticable {
   ThemeData({
     required this.config,
     required this.brightness,
@@ -97,6 +98,31 @@ class ThemeData {
     performance,
     config.metrics,
   );
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<Brightness>('brightness', brightness))
+      ..add(EnumProperty<PerformanceTier>('performance', performance))
+      ..add(
+        DiagnosticsProperty<ThemeConfig>(
+          'config',
+          config,
+          expandableValue: true,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<ColorTokens>(
+          'colors',
+          colors,
+          expandableValue: true,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<SizeTokens>('sizes', sizes, expandableValue: true),
+      );
+  }
 }
 
 /// Owns the colour mode and the app theme config, like the web kit's `ThemeProvider`. Put it above
@@ -134,24 +160,60 @@ class ThemeProvider extends StatelessWidget {
     return scope!.data;
   }
 
+  /// What rebuilds every provider: a device measured slow, and DevTools' theme override.
+  static final _inputs = Listenable.merge([
+    MeasuredPerformance.slow,
+    KitDevTools.themeOverride,
+  ]);
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        DiagnosticsProperty<ThemeConfig>(
+          'config',
+          config,
+          expandableValue: true,
+          defaultValue: ThemeConfig.defaults,
+        ),
+      )
+      ..add(
+        EnumProperty<Brightness>('brightness', brightness, defaultValue: null),
+      )
+      ..add(
+        DiagnosticsProperty<ColorTokens>(
+          'colors',
+          colors,
+          expandableValue: true,
+          defaultValue: null,
+        ),
+      );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final mode =
-        brightness ??
-        MediaQuery.maybePlatformBrightnessOf(context) ??
-        Brightness.light;
+    KitDevTools.ensureRegistered();
     // The root provider resolves the touch reach of the controls below it (TouchTarget).
     final Widget content = TouchTargetScope.exists(context)
         ? child
         : TouchTargetScope(child: child);
-    // A device measured slow steps `auto` down while the app runs (MeasuredPerformance).
-    return ValueListenableBuilder<bool>(
-      valueListenable: MeasuredPerformance.slow,
+    // A device measured slow steps `auto` down while the app runs (MeasuredPerformance), and
+    // DevTools' override replaces options everywhere at once (KitDevTools).
+    final root = context.getInheritedWidgetOfExactType<_ThemeScope>() == null;
+    return ListenableBuilder(
+      listenable: _inputs,
       child: content,
-      builder: (context, _, content) {
+      builder: (context, content) {
+        final override = KitDevTools.themeOverride.value;
+        final forced = brightness == null || root ? override?.brightness : null;
         final data = ThemeData(
-          config: config,
-          brightness: mode,
+          config: override?.apply(config) ?? config,
+          brightness:
+              forced ??
+              brightness ??
+              MediaQuery.maybePlatformBrightnessOf(context) ??
+              Brightness.light,
           colors: colors,
         );
         return _ThemeScope(
@@ -176,6 +238,40 @@ class _ThemeScope extends InheritedWidget {
   final ThemeData data;
   @override
   bool updateShouldNotify(_ThemeScope old) => old.data != data;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      DiagnosticsProperty<ThemeData>('data', data, expandableValue: true),
+    );
+  }
+}
+
+/// Every theme below [root], outermost first: its nesting depth among themes, the widgets that
+/// created it (debug builds only; empty otherwise) and its data. For DevTools
+/// (`ext.feeef_ui.getState`); walks the whole tree, so never call it per frame.
+List<({int depth, String creator, ThemeData data})> debugThemesInTree(
+  Element root,
+) {
+  final found = <({int depth, String creator, ThemeData data})>[];
+  void visit(Element element, int depth) {
+    var below = depth;
+    final widget = element.widget;
+    if (widget is _ThemeScope) {
+      var creator = '';
+      assert(() {
+        creator = element.debugGetCreatorChain(8);
+        return true;
+      }());
+      found.add((depth: depth, creator: creator, data: widget.data));
+      below = depth + 1;
+    }
+    element.visitChildren((child) => visit(child, below));
+  }
+
+  visit(root, 0);
+  return found;
 }
 
 /// The glass style to paint with: the app's [ThemeConfig.glass], or `solid` when the platform asks

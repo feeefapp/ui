@@ -1,0 +1,6 @@
+include: ../analysis_options.yaml
+
+# Test widgets are fixtures, not inspected in DevTools.
+linter:
+  rules:
+    diagnostic_describe_all_properties: false

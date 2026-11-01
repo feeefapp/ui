@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -23,6 +24,18 @@ class PopoverSurface extends StatelessWidget {
   /// Space between the 1px edge and [child].
   final EdgeInsetsGeometry padding;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      DiagnosticsProperty<EdgeInsetsGeometry>(
+        'padding',
+        padding,
+        defaultValue: EdgeInsets.zero,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,6 +107,48 @@ class Popover extends StatefulWidget {
   /// Panel width, at most the bounds' width minus twice [collisionPadding]. Null shrink-wraps.
   final double? width;
   final ValueChanged<bool>? onOpenChange;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        ObjectFlagProperty<
+          Widget Function(BuildContext context, VoidCallback toggle, bool open)
+        >.has('trigger', trigger),
+      )
+      ..add(
+        ObjectFlagProperty<
+          Widget Function(BuildContext context, VoidCallback close)
+        >.has('content', content),
+      )
+      ..add(StringProperty('label', label, defaultValue: null))
+      ..add(
+        EnumProperty<PanelAlign>(
+          'align',
+          align,
+          defaultValue: PanelAlign.center,
+        ),
+      )
+      ..add(DoubleProperty('sideOffset', sideOffset, defaultValue: 0))
+      ..add(
+        DoubleProperty('collisionPadding', collisionPadding, defaultValue: 0),
+      )
+      ..add(
+        DiagnosticsProperty<EdgeInsetsGeometry>(
+          'padding',
+          padding,
+          defaultValue: EdgeInsets.zero,
+        ),
+      )
+      ..add(DoubleProperty('width', width, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<ValueChanged<bool>?>.has(
+          'onOpenChange',
+          onOpenChange,
+        ),
+      );
+  }
 
   @override
   State<Popover> createState() => _PopoverState();

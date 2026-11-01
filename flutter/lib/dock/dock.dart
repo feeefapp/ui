@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../actions/actions_bar.dart';
@@ -40,6 +41,17 @@ class Dock extends StatefulWidget {
 
   /// Task identity, e.g. idle/selected; don't key every count or label change.
   final String swapKey;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(
+        EnumProperty<DockAlign>('align', align, defaultValue: DockAlign.center),
+      )
+      ..add(StringProperty('swapKey', swapKey, defaultValue: 'default'));
+  }
 
   @override
   State<Dock> createState() => _DockState();

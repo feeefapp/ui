@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -89,6 +90,77 @@ class Select extends StatefulWidget {
   final ValidationMode validationMode;
   final ValueChanged<String?>? onValidationChange;
   final FocusNode? focusNode;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('value', value))
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>>.has(
+          'onValueChange',
+          onValueChange,
+        ),
+      )
+      ..add(IterableProperty<Option>('children', children))
+      ..add(StringProperty('label', label, defaultValue: null))
+      ..add(StringProperty('hint', hint, defaultValue: null))
+      ..add(StringProperty('ariaLabel', ariaLabel, defaultValue: null))
+      ..add(StringProperty('placeholder', placeholder, defaultValue: null))
+      ..add(StringProperty('name', name, defaultValue: null))
+      ..add(
+        EnumProperty<ControlVariant>(
+          'variant',
+          variant,
+          defaultValue: ControlVariant.elevated,
+        ),
+      )
+      ..add(
+        EnumProperty<ControlSize>(
+          'controlSize',
+          controlSize,
+          defaultValue: ControlSize.regular,
+        ),
+      )
+      ..add(
+        EnumProperty<FieldLabelStyle>(
+          'labelStyle',
+          labelStyle,
+          defaultValue: FieldLabelStyle.outlined,
+        ),
+      )
+      ..add(StringProperty('error', error, defaultValue: null))
+      ..add(FlagProperty('disabled', value: disabled, ifTrue: 'disabled'))
+      ..add(FlagProperty('required', value: required, ifTrue: 'required'))
+      ..add(
+        StringProperty(
+          'requiredMessage',
+          requiredMessage,
+          defaultValue: 'Choose an option.',
+        ),
+      )
+      ..add(ObjectFlagProperty<InputValidator?>.has('validator', validator))
+      ..add(
+        EnumProperty<ValidationMode>(
+          'validationMode',
+          validationMode,
+          defaultValue: ValidationMode.blur,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<String?>?>.has(
+          'onValidationChange',
+          onValidationChange,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      );
+  }
 
   @override
   State<Select> createState() => _SelectState();
@@ -432,6 +504,22 @@ class _OptionRow extends StatelessWidget {
   final VoidCallback onHover, onTap;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<Option>('option', option))
+      ..add(FlagProperty('checked', value: checked, ifTrue: 'checked'))
+      ..add(
+        FlagProperty('highlighted', value: highlighted, ifTrue: 'highlighted'),
+      )
+      ..add(ColorProperty('highlight', highlight))
+      ..add(ColorProperty('checkedFill', checkedFill))
+      ..add(ColorProperty('both', both))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onHover', onHover))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onTap', onTap));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final fill = checked && highlighted
         ? both
@@ -475,6 +563,17 @@ class _PlainTrigger extends StatelessWidget {
   final bool small, hovered, open, focus;
   final ControlVariant variant;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(FlagProperty('small', value: small, ifTrue: 'small'))
+      ..add(FlagProperty('hovered', value: hovered, ifTrue: 'hovered'))
+      ..add(FlagProperty('open', value: open, ifTrue: 'open'))
+      ..add(FlagProperty('focus', value: focus, ifTrue: 'focused'))
+      ..add(EnumProperty<ControlVariant>('variant', variant));
+  }
 
   @override
   Widget build(BuildContext context) {

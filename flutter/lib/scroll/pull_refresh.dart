@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/pixel_loader.dart';
@@ -85,6 +86,16 @@ class PullRefreshIndicator extends StatelessWidget {
   /// The current pull (px).
   final double distance;
   final bool refreshing;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('distance', distance))
+      ..add(
+        FlagProperty('refreshing', value: refreshing, ifTrue: 'refreshing'),
+      );
+  }
 
   @override
   Widget build(BuildContext context) {

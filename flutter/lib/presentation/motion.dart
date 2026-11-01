@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../glass/container.dart';
@@ -104,6 +105,16 @@ class PopTransition extends StatelessWidget {
   });
   final PopMotionController controller;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<PopMotionController>('controller', controller))
+      ..add(DoubleProperty('opacity', controller.opacity))
+      ..add(DoubleProperty('scale', controller.scale))
+      ..add(FlagProperty('moving', value: controller.moving, ifTrue: 'moving'));
+  }
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(

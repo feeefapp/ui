@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../glass/container.dart';
@@ -43,6 +44,22 @@ class PresentationHeader extends StatelessWidget {
   /// Disables the close button (while a save runs, say). A leaving surface keeps its look: closing
   /// twice does nothing.
   final bool closeDisabled;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IntProperty('trailing', trailing.length, defaultValue: 0))
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onClose', onClose))
+      ..add(StringProperty('closeLabel', closeLabel, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'closeDisabled',
+          value: closeDisabled,
+          ifTrue: 'close disabled',
+        ),
+      );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -130,6 +147,15 @@ class CloseBubble extends StatelessWidget {
   final String label;
   final VoidCallback onClose;
   final bool disabled;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onClose', onClose))
+      ..add(FlagProperty('disabled', value: disabled, ifTrue: 'disabled'));
+  }
 
   @override
   Widget build(BuildContext context) => ToolbarGroup(

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../layout/size_reporter.dart';
@@ -62,6 +63,33 @@ class PresentationBody extends StatefulWidget {
   final Widget child;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(FlagProperty('fill', value: fill, ifTrue: 'fill'))
+      ..add(DoubleProperty('edgeGap', edgeGap, defaultValue: null))
+      ..add(
+        DoubleProperty('contentPadding', contentPadding, defaultValue: null),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<double>?>.has(
+          'onNaturalHeight',
+          onNaturalHeight,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<ScrollController?>(
+          'controller',
+          controller,
+          defaultValue: null,
+        ),
+      )
+      ..add(ColorProperty('surface', surface, defaultValue: null))
+      ..add(DoubleProperty('radius', radius, defaultValue: null));
+  }
+
+  @override
   State<PresentationBody> createState() => _PresentationBodyState();
 }
 
@@ -69,6 +97,16 @@ class _PresentationBodyState extends State<PresentationBody> {
   double? _body;
   double _top = 0, _bottom = 0;
   double? _reported;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('bodyHeight', _body, defaultValue: null))
+      ..add(DoubleProperty('topHeight', _top, defaultValue: 0.0))
+      ..add(DoubleProperty('bottomHeight', _bottom, defaultValue: 0.0))
+      ..add(DoubleProperty('naturalHeight', _reported, defaultValue: null));
+  }
 
   void _set(void Function() update) {
     if (mounted) setState(update);

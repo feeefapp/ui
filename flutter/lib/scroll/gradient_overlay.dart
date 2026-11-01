@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
@@ -41,6 +42,26 @@ class ScrollGradientOverlay extends StatelessWidget {
 
   /// Corner radius the washes are clipped to (the enclosing panel's).
   final double radius;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<ScrollController>('controller', controller))
+      ..add(
+        DiagnosticsProperty<Listenable?>(
+          'metrics',
+          metrics,
+          defaultValue: null,
+        ),
+      )
+      ..add(DoubleProperty('topHeight', topHeight, defaultValue: 100))
+      ..add(DoubleProperty('bottomHeight', bottomHeight, defaultValue: 160))
+      ..add(DoubleProperty('density', density, defaultValue: 0.8))
+      ..add(DoubleProperty('fadeZone', fadeZone, defaultValue: scrollFadeZone))
+      ..add(ColorProperty('color', color))
+      ..add(DoubleProperty('radius', radius, defaultValue: 0));
+  }
 
   @override
   Widget build(BuildContext context) => IgnorePointer(

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -197,6 +198,39 @@ class FreeformBoard extends StatefulWidget {
   /// Draws a completed take instead of loading its `fileUrl` (for images the host already holds,
   /// or formats Flutter can't decode, such as SVG). Its card keeps the take's aspect ratio.
   final Widget Function(BuildContext context, ImageTake take)? imageBuilder;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        FlagProperty(
+          'embedded',
+          value: embedded,
+          ifTrue: 'embedded',
+          defaultValue: false,
+        ),
+      )
+      ..add(IterableProperty<ImageTake>('takes', takes))
+      ..add(StringProperty('selectedId', selectedId, defaultValue: null))
+      ..add(ObjectFlagProperty<ValueChanged<String>>.has('onSelect', onSelect))
+      ..add(DiagnosticsProperty<Insets>('insets', insets))
+      ..add(IntProperty('now', now))
+      ..add(FlagProperty('signedIn', value: signedIn, ifTrue: 'signed in'))
+      ..add(IterableProperty<BoardStarter>('starters', starters))
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>>.has('onStarter', onStarter),
+      )
+      ..add(ObjectFlagProperty<ValueChanged<ImageTake>>.has('onRetry', onRetry))
+      ..add(
+        ObjectFlagProperty<ValueChanged<ImageTake>>.has('onRemove', onRemove),
+      )
+      ..add(
+        ObjectFlagProperty<
+          Widget Function(BuildContext context, ImageTake take)
+        >.has('imageBuilder', imageBuilder),
+      );
+  }
 
   @override
   State<FreeformBoard> createState() => _FreeformBoardState();
@@ -792,6 +826,15 @@ class _CardLabel extends StatelessWidget {
   final bool current;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<ImageTake>('take', take))
+      ..add(IntProperty('number', number))
+      ..add(FlagProperty('current', value: current, ifTrue: 'current'));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final c = ThemeProvider.of(context).colors;
     final t = I18n.of(context).t;
@@ -842,6 +885,25 @@ class _CardView extends StatefulWidget {
   final ValueChanged<double> onRatio;
   final VoidCallback onRetry, onRemove;
   final Widget Function(Widget) stop;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<ImageTake>('take', take))
+      ..add(FlagProperty('current', value: current, ifTrue: 'current'))
+      ..add(IntProperty('now', now))
+      ..add(
+        ObjectFlagProperty<Widget Function(BuildContext, ImageTake)>.has(
+          'imageBuilder',
+          imageBuilder,
+        ),
+      )
+      ..add(ObjectFlagProperty<ValueChanged<double>>.has('onRatio', onRatio))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onRetry', onRetry))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onRemove', onRemove))
+      ..add(ObjectFlagProperty<Widget Function(Widget)>.has('stop', stop));
+  }
 
   @override
   State<_CardView> createState() => _CardViewState();
@@ -1163,6 +1225,18 @@ class _StateView extends StatelessWidget {
   final Widget Function(Widget) stop;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<ImageTake>('take', take))
+      ..add(FlagProperty('busy', value: busy, ifTrue: 'busy'))
+      ..add(IntProperty('now', now))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onRetry', onRetry))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onRemove', onRemove))
+      ..add(ObjectFlagProperty<Widget Function(Widget)>.has('stop', stop));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final c = ThemeProvider.of(context).colors;
     final t = I18n.of(context).t;
@@ -1263,6 +1337,17 @@ class _Welcome extends StatelessWidget {
   final ValueChanged<String> onStarter;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(FlagProperty('signedIn', value: signedIn, ifTrue: 'signed in'))
+      ..add(IterableProperty<BoardStarter>('starters', starters))
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>>.has('onStarter', onStarter),
+      );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
@@ -1329,6 +1414,12 @@ class _Welcome extends StatelessWidget {
 class _FilledStar extends StatelessWidget {
   const _FilledStar({required this.color});
   final Color color;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(ColorProperty('color', color));
+  }
 
   @override
   Widget build(BuildContext context) => SizedBox.square(

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui show BoxHeightStyle, ClipOp;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -91,6 +92,82 @@ class FieldShell extends StatefulWidget {
 
   /// The control, laid out inside the frame's padding.
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('hint', hint, defaultValue: null))
+      ..add(StringProperty('label', label, defaultValue: null))
+      ..add(
+        EnumProperty<FieldLabelStyle>(
+          'labelStyle',
+          labelStyle,
+          defaultValue: FieldLabelStyle.outlined,
+        ),
+      )
+      ..add(StringProperty('error', error, defaultValue: null))
+      ..add(
+        EnumProperty<ControlVariant>(
+          'variant',
+          variant,
+          defaultValue: ControlVariant.outlined,
+        ),
+      )
+      ..add(
+        EnumProperty<ControlSize>(
+          'controlSize',
+          controlSize,
+          defaultValue: ControlSize.regular,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'disabled',
+          value: disabled,
+          ifTrue: 'disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'required',
+          value: required,
+          ifTrue: 'required',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'invalid',
+          value: invalid,
+          ifTrue: 'invalid',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'populated',
+          value: populated,
+          ifTrue: 'populated',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'alwaysFloat',
+          value: alwaysFloat,
+          ifTrue: 'always float',
+          defaultValue: false,
+        ),
+      )
+      ..add(IntProperty('minLines', minLines, defaultValue: 1))
+      ..add(
+        ObjectFlagProperty<
+          Widget Function(BuildContext context, Widget frame)?
+        >.has('frameBuilder', frameBuilder),
+      );
+  }
 
   @override
   State<FieldShell> createState() => _FieldShellState();
@@ -415,6 +492,31 @@ class _FloatingLabel extends StatelessWidget {
   final Color color;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('text', text))
+      ..add(
+        FlagProperty(
+          'floated',
+          value: floated,
+          ifTrue: 'floated',
+          ifFalse: 'resting',
+        ),
+      )
+      ..add(FlagProperty('padded', value: padded, ifTrue: 'padded'))
+      ..add(DoubleProperty('restFont', restFont))
+      ..add(DoubleProperty('restLine', restLine))
+      ..add(DoubleProperty('restTop', restTop))
+      ..add(DoubleProperty('floatTop', floatTop))
+      ..add(DoubleProperty('floatFont', floatFont))
+      ..add(DoubleProperty('floatLine', floatLine))
+      ..add(DoubleProperty('start', start))
+      ..add(DoubleProperty('end', end, defaultValue: null))
+      ..add(ColorProperty('color', color));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final reduced = reducedMotionOf(context);
     final base = DefaultTextStyle.of(context).style;
@@ -709,6 +811,190 @@ class TextField extends StatefulWidget {
   final bool autofocus;
   final TextEditingController? controller;
   final FocusNode? focusNode;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('hint', hint, defaultValue: null))
+      ..add(StringProperty('label', label, defaultValue: null))
+      ..add(StringProperty('placeholder', placeholder, defaultValue: null))
+      ..add(StringProperty('ariaLabel', ariaLabel, defaultValue: null))
+      ..add(StringProperty('name', name, defaultValue: null))
+      ..add(
+        EnumProperty<ControlSize>(
+          'controlSize',
+          controlSize,
+          defaultValue: ControlSize.regular,
+        ),
+      )
+      ..add(
+        EnumProperty<ControlVariant>(
+          'variant',
+          variant,
+          defaultValue: ControlVariant.outlined,
+        ),
+      )
+      ..add(
+        EnumProperty<FieldLabelStyle>(
+          'labelStyle',
+          labelStyle,
+          defaultValue: FieldLabelStyle.outlined,
+        ),
+      )
+      ..add(StringProperty('error', error, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'showCounter',
+          value: showCounter,
+          ifTrue: 'counter',
+          defaultValue: false,
+        ),
+      )
+      ..add(StringProperty('value', value, defaultValue: null))
+      ..add(StringProperty('defaultValue', defaultValue, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>?>.has(
+          'onValueChange',
+          onValueChange,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>?>.has(
+          'onSubmitted',
+          onSubmitted,
+        ),
+      )
+      ..add(ObjectFlagProperty<InputValidator?>.has('validator', validator))
+      ..add(
+        EnumProperty<ValidationMode>(
+          'validationMode',
+          validationMode,
+          defaultValue: ValidationMode.blur,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<String?>?>.has(
+          'onValidationChange',
+          onValidationChange,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'disabled',
+          value: disabled,
+          ifTrue: 'disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'readOnly',
+          value: readOnly,
+          ifTrue: 'read-only',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'required',
+          value: required,
+          ifTrue: 'required',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        StringProperty(
+          'requiredMessage',
+          requiredMessage,
+          defaultValue: 'Fill in this field.',
+        ),
+      )
+      ..add(IntProperty('minLength', minLength, defaultValue: null))
+      ..add(IntProperty('maxLength', maxLength, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'multiline',
+          value: multiline,
+          ifTrue: 'multiline',
+          defaultValue: false,
+        ),
+      )
+      ..add(IntProperty('minLines', minLines, defaultValue: 1))
+      ..add(IntProperty('maxLines', maxLines, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'obscureText',
+          value: obscureText,
+          ifTrue: 'obscured',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<TextInputType>(
+          'keyboardType',
+          keyboardType,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        EnumProperty<TextInputAction>(
+          'textInputAction',
+          textInputAction,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        IterableProperty<String>(
+          'autofillHints',
+          autofillHints,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        IterableProperty<TextInputFormatter>(
+          'inputFormatters',
+          inputFormatters,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        EnumProperty<TextCapitalization>(
+          'textCapitalization',
+          textCapitalization,
+          defaultValue: TextCapitalization.none,
+        ),
+      )
+      ..add(
+        EnumProperty<TextDirection>(
+          'textDirection',
+          textDirection,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'autofocus',
+          value: autofocus,
+          ifTrue: 'autofocus',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<TextEditingController>(
+          'controller',
+          controller,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      );
+  }
 
   @override
   State<TextField> createState() => _TextFieldState();
@@ -1008,6 +1294,19 @@ class FieldForm extends StatefulWidget {
   final VoidCallback? onReset;
   final Widget child;
 
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        ObjectFlagProperty<ValueChanged<Map<String, String>>?>.has(
+          'onSubmit',
+          onSubmit,
+        ),
+      )
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onReset', onReset));
+  }
+
   /// The nearest form, or null when the field is not in one.
   static FieldFormState? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<_FieldFormScope>()?.form;
@@ -1024,6 +1323,12 @@ class FieldForm extends StatefulWidget {
 
 class FieldFormState extends State<FieldForm> {
   final _fields = <FieldFormEntry>[];
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(IntProperty('fields', _fields.length));
+  }
 
   void register(FieldFormEntry field) {
     if (!_fields.contains(field)) _fields.add(field);
@@ -1064,6 +1369,12 @@ class FieldFormState extends State<FieldForm> {
 class _FieldFormScope extends InheritedWidget {
   const _FieldFormScope({required this.form, required super.child});
   final FieldFormState form;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<FieldFormState>('form', form));
+  }
 
   @override
   bool updateShouldNotify(_FieldFormScope old) => old.form != form;

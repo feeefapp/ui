@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
@@ -33,6 +34,29 @@ class Tooltip extends StatefulWidget {
   final double offset;
   final bool enabled;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(
+        EnumProperty<TooltipSide>(
+          'side',
+          side,
+          defaultValue: TooltipSide.right,
+        ),
+      )
+      ..add(DoubleProperty('offset', offset, defaultValue: 8))
+      ..add(
+        FlagProperty(
+          'enabled',
+          value: enabled,
+          ifFalse: 'disabled',
+          defaultValue: true,
+        ),
+      );
+  }
 
   @override
   State<Tooltip> createState() => _TooltipState();
@@ -104,6 +128,12 @@ class _TooltipState extends State<Tooltip> {
 class _TooltipSurface extends StatelessWidget {
   const _TooltipSurface({required this.label});
   final String label;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(StringProperty('label', label));
+  }
 
   @override
   Widget build(BuildContext context) {

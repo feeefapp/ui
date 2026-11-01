@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' show SemanticsRole;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -65,6 +66,51 @@ class Checkbox extends StatefulWidget {
   /// select box: "Select order #1042".
   final String? ariaLabel;
   final FocusNode? focusNode;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<bool>('checked', checked, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'defaultChecked',
+          value: defaultChecked,
+          ifTrue: 'checked by default',
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<bool>?>.has(
+          'onCheckedChange',
+          onCheckedChange,
+        ),
+      )
+      ..add(StringProperty('error', error, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'indeterminate',
+          value: indeterminate,
+          ifTrue: 'indeterminate',
+        ),
+      )
+      ..add(FlagProperty('disabled', value: disabled, ifTrue: 'disabled'))
+      ..add(FlagProperty('required', value: required, ifTrue: 'required'))
+      ..add(
+        EnumProperty<ControlSize>(
+          'controlSize',
+          controlSize,
+          defaultValue: ControlSize.regular,
+        ),
+      )
+      ..add(StringProperty('ariaLabel', ariaLabel, defaultValue: null))
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      );
+  }
 
   @override
   State<Checkbox> createState() => _CheckboxState();
@@ -133,6 +179,43 @@ class Radio extends StatefulWidget {
   /// Accessible name when there is no visible [label] (the web `aria-label`).
   final String? ariaLabel;
   final FocusNode? focusNode;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<bool>('checked', checked, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'defaultChecked',
+          value: defaultChecked,
+          ifTrue: 'checked by default',
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<bool>?>.has(
+          'onCheckedChange',
+          onCheckedChange,
+        ),
+      )
+      ..add(StringProperty('error', error, defaultValue: null))
+      ..add(FlagProperty('disabled', value: disabled, ifTrue: 'disabled'))
+      ..add(
+        EnumProperty<ControlSize>(
+          'controlSize',
+          controlSize,
+          defaultValue: ControlSize.regular,
+        ),
+      )
+      ..add(StringProperty('ariaLabel', ariaLabel, defaultValue: null))
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      );
+  }
 
   @override
   State<Radio> createState() => _RadioState();
@@ -210,6 +293,31 @@ class RadioGroup extends StatefulWidget {
   final String? error;
   final bool required;
   final ControlSize controlSize;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(IterableProperty<RadioOption>('options', options))
+      ..add(StringProperty('value', value, defaultValue: null))
+      ..add(StringProperty('defaultValue', defaultValue, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>?>.has(
+          'onValueChange',
+          onValueChange,
+        ),
+      )
+      ..add(StringProperty('error', error, defaultValue: null))
+      ..add(FlagProperty('required', value: required, ifTrue: 'required'))
+      ..add(
+        EnumProperty<ControlSize>(
+          'controlSize',
+          controlSize,
+          defaultValue: ControlSize.regular,
+        ),
+      );
+  }
 
   @override
   State<RadioGroup> createState() => _RadioGroupState();
@@ -387,6 +495,55 @@ class _Choice extends StatefulWidget {
   final String? error;
   final ControlSize controlSize;
   final FocusNode? focusNode;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        FlagProperty(
+          'radio',
+          value: radio,
+          ifTrue: 'radio',
+          ifFalse: 'checkbox',
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'checked',
+          value: checked,
+          ifTrue: 'checked',
+          ifFalse: 'unchecked',
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'indeterminate',
+          value: indeterminate,
+          ifTrue: 'indeterminate',
+        ),
+      )
+      ..add(FlagProperty('disabled', value: disabled, ifTrue: 'disabled'))
+      ..add(FlagProperty('required', value: required, ifTrue: 'required'))
+      ..add(FlagProperty('invalid', value: invalid, ifTrue: 'invalid'))
+      ..add(StringProperty('ariaLabel', ariaLabel, defaultValue: null))
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onToggle', onToggle))
+      ..add(StringProperty('error', error, defaultValue: null))
+      ..add(
+        EnumProperty<ControlSize>(
+          'controlSize',
+          controlSize,
+          defaultValue: ControlSize.regular,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      );
+  }
 
   @override
   State<_Choice> createState() => _ChoiceState();

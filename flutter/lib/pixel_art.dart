@@ -5,6 +5,7 @@ library;
 
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'avatar_fingerprint.dart';
@@ -171,6 +172,31 @@ class PixelArtwork extends StatefulWidget {
   final String? title;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        EnumProperty<PixelVariant>(
+          'variant',
+          variant,
+          defaultValue: PixelVariant.voice,
+        ),
+      )
+      ..add(StringProperty('seed', seed, defaultValue: 'feeef'))
+      ..add(DoubleProperty('size', size, defaultValue: 48))
+      ..add(EnumProperty<PixelTone>('tone', tone, defaultValue: PixelTone.ink))
+      ..add(
+        FlagProperty(
+          'animated',
+          value: animated,
+          ifTrue: 'animated',
+          defaultValue: false,
+        ),
+      )
+      ..add(StringProperty('title', title, defaultValue: null));
+  }
+
+  @override
   State<PixelArtwork> createState() => _PixelArtworkState();
 }
 
@@ -317,6 +343,37 @@ class PixelTexture extends StatefulWidget {
 
   /// Overall opacity (`--pixel-texture-opacity`, default 0.13).
   final double opacity;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        EnumProperty<TextureVariant>(
+          'variant',
+          variant,
+          defaultValue: TextureVariant.corner,
+        ),
+      )
+      ..add(StringProperty('seed', seed, defaultValue: 'feeef-surface'))
+      ..add(
+        EnumProperty<TextureDensity>(
+          'density',
+          density,
+          defaultValue: TextureDensity.medium,
+        ),
+      )
+      ..add(EnumProperty<PixelTone?>('tone', tone, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'animated',
+          value: animated,
+          ifTrue: 'animated',
+          defaultValue: false,
+        ),
+      )
+      ..add(DoubleProperty('opacity', opacity, defaultValue: 0.13));
+  }
 
   @override
   State<PixelTexture> createState() => _PixelTextureState();

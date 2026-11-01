@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' hide Action;
 
@@ -25,6 +26,12 @@ class ActionsWidthProvider extends InheritedWidget {
     required super.child,
   });
   final double? value;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DoubleProperty('value', value, defaultValue: null));
+  }
 
   static double? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<ActionsWidthProvider>()?.value;
@@ -69,6 +76,36 @@ class ActionsBar extends StatefulWidget {
 
   /// Application effects are injected; this primitive never calls business APIs.
   final void Function(Object error, Action action)? onActionError;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IterableProperty<Action>('actions', actions))
+      ..add(StringProperty('label', label))
+      ..add(
+        EnumProperty<ActionsAlign>(
+          'align',
+          align,
+          defaultValue: ActionsAlign.end,
+        ),
+      )
+      ..add(
+        EnumProperty<ControlSize>(
+          'size',
+          size,
+          defaultValue: ControlSize.regular,
+        ),
+      )
+      ..add(DoubleProperty('gap', gap, defaultValue: 4))
+      ..add(StringProperty('overflowLabel', overflowLabel, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<void Function(Object error, Action action)?>.has(
+          'onActionError',
+          onActionError,
+        ),
+      );
+  }
 
   @override
   State<ActionsBar> createState() => _ActionsBarState();
@@ -525,6 +562,16 @@ class _ActionControl extends StatelessWidget {
   final VoidCallback? onClick;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<Action>('action', action))
+      ..add(EnumProperty<ControlSize>('size', size))
+      ..add(FlagProperty('loading', value: loading, ifTrue: 'loading'))
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onClick', onClick));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final a = action;
     final iconOnly =
@@ -631,6 +678,46 @@ class ActionsMenuAnchor extends StatefulWidget {
   final void Function(Object error, Action action)? onActionError;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(IterableProperty<Action>('actions', actions))
+      ..add(
+        ObjectFlagProperty<Widget Function(VoidCallback? open)>.has(
+          'builder',
+          builder,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'enabled',
+          value: enabled,
+          ifFalse: 'disabled',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'cover',
+          value: cover,
+          ifFalse: 'beside trigger',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        EnumProperty<PanelSide>('side', side, defaultValue: PanelSide.bottom),
+      )
+      ..add(DoubleProperty('gap', gap, defaultValue: 4))
+      ..add(
+        ObjectFlagProperty<void Function(Object error, Action action)?>.has(
+          'onActionError',
+          onActionError,
+        ),
+      );
+  }
+
+  @override
   State<ActionsMenuAnchor> createState() => _ActionsMenuAnchorState();
 }
 
@@ -712,6 +799,50 @@ class _MenuAnchor extends StatefulWidget {
   final Widget Function(VoidCallback? open) builder;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(
+        FlagProperty(
+          'cover',
+          value: cover,
+          ifFalse: 'beside trigger',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        EnumProperty<PanelSide>('side', side, defaultValue: PanelSide.bottom),
+      )
+      ..add(DoubleProperty('gap', gap, defaultValue: 4))
+      ..add(
+        FlagProperty(
+          'toolbar',
+          value: toolbar,
+          ifTrue: 'toolbar',
+          ifFalse: 'content',
+          defaultValue: true,
+        ),
+      )
+      ..add(IterableProperty<Action>('actions', actions))
+      ..add(IterableProperty<String>('pending', pending))
+      ..add(
+        ObjectFlagProperty<void Function(Action action, [bool? checked])>.has(
+          'execute',
+          execute,
+        ),
+      )
+      ..add(FlagProperty('enabled', value: enabled, ifFalse: 'disabled'))
+      ..add(ObjectFlagProperty<bool Function()?>.has('onOpen', onOpen))
+      ..add(
+        ObjectFlagProperty<Widget Function(VoidCallback? open)>.has(
+          'builder',
+          builder,
+        ),
+      );
+  }
+
+  @override
   State<_MenuAnchor> createState() => _MenuAnchorState();
 }
 
@@ -791,6 +922,22 @@ class _ActionsMenu extends StatefulWidget {
   final Set<String> pending;
   final void Function(Action action, [bool? checked]) execute;
   final VoidCallback close;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(IterableProperty<Action>('actions', actions))
+      ..add(IterableProperty<String>('pending', pending))
+      ..add(
+        ObjectFlagProperty<void Function(Action action, [bool? checked])>.has(
+          'execute',
+          execute,
+        ),
+      )
+      ..add(ObjectFlagProperty<VoidCallback>.has('close', close));
+  }
 
   @override
   State<_ActionsMenu> createState() => _ActionsMenuState();
@@ -896,6 +1043,28 @@ class _MenuRow extends StatelessWidget {
   final VoidCallback onHover;
   final Set<String> pending;
   final void Function(Action action, [bool? checked]) execute;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<Action>('action', action))
+      ..add(
+        FlagProperty('highlighted', value: highlighted, ifTrue: 'highlighted'),
+      )
+      ..add(FlagProperty('loading', value: loading, ifTrue: 'loading'))
+      ..add(
+        FlagProperty('leadingSlot', value: leadingSlot, ifTrue: 'leading slot'),
+      )
+      ..add(ObjectFlagProperty<VoidCallback>.has('onHover', onHover))
+      ..add(IterableProperty<String>('pending', pending))
+      ..add(
+        ObjectFlagProperty<void Function(Action action, [bool? checked])>.has(
+          'execute',
+          execute,
+        ),
+      );
+  }
 
   @override
   Widget build(BuildContext context) {

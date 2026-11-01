@@ -6,6 +6,7 @@ library;
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -123,6 +124,65 @@ class ModelLadder extends StatefulWidget {
 
   /// Which side of the trigger the popover opens on (it flips when there is no room).
   final PanelSide side;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IterableProperty<LadderStop>('stops', stops))
+      ..add(IntProperty('index', index))
+      ..add(IntProperty('defaultIndex', defaultIndex, defaultValue: 0))
+      ..add(ObjectFlagProperty<ValueChanged<int>>.has('onChange', onChange))
+      ..add(FlagProperty('enabled', value: enabled, ifFalse: 'disabled'))
+      ..add(
+        DiagnosticsProperty<AspectReadout>(
+          'canvas',
+          canvas,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        IterableProperty<LadderStop>('catalog', catalog, defaultValue: null),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>?>.has(
+          'onPickModel',
+          onPickModel,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<VoidCallback?>.has('onBrowseModels', onBrowseModels),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<bool>?>.has(
+          'onOpenChange',
+          onOpenChange,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<LadderStop>(
+          'selectedModel',
+          selectedModel,
+          defaultValue: null,
+        ),
+      )
+      ..add(DiagnosticsProperty<LadderCopy>('copy', copy, defaultValue: null))
+      ..add(
+        EnumProperty<ModelLadderVariant>(
+          'variant',
+          variant,
+          defaultValue: ModelLadderVariant.chip,
+        ),
+      )
+      ..add(
+        EnumProperty<PanelAlign>(
+          'align',
+          align,
+          defaultValue: PanelAlign.start,
+        ),
+      )
+      ..add(EnumProperty<PanelSide>('side', side, defaultValue: PanelSide.top));
+  }
 
   @override
   State<ModelLadder> createState() => _ModelLadderState();
@@ -306,6 +366,15 @@ class _PopoverScope extends InheritedWidget {
   });
   final bool autofocus;
   final double listHeight;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(FlagProperty('autofocus', value: autofocus, ifTrue: 'autofocus'))
+      ..add(DoubleProperty('listHeight', listHeight));
+  }
+
   @override
   bool updateShouldNotify(_PopoverScope old) =>
       old.autofocus != autofocus || old.listHeight != listHeight;
@@ -330,6 +399,21 @@ class _Trigger extends StatelessWidget {
   final String tier, name, label;
   final FocusNode focusNode;
   final VoidCallback onTap;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<ModelLadderVariant>('variant', variant))
+      ..add(FlagProperty('enabled', value: enabled, ifFalse: 'disabled'))
+      ..add(FlagProperty('open', value: open, ifTrue: 'open'))
+      ..add(FlagProperty('top', value: top, ifTrue: 'top rung'))
+      ..add(StringProperty('tier', tier))
+      ..add(StringProperty('name', name))
+      ..add(StringProperty('label', label))
+      ..add(DiagnosticsProperty<FocusNode>('focusNode', focusNode))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onTap', onTap));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -435,6 +519,14 @@ class _Trigger extends StatelessWidget {
 class _TriggerIcon extends StatelessWidget {
   const _TriggerIcon({required this.top, required this.icon});
   final bool top, icon;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(FlagProperty('top', value: top, ifTrue: 'top rung'))
+      ..add(FlagProperty('icon', value: icon, ifTrue: 'icon'));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -587,6 +679,51 @@ class ModelLadderCard extends StatefulWidget {
 
   /// `false` turns the title into a plain label with no model list.
   final bool pickable;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IterableProperty<LadderStop>('stops', stops))
+      ..add(IntProperty('index', index))
+      ..add(IntProperty('defaultIndex', defaultIndex, defaultValue: 0))
+      ..add(ObjectFlagProperty<ValueChanged<int>>.has('onChange', onChange))
+      ..add(
+        DiagnosticsProperty<AspectReadout>(
+          'canvas',
+          canvas,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        IterableProperty<LadderStop>('catalog', catalog, defaultValue: null),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>?>.has(
+          'onPickModel',
+          onPickModel,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<VoidCallback?>.has('onBrowseModels', onBrowseModels),
+      )
+      ..add(
+        DiagnosticsProperty<LadderStop>(
+          'selectedModel',
+          selectedModel,
+          defaultValue: null,
+        ),
+      )
+      ..add(DiagnosticsProperty<LadderCopy>('copy', copy, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'pickable',
+          value: pickable,
+          ifFalse: 'not pickable',
+          defaultValue: true,
+        ),
+      );
+  }
 
   @override
   State<ModelLadderCard> createState() => _ModelLadderCardState();
@@ -855,6 +992,14 @@ class _Tier extends StatelessWidget {
   final bool top;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('text', text))
+      ..add(FlagProperty('top', value: top, ifTrue: 'top rung'));
+  }
+
+  @override
   Widget build(BuildContext context) {
     Widget label = Text(
       text,
@@ -893,6 +1038,14 @@ class _AccessBadge extends StatelessWidget {
   final String label;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<LadderAccess>('access', access))
+      ..add(StringProperty('label', label));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final c = ThemeProvider.of(context).colors;
     final free = access == LadderAccess.free;
@@ -927,6 +1080,12 @@ class _CardFrame extends StatelessWidget {
   final Widget child;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(FlagProperty('list', value: list, ifTrue: 'list'));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<_PopoverScope>();
     final screen = MediaQuery.sizeOf(context).height;
@@ -953,6 +1112,14 @@ class AspectBox extends StatelessWidget {
 
   /// Side of the square it is fitted into, in pixels.
   final double box;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('widthOverHeight', widthOverHeight))
+      ..add(DoubleProperty('box', box, defaultValue: 20.0));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -999,6 +1166,23 @@ class _LadderTrack extends StatelessWidget {
   final String label;
   final String Function(int index) valueText;
   final FocusNode focusNode;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IntProperty('count', count))
+      ..add(IntProperty('index', index))
+      ..add(ObjectFlagProperty<ValueChanged<int>>.has('onChange', onChange))
+      ..add(StringProperty('label', label))
+      ..add(
+        ObjectFlagProperty<String Function(int index)>.has(
+          'valueText',
+          valueText,
+        ),
+      )
+      ..add(DiagnosticsProperty<FocusNode>('focusNode', focusNode));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1129,6 +1313,18 @@ class _ModelList extends StatefulWidget {
   final LadderCopy copy;
   final VoidCallback onBack;
   final ValueChanged<String> onPick;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IterableProperty<LadderStop>('items', items))
+      ..add(IterableProperty<LadderStop>('tiers', tiers))
+      ..add(StringProperty('selectedId', selectedId))
+      ..add(DiagnosticsProperty<LadderCopy>('copy', copy))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onBack', onBack))
+      ..add(ObjectFlagProperty<ValueChanged<String>>.has('onPick', onPick));
+  }
 
   @override
   State<_ModelList> createState() => _ModelListState();
@@ -1417,6 +1613,18 @@ class _OptionRow extends StatelessWidget {
   final VoidCallback onFocus, onTap;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<_Row>('row', row))
+      ..add(FlagProperty('selected', value: selected, ifTrue: 'selected'))
+      ..add(DiagnosticsProperty<FocusNode>('focusNode', focusNode))
+      ..add(StringProperty('accessLabel', accessLabel, defaultValue: null))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onFocus', onFocus))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onTap', onTap));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
@@ -1543,6 +1751,34 @@ class _LadderControl extends StatefulWidget {
   final EdgeInsetsDirectional padding;
   final Color fill, hover, pressed, edge;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onTap', onTap))
+      ..add(FlagProperty('bordered', value: bordered, ifTrue: 'bordered'))
+      ..add(FlagProperty('disabled', value: disabled, ifTrue: 'disabled'))
+      ..add(FlagProperty('inert', value: inert, ifTrue: 'inert'))
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      )
+      ..add(StringProperty('label', label, defaultValue: null))
+      ..add(DiagnosticsProperty<bool>('expanded', expanded, defaultValue: null))
+      ..add(DiagnosticsProperty<bool>('selected', selected, defaultValue: null))
+      ..add(DoubleProperty('height', height))
+      ..add(DoubleProperty('width', width, defaultValue: null))
+      ..add(DoubleProperty('radius', radius))
+      ..add(DiagnosticsProperty<EdgeInsetsDirectional>('padding', padding))
+      ..add(ColorProperty('fill', fill))
+      ..add(ColorProperty('hover', hover))
+      ..add(ColorProperty('pressed', pressed))
+      ..add(ColorProperty('edge', edge));
+  }
 
   @override
   State<_LadderControl> createState() => _LadderControlState();

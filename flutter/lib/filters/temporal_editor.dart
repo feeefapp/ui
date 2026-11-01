@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
@@ -266,6 +267,18 @@ class TemporalEditorBuilder extends StatefulWidget {
   builder;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<TemporalEditorOptions>('options', options))
+      ..add(
+        ObjectFlagProperty<
+          Widget Function(BuildContext context, TemporalEditorState editor)
+        >.has('builder', builder),
+      );
+  }
+
+  @override
   State<TemporalEditorBuilder> createState() => _TemporalEditorBuilderState();
 }
 
@@ -312,6 +325,20 @@ class TemporalPresets extends StatelessWidget {
 
   /// `list` chips or a scrolling `bar`.
   final TemporalPresetsLayout layout;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<TemporalEditorState>('editor', editor))
+      ..add(
+        EnumProperty<TemporalPresetsLayout>(
+          'layout',
+          layout,
+          defaultValue: TemporalPresetsLayout.list,
+        ),
+      );
+  }
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -380,6 +407,12 @@ class TemporalEdges extends StatelessWidget {
   final TemporalEditorState editor;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<TemporalEditorState>('editor', editor));
+  }
+
+  @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: editor,
     builder: (context, _) {
@@ -424,6 +457,14 @@ class TemporalBody extends StatelessWidget {
 
   /// Enter in a typed-entry field: the host's Apply (the web kit submits the enclosing form).
   final VoidCallback? onSubmit;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<TemporalEditorState>('editor', editor))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onSubmit', onSubmit));
+  }
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -608,6 +649,12 @@ class _Note extends StatelessWidget {
   final String text;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(StringProperty('text', text));
+  }
+
+  @override
   Widget build(BuildContext context) => Text(
     text,
     style: TextStyle(
@@ -631,6 +678,18 @@ class _ManualField extends StatefulWidget {
   final String hint, value;
   final ValueChanged<String> onChanged;
   final VoidCallback? onSubmit;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('hint', hint))
+      ..add(StringProperty('value', value))
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>>.has('onChanged', onChanged),
+      )
+      ..add(ObjectFlagProperty<VoidCallback>.has('onSubmit', onSubmit));
+  }
 
   @override
   State<_ManualField> createState() => _ManualFieldState();
@@ -685,6 +744,16 @@ class _TimeInput extends StatelessWidget {
 
   /// Seconds between allowed values; minutes snap to it, seconds appear below one minute.
   final num step;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(StringProperty('value', value))
+      ..add(ObjectFlagProperty<ValueChanged<String>>.has('onChange', onChange))
+      ..add(DiagnosticsProperty<num>('step', step, defaultValue: 60));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -822,6 +891,28 @@ class TemporalFilterEditor extends StatelessWidget {
   final VoidCallback? onSubmit;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<TemporalConfig>('config', config))
+      ..add(DiagnosticsProperty<TemporalValue>('value', value))
+      ..add(
+        ObjectFlagProperty<ValueChanged<TemporalValue?>>.has(
+          'onChange',
+          onChange,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<TemporalValue?>>.has('onPick', onPick),
+      )
+      ..add(StringProperty('locale', locale, defaultValue: null))
+      ..add(
+        DiagnosticsProperty<Object>('resetKey', resetKey, defaultValue: null),
+      )
+      ..add(ObjectFlagProperty<VoidCallback>.has('onSubmit', onSubmit));
+  }
+
+  @override
   Widget build(BuildContext context) => TemporalEditorBuilder(
     options: TemporalEditorOptions(
       config: config,
@@ -876,6 +967,12 @@ class _RenderFooterRow extends RenderBox
     if (value == _direction) return;
     _direction = value;
     markNeedsLayout();
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(EnumProperty<TextDirection>('direction', _direction));
   }
 
   @override

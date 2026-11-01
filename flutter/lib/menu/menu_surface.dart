@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
@@ -90,6 +91,20 @@ class MenuTokensScope extends InheritedWidget {
     required super.child,
   });
   final MenuTokens tokens;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('minWidth', tokens.minWidth))
+      ..add(DoubleProperty('maxWidth', tokens.maxWidth))
+      ..add(DoubleProperty('row', tokens.row))
+      ..add(DoubleProperty('separator', tokens.separator))
+      ..add(DoubleProperty('inset', tokens.inset))
+      ..add(DoubleProperty('rowInline', tokens.rowInline))
+      ..add(DoubleProperty('radius', tokens.radius, defaultValue: null));
+  }
+
   @override
   bool updateShouldNotify(MenuTokensScope old) => old.tokens != tokens;
 }
@@ -176,6 +191,14 @@ class MenuSurface extends StatefulWidget {
   final double minWidth;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label, defaultValue: null))
+      ..add(DoubleProperty('minWidth', minWidth, defaultValue: 0.0));
+  }
+
+  @override
   State<MenuSurface> createState() => _MenuSurfaceState();
 }
 
@@ -199,6 +222,18 @@ class _MenuSurfaceState extends State<MenuSurface>
 
   /// The glass has left (flying back into the trigger).
   bool _leaving = false;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<_Phase>('phase', _phase))
+      ..add(EnumProperty<Motion>('motion', _motion, defaultValue: Motion.full))
+      ..add(FlagProperty('anchored', value: _scope != null, ifFalse: 'at rest'))
+      ..add(FlagProperty('leaving', value: _leaving, ifTrue: 'leaving'))
+      ..add(DoubleProperty('contentOpacity', _content.value.opacity))
+      ..add(DoubleProperty('contentBlur', _content.value.blur));
+  }
 
   bool get _reduced => _motion != Motion.full;
 
@@ -422,6 +457,39 @@ class MenuRow extends StatelessWidget {
   final bool destructive, enabled;
   final VoidCallback? onTap;
   final VoidCallback? onHover;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        FlagProperty(
+          'highlighted',
+          value: highlighted,
+          ifTrue: 'highlighted',
+          defaultValue: false,
+        ),
+      )
+      ..add(ColorProperty('fill', fill, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'destructive',
+          value: destructive,
+          ifTrue: 'destructive',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'enabled',
+          value: enabled,
+          ifFalse: 'disabled',
+          defaultValue: true,
+        ),
+      )
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onTap', onTap))
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onHover', onHover));
+  }
 
   @override
   Widget build(BuildContext context) {

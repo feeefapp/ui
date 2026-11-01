@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
@@ -39,6 +40,14 @@ class SizeClassScope extends StatelessWidget {
   final double breakpoint;
   final Widget child;
 
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      DoubleProperty('breakpoint', breakpoint, defaultValue: 600.0),
+    );
+  }
+
   /// Width of the nearest scope's element (the twin of `useElementWidth`), or null outside one or
   /// when its width is unbounded.
   static double? widthOf(BuildContext context) =>
@@ -65,6 +74,15 @@ class _SizeClassData extends InheritedWidget {
   });
   final double? width;
   final SizeClass sizeClass;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('width', width, defaultValue: null))
+      ..add(EnumProperty<SizeClass>('sizeClass', sizeClass));
+  }
+
   @override
   bool updateShouldNotify(_SizeClassData old) =>
       old.width != width || old.sizeClass != sizeClass;
@@ -107,6 +125,41 @@ class AdaptiveStack extends MultiChildRenderObjectWidget {
 
   /// Called when the axis changes.
   final ValueChanged<Axis>? onAxisChange;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        DoubleProperty(
+          'breakpoint',
+          breakpoint,
+          ifNull: 'fit',
+          defaultValue: null,
+        ),
+      )
+      ..add(DoubleProperty('gap', gap, defaultValue: 12.0))
+      ..add(
+        EnumProperty<AdaptiveAlign>(
+          'align',
+          align,
+          defaultValue: AdaptiveAlign.center,
+        ),
+      )
+      ..add(
+        EnumProperty<AdaptiveJustify>(
+          'justify',
+          justify,
+          defaultValue: AdaptiveJustify.start,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<Axis>?>.has(
+          'onAxisChange',
+          onAxisChange,
+        ),
+      );
+  }
 
   @override
   RenderAdaptiveStack createRenderObject(BuildContext context) =>
@@ -155,6 +208,12 @@ class AdaptiveFlex extends ParentDataWidget<AdaptiveStackParentData> {
   final double flex;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DoubleProperty('flex', flex, defaultValue: 1.0));
+  }
+
+  @override
   void applyParentData(RenderObject renderObject) {
     final data = renderObject.parentData! as AdaptiveStackParentData;
     if (data.flex == flex) return;
@@ -197,6 +256,51 @@ class RenderAdaptiveStack extends RenderBox
 
   /// The axis of the latest layout (horizontal before the first).
   Axis get axis => _axis ?? Axis.horizontal;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        DoubleProperty(
+          'breakpoint',
+          _breakpoint,
+          ifNull: 'fit',
+          defaultValue: null,
+        ),
+      )
+      ..add(DoubleProperty('gap', _gap, defaultValue: 12.0))
+      ..add(
+        EnumProperty<AdaptiveAlign>(
+          'align',
+          _align,
+          defaultValue: AdaptiveAlign.center,
+        ),
+      )
+      ..add(
+        EnumProperty<AdaptiveJustify>(
+          'justify',
+          _justify,
+          defaultValue: AdaptiveJustify.start,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<Axis>?>.has(
+          'onAxisChange',
+          onAxisChange,
+        ),
+      )
+      ..add(EnumProperty<TextDirection>('textDirection', _textDirection))
+      ..add(
+        FlagProperty(
+          'reduceMotion',
+          value: reduceMotion,
+          ifTrue: 'reduced motion',
+          defaultValue: false,
+        ),
+      )
+      ..add(EnumProperty<Axis>('axis', axis));
+  }
 
   set breakpoint(double? value) {
     if (value == _breakpoint) return;
@@ -540,6 +644,22 @@ class RenderViewThatFits extends RenderBox
 
   /// Index of the shown option after the latest layout.
   int get shownIndex => _index ?? 0;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<TextDirection>('textDirection', _textDirection))
+      ..add(
+        FlagProperty(
+          'reduceMotion',
+          value: reduceMotion,
+          ifTrue: 'reduced motion',
+          defaultValue: false,
+        ),
+      )
+      ..add(IntProperty('shownIndex', shownIndex));
+  }
 
   late final _fade = MotionValue(1, 0.01)..subscribe((_) => markNeedsPaint());
   final _opacity = LayerHandle<OpacityLayer>();

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
@@ -98,6 +99,78 @@ class Modal extends StatefulWidget {
 
   /// The content. It scrolls under the floating header and dock.
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        FlagProperty(
+          'open',
+          value: open,
+          ifTrue: 'open',
+          ifFalse: 'closed',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<bool>?>.has(
+          'onOpenChange',
+          onOpenChange,
+        ),
+      )
+      ..add(StringProperty('label', label))
+      ..add(IntProperty('trailing', trailing.length, defaultValue: 0))
+      ..add(
+        FlagProperty(
+          'showClose',
+          value: showClose,
+          ifFalse: 'no close bubble',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        FlagProperty('fill', value: fill, ifTrue: 'fill', defaultValue: false),
+      )
+      ..add(
+        FlagProperty('wide', value: wide, ifTrue: 'wide', defaultValue: false),
+      )
+      ..add(DoubleProperty('width', width, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'dismissible',
+          value: dismissible,
+          ifFalse: 'not dismissible',
+          defaultValue: true,
+        ),
+      )
+      ..add(DoubleProperty('edgeGap', edgeGap, defaultValue: null))
+      ..add(
+        DoubleProperty('contentPadding', contentPadding, defaultValue: 16.0),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode?>(
+          'initialFocus',
+          initialFocus,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode?>(
+          'returnFocus',
+          returnFocus,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'container',
+          value: container,
+          ifTrue: 'in place',
+          defaultValue: false,
+        ),
+      );
+  }
 
   @override
   State<Modal> createState() => _ModalState();

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -80,6 +81,53 @@ class SplitView extends StatefulWidget {
   final String resizeLabel;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IntProperty('detail', detail.length, defaultValue: 0))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onBack', onBack))
+      ..add(DoubleProperty('listWidth', listWidth, defaultValue: null))
+      ..add(
+        DoubleProperty(
+          'defaultListWidth',
+          defaultListWidth,
+          defaultValue: 360.0,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<double>?>.has(
+          'onListWidthChange',
+          onListWidthChange,
+        ),
+      )
+      ..add(DoubleProperty('minListWidth', minListWidth, defaultValue: 280.0))
+      ..add(DoubleProperty('maxListWidth', maxListWidth, defaultValue: 520.0))
+      ..add(
+        FlagProperty(
+          'resizable',
+          value: resizable,
+          ifFalse: 'fixed',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        DoubleProperty(
+          'compactBreakpoint',
+          compactBreakpoint,
+          defaultValue: 720.0,
+        ),
+      )
+      ..add(StringProperty('label', label, defaultValue: 'List and detail'))
+      ..add(
+        StringProperty(
+          'resizeLabel',
+          resizeLabel,
+          defaultValue: 'Resize the list',
+        ),
+      );
+  }
+
+  @override
   State<SplitView> createState() => _SplitViewState();
 }
 
@@ -95,6 +143,17 @@ class _SplitViewState extends State<SplitView> {
   double _start = 0, _dragged = 0;
 
   double get _width => widget.listWidth ?? _local;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('width', _width, unit: 'px'))
+      ..add(DoubleProperty('painted', _painted, unit: 'px'))
+      ..add(FlagProperty('resizing', value: _resizing, ifTrue: 'resizing'))
+      ..add(FlagProperty('hovered', value: _hovered, ifTrue: 'hovered'))
+      ..add(FlagProperty('focused', value: _focused, ifTrue: 'focused'));
+  }
 
   @override
   void initState() {

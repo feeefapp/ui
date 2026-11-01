@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../dock/dock.dart';
@@ -22,6 +23,12 @@ class PresentationDock extends StatelessWidget {
 
   /// The surface's actions: Cancel as `text`, the one main action `filled`, last.
   final List<Widget> children;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(StringProperty('label', label, defaultValue: null));
+  }
 
   @override
   Widget build(BuildContext context) => Dock(

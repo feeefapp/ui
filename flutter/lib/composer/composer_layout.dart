@@ -17,6 +17,12 @@ class ComposerSlot extends ParentDataWidget<_SlotData> {
   final ComposerSlotName name;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(EnumProperty<ComposerSlotName>('name', name));
+  }
+
+  @override
   void applyParentData(RenderObject renderObject) {
     final data = renderObject.parentData! as _SlotData;
     if (data.name == name) return;
@@ -62,6 +68,15 @@ class ComposerCapsuleLayout extends MultiChildRenderObjectWidget {
 
   /// Space between the rows.
   final double rowGap;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(FlagProperty('expanded', value: expanded, ifTrue: 'expanded'))
+      ..add(DoubleProperty('inset', inset, defaultValue: 0.0))
+      ..add(DoubleProperty('rowGap', rowGap, defaultValue: 0.0));
+  }
 
   @override
   RenderComposerCapsule createRenderObject(BuildContext context) =>
@@ -129,6 +144,23 @@ class RenderComposerCapsule extends RenderBox
   }
 
   bool reducedMotion;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(FlagProperty('expanded', value: _expanded, ifTrue: 'expanded'))
+      ..add(DoubleProperty('inset', _inset, defaultValue: 0.0))
+      ..add(DoubleProperty('rowGap', _rowGap, defaultValue: 0.0))
+      ..add(EnumProperty<TextDirection>('textDirection', _textDirection))
+      ..add(
+        FlagProperty(
+          'reducedMotion',
+          value: reducedMotion,
+          ifTrue: 'reduced motion',
+        ),
+      );
+  }
 
   ComposerLayoutSnapshot? _rest;
   ComposerLayoutSnapshot? _from, _to;

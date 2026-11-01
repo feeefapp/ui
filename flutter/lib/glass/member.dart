@@ -58,6 +58,47 @@ class GlassMemberBox extends StatefulWidget {
   final Widget child;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        DiagnosticsProperty<GlassOrigin?>('origin', origin, defaultValue: null),
+      )
+      ..add(StringProperty('glassId', glassId, defaultValue: null))
+      ..add(StringProperty('union', union, defaultValue: null))
+      ..add(
+        EnumProperty<GlassMotion>(
+          'motion',
+          motion,
+          defaultValue: GlassMotion.spring,
+        ),
+      )
+      ..add(DoubleProperty('radius', radius))
+      ..add(
+        FlagProperty(
+          'hidden',
+          value: hidden,
+          ifTrue: 'glass hidden',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'singleRim',
+          value: singleRim,
+          ifTrue: 'single rim',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<Widget Function(Widget child)>.has(
+          'standalone',
+          standalone,
+        ),
+      );
+  }
+
+  @override
   State<GlassMemberBox> createState() => _GlassMemberBoxState();
 }
 
@@ -72,6 +113,20 @@ class _InsideBubble extends InheritedWidget {
   /// The container that bubble belongs to: a bubble in an overlay opened from it (a menu, under a
   /// [GlassLayer] or its own container) is not inside it.
   final GlassMemberRegistry? registry;
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<GlobalKey>('box', box))
+      ..add(
+        DiagnosticsProperty<GlassMemberRegistry?>(
+          'registry',
+          registry,
+          defaultValue: null,
+        ),
+      );
+  }
+
   @override
   bool updateShouldNotify(_InsideBubble old) => old.registry != registry;
 }
@@ -94,6 +149,36 @@ class _GlassMemberBoxState extends State<GlassMemberBox> {
   String? _id;
   static int _serial = 0;
   late final String _autoId = 'glass-member-${_serial++}';
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('id', _id, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'registered',
+          value: _handle != null,
+          ifTrue: 'registered',
+          ifFalse: 'not registered',
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'nested',
+          value: _nested,
+          ifTrue: 'joins enclosing bubble',
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'inContainer',
+          value: _inContainer,
+          ifTrue: 'in container',
+          ifFalse: 'standalone',
+        ),
+      );
+  }
 
   @override
   void didChangeDependencies() {
@@ -219,6 +304,14 @@ class _GlassMemberBoxState extends State<GlassMemberBox> {
 class GlassHidden extends InheritedWidget {
   const GlassHidden({super.key, required this.hidden, required super.child});
   final bool hidden;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      FlagProperty('hidden', value: hidden, ifTrue: 'hidden', ifFalse: 'shown'),
+    );
+  }
 
   /// Whether a [GlassHidden] above [context] hides its bubbles.
   static bool of(BuildContext context) =>

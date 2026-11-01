@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -18,6 +19,19 @@ class LanguageSwitcher extends StatelessWidget {
 
   /// Show a globe icon button with a menu instead of the labelled select.
   final bool iconOnly;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      FlagProperty(
+        'iconOnly',
+        value: iconOnly,
+        ifTrue: 'icon only',
+        defaultValue: false,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +66,14 @@ class _LanguageName extends StatelessWidget {
   const _LanguageName(this.language);
   final Language language;
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('language', language.code))
+      ..add(EnumProperty<TextDirection>('direction', language.direction));
+  }
+
+  @override
   Widget build(BuildContext context) => Directionality(
     textDirection: language.direction,
     child: Text(language.name, maxLines: 1, softWrap: false),
@@ -62,6 +84,18 @@ class _LanguageMenuButton extends StatefulWidget {
   const _LanguageMenuButton({required this.languages, required this.i18n});
   final List<Language> languages;
   final I18n i18n;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        IterableProperty<String>('languages', [
+          for (final l in languages) l.code,
+        ]),
+      )
+      ..add(DiagnosticsProperty<I18n>('i18n', i18n));
+  }
 
   @override
   State<_LanguageMenuButton> createState() => _LanguageMenuButtonState();
@@ -134,6 +168,21 @@ class _LanguageMenu extends StatefulWidget {
   final String selected;
   final ValueChanged<String> choose;
   final VoidCallback close;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(
+        IterableProperty<String>('languages', [
+          for (final l in languages) l.code,
+        ]),
+      )
+      ..add(StringProperty('selected', selected))
+      ..add(ObjectFlagProperty<ValueChanged<String>>.has('choose', choose))
+      ..add(ObjectFlagProperty<VoidCallback>.has('close', close));
+  }
 
   @override
   State<_LanguageMenu> createState() => _LanguageMenuState();

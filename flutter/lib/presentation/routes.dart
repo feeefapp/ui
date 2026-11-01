@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../containers/sheet.dart';
@@ -56,6 +57,15 @@ class _RouteScope extends StatefulWidget {
   final WidgetBuilder builder;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<PresentationRoute<Object?>>('route', route))
+      ..add(DiagnosticsProperty<Animation<double>>('animation', animation))
+      ..add(ObjectFlagProperty<WidgetBuilder>.has('builder', builder));
+  }
+
+  @override
   State<_RouteScope> createState() => _RouteScopeState();
 }
 
@@ -65,6 +75,14 @@ class _RouteScopeState extends State<_RouteScope> {
       widget.animation.status != AnimationStatus.dismissed;
 
   late bool _last = _open;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      FlagProperty('open', value: _last, ifTrue: 'open', ifFalse: 'closing'),
+    );
+  }
 
   void _status(AnimationStatus _) {
     if (_open != _last) setState(() => _last = _open);

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/semantics.dart';
 import 'package:flutter/widgets.dart';
@@ -80,6 +81,82 @@ class ScrollArea extends StatefulWidget {
   final Widget child;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(
+        DoubleProperty(
+          'edgeGap',
+          edgeGap,
+          ifNull: 'shell gap',
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DoubleProperty(
+          'sideGap',
+          sideGap,
+          ifNull: 'edgeGap',
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DoubleProperty(
+          'contentPadding',
+          contentPadding,
+          ifNull: 'shell gap',
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'gradient',
+          value: gradient,
+          ifFalse: 'no edge washes',
+          defaultValue: true,
+        ),
+      )
+      ..add(DoubleProperty('topFadeHeight', topFadeHeight, defaultValue: null))
+      ..add(
+        DoubleProperty(
+          'bottomFadeHeight',
+          bottomFadeHeight,
+          defaultValue: null,
+        ),
+      )
+      ..add(ColorProperty('surface', surface, defaultValue: null))
+      ..add(
+        DoubleProperty(
+          'radius',
+          radius,
+          ifNull: 'panel radius',
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<ScrollController?>(
+          'controller',
+          controller,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<Future<void> Function()?>.has(
+          'onRefresh',
+          onRefresh,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<RefreshController?>(
+          'refreshController',
+          refreshController,
+          defaultValue: null,
+        ),
+      );
+  }
+
+  @override
   State<ScrollArea> createState() => _ScrollAreaState();
 }
 
@@ -95,6 +172,19 @@ class ScrollAreaPrimary extends InheritedWidget {
 
   /// The controller to take, or null to stop handing one down.
   final ScrollController? controller;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      DiagnosticsProperty<ScrollController?>(
+        'controller',
+        controller,
+        ifNull: 'stops handing one down',
+        defaultValue: null,
+      ),
+    );
+  }
 
   /// The controller handed to a [ScrollArea] at [context], if any.
   static ScrollController? of(BuildContext context) => context
@@ -471,6 +561,12 @@ class ScrollExtraBottom extends InheritedWidget {
       0;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DoubleProperty('value', value));
+  }
+
+  @override
   bool updateShouldNotify(ScrollExtraBottom old) => old.value != value;
 }
 
@@ -491,6 +587,12 @@ class ScrollTopReserve extends InheritedWidget {
   static double of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<ScrollTopReserve>()?.value ??
       0;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DoubleProperty('value', value));
+  }
 
   @override
   bool updateShouldNotify(ScrollTopReserve old) => old.value != value;

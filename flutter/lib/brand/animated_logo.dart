@@ -4,6 +4,7 @@
 /// [FoAnimatedLogoPlayer] plays them natively.
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
@@ -360,6 +361,15 @@ class FoAnimatedLogoPlayer extends StatefulWidget {
 
   /// Called once when the animation finishes.
   final VoidCallback? onEnd;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('size', size, defaultValue: 150))
+      ..add(DoubleProperty('time', time, ifNull: 'playing', defaultValue: null))
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onEnd', onEnd));
+  }
 
   @override
   State<FoAnimatedLogoPlayer> createState() => _FoAnimatedLogoPlayerState();

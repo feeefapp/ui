@@ -1,5 +1,15 @@
 ## Unreleased
 
+Flutter DevTools:
+
+* Every widget, State and render object describes its properties for the inspector, and the
+  theme objects are `Diagnosticable`; `diagnostic_describe_all_properties` is on for `lib/`.
+* A `feeef_ui` DevTools tab (`extension/devtools`, source `devtools_extension/`): the themes in the
+  tree with their tokens, the effects tier, live theme overrides and a slow-device switch, over the
+  new `ext.feeef_ui.*` service extensions (`KitDevTools`, `ThemeOverride`).
+* `feeef_ui:` timeline events for glass outlines and rasters, and `feeef_ui.*` logs for shader load
+  failures and a device measured slow (`kitTimeline`, `kitLog`).
+
 Performance, with no change to the look:
 
 * Glass: a container rebuilds its outlines at most once per frame (springs, presses and measures

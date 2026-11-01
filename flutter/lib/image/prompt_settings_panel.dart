@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
@@ -38,6 +39,14 @@ class PromptSettingsPanel extends StatefulWidget {
 
   /// The settings controls, 14px apart.
   final List<Widget> children;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(ObjectFlagProperty<VoidCallback>.has('onClose', onClose))
+      ..add(DoubleProperty('maxHeight', maxHeight, defaultValue: null));
+  }
 
   @override
   State<PromptSettingsPanel> createState() => _PromptSettingsPanelState();
@@ -135,6 +144,15 @@ class _Header extends StatelessWidget {
   });
   final String title, closeLabel;
   final VoidCallback onClose;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('title', title))
+      ..add(StringProperty('closeLabel', closeLabel))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onClose', onClose));
+  }
 
   @override
   Widget build(BuildContext context) {

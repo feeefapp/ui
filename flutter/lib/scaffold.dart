@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'glass/container.dart';
@@ -59,6 +60,54 @@ class GlassGroup extends StatefulWidget {
   /// Space between the border and [child].
   final EdgeInsetsGeometry padding;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<SurfaceTag>('as', as, defaultValue: SurfaceTag.div))
+      ..add(StringProperty('label', label, defaultValue: null))
+      ..add(StringProperty('glassId', glassId, defaultValue: null))
+      ..add(StringProperty('glassUnion', glassUnion, defaultValue: null))
+      ..add(
+        EnumProperty<GlassMotion>(
+          'glassMotion',
+          glassMotion,
+          defaultValue: GlassMotion.spring,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'glassHidden',
+          value: glassHidden,
+          ifTrue: 'glass hidden',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'singleRim',
+          value: singleRim,
+          ifTrue: 'single rim',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        DoubleProperty(
+          'radius',
+          radius,
+          ifNull: 'theme glass radius',
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<EdgeInsetsGeometry>(
+          'padding',
+          padding,
+          defaultValue: EdgeInsets.zero,
+        ),
+      );
+  }
 
   @override
   State<GlassGroup> createState() => _GlassGroupState();
@@ -202,6 +251,17 @@ class _ScaffoldScope extends InheritedWidget {
   final double floatingBottom;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<_ScaffoldProviderState>('state', state))
+      ..add(
+        DiagnosticsProperty<Map<FloatingSlot, double>>('reserves', reserves),
+      )
+      ..add(DoubleProperty('floatingBottom', floatingBottom));
+  }
+
+  @override
   bool updateShouldNotify(_ScaffoldScope old) =>
       old.floatingBottom != floatingBottom ||
       old.reserves.length != reserves.length ||
@@ -235,6 +295,24 @@ class FloatingLayer extends StatefulWidget {
 
   /// The floating surface. Its box (not the layer's) is measured.
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<FloatingSlot>('slot', slot))
+      ..add(
+        FlagProperty(
+          'active',
+          value: active,
+          ifFalse: 'not reserving',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        DoubleProperty('gap', gap, ifNull: 'shell gap', defaultValue: null),
+      );
+  }
 
   @override
   State<FloatingLayer> createState() => _FloatingLayerState();

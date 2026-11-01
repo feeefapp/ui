@@ -1,5 +1,6 @@
 import 'dart:ui' as ui show BoxHeightStyle;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -143,6 +144,163 @@ class RawInput extends StatefulWidget {
   final ValueChanged<bool>? onFocusChange;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('value', value, defaultValue: null))
+      ..add(StringProperty('defaultValue', defaultValue, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>?>.has(
+          'onValueChange',
+          onValueChange,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'multiline',
+          value: multiline,
+          ifTrue: 'multiline',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'autoResize',
+          value: autoResize,
+          ifTrue: 'auto-resize',
+          ifFalse: 'fixed height',
+          defaultValue: true,
+        ),
+      )
+      ..add(IntProperty('minLines', minLines, defaultValue: 1))
+      ..add(IntProperty('maxLines', maxLines, defaultValue: null))
+      ..add(ObjectFlagProperty<InputValidator?>.has('validator', validator))
+      ..add(StringProperty('error', error, defaultValue: null))
+      ..add(
+        EnumProperty<ValidationMode>(
+          'validationMode',
+          validationMode,
+          defaultValue: ValidationMode.blur,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<String?>?>.has(
+          'onValidationChange',
+          onValidationChange,
+        ),
+      )
+      ..add(StringProperty('label', label, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'disabled',
+          value: disabled,
+          ifTrue: 'disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'readOnly',
+          value: readOnly,
+          ifTrue: 'read-only',
+          defaultValue: false,
+        ),
+      )
+      ..add(IntProperty('maxLength', maxLength, defaultValue: null))
+      ..add(
+        EnumProperty<TextDirection>(
+          'textDirection',
+          textDirection,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'autoDirection',
+          value: autoDirection,
+          ifTrue: 'auto direction',
+          defaultValue: false,
+        ),
+      )
+      ..add(DiagnosticsProperty<TextStyle>('style', style, defaultValue: null))
+      ..add(
+        EnumProperty<TextAlign>(
+          'textAlign',
+          textAlign,
+          defaultValue: TextAlign.start,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<TextInputType>(
+          'keyboardType',
+          keyboardType,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        EnumProperty<TextInputAction>(
+          'textInputAction',
+          textInputAction,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        IterableProperty<String>(
+          'autofillHints',
+          autofillHints,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'obscureText',
+          value: obscureText,
+          ifTrue: 'obscured',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'autofocus',
+          value: autofocus,
+          ifTrue: 'autofocus',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<TextEditingController>(
+          'controller',
+          controller,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<
+          KeyEventResult Function(KeyEvent event, TextEditingValue value)?
+        >.has('onKeyEvent', onKeyEvent),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>?>.has(
+          'onSubmitted',
+          onSubmitted,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<bool>?>.has(
+          'onFocusChange',
+          onFocusChange,
+        ),
+      );
+  }
+
+  @override
   State<RawInput> createState() => RawInputState();
 }
 
@@ -171,6 +329,21 @@ class RawInputState extends State<RawInput>
   bool get forcePressEnabled => false;
   @override
   bool get selectionEnabled => !widget.disabled;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        StringProperty(
+          'validationMessage',
+          validationMessage,
+          defaultValue: null,
+        ),
+      )
+      ..add(StringProperty('message', _message, defaultValue: null))
+      ..add(FlagProperty('touched', value: _touched, ifTrue: 'touched'));
+  }
 
   /// Moves keyboard focus into the input.
   void focus() => _focus.requestFocus();

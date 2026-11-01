@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../theme/tokens.dart';
@@ -16,6 +17,12 @@ class DockContentSwap extends StatefulWidget {
   /// Coarse task identity, e.g. `idle` / `selected`.
   final String swapKey;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(StringProperty('swapKey', swapKey));
+  }
 
   @override
   State<DockContentSwap> createState() => _DockContentSwapState();

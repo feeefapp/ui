@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
+import '../devtools/devtools.dart';
 import 'geometry.dart';
 import 'refraction.dart';
 
@@ -65,6 +66,56 @@ class GlassRefraction extends StatefulWidget {
   /// Toward the light (unit, y down), for the edge mask's angle.
   final Offset light;
 
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<LensKind?>('lens', lens, defaultValue: null))
+      ..add(DoubleProperty('strength', strength, defaultValue: 1))
+      ..add(
+        DiagnosticsProperty<BackdropKey?>(
+          'backdropKey',
+          backdropKey,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<GlassPath>(
+          'path',
+          path,
+          level: DiagnosticLevel.hidden,
+        ),
+      )
+      ..add(IntProperty('shapes', path.shapes.length))
+      ..add(DiagnosticsProperty<Rect>('bounds', path.bounds))
+      ..add(DiagnosticsProperty<Rect?>('clip', path.clip, defaultValue: null))
+      ..add(DoubleProperty('spacing', spacing))
+      ..add(DoubleProperty('blur', blur, defaultValue: 0))
+      ..add(IterableProperty<double>('colour', colour))
+      ..add(
+        DiagnosticsProperty<({double k1, double k3})>(
+          'edge',
+          edge,
+          defaultValue: (k1: 0.0, k3: 0.0),
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<Offset>(
+          'light',
+          light,
+          defaultValue: const Offset(-0.7071067811865476, -0.7071067811865476),
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'supported',
+          value: supported,
+          ifTrue: 'refracts (Impeller)',
+          ifFalse: 'blur and colour only',
+        ),
+      );
+  }
+
   /// Shapes the shader can blend in one cluster; larger clusters bend their first six.
   static const maxShapes = 6;
 
@@ -111,9 +162,20 @@ class _GlassRefractionState extends State<GlassRefraction> {
   void initState() {
     super.initState();
     if (GlassRefraction._loaded == null) {
-      GlassRefraction._load().then((_) {
-        if (mounted) setState(() {});
-      }, onError: (Object _) {});
+      GlassRefraction._load().then(
+        (_) {
+          if (mounted) setState(() {});
+        },
+        onError: (Object error, StackTrace stack) {
+          kitLog(
+            'glass',
+            'Refraction shader failed to load; glass stays unbent',
+            level: 900,
+            error: error,
+            stackTrace: stack,
+          );
+        },
+      );
     }
   }
 
@@ -177,6 +239,38 @@ class _RefractionBackdrop extends LeafRenderObjectWidget {
   final BackdropKey? backdropKey;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<ui.FragmentProgram>('program', program))
+      ..add(
+        DiagnosticsProperty<GlassPath>(
+          'path',
+          path,
+          level: DiagnosticLevel.hidden,
+        ),
+      )
+      ..add(IntProperty('shapes', path.shapes.length))
+      ..add(DiagnosticsProperty<Rect>('bounds', path.bounds))
+      ..add(DiagnosticsProperty<Rect?>('clip', path.clip, defaultValue: null))
+      ..add(DoubleProperty('spacing', spacing))
+      ..add(DoubleProperty('blur', blur, defaultValue: 0))
+      ..add(DoubleProperty('strength', strength))
+      ..add(DoubleProperty('dpr', dpr))
+      ..add(EnumProperty<LensKind?>('lens', lens, defaultValue: null))
+      ..add(IterableProperty<double>('colour', colour))
+      ..add(DiagnosticsProperty<({double k1, double k3})>('edge', edge))
+      ..add(DiagnosticsProperty<Offset>('light', light))
+      ..add(
+        DiagnosticsProperty<BackdropKey?>(
+          'backdropKey',
+          backdropKey,
+          defaultValue: null,
+        ),
+      );
+  }
+
+  @override
   RenderObject createRenderObject(BuildContext context) =>
       _RenderRefraction(program.fragmentShader())..update(this);
 
@@ -199,6 +293,39 @@ class _RenderRefraction extends RenderBox {
   void update(_RefractionBackdrop config) {
     _config = config;
     markNeedsPaint();
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IntProperty('shapes', _config?.path.shapes.length))
+      ..add(
+        DiagnosticsProperty<Rect?>(
+          'bounds',
+          _config?.path.bounds,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<Rect?>(
+          'clip',
+          _config?.path.clip,
+          defaultValue: null,
+        ),
+      )
+      ..add(EnumProperty<LensKind?>('lens', _config?.lens, defaultValue: null))
+      ..add(DoubleProperty('blur', _config?.blur, defaultValue: 0))
+      ..add(DoubleProperty('strength', _config?.strength))
+      ..add(DoubleProperty('spacing', _config?.spacing))
+      ..add(DoubleProperty('dpr', _config?.dpr))
+      ..add(
+        DiagnosticsProperty<Offset?>(
+          'paintedOrigin',
+          _painted,
+          defaultValue: null,
+        ),
+      );
   }
 
   /// The origin the shader was last given, physical px.

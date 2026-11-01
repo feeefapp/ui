@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:path_parsing/path_parsing.dart';
 
@@ -144,6 +145,26 @@ class LucideIcon extends StatelessWidget {
   final String? semanticLabel;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('data', data.name))
+      ..add(
+        DoubleProperty('size', size, ifNull: 'icon theme', defaultValue: null),
+      )
+      ..add(ColorProperty('color', color, defaultValue: null))
+      ..add(
+        DoubleProperty(
+          'strokeWidth',
+          strokeWidth,
+          ifNull: 'inherited',
+          defaultValue: null,
+        ),
+      )
+      ..add(StringProperty('semanticLabel', semanticLabel, defaultValue: null));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = IconTheme.of(context);
     final side = size ?? theme.size ?? 24;
@@ -163,6 +184,12 @@ class LucideIcon extends StatelessWidget {
 class LucideStroke extends InheritedWidget {
   const LucideStroke({super.key, required this.width, required super.child});
   final double width;
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DoubleProperty('width', width));
+  }
+
   static double? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<LucideStroke>()?.width;
   @override

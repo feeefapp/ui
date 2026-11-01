@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
@@ -136,6 +137,55 @@ class Alert extends StatefulWidget {
 
   /// Renders in place, filling its parent, instead of in the nearest [Overlay] (previews).
   final bool container;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        FlagProperty(
+          'open',
+          value: open,
+          ifTrue: 'open',
+          ifFalse: 'closed',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<bool>?>.has(
+          'onOpenChange',
+          onOpenChange,
+        ),
+      )
+      ..add(StringProperty('title', title))
+      ..add(
+        IterableProperty<String>('actions', [
+          for (final action in actions) action.label,
+        ]),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode?>(
+          'initialFocus',
+          initialFocus,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode?>(
+          'returnFocus',
+          returnFocus,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'container',
+          value: container,
+          ifTrue: 'in place',
+          defaultValue: false,
+        ),
+      );
+  }
 
   @override
   State<Alert> createState() => _AlertState();
@@ -359,6 +409,12 @@ class _AlertMaterial extends StatelessWidget {
   final Widget child;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DoubleProperty('radius', radius));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final c = ThemeProvider.of(context).colors;
     final glass = MenuMaterial.of(context);
@@ -518,6 +574,14 @@ class AlertActionsLayout extends MultiChildRenderObjectWidget {
   final List<AlertActionRole?> roles;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('gap', gap))
+      ..add(IterableProperty<AlertActionRole?>('roles', roles));
+  }
+
+  @override
   RenderObject createRenderObject(BuildContext context) =>
       RenderAlertActions(gap, roles, Directionality.of(context));
 
@@ -564,6 +628,23 @@ class RenderAlertActions extends RenderBox
 
   /// Whether the last layout put the actions side by side.
   bool sideBySide = false;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('gap', _gap))
+      ..add(IterableProperty<AlertActionRole?>('roles', _roles))
+      ..add(EnumProperty<TextDirection>('textDirection', _textDirection))
+      ..add(
+        FlagProperty(
+          'sideBySide',
+          value: sideBySide,
+          ifTrue: 'side by side',
+          ifFalse: 'stacked',
+        ),
+      );
+  }
 
   @override
   void setupParentData(RenderBox child) {

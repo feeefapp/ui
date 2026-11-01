@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
@@ -22,6 +23,12 @@ class MovingBrandAnchor extends StatefulWidget {
 
   /// The logo link.
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(EnumProperty<BrandAnchorSlot>('slot', slot));
+  }
 
   @override
   State<MovingBrandAnchor> createState() => _MovingBrandAnchorState();
@@ -67,6 +74,12 @@ class MovingBrand extends StatefulWidget {
 
   /// Key of the widget containing the logo anchors to follow (the web kit's `host` ref).
   final GlobalKey host;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<GlobalKey>('host', host));
+  }
 
   @override
   State<MovingBrand> createState() => _MovingBrandState();

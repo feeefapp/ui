@@ -4,6 +4,7 @@
 /// or Radio; in Dart use those widgets directly. Flutter's own `Image` is the twin of `Image`.
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -56,6 +57,99 @@ class Input extends StatelessWidget {
   final Iterable<String>? autofillHints;
   final bool autofocus;
   final FocusNode? focusNode;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        DiagnosticsProperty<TextEditingController>(
+          'controller',
+          controller,
+          defaultValue: null,
+        ),
+      )
+      ..add(StringProperty('defaultValue', defaultValue, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>?>.has('onChanged', onChanged),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>?>.has(
+          'onSubmitted',
+          onSubmitted,
+        ),
+      )
+      ..add(StringProperty('placeholder', placeholder, defaultValue: null))
+      ..add(StringProperty('ariaLabel', ariaLabel, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'disabled',
+          value: disabled,
+          ifTrue: 'disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'readOnly',
+          value: readOnly,
+          ifTrue: 'read-only',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'invalid',
+          value: invalid,
+          ifTrue: 'invalid',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'obscureText',
+          value: obscureText,
+          ifTrue: 'obscured',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<TextInputType>(
+          'keyboardType',
+          keyboardType,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        EnumProperty<TextInputAction>(
+          'textInputAction',
+          textInputAction,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        IterableProperty<String>(
+          'autofillHints',
+          autofillHints,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'autofocus',
+          value: autofocus,
+          ifTrue: 'autofocus',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      );
+  }
 
   @override
   Widget build(BuildContext context) => _RawField(
@@ -113,6 +207,66 @@ class Textarea extends StatelessWidget {
   final FocusNode? focusNode;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        DiagnosticsProperty<TextEditingController>(
+          'controller',
+          controller,
+          defaultValue: null,
+        ),
+      )
+      ..add(StringProperty('defaultValue', defaultValue, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>?>.has('onChanged', onChanged),
+      )
+      ..add(StringProperty('placeholder', placeholder, defaultValue: null))
+      ..add(StringProperty('ariaLabel', ariaLabel, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'disabled',
+          value: disabled,
+          ifTrue: 'disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'readOnly',
+          value: readOnly,
+          ifTrue: 'read-only',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'invalid',
+          value: invalid,
+          ifTrue: 'invalid',
+          defaultValue: false,
+        ),
+      )
+      ..add(IntProperty('minLines', minLines, defaultValue: 2))
+      ..add(IntProperty('maxLines', maxLines, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'autofocus',
+          value: autofocus,
+          ifTrue: 'autofocus',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      );
+  }
+
+  @override
   Widget build(BuildContext context) => _RawField(
     multiline: true,
     controller: controller,
@@ -163,6 +317,109 @@ class _RawField extends StatefulWidget {
   final int minLines;
   final int? maxLines;
   final FocusNode? focusNode;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        FlagProperty(
+          'multiline',
+          value: multiline,
+          ifTrue: 'multiline',
+          ifFalse: 'single-line',
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<TextEditingController>(
+          'controller',
+          controller,
+          defaultValue: null,
+        ),
+      )
+      ..add(StringProperty('defaultValue', defaultValue, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>?>.has('onChanged', onChanged),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>?>.has(
+          'onSubmitted',
+          onSubmitted,
+        ),
+      )
+      ..add(StringProperty('placeholder', placeholder, defaultValue: null))
+      ..add(StringProperty('ariaLabel', ariaLabel, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'disabled',
+          value: disabled,
+          ifTrue: 'disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'readOnly',
+          value: readOnly,
+          ifTrue: 'read-only',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'invalid',
+          value: invalid,
+          ifTrue: 'invalid',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'obscureText',
+          value: obscureText,
+          ifTrue: 'obscured',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<TextInputType>(
+          'keyboardType',
+          keyboardType,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        EnumProperty<TextInputAction>(
+          'textInputAction',
+          textInputAction,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        IterableProperty<String>(
+          'autofillHints',
+          autofillHints,
+          defaultValue: null,
+        ),
+      )
+      ..add(IntProperty('minLines', minLines, defaultValue: 1))
+      ..add(IntProperty('maxLines', maxLines, defaultValue: null))
+      ..add(
+        FlagProperty(
+          'autofocus',
+          value: autofocus,
+          ifTrue: 'autofocus',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode>(
+          'focusNode',
+          focusNode,
+          defaultValue: null,
+        ),
+      );
+  }
 
   @override
   State<_RawField> createState() => _RawFieldState();

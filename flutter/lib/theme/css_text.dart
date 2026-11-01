@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 final _shifts = <(String?, double, FontWeight?, double, double), double>{};
@@ -54,6 +55,12 @@ class CssBaseline extends StatelessWidget {
   const CssBaseline({super.key, required this.lineHeight, required this.child});
   final double lineHeight;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DoubleProperty('lineHeight', lineHeight));
+  }
 
   @override
   Widget build(BuildContext context) {

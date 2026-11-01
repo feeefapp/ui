@@ -70,6 +70,14 @@ class CarouselProgress extends InheritedNotifier<ValueNotifier<double>> {
   /// The carousel's effect (parallax media only move under `parallax`).
   final CarouselEffect effect;
 
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<CarouselEffect>('effect', effect))
+      ..add(DoubleProperty('progress', notifier?.value));
+  }
+
   /// Signed progress in slide steps, physical axis: 0 centered, ±1 a neighbour's place.
   static double of(BuildContext context) =>
       context
@@ -161,6 +169,61 @@ class Carousel extends StatefulWidget {
   final CarouselControls controls;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(
+        DiagnosticsProperty<SlideWidth>(
+          'slideWidth',
+          slideWidth,
+          description: switch (slideWidth) {
+            _FractionWidth(:final value) => '$value of the carousel',
+            _PixelWidth(:final value) => '${value}px',
+          },
+          defaultValue: const SlideWidth.fraction(0.82),
+        ),
+      )
+      ..add(DoubleProperty('gap', gap, defaultValue: 12.0))
+      ..add(
+        EnumProperty<CarouselAlign>(
+          'align',
+          align,
+          defaultValue: CarouselAlign.center,
+        ),
+      )
+      ..add(
+        EnumProperty<CarouselEffect>(
+          'effect',
+          effect,
+          defaultValue: CarouselEffect.scale,
+        ),
+      )
+      ..add(IntProperty('index', index, defaultValue: null))
+      ..add(
+        ObjectFlagProperty<ValueChanged<int>?>.has(
+          'onIndexChange',
+          onIndexChange,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'dots',
+          value: dots,
+          ifFalse: 'no dots',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        EnumProperty<CarouselControls>(
+          'controls',
+          controls,
+          defaultValue: CarouselControls.auto,
+        ),
+      );
+  }
+
+  @override
   State<Carousel> createState() => _CarouselState();
 }
 
@@ -178,6 +241,26 @@ class _CarouselState extends State<Carousel> {
   Timer? _wheelTimer;
 
   int get _count => widget.children.length;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IntProperty('current', _current))
+      ..add(IntProperty('count', _count))
+      ..add(DoubleProperty('step', _step, unit: 'px'))
+      ..add(FlagProperty('placed', value: _placed, ifFalse: 'not placed yet'))
+      ..add(FlagProperty('dragging', value: _dragging, ifTrue: 'dragging'))
+      ..add(FlagProperty('wheeling', value: _wheeling, ifTrue: 'wheeling'))
+      ..add(FlagProperty('hovered', value: _hovered, ifTrue: 'hovered'))
+      ..add(
+        FlagProperty(
+          'focusWithin',
+          value: _focusWithin,
+          ifTrue: 'focus within',
+        ),
+      );
+  }
 
   @override
   void initState() {
@@ -609,6 +692,16 @@ class _SlideBody extends StatelessWidget {
   final Widget child;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<CarouselEffect>('effect', effect))
+      ..add(FlagProperty('reduced', value: reduced, ifTrue: 'reduced motion'))
+      ..add(DoubleProperty('progress', progress.value))
+      ..add(DoubleProperty('radius', radius));
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Each slide is its own layer: scrolling the track and scaling or fading a slide move and
     // blend it without painting its content again.
@@ -650,11 +743,28 @@ class _Dot extends StatefulWidget {
   final VoidCallback onTap;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IntProperty('index', index))
+      ..add(FlagProperty('current', value: current, ifTrue: 'current'))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onTap', onTap));
+  }
+
+  @override
   State<_Dot> createState() => _DotState();
 }
 
 class _DotState extends State<_Dot> {
   bool _focusVisible = false;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      FlagProperty('focusVisible', value: _focusVisible, ifTrue: 'focus ring'),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -733,6 +843,16 @@ class _SlideRow extends MultiChildRenderObjectWidget {
   final TextDirection textDirection;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('slideWidth', slideWidth))
+      ..add(DoubleProperty('gap', gap))
+      ..add(DoubleProperty('padding', padding))
+      ..add(EnumProperty<TextDirection>('textDirection', textDirection));
+  }
+
+  @override
   _RenderSlideRow createRenderObject(BuildContext context) => _RenderSlideRow()
     ..slideWidth = slideWidth
     ..gap = gap
@@ -758,6 +878,16 @@ class _RenderSlideRow extends RenderBox
         RenderBoxContainerDefaultsMixin<RenderBox, _SlideRowParentData> {
   double slideWidth = 0, gap = 0, padding = 0;
   TextDirection textDirection = TextDirection.ltr;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('slideWidth', slideWidth))
+      ..add(DoubleProperty('gap', gap))
+      ..add(DoubleProperty('padding', padding))
+      ..add(EnumProperty<TextDirection>('textDirection', textDirection));
+  }
 
   @override
   void setupParentData(RenderBox child) {

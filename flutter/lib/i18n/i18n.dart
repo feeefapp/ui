@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'i18n_core.dart';
@@ -78,6 +79,30 @@ class I18nProvider extends StatelessWidget {
   final Widget child;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('locale', locale, defaultValue: 'ar'))
+      ..add(
+        EnumProperty<TextDirection>('direction', direction, defaultValue: null),
+      )
+      ..add(
+        IterableProperty<String>(
+          'availableLocales',
+          availableLocales,
+          defaultValue: null,
+        ),
+      )
+      ..add(IntProperty('translations', translations.length, defaultValue: 0))
+      ..add(
+        ObjectFlagProperty<ValueChanged<String>?>.has(
+          'onLocaleChange',
+          onLocaleChange,
+        ),
+      );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final base = locale.split(RegExp('[-_]')).first;
     final messages = {...?uiMessages[base], ...translations};
@@ -103,4 +128,16 @@ class _I18nScope extends InheritedWidget {
       old.i18n.locale != i18n.locale ||
       old.i18n.direction != i18n.direction ||
       !identical(old.i18n._messages, i18n._messages);
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('locale', i18n.locale))
+      ..add(EnumProperty<TextDirection>('direction', i18n.direction))
+      ..add(IntProperty('messages', i18n._messages.length))
+      ..add(
+        DiagnosticsProperty<I18n>('i18n', i18n, level: DiagnosticLevel.hidden),
+      );
+  }
 }

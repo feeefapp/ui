@@ -8,6 +8,7 @@ library;
 
 export 'ambient_loop.dart';
 export 'performance.dart';
+export 'devtools/devtools.dart';
 export 'platform/pointer_shield.dart';
 export 'actions/actions_bar.dart';
 export 'actions/layout.dart';

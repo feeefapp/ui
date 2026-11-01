@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
 import '../ambient_loop.dart';
+import '../devtools/devtools.dart';
 import '../theme.dart';
 
 const _bayer = [
@@ -91,6 +92,15 @@ class PixelShader extends StatefulWidget {
   final double opacity;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('density', density, defaultValue: 1.2))
+      ..add(DoubleProperty('speed', speed, defaultValue: 0.35))
+      ..add(DoubleProperty('opacity', opacity, defaultValue: 1));
+  }
+
+  @override
   State<PixelShader> createState() => _PixelShaderState();
 }
 
@@ -124,7 +134,15 @@ class _PixelShaderState extends State<PixelShader>
         .then((program) {
           if (mounted) setState(() => _shader = program.fragmentShader());
         })
-        .catchError((Object _) {});
+        .catchError((Object error, StackTrace stack) {
+          kitLog(
+            'pixel_field',
+            'Pixel field shader failed to load; drawing cells on the CPU',
+            level: 900,
+            error: error,
+            stackTrace: stack,
+          );
+        });
   }
 
   @override

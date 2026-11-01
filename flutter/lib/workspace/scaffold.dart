@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -173,6 +174,95 @@ class Scaffold extends StatefulWidget {
   /// Text direction for the scaffold and its drawer. Inherited when omitted.
   final TextDirection? textDirection;
 
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        ObjectFlagProperty<ScaffoldViewportBuilder?>.has(
+          'renderViewport',
+          renderViewport,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<ScrollController?>(
+          'contentController',
+          contentController,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        StringProperty(
+          'contentLabel',
+          contentLabel,
+          defaultValue: 'Workspace content',
+        ),
+      )
+      ..add(
+        EnumProperty<ScaffoldSideMode?>(
+          'sideMode',
+          sideMode,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        EnumProperty<ScaffoldSideMode>(
+          'defaultSideMode',
+          defaultSideMode,
+          defaultValue: ScaffoldSideMode.expanded,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<ScaffoldSideMode>?>.has(
+          'onSideModeChange',
+          onSideModeChange,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'compact',
+          value: compact,
+          ifTrue: 'compact',
+          ifFalse: 'not compact',
+        ),
+      )
+      ..add(
+        DoubleProperty(
+          'compactBreakpoint',
+          compactBreakpoint,
+          defaultValue: 720,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode?>(
+          'drawerReturnFocus',
+          drawerReturnFocus,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        StringProperty(
+          'drawerLabel',
+          drawerLabel,
+          defaultValue: 'Workspace navigation',
+        ),
+      )
+      ..add(
+        StringProperty(
+          'drawerCloseLabel',
+          drawerCloseLabel,
+          defaultValue: 'Close',
+        ),
+      )
+      ..add(
+        EnumProperty<TextDirection?>(
+          'textDirection',
+          textDirection,
+          defaultValue: null,
+        ),
+      );
+  }
+
   /// The nearest Scaffold's state. Throws outside a scaffold, like `useScaffold()`.
   static ScaffoldState of(BuildContext context) {
     final state = maybeOf(context);
@@ -193,6 +283,12 @@ class Scaffold extends StatefulWidget {
 class _ScaffoldScope extends InheritedWidget {
   const _ScaffoldScope({required this.state, required super.child});
   final ScaffoldState state;
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<ScaffoldState>('state', state));
+  }
+
   @override
   bool updateShouldNotify(_ScaffoldScope old) => old.state != state;
 }
@@ -389,6 +485,16 @@ class _SideBoundary extends StatefulWidget {
   final Widget child;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<ScaffoldSideMode>('mode', mode))
+      ..add(FlagProperty('immediate', value: immediate, ifTrue: 'immediate'))
+      ..add(EnumProperty<Density>('density', density))
+      ..add(FlagProperty('rtl', value: rtl, ifTrue: 'rtl'));
+  }
+
+  @override
   State<_SideBoundary> createState() => _SideBoundaryState();
 }
 
@@ -476,6 +582,29 @@ class _MainPanel extends StatefulWidget {
   /// A visible sidebar's own shell gap separates it: no start margin.
   final bool besideSide;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<FocusNode>('focusNode', focusNode))
+      ..add(
+        FlagProperty(
+          'framed',
+          value: framed,
+          ifTrue: 'framed',
+          ifFalse: 'edge to edge',
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'besideSide',
+          value: besideSide,
+          ifTrue: 'beside side',
+          defaultValue: false,
+        ),
+      );
+  }
 
   @override
   State<_MainPanel> createState() => _MainPanelState();
@@ -568,6 +697,26 @@ class _WorkspaceDrawer extends StatefulWidget {
   final TextDirection textDirection;
   final VoidCallback close;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        FlagProperty('open', value: open, ifTrue: 'open', ifFalse: 'closed'),
+      )
+      ..add(StringProperty('label', label))
+      ..add(StringProperty('closeLabel', closeLabel))
+      ..add(
+        DiagnosticsProperty<FocusNode?>(
+          'returnFocus',
+          returnFocus,
+          defaultValue: null,
+        ),
+      )
+      ..add(EnumProperty<TextDirection>('textDirection', textDirection))
+      ..add(ObjectFlagProperty<VoidCallback>.has('close', close));
+  }
 
   @override
   State<_WorkspaceDrawer> createState() => _WorkspaceDrawerState();
@@ -810,6 +959,20 @@ class ScaffoldSide extends StatelessWidget {
   final String contentLabel;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label, defaultValue: 'Workspace sidebar'))
+      ..add(
+        StringProperty(
+          'contentLabel',
+          contentLabel,
+          defaultValue: 'Sidebar navigation content',
+        ),
+      );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final rail = Scaffold.maybeOf(context)?.sideMode == ScaffoldSideMode.rail;
@@ -962,6 +1125,20 @@ class ScaffoldToggleButton extends StatelessWidget {
 
   /// Accessible name. Defaults to a description of what the click does.
   final String? label;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        EnumProperty<ScaffoldToggleAction>(
+          'action',
+          action,
+          defaultValue: ScaffoldToggleAction.cycle,
+        ),
+      )
+      ..add(StringProperty('label', label, defaultValue: null));
+  }
 
   @override
   Widget build(BuildContext context) {

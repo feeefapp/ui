@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -34,6 +35,29 @@ class PresentationRouteScope extends InheritedWidget {
 
   static void _noop([Object? _]) {}
 
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        FlagProperty('open', value: open, ifTrue: 'open', ifFalse: 'closed'),
+      )
+      ..add(
+        ObjectFlagProperty<void Function([Object? result])>.has(
+          'dismiss',
+          dismiss,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'active',
+          value: _active,
+          ifFalse: 'hides enclosing route',
+          defaultValue: true,
+        ),
+      );
+  }
+
   /// The scope driving the surface at [context], if a route hosts it.
   static PresentationRouteScope? maybeOf(BuildContext context) {
     final scope = context
@@ -66,6 +90,15 @@ class PresentationLayer extends StatefulWidget {
 
   /// Builds the surface.
   final WidgetBuilder builder;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(FlagProperty('mounted', value: mounted, ifTrue: 'mounted'))
+      ..add(FlagProperty('inPlace', value: inPlace, ifTrue: 'in place'))
+      ..add(ObjectFlagProperty<WidgetBuilder>.has('builder', builder));
+  }
 
   @override
   State<PresentationLayer> createState() => _PresentationLayerState();
@@ -134,6 +167,44 @@ class PresentationHost extends StatefulWidget {
   final FocusNode? returnFocus;
 
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(
+        FlagProperty(
+          'modal',
+          value: modal,
+          ifFalse: 'non-modal',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'alert',
+          value: alert,
+          ifTrue: 'alert',
+          defaultValue: false,
+        ),
+      )
+      ..add(ObjectFlagProperty<VoidCallback?>.has('onEscape', onEscape))
+      ..add(
+        DiagnosticsProperty<FocusNode?>(
+          'initialFocus',
+          initialFocus,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<FocusNode?>(
+          'returnFocus',
+          returnFocus,
+          defaultValue: null,
+        ),
+      );
+  }
 
   @override
   State<PresentationHost> createState() => _PresentationHostState();
@@ -240,6 +311,17 @@ mixin PresentationStateMixin<T extends StatefulWidget> on State<T> {
 
   /// The widget's `onOpenChange`.
   ValueChanged<bool>? get declaredOnOpenChange;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        FlagProperty('open', value: isOpen, ifTrue: 'open', ifFalse: 'closed'),
+      )
+      ..add(FlagProperty('presented', value: presented, ifTrue: 'presented'))
+      ..add(FlagProperty('routed', value: routed, ifTrue: 'routed'));
+  }
 
   /// Whether the surface is open: its route's state when a route hosts it.
   bool get isOpen => _route?.open ?? declaredOpen;

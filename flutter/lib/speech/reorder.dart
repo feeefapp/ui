@@ -63,6 +63,12 @@ class SpeechReorderGroup extends StatefulWidget {
   final List<Widget> children;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DoubleProperty('spacing', spacing, defaultValue: 12));
+  }
+
+  @override
   State<SpeechReorderGroup> createState() => _GroupState();
 }
 
@@ -95,6 +101,14 @@ class _GroupState extends State<SpeechReorderGroup>
   Duration _now = Duration.zero;
 
   bool get reordering => _drag?.active ?? false;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(FlagProperty('reordering', value: reordering, ifTrue: 'reordering'))
+      ..add(IntProperty('blocks', _blocks.length));
+  }
 
   @override
   void initState() {
@@ -382,6 +396,16 @@ class _GroupScope extends InheritedWidget {
   final _GroupState state;
   final bool reordering;
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<_GroupState>('state', state))
+      ..add(
+        FlagProperty('reordering', value: reordering, ifTrue: 'reordering'),
+      );
+  }
+
+  @override
   bool updateShouldNotify(_GroupScope old) =>
       old.state != state || old.reordering != reordering;
 }
@@ -563,6 +587,14 @@ class _SpeechColumn extends MultiChildRenderObjectWidget {
   final Set<int> raised;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('spacing', spacing))
+      ..add(IterableProperty<int>('raised', raised));
+  }
+
+  @override
   RenderObject createRenderObject(BuildContext context) =>
       _RenderSpeechColumn(spacing, raised);
 
@@ -596,6 +628,14 @@ class _RenderSpeechColumn extends RenderBox
     if (setEquals(value, _raised)) return;
     _raised = value;
     markNeedsPaint();
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('spacing', _spacing))
+      ..add(IterableProperty<int>('raised', _raised));
   }
 
   @override

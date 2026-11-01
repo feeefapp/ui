@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui show SemanticsRole;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
@@ -241,6 +242,85 @@ class SelectionTrack<T> extends StatefulWidget {
   final SelectionOverflow overflow;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<T>('value', value))
+      ..add(
+        ObjectFlagProperty<void Function(T value, SelectionSource source)>.has(
+          'onSelect',
+          onSelect,
+        ),
+      )
+      ..add(
+        IterableProperty<String>(
+          'options',
+          options.map((option) => option.label),
+        ),
+      )
+      ..add(StringProperty('label', label))
+      ..add(
+        EnumProperty<SelectionSemantics>(
+          'semantics',
+          semantics,
+          defaultValue: SelectionSemantics.radio,
+        ),
+      )
+      ..add(
+        EnumProperty<SelectionLayout>(
+          'layout',
+          layout,
+          defaultValue: SelectionLayout.inline,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<SelectionTrackSizes>(
+          'sizes',
+          sizes,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'disabled',
+          value: disabled,
+          ifTrue: 'disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'equalWidth',
+          value: equalWidth,
+          ifTrue: 'equal width',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'draggable',
+          value: draggable,
+          ifFalse: 'not draggable',
+          defaultValue: true,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<SelectionMinimize>(
+          'minimize',
+          minimize,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        EnumProperty<SelectionOverflow>(
+          'overflow',
+          overflow,
+          defaultValue: SelectionOverflow.scroll,
+        ),
+      );
+  }
+
+  @override
   State<SelectionTrack<T>> createState() => _SelectionTrackState<T>();
 }
 
@@ -406,6 +486,20 @@ class _SelectionTrackState<T> extends State<SelectionTrack<T>>
   bool get _reduced => reducedMotionOf(context);
   int get _selected =>
       widget.options.indexWhere((option) => option.value == widget.value);
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('center', center.get()))
+      ..add(DoubleProperty('width', width.get()))
+      ..add(DoubleProperty('top', top.get()))
+      ..add(DoubleProperty('press', press.get()))
+      ..add(DoubleProperty('stretch', stretch.get()))
+      ..add(DoubleProperty('lens', lens.get()))
+      ..add(FlagProperty('overflow', value: _overflow, ifTrue: 'overflowing'))
+      ..add(FlagProperty('dragging', value: _dragging, ifTrue: 'dragging'));
+  }
 
   @override
   void initState() {
@@ -1233,6 +1327,30 @@ class _PillDragRecognizer extends OneSequenceGestureRecognizer {
   int? _pointer;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        ObjectFlagProperty<void Function(PointerDownEvent event)?>.has(
+          'onDown',
+          onDown,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<bool Function(PointerMoveEvent event)?>.has(
+          'onMove',
+          onMove,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<
+          void Function(PointerEvent? event, {required bool cancelled})?
+        >.has('onEnd', onEnd),
+      )
+      ..add(FlagProperty('accepted', value: _accepted, ifTrue: 'accepted'));
+  }
+
+  @override
   void addAllowedPointer(PointerDownEvent event) {
     if (_pointer != null) return;
     super.addAllowedPointer(event);
@@ -1292,6 +1410,15 @@ class _EqualRow extends MultiChildRenderObjectWidget {
   final TextDirection textDirection;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('spacing', spacing))
+      ..add(DoubleProperty('minChildWidth', minChildWidth))
+      ..add(EnumProperty<TextDirection>('textDirection', textDirection));
+  }
+
+  @override
   RenderObject createRenderObject(BuildContext context) =>
       _RenderEqualRow(spacing, minChildWidth, textDirection);
 
@@ -1331,6 +1458,15 @@ class _RenderEqualRow extends RenderBox
     if (value == _textDirection) return;
     _textDirection = value;
     markNeedsLayout();
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('spacing', _spacing))
+      ..add(DoubleProperty('minChildWidth', _minChildWidth))
+      ..add(EnumProperty<TextDirection>('textDirection', _textDirection));
   }
 
   @override
@@ -1445,6 +1581,12 @@ class _OnLayout extends SingleChildRenderObjectWidget {
   final VoidCallback onLayout;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(ObjectFlagProperty<VoidCallback>.has('onLayout', onLayout));
+  }
+
+  @override
   RenderObject createRenderObject(BuildContext context) =>
       _RenderOnLayout(onLayout);
 
@@ -1457,6 +1599,12 @@ class _OnLayout extends SingleChildRenderObjectWidget {
 class _RenderOnLayout extends RenderProxyBox {
   _RenderOnLayout(this.onLayout);
   VoidCallback onLayout;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(ObjectFlagProperty<VoidCallback>.has('onLayout', onLayout));
+  }
 
   @override
   void performLayout() {
@@ -1486,7 +1634,6 @@ class _InkClip {
   /// The drop's corner radius.
   double radius(Rect drop) =>
       math.min(drop.width, drop.height) / 2 * radiusScale;
-
 }
 
 /// Paints its child, then paints it again in the selected ink inside [ink]'s drop: the selected
@@ -1509,6 +1656,23 @@ class _InkOverlay extends SingleChildRenderObjectWidget {
   final double Function() lens;
 
   final Listenable repaint;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        DiagnosticsProperty<_InkClip>(
+          'ink',
+          ink,
+          description: 'drop of option ${ink.index}',
+        ),
+      )
+      ..add(ColorProperty('color', color))
+      ..add(ColorProperty('lensColor', lensColor))
+      ..add(DoubleProperty('lens', lens()))
+      ..add(DiagnosticsProperty<Listenable>('repaint', repaint));
+  }
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
@@ -1564,6 +1728,24 @@ class _RenderInkOverlay extends RenderProxyBox {
       value.addListener(markNeedsPaint);
     }
     _repaint = value;
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        DiagnosticsProperty<_InkClip>(
+          'ink',
+          ink,
+          description: 'drop of option ${ink.index}',
+        ),
+      )
+      ..add(ColorProperty('color', _color))
+      ..add(ColorProperty('lensColor', _lensColor))
+      ..add(DoubleProperty('lens', lens()))
+      ..add(DiagnosticsProperty<Listenable>('repaint', _repaint))
+      ..add(IntProperty('holes', holes.length));
   }
 
   @override
@@ -1699,6 +1881,18 @@ class _InkHole extends SingleChildRenderObjectWidget {
 
 class _RenderInkHole extends RenderProxyBox {
   _RenderInkOverlay? _overlay;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      FlagProperty(
+        'overlay',
+        value: _overlay != null,
+        ifFalse: 'outside an ink overlay',
+      ),
+    );
+  }
 
   @override
   void attach(PipelineOwner owner) {
@@ -1878,6 +2072,91 @@ class _Segment<T> extends StatefulWidget {
   final double Function() lens;
 
   final Listenable motion;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        DiagnosticsProperty<SegmentOption<T>>(
+          'option',
+          option,
+          description: option.label,
+        ),
+      )
+      ..add(IntProperty('index', index))
+      ..add(FlagProperty('selected', value: selected, ifTrue: 'selected'))
+      ..add(FlagProperty('disabled', value: disabled, ifTrue: 'disabled'))
+      ..add(FlagProperty('tabbable', value: tabbable, ifTrue: 'tabbable'))
+      ..add(FlagProperty('dragging', value: dragging, ifTrue: 'dragging'))
+      ..add(
+        DiagnosticsProperty<SelectionMinimize>(
+          'minimize',
+          minimize,
+          defaultValue: null,
+        ),
+      )
+      ..add(DiagnosticsProperty<GlobalKey>('iconKey', iconKey))
+      ..add(
+        FlagProperty(
+          'foldable',
+          value: foldable,
+          ifTrue: 'foldable',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'menuFolded',
+          value: menuFolded,
+          ifTrue: 'menu folded',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'menuOpen',
+          value: menuOpen,
+          ifTrue: 'menu open',
+          defaultValue: false,
+        ),
+      )
+      ..add(DoubleProperty('naturalWidth', naturalWidth, defaultValue: null))
+      ..add(StringProperty('groupLabel', groupLabel, defaultValue: ''))
+      ..add(ColorProperty('fallback', fallback, defaultValue: null))
+      ..add(EnumProperty<SelectionSemantics>('semantics', semantics))
+      ..add(EnumProperty<SelectionLayout>('layout', layout))
+      ..add(
+        DiagnosticsProperty<SelectionTrackSizes>(
+          'sizes',
+          sizes,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        FlagProperty('fill', value: fill, ifTrue: 'fill', defaultValue: false),
+      )
+      ..add(DiagnosticsProperty<FocusNode>('focusNode', focusNode))
+      ..add(DoubleProperty('height', height))
+      ..add(DoubleProperty('padding', padding))
+      ..add(DoubleProperty('radius', radius))
+      ..add(DoubleProperty('fontSize', fontSize))
+      ..add(DoubleProperty('radiusScale', radiusScale))
+      ..add(DoubleProperty('lineHeight', lineHeight, defaultValue: null))
+      ..add(DoubleProperty('touchTarget', touchTarget))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onSelect', onSelect))
+      ..add(
+        DiagnosticsProperty<_InkClip>(
+          'ink',
+          ink,
+          description: 'drop of option ${ink.index}',
+        ),
+      )
+      ..add(ColorProperty('inkColor', inkColor))
+      ..add(ColorProperty('lensInkColor', lensInkColor))
+      ..add(DoubleProperty('lens', lens()))
+      ..add(DiagnosticsProperty<Listenable>('motion', motion));
+  }
 
   @override
   State<_Segment<T>> createState() => _SegmentState<T>();
@@ -2297,6 +2576,15 @@ class _Badge extends StatelessWidget {
   final double radiusScale;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('text', text))
+      ..add(ColorProperty('ink', ink))
+      ..add(DoubleProperty('radiusScale', radiusScale));
+  }
+
+  @override
   Widget build(BuildContext context) => DecoratedBox(
     decoration: ShapeDecoration(
       color: ink.withValues(alpha: ink.a * 0.14),
@@ -2335,6 +2623,14 @@ class _IconBadge extends StatelessWidget {
   const _IconBadge({required this.text, required this.radiusScale});
   final String text;
   final double radiusScale;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('text', text))
+      ..add(DoubleProperty('radiusScale', radiusScale));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2436,6 +2732,21 @@ abstract class _FoldState<W extends StatefulWidget> extends State<W> {
   bool get target;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        FlagProperty(
+          'target',
+          value: target,
+          ifTrue: 'toward 1',
+          ifFalse: 'toward 0',
+        ),
+      )
+      ..add(DoubleProperty('t', t));
+  }
+
+  @override
   void initState() {
     super.initState();
     _t = MotionValue(target ? 1 : 0, 0.002);
@@ -2469,6 +2780,14 @@ class _FoldGap extends StatefulWidget {
   final bool folded;
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('gap', gap))
+      ..add(FlagProperty('folded', value: folded, ifTrue: 'folded'));
+  }
+
+  @override
   State<_FoldGap> createState() => _FoldGapState();
 }
 
@@ -2486,6 +2805,16 @@ class _FoldChevron extends StatefulWidget {
   const _FoldChevron({required this.open, required this.color});
   final bool open;
   final Color color;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        FlagProperty('open', value: open, ifTrue: 'open', ifFalse: 'closed'),
+      )
+      ..add(ColorProperty('color', color));
+  }
 
   @override
   State<_FoldChevron> createState() => _FoldChevronState();
@@ -2534,6 +2863,23 @@ class _SelectionMenu<T> extends StatefulWidget {
   final bool disabled;
   final ValueChanged<int> onPick;
   final VoidCallback onClose;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('label', label))
+      ..add(
+        IterableProperty<String>(
+          'options',
+          options.map((option) => option.label),
+        ),
+      )
+      ..add(IntProperty('selected', selected))
+      ..add(FlagProperty('disabled', value: disabled, ifTrue: 'disabled'))
+      ..add(ObjectFlagProperty<ValueChanged<int>>.has('onPick', onPick))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onClose', onClose));
+  }
 
   @override
   State<_SelectionMenu<T>> createState() => _SelectionMenuState<T>();

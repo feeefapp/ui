@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'i18n/i18n.dart';
@@ -60,6 +61,32 @@ class ThemeModeProvider extends StatefulWidget {
   final ValueChanged<ThemeMode>? onModeChange;
   final Widget child;
 
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        EnumProperty<ThemeMode>(
+          'initialMode',
+          initialMode,
+          defaultValue: ThemeMode.system,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<ThemeConfig>(
+          'config',
+          config,
+          defaultValue: ThemeConfig.defaults,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<ValueChanged<ThemeMode>?>.has(
+          'onModeChange',
+          onModeChange,
+        ),
+      );
+  }
+
   /// The nearest provider's mode. Throws outside one, like `useTheme()`.
   static ThemeModeState of(BuildContext context) {
     final state = maybeOf(context);
@@ -108,6 +135,21 @@ class _ThemeModeProviderState extends State<ThemeModeProvider> {
 class _ModeScope extends InheritedWidget {
   const _ModeScope({required this.state, required super.child});
   final ThemeModeState state;
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        DiagnosticsProperty<ThemeModeState>(
+          'state',
+          state,
+          level: DiagnosticLevel.hidden,
+        ),
+      )
+      ..add(EnumProperty<ThemeMode>('mode', state.mode))
+      ..add(EnumProperty<Brightness>('resolvedMode', state.resolvedMode));
+  }
+
   @override
   bool updateShouldNotify(_ModeScope old) => old.state != state;
 }

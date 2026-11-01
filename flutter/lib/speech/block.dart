@@ -3,6 +3,7 @@ library;
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
@@ -58,6 +59,29 @@ class SpeechBlock extends StatefulWidget {
 
   /// Called once on drop (or arrow key) with the old and new index.
   final void Function(int from, int to) onMove;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IntProperty('index', index))
+      ..add(IntProperty('count', count))
+      ..add(StringProperty('seed', seed))
+      ..add(
+        FlagProperty(
+          'reorderDisabled',
+          value: reorderDisabled,
+          ifTrue: 'reorder disabled',
+          defaultValue: false,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<void Function(int from, int to)>.has(
+          'onMove',
+          onMove,
+        ),
+      );
+  }
 
   /// Tells the enclosing block that its editor changed, so it shows the typing state for 420ms.
   static void noteInput(BuildContext context) =>
@@ -188,6 +212,12 @@ class _BlockScope extends InheritedWidget {
   const _BlockScope({required this.state, required super.child});
   final _SpeechBlockState state;
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<_SpeechBlockState>('state', state));
+  }
+
+  @override
   bool updateShouldNotify(_BlockScope old) => false;
 }
 
@@ -195,6 +225,12 @@ class _BlockScope extends InheritedWidget {
 class _Caption extends StatelessWidget {
   const _Caption({required this.text});
   final String text;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(StringProperty('text', text));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -228,6 +264,17 @@ class _Handle extends StatelessWidget {
   final FocusNode focusNode;
   final bool enabled;
   final String label, hint;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<SpeechReorder>('reorder', reorder))
+      ..add(DiagnosticsProperty<FocusNode>('focusNode', focusNode))
+      ..add(FlagProperty('enabled', value: enabled, ifFalse: 'disabled'))
+      ..add(StringProperty('label', label))
+      ..add(StringProperty('hint', hint));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -298,6 +345,18 @@ class _BlockSurface extends StatelessWidget {
   final String seed;
   final bool typing, focusWithin, dragging;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('seed', seed))
+      ..add(FlagProperty('typing', value: typing, ifTrue: 'typing'))
+      ..add(
+        FlagProperty('focusWithin', value: focusWithin, ifTrue: 'focus within'),
+      )
+      ..add(FlagProperty('dragging', value: dragging, ifTrue: 'dragging'));
+  }
 
   @override
   Widget build(BuildContext context) {

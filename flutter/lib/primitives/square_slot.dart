@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../theme.dart';
@@ -16,6 +17,12 @@ class SquareSlot extends StatelessWidget {
   /// control height.
   final double? size;
   final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DoubleProperty('size', size, defaultValue: null));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +53,14 @@ class SquareSlotScope extends InheritedWidget {
 
   final double size;
   final double? iconSize;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('size', size))
+      ..add(DoubleProperty('iconSize', iconSize, defaultValue: null));
+  }
 
   static SquareSlotScope? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<SquareSlotScope>();
