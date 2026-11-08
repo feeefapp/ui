@@ -237,6 +237,41 @@ void main() {
       expect(field.focusNode.hasFocus, isFalse);
     });
 
+    testWidgets(
+      'Arabic catalog rows retain distinct model ids and support search',
+      (tester) async {
+        final many = [
+          for (var i = 0; i < 8; i++)
+            LadderStop(
+              modelId: 'provider/model-$i',
+              label: '',
+              modelName: 'provider/model-$i',
+            ),
+        ];
+        await tester.pumpWidget(
+          overlay(
+            I18nProvider(
+              locale: 'ar',
+              child: ModelLadderCard(stops: many, index: 1, onChange: (_) {}),
+            ),
+          ),
+        );
+        await settle(tester, 4);
+        expect(find.text('provider/model-1'), findsOneWidget);
+        await tester.tap(find.text('provider/model-1'));
+        await settle(tester, 4);
+        expect(find.text('provider/model-1'), findsOneWidget);
+        expect(find.text('provider/model-2'), findsOneWidget);
+        final nameContext = tester.element(find.text('provider/model-1'));
+        expect(Directionality.of(nameContext), TextDirection.rtl);
+        await tester.enterText(find.byType(EditableText), 'model-6');
+        await settle(tester, 4);
+        expect(find.text('provider/model-6'), findsOneWidget);
+        expect(find.text('provider/model-1'), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
     testWidgets('a canvas readout shows the size, aspect and a fitted box', (
       tester,
     ) async {

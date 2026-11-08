@@ -114,18 +114,28 @@ abstract final class GridLayout {
       }
       placed.add(next);
     }
-    return compact(placed, columns: columns, keepOrderOf: id);
+    // Gravity after the push/swap pass — do not pin [id] or it claims y=0 and undoes a swap.
+    return compact(placed, columns: columns);
   }
 
   /// Every widget raised as far as it goes without overlapping one above it. [keepOrderOf]
-  /// settles first so a widget being dragged keeps the slot it is shown in.
+  /// is settled first (before reading order) so a widget being dragged claims its target cell
+  /// before neighbours rise into it. Horizontal gutters are filled by [expandIntoGaps].
   static List<GridPlacement> compact(
     List<GridPlacement> items, {
     required int columns,
     String? keepOrderOf,
   }) {
-    final sorted = [for (final item in items) _fit(item, columns)]
-      ..sort(_readingOrder);
+    final sorted = [for (final item in items) _fit(item, columns)];
+    if (keepOrderOf != null) {
+      sorted.sort((a, b) {
+        if (a.id == keepOrderOf) return -1;
+        if (b.id == keepOrderOf) return 1;
+        return _readingOrder(a, b);
+      });
+    } else {
+      sorted.sort(_readingOrder);
+    }
     final settled = <GridPlacement>[];
     for (final item in sorted) {
       var next = item;
@@ -140,6 +150,34 @@ abstract final class GridLayout {
     }
     final order = {for (var i = 0; i < items.length; i++) items[i].id: i};
     return settled..sort((a, b) => order[a.id]!.compareTo(order[b.id]!));
+  }
+
+  /// Grow each widget into empty cells on its rows (start and end) so a missing neighbour does
+  /// not leave a column gutter. [ids] limits which widgets may grow; omit to allow all.
+  static List<GridPlacement> expandIntoGaps(
+    List<GridPlacement> items, {
+    required int columns,
+    Set<String>? ids,
+  }) {
+    if (items.isEmpty) return items;
+    var out = [for (final item in items) _fit(item, columns)];
+    for (var i = 0; i < out.length; i++) {
+      var item = out[i];
+      if (ids != null && !ids.contains(item.id)) continue;
+      final others = [for (final o in out) if (o.id != item.id) o];
+      while (item.right < columns) {
+        final grown = item.copyWith(w: item.w + 1);
+        if (others.any(grown.overlaps)) break;
+        item = grown;
+      }
+      while (item.x > 0) {
+        final grown = item.copyWith(x: item.x - 1, w: item.w + 1);
+        if (others.any(grown.overlaps)) break;
+        item = grown;
+      }
+      out[i] = item;
+    }
+    return compact(out, columns: columns);
   }
 
   /// [item] appended at the first free spot, scanning rows top to bottom, start to end.

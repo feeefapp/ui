@@ -50,7 +50,9 @@ function Overview() {
           Both components are controlled by <C>stops</C>, <C>index</C> and <C>onChange</C>; the owner
           keeps the default (the Lab uses the middle rung, <C>middleIndex(count)</C>). Each stop has a{' '}
           <C>modelId</C>, a human <C>modelName</C> and a tier <C>label</C>. A label that only repeats the
-          name or id is replaced by Fast / Balanced / Best by position. <C>priceUsd</C> shows “Usually
+          name or id is replaced by Fast / Balanced / Best by position. The model list keeps the
+          model name, or its id when no distinct name is available, so choices remain identifiable.
+          <C>priceUsd</C> shows “Usually
           about …” and must come from the server; <C>access</C> shows a Free or Pro tag but enforces
           nothing. <C>catalog</C> adds models to the title list; picking one that is not a rung calls{' '}
           <C>onPickModel</C>, and passing it back as <C>selectedModel</C> hides the track until the user

@@ -5,7 +5,8 @@ const STOPS: LadderStop[] = [
   { modelId: 'google/gemini-flash-lite', modelName: 'Gemini Flash Lite', label: 'Fast', access: 'free' },
   { modelId: 'openai/gpt-4.1-mini', modelName: 'GPT-4.1 mini', label: 'Everyday', access: 'free' },
   { modelId: 'google/gemini-pro', modelName: 'Gemini Pro', label: 'Smart', access: 'pro', priceUsd: 0.012 },
-  { modelId: 'anthropic/claude-opus', modelName: 'Claude Opus', label: 'Best', access: 'pro', priceUsd: 0.08 },
+  // A catalog may use its id as the name; the list still identifies this model.
+  { modelId: 'anthropic/claude-opus', modelName: 'anthropic/claude-opus', label: 'Best', access: 'pro', priceUsd: 0.08 },
 ]
 const DEFAULT = middleIndex(STOPS.length)
 

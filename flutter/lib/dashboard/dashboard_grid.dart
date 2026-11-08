@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
 import '../icons/lucide.dart';
+import '../primitives/button.dart';
 import '../theme.dart';
 import 'grid_layout.dart';
 
@@ -349,94 +351,205 @@ class _DashboardGridState extends State<DashboardGrid> {
     );
   }
 
-  /// A tile's content with, while editing, its drag surface, remove button and resize grip.
+  /// A tile's content with, while editing, its drag surface, remove badge and corner handle.
   Widget _framed(DashboardTile tile, double width) {
     if (!widget.editing) {
       if (widget.onEditRequest == null) return tile.child;
       return GestureDetector(
-        onLongPress: widget.onEditRequest,
+        onLongPress: () {
+          HapticFeedback.mediumImpact();
+          widget.onEditRequest!();
+        },
         child: tile.child,
       );
     }
-    final c = ThemeProvider.of(context).colors;
+    final theme = ThemeProvider.of(context);
+    final c = theme.colors;
     final active = tile.id == _active;
-    return Semantics(
-      label: tile.label,
-      child: Stack(
-        fit: StackFit.expand,
-        clipBehavior: Clip.none,
-        children: [
-          // The content stays visible but doesn't take taps while arranging.
-          IgnorePointer(child: tile.child),
-          MouseRegion(
-            cursor: active
-                ? SystemMouseCursors.grabbing
-                : SystemMouseCursors.grab,
+    final radius = theme.sizes.radiusPanel;
+    // Soft rim like iOS widgets in arrange mode; stronger while this tile is held.
+    final rim = BorderSide(
+      color: c.ink.withValues(alpha: active ? 0.28 : 0.12),
+      width: active ? 1.5 : 1,
+    );
+    // animation_level: 1 — barely-there jiggle; the minus + corner handle carry the mode
+    final body = Stack(
+      fit: StackFit.expand,
+      clipBehavior: Clip.none,
+      children: [
+        IgnorePointer(
+          child: DecoratedBox(
+            decoration: ShapeDecoration(
+              shape: SuperellipseBorder(radius: radius, side: rim),
+            ),
+            child: ClipPath(
+              clipper: ShapeBorderClipper(
+                shape: SuperellipseBorder(radius: radius),
+              ),
+              child: tile.child,
+            ),
+          ),
+        ),
+        MouseRegion(
+          cursor: active
+              ? SystemMouseCursors.grabbing
+              : SystemMouseCursors.grab,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onPanStart: (_) {
+              HapticFeedback.selectionClick();
+              _start(tile.id, _Gesture.move, width, _rtl);
+            },
+            onPanUpdate: (d) =>
+                _update(d.delta, d.globalPosition, width, _rtl),
+            onPanEnd: (_) => _end(),
+            onPanCancel: _end,
+          ),
+        ),
+        if (widget.onRemove != null)
+          // iOS: grey (−) badge on the top-leading corner, half outside the tile.
+          PositionedDirectional(
+            top: -6,
+            start: -6,
+            child: _RemoveBadge(
+              label: '${widget.removeLabel} ${tile.label}',
+              onTap: () {
+                HapticFeedback.lightImpact();
+                widget.onRemove!(tile.id);
+              },
+              color: c,
+            ),
+          ),
+        // iOS widget resize: thick curved stroke on the bottom-trailing corner.
+        PositionedDirectional(
+          bottom: 0,
+          end: 0,
+          child: MouseRegion(
+            cursor: _rtl
+                ? SystemMouseCursors.resizeDownLeft
+                : SystemMouseCursors.resizeDownRight,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onPanStart: (_) => _start(tile.id, _Gesture.move, width, _rtl),
+              onPanStart: (_) {
+                HapticFeedback.selectionClick();
+                _start(tile.id, _Gesture.resize, width, _rtl);
+              },
               onPanUpdate: (d) =>
                   _update(d.delta, d.globalPosition, width, _rtl),
               onPanEnd: (_) => _end(),
               onPanCancel: _end,
-            ),
-          ),
-          if (widget.onRemove != null)
-            // Over the corner, half outside, so it never covers the tile's own controls (taps
-            // land on the inner half: Flutter hit-tests within the tile).
-            PositionedDirectional(
-              top: -8,
-              end: -8,
-              child: _EditButton(
-                label: '${widget.removeLabel} ${tile.label}',
-                icon: const LucideX(),
-                onTap: () => widget.onRemove!(tile.id),
-                color: c,
-              ),
-            ),
-          PositionedDirectional(
-            bottom: 4,
-            end: 4,
-            child: MouseRegion(
-              cursor: _rtl
-                  ? SystemMouseCursors.resizeDownLeft
-                  : SystemMouseCursors.resizeDownRight,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onPanStart: (_) =>
-                    _start(tile.id, _Gesture.resize, width, _rtl),
-                onPanUpdate: (d) =>
-                    _update(d.delta, d.globalPosition, width, _rtl),
-                onPanEnd: (_) => _end(),
-                onPanCancel: _end,
-                child: Semantics(
-                  label: '${widget.resizeLabel} ${tile.label}',
-                  child: SizedBox.square(
-                    dimension: 28,
-                    child: CustomPaint(
-                      painter: _GripPainter(color: c.muted, rtl: _rtl),
+              child: Semantics(
+                label: '${widget.resizeLabel} ${tile.label}',
+                child: SizedBox.square(
+                  dimension: 44,
+                  child: CustomPaint(
+                    painter: _CornerHandlePainter(
+                      color: c.ink.withValues(alpha: 0.45),
+                      rtl: _rtl,
                     ),
                   ),
                 ),
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
+    );
+    return Semantics(
+      label: tile.label,
+      child: active
+          ? body
+          : _ArrangeMotion(seed: tile.id.hashCode, child: body),
     );
   }
 }
 
-class _EditButton extends StatelessWidget {
-  const _EditButton({
+/// Barely-perceptible jiggle — Apple home-screen amplitude, not a shake.
+///
+/// animation_level: 1
+class _ArrangeMotion extends StatefulWidget {
+  const _ArrangeMotion({required this.seed, required this.child});
+
+  final int seed;
+  final Widget child;
+
+  @override
+  State<_ArrangeMotion> createState() => _ArrangeMotionState();
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IntProperty('seed', seed))
+      ..add(DiagnosticsProperty<Widget>('child', child));
+  }
+}
+
+class _ArrangeMotionState extends State<_ArrangeMotion>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  bool? _reduced;
+
+  @override
+  void initState() {
+    super.initState();
+    // Slow cycle; reverse:false + sin() so neighbours stay out of phase without snapping.
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 520),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduced =
+        reducedMotionOf(context) || !TickerMode.valuesOf(context).enabled;
+    if (_reduced == reduced) return;
+    _reduced = reduced;
+    if (reduced) {
+      _ctrl
+        ..stop()
+        ..value = 0;
+    } else if (!_ctrl.isAnimating) {
+      _ctrl.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (reducedMotionOf(context)) return widget.child;
+    // Unique phase + tiny amplitude (~0.3°) so the board reads "editing", not vibrating.
+    final phase = (widget.seed % 11) / 11 * 2 * math.pi;
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, child) {
+        final t = _ctrl.value * 2 * math.pi + phase;
+        return Transform.rotate(
+          angle: math.sin(t) * 0.0055,
+          child: child,
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
+
+/// (−) remove control — feeef [Button] icon size, frosted so it reads like iOS home-screen.
+class _RemoveBadge extends StatelessWidget {
+  const _RemoveBadge({
     required this.label,
-    required this.icon,
     required this.onTap,
     required this.color,
   });
 
   final String label;
-  final Widget icon;
   final VoidCallback onTap;
   final ColorTokens color;
 
@@ -451,37 +564,33 @@ class _EditButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: label,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: onTap,
-          child: DecoratedBox(
-            decoration: ShapeDecoration(
-              color: color.surface,
-              shape: CircleBorder(side: BorderSide(color: color.line)),
-            ),
-            child: SizedBox.square(
-              dimension: 28,
-              child: Center(
-                child: IconTheme(
-                  data: IconThemeData(color: color.ink, size: 14),
-                  child: icon,
-                ),
-              ),
-            ),
-          ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(
+          color.ink.withValues(alpha: 0.18),
+          color.surface,
         ),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: color.surface.withValues(alpha: 0.75),
+          width: 1.5,
+        ),
+      ),
+      child: Button(
+        variant: ButtonVariant.ghost,
+        controlSize: ControlSize.icon,
+        iconSize: ControlSize.small,
+        ariaLabel: label,
+        onClick: onTap,
+        children: const [LucideMinus()],
       ),
     );
   }
 }
 
-/// Three short diagonal strokes in the corner, the usual resize grip.
-class _GripPainter extends CustomPainter {
-  _GripPainter({required this.color, required this.rtl});
+/// Thick rounded stroke hugging the bottom-trailing corner — Apple widget resize handle.
+class _CornerHandlePainter extends CustomPainter {
+  _CornerHandlePainter({required this.color, required this.rtl});
 
   final Color color;
   final bool rtl;
@@ -490,20 +599,41 @@ class _GripPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color
-      ..strokeWidth = 1.5
-      ..strokeCap = StrokeCap.round;
-    final e = size.width - 7;
-    for (final d in [6.0, 11.0, 16.0]) {
-      final a = Offset(e - d, e);
-      final b = Offset(e, e - d);
-      canvas.drawLine(
-        rtl ? Offset(size.width - a.dx, a.dy) : a,
-        rtl ? Offset(size.width - b.dx, b.dy) : b,
-        paint,
-      );
+      ..strokeWidth = 4.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    // Arc sits inset so the stroke centres on the tile's rounded corner.
+    const inset = 5.0;
+    const arm = 22.0;
+    final r = 14.0;
+    final path = Path();
+    if (rtl) {
+      // Bottom-start corner in RTL.
+      path
+        ..moveTo(inset, size.height - inset - arm)
+        ..lineTo(inset, size.height - inset - r)
+        ..arcToPoint(
+          Offset(inset + r, size.height - inset),
+          radius: Radius.circular(r),
+          clockwise: false,
+        )
+        ..lineTo(inset + arm, size.height - inset);
+    } else {
+      path
+        ..moveTo(size.width - inset - arm, size.height - inset)
+        ..lineTo(size.width - inset - r, size.height - inset)
+        ..arcToPoint(
+          Offset(size.width - inset, size.height - inset - r),
+          radius: Radius.circular(r),
+          clockwise: true,
+        )
+        ..lineTo(size.width - inset, size.height - inset - arm);
     }
+    canvas.drawPath(path, paint);
   }
 
   @override
-  bool shouldRepaint(_GripPainter old) => old.color != color || old.rtl != rtl;
+  bool shouldRepaint(_CornerHandlePainter old) =>
+      old.color != color || old.rtl != rtl;
 }

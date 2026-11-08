@@ -20,6 +20,33 @@ void main() {
       expect(of(out, 'b').y, 0);
     });
 
+    test('compact keepOrderOf settles that widget first so it claims its cell', () {
+      final out = GridLayout.compact([
+        p('a', 0, 4, 6, 2),
+        p('b', 0, 1, 6, 2),
+      ], columns: 12, keepOrderOf: 'a');
+      // a is processed first and rises to y=0; b then takes the next free row.
+      expect(of(out, 'a').y, 0);
+      expect(of(out, 'b').y, 2);
+    });
+
+    test('expandIntoGaps grows an orphan into the empty columns beside it', () {
+      final out = GridLayout.expandIntoGaps([
+        p('map', 0, 0, 6, 4),
+      ], columns: 12);
+      expect(of(out, 'map').w, 12);
+      expect(of(out, 'map').x, 0);
+    });
+
+    test('expandIntoGaps only grows listed ids', () {
+      final out = GridLayout.expandIntoGaps([
+        p('map', 0, 0, 6, 4),
+        p('kpi', 0, 4, 3, 2),
+      ], columns: 12, ids: {'map'});
+      expect(of(out, 'map').w, 12);
+      expect(of(out, 'kpi').w, 3);
+    });
+
     test('moving onto a widget pushes it down; nothing overlaps', () {
       final start = [
         p('a', 0, 0, 6, 2),
@@ -140,8 +167,10 @@ void main() {
         ),
       );
       // Drag c (full width, second band) up to the top.
+      // Arrange-mode jiggle is an infinite ticker — pump frames, don't pumpAndSettle.
       await tester.dragFrom(const Offset(600, 160), const Offset(0, -120));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 220));
       expect(tester.takeException(), isNull);
       expect(reported, isNotNull);
       expect(of(reported!, 'c').y, 0);

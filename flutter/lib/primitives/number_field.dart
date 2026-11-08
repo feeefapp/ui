@@ -452,7 +452,8 @@ class _NumberFieldState extends State<NumberField>
     final height = theme.coarsePointer(context) && base < s.touchTarget
         ? s.touchTarget
         : base;
-    final radius = small ? s.radiusControlSmall : s.radiusControl;
+    final rawRadius = small ? s.radiusControlSmall : s.radiusControl;
+    final radius = math.min(rawRadius, height / 2 * cornerSmoothingFade);
     final pad = small ? 12.0 : 14.0;
     final value = _value;
     final decimals = stepDecimals(_step);

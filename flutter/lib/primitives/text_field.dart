@@ -181,8 +181,13 @@ class _FieldShellState extends State<FieldShell> {
 
   void _measure(_) {
     if (!mounted) return;
-    double width(GlobalKey key) =>
-        (key.currentContext?.findRenderObject() as RenderBox?)?.size.width ?? 0;
+    double width(GlobalKey key) {
+      final box = key.currentContext?.findRenderObject() as RenderBox?;
+      // Mid-frame or aborted layout leaves hasSize false — reading .size asserts.
+      if (box == null || !box.hasSize) return 0;
+      return box.size.width;
+    }
+
     final leading = width(_leadingKey), trailing = width(_trailingKey);
     if (leading != _leadingWidth || trailing != _trailingWidth) {
       setState(() {
@@ -285,9 +290,17 @@ class _FieldShellState extends State<FieldShell> {
       notchWidth = painter.width + 8;
       painter.dispose();
     }
-    final radius = small ? s.radiusControlSmall : s.radiusControl;
+    // Stay under the continuous-corner fade (`cornerSmoothingFade` × half height) so a
+    // taller field still reads as a superellipse, not a circular round-rect.
+    final rawRadius = small ? s.radiusControlSmall : s.radiusControl;
+    final radius = math.min(rawRadius, height / 2 * cornerSmoothingFade);
+    // 12 start offset + gap after the adornment. Icon+prefix keeps 12px gap; a lone
+    // interactive [leading] (dial, currency action) only needs 6 so the control isn't
+    // padded away from the typed text.
+    final leadingGap =
+        widget.leadingIcon != null && widget.leading != null ? 12.0 : 6.0;
     final insetStart = (widget.leadingIcon != null || widget.leading != null)
-        ? _leadingWidth + 24
+        ? _leadingWidth + 12 + leadingGap
         : 12.0;
     final insetEnd = widget.trailing != null ? _trailingWidth + 24 : 12.0;
     final ink = paint.ink;
@@ -303,7 +316,9 @@ class _FieldShellState extends State<FieldShell> {
         : labelInk;
     final frameHeight = height + (widget.minLines - 1) * line;
 
-    Widget frame = CustomPaint(
+    // Input surface only — [frameBuilder] (tap-to-focus + text cursor) must wrap this,
+    // not the leading/trailing overlays, or interactive adornments steal/fight focus.
+    Widget input = CustomPaint(
       painter: _FieldPainter(
         dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
         fill: paint.fill,
@@ -342,33 +357,40 @@ class _FieldShellState extends State<FieldShell> {
       ),
     );
 
+    if (widget.frameBuilder != null) {
+      input = widget.frameBuilder!(context, input);
+    }
+
     // Affixes inherit the surrounding text (the page's, in the web kit), only recoloured.
     final adornment = TextStyle(color: labelInk);
-    frame = Stack(
+    Widget frame = Stack(
       clipBehavior: Clip.none,
       children: [
-        frame,
+        input,
         if (widget.leadingIcon != null || widget.leading != null)
           PositionedDirectional(
             start: 12,
             top: 0,
             bottom: 0,
-            child: IgnorePointer(
-              child: Center(
-                child: DefaultTextStyle.merge(
-                  style: adornment,
-                  child: IconTheme.merge(
-                    data: IconThemeData(size: 20, color: labelInk),
-                    child: Row(
-                      key: _leadingKey,
-                      mainAxisSize: MainAxisSize.min,
-                      spacing: 12,
-                      children: [
-                        if (widget.leadingIcon != null)
-                          ExcludeSemantics(child: widget.leadingIcon!),
-                        if (widget.leading != null) widget.leading!,
-                      ],
-                    ),
+            child: _FieldAdornmentSlot(
+              // Decorative icons IgnorePointer; interactive leading keeps pointer events.
+              absorbHits: widget.leading != null,
+              alignment: AlignmentDirectional.centerStart,
+              child: DefaultTextStyle.merge(
+                style: adornment,
+                child: IconTheme.merge(
+                  data: IconThemeData(size: 20, color: labelInk),
+                  child: Row(
+                    key: _leadingKey,
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: 12,
+                    children: [
+                      if (widget.leadingIcon != null)
+                        IgnorePointer(
+                          child: ExcludeSemantics(child: widget.leadingIcon!),
+                        ),
+                      if (widget.leading != null) widget.leading!,
+                    ],
                   ),
                 ),
               ),
@@ -379,7 +401,9 @@ class _FieldShellState extends State<FieldShell> {
             end: 12,
             top: 0,
             bottom: 0,
-            child: Center(
+            child: _FieldAdornmentSlot(
+              absorbHits: true,
+              alignment: AlignmentDirectional.centerEnd,
               child: DefaultTextStyle.merge(
                 style: adornment,
                 child: IconTheme.merge(
@@ -411,10 +435,6 @@ class _FieldShellState extends State<FieldShell> {
           ),
       ],
     );
-
-    if (widget.frameBuilder != null) {
-      frame = widget.frameBuilder!(context, frame);
-    }
     final message = (widget.error?.isNotEmpty ?? false)
         ? Text(widget.error!)
         : widget.supportingText;
@@ -462,6 +482,36 @@ class _FieldShellState extends State<FieldShell> {
         ),
       ),
     );
+  }
+}
+
+/// Leading/trailing over the input. Decorative icons ignore pointers so tap-to-focus
+/// still works; interactive adornments keep their own hit targets (stacked above the
+/// input — see [FieldShell] build order).
+class _FieldAdornmentSlot extends StatelessWidget {
+  const _FieldAdornmentSlot({
+    required this.absorbHits,
+    required this.alignment,
+    required this.child,
+  });
+
+  final bool absorbHits;
+  final AlignmentGeometry alignment;
+  final Widget child;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<bool>('absorbHits', absorbHits))
+      ..add(DiagnosticsProperty<AlignmentGeometry>('alignment', alignment));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final aligned = Align(alignment: alignment, child: child);
+    if (!absorbHits) return IgnorePointer(child: aligned);
+    return aligned;
   }
 }
 

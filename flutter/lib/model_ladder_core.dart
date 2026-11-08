@@ -193,7 +193,7 @@ String visibleLabel(
   return copy.balanced;
 }
 
-/// Human name for a list row; falls back to the tier when the catalog copied the id.
+/// Human name for a list row; keeps the model id when no distinct name is available.
 String displayName(
   LadderStop stop,
   int index,
@@ -205,8 +205,9 @@ String displayName(
   if (name.isNotEmpty && name != id) return name;
   final label = stop.label.trim();
   if (label.isNotEmpty && label != id && label != name) return label;
-  final tier = visibleLabel(stop, index, count, copy);
-  return tier == id && id.isNotEmpty ? id : tier;
+  if (name.isNotEmpty) return name;
+  if (id.isNotEmpty) return id;
+  return visibleLabel(stop, index, count, copy);
 }
 
 /// The ladder's middle rung is the balanced default, as in marchant.

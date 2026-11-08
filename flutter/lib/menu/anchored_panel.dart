@@ -641,6 +641,17 @@ class _RenderAnchoredLayout extends RenderShiftedBox {
     );
   }
 
+  /// Skip hit-testing until [performLayout] has placed the panel and the child
+  /// has a size — otherwise pointer events during the first open frame assert
+  /// `Cannot hit test a render box with no size` and cascade into mouse_tracker.
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+    if (!geometry.placed) return false;
+    final child = this.child;
+    if (child == null || !child.hasSize) return false;
+    return super.hitTest(result, position: position);
+  }
+
   @override
   void performLayout() {
     size = constraints.biggest;

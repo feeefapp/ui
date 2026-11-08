@@ -1354,56 +1354,61 @@ class _Welcome extends StatelessWidget {
     final t = I18n.of(context).t;
     final vw = MediaQuery.maybeSizeOf(context)?.width ?? 800;
     final title = _clamp(vw * 0.03, 20, 26);
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 460),
-      child: DefaultTextStyle.merge(
-        textAlign: TextAlign.center,
-        style: TextStyle(color: c.ink),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          spacing: 10,
-          children: [
-            const PixelArtwork(
-              variant: PixelVariant.orbit,
-              seed: 'image-canvas',
-              size: 84,
-              tone: PixelTone.muted,
-              animated: true,
-            ),
-            Text(
-              t('lab.board.endless'),
-              style: TextStyle(
-                fontSize: title,
-                // `line-height: round(1.15em, 1px)`.
-                height: (title * 1.15).roundToDouble() / title,
-                fontWeight: FontWeight.w500,
-                letterSpacing: -0.03 * title,
+    // The board reserves room for the floating composer via [insets]; when that
+    // free area is shorter than this welcome, scale it down instead of overflowing.
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 460),
+        child: DefaultTextStyle.merge(
+          textAlign: TextAlign.center,
+          style: TextStyle(color: c.ink),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            spacing: 10,
+            children: [
+              const PixelArtwork(
+                variant: PixelVariant.orbit,
+                seed: 'image-canvas',
+                size: 84,
+                tone: PixelTone.muted,
+                animated: true,
               ),
-            ),
-            Text(
-              signedIn
-                  ? t('lab.board.describeBelow')
-                  : t('lab.board.describeSignIn'),
-              style: TextStyle(fontSize: 14, height: 1.5, color: c.muted),
-            ),
-            if (starters.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final starter in starters)
-                      Button(
-                        variant: ButtonVariant.elevated,
-                        onClick: () => onStarter(starter.prompt),
-                        children: [Text(starter.label)],
-                      ),
-                  ],
+              Text(
+                t('lab.board.endless'),
+                style: TextStyle(
+                  fontSize: title,
+                  // `line-height: round(1.15em, 1px)`.
+                  height: (title * 1.15).roundToDouble() / title,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: -0.03 * title,
                 ),
               ),
-          ],
+              Text(
+                signedIn
+                    ? t('lab.board.describeBelow')
+                    : t('lab.board.describeSignIn'),
+                style: TextStyle(fontSize: 14, height: 1.5, color: c.muted),
+              ),
+              if (starters.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final starter in starters)
+                        Button(
+                          variant: ButtonVariant.elevated,
+                          onClick: () => onStarter(starter.prompt),
+                          children: [Text(starter.label)],
+                        ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

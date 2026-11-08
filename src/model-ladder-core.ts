@@ -74,15 +74,14 @@ export function visibleLabel(stop: LadderStop, index: number, count: number, cop
   return copy.balanced
 }
 
-/** Human name for a list row; falls back to the tier when the catalog copied the id. */
+/** Human name for a list row; keeps the model id when no distinct name is available. */
 export function displayName(stop: LadderStop, index: number, count: number, copy = LADDER_COPY) {
   const name = stop.modelName.trim()
   const id = stop.modelId.trim()
   if (name && name !== id) return name
   const label = stop.label.trim()
   if (label && label !== id && label !== name) return label
-  const tier = visibleLabel(stop, index, count, copy)
-  return tier === id && id ? id : tier
+  return name || id || visibleLabel(stop, index, count, copy)
 }
 
 /** The ladder's middle rung is the balanced default, as in marchant. */

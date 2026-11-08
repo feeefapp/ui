@@ -53,7 +53,7 @@ export declare const LADDER_COPY: LadderCopy;
 export declare const clamp: (value: number, min: number, max: number) => number;
 /** Tier word for a stop; a label that copies the name or id becomes Fast / Balanced / Best. */
 export declare function visibleLabel(stop: LadderStop, index: number, count: number, copy?: LadderCopy): string;
-/** Human name for a list row; falls back to the tier when the catalog copied the id. */
+/** Human name for a list row; keeps the model id when no distinct name is available. */
 export declare function displayName(stop: LadderStop, index: number, count: number, copy?: LadderCopy): string;
 /** The ladder's middle rung is the balanced default, as in marchant. */
 export declare const middleIndex: (count: number) => number;
