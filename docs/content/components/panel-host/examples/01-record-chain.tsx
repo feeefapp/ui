@@ -7,29 +7,29 @@ import { TextField } from '@feeef.dev/ui/primitives/text-field'
 import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
 import { FloatingBoundary } from '@feeef.dev/ui/menu'
 
-function AppDetails() {
+function AppDetails({ name = 'Feeef lite', id = 'app:feeef-lite' }: { name?: string; id?: string }) {
   const stack = usePanelStack()
   const [editing, setEditing] = useState(false)
   const [note, setNote] = useState('Keep this unsaved note while opening the owner.')
   return (
-    <Panel label="Feeef lite" title="OAuth app" trailing={
+    <Panel label={name} title="OAuth app" trailing={
       <ToolbarGroup label="App tools">
         <IconButton variant="text" appearance="toolbar" aria-label="Edit app" onClick={() => setEditing(!editing)}>
           <Pencil size={18} />
         </IconButton>
       </ToolbarGroup>
     }>
-      <h2>Feeef lite</h2>
+      <h2>{name}</h2>
       <p>Confidential client · On</p>
       <ListSection header="Details">
         <ListRow title="Owner" subtitle="mohamad" leading={<UserRound size={18} />} onClick={() => {
-          void stack.push({ id: 'owner:mohamad', minWidth: 240, preferredWidth: 300, panel: <OwnerDetails /> }, 'app:feeef-lite')
+          void stack.push({ id: 'owner:mohamad', minWidth: 220, preferredWidth: 300, panel: <OwnerDetails /> }, id)
         }} />
         <ListRow title="Created" trailing="16 Aug 2026" />
         <ListRow title="Last used" trailing="Today" />
       </ListSection>
       <TextField hint="Unsaved note" value={note} onChange={event => setNote(event.target.value)} />
-      {editing && <TextField hint="App name" defaultValue="Feeef lite" />}
+      {editing && <TextField hint="App name" defaultValue={name} />}
       <p>Open the owner, return, then change the preview width. Your draft stays here.</p>
     </Panel>
   )
@@ -55,8 +55,8 @@ function Apps() {
       <p>Apps that sign people in or call the API for them.</p>
       <ListSection>
         {['marketing', 'Unifunl.io', 'Feeef lite', 'feeef.dev'].map(name => (
-          <ListRow key={name} title={name} subtitle="Confidential client" selected={name === 'Feeef lite' && stack.panels.length > 1}
-            onClick={() => { void stack.push({ id: 'app:feeef-lite', minWidth: 260, preferredWidth: 360, panel: <AppDetails /> }, 'apps') }} />
+          <ListRow key={name} title={name} subtitle="Confidential client" selected={stack.panels[1]?.id === `app:${name}`}
+            onClick={() => { const id = `app:${name}`; void stack.push({ id, minWidth: 240, preferredWidth: 360, panel: <AppDetails name={name} id={id} /> }, 'apps') }} />
         ))}
       </ListSection>
     </Panel>

@@ -25,11 +25,15 @@ export const InPlaceHost = React.forwardRef<HTMLElement, PresentationHostProps &
     setLayer(element)
   }, [])
   React.useImperativeHandle(ref, () => node.current!, [layer])
+  // Snapshot before sibling dialogs switch modes: show()/close() can steal focus before
+  // this dialog's layout effect runs, even though its own focused field never unmounted.
+  const focusedBeforeCommit = typeof document !== 'undefined' && document.activeElement instanceof HTMLElement
+    && node.current?.contains(document.activeElement) ? document.activeElement : null
   React.useLayoutEffect(() => {
     const element = node.current
     if (!element) return
     const active = document.activeElement instanceof HTMLElement ? document.activeElement : null
-    const inside = active && element.contains(active) ? active : null
+    const inside = focusedBeforeCommit ?? (active && element.contains(active) ? active : null)
     // Closing and re-opening is necessary when changing a native dialog's modal mode.
     if (element.open) element.close()
     if (inPlace.hidden) return

@@ -40,6 +40,10 @@ const MORPH_CLOSE = { duration: 0.36, bounce: 0.08 };
 export function Sheet(props) {
     return props.regular === 'pane' ? _jsx(PaneSheet, { ...props }) : _jsx(BottomSheet, { ...props });
 }
+/** @internal A permanently mounted Sheet tree, restyled as a column without moving its children. */
+export function InPlaceSheet(props) {
+    return _jsx(SheetPresentation, { ...props, onExited: () => { } });
+}
 function BottomSheet(props) {
     const { mounted, exited } = usePresented(props.open);
     if (!mounted)
@@ -58,7 +62,7 @@ function scaleOf(el) {
     return el.getBoundingClientRect().width / (el.offsetWidth || 1) || 1;
 }
 const EDITABLE = 'input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]), textarea, [contenteditable=""], [contenteditable="true"]';
-function SheetPresentation({ open, onOpenChange, label, children, detents = DEFAULT_DETENTS, detent: controlledDetent, defaultDetent, onDetentChange, dismissible = true, snap = true, grabber, title, leading, trailing, showClose = true, header, dock, modal = true, backgroundInteraction, floating, source, focusDetent, regular = 'dialog', regularBreakpoint = 720, cardWidth = 380, container, recede = true, contentPadding, initialFocusRef, returnFocusRef, className, onExited, }) {
+function SheetPresentation({ open, onOpenChange, label, children, detents = DEFAULT_DETENTS, detent: controlledDetent, defaultDetent, onDetentChange, dismissible = true, snap = true, grabber, title, leading, trailing, showClose = true, header, dock, modal = true, backgroundInteraction, floating, source, focusDetent, regular = 'dialog', regularBreakpoint = 720, cardWidth = 380, container, recede = true, contentPadding, initialFocusRef, returnFocusRef, className, onExited, inPlace, }) {
     const { t } = useI18n();
     const host = React.useRef(null);
     const panel = React.useRef(null);
@@ -84,9 +88,10 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
     /** The content column keeps the floating gap at every height, so nothing reflows while it moves. */
     const columnInset = presentation === 'dialog' || mode === 'attached' ? 0 : (metrics?.inset ?? 0);
     const undimmed = backgroundInteraction !== undefined && metrics ? detentHeight(backgroundInteraction, metrics) : null;
-    const dims = modal || backgroundInteraction !== undefined;
-    const hostModal = modal && backgroundInteraction === undefined;
-    const showGrabber = presentation !== 'dialog' && (grabber ?? detents.length > 1);
+    const columnMode = !!inPlace && !inPlace.sheet;
+    const dims = !columnMode && (modal || backgroundInteraction !== undefined);
+    const hostModal = !columnMode && modal && backgroundInteraction === undefined;
+    const showGrabber = !columnMode && presentation !== 'dialog' && (grabber ?? detents.length > 1);
     const [localIndex, setLocalIndex] = React.useState(() => Math.max(0, detents.indexOf(defaultDetent ?? detents[0])));
     const index = controlledDetent !== undefined ? Math.max(0, detents.indexOf(controlledDetent)) : Math.min(localIndex, detents.length - 1);
     /** A free sheet's rest height, and the detent reported with it (a controlled host echoes it back). */
@@ -173,7 +178,11 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
         if (L.undimmed !== null)
             el.style.pointerEvents = dim > 0.02 ? 'auto' : 'none';
     };
+    const columnRef = React.useRef(columnMode);
+    columnRef.current = columnMode;
     const paintSheet = (v) => {
+        if (columnRef.current)
+            return;
         const el = panel.current;
         const L = live.current;
         if (!el || L.presentation === 'dialog' || !L.metrics)
@@ -376,6 +385,22 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
     const target = free ? Math.max(minHeight, Math.min(maxHeight, freeHeight)) : (heights[index] ?? 0);
     const dialogHeight = metrics ? Math.min(metrics.natural, metrics.hostHeight - 64) : 0;
     React.useLayoutEffect(() => {
+        if (columnMode) {
+            // animation_level: 1. Resizing snaps layout; the shared Sheet engine animates presentation.
+            visible.stop();
+            shown.stop();
+            lift.stop();
+            morph.stop();
+            endMorph();
+            motionHeight.current = 0;
+            presented.current = false;
+            for (const node of [panel.current, surface.current, solid.current, column.current])
+                node?.removeAttribute('style');
+            for (const node of pinned())
+                node.style.translate = '';
+            riding(false);
+            return;
+        }
         if (!metrics)
             return;
         const reduced = prefersReducedMotion();
@@ -540,7 +565,7 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
             rest(target);
         else
             void moveTo(target);
-    }, [open, metrics, presentation, mode, target, dialogHeight]);
+    }, [open, metrics, presentation, mode, target, dialogHeight, columnMode]);
     const setDetentIndex = (next) => {
         setFreeHeight(null);
         reported.current = null;
@@ -605,7 +630,7 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
     // not start scrolling first.
     React.useEffect(() => {
         const el = panel.current;
-        if (!el)
+        if (!el || columnMode)
             return;
         let start = 0;
         let scale = 1;
@@ -846,7 +871,7 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
             el.removeEventListener('wheel', onWheel);
         };
         // A sheet open before its container exists gets its panel when the container arrives.
-    }, [container]);
+    }, [container, columnMode]);
     const cycle = (step) => {
         const order = heights.map((h, i) => [h, i]).sort((a, b) => a[0] - b[0]);
         const at = order.findIndex(([, i]) => i === index);
@@ -875,7 +900,7 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
         },
     }), [detents[index], presentation]);
     const top = header !== undefined ? (header) : (_jsx(PresentationHeader, { title: title, leading: leading, titleId: titleId, trailing: trailing, onClose: showClose ? () => open && onOpenChange(false) : undefined, closeLabel: t('lab.composer.closeLabel', { label }) }));
-    return (_jsxs(PresentationHost, { ref: host, kind: "sheet", label: label, labelledBy: header === undefined && leading == null && title != null ? titleId : undefined, modal: hostModal, container: container, initialFocusRef: initialFocusRef ?? panel, returnFocusRef: returnFocusRef, onEscape: collapse, children: [dims && _jsx("div", { ref: scrim, className: "lab-sheet-scrim", "aria-hidden": "true", onClick: collapse }), _jsx("div", { ref: probe, className: "lab-sheet-safe-probe", "aria-hidden": "true" }), _jsx("div", { ref: tokens, className: "lab-sheet-token-probe", "aria-hidden": "true" }), _jsxs("div", { ref: panel, className: cn('lab-sheet', className), "data-presentation": presentation, "data-mode": mode, "data-detent": typeof detents[index] === 'string' ? detents[index] : undefined, "data-ready": metrics ? '' : undefined, style: presentation === 'card' ? { '--lab-sheet-card-width': `${cardWidth}px` } : undefined, tabIndex: -1, onKeyDown: (event) => {
+    return (_jsxs(PresentationHost, { ref: host, inPlace: inPlace, kind: "sheet", label: label, labelledBy: header === undefined && leading == null && title != null ? titleId : undefined, modal: hostModal, container: container, initialFocusRef: initialFocusRef ?? panel, returnFocusRef: returnFocusRef, onEscape: collapse, children: [(dims || inPlace) && _jsx("div", { ref: scrim, className: "lab-sheet-scrim", "aria-hidden": "true", onClick: collapse }), _jsx("div", { ref: probe, className: "lab-sheet-safe-probe", "aria-hidden": "true" }), _jsx("div", { ref: tokens, className: "lab-sheet-token-probe", "aria-hidden": "true" }), _jsxs("div", { ref: panel, className: cn('lab-sheet', className), "data-presentation": presentation, "data-mode": mode, "data-detent": typeof detents[index] === 'string' ? detents[index] : undefined, "data-ready": metrics ? '' : undefined, style: presentation === 'card' ? { '--lab-sheet-card-width': `${cardWidth}px` } : undefined, tabIndex: -1, onKeyDown: (event) => {
                     // A non-modal host gets no cancel event: Escape still lowers or closes the sheet.
                     if (event.key !== 'Escape' || hostModal || event.defaultPrevented)
                         return;

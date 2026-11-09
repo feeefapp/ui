@@ -13,6 +13,8 @@ export { Button, SquareSlot, Input, Textarea, Select, Option, Label, Alert, Moda
 export { ScaffoldProvider, GlassGroup, FloatingLayer, ViewTransition, useNavigation, useFloatingReserve, } from './scaffold.js';
 export { FloatingBoundary, MenuSurface, useFloatingBoundary } from './menu/index.js';
 export { PresentationBody, PresentationDock, PresentationHeader, } from './presentation/index.js';
+export { Panel, PanelHost, PanelStack, usePanelStack } from './containers/panel-host.js';
+export { allocatePanelWidths, pushPanel, replacePanel, closePanel } from './containers/panel-model.js';
 export { RefreshController, ScrollArea, ScrollGradientOverlay, useRefreshController, useShellGap } from './scroll/index.js';
 export { Dock } from './dock/index.js';
 export { ActionsBar, ActionsWidthProvider } from './actions/index.js';

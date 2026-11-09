@@ -29,6 +29,26 @@ function Overview() {
           inside the same panel, not in the gap between columns.
         </p>
       </Section>
+      <Section title="Controlled composition">
+        <p>
+          On the web, pass <C>panels</C> as an ordered array including the root at index zero, and echo
+          <C>onPanelsChange</C> into your state. Each entry has a stable <C>id</C>, a <C>panel</C>
+          element, and optional sizing preferences. <C>usePanelStack()</C> supplies <C>push</C>,
+          <C>replace</C>, and <C>close</C>. Pass the originating panel ID to <C>push</C> when opening
+          a related record; that truncates its old descendants.
+        </p>
+        <p>
+          In Flutter, pass the root separately as <C>root</C> and the child chain as
+          <C>List&lt;PanelEntry&gt;</C>. Content uses <C>PanelScope.of(context)</C> to request a child
+          or close its branch. The Flutter example shows the native composition rather than a
+          mechanical translation of web hooks.
+        </p>
+        <p>
+          The host needs bounded height from its parent. A workspace should give it the available
+          viewport through the scaffold's viewport slot, not nest it inside the page's scrolling
+          content. Each panel owns its own measured scrolling region.
+        </p>
+      </Section>
       <Section title="One chain, any available width">
         <p>
           Width is measured on the host, not inferred from a device name or the browser window.
@@ -49,9 +69,12 @@ function Overview() {
           while updating a record; change identity when opening a different record.
         </p>
         <p>
-          If closing would discard work, route dismissal through a guard and show a confirmation.
-          Server writes remain app-owned: apply optimistic UI with rollback, reconcile the response,
-          and surface an actionable error. Opening a panel must not wait for its data request.
+          If closing would discard work, use the web host's <C>beforeClose</C> or the Flutter
+          entry's <C>canClose</C> and show a confirmation. Guards include descendants and deduplicate
+          pending requests. Direct updates to the controlled list remain authoritative: guard those
+          in your app too. Server writes remain app-owned: apply optimistic UI with rollback,
+          reconcile the response, and surface an actionable error. Opening a panel must not wait
+          for its data request.
         </p>
       </Section>
       <Section title="Choose the smallest container that fits the job">

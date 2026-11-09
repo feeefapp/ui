@@ -6,3 +6,5 @@ docs/dist/
 parity/dist
 parity/out
 parity/runs
+dist/
+ui/dist/

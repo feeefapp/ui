@@ -4,6 +4,7 @@ import * as React from 'react';
 import { FloatingPortalScope } from '../menu/boundary.js';
 import { createPortal } from 'react-dom';
 import { cn } from '../utils.js';
+import { InPlaceHost } from './in-place-host.js';
 /**
  * Enters the top layer from the dialog's first child, so the dialog is shown before any of its
  * content runs a layout effect: React runs children's layout effects before their parent's, and
@@ -32,7 +33,13 @@ function TopLayerEntry({ modal, opener }) {
  * and back out. Motion, scrim and the surface itself belong to the caller; keep the host mounted
  * until the exit animation ends and unmount it then (focus returns on unmount).
  */
-export const PresentationHost = React.forwardRef(function PresentationHost({ kind, label, labelledBy, describedBy, role = 'dialog', modal = true, container, onEscape, initialFocusRef, returnFocusRef, className, style, children, }, ref) {
+/** Internal in-place mode is used only by adaptive panels; ordinary presentations are unchanged. */
+export const PresentationHost = React.forwardRef(function PresentationHost(props, ref) {
+    return props.inPlace
+        ? _jsx(InPlaceHost, { ...props, inPlace: props.inPlace, ref: ref })
+        : _jsx(PortalPresentationHost, { ...props, ref: ref });
+});
+const PortalPresentationHost = React.forwardRef(function PortalPresentationHost({ kind, label, labelledBy, describedBy, role = 'dialog', modal = true, container, onEscape, initialFocusRef, returnFocusRef, className, style, children, }, ref) {
     const host = React.useRef(null);
     // Floating panels opened inside render into the surface (see FloatingPortalScope).
     const [layer, setLayer] = React.useState(null);

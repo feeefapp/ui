@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { type InPlacePresentation } from './in-place-host.js';
 export type PresentationHostProps = {
     /** Which surface this hosts (`alert`, `modal`, `pane`, `sheet`, …); styles key off `data-kind`. */
     kind: string;
@@ -31,7 +32,10 @@ export type PresentationHostProps = {
  * and back out. Motion, scrim and the surface itself belong to the caller; keep the host mounted
  * until the exit animation ends and unmount it then (focus returns on unmount).
  */
-export declare const PresentationHost: React.ForwardRefExoticComponent<PresentationHostProps & React.RefAttributes<HTMLElement>>;
+/** Internal in-place mode is used only by adaptive panels; ordinary presentations are unchanged. */
+export declare const PresentationHost: React.ForwardRefExoticComponent<PresentationHostProps & {
+    inPlace?: InPlacePresentation;
+} & React.RefAttributes<HTMLElement>>;
 /**
  * Keeps a surface mounted while it leaves: `mounted` turns true as soon as `open` does, and false
  * only when the surface calls `exited()` at the end of its exit animation.

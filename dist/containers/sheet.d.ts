@@ -1,4 +1,5 @@
 import * as React from 'react';
+import type { InPlacePresentation } from '../presentation/in-place-host.js';
 import type { PresentationChromeProps } from '../presentation/modal.js';
 import { MotionValue } from '../physics/motion-value.js';
 import { type SheetDetent } from './sheet-model.js';
@@ -119,4 +120,8 @@ export declare function useSheet(): SheetState | null;
  * on wide screens, so you write the content once.
  */
 export declare function Sheet(props: SheetProps): React.JSX.Element;
+/** @internal A permanently mounted Sheet tree, restyled as a column without moving its children. */
+export declare function InPlaceSheet(props: SheetProps & {
+    inPlace: InPlacePresentation;
+}): React.JSX.Element;
 //# sourceMappingURL=sheet.d.ts.map

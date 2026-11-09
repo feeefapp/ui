@@ -21,6 +21,10 @@ export { FloatingBoundary, MenuSurface, useFloatingBoundary } from './menu/index
 export type { FloatingBoundaryProps, MenuSurfaceProps } from './menu/index.js';
 export { PresentationBody, PresentationDock, PresentationHeader, } from './presentation/index.js';
 export type { SheetDetent, SheetProps, SheetState } from './containers/sheet.js';
+export { Panel, PanelHost, PanelStack, usePanelStack } from './containers/panel-host.js';
+export type { PanelProps, PanelEntry, PanelHostProps, PanelStackState, PanelChangeReason } from './containers/panel-host.js';
+export { allocatePanelWidths, pushPanel, replacePanel, closePanel } from './containers/panel-model.js';
+export type { PanelSizing, PanelIdentity, PanelWidth } from './containers/panel-model.js';
 export type { AlertAction, AlertActionRole, AlertProps, ModalProps, PresentationBodyProps, PresentationChromeProps, PresentationDockProps, PresentationHeaderProps, } from './presentation/index.js';
 export { RefreshController, ScrollArea, ScrollGradientOverlay, useRefreshController, useShellGap } from './scroll/index.js';
 export type { ScrollAreaProps, ScrollGradientOverlayProps } from './scroll/index.js';
