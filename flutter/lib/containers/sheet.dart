@@ -262,6 +262,7 @@ class Sheet extends StatelessWidget {
     this.modal = true,
     this.backgroundInteraction,
     this.floating,
+    this.roundedBottom = false,
     this.source,
     this.focusDetent,
     this.raiseOnFocus = true,
@@ -362,6 +363,10 @@ class Sheet extends StatelessWidget {
   /// the edges and turning opaque as it rises to full height (iOS 26). Default: true when a detent
   /// is below `large`. A sheet with only full-height detents is always attached and opaque.
   final bool? floating;
+
+  /// Keep the bottom corners rounded and inset even at the largest detent.
+  /// Defaults to false for the edge-attached iOS presentation.
+  final bool roundedBottom;
 
   /// The key of the control that opened the sheet (wrap it in a [SheetSource] so it hides). The
   /// sheet grows out of it and returns into it when it closes (unless it is dragged away), like an
@@ -548,6 +553,14 @@ class Sheet extends StatelessWidget {
         ),
       )
       ..add(DoubleProperty('cardWidth', cardWidth, defaultValue: 380.0))
+      ..add(
+        FlagProperty(
+          'roundedBottom',
+          value: roundedBottom,
+          ifTrue: 'roundedBottom',
+          defaultValue: false,
+        ),
+      )
       ..add(DoubleProperty('paneWidth', paneWidth, defaultValue: 420.0))
       ..add(
         EnumProperty<SheetPaneSide>(
@@ -911,7 +924,7 @@ class _SheetState extends State<_BottomSheet> {
   /// The content column keeps the floating gap at every height, so nothing reflows while it moves.
   double get _columnInset =>
       _presentation == SheetPresentation.dialog ||
-          _mode == SheetFrameMode.attached
+          (_mode == SheetFrameMode.attached && !widget.sheet.roundedBottom)
       ? 0
       : _inset;
 
@@ -978,6 +991,13 @@ class _SheetState extends State<_BottomSheet> {
       _presentation != SheetPresentation.dialog &&
       (!widget.sheet.snap || _heights.toSet().length > 1);
 
+  /// Even a single-detent sheet can be pulled down to dismiss. Its scroll view must
+  /// own that gesture so native trackpad pans and touch drags share the same handoff.
+  bool get _contentMovable =>
+      _ready &&
+      _presentation != SheetPresentation.dialog &&
+      (_resizable || widget.sheet.dismissible);
+
   /// The height up to which the page stays usable, or null.
   double? get _undimmed {
     final d = widget.sheet.backgroundInteraction, m = _metrics;
@@ -1004,6 +1024,7 @@ class _SheetState extends State<_BottomSheet> {
       inset: _inset,
       radius: _radius,
       mode: _mode,
+      roundedBottom: widget.sheet.roundedBottom,
     );
   }
 
@@ -1308,7 +1329,7 @@ class _SheetState extends State<_BottomSheet> {
 
   /// A touch on the content: a moving sheet stops under the finger.
   void _contentHold() {
-    if (!_resizable) return;
+    if (!_contentMovable) return;
     _wheelIdle?.cancel();
     if (_visible.isAnimating) {
       _visible.stop();
@@ -1383,8 +1404,8 @@ class _SheetState extends State<_BottomSheet> {
     if (!_ready || !_open || _dragging) return false;
     if (_presentation == SheetPresentation.dialog) return false;
     final height = _visible.get();
-    // A fixed sheet only moves to close.
-    if (delta > 0) return _resizable && height < _maxHeight - 0.5;
+    // A single-detent sheet can reverse a pull-to-dismiss before its content scrolls.
+    if (delta > 0) return _contentMovable && height < _maxHeight - 0.5;
     if (delta >= 0 || scroll > 0) return false;
     return widget.sheet.dismissible
         ? height > 0.5
@@ -1523,8 +1544,8 @@ class _SheetState extends State<_BottomSheet> {
       return false;
     }
     final chrome = _isChrome(global);
-    // On a resizable sheet the content's own scroll view drives the sheet (see _SheetScrollPosition).
-    if (_resizable && !chrome) return false;
+    // The content's own scroll view drives resizes and pull-to-dismiss gestures.
+    if (_contentMovable && !chrome) return false;
     return kind == PointerDeviceKind.touch ||
         kind == PointerDeviceKind.stylus ||
         kind == PointerDeviceKind.invertedStylus ||
@@ -1550,10 +1571,16 @@ class _SheetState extends State<_BottomSheet> {
     return _visible.get() < _heights.reduce(math.max) - 1;
   }
 
+  double _gestureY(PointerEvent event) => _localY(
+    event.position +
+        (event is PointerPanZoomUpdateEvent ? event.pan : Offset.zero),
+  );
+
   void _onStart(PointerEvent event) {
     _dragging = true;
     _stopMorph();
-    _dragOrigin = _localY(event.position);
+    _wheelIdle?.cancel();
+    _dragOrigin = _gestureY(event);
     _pointerTracker = VelocityTracker.withKind(event.kind)
       ..addPosition(event.timeStamp, Offset(0, _dragOrigin));
     final value = _presentation == SheetPresentation.dialog ? _lift : _visible;
@@ -1564,7 +1591,7 @@ class _SheetState extends State<_BottomSheet> {
   }
 
   void _onMove(PointerEvent event) {
-    final y = _localY(event.position);
+    final y = _gestureY(event);
     _pointerTracker?.addPosition(event.timeStamp, Offset(0, y));
     final move = y - _dragOrigin;
     if (_presentation == SheetPresentation.dialog) {
@@ -1839,7 +1866,10 @@ class _SheetState extends State<_BottomSheet> {
     final s = theme.sizes;
     final highContrast = MediaQuery.maybeHighContrastOf(context) ?? false;
     final dialog = presentation == SheetPresentation.dialog;
-    final attached = !dialog && _mode == SheetFrameMode.attached;
+    final attached =
+        !dialog &&
+        _mode == SheetFrameMode.attached &&
+        !widget.sheet.roundedBottom;
     final r = dialog ? s.radiusPanel : _radius;
     final radii = [r, r, attached ? 0.0 : r, attached ? 0.0 : r];
     final header =
@@ -2525,13 +2555,13 @@ class _SheetScrollPosition extends ScrollPositionWithSingleContext {
 
   @override
   Drag drag(DragStartDetails details, VoidCallback dragCancelCallback) {
-    if (sheet._resizable) sheet._contentStart(pixels);
+    if (sheet._contentMovable) sheet._contentStart(pixels);
     return super.drag(details, dragCancelCallback);
   }
 
   @override
   void applyUserOffset(double delta) {
-    if (!sheet._resizable) return super.applyUserOffset(delta);
+    if (!sheet._contentMovable) return super.applyUserOffset(delta);
     // delta > 0: the finger moves down (the content too).
     final scroll = sheet._contentDrag(
       -delta,
@@ -2544,7 +2574,7 @@ class _SheetScrollPosition extends ScrollPositionWithSingleContext {
 
   @override
   void goBallistic(double velocity) {
-    if (!sheet._resizable) return super.goBallistic(velocity);
+    if (!sheet._contentMovable) return super.goBallistic(velocity);
     // velocity > 0: the content moves up (the scroll offset grows).
     if (!sheet._contentEnd(velocity)) return super.goBallistic(0);
     super.goBallistic(velocity);
@@ -2553,7 +2583,7 @@ class _SheetScrollPosition extends ScrollPositionWithSingleContext {
   @override
   double setPixels(double newPixels) {
     final current = activity;
-    if (sheet._resizable &&
+    if (sheet._contentMovable &&
         current is BallisticScrollActivity &&
         current.velocity < 0 &&
         newPixels < minScrollExtent &&
@@ -2570,8 +2600,25 @@ class _SheetScrollPosition extends ScrollPositionWithSingleContext {
 
   @override
   void pointerScroll(double delta) {
-    // delta > 0: scrolling down (the content moves up), which grows the sheet first.
-    if (sheet._wheelMoves(delta, pixels)) return sheet._wheel(delta);
+    // A single wheel event can cross the boundary: do not discard its remainder
+    // at the highest detent or at the content's top.
+    if (delta > 0 && sheet._wheelMoves(delta, pixels)) {
+      final grow = math.min(delta, sheet._maxHeight - sheet._visible.get());
+      sheet._wheel(grow);
+      final remainder = delta - grow;
+      if (remainder > precisionErrorTolerance) super.pointerScroll(remainder);
+      return;
+    }
+    if (delta < 0 && sheet._contentMovable) {
+      final back = math.min(-delta, math.max(0.0, pixels - minScrollExtent));
+      if (back > precisionErrorTolerance) super.pointerScroll(-back);
+      final remainder = delta + back;
+      if (remainder < -precisionErrorTolerance &&
+          sheet._wheelMoves(remainder, pixels)) {
+        sheet._wheel(remainder);
+      }
+      return;
+    }
     super.pointerScroll(delta);
   }
 }
@@ -2621,15 +2668,31 @@ class _SheetDragRecognizer extends OneSequenceGestureRecognizer {
   }
 
   @override
+  bool isPointerPanZoomAllowed(PointerPanZoomStartEvent event) =>
+      _pointer == null &&
+      super.isPointerPanZoomAllowed(event) &&
+      canBegin(event.kind, event.position);
+
+  @override
+  void addAllowedPointerPanZoom(PointerPanZoomStartEvent event) {
+    startTrackingPointer(event.pointer, event.transform);
+    _pointer = event.pointer;
+    _down = event.position;
+    _decided = _started = false;
+  }
+
+  @override
   void handleEvent(PointerEvent event) {
     if (event.pointer != _pointer) return;
-    if (event is PointerMoveEvent) {
+    if (event is PointerMoveEvent || event is PointerPanZoomUpdateEvent) {
       if (_started) {
         onMove(event);
         return;
       }
       if (_decided) return;
-      final d = event.position - _down;
+      final d = event is PointerPanZoomUpdateEvent
+          ? event.pan
+          : event.position - _down;
       if (d.distance < 4) return;
       _decided = true;
       if (d.dy.abs() < d.dx.abs() || !shouldStart(d.dy >= 0 ? 1 : -1, _down)) {
@@ -2641,7 +2704,9 @@ class _SheetDragRecognizer extends OneSequenceGestureRecognizer {
       _started = true;
       // Measured from here so the sheet does not jump by the threshold distance.
       onStart(event);
-    } else if (event is PointerUpEvent || event is PointerCancelEvent) {
+    } else if (event is PointerUpEvent ||
+        event is PointerCancelEvent ||
+        event is PointerPanZoomEndEvent) {
       if (_started) {
         _started = false;
         onEnd(event is PointerCancelEvent);

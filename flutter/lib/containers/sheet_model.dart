@@ -237,7 +237,24 @@ SheetFrame sheetFrame(
   required double inset,
   required double radius,
   required SheetFrameMode mode,
+  bool roundedBottom = false,
 }) {
+  if (roundedBottom) {
+    final frame = sheetFrame(
+      visible,
+      heights: heights,
+      large: large,
+      inset: inset,
+      radius: radius,
+      mode: mode,
+    );
+    return (
+      expansion: frame.expansion,
+      gap: math.max(inset, frame.gap),
+      bottomRadius: radius,
+      solid: frame.solid,
+    );
+  }
   switch (mode) {
     case SheetFrameMode.attached:
       return (expansion: 1, gap: 0, bottomRadius: 0, solid: 1);

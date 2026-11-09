@@ -1474,6 +1474,168 @@ void main() {
       },
     );
 
+    testWidgets('wheel preserves the delta across the sheet/content boundary', (
+      tester,
+    ) async {
+      _phone(tester);
+      await tester.pumpWidget(
+        page(
+          sheet: (set) => free(
+            set,
+            rows: 40,
+            snap: true,
+            detents: const [SheetDetent.medium, SheetDetent.large],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final at = tester.getCenter(find.text('Stop 2'));
+      final mouse = TestPointer(1, PointerDeviceKind.mouse);
+      Future<void> wheel(double delta) async {
+        await tester.sendEventToBinding(mouse.hover(at));
+        await tester.sendEventToBinding(mouse.scroll(Offset(0, delta)));
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+
+      await wheel(500);
+      expect(visible(tester), closeTo(790, 0.5));
+      expect(contentScroll(tester).pixels, closeTo(110, 0.5));
+      await wheel(-160);
+      expect(contentScroll(tester).pixels, 0);
+      expect(visible(tester), closeTo(740, 0.5));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets(
+      'a single-detent wheel pull reverses into the sheet before scrolling',
+      (tester) async {
+        _phone(tester);
+        await tester.pumpWidget(
+          page(
+            sheet: (set) => Sheet(
+              label: 'Route',
+              container: true,
+              detents: const [SheetDetent.large],
+              child: Column(
+                children: [
+                  for (var i = 0; i < 40; i++)
+                    SizedBox(height: 44, child: Text('Stop $i')),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final at = tester.getCenter(find.text('Stop 2'));
+        final mouse = TestPointer(1, PointerDeviceKind.mouse);
+        Future<void> wheel(double delta) async {
+          await tester.sendEventToBinding(mouse.hover(at));
+          await tester.sendEventToBinding(mouse.scroll(Offset(0, delta)));
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+
+        await wheel(-100);
+        expect(visible(tester), closeTo(740, 0.5));
+        await wheel(40);
+        expect(visible(tester), closeTo(780, 0.5));
+        expect(contentScroll(tester).pixels, 0);
+        await tester.pumpAndSettle();
+      },
+    );
+
+    for (final chrome in [false, true]) {
+      testWidgets(
+        'native trackpad shrinks a single detent (${chrome ? 'chrome' : 'content'})',
+        (tester) async {
+          _phone(tester);
+          await tester.pumpWidget(
+            page(
+              sheet: (set) => Sheet(
+                label: 'Route',
+                container: true,
+                regular: SheetRegular.sheet,
+                header: const SizedBox(
+                  height: 48,
+                  child: Text('Trackpad header'),
+                ),
+                detents: const [SheetDetent.large],
+                child: Column(
+                  children: [
+                    for (var i = 0; i < 40; i++)
+                      SizedBox(height: 44, child: Text('Stop $i')),
+                  ],
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          final before = visible(tester);
+          final at = chrome
+              ? tester.getCenter(find.text('Trackpad header'))
+              : tester.getCenter(find.text('Stop 2'));
+          final gesture = await tester.startGesture(
+            at,
+            kind: PointerDeviceKind.trackpad,
+          );
+          // Cross native pan slop first; subsequent deltas must follow the gesture.
+          await gesture.moveBy(const Offset(0, 30));
+          await tester.pump(const Duration(milliseconds: 16));
+          final start = visible(tester);
+          await gesture.moveBy(const Offset(0, 40));
+          await tester.pump(const Duration(milliseconds: 16));
+          expect(visible(tester), lessThan(start - 5));
+          expect(visible(tester), lessThan(before - 5));
+          // A native sequence remains active even with a pause longer than wheel idle.
+          final paused = visible(tester);
+          await tester.pump(const Duration(milliseconds: 200));
+          expect(visible(tester), closeTo(paused, 0.5));
+          await gesture.up();
+          await tester.pumpAndSettle();
+          expect(visible(tester), closeTo(before, 0.5));
+        },
+      );
+    }
+
+    testWidgets(
+      'native trackpad grows, scrolls, and reverses without losing delta',
+      (tester) async {
+        _phone(tester);
+        await tester.pumpWidget(
+          page(
+            sheet: (set) => free(
+              set,
+              rows: 40,
+              snap: true,
+              detents: const [SheetDetent.medium, SheetDetent.large],
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.text('Stop 2')),
+          kind: PointerDeviceKind.trackpad,
+        );
+        await gesture.moveBy(const Offset(0, -30));
+        await tester.pump(const Duration(milliseconds: 16));
+        final start = visible(tester);
+        await gesture.moveBy(const Offset(0, -100));
+        await tester.pump(const Duration(milliseconds: 16));
+        expect(visible(tester), closeTo(start + 100, 0.5));
+        expect(contentScroll(tester).pixels, 0);
+        await gesture.moveBy(const Offset(0, -500));
+        await tester.pump(const Duration(milliseconds: 16));
+        expect(visible(tester), closeTo(790, 0.5));
+        final scrolled = contentScroll(tester).pixels;
+        expect(scrolled, closeTo(start + 600 - 790, 0.5));
+        await gesture.moveBy(Offset(0, scrolled + 100));
+        await tester.pump(const Duration(milliseconds: 16));
+        expect(contentScroll(tester).pixels, 0);
+        expect(visible(tester), closeTo(690, 0.5));
+        await gesture.up();
+        await tester.pumpAndSettle();
+      },
+    );
+
     testWidgets('fit follows its content with a spring', (tester) async {
       _phone(tester);
       var rows = 3;
