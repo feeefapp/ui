@@ -53,6 +53,10 @@ export {
   PresentationHeader,
 } from './presentation'
 export type { SheetDetent, SheetProps, SheetState } from './containers/sheet'
+export { Panel, PanelHost, PanelStack, usePanelStack } from './containers/panel-host'
+export type { PanelProps, PanelEntry, PanelHostProps, PanelStackState, PanelChangeReason } from './containers/panel-host'
+export { allocatePanelWidths, pushPanel, replacePanel, closePanel } from './containers/panel-model'
+export type { PanelSizing, PanelIdentity, PanelWidth } from './containers/panel-model'
 export type {
   AlertAction,
   AlertActionRole,

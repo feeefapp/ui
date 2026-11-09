@@ -4,6 +4,7 @@ import * as React from 'react'
 import { FloatingPortalScope } from '../menu/boundary'
 import { createPortal } from 'react-dom'
 import { cn } from '../utils'
+import { InPlaceHost, type InPlacePresentation } from './in-place-host'
 
 export type PresentationHostProps = {
   /** Which surface this hosts (`alert`, `modal`, `pane`, `sheet`, …); styles key off `data-kind`. */
@@ -57,7 +58,14 @@ function TopLayerEntry({ modal, opener }: { modal: boolean; opener: React.Mutabl
  * and back out. Motion, scrim and the surface itself belong to the caller; keep the host mounted
  * until the exit animation ends and unmount it then (focus returns on unmount).
  */
-export const PresentationHost = React.forwardRef<HTMLElement, PresentationHostProps>(function PresentationHost(
+/** Internal in-place mode is used only by adaptive panels; ordinary presentations are unchanged. */
+export const PresentationHost = React.forwardRef<HTMLElement, PresentationHostProps & { inPlace?: InPlacePresentation }>(function PresentationHost(props, ref) {
+  return props.inPlace
+    ? <InPlaceHost {...props} inPlace={props.inPlace} ref={ref} />
+    : <PortalPresentationHost {...props} ref={ref} />
+})
+
+const PortalPresentationHost = React.forwardRef<HTMLElement, PresentationHostProps>(function PortalPresentationHost(
   {
     kind,
     label,

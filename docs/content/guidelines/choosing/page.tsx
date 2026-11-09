@@ -591,6 +591,14 @@ function Overview() {
               </>,
             ],
             [
+              'Should a related record open beside the current one, and another after it?',
+              <>
+                Use <Link to="/components/panel-host">adaptive panels</Link>. One host coordinates a
+                chain of independent surfaces, fitting as many columns as its container allows and
+                presenting nested sheets on phones. Do not nest split views or overlay panes.
+              </>,
+            ],
+            [
               'Is the person going deeper into one thing and expecting to come back the same way?',
               <>
                 Push a page on a <Link to="/components/navigation-stack">NavigationStack</Link>: back button
@@ -612,7 +620,8 @@ function Overview() {
             ['Details of the thing the page is about', <C>{'<Sheet regular="pane">'}</C>, 'Beside the page when wide, a sheet on phones.'],
             ['A short task about the page, mostly on phones', <C>Sheet</C>, 'Detents, drag and flick; a dialog on wide screens.'],
             ['Going deeper and coming back', <C>NavigationStack</C>, 'Push and pop, swipe back, pages stay mounted.'],
-            ['Many items from one list', <C>SplitView</C>, 'Side by side when wide, a stack on phones.'],
+            ['Many items from one list', <C>SplitView</C>, 'Two columns when wide, a navigation stack on phones; deeper pages stay in the detail column.'],
+            ['Related records opening more records', <Link to="/components/panel-host">PanelHost + Panel</Link>, 'A coordinated chain of desktop columns and stacked sheets on phones; content stays independent.'],
             ['Top-level places on a phone', <C>TabView</C>, 'Each tab keeps its stack; the bar shrinks while reading.'],
             ['Browsing a few items sideways', <C>Carousel</C>, 'Snap paging, a peek of the next item, never auto-advancing.'],
             ['Fresh data in a list people keep open', <><C>ScrollArea onRefresh</C> + a Refresh button</>, 'Pull at the top on touch; the button runs the same RefreshController.'],

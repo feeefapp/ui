@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { useI18n } from '../i18n'
 import { PresentationHost, usePresented } from '../presentation/host'
+import type { InPlacePresentation } from '../presentation/in-place-host'
 import { PresentationHeader } from '../presentation/header'
 import { PresentationBody } from '../presentation/body'
 import type { PresentationChromeProps } from '../presentation/modal'
@@ -169,6 +170,11 @@ export function Sheet(props: SheetProps) {
   return props.regular === 'pane' ? <PaneSheet {...props} /> : <BottomSheet {...props} />
 }
 
+/** @internal A permanently mounted Sheet tree, restyled as a column without moving its children. */
+export function InPlaceSheet(props: SheetProps & { inPlace: InPlacePresentation }) {
+  return <SheetPresentation {...props} onExited={() => {}} />
+}
+
 function BottomSheet(props: SheetProps) {
   const { mounted, exited } = usePresented(props.open)
   if (!mounted) return null
@@ -240,7 +246,8 @@ function SheetPresentation({
   returnFocusRef,
   className,
   onExited,
-}: SheetProps & { onExited: () => void }) {
+  inPlace,
+}: SheetProps & { onExited: () => void; inPlace?: InPlacePresentation }) {
   const { t } = useI18n()
   const host = React.useRef<HTMLElement | null>(null)
   const panel = React.useRef<HTMLDivElement>(null)
@@ -268,9 +275,10 @@ function SheetPresentation({
   /** The content column keeps the floating gap at every height, so nothing reflows while it moves. */
   const columnInset = presentation === 'dialog' || mode === 'attached' ? 0 : (metrics?.inset ?? 0)
   const undimmed = backgroundInteraction !== undefined && metrics ? detentHeight(backgroundInteraction, metrics) : null
-  const dims = modal || backgroundInteraction !== undefined
-  const hostModal = modal && backgroundInteraction === undefined
-  const showGrabber = presentation !== 'dialog' && (grabber ?? detents.length > 1)
+  const columnMode = !!inPlace && !inPlace.sheet
+  const dims = !columnMode && (modal || backgroundInteraction !== undefined)
+  const hostModal = !columnMode && modal && backgroundInteraction === undefined
+  const showGrabber = !columnMode && presentation !== 'dialog' && (grabber ?? detents.length > 1)
   const [localIndex, setLocalIndex] = React.useState(() =>
     Math.max(0, detents.indexOf(defaultDetent ?? detents[0]))
   )
@@ -361,7 +369,10 @@ function SheetPresentation({
     // Below the undimmed detent the page under the scrim stays usable.
     if (L.undimmed !== null) el.style.pointerEvents = dim > 0.02 ? 'auto' : 'none'
   }
+  const columnRef = React.useRef(columnMode)
+  columnRef.current = columnMode
   const paintSheet = (v: number) => {
+    if (columnRef.current) return
     const el = panel.current
     const L = live.current
     if (!el || L.presentation === 'dialog' || !L.metrics) return
@@ -550,6 +561,20 @@ function SheetPresentation({
   const target = free ? Math.max(minHeight, Math.min(maxHeight, freeHeight!)) : (heights[index] ?? 0)
   const dialogHeight = metrics ? Math.min(metrics.natural, metrics.hostHeight - 64) : 0
   React.useLayoutEffect(() => {
+    if (columnMode) {
+      // animation_level: 1. Resizing snaps layout; the shared Sheet engine animates presentation.
+      visible.stop()
+      shown.stop()
+      lift.stop()
+      morph.stop()
+      endMorph()
+      motionHeight.current = 0
+      presented.current = false
+      for (const node of [panel.current, surface.current, solid.current, column.current]) node?.removeAttribute('style')
+      for (const node of pinned()) node.style.translate = ''
+      riding(false)
+      return
+    }
     if (!metrics) return
     const reduced = prefersReducedMotion()
     const motion = motionOf()
@@ -686,7 +711,7 @@ function SheetPresentation({
       if (Math.abs(visible.getTarget() - target) >= 1) void moveTo(target)
     } else if (Math.abs(visible.get() - target) < 1) rest(target)
     else void moveTo(target)
-  }, [open, metrics, presentation, mode, target, dialogHeight])
+  }, [open, metrics, presentation, mode, target, dialogHeight, columnMode])
 
   const setDetentIndex = (next: number) => {
     setFreeHeight(null)
@@ -746,7 +771,7 @@ function SheetPresentation({
   // not start scrolling first.
   React.useEffect(() => {
     const el = panel.current
-    if (!el) return
+    if (!el || columnMode) return
     let start = 0
     let scale = 1
     /** A content gesture on a resizable sheet: the split state and the last finger offset. */
@@ -964,7 +989,7 @@ function SheetPresentation({
       el.removeEventListener('wheel', onWheel)
     }
     // A sheet open before its container exists gets its panel when the container arrives.
-  }, [container])
+  }, [container, columnMode])
 
   const cycle = (step: 1 | -1) => {
     const order = heights.map((h, i) => [h, i] as const).sort((a, b) => a[0] - b[0])
@@ -1011,6 +1036,7 @@ function SheetPresentation({
   return (
     <PresentationHost
       ref={host}
+      inPlace={inPlace}
       kind="sheet"
       label={label}
       labelledBy={header === undefined && leading == null && title != null ? titleId : undefined}
@@ -1020,7 +1046,7 @@ function SheetPresentation({
       returnFocusRef={returnFocusRef}
       onEscape={collapse}
     >
-      {dims && <div ref={scrim} className="lab-sheet-scrim" aria-hidden="true" onClick={collapse} />}
+      {(dims || inPlace) && <div ref={scrim} className="lab-sheet-scrim" aria-hidden="true" onClick={collapse} />}
       <div ref={probe} className="lab-sheet-safe-probe" aria-hidden="true" />
       <div ref={tokens} className="lab-sheet-token-probe" aria-hidden="true" />
       <div

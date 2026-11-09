@@ -96,7 +96,8 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
 | A short task about the page on a phone (filters, contact, quick edit) | `Sheet` (detents, `fit` for short forms; dialog when wide; `source` to grow out of its button) | a new page that loses the person's place |
 | Results or tools that live over the page (a map's search and places) | `Sheet` with `peek`/`medium`/`large`, `dismissible={false}`, `backgroundInteraction`, `regular="card"` | a pane or a page that hides the map |
 | Going deeper and coming back | `NavigationStack` + `NavigationPage` | swapping content with no back or swipe |
-| Many items from one list | `SplitView` (stack on phones) | a modal per item |
+| Many items from one list, deeper pages inside its detail | `SplitView` (navigation stack on phones) | a modal per item |
+| A chain of related records sharing space | `PanelHost` + independent `Panel` surfaces (stacked sheets on phones) | nested split views or independently managed floating panes |
 | Rows that open, choose or show values | `ListSection` + `ListRow` | hand-made `<div>` rows |
 | Sidebar destinations | `NavigationItem` (a regular-height button; icon and count in square slots) | list rows or hand-made links |
 | An icon, count or chevron at the start or end of your own row or button | `SquareSlot` | a hand-sized icon box |

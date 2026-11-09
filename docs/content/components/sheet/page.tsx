@@ -124,7 +124,9 @@ function Overview() {
           <p>
             A pane floats over the end of the page; it does not push the page aside. When the details belong in
             the layout (a list and its record side by side), use a <Link to="/components/split-view">split view</Link>{' '}
-            or the scaffold’s inspector column instead. Never open a pane from a pane.
+            instead. For a growing chain of records beside one another on desktop and stacked sheets on
+            phones, use <Link to="/components/panel-host">adaptive panels</Link>: one host coordinates
+            their widths and dismissal. Do not stack independent floating panes.
           </p>
         </Callout>
         <Code

@@ -4,6 +4,25 @@ The Flutter twin of `@feeef.dev/ui`: same component names and props, same tokens
 built on `package:flutter/widgets.dart` only (it works inside a MaterialApp but doesn't need one).
 Labels and other visible content are widgets (`Text`, `LucideBold()`), on both sides.
 
+## Adaptive panels
+
+`PanelHost` coordinates a controlled `List<PanelEntry>` beside a root `Panel`. A `Panel` is a
+standalone presentation surface using the shared header, body, and dock. Give each entry a stable
+`id` and optional `PanelSizing`; the host fits the newest columns to its bounded local constraints.
+On compact widths, entries use the existing `Sheet` presentation. Content and header subtrees
+retain their state when switching presentation.
+
+Content requests a child with `PanelScope.of(context).push(entry)` and closes its branch with
+`PanelScope.of(context).close?.call()`. Echo `onPanelsChange` into the controlled list. Opening a
+child replaces that panel's descendants; closing an ancestor removes its descendants too.
+`PanelEntry.canClose` can asynchronously protect unsaved work, including when an ancestor closes;
+pending requests are deduplicated. Direct owner updates remain authoritative, so apply your own
+guards before replacing the controlled list externally.
+
+Routing, data fetching, authorization, and optimistic mutations stay in the app. `SplitView`
+continues to provide a two-column navigation stack; `SheetRegular.pane` continues to float over
+rather than reserve page space. The docs' Adaptive panels example includes the Flutter composition.
+
 ## What is ported
 
 Everything in the web kit. Every docs example has a Dart twin (156 of them, next to the `.tsx` in

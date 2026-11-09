@@ -58,6 +58,23 @@ export function App({ locale, translations, url, children }) {
 - Modules that use hooks start with `'use client'`, so they work from Next.js server components.
 - Every component imports its own CSS; the host bundler (Vite, Next.js) loads it.
 
+## Adaptive record workspaces
+
+Use `PanelHost` and `Panel` from `@feeef.dev/ui/containers` for a growing chain of related
+records: list → record → related record. The host coordinates available desktop columns and
+compact sheet presentations. Content components remain ordinary reusable components; routing,
+selection, data loading, permissions, and mutations stay in the consuming app.
+
+Keep one stable identity per open record. Replace the selected branch when switching records,
+and close descendants when closing their ancestor. Keep draft state alive across width changes;
+do not render separate desktop and phone forms. Use panel-local header actions for tools such as
+Edit, and the shared presentation dock for task actions.
+
+This is distinct from `SplitView` (two columns, deeper pages inside its detail stack) and
+`Sheet regular="pane"` (a floating overlay that does not reserve layout space). Existing APIs
+retain their behavior. See the docs site's **Adaptive panels** page for interactive examples,
+composition guidance, and the public API.
+
 ## Theme config
 
 Each app picks its look once and passes it down; components never branch on it.

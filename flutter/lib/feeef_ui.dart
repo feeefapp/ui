@@ -32,6 +32,7 @@ export 'containers/adaptive_model.dart';
 export 'containers/carousel.dart';
 export 'containers/carousel_model.dart';
 export 'containers/navigation_stack.dart';
+export 'containers/panel.dart';
 export 'containers/sheet.dart';
 export 'containers/split_view.dart';
 export 'containers/stack_model.dart';

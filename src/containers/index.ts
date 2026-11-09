@@ -1,4 +1,8 @@
-/** Structural containers: navigation stack, split view and sheet. */
+/** Structural containers: navigation stack, split view, panels and sheet. */
+export { Panel, PanelHost, PanelStack, usePanelStack } from './panel-host'
+export type { PanelProps, PanelEntry, PanelHostProps, PanelStackState, PanelChangeReason } from './panel-host'
+export { allocatePanelWidths, pushPanel, replacePanel, closePanel } from './panel-model'
+export type { PanelSizing, PanelIdentity, PanelWidth } from './panel-model'
 export {
   NavigationPage,
   NavigationStack,

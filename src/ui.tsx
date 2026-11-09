@@ -8,6 +8,8 @@ export { Input, Textarea, Label, Image } from './primitives/fields'
 export { Select, Option } from './primitives/select'
 export { Alert, Modal } from './presentation'
 export { Sheet, useSheet } from './containers/sheet'
+export { Panel, PanelHost, PanelStack, usePanelStack } from './containers/panel-host'
+export type { PanelProps, PanelEntry, PanelHostProps, PanelStackState, PanelChangeReason } from './containers/panel-host'
 export { ProBadge } from './primitives/badge'
 export {
   Box,

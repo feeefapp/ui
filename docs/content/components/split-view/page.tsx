@@ -17,6 +17,11 @@ function Overview() {
           <Link to="/components/navigation-stack">navigation stack</Link>: the list is the root page and
           opening an item pushes it. You write the pages once.
         </p>
+        <p>
+          When deeper records should become additional desktop columns and new sheets on phones,
+          use <Link to="/components/panel-host">adaptive panels</Link> instead. SplitView deliberately
+          keeps deeper pages inside its detail column; do not nest split views to build a panel chain.
+        </p>
       </Section>
 
       <Section title="Selection drives the detail">
