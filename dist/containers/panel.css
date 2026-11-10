@@ -1,0 +1,60 @@
+/* animation_level: 1. Column allocation snaps; compact presentations reuse Sheet's
+   reduced-motion-aware spring, pan, focus and scroll engine. No independent transition. */
+.lab-panel-host {
+  position: relative;
+  display: flex;
+  gap: var(--lab-shell-gap, 8px);
+  min-inline-size: 0;
+  min-block-size: 0;
+  block-size: 100%;
+  overflow: hidden;
+}
+.lab-panel-slot {
+  position: relative;
+  flex: none;
+  min-inline-size: 0;
+  min-block-size: 0;
+  block-size: 100%;
+}
+.lab-panel-slot[hidden] { display: none; }
+.lab-panel-slot[data-sheet] {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.lab-presentation[data-in-place='column'] {
+  position: relative;
+  inset: auto;
+  z-index: auto;
+  display: block;
+  pointer-events: auto;
+  border-radius: var(--lab-radius-panel);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface);
+  box-shadow: inset 0 0 0 1px var(--lab-line);
+}
+.lab-presentation[data-in-place][hidden] { display: none; }
+.lab-presentation[data-in-place='column'] > .lab-sheet-scrim,
+.lab-presentation[data-in-place='column'] .lab-sheet-surface {
+  display: none;
+}
+.lab-presentation[data-in-place='column'] > .lab-sheet {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  visibility: visible;
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+}
+.lab-presentation[data-in-place='column'] .lab-sheet-column {
+  inset: 0;
+  border-radius: inherit;
+}
+/* Standalone Panel also uses the same in-place Sheet tree. */
+.lab-presentation[data-in-place='column'] .lab-sheet {
+  border-radius: inherit;
+}
+.lab-presentation[data-in-place='sheet'] {
+  pointer-events: auto;
+}
