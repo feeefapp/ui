@@ -56,6 +56,44 @@ String percent(WidgetTester tester) =>
     tester.widgetList<Text>(find.textContaining('%')).map((t) => t.data!).first;
 
 void main() {
+  testWidgets(
+    'authenticated custom image renderers keep decoded tall and wide dimensions',
+    (tester) async {
+      await tester.pumpWidget(
+        app(
+          SizedBox(
+            height: 500,
+            child: FreeformBoard(
+              takes: [
+                take('tall', TakeStatus.completed),
+                take('wide', TakeStatus.completed),
+              ],
+              imageRatios: const {'tall': 1 / 8, 'wide': 16 / 9},
+              selectedId: 'tall',
+              onSelect: (_) {},
+              insets: (top: 12, right: 12, bottom: 12, left: 12),
+              now: _now,
+              signedIn: true,
+              starters: const [],
+              onStarter: (_) {},
+              onRetry: (_) {},
+              onRemove: (_) {},
+              imageBuilder: (_, item) =>
+                  SizedBox.expand(key: ValueKey('custom-${item.id}')),
+            ),
+          ),
+          width: 1000,
+        ),
+      );
+      await settle(tester);
+      final tall = tester.getRect(find.byKey(const ValueKey('custom-tall')));
+      final wide = tester.getRect(find.byKey(const ValueKey('custom-wide')));
+      expect(tall.width / tall.height, closeTo(1 / 8, .002));
+      expect(wide.width / wide.height, closeTo(16 / 9, .002));
+      await finish(tester);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.macOS),
+  );
   testWidgets('versions sit oldest first; the newest is selected and fitted', (
     tester,
   ) async {

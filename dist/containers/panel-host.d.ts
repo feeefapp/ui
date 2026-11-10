@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { type PanelSizing } from './panel-model.js';
+import { type PanelSizing, type PanelWidths } from './panel-model.js';
 import type { PresentationChromeProps } from '../presentation/modal.js';
 import './panel.css';
 /** An independent work surface. Header tools and close always belong to this panel. */
@@ -44,6 +44,14 @@ export type PanelHostProps = {
     panels: readonly PanelEntry[];
     /** Echo the requested chain into panels. The host never keeps a shadow navigation stack. */
     onPanelsChange: (panels: readonly PanelEntry[]) => void;
+    /** Enables pointer and keyboard resizing between visible desktop columns. Default true. */
+    resizable?: boolean;
+    /** Controlled desktop width preferences in CSS pixels, keyed by stable panel ID. Echo onWidthsChange. */
+    widths?: PanelWidths;
+    /** Initial uncontrolled width preferences keyed by panel ID. Defaults to each entry's preferredWidth. */
+    defaultWidths?: PanelWidths;
+    /** Reports resized ID-keyed preferences. Optional; persistence belongs to the application, not this kit. */
+    onWidthsChange?: (widths: PanelWidths) => void;
     /** Container width below which details become native, stacked modal Sheets. Default 720. */
     breakpoint?: number;
     /** Optional column gap in CSS pixels. Default: the theme's --lab-shell-gap. */
@@ -62,7 +70,7 @@ export type PanelHostProps = {
  * All entries stay mounted under identical parents. Only explicit removal resets child state.
  * Native dialog top-layer promotion changes presentation without a portal or second content copy.
  */
-export declare function PanelHost({ panels, onPanelsChange, breakpoint, gap, beforeClose, onCloseError, className, style }: PanelHostProps): React.JSX.Element;
+export declare function PanelHost({ panels, onPanelsChange, resizable, widths: controlledWidths, defaultWidths, onWidthsChange, breakpoint, gap, beforeClose, onCloseError, className, style }: PanelHostProps): React.JSX.Element;
 /** Alias for PanelHost when naming the complete controlled chain rather than its layout role. */
 export declare const PanelStack: typeof PanelHost;
 //# sourceMappingURL=panel-host.d.ts.map

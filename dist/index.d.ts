@@ -24,7 +24,7 @@ export type { SheetDetent, SheetProps, SheetState } from './containers/sheet.js'
 export { Panel, PanelHost, PanelStack, usePanelStack } from './containers/panel-host.js';
 export type { PanelProps, PanelEntry, PanelHostProps, PanelStackState, PanelChangeReason } from './containers/panel-host.js';
 export { allocatePanelWidths, pushPanel, replacePanel, closePanel } from './containers/panel-model.js';
-export type { PanelSizing, PanelIdentity, PanelWidth } from './containers/panel-model.js';
+export type { PanelSizing, PanelIdentity, PanelWidth, PanelWidths } from './containers/panel-model.js';
 export type { AlertAction, AlertActionRole, AlertProps, ModalProps, PresentationBodyProps, PresentationChromeProps, PresentationDockProps, PresentationHeaderProps, } from './presentation/index.js';
 export { RefreshController, ScrollArea, ScrollGradientOverlay, useRefreshController, useShellGap } from './scroll/index.js';
 export type { ScrollAreaProps, ScrollGradientOverlayProps } from './scroll/index.js';

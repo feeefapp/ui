@@ -1,7 +1,8 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
-import { attachPan } from '../physics/gesture.js';
+import { ResizeDivider } from './resize-divider.js';
+import { useI18n } from '../i18n.js';
 import { MotionValue } from '../physics/motion-value.js';
 import { SPRINGS, rubberBandClamp } from '../physics/spring.js';
 import { NavigationStack } from './navigation-stack.js';
@@ -27,8 +28,8 @@ function detailPages(detail) {
  * same pages render in both, so a phone and a desktop share one implementation.
  */
 export function SplitView({ list, detail, placeholder, onBack, listWidth: controlledWidth, defaultListWidth = 360, onListWidthChange, minListWidth = 280, maxListWidth = 520, resizable = true, compactBreakpoint = 720, label = 'List and detail', className, }) {
+    const { t } = useI18n();
     const root = React.useRef(null);
-    const divider = React.useRef(null);
     const [hostWidth, setHostWidth] = React.useState(null);
     const [localWidth, setLocalWidth] = React.useState(defaultListWidth);
     const width = controlledWidth ?? localWidth;
@@ -68,53 +69,25 @@ export function SplitView({ list, detail, placeholder, onBack, listWidth: contro
         L.onListWidthChange?.(clamped);
         return clamped;
     }, []);
-    React.useEffect(() => {
-        const el = divider.current;
-        if (!el || !resizable || compact)
-            return;
-        let start = 0;
-        return attachPan(el, () => ({
-            axis: 'x',
-            threshold: 1,
-            onStart: () => {
-                motion.current.stop();
-                start = motion.current.get();
-                root.current?.setAttribute('data-resizing', '');
-            },
-            onMove: ({ dx, time }) => {
-                const L = live.current;
-                const rtl = getComputedStyle(root.current).direction === 'rtl';
-                const raw = start + (rtl ? -dx : dx);
-                motion.current.track(rubberBandClamp(raw, L.minListWidth, L.maxListWidth, 240), time);
-            },
-            onEnd: ({ time }) => {
-                root.current?.removeAttribute('data-resizing');
-                const velocity = motion.current.getVelocity(time);
-                const target = commit(motion.current.get());
-                void motion.current.animateTo(target, { spring: SPRINGS.release, velocity });
-            },
-        }));
-    }, [resizable, compact, commit]);
-    const step = (delta) => {
-        const target = commit(width + delta);
+    // animation_level: 1. Shared divider gestures track directly; release uses the existing motion gate.
+    const step = (next) => {
+        const target = commit(next);
         void motion.current.animateTo(target, { spring: SPRINGS.snappy });
     };
     if (compact)
         return (_jsx("div", { ref: root, className: cn('lab-split', className), "data-compact": "", role: "region", "aria-label": label, children: _jsx(NavigationStack, { label: label, onBack: onBack, children: [list, ...pages] }) }));
-    return (_jsxs("div", { ref: root, className: cn('lab-split', className), role: "region", "aria-label": label, style: { '--lab-split-list': `${Math.round(width)}px` }, children: [_jsx("div", { className: "lab-split-list", children: list }), _jsx("div", { ref: divider, className: "lab-split-divider", role: "separator", "aria-orientation": "vertical", "aria-label": "Resize the list", "aria-valuenow": Math.round(width), "aria-valuemin": minListWidth, "aria-valuemax": maxListWidth, tabIndex: resizable ? 0 : undefined, "data-resizable": resizable || undefined, onDoubleClick: () => resizable && step(defaultListWidth - width), onKeyDown: (event) => {
-                    if (!resizable)
-                        return;
-                    const rtl = getComputedStyle(event.currentTarget).direction === 'rtl';
-                    const toward = (key) => (key === 'ArrowRight') !== rtl;
-                    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight')
-                        step(toward(event.key) ? 24 : -24);
-                    else if (event.key === 'Home')
-                        step(minListWidth - width);
-                    else if (event.key === 'End')
-                        step(maxListWidth - width);
-                    else
-                        return;
-                    event.preventDefault();
+    return (_jsxs("div", { ref: root, className: cn('lab-split', className), role: "region", "aria-label": label, style: { '--lab-split-list': `${Math.round(width)}px` }, children: [_jsx("div", { className: "lab-split-list", children: list }), _jsx(ResizeDivider, { className: "lab-split-divider", label: t('lab.panel.resize'), value: Math.round(width), min: minListWidth, max: maxListWidth, reset: defaultListWidth, enabled: resizable, onChange: step, onDragStart: () => {
+                    motion.current.stop();
+                    root.current?.setAttribute('data-resizing', '');
+                    return motion.current.get();
+                }, onDragMove: (raw, { time }) => {
+                    const L = live.current;
+                    motion.current.track(rubberBandClamp(raw, L.minListWidth, L.maxListWidth, 240), time);
+                }, onDragEnd: ({ time }) => {
+                    root.current?.removeAttribute('data-resizing');
+                    const velocity = motion.current.getVelocity(time);
+                    const target = commit(motion.current.get());
+                    void motion.current.animateTo(target, { spring: SPRINGS.release, velocity });
                 } }), _jsx("div", { className: "lab-split-detail", children: pages.length ? (_jsx(NavigationStack, { label: `${label}: detail`, onBack: onBack, children: pages })) : (placeholder) })] }));
 }
 /** Quiet centered message for an empty detail column. */

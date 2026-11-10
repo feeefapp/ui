@@ -9,6 +9,36 @@
   block-size: 100%;
   overflow: hidden;
 }
+/* Dividers overlay the existing gap, never consume extra layout width or move panel parents. */
+.lab-panel-divider {
+  position: absolute;
+  inset-block: 0;
+  inline-size: max(12px, var(--lab-shell-gap, 8px));
+  transform: translateX(-50%);
+  z-index: 1;
+  cursor: col-resize;
+  touch-action: pan-y;
+  user-select: none;
+  outline: none;
+}
+.lab-panel-divider:dir(rtl) { transform: translateX(50%); }
+.lab-panel-divider::after {
+  content: '';
+  position: absolute;
+  inset-block: var(--lab-space-3, 12px);
+  inset-inline-start: calc(50% - 1px);
+  inline-size: 2px;
+  border-radius: var(--lab-radius-small);
+  background: var(--lab-line);
+}
+.lab-panel-divider:hover::after,
+.lab-panel-divider:focus-visible::after,
+.lab-panel-divider[data-resizing]::after { background: var(--lab-primary); }
+.lab-panel-divider:focus-visible { outline: 2px solid var(--lab-primary); outline-offset: -2px; }
+@media (forced-colors: active) {
+  .lab-panel-divider::after { background: ButtonText; }
+  .lab-panel-divider:focus-visible { outline-color: Highlight; }
+}
 .lab-panel-slot {
   position: relative;
   flex: none;

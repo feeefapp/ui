@@ -22,10 +22,21 @@ export declare function pushPanel<T extends PanelIdentity>(panels: readonly T[],
 export declare function replacePanel<T extends PanelIdentity>(panels: readonly T[], panel: T, id?: string): readonly T[];
 /** Remove the named panel and all descendants. Unknown IDs leave the stack unchanged. */
 export declare function closePanel<T extends PanelIdentity>(panels: readonly T[], id: string): readonly T[];
+/** Width preferences keyed by stable panel IDs; persistence belongs to the application. */
+export type PanelWidths = Readonly<Record<string, number>>;
+/** Feasible first-column range, intersecting both columns' bounds for a fixed pair total. */
+export declare function panelResizeBounds(first: PanelSizing, second: PanelSizing, total: number): {
+    min: number;
+    max: number;
+};
+/** Clamp one adjacent pair without changing its total or any sibling's width/visibility. */
+export declare function resizePanelPair(first: PanelIdentity & PanelSizing, second: PanelIdentity & PanelSizing, total: number, requested: number): PanelWidth[];
 /**
  * Allocate a newest-first fitting suffix, returned in reading order. Hidden ancestors are not
- * removed from the owner's array. Shrink proportionally toward minima, then share spare space
- * equally up to maxima. At least the newest panel is returned, even in a zero-width container.
+ * removed from the owner's array. Explicit ID-keyed widths take priority: flexible siblings absorb
+ * container changes first, then overrides yield only as required by available space and bounds.
+ * Shrink proportionally toward minima; share spare space equally up to maxima. At least the newest
+ * panel is returned, even in a zero-width container. Maxima may leave unused trailing space.
  */
-export declare function allocatePanelWidths(panels: readonly (PanelIdentity & PanelSizing)[], containerWidth: number, gap?: number): PanelWidth[];
+export declare function allocatePanelWidths(panels: readonly (PanelIdentity & PanelSizing)[], containerWidth: number, gap?: number, widths?: PanelWidths): PanelWidth[];
 //# sourceMappingURL=panel-model.d.ts.map

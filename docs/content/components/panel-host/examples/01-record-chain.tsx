@@ -69,7 +69,7 @@ export default function RecordChain() {
   ])
   const [compact, setCompact] = useState(false)
   return (
-    <div className="demo-column" style={{ width: '100%' }}>
+    <div className="demo-column" style={{ width: '100%', minWidth: 0, gridTemplateColumns: 'minmax(0, 1fr)' }}>
       <Button variant="tonal" onClick={() => setCompact(!compact)}>{compact ? 'Use desktop width' : 'Use phone width'}</Button>
       <FloatingBoundary>
         <div style={{ width: compact ? 'min(390px, 100%)' : '100%', height: 560, position: 'relative' }}>

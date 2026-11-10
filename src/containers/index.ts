@@ -2,7 +2,7 @@
 export { Panel, PanelHost, PanelStack, usePanelStack } from './panel-host'
 export type { PanelProps, PanelEntry, PanelHostProps, PanelStackState, PanelChangeReason } from './panel-host'
 export { allocatePanelWidths, pushPanel, replacePanel, closePanel } from './panel-model'
-export type { PanelSizing, PanelIdentity, PanelWidth } from './panel-model'
+export type { PanelSizing, PanelIdentity, PanelWidth, PanelWidths } from './panel-model'
 export {
   NavigationPage,
   NavigationStack,

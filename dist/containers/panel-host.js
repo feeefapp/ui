@@ -1,9 +1,11 @@
 'use client';
-import { jsx as _jsx } from "react/jsx-runtime";
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
 import { InPlaceSheet } from './sheet.js';
 import { useElementWidth } from './adaptive.js';
-import { allocatePanelWidths, closePanel, pushPanel, replacePanel } from './panel-model.js';
+import { allocatePanelWidths, closePanel, pushPanel, replacePanel, panelResizeBounds, resizePanelPair } from './panel-model.js';
+import { ResizeDivider } from './resize-divider.js';
+import { useI18n } from '../i18n.js';
 import { cn } from '../utils.js';
 import { useShellGap } from '../scroll/shell-gap.js';
 import './panel.css';
@@ -27,7 +29,10 @@ export function Panel({ onClose, ...props }) {
  * All entries stay mounted under identical parents. Only explicit removal resets child state.
  * Native dialog top-layer promotion changes presentation without a portal or second content copy.
  */
-export function PanelHost({ panels, onPanelsChange, breakpoint = 720, gap, beforeClose, onCloseError, className, style }) {
+export function PanelHost({ panels, onPanelsChange, resizable = true, widths: controlledWidths, defaultWidths = {}, onWidthsChange, breakpoint = 720, gap, beforeClose, onCloseError, className, style }) {
+    const { t } = useI18n();
+    const [localWidths, setLocalWidths] = React.useState(defaultWidths);
+    const preferences = controlledWidths ?? localWidths;
     const root = React.useRef(null);
     const width = useElementWidth(root);
     const themeGap = useShellGap(root);
@@ -67,13 +72,32 @@ export function PanelHost({ panels, onPanelsChange, breakpoint = 720, gap, befor
             ? Promise.resolve(false) : request(closePanel(panels, id), 'close'),
     };
     const compact = width !== null && width < breakpoint;
-    const columns = allocatePanelWidths(panels, width ?? 0, gap ?? themeGap);
+    const spacing = gap ?? themeGap;
+    const columns = allocatePanelWidths(panels, width ?? 0, spacing, preferences);
+    const defaults = allocatePanelWidths(panels, width ?? 0, spacing, defaultWidths);
     const widths = new Map(columns.map(p => [p.id, p.width]));
-    return (_jsx(StackContext.Provider, { value: stack, children: _jsx("div", { ref: root, className: cn('lab-panel-host', className), style: { ...style, ...(gap === undefined ? {} : { gap }) }, "data-compact": compact || undefined, "aria-busy": pending || undefined, children: panels.map((entry, index) => {
-                const sheet = compact && index > 0;
-                const hidden = !compact && width !== null && !widths.has(entry.id);
-                return _jsx("div", { className: "lab-panel-slot", hidden: hidden, inert: hidden || undefined, "data-sheet": sheet || undefined, "data-panel-id": entry.id, style: { width: compact ? '100%' : widths.get(entry.id) ?? 0 }, children: _jsx(SurfaceContext.Provider, { value: { sheet, hidden, close: index === 0 ? undefined : () => { void stack.close(entry.id); } }, children: entry.panel }) }, entry.id);
-            }) }) }));
+    // animation_level: 1. Direct manipulation snaps to feasible geometry; no easing or idle loop.
+    const resize = (first, second, total, requested) => {
+        const pair = resizePanelPair(first, second, total, requested);
+        // Snapshot the other visible widths too: changing preference priority must not redistribute siblings.
+        const next = { ...preferences, ...Object.fromEntries([...columns, ...pair].map(p => [p.id, p.width])) };
+        if (controlledWidths === undefined)
+            setLocalWidths(next);
+        onWidthsChange?.(next);
+    };
+    const dividers = compact || !resizable ? [] : columns.slice(0, -1).map((column, index) => {
+        const next = columns[index + 1];
+        const first = panels.find(p => p.id === column.id), second = panels.find(p => p.id === next.id);
+        const total = column.width + next.width;
+        const bounds = panelResizeBounds(first, second, total);
+        const offset = columns.slice(0, index + 1).reduce((sum, p) => sum + p.width, 0) + spacing * index;
+        return _jsx(ResizeDivider, { className: "lab-panel-divider", label: t('lab.panel.resize'), value: column.width, min: bounds.min, max: bounds.max, reset: defaults.find(p => p.id === column.id)?.width ?? column.width, style: { insetInlineStart: offset + spacing / 2 }, onChange: value => resize(first, second, total, value) }, JSON.stringify([column.id, next.id]));
+    });
+    return (_jsx(StackContext.Provider, { value: stack, children: _jsxs("div", { ref: root, className: cn('lab-panel-host', className), style: { ...style, ...(gap === undefined ? {} : { gap }) }, "data-compact": compact || undefined, "aria-busy": pending || undefined, children: [panels.map((entry, index) => {
+                    const sheet = compact && index > 0;
+                    const hidden = !compact && width !== null && !widths.has(entry.id);
+                    return _jsx("div", { className: "lab-panel-slot", hidden: hidden, inert: hidden || undefined, "data-sheet": sheet || undefined, "data-panel-id": entry.id, style: { width: compact ? '100%' : widths.get(entry.id) ?? 0 }, children: _jsx(SurfaceContext.Provider, { value: { sheet, hidden, close: index === 0 ? undefined : () => { void stack.close(entry.id); } }, children: entry.panel }) }, entry.id);
+                }), dividers] }) }));
 }
 /** Alias for PanelHost when naming the complete controlled chain rather than its layout role. */
 export const PanelStack = PanelHost;

@@ -21,6 +21,7 @@ import '../theme/tokens.dart' show MotionTokens;
 import 'board_utils.dart';
 import 'freeform_frame.dart';
 import 'types.dart';
+import 'image_url_metadata.dart';
 
 /// Room taken by floating chrome on each edge of the board, in pixels.
 typedef Insets = ({double top, double right, double bottom, double left});
@@ -69,9 +70,11 @@ List<FreeformCard> layoutCards(
   final cards = <FreeformCard>[];
   for (final (i, take) in takes.reversed.indexed) {
     final ratio = _clamp(
-      ratios[take.id] ?? stageRatio(null, take.options),
-      0.25,
-      4,
+      ratios[take.id] ??
+          ImageUrlMetadata.parse(take.fileUrl)?.aspectRatio ??
+          stageRatio(null, take.options),
+      1 / 100,
+      100,
     );
     final w = _jsRound(cardHeight * ratio);
     cards.add(
@@ -155,6 +158,7 @@ class FreeformBoard extends StatefulWidget {
     required this.onRemove,
     this.emptyContent,
     this.imageBuilder,
+    this.imageRatios = const {},
   });
 
   /// Kept for parity with the web kit, where a board without it covers the whole window
@@ -199,6 +203,10 @@ class FreeformBoard extends StatefulWidget {
   /// or formats Flutter can't decode, such as SVG). Its card keeps the take's aspect ratio.
   final Widget Function(BuildContext context, ImageTake take)? imageBuilder;
 
+  /// Decoded dimensions supplied by hosts rendering authenticated/memory images.
+  /// Custom builders cannot be probed by NetworkImage; these ratios keep layout truthful.
+  final Map<String, double> imageRatios;
+
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
@@ -212,6 +220,9 @@ class FreeformBoard extends StatefulWidget {
         ),
       )
       ..add(IterableProperty<ImageTake>('takes', takes))
+      ..add(
+        DiagnosticsProperty<Map<String, double>>('imageRatios', imageRatios),
+      )
       ..add(StringProperty('selectedId', selectedId, defaultValue: null))
       ..add(ObjectFlagProperty<ValueChanged<String>>.has('onSelect', onSelect))
       ..add(DiagnosticsProperty<Insets>('insets', insets))
@@ -543,7 +554,7 @@ class _FreeformBoardState extends State<FreeformBoard>
           constraints.maxHeight.isFinite ? constraints.maxHeight : 800,
         );
         _size = size;
-        _cards = layoutCards(widget.takes, _ratios);
+        _cards = layoutCards(widget.takes, {..._ratios, ...widget.imageRatios});
         final selected = _selected;
         final insets = widget.insets;
         // Bring the selection (or a new version) into the free area whenever it, the panels or

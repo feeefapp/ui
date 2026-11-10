@@ -46,7 +46,9 @@ function Overview() {
         <p>
           The host needs bounded height from its parent. A workspace should give it the available
           viewport through the scaffold's viewport slot, not nest it inside the page's scrolling
-          content. Each panel owns its own measured scrolling region.
+          content. Each panel owns its own measured scrolling region. Inside a CSS grid, constrain
+          the track with <C>minmax(0, 1fr)</C> and allow the wrapper to shrink with <C>min-width: 0</C>;
+          an intrinsic track can otherwise retain old desktop widths and prevent sheet adaptation.
         </p>
       </Section>
       <Section title="One chain, any available width">
@@ -60,6 +62,20 @@ function Overview() {
           Compact presentations use the kit's <Link to="/components/sheet">Sheet</Link> behavior.
           Do not render a second copy of a form for phones. Draft and scroll state belong to the
           panel identity and should survive resizing the host.
+        </p>
+      </Section>
+      <Section title="Resize desktop columns">
+        <p>
+          Drag the divider between two visible columns. Both panels keep their minimum and maximum
+          widths and share the same total space; resizing does not discard records or remount their
+          content. Direction follows the layout in Arabic too. Dividers are absent in sheet mode.
+        </p>
+        <p>
+          Focus a divider and use the arrow keys, <kbd>Home</kbd>, or <kbd>End</kbd>. Double-click to
+          restore its default allocation. Set <C>{'resizable={false}'}</C> to disable manual resizing.
+          Supply <C>widths</C> and <C>onWidthsChange</C> for controlled preferences keyed by panel ID,
+          or <C>defaultWidths</C> for initial preferences. Persist them in the application, not in
+          content components; container changes still clamp preferences to readable bounds.
         </p>
       </Section>
       <Section title="Closing and changing selection">
