@@ -5,7 +5,12 @@
  */
 import { execFileSync } from 'node:child_process'
 
-const changed = execFileSync('git', ['status', '--porcelain', '--', 'dist'], { encoding: 'utf8' }).trim()
+// Include ignored files and expand untracked directories: every emitted artifact must be tracked.
+const changed = execFileSync(
+  'git',
+  ['status', '--porcelain', '--untracked-files=all', '--ignored', '--', 'dist'],
+  { encoding: 'utf8' },
+).trim()
 if (changed) {
   console.error('dist/ is out of date. Run `npm run build` and commit the result:\n' + changed)
   process.exit(1)
