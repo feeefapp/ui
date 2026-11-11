@@ -16,7 +16,7 @@ export type SplitViewProps = {
     listWidth?: number;
     /** Initial list column width when uncontrolled. Default 360. */
     defaultListWidth?: number;
-    /** Called when the divider is dragged or moved with the keyboard; persist it if you like. */
+    /** Called on drag release or keyboard/reset changes; controlled owners must echo the requested width. */
     onListWidthChange?: (width: number) => void;
     /** Narrowest list column. Default 280. */
     minListWidth?: number;

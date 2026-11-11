@@ -53,7 +53,7 @@ export function ResizeDivider(props: ResizeDividerProps) {
     aria-orientation="vertical" aria-label={props.label}
     aria-valuenow={props.value} aria-valuemin={props.min} aria-valuemax={props.max}
     aria-disabled={!enabled || undefined} tabIndex={enabled ? 0 : undefined}
-    data-resizable={enabled || undefined}
+    data-resizable={enabled || undefined} data-resize-value={props.value}
     onDoubleClick={() => enabled && props.onChange(Math.max(props.min, Math.min(props.max, props.reset)))}
     onKeyDown={event => {
       if (!enabled) return

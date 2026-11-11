@@ -50,7 +50,7 @@ export type PanelHostProps = {
     widths?: PanelWidths;
     /** Initial uncontrolled width preferences keyed by panel ID. Defaults to each entry's preferredWidth. */
     defaultWidths?: PanelWidths;
-    /** Reports resized ID-keyed preferences. Optional; persistence belongs to the application, not this kit. */
+    /** Reports ID-keyed preferences on drag release or keyboard/reset changes, never per pointer sample. */
     onWidthsChange?: (widths: PanelWidths) => void;
     /** Container width below which details become native, stacked modal Sheets. Default 720. */
     breakpoint?: number;

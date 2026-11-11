@@ -68,14 +68,18 @@ function Overview() {
         <p>
           Drag the divider between two visible columns. Both panels keep their minimum and maximum
           widths and share the same total space; resizing does not discard records or remount their
-          content. Direction follows the layout in Arabic too. Dividers are absent in sheet mode.
+          content. Direction follows the layout in Arabic too. The visible grip is centered and at
+          most 30px tall, with a larger transparent hit area. Desktop columns share the workspace's
+          outer frame instead of adding card borders. Dividers are absent in sheet mode.
         </p>
         <p>
           Focus a divider and use the arrow keys, <kbd>Home</kbd>, or <kbd>End</kbd>. Double-click to
           restore its default allocation. Set <C>{'resizable={false}'}</C> to disable manual resizing.
           Supply <C>widths</C> and <C>onWidthsChange</C> for controlled preferences keyed by panel ID,
-          or <C>defaultWidths</C> for initial preferences. Persist them in the application, not in
-          content components; container changes still clamp preferences to readable bounds.
+          or <C>defaultWidths</C> for initial preferences. Pointer movement paints only the adjacent
+          widths on animation frames; preferences commit on release, not on every pointer event.
+          Persist them in the application, not in content components; container changes still clamp
+          preferences to readable bounds.
         </p>
       </Section>
       <Section title="Closing and changing selection">

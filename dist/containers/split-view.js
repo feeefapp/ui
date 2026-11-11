@@ -3,8 +3,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
 import { ResizeDivider } from './resize-divider.js';
 import { useI18n } from '../i18n.js';
-import { MotionValue } from '../physics/motion-value.js';
-import { SPRINGS, rubberBandClamp } from '../physics/spring.js';
+import { createResizeDrag } from './resize-drag.js';
 import { NavigationStack } from './navigation-stack.js';
 import { cn } from '../utils.js';
 import './split-view.css';
@@ -45,49 +44,50 @@ export function SplitView({ list, detail, placeholder, onBack, listWidth: contro
         observer.observe(el);
         return () => observer.disconnect();
     }, []);
-    // The column width is a motion value: dragging tracks it, release springs it into bounds.
-    const motion = React.useRef(null);
-    if (!motion.current)
-        motion.current = new MotionValue(width, 0.5);
-    const live = React.useRef({ width, minListWidth, maxListWidth, onListWidthChange, controlledWidth });
-    live.current = { width, minListWidth, maxListWidth, onListWidthChange, controlledWidth };
-    const paint = React.useCallback((value) => {
-        root.current?.style.setProperty('--lab-split-list', `${Math.round(value)}px`);
-    }, []);
-    React.useLayoutEffect(() => motion.current.subscribe(paint), [paint]);
-    React.useLayoutEffect(() => {
-        if (!motion.current.isAnimating()) {
-            motion.current.set(width);
-            paint(width);
-        }
-    }, [width, compact, paint]);
-    const commit = React.useCallback((next) => {
-        const L = live.current;
-        const clamped = Math.round(Math.max(L.minListWidth, Math.min(L.maxListWidth, next)));
-        if (L.controlledWidth === undefined)
+    const drag = React.useRef(null);
+    React.useLayoutEffect(() => () => {
+        drag.current?.finish(true);
+        drag.current = null;
+    }, [width, controlledWidth, hostWidth, compact, minListWidth, maxListWidth, resizable]);
+    const clamp = (next) => Math.max(minListWidth, Math.min(maxListWidth, next));
+    const commit = (next) => {
+        const clamped = clamp(next);
+        if (controlledWidth === undefined)
             setLocalWidth(clamped);
-        L.onListWidthChange?.(clamped);
-        return clamped;
-    }, []);
-    // animation_level: 1. Shared divider gestures track directly; release uses the existing motion gate.
+        onListWidthChange?.(clamped);
+    };
+    // animation_level: 1. Frame-coalesced direct manipulation; no overshoot or release clock.
     const step = (next) => {
-        const target = commit(next);
-        void motion.current.animateTo(target, { spring: SPRINGS.snappy });
+        drag.current?.finish(true);
+        drag.current = null;
+        commit(next);
     };
     if (compact)
         return (_jsx("div", { ref: root, className: cn('lab-split', className), "data-compact": "", role: "region", "aria-label": label, children: _jsx(NavigationStack, { label: label, onBack: onBack, children: [list, ...pages] }) }));
     return (_jsxs("div", { ref: root, className: cn('lab-split', className), role: "region", "aria-label": label, style: { '--lab-split-list': `${Math.round(width)}px` }, children: [_jsx("div", { className: "lab-split-list", children: list }), _jsx(ResizeDivider, { className: "lab-split-divider", label: t('lab.panel.resize'), value: Math.round(width), min: minListWidth, max: maxListWidth, reset: defaultListWidth, enabled: resizable, onChange: step, onDragStart: () => {
-                    motion.current.stop();
-                    root.current?.setAttribute('data-resizing', '');
-                    return motion.current.get();
-                }, onDragMove: (raw, { time }) => {
-                    const L = live.current;
-                    motion.current.track(rubberBandClamp(raw, L.minListWidth, L.maxListWidth, 240), time);
-                }, onDragEnd: ({ time }) => {
-                    root.current?.removeAttribute('data-resizing');
-                    const velocity = motion.current.getVelocity(time);
-                    const target = commit(motion.current.get());
-                    void motion.current.animateTo(target, { spring: SPRINGS.release, velocity });
+                    drag.current?.finish(true);
+                    const host = root.current;
+                    const divider = host.querySelector('.lab-split-divider');
+                    const aria = divider.getAttribute('aria-valuenow');
+                    host.setAttribute('data-resizing', '');
+                    drag.current = createResizeDrag({
+                        paint: raw => {
+                            const value = clamp(raw);
+                            host.style.setProperty('--lab-split-drag-list', `${value}px`);
+                            divider.setAttribute('aria-valuenow', String(value));
+                        },
+                        restore: () => {
+                            host.style.removeProperty('--lab-split-drag-list');
+                            host.removeAttribute('data-resizing');
+                            divider.setAttribute('aria-valuenow', divider.getAttribute('data-resize-value') ?? aria);
+                            divider.removeAttribute('data-resizing');
+                        },
+                        commit,
+                    });
+                    return width;
+                }, onDragMove: raw => drag.current?.move(raw), onDragEnd: ({ cancelled }) => {
+                    drag.current?.finish(cancelled);
+                    drag.current = null;
                 } }), _jsx("div", { className: "lab-split-detail", children: pages.length ? (_jsx(NavigationStack, { label: `${label}: detail`, onBack: onBack, children: pages })) : (placeholder) })] }));
 }
 /** Quiet centered message for an empty detail column. */

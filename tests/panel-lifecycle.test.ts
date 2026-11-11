@@ -14,3 +14,9 @@ test('adaptive sheet keeps one presentation/body tree instead of swapping parent
   assert.match(host, /showModal\(/)
   assert.match(host, /\.close\(/)
 })
+
+test('desktop columns skip bottom-sheet geometry measurements while being resized', () => {
+  const sheet = readFileSync(new URL('../src/containers/sheet.tsx', import.meta.url), 'utf8')
+  assert.match(sheet, /const measure = \(\) => \{\s*if \(columnRef\.current\) return/)
+  assert.match(sheet, /measureRef\.current\(\), \[columnInset, columnMode\]/)
+})

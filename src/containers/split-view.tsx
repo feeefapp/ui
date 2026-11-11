@@ -3,8 +3,7 @@
 import * as React from 'react'
 import { ResizeDivider } from './resize-divider'
 import { useI18n } from '../i18n'
-import { MotionValue } from '../physics/motion-value'
-import { SPRINGS, rubberBandClamp } from '../physics/spring'
+import { createResizeDrag } from './resize-drag'
 import { NavigationStack } from './navigation-stack'
 import { cn } from '../utils'
 import './split-view.css'
@@ -25,7 +24,7 @@ export type SplitViewProps = {
   listWidth?: number
   /** Initial list column width when uncontrolled. Default 360. */
   defaultListWidth?: number
-  /** Called when the divider is dragged or moved with the keyboard; persist it if you like. */
+  /** Called on drag release or keyboard/reset changes; controlled owners must echo the requested width. */
   onListWidthChange?: (width: number) => void
   /** Narrowest list column. Default 280. */
   minListWidth?: number
@@ -91,34 +90,23 @@ export function SplitView({
     return () => observer.disconnect()
   }, [])
 
-  // The column width is a motion value: dragging tracks it, release springs it into bounds.
-  const motion = React.useRef<MotionValue | null>(null)
-  if (!motion.current) motion.current = new MotionValue(width, 0.5)
-  const live = React.useRef({ width, minListWidth, maxListWidth, onListWidthChange, controlledWidth })
-  live.current = { width, minListWidth, maxListWidth, onListWidthChange, controlledWidth }
-  const paint = React.useCallback((value: number) => {
-    root.current?.style.setProperty('--lab-split-list', `${Math.round(value)}px`)
-  }, [])
-  React.useLayoutEffect(() => motion.current!.subscribe(paint), [paint])
-  React.useLayoutEffect(() => {
-    if (!motion.current!.isAnimating()) {
-      motion.current!.set(width)
-      paint(width)
-    }
-  }, [width, compact, paint])
+  const drag = React.useRef<ReturnType<typeof createResizeDrag> | null>(null)
+  React.useLayoutEffect(() => () => {
+    drag.current?.finish(true)
+    drag.current = null
+  }, [width, controlledWidth, hostWidth, compact, minListWidth, maxListWidth, resizable])
 
-  const commit = React.useCallback((next: number) => {
-    const L = live.current
-    const clamped = Math.round(Math.max(L.minListWidth, Math.min(L.maxListWidth, next)))
-    if (L.controlledWidth === undefined) setLocalWidth(clamped)
-    L.onListWidthChange?.(clamped)
-    return clamped
-  }, [])
-
-  // animation_level: 1. Shared divider gestures track directly; release uses the existing motion gate.
+  const clamp = (next: number) => Math.max(minListWidth, Math.min(maxListWidth, next))
+  const commit = (next: number) => {
+    const clamped = clamp(next)
+    if (controlledWidth === undefined) setLocalWidth(clamped)
+    onListWidthChange?.(clamped)
+  }
+  // animation_level: 1. Frame-coalesced direct manipulation; no overshoot or release clock.
   const step = (next: number) => {
-    const target = commit(next)
-    void motion.current!.animateTo(target, { spring: SPRINGS.snappy })
+    drag.current?.finish(true)
+    drag.current = null
+    commit(next)
   }
 
   if (compact)
@@ -142,19 +130,31 @@ export function SplitView({
         value={Math.round(width)} min={minListWidth} max={maxListWidth} reset={defaultListWidth}
         enabled={resizable} onChange={step}
         onDragStart={() => {
-          motion.current!.stop()
-          root.current?.setAttribute('data-resizing', '')
-          return motion.current!.get()
+          drag.current?.finish(true)
+          const host = root.current!
+          const divider = host.querySelector<HTMLElement>('.lab-split-divider')!
+          const aria = divider.getAttribute('aria-valuenow')!
+          host.setAttribute('data-resizing', '')
+          drag.current = createResizeDrag({
+            paint: raw => {
+              const value = clamp(raw)
+              host.style.setProperty('--lab-split-drag-list', `${value}px`)
+              divider.setAttribute('aria-valuenow', String(value))
+            },
+            restore: () => {
+              host.style.removeProperty('--lab-split-drag-list')
+              host.removeAttribute('data-resizing')
+              divider.setAttribute('aria-valuenow', divider.getAttribute('data-resize-value') ?? aria)
+              divider.removeAttribute('data-resizing')
+            },
+            commit,
+          })
+          return width
         }}
-        onDragMove={(raw, { time }) => {
-          const L = live.current
-          motion.current!.track(rubberBandClamp(raw, L.minListWidth, L.maxListWidth, 240), time)
-        }}
-        onDragEnd={({ time }) => {
-          root.current?.removeAttribute('data-resizing')
-          const velocity = motion.current!.getVelocity(time)
-          const target = commit(motion.current!.get())
-          void motion.current!.animateTo(target, { spring: SPRINGS.release, velocity })
+        onDragMove={raw => drag.current?.move(raw)}
+        onDragEnd={({ cancelled }) => {
+          drag.current?.finish(cancelled)
+          drag.current = null
         }} />
       <div className="lab-split-detail">
         {pages.length ? (

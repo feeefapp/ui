@@ -4,5 +4,5 @@ import './moving-brand.css';
 export declare function MovingBrand({ host, }: {
     /** Element containing the `[data-tool-brand-anchor="side"|"header"]` logo anchors to follow. */
     host: RefObject<HTMLElement | null>;
-}): import("react").JSX.Element;
+}): import("react").ReactPortal | null;
 //# sourceMappingURL=moving-brand.d.ts.map

@@ -5,6 +5,7 @@ import { InPlaceSheet } from './sheet'
 import { useElementWidth } from './adaptive'
 import { allocatePanelWidths, closePanel, pushPanel, replacePanel, panelResizeBounds, resizePanelPair, type PanelSizing, type PanelWidths } from './panel-model'
 import { ResizeDivider } from './resize-divider'
+import { createResizeDrag } from './resize-drag'
 import { useI18n } from '../i18n'
 import type { PresentationChromeProps } from '../presentation/modal'
 import { cn } from '../utils'
@@ -76,7 +77,7 @@ export type PanelHostProps = {
   widths?: PanelWidths
   /** Initial uncontrolled width preferences keyed by panel ID. Defaults to each entry's preferredWidth. */
   defaultWidths?: PanelWidths
-  /** Reports resized ID-keyed preferences. Optional; persistence belongs to the application, not this kit. */
+  /** Reports ID-keyed preferences on drag release or keyboard/reset changes, never per pointer sample. */
   onWidthsChange?: (widths: PanelWidths) => void
   /** Container width below which details become native, stacked modal Sheets. Default 720. */
   breakpoint?: number
@@ -140,6 +141,14 @@ export function PanelHost({ panels, onPanelsChange, resizable = true, widths: co
   const columns = allocatePanelWidths(panels, width ?? 0, spacing, preferences)
   const defaults = allocatePanelWidths(panels, width ?? 0, spacing, defaultWidths)
   const widths = new Map(columns.map(p => [p.id, p.width]))
+  const drag = React.useRef<ReturnType<typeof createResizeDrag> | null>(null)
+  // Any authoritative geometry/controlled navigation change invalidates the captured pair.
+  // This also clears pending frames on breakpoint changes and unmount, before they can repaint.
+  const geometry = JSON.stringify(columns)
+  React.useLayoutEffect(() => () => {
+    drag.current?.finish(true)
+    drag.current = null
+  }, [panels, controlledWidths, width, spacing, compact, resizable, geometry])
   // animation_level: 1. Direct manipulation snaps to feasible geometry; no easing or idle loop.
   const resize = (first: PanelEntry, second: PanelEntry, total: number, requested: number) => {
     const pair = resizePanelPair(first, second, total, requested)
@@ -157,8 +166,49 @@ export function PanelHost({ panels, onPanelsChange, resizable = true, widths: co
     return <ResizeDivider key={JSON.stringify([column.id, next.id])} className="lab-panel-divider"
       label={t('lab.panel.resize')} value={column.width} min={bounds.min} max={bounds.max}
       reset={defaults.find(p => p.id === column.id)?.width ?? column.width}
-      style={{ insetInlineStart: offset + spacing / 2 }}
-      onChange={value => resize(first, second, total, value)} />
+      style={{ '--lab-panel-divider-offset': `${offset + spacing / 2}px` } as React.CSSProperties}
+      onChange={value => {
+        drag.current?.finish(true)
+        drag.current = null
+        resize(first, second, total, value)
+      }}
+      onDragStart={() => {
+        drag.current?.finish(true)
+        const host = root.current!
+        // Cache nodes once. Frames only write CSS; they never measure,
+        // allocate the whole chain, notify persistence, or rebuild Stack/Surface contexts.
+        const slots = Array.from(host.children).filter((el): el is HTMLElement => el instanceof HTMLElement && el.classList.contains('lab-panel-slot'))
+        const a = slots.find(el => el.dataset.panelId === first.id)!
+        const b = slots.find(el => el.dataset.panelId === second.id)!
+        const dividers = Array.from(host.children).filter((el): el is HTMLElement => el instanceof HTMLElement && el.classList.contains('lab-panel-divider'))
+        const divider = dividers[index]
+        const aria = divider.getAttribute('aria-valuenow')!
+        host.setAttribute('data-resizing', '')
+        drag.current = createResizeDrag({
+          paint: requested => {
+            const [left, right] = resizePanelPair(first, second, total, requested)
+            a.style.setProperty('--lab-panel-drag-width', `${left.width}px`)
+            b.style.setProperty('--lab-panel-drag-width', `${right.width}px`)
+            divider.style.setProperty('--lab-panel-drag-offset', `${offset + spacing / 2 + left.width - column.width}px`)
+            divider.setAttribute('aria-valuenow', String(left.width))
+          },
+          restore: () => {
+            a.style.removeProperty('--lab-panel-drag-width')
+            b.style.removeProperty('--lab-panel-drag-width')
+            divider.style.removeProperty('--lab-panel-drag-offset')
+            divider.setAttribute('aria-valuenow', divider.getAttribute('data-resize-value') ?? aria)
+            divider.removeAttribute('data-resizing')
+            host.removeAttribute('data-resizing')
+          },
+          commit: requested => resize(first, second, total, requested),
+        })
+        return column.width
+      }}
+      onDragMove={value => drag.current?.move(value)}
+      onDragEnd={({ cancelled }) => {
+        drag.current?.finish(cancelled)
+        drag.current = null
+      }} />
   })
   return (
     <StackContext.Provider value={stack}>
@@ -169,7 +219,7 @@ export function PanelHost({ panels, onPanelsChange, resizable = true, widths: co
           const hidden = !compact && width !== null && !widths.has(entry.id)
           return <div key={entry.id} className="lab-panel-slot" hidden={hidden} inert={hidden || undefined}
             data-sheet={sheet || undefined} data-panel-id={entry.id}
-            style={{ width: compact ? '100%' : widths.get(entry.id) ?? 0 }}>
+            style={{ '--lab-panel-width': compact ? '100%' : `${widths.get(entry.id) ?? 0}px` } as React.CSSProperties}>
             <SurfaceContext.Provider value={{ sheet, hidden, close: index === 0 ? undefined : () => { void stack.close(entry.id) } }}>
               {entry.panel}
             </SurfaceContext.Provider>

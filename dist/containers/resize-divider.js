@@ -36,7 +36,7 @@ export function ResizeDivider(props) {
             },
         }));
     }, [enabled]);
-    return _jsx("div", { ref: element, className: props.className, style: props.style, role: "separator", "aria-orientation": "vertical", "aria-label": props.label, "aria-valuenow": props.value, "aria-valuemin": props.min, "aria-valuemax": props.max, "aria-disabled": !enabled || undefined, tabIndex: enabled ? 0 : undefined, "data-resizable": enabled || undefined, onDoubleClick: () => enabled && props.onChange(Math.max(props.min, Math.min(props.max, props.reset))), onKeyDown: event => {
+    return _jsx("div", { ref: element, className: props.className, style: props.style, role: "separator", "aria-orientation": "vertical", "aria-label": props.label, "aria-valuenow": props.value, "aria-valuemin": props.min, "aria-valuemax": props.max, "aria-disabled": !enabled || undefined, tabIndex: enabled ? 0 : undefined, "data-resizable": enabled || undefined, "data-resize-value": props.value, onDoubleClick: () => enabled && props.onChange(Math.max(props.min, Math.min(props.max, props.reset))), onKeyDown: event => {
             if (!enabled)
                 return;
             const next = dividerKeyValue(event.key, props.value, props.min, props.max, getComputedStyle(event.currentTarget).direction === 'rtl');

@@ -6,6 +6,7 @@ import { FoAnimatedLogo } from '../brand/logo'
 import { useScaffold } from './scaffold'
 import './moving-brand.css'
 import { reducedMotionQuery } from '../physics/motion-value'
+import { movingBrandLayer } from './moving-brand-model'
 
 const BRAND_WIDTH = 104
 const BRAND_HEIGHT = 26
@@ -19,12 +20,19 @@ export function MovingBrand({
 }) {
   const state = useScaffold()
   const visual = useRef<HTMLDivElement>(null)
-  const [portal, setPortal] = useState<HTMLDialogElement | null>(null)
+  const [portal, setPortal] = useState<HTMLElement | null>(null)
   const position = useRef<{ x: number; y: number; scale: number } | null>(null)
   useEffect(() => {
     const root = host.current
     const layer = visual.current
-    if (!root || !layer) return
+    if (!root) return
+    // animation_level: 1. Keep viewport positioning out of transformed panel chrome.
+    // Initial render keeps the real anchor visible until the body portal is ready.
+    if (!portal) {
+      setPortal(document.body)
+      return
+    }
+    if (!layer) return
     let frame = 0
     let last = 0
     let followUntil = 0
@@ -45,11 +53,12 @@ export function MovingBrand({
         position.current = null
       }
       if (!anchor) return hide()
-      const modal = anchor.closest('dialog')
-      if (modal !== portal) {
-        setPortal(modal)
+      const targetLayer = movingBrandLayer<HTMLElement>(anchor, document.body)
+      if (targetLayer !== portal) {
+        setPortal(targetLayer)
         return
       }
+      const modal = portal instanceof HTMLDialogElement ? portal : null
       const rect = anchor.getBoundingClientRect()
       if (!rect.width || !rect.height) return hide()
       // Take the size of the logo the anchor holds (72×18 in a header, 104×26 in the sidebar), so
@@ -114,5 +123,5 @@ export function MovingBrand({
       <FoAnimatedLogo width={BRAND_WIDTH} height={BRAND_HEIGHT} />
     </div>
   )
-  return portal ? createPortal(logo, portal) : logo
+  return portal ? createPortal(logo, portal) : null
 }

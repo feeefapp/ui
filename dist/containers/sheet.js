@@ -331,6 +331,8 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
     // Mount: start measuring the host and the body.
     React.useLayoutEffect(() => {
         const measure = () => {
+            if (columnRef.current)
+                return;
             const box = host.current;
             if (!box)
                 return;
@@ -380,7 +382,7 @@ function SheetPresentation({ open, onOpenChange, label, children, detents = DEFA
         };
     }, [container]);
     // The column inset (and with it fit and peek) follows the presentation and floating mode.
-    React.useLayoutEffect(() => measureRef.current(), [columnInset]);
+    React.useLayoutEffect(() => measureRef.current(), [columnInset, columnMode]);
     // Present, follow detent and size changes, and leave.
     const target = free ? Math.max(minHeight, Math.min(maxHeight, freeHeight)) : (heights[index] ?? 0);
     const dialogHeight = metrics ? Math.min(metrics.natural, metrics.hostHeight - 64) : 0;

@@ -6,6 +6,7 @@ import { FoAnimatedLogo } from '../brand/logo.js';
 import { useScaffold } from './scaffold.js';
 import './moving-brand.css';
 import { reducedMotionQuery } from '../physics/motion-value.js';
+import { movingBrandLayer } from './moving-brand-model.js';
 const BRAND_WIDTH = 104;
 const BRAND_HEIGHT = 26;
 /** One persistent visual follows the real, accessible logo links as navigation changes. */
@@ -17,7 +18,15 @@ export function MovingBrand({ host, }) {
     useEffect(() => {
         const root = host.current;
         const layer = visual.current;
-        if (!root || !layer)
+        if (!root)
+            return;
+        // animation_level: 1. Keep viewport positioning out of transformed panel chrome.
+        // Initial render keeps the real anchor visible until the body portal is ready.
+        if (!portal) {
+            setPortal(document.body);
+            return;
+        }
+        if (!layer)
             return;
         let frame = 0;
         let last = 0;
@@ -38,11 +47,12 @@ export function MovingBrand({ host, }) {
             };
             if (!anchor)
                 return hide();
-            const modal = anchor.closest('dialog');
-            if (modal !== portal) {
-                setPortal(modal);
+            const targetLayer = movingBrandLayer(anchor, document.body);
+            if (targetLayer !== portal) {
+                setPortal(targetLayer);
                 return;
             }
+            const modal = portal instanceof HTMLDialogElement ? portal : null;
             const rect = anchor.getBoundingClientRect();
             if (!rect.width || !rect.height)
                 return hide();
@@ -103,6 +113,6 @@ export function MovingBrand({ host, }) {
             delete host.current.dataset.movingBrand;
     }, [host]);
     const logo = (_jsx("div", { ref: visual, className: "lab-tool-moving-brand", "aria-hidden": "true", children: _jsx(FoAnimatedLogo, { width: BRAND_WIDTH, height: BRAND_HEIGHT }) }));
-    return portal ? createPortal(logo, portal) : logo;
+    return portal ? createPortal(logo, portal) : null;
 }
 //# sourceMappingURL=moving-brand.js.map
