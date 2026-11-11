@@ -43,10 +43,10 @@ backdrop blur from seeing the page. */
   fill: none;
   stroke-width: 2;
 }
-/* No drawn outline: like Apple's glass, the rim light and the shadow define the edge. The outline
-returns where contrast matters (prefers-contrast, solid glass). */
+/* Keep a theme-aware 1px inside border beneath the reflective rim, even without highlights.
+   The scene clips this 2px stroke to the shared silhouette, so merged bubbles have one border. */
 .lab-glass-edge {
-  stroke: transparent;
+  stroke: var(--lab-line);
 }
 .lab-glass-rim-base {
   stroke: var(--lab-glass-edge-low);

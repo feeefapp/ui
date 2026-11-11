@@ -180,9 +180,10 @@ and lens. A menu is born out of its button's glass and merges back into it; a bu
 (plain, in content) gives a small droplet at its centre instead, so no glass copy of it pops in.
 Never paint your own menu glass or morph: give the bubble an `origin`.
 
-Flutter compact glass (shorter side up to 72px) has one rim on its outer silhouette.
-Do not stack a dark exterior hairline or an inset border on toolbar bubbles. Large
-panels retain their hairline and solid/high-contrast surfaces retain their outline.
+Web and Flutter glass retain one theme-aware 1px inside border on the shared silhouette,
+beneath the reflective rim, in liquid, transparent and solid modes. The border remains when
+highlights are disabled; high-contrast surfaces use ink. Never add per-member borders or a
+second inset contour on toolbar bubbles. Exterior hairlines and reflections remain material effects.
 The native refraction shader and painted clip must share the clamped continuous-corner
 distance, including its fade to circular capsules, so the material has one silhouette.
 

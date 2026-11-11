@@ -16,6 +16,57 @@ Widget bubble(String id, {double width = 80}) => GlassGroup(
 );
 
 void main() {
+  for (final brightness in Brightness.values) {
+    for (final style in GlassStyle.values) {
+      testWidgets(
+        'glass has a visible border without reflections: $brightness $style',
+        (tester) async {
+          final boundary = GlobalKey();
+          await tester.pumpWidget(
+            host(
+              ThemeProvider(
+                config: ThemeConfig(glass: style, glassHighlight: 0),
+                brightness: brightness,
+                child: ColoredBox(
+                  color: brightness == Brightness.light
+                      ? const Color(0xffeeeeee)
+                      : const Color(0xff222222),
+                  child: Center(
+                    child: RepaintBoundary(
+                      key: boundary,
+                      child: const GlassGroup(
+                        radius: 0,
+                        child: SizedBox(width: 158, height: 42),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pump();
+          await tester.runAsync(() async {
+            final render =
+                boundary.currentContext!.findRenderObject()
+                    as RenderRepaintBoundary;
+            final image = await render.toImage();
+            final bytes = (await image.toByteData(
+              format: ui.ImageByteFormat.rawRgba,
+            ))!;
+            List<int> pixel(int y) => [
+              for (var c = 0; c < 3; c++)
+                bytes.getUint8((y * image.width + 80) * 4 + c),
+            ];
+            // With no reflective rim, only the theme line can define these inside edges.
+            expect(pixel(0), isNot(pixel(3)));
+            expect(pixel(image.height - 1), isNot(pixel(image.height - 4)));
+            image.dispose();
+          });
+        },
+      );
+    }
+  }
+
   for (final brightness in [Brightness.light, Brightness.dark]) {
     testWidgets(
       'standalone compact glass has no inset contour in $brightness',

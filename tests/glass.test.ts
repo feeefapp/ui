@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { readFileSync } from 'node:fs'
 import {
   clusterPath,
   glassClusters,
@@ -14,6 +15,13 @@ import {
 } from '../src/glass/geometry.ts'
 import { GLASS_ORIGIN, GLASS_ORIGIN_HUG, GLASS_ORIGIN_SEED, glassOrigin, glassSeed, planGlassTransition, sameGlassRow, sameRect } from '../src/glass/transitions.ts'
 import { DEFAULT_GLASS_LIGHT, glassLightToward } from '../src/glass/light.ts'
+
+test('glass keeps a theme-aware outline independently of reflections', () => {
+  const css = readFileSync(new URL('../src/glass/glass.css', import.meta.url), 'utf8')
+  const edge = css.match(/\.lab-glass-edge\s*\{([^}]+)\}/)?.[1]
+  assert.match(edge ?? '', /stroke:\s*var\(--lab-line\)/)
+  assert.match(css, /@media\s*\(prefers-contrast: more\)[\s\S]*?\.lab-glass-edge\s*\{\s*stroke:\s*var\(--lab-ink\)/)
+})
 
 const pill = (x: number, width = 80, y = 0): GlassShape => ({ x, y, width, height: 46, radius: 23 })
 const near = (a: number, b: number, tolerance: number) => Math.abs(a - b) <= tolerance

@@ -15,7 +15,7 @@ function Overview() {
       <p>These examples use the clear reference material: a 1px curved rim, the kit’s clamped continuous corners and the measured lens. Each example supplies its background separately so Firefox refracts it too. The <a href="/foundations/glass-reflections">Glass reflections controls</a> let you tune these same component parameters.</p>
 
       <Section title="Flutter floating controls">
-        <p>Compact Flutter glass (up to 72px on its shorter side) uses one reflective rim on the outer silhouette. Toolbar groups and standalone bubbles omit the separate dark hairline and inset border so floating controls do not look like nested capsules. ToolbarGroup keeps this single rim at every width, including vertical rails with text controls; its width does not turn it into a panel. Larger panels keep their exterior hairline; solid and high-contrast surfaces keep their outline.</p>
+        <p>Web and Flutter glass keep one theme-aware 1px inside border beneath the reflective rim, in both light and dark themes and in every glass style. The border stays visible when highlights are disabled; high-contrast surfaces use ink. Toolbar groups and standalone bubbles use the same shared silhouette, without per-member borders or a second inset contour. ToolbarGroup keeps one reflective rim at every width, including vertical rails with text controls; its width does not turn it into a panel. Exterior hairlines remain part of the glass material.</p>
         <p>The native refraction shader uses the same clamped continuous-corner distance as the painted outline, including the transition to round capsules. Keep these shapes aligned: circular shader corners beneath a continuous-corner clip produce a second visible contour.</p>
       </Section>
 

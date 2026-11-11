@@ -641,9 +641,6 @@ class _GlassMaterial {
 
   bool get rim => style != GlassStyle.solid;
 
-  /// The drawn outline: only solid glass keeps it; liquid glass is defined by rim light and shadow.
-  bool get outline => style == GlassStyle.solid;
-
   /// The outline's colour: the ink when the platform asks for more contrast.
   Color get outlineColor => highContrast ? colors.ink : colors.line;
 
@@ -1169,15 +1166,15 @@ class _GlassPainter extends CustomPainter {
       // Edge and rim are 2px strokes clipped to the outline: 1px inside, like a CSS border.
       scissor(p);
       canvas.clipPath(p.path);
-      if (material.outline) {
-        canvas.drawPath(
-          p.path,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 2
-            ..color = material.outlineColor,
-        );
-      }
+      // All glass keeps the theme line beneath its reflection, including when highlights
+      // are disabled. Paint the shared silhouette, never individual member borders.
+      canvas.drawPath(
+        p.path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..color = material.outlineColor,
+      );
       if (material.rim) {
         // A layer of white inside the outline (clipped above), lit at both ends of the light
         // axis by the edge normal: glassRim / rimLayer, drawn as a band of vertices.
