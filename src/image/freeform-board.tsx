@@ -39,7 +39,7 @@ export function layoutCards(takes: ImageTake[], ratios: Record<string, number>):
   const ordered = [...takes].reverse()
   let x = 0
   return ordered.map((take, i) => {
-    const ratio = clamp(ratios[take.id] ?? stageRatio(undefined, take.options), 0.25, 4)
+    const ratio = clamp(ratios[take.id] ?? stageRatio(undefined, take.options), 1 / 100, 100)
     const w = Math.round(CARD_H * ratio)
     const card = { take, x, y: -CARD_H / 2, w, h: CARD_H, number: i + 1 }
     x += w + GAP
