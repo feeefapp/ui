@@ -1,5 +1,12 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+
+test('independent desktop panels retain their own boundary even on the same surface color', () => {
+  const css = readFileSync(new URL('../src/containers/panel.css', import.meta.url), 'utf8')
+  const column = css.match(/\.lab-presentation\[data-in-place='column'\] \{([^}]+)\}/)?.[1] ?? ''
+  assert.match(column, /box-shadow:\s*inset[^;]*var\(--lab-line\)/)
+})
 import { dividerKeyValue } from '../src/containers/resize-model'
 import { allocatePanelWidths, pushPanel, replacePanel, closePanel, panelResizeBounds, resizePanelPair } from '../src/containers/panel-model'
 

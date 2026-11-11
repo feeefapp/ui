@@ -78,7 +78,7 @@ test('desktop panels are flat and both visible resize grips are centered and cap
   const panel = readFileSync(new URL('../src/containers/panel.css', import.meta.url), 'utf8')
   const split = readFileSync(new URL('../src/containers/split-view.css', import.meta.url), 'utf8')
   const column = panel.match(/\.lab-presentation\[data-in-place='column'\]\s*\{([^}]+)\}/)![1]
-  assert.match(column, /box-shadow:\s*none/)
+  assert.match(column, /box-shadow:\s*inset 0 0 0 1px var\(--lab-line\)/)
   for (const [css, selector] of [[panel, 'lab-panel-divider::after'], [split, 'lab-split-divider::before']]) {
     const block = css.slice(css.indexOf(`.${selector} {`)).split('}')[0]
     assert.match(block, /block-size:\s*min\(30px,\s*100%\)/)

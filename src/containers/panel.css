@@ -66,8 +66,8 @@
   border-radius: var(--lab-radius-panel);
   corner-shape: superellipse(1.5);
   background: var(--lab-surface);
-  /* Columns share their workspace's outer boundary; compact Sheets retain their own material. */
-  box-shadow: none;
+  /* Each column is an independent surface, including when its parent uses the same color. */
+  box-shadow: inset 0 0 0 1px var(--lab-line);
 }
 .lab-presentation[data-in-place][hidden] { display: none; }
 .lab-presentation[data-in-place='column'] > .lab-sheet-scrim,
