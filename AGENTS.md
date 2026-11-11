@@ -21,6 +21,13 @@ translations, URL and navigation through `Provider` / `Services`. Modules using 
 start with `'use client'`. Kit strings use the `lab.*` keys in `src/messages.ts` (en/ar/fr);
 keep all three locales in sync.
 
+## Shared chrome invariants
+
+- Toolbar icon actions use `appearance="toolbar"`, regular sizing and accessible names. Refresh, Filter, Close, Back and selection share the same geometry; no small icon exceptions.
+- Bare `Checkbox` goes directly into `ToolbarGroup`; its shared square footprint equals an icon button. Never compensate for row alignment with a sized wrapper. Labeled choices put the name/count in `label`.
+- Independent `PanelHost` surfaces inside `Scaffold renderViewport` require `contentSurface="none"`. No outer painted card. Preserve the default card for ordinary pages/custom scroll areas without their own surfaces.
+- Regressions require shared tests plus browser measurements at desktop/phone, light/dark and RTL. Keep `tests/toolbar-workspace-browser.*` and `DESIGN.md` consistent. Apply consumer fixes across shared and page-specific toolbar entry points, not one screenshot.
+
 The live contract is lab.feeef.org/ui and the Lab README.
 Reuse ui.tsx controls, system.css tokens and scaffold.tsx layout/materials.
 Lab buttons and fields own native elements; do not inherit generic UI visual classes.

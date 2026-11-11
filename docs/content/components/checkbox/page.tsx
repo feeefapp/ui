@@ -97,6 +97,18 @@ function Overview() {
         />
       </Section>
 
+      <Section title="Toolbar selection">
+        <p>
+          Place an icon-only select-all <C>Checkbox</C> directly inside <C>ToolbarGroup</C>.
+          The kit gives its label the same square footprint as a regular toolbar icon button,
+          including density and touch sizing. Do not add a fixed-width wrapper to align it with rows.
+          Use <C>label</C> instead when a visible count or name is part of the control.
+        </p>
+        <Code code={`<ToolbarGroup label="Selection">
+  <Checkbox aria-label="Select all rows" checked={all} onCheckedChange={setAll} />
+</ToolbarGroup>`} />
+      </Section>
+
       <Section title="Indeterminate">
         <p>
           A “select all” checkbox over a list is <C>indeterminate</C> when only some items are

@@ -98,6 +98,9 @@ function Overview() {
           take the group's height and share its glass. A filled button keeps its fill. Groups sit{' '}
           <C>--lab-toolbar-gap</C> apart: the shell gap G (8px) unless <C>metrics.toolbarGap</C>{' '}
           sets it. Selects and fields in a group take its control height, like buttons.
+          Refresh, Close, Filter and Back are never a smaller size class than their neighbours.
+          A bare <C>Checkbox</C> placed directly in a group gets the same square footprint as
+          an icon button; no app-owned spacer or width override is needed.
         </p>
         <Code
           code={`<Toolbar

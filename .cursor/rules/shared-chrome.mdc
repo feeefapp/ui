@@ -1,0 +1,13 @@
+---
+description: Shared toolbar geometry and independent panel surface ownership
+globs: src/**/*.tsx,src/**/*.css,docs/content/**/*.tsx
+alwaysApply: false
+---
+
+# Shared chrome invariants
+
+Read `DESIGN.md` first. Toolbar controls use `appearance="toolbar"` and regular sizing: Refresh, Filter, Close, Back and selection must match at every density. Bare `Checkbox` sits directly in `ToolbarGroup`, with the icon button's square footprint; no sized spacer. Visible count/name belongs in `label`.
+
+A `PanelHost` custom viewport owns its painted `Panel` surfaces. Its enclosing `Scaffold` uses `contentSurface="none"`; never add an outer card. Keep the default card for ordinary page content without its own surfaces.
+
+Fix primitives here rather than in consumers. Add regression tests, update live docs/examples, build and commit `dist`, release, then bump app git pins and lockfiles. Verify desktop/phone, light/dark, RTL and geometry equality. Keep form/list/menu sizing outside toolbars independent.

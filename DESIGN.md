@@ -27,6 +27,8 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
    - **One row, one height.** Every bubble, button, field and checkbox in a row (a toolbar, a dock)
      is as tall as the others. A checkbox in a dock or bar takes its count or name as `label` so
      the whole thing is one control of button height, never a bare mark beside loose text.
+     Icon-only select-all is the exception: put a bare `Checkbox` directly in `ToolbarGroup`.
+     The kit gives it exactly the icon button's square footprint; never wrap it in a sized spacer.
    - **One row, one icon size.** Icon buttons in a row are all the same size: the toolbar's
      (`appearance="toolbar"`, regular), never a smaller one beside a bigger one.
    - **Back leads.** A back button is the first control of the leading group; when the app shows a
@@ -130,7 +132,13 @@ Provider (theme once)
    └─ bottom: Dock → task actions (and page views on phones)
 ```
 
-Drill-down areas swap the scaffold's scroll area for a container (`renderViewport`):
+Drill-down areas swap the scaffold's scroll area for a container (`renderViewport`).
+When that container owns independent painted panels (`PanelHost`), set
+`Scaffold contentSurface="none"`: the scaffold is structural, not an extra card around the panels.
+Keep the default `card` for ordinary pages or custom scroll areas that still need its surface.
+Toolbar controls always use `appearance="toolbar"` and regular sizing, including Refresh and Back;
+never resize individual toolbar controls in app CSS or keep a legacy small icon beside Close.
+
 
 ```
 Scaffold renderViewport
