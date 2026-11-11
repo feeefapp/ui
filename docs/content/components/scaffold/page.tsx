@@ -261,6 +261,14 @@ function Overview() {
           editor that needs the viewport ref); it receives the rendered <C>appBar</C> and <C>bottom</C> to
           float itself.
         </p>
+        <p>
+          <C>contentSurface?: 'card' | 'none'</C> defaults to <C>card</C>, preserving the outer content
+          surface even with <C>renderViewport</C> (an editor may still need it). For a <C>PanelHost</C>
+          whose independent <C>Panel</C>s paint their own surfaces, set <C>contentSurface="none"</C>:
+          the viewport becomes transparent with no border, radius or shadow. Shell spacing and keyboard
+          focus remain, including the shell gap when the sidebar is hidden or compact. Each panel keeps
+          its own paint; this prop changes only the scaffold's outer viewport.
+        </p>
         <Callout title="One scaffold per page">
           <p>
             Nest pages inside the content, not scaffolds inside scaffolds. Dialogs and sheets have their own

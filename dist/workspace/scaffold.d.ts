@@ -31,6 +31,9 @@ export type ScaffoldProps = {
         appBar: React.ReactNode;
         bottom: React.ReactNode;
     }) => React.ReactNode;
+    /** Outer content paint. Defaults to `card`; use `none` for independently painted Panels.
+     * Shell spacing and focus remain in either mode, independently of `renderViewport`. */
+    contentSurface?: 'card' | 'none';
     /** Page content, rendered inside the content panel's scroll area. Can be a function of the state. */
     children: ScaffoldSlot;
     /** Sidebar content, usually a ScaffoldSide. Rendered in the drawer when compact. */
@@ -65,11 +68,11 @@ export type ScaffoldProps = {
     dir?: 'ltr' | 'rtl';
 };
 /**
- * Workspace layout: optional top row, a sidebar (expanded, rail or hidden) and one rounded content
- * panel with floating app bar and bottom slots. Fills its parent's height. Below the compact
+ * Workspace layout: optional top row, a sidebar (expanded, rail or hidden) and a content viewport
+ * (rounded card by default) with floating app bar and bottom slots. Fills its parent's height. Below the compact
  * breakpoint the sidebar moves into a modal drawer. Provider owns theme, services and portals.
  */
-export declare function Scaffold({ children, renderViewport, side, topSide, appBar, bottom, contentLabel, contentViewportRef, sideMode: controlledMode, defaultSideMode, onSideModeChange, compact: compactOverride, compactBreakpoint, drawerLabel, drawerReturnFocusRef, className, style, dir, }: ScaffoldProps): React.JSX.Element;
+export declare function Scaffold({ children, renderViewport, contentSurface, side, topSide, appBar, bottom, contentLabel, contentViewportRef, sideMode: controlledMode, defaultSideMode, onSideModeChange, compact: compactOverride, compactBreakpoint, drawerLabel, drawerReturnFocusRef, className, style, dir, }: ScaffoldProps): React.JSX.Element;
 type ThreeSlots = {
     /** Start content: a brand, back button or toggle. Pinned at the top in a sidebar. */
     leading?: React.ReactNode;

@@ -47,6 +47,9 @@ export type ScaffoldProps = {
    * editor with its own ScrollArea can float them itself; `children` is then not rendered.
    */
   renderViewport?: (slots: { appBar: React.ReactNode; bottom: React.ReactNode }) => React.ReactNode
+  /** Outer content paint. Defaults to `card`; use `none` for independently painted Panels.
+   * Shell spacing and focus remain in either mode, independently of `renderViewport`. */
+  contentSurface?: 'card' | 'none'
   /** Page content, rendered inside the content panel's scroll area. Can be a function of the state. */
   children: ScaffoldSlot
   /** Sidebar content, usually a ScaffoldSide. Rendered in the drawer when compact. */
@@ -82,13 +85,14 @@ export type ScaffoldProps = {
 }
 
 /**
- * Workspace layout: optional top row, a sidebar (expanded, rail or hidden) and one rounded content
- * panel with floating app bar and bottom slots. Fills its parent's height. Below the compact
+ * Workspace layout: optional top row, a sidebar (expanded, rail or hidden) and a content viewport
+ * (rounded card by default) with floating app bar and bottom slots. Fills its parent's height. Below the compact
  * breakpoint the sidebar moves into a modal drawer. Provider owns theme, services and portals.
  */
 export function Scaffold({
   children,
   renderViewport,
+  contentSurface = 'card',
   side,
   topSide,
   appBar,
@@ -153,8 +157,8 @@ export function Scaffold({
   )
   const render = (slot: ScaffoldSlot) => (typeof slot === 'function' ? slot(state) : slot)
   const visibleSide = Boolean(side) && !compact && !drawerOpen && sideMode !== 'hidden'
-  // The content is a card only when something frames it (a top row or a visible sidebar);
-  // otherwise it fills the window edge to edge.
+  // The default card is inset only when something frames it (a top row or visible sidebar).
+  // Surface-free viewports retain shell spacing so independent Panels sit clear of the window.
   const framed = Boolean(topSide) || visibleSide
   return (
     <WorkspaceScaffoldContext.Provider value={state}>
@@ -181,7 +185,7 @@ export function Scaffold({
               {!compact && !drawerOpen && render(side)}
             </div>
           </div>
-          <div ref={main} className="lab-workspace-main" tabIndex={-1}>
+          <div ref={main} className="lab-workspace-main" data-content-surface={contentSurface} tabIndex={-1}>
             {renderViewport ? (
               renderViewport({ appBar: render(appBar), bottom: render(bottom) })
             ) : (

@@ -22,11 +22,11 @@ export function useScaffold() {
     return context;
 }
 /**
- * Workspace layout: optional top row, a sidebar (expanded, rail or hidden) and one rounded content
- * panel with floating app bar and bottom slots. Fills its parent's height. Below the compact
+ * Workspace layout: optional top row, a sidebar (expanded, rail or hidden) and a content viewport
+ * (rounded card by default) with floating app bar and bottom slots. Fills its parent's height. Below the compact
  * breakpoint the sidebar moves into a modal drawer. Provider owns theme, services and portals.
  */
-export function Scaffold({ children, renderViewport, side, topSide, appBar, bottom, contentLabel = 'Workspace content', contentViewportRef, sideMode: controlledMode, defaultSideMode = 'expanded', onSideModeChange, compact: compactOverride, compactBreakpoint = 720, drawerLabel = 'Workspace navigation', drawerReturnFocusRef, className, style, dir, }) {
+export function Scaffold({ children, renderViewport, contentSurface = 'card', side, topSide, appBar, bottom, contentLabel = 'Workspace content', contentViewportRef, sideMode: controlledMode, defaultSideMode = 'expanded', onSideModeChange, compact: compactOverride, compactBreakpoint = 720, drawerLabel = 'Workspace navigation', drawerReturnFocusRef, className, style, dir, }) {
     const host = React.useRef(null);
     const main = React.useRef(null);
     const [localMode, setLocalMode] = React.useState(defaultSideMode);
@@ -69,10 +69,10 @@ export function Scaffold({ children, renderViewport, side, topSide, appBar, bott
     const state = React.useMemo(() => ({ compact, sideMode, setSideMode, cycleSide, drawerOpen, setDrawerOpen, sideId }), [compact, sideMode, setSideMode, cycleSide, drawerOpen, sideId]);
     const render = (slot) => (typeof slot === 'function' ? slot(state) : slot);
     const visibleSide = Boolean(side) && !compact && !drawerOpen && sideMode !== 'hidden';
-    // The content is a card only when something frames it (a top row or a visible sidebar);
-    // otherwise it fills the window edge to edge.
+    // The default card is inset only when something frames it (a top row or visible sidebar).
+    // Surface-free viewports retain shell spacing so independent Panels sit clear of the window.
     const framed = Boolean(topSide) || visibleSide;
-    return (_jsx(WorkspaceScaffoldContext.Provider, { value: state, children: _jsxs("div", { ref: host, className: cn('lab-workspace-scaffold', className), style: style, dir: dir, "data-side-mode": visibleSide ? sideMode : 'hidden', "data-framed": framed, "data-compact": compact, "data-lab-sheet-backdrop": "", children: [_jsx(PixelShader, { className: "lab-workspace-scaffold-pixels", density: 0.8, speed: 0.18 }), topSide && _jsx("div", { className: "lab-workspace-top-side", children: render(topSide) }), _jsxs("div", { className: "lab-workspace-scaffold-row", children: [_jsx("div", { className: "lab-workspace-side-boundary", inert: !visibleSide || undefined, "aria-hidden": !visibleSide || undefined, children: _jsx("div", { id: sideId, className: "lab-workspace-side-content", children: !compact && !drawerOpen && render(side) }) }), _jsx("div", { ref: main, className: "lab-workspace-main", tabIndex: -1, children: renderViewport ? (renderViewport({ appBar: render(appBar), bottom: render(bottom) })) : (_jsx(ScrollArea, { ref: contentViewportRef, className: "lab-workspace-route", label: contentLabel, top: appBar ? render(appBar) : undefined, bottom: bottom ? render(bottom) : undefined, children: render(children) })) })] }), compact && (_jsx(WorkspaceDrawer, { open: drawerOpen, label: drawerLabel, returnFocusRef: drawerReturnFocusRef, onClose: () => setDrawerOpen(false), children: _jsx("div", { dir: dir, className: "lab-workspace-drawer-side", children: render(side) }) }))] }) }));
+    return (_jsx(WorkspaceScaffoldContext.Provider, { value: state, children: _jsxs("div", { ref: host, className: cn('lab-workspace-scaffold', className), style: style, dir: dir, "data-side-mode": visibleSide ? sideMode : 'hidden', "data-framed": framed, "data-compact": compact, "data-lab-sheet-backdrop": "", children: [_jsx(PixelShader, { className: "lab-workspace-scaffold-pixels", density: 0.8, speed: 0.18 }), topSide && _jsx("div", { className: "lab-workspace-top-side", children: render(topSide) }), _jsxs("div", { className: "lab-workspace-scaffold-row", children: [_jsx("div", { className: "lab-workspace-side-boundary", inert: !visibleSide || undefined, "aria-hidden": !visibleSide || undefined, children: _jsx("div", { id: sideId, className: "lab-workspace-side-content", children: !compact && !drawerOpen && render(side) }) }), _jsx("div", { ref: main, className: "lab-workspace-main", "data-content-surface": contentSurface, tabIndex: -1, children: renderViewport ? (renderViewport({ appBar: render(appBar), bottom: render(bottom) })) : (_jsx(ScrollArea, { ref: contentViewportRef, className: "lab-workspace-route", label: contentLabel, top: appBar ? render(appBar) : undefined, bottom: bottom ? render(bottom) : undefined, children: render(children) })) })] }), compact && (_jsx(WorkspaceDrawer, { open: drawerOpen, label: drawerLabel, returnFocusRef: drawerReturnFocusRef, onClose: () => setDrawerOpen(false), children: _jsx("div", { dir: dir, className: "lab-workspace-drawer-side", children: render(side) }) }))] }) }));
 }
 /** Sidebar body: a scroll area with `leading` floating at the top and `trailing` at the bottom. */
 export function ScaffoldSide({ leading, children, trailing, className }) {

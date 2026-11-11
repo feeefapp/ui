@@ -84,6 +84,34 @@ html[data-lab-theme] .lab-toolbar-group .lab-text-field[data-control-size='small
   }
 }
 
+/* A toolbar is one size class, including legacy callers passing small. Text and icon
+   controls use the same metric as Close, Filter and the navigation toggle. */
+html[data-lab-theme] .lab-toolbar-group .lab-control[data-control-appearance='toolbar'] {
+  --lab-control-size: var(--lab-toolbar-control);
+  --lab-control-label: var(--lab-control-font);
+}
+html[data-lab-theme] .lab-toolbar-group .lab-control[data-control-appearance='toolbar'] > svg:not(.lab-pixel-texture, .lab-pixel-loader, .lab-pixel-art, .lab-shader) {
+  width: 20px;
+  height: 20px;
+}
+/* Bare selection is a square control, not a mark inside an app-sized spacer. Labeled
+   choices still hug their text. Form/list choices outside a toolbar retain their own sizes. */
+html[data-lab-theme] .lab-toolbar-group .lab-choice[data-bare] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  inline-size: var(--lab-toolbar-control);
+  block-size: var(--lab-toolbar-control);
+  min-inline-size: var(--lab-toolbar-control);
+  min-block-size: var(--lab-toolbar-control);
+  padding: 0;
+}
+html[data-lab-theme] .lab-toolbar-group .lab-choice[data-bare] .lab-choice-mark {
+  width: 20px;
+  height: 20px;
+}
+
 /* Nested action bars and direct controls share the same inset curve. */
 html[data-lab-theme] .lab-toolbar-group .lab-control[data-variant] {
   border-radius: calc(var(--lab-glass-radius) - 2px);

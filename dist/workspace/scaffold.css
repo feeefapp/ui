@@ -90,11 +90,18 @@
 .lab-workspace-scaffold:not([data-side-mode='hidden']) .lab-workspace-main {
   margin-inline-start: 0;
 }
-/* Nothing around the content (no top row, sidebar hidden or in the compact drawer): no card. */
-.lab-workspace-scaffold[data-framed='false'] .lab-workspace-main {
+/* Nothing around the default card: preserve its existing edge-to-edge layout. */
+.lab-workspace-scaffold[data-framed='false'] .lab-workspace-main[data-content-surface='card'] {
   margin: 0;
   border-color: transparent;
   border-radius: 0;
+}
+/* Independent Panels paint themselves; the viewport keeps only its layout and focus boundary. */
+.lab-workspace-main[data-content-surface='none'] {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 .lab-workspace-main:focus {
   outline: none;
