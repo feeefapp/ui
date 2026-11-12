@@ -27,6 +27,25 @@ test('original rim gradient spans the box along the light, including translated 
   }
 })
 
+test('directional rim strength scales themed stop alpha before clamping, not path opacity', () => {
+  const scene = readFileSync(new URL('../src/glass/scene.ts', import.meta.url), 'utf8')
+  const css = readFileSync(new URL('../src/glass/glass.css', import.meta.url), 'utf8')
+  assert.match(scene, /setPropertyIfChanged\(edge\.gradient\.style, '--lab-glass-rim-strength', String\(highlightStrength\)\)/)
+  assert.doesNotMatch(scene, /setAttributeIfChanged\(edge\.rim, 'opacity'/)
+  for (const name of ['light', 'low']) {
+    const stop = css.match(new RegExp(`\\.lab-glass-stop-${name}\\s*\\{([^}]+)\\}`))?.[1] ?? ''
+    assert.ok(stop.includes(`stop-color: var(--lab-glass-rim-${name});`), 'retain a safe base-colour fallback')
+    assert.ok(stop.includes(`stop-color: rgb(from var(--lab-glass-rim-${name}) r g b / calc(alpha * var(--lab-glass-rim-strength, 1)));`), 'multiply alpha on each stop, inheriting strength from its gradient in defs')
+  }
+  assert.match(css, /\.lab-glass-stop-none\s*\{\s*stop-color:\s*transparent;/)
+  assert.deepEqual([...css.matchAll(/--lab-glass-rim-light: ([^;]+);/g)].map(match => match[1]), [
+    'rgb(255 255 255 / 76%)', 'rgb(255 255 255 / 30%)', 'rgb(255 255 255 / 76%)', 'rgb(255 255 255 / 30%)',
+  ], 'preserve default, dark, adaptive-light and adaptive-dark colours')
+  assert.deepEqual([...css.matchAll(/--lab-glass-rim-low: ([^;]+);/g)].map(match => match[1]), [
+    'rgb(255 255 255 / 20%)', 'rgb(255 255 255 / 10%)', 'rgb(255 255 255 / 20%)', 'rgb(255 255 255 / 10%)',
+  ])
+})
+
 test('glass keeps a theme-aware outline independently of reflections', () => {
   const css = readFileSync(new URL('../src/glass/glass.css', import.meta.url), 'utf8')
   const edge = css.match(/\.lab-glass-edge\s*\{([^}]+)\}/)?.[1]

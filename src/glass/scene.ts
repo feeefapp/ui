@@ -1427,7 +1427,9 @@ function renderPaint(
     const gradient = rimGradient(path.bounds, lights[i])
     for (const [name, value] of Object.entries(gradient))
       setAttributeIfChanged(edge.gradient, name, String(value))
-    setAttributeIfChanged(edge.rim, 'opacity', String(highlightStrength))
+    // Stops inherit from their gradient in defs, not the path that references it.
+    // Scale colour alpha before clamping; path opacity would cap every strength above one.
+    setPropertyIfChanged(edge.gradient.style, '--lab-glass-rim-strength', String(highlightStrength))
     setPropertyIfChanged(edge.rim.style, 'stroke-width', String(2 * highlightWidth))
     setAttributeIfChanged(edge.rim, 'display', highlightProfile === 'rim' ? '' : 'none')
     if (edge.visible !== path.visible) {
