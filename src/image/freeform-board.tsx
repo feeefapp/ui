@@ -35,6 +35,14 @@ const MAX_SCALE = 4
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
 
 /** Lay the versions out left to right, oldest first, centred on the origin row. */
+/** `google/gemini-3-pro-image-preview` → `Gemini 3 Pro Image Preview`. */
+export function humanModel(id: string) {
+  return (id.split('/').pop() || id)
+    .replace(/[-_]+/g, ' ')
+    .replace(/\b[a-z]/g, (c) => c.toUpperCase())
+    .trim()
+}
+
 export function layoutCards(takes: ImageTake[], ratios: Record<string, number>): Card[] {
   const ordered = [...takes].reverse()
   let x = 0
@@ -81,7 +89,10 @@ export function FreeformBoard({
   onRetry,
   onRemove,
   emptyContent,
+  modelLabel,
 }: {
+  /** Display name of a take's model for its card label ("{model} #{n}"). Defaults to a tidied id. */
+  modelLabel?(modelId: string): string | undefined
   /** Fills its positioned parent instead of the whole window (`position: fixed`). */
   embedded?: boolean
   /** Versions to show, newest first; they are laid out oldest to newest, left to right. */
@@ -368,7 +379,11 @@ export function FreeformBoard({
                 style={{ transform: `scale(${1 / view.scale})` }}
               >
                 {take.starred && <Star size={11} fill="currentColor" />}
-                {t(`lab.canvas.op_${take.operation}`)} #{card.number}
+                <span className="lab-ff-label-text">
+                  {(take.model && (modelLabel?.(take.model) || humanModel(take.model))) ||
+                    t(`lab.canvas.op_${take.operation}`)}{' '}
+                  #{card.number}
+                </span>
                 {take.status === 'failed' && <X size={11} />}
               </figcaption>
             </figure>

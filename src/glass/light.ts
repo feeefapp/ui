@@ -36,6 +36,14 @@ export function glassLightToward(
   return normalize(base.x + (toward.x - base.x) * pull, base.y + (toward.y - base.y) * pull)
 }
 
+/** Original directional rim: the light-facing end is bright and fades across the whole shape. */
+export function rimGradient(bounds: GlassRect, light: GlassLight) {
+  const cx = bounds.x + bounds.width / 2
+  const cy = bounds.y + bounds.height / 2
+  const half = (Math.abs(bounds.width * light.x) + Math.abs(bounds.height * light.y)) / 2
+  return { x1: cx + light.x * half, y1: cy + light.y * half, x2: cx - light.x * half, y2: cy - light.y * half }
+}
+
 /** A short outline segment and the outward normal of the blended surface at its midpoint. */
 export function rimSurface(shapes: readonly GlassShape[], spacing: number) {
   return unionLoops(shapes, spacing, 1).flatMap((loop) => loop.map(([x, y], i) => {

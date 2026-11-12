@@ -1,1 +1,0 @@
-{"version":3,"file":"width-context.d.ts","sourceRoot":"","sources":["../../src/actions/width-context.tsx"],"names":[],"mappings":"AAEA,OAAO,EAA6B,KAAK,SAAS,EAAE,MAAM,OAAO,CAAA;AAIjE;;;;GAIG;AACH,wBAAgB,oBAAoB,CAAC,EACnC,KAAK,EACL,QAAQ,GACT,EAAE;IACD,uGAAuG;IACvG,KAAK,EAAE,MAAM,GAAG,SAAS,CAAA;IACzB,oDAAoD;IACpD,QAAQ,EAAE,SAAS,CAAA;CACpB,+BAEA;AAED,wBAAgB,eAAe,uBAE9B"}

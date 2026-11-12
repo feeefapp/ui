@@ -52,7 +52,30 @@ backdrop blur from seeing the page. */
   stroke: var(--lab-glass-edge-low);
 }
 .lab-glass-stop-light {
-  stop-color: var(--lab-glass-edge-light);
+  stop-color: var(--lab-glass-rim-light);
+}
+.lab-glass-stop-low {
+  stop-color: var(--lab-glass-rim-low);
+}
+.lab-glass-stop-none {
+  stop-color: transparent;
+}
+/* Original directional edge colours, independent of the newer material optics. */
+:where(.lab-glass-container) {
+  --lab-glass-rim-light: rgb(255 255 255 / 76%);
+  --lab-glass-rim-low: rgb(255 255 255 / 20%);
+}
+html[data-lab-theme='dark'] .lab-glass-container {
+  --lab-glass-rim-light: rgb(255 255 255 / 30%);
+  --lab-glass-rim-low: rgb(255 255 255 / 10%);
+}
+html[data-lab-theme] .lab-glass-container[data-glass-backdrop='light'] {
+  --lab-glass-rim-light: rgb(255 255 255 / 76%);
+  --lab-glass-rim-low: rgb(255 255 255 / 20%);
+}
+html[data-lab-theme] .lab-glass-container[data-glass-backdrop='dark'] {
+  --lab-glass-rim-light: rgb(255 255 255 / 30%);
+  --lab-glass-rim-low: rgb(255 255 255 / 10%);
 }
 .lab-glass-shadow-shape {
   fill: var(--lab-glass-shadow-color);

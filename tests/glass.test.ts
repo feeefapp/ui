@@ -14,7 +14,18 @@ import {
   type GlassShape,
 } from '../src/glass/geometry.ts'
 import { GLASS_ORIGIN, GLASS_ORIGIN_HUG, GLASS_ORIGIN_SEED, glassOrigin, glassSeed, planGlassTransition, sameGlassRow, sameRect } from '../src/glass/transitions.ts'
-import { DEFAULT_GLASS_LIGHT, glassLightToward } from '../src/glass/light.ts'
+import { DEFAULT_GLASS_LIGHT, glassLightToward, rimGradient } from '../src/glass/light.ts'
+
+test('original rim gradient spans the box along the light, including translated and merged bounds', () => {
+  for (const bounds of [{ x: 0, y: 0, width: 160, height: 44 }, { x: 30, y: -20, width: 300, height: 90 }]) {
+    const g = rimGradient(bounds, DEFAULT_GLASS_LIGHT)
+    assert.ok(g.x1 < g.x2 && g.y1 < g.y2)
+    assert.equal((g.x1 + g.x2) / 2, bounds.x + bounds.width / 2)
+    assert.equal((g.y1 + g.y2) / 2, bounds.y + bounds.height / 2)
+    const turned = rimGradient(bounds, { x: 1, y: 0 })
+    assert.deepEqual(turned, { x1: bounds.x + bounds.width, y1: bounds.y + bounds.height / 2, x2: bounds.x, y2: bounds.y + bounds.height / 2 })
+  }
+})
 
 test('glass keeps a theme-aware outline independently of reflections', () => {
   const css = readFileSync(new URL('../src/glass/glass.css', import.meta.url), 'utf8')

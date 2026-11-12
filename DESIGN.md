@@ -181,8 +181,10 @@ and lens. A menu is born out of its button's glass and merges back into it; a bu
 Never paint your own menu glass or morph: give the bubble an `origin`.
 
 Web and Flutter glass retain one theme-aware 1px inside border on the shared silhouette,
-beneath the reflective rim, in liquid, transparent and solid modes. The border remains when
-highlights are disabled; high-contrast surfaces use ink. Never add per-member borders or a
+beneath the original directional rim in liquid and transparent modes (solid keeps the border).
+The rim fades from its lit end through low light to clear, then a faint opposite edge; use the
+same five gradient stops on web and Flutter, never a uniform or symmetric normal-based ring.
+The border remains when highlights are disabled; high-contrast surfaces use ink. Never add per-member borders or a
 second inset contour on toolbar bubbles. Exterior hairlines and reflections remain material effects.
 The native refraction shader and painted clip must share the clamped continuous-corner
 distance, including its fade to circular capsules, so the material has one silhouette.

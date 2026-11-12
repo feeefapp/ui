@@ -78,7 +78,7 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
   adaptive?: boolean
   /** Reflective bevel width in CSS px, 0–100; default 1. Small bubbles cap it to fit. */
   highlightWidth?: number
-  /** `surface` uses a convex bevel; `rim` (default) uses the thin, symmetric screenshot-fitted highlight. */
+  /** `surface` uses a convex bevel; `rim` (default) uses the original thin, directional five-stop gradient. */
   highlightProfile?: 'surface' | 'rim'
   /** Local material tint, 0 clear–1 tinted (clear lifts what is behind it, clipping light content to white like iOS); omitted inherits ThemeConfig glassTint. */
   tint?: number

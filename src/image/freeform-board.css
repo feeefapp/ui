@@ -101,6 +101,11 @@
   white-space: nowrap;
   pointer-events: none;
 }
+.lab-ff-label-text {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .lab-ff-card[aria-current='true'] .lab-ff-label {
   color: var(--lab-ink);
 }

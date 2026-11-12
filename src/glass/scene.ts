@@ -20,7 +20,7 @@ import {
   type GlassShape,
   type HostFrame,
 } from './geometry'
-import { DEFAULT_GLASS_LIGHT, glassLightToward, surfaceReflection, surfaceShade, highlightSurface, type GlassLight } from './light'
+import { DEFAULT_GLASS_LIGHT, glassLightToward, rimGradient, surfaceReflection, surfaceShade, highlightSurface, type GlassLight } from './light'
 import { glassMemberRect } from './member-bounds'
 import { GLASS_FOLLOW_ATTRIBUTE, GLASS_INSTANT_ATTRIBUTE, GLASS_ORIGIN_SPRINGS, GLASS_SETTLED_EVENT, glassChangesAtOnce, glassOrigin, planGlassTransition, sameRect } from './transitions'
 import { adaptiveGlassTone, backdropTone, parseCssColor, type BackdropSample, type GlassTone } from './adaptive'
@@ -28,7 +28,7 @@ import { liveDisplacementMap, rgbaBmpDataUrl, elementImagePlacement, supportsEle
 import { DecodedRefractionMap } from './decoded-refraction-map'
 import { RefractionWork } from './refraction-work'
 import { obsoleteRimRegions, rimBufferCapacity } from './rim-buffer'
-import { GLASS_MENU, GLASS_RIM_MAX_WIDTH, GLASS_SHADOW, glassEdgeTerms, glassHairline, glassKindBlur, glassMaterial, glassMenuMaterial, glassRim, glassSize, rimLayer, type GlassKind, type GlassRim } from './material'
+import { GLASS_MENU, GLASS_SHADOW, glassEdgeTerms, glassHairline, glassKindBlur, glassMaterial, glassMenuMaterial, glassSize, type GlassKind } from './material'
 import { bandPath, hairlineBands, type HairlineBands } from './hairline'
 import { GLASS_CONTENT_FOLLOW, GLASS_GLOW_START, GLASS_PRESS_SCALE, glassGlowRadius, glassLayoutRect, glassStretch, pressedShape } from './press'
 import { cornerFit, cssCornerRadius, cssCornerShape, trueCornerRadius } from '../brand/corner-fit'
@@ -908,7 +908,6 @@ export class GlassScene {
       this.highlightWidth,
       this.highlightStrength,
       this.highlightProfile,
-      glassRim(this.tint, this.scheme()),
       input.paint,
       glow ? { x: glow.x, y: glow.y, radius: glow.radius.get(), opacity: glow.opacity.get() } : null
     )
@@ -1354,7 +1353,7 @@ type RimSurface = {
 const rimSurfaces = new WeakMap<SVGSVGElement, RimSurface[]>()
 const edgeLayers = new WeakMap<SVGSVGElement, {
   defs: SVGDefsElement
-  clusters: { clip: SVGClipPathElement; outline: SVGPathElement; group: SVGGElement; edge: SVGPathElement; d: string; visible: string }[]
+  clusters: { clip: SVGClipPathElement; outline: SVGPathElement; group: SVGGElement; edge: SVGPathElement; gradient: SVGLinearGradientElement; rim: SVGPathElement; d: string; visible: string }[]
   glow?: { clip: SVGClipPathElement; outline: SVGPathElement; gradient: SVGRadialGradientElement; group: SVGGElement; circle: SVGCircleElement }
 }>()
 const reflectionLayers = new WeakMap<SVGSVGElement, HTMLDivElement>()
@@ -1369,7 +1368,6 @@ function renderPaint(
   highlightWidth: number,
   highlightStrength: number,
   highlightProfile: 'surface' | 'rim',
-  rim: GlassRim,
   paint: ReturnType<typeof readPaintStyle>,
   glow: { x: number; y: number; radius: number; opacity: number } | null
 ) {
@@ -1381,9 +1379,7 @@ function renderPaint(
     reflectionLayers.set(svg, layer)
   }
   const { lightColor, lightAlpha, shadowAlpha } = paint
-  // The rim's samples must reach its full width; the surface bevel uses highlightWidth itself.
-  const sampleWidth = highlightProfile === 'rim' ? highlightWidth * GLASS_RIM_MAX_WIDTH : highlightWidth
-  const rimProfile = { ...rim, width: rim.width * highlightWidth }
+  const sampleWidth = highlightWidth
   let surfaces = rimSurfaces.get(svg)
   if (!surfaces) {
     surfaces = []
@@ -1399,6 +1395,7 @@ function renderPaint(
   while (edges.clusters.length > paths.length) {
     const departed = edges.clusters.pop()!
     departed.clip.remove()
+    departed.gradient.remove()
     departed.group.remove()
   }
   const defs = edges.defs
@@ -1411,19 +1408,37 @@ function renderPaint(
       defs.append(clip)
       const group = node('g', { 'clip-path': `url(#${uid}-c${i})` })
       const stroke = node('path', { class: 'lab-glass-edge' })
-      group.append(stroke)
+      const gradient = node('linearGradient', { id: `${uid}-rim${i}`, gradientUnits: 'userSpaceOnUse' })
+      for (const [offset, name] of [[0, 'light'], [0.22, 'low'], [0.48, 'none'], [0.72, 'none'], [1, 'low']] as const)
+        gradient.append(node('stop', { offset, class: `lab-glass-stop-${name}` }))
+      defs.append(gradient)
+      const rim = node('path', { class: 'lab-glass-rim lab-glass-directional-rim', stroke: `url(#${uid}-rim${i})` })
+      group.append(stroke, rim)
       svg.append(group)
-      edge = { clip, outline, group, edge: stroke, d: '', visible: '' }
+      edge = { clip, outline, group, edge: stroke, gradient, rim, d: '', visible: '' }
       edges.clusters[i] = edge
     }
     // The stroke keeps the whole outline; its clip is cut at the scroller, so the cut edge is bare.
     if (edge.d !== path.d) {
       edge.edge.setAttribute('d', path.d)
+      edge.rim.setAttribute('d', path.d)
       edge.d = path.d
     }
+    const gradient = rimGradient(path.bounds, lights[i])
+    for (const [name, value] of Object.entries(gradient))
+      setAttributeIfChanged(edge.gradient, name, String(value))
+    setAttributeIfChanged(edge.rim, 'opacity', String(highlightStrength))
+    setPropertyIfChanged(edge.rim.style, 'stroke-width', String(2 * highlightWidth))
+    setAttributeIfChanged(edge.rim, 'display', highlightProfile === 'rim' ? '' : 'none')
     if (edge.visible !== path.visible) {
       edge.outline.setAttribute('d', path.visible)
       edge.visible = path.visible
+    }
+    // Default rim uses the original continuous SVG gradient, not a rasterized symmetric band.
+    // Keep the optional broad surface-bevel renderer separate; never stack both edge treatments.
+    if (highlightProfile === 'rim') {
+      if (surfaces[i]) setStyleIfChanged(surfaces[i].canvas.style, 'display', 'none')
+      return
     }
     // Merged path bounds already include a fringe. The exact CSS box of a lone shape does
     // not, so give its reflection the same room for antialiasing without resizing the lens.
@@ -1458,18 +1473,16 @@ function renderPaint(
       surfaces[i] = cached
     }
     const light = lights[i]
-    const key = `${light.x.toFixed(3)},${light.y.toFixed(3)}|${highlightProfile}|${rimProfile.w0},${rimProfile.w1},${rimProfile.p},${rimProfile.width}|${highlightStrength}|${lightColor.r},${lightColor.g},${lightColor.b},${lightAlpha}|${shadowAlpha}`
+    const key = `${light.x.toFixed(3)},${light.y.toFixed(3)}|${highlightProfile}|${highlightWidth}|${highlightStrength}|${lightColor.r},${lightColor.g},${lightColor.b},${lightAlpha}|${shadowAlpha}`
     if (cached.key !== key) {
       const { surface, canvas } = cached
       const context = canvas.getContext('2d')
       if (context) {
         const image = cached.image ??= context.createImageData(surface.width, surface.height)
         for (const sample of surface.samples) {
-          const reflection = highlightProfile === 'rim'
-            ? rimLayer(sample.depth, (sample.nx * light.x + sample.ny * light.y) / (Math.hypot(sample.nx, sample.ny) || 1), rimProfile)
-            : surfaceReflection(sample.depth, sample.nx, sample.ny, light, surface.bezel) * lightAlpha
+          const reflection = surfaceReflection(sample.depth, sample.nx, sample.ny, light, surface.bezel) * lightAlpha
           const highlight = Math.min(1, reflection * highlightStrength) * sample.coverage
-          const shade = highlightProfile === 'rim' ? 0 : surfaceShade(sample.depth, sample.nx, sample.ny, light, surface.bezel) * Math.min(1, highlightStrength) * shadowAlpha * sample.coverage
+          const shade = surfaceShade(sample.depth, sample.nx, sample.ny, light, surface.bezel) * Math.min(1, highlightStrength) * shadowAlpha * sample.coverage
           const alpha = highlight + shade * (1 - highlight)
           const share = alpha > 0 ? highlight / alpha : 0
           image.data[sample.index] = Math.round(lightColor.r * share * 255)
@@ -1484,6 +1497,7 @@ function renderPaint(
     // highlightSurface samples at exactly 2×. Preserve that scale when fractional spring
     // dimensions round its bitmap upward; squeezing it back into the unrounded box moved
     // the rim inward by up to half a pixel on each frame.
+    setStyleIfChanged(cached.canvas.style, 'display', '')
     setStyleIfChanged(cached.canvas.style, 'left', `${x}px`)
     setStyleIfChanged(cached.canvas.style, 'top', `${y}px`)
     setStyleIfChanged(cached.canvas.style, 'width', `${cached.canvas.width / 2}px`)

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -676,17 +675,6 @@ class _GlassMaterial {
     return (k1: terms.k1 * highlight, k3: terms.k3 * highlight);
   }
 
-  /// The rim at this tint and brightness, at the theme's highlight strength and width.
-  GlassRim get rimLight {
-    final rim = glassRim(tint, dark: dark);
-    return (
-      w0: rim.w0 * highlight,
-      w1: rim.w1 * highlight,
-      p: rim.p,
-      width: rim.width * highlightWidth,
-    );
-  }
-
   /// The hairline's strengths at this tint and brightness.
   ({double ring, double sliver}) get hairline =>
       glassHairline(tint, dark: dark);
@@ -1176,11 +1164,40 @@ class _GlassPainter extends CustomPainter {
           ..color = material.outlineColor,
       );
       if (material.rim) {
-        // A layer of white inside the outline (clipped above), lit at both ends of the light
-        // axis by the edge normal: glassRim / rimLayer, drawn as a band of vertices.
-        final rim = _RimBand.of(p)
-            .vertices(scene.lightFor(p.bounds), material.rimLight);
-        if (rim != null) canvas.drawVertices(rim, BlendMode.dst, Paint());
+        // Original directional rim, shared with the web SVG stops. The gradient spans the
+        // merged silhouette, so a straight edge fades too instead of becoming a uniform line.
+        final light = scene.lightFor(p.bounds);
+        final half =
+            (p.bounds.width * light.dx).abs() / 2 +
+            (p.bounds.height * light.dy).abs() / 2;
+        if (half > 0 && material.highlight > 0 && material.highlightWidth > 0) {
+          final key = material.dark ? 0.30 : 0.76;
+          final low = material.dark ? 0.10 : 0.20;
+          Color white(double alpha) => Color.from(
+            alpha: (alpha * material.highlight).clamp(0.0, 1.0),
+            red: 1,
+            green: 1,
+            blue: 1,
+          );
+          canvas.drawPath(
+            p.path,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 2 * material.highlightWidth
+              ..shader = ui.Gradient.linear(
+                p.bounds.center + light * half,
+                p.bounds.center - light * half,
+                [
+                  white(key),
+                  white(low),
+                  const Color(0x00ffffff),
+                  const Color(0x00ffffff),
+                  white(low),
+                ],
+                const [0, 0.22, 0.48, 0.72, 1],
+              ),
+          );
+        }
       }
       canvas.restore();
     }
@@ -2091,157 +2108,6 @@ class GlassBar extends StatelessWidget {
       ),
       brightness: theme.brightness,
       child: child,
-    );
-  }
-}
-
-/// The rim as a triangle band along an outline: at each sample along it the alpha of `rimLayer`
-/// at depth 0, ⅔ of the rim's width and its full width, by the outward normal there against the
-/// light. Clipped to the outline by the caller, so nothing paints outside. The samples (positions
-/// and normals every 1.5 px) are measured once per outline, the positions once per rim width and
-/// the vertices once per light: a light that turns with the pointer only recomputes colours, and
-/// glass that repaints for anything else reuses everything.
-class _RimBand {
-  _RimBand(GlassPath path) {
-    final samples = <double>[];
-    final rows = <int>[];
-    if (path.loops.isNotEmpty) {
-      // The outline's own vertices and their normals: along a straight edge the two ends are
-      // enough (the band between them is one quad of one colour), and an arc's vertices sit
-      // about a pixel apart. Every vertex has a 16-bit index: a huge outline takes every n-th.
-      final total = path.loops.fold(0, (sum, loop) => sum + loop.length + 1);
-      final stride = math.max(1, (total * 3 / 60000).ceil());
-      for (final loop in path.loops) {
-        final n = loop.length;
-        if (n < 3) continue;
-        final normals = loopNormals(loop);
-        // A hole's loop encloses what is outside the glass: probe once which way is out.
-        if (path.path.contains(
-          loop[0] + Offset(normals[0], normals[1]) * 0.75,
-        )) {
-          for (var i = 0; i < normals.length; i++) {
-            normals[i] = -normals[i];
-          }
-        }
-        var taken = 0;
-        // Closed by repeating the first vertex.
-        for (var i = 0; i <= n; i += stride) {
-          final k = i % n;
-          samples
-            ..add(loop[k].dx)
-            ..add(loop[k].dy)
-            ..add(normals[k * 2])
-            ..add(normals[k * 2 + 1]);
-          taken++;
-        }
-        if (stride > 1 && (n % stride) != 0) {
-          samples
-            ..add(loop[0].dx)
-            ..add(loop[0].dy)
-            ..add(normals[0])
-            ..add(normals[1]);
-          taken++;
-        }
-        rows.add(taken);
-      }
-    } else {
-      _walk(path.path, samples, rows);
-    }
-    _samples = Float32List.fromList(samples);
-    final indices = <int>[];
-    var first = 0;
-    for (final count in rows) {
-      for (var i = 0; i + 1 < count; i++) {
-        for (var k = 0; k + 1 < _depths.length; k++) {
-          final a = (first + i) * _depths.length + k;
-          final b = a + _depths.length;
-          indices.addAll([a, b, a + 1, a + 1, b, b + 1]);
-        }
-      }
-      first += count;
-    }
-    _indices = Uint16List.fromList(indices);
-  }
-
-  /// Samples along a path whose polygons aren't known (every 1.5 px along its contours).
-  static void _walk(Path outline, List<double> samples, List<int> rows) {
-    final contours = outline.computeMetrics().toList();
-    final total = contours.fold(0.0, (sum, m) => sum + m.length);
-    final step = math.max(1.5, total * 3 / 60000);
-    for (final metric in contours) {
-      final count = math.max(3, (metric.length / step).ceil());
-      // The outward side: probe once per contour (union outlines are simple closed loops).
-      final probe = metric.getTangentForOffset(0);
-      if (probe == null) continue;
-      final n0 = Offset(probe.vector.dy, -probe.vector.dx);
-      final outward = outline.contains(probe.position + n0 * 0.75) ? -1.0 : 1.0;
-      var taken = 0;
-      for (var i = 0; i <= count; i++) {
-        final tangent = metric.getTangentForOffset(metric.length * i / count);
-        if (tangent == null) continue;
-        samples
-          ..add(tangent.position.dx)
-          ..add(tangent.position.dy)
-          ..add(tangent.vector.dy * outward)
-          ..add(-tangent.vector.dx * outward);
-        taken++;
-      }
-      rows.add(taken);
-    }
-  }
-
-  static const _depths = [0.0, 2 / 3, 1.0];
-
-  /// x, y and the outward normal's x, y per sample.
-  late final Float32List _samples;
-  late final Uint16List _indices;
-  double? _width;
-  Float32List? _positions;
-  Offset? _light;
-  GlassRim? _rim;
-  ui.Vertices? _vertices;
-
-  static final _bands = Expando<_RimBand>();
-
-  /// The band along [path]'s outline.
-  static _RimBand of(GlassPath path) => _bands[path] ??= _RimBand(path);
-
-  ui.Vertices? vertices(Offset light, GlassRim rim) {
-    if (_indices.isEmpty) return null;
-    if (_vertices != null && _light == light && _rim == rim) return _vertices;
-    final count = _samples.length ~/ 4;
-    if (_width != rim.width) {
-      final positions = Float32List(count * _depths.length * 2);
-      for (var i = 0; i < count; i++) {
-        final x = _samples[i * 4], y = _samples[i * 4 + 1];
-        final nx = _samples[i * 4 + 2], ny = _samples[i * 4 + 3];
-        for (var k = 0; k < _depths.length; k++) {
-          final d = _depths[k] * rim.width;
-          positions[(i * _depths.length + k) * 2] = x - nx * d;
-          positions[(i * _depths.length + k) * 2 + 1] = y - ny * d;
-        }
-      }
-      _positions = positions;
-      _width = rim.width;
-    }
-    final colors = Int32List(count * _depths.length);
-    for (var i = 0; i < count; i++) {
-      final cosine =
-          _samples[i * 4 + 2] * light.dx + _samples[i * 4 + 3] * light.dy;
-      for (var k = 0; k < _depths.length; k++) {
-        final alpha = rimLayer(_depths[k] * rim.width, cosine, rim);
-        final a = (alpha.clamp(0.0, 1.0) * 255).round();
-        colors[i * _depths.length + k] = (a << 24) | 0x00FFFFFF;
-      }
-    }
-    _vertices?.dispose();
-    _light = light;
-    _rim = rim;
-    return _vertices = ui.Vertices.raw(
-      ui.VertexMode.triangles,
-      _positions!,
-      colors: colors,
-      indices: _indices,
     );
   }
 }

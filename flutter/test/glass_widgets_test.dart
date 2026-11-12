@@ -17,6 +17,46 @@ Widget bubble(String id, {double width = 80}) => GlassGroup(
 
 void main() {
   for (final brightness in Brightness.values) {
+    testWidgets(
+      'original rim fades directionally across a straight edge: $brightness',
+      (tester) async {
+        final boundary = GlobalKey();
+        await tester.pumpWidget(
+          host(
+            ThemeProvider(
+              config: const ThemeConfig(glass: GlassStyle.transparent),
+              brightness: brightness,
+              child: Center(
+                child: RepaintBoundary(
+                  key: boundary,
+                  child: const GlassGroup(
+                    radius: 0,
+                    child: SizedBox(width: 158, height: 42),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.runAsync(() async {
+          final render =
+              boundary.currentContext!.findRenderObject()
+                  as RenderRepaintBoundary;
+          final image = await render.toImage();
+          final bytes = (await image.toByteData(
+            format: ui.ImageByteFormat.rawRgba,
+          ))!;
+          int red(int x, int y) => bytes.getUint8((y * image.width + x) * 4);
+          // The original diagonal rim is bright at the lit end and fades along the top edge.
+          // A normal-based symmetric rim or uniform border paints both samples alike.
+          expect(red(4, 0), greaterThan(red(154, 0) + 8));
+          image.dispose();
+        });
+      },
+    );
+  }
+  for (final brightness in Brightness.values) {
     for (final style in GlassStyle.values) {
       testWidgets(
         'glass has a visible border without reflections: $brightness $style',
