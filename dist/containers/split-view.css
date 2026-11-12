@@ -1,0 +1,118 @@
+/* Split view: list | hairline divider | detail. The list width is one custom property. */
+.lab-split {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--lab-split-drag-list, var(--lab-split-list, 360px)) 0 minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  corner-shape: inherit;
+  background: var(--lab-surface);
+}
+.lab-split[data-compact] {
+  display: block;
+}
+.lab-split[data-resizing] {
+  cursor: col-resize;
+}
+.lab-split[data-resizing] * {
+  cursor: col-resize !important;
+}
+.lab-split-list,
+.lab-split-detail {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.lab-split-list > *,
+.lab-split-detail > * {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+.lab-split-divider {
+  position: relative;
+  z-index: 6;
+  width: 0;
+  outline: none;
+}
+.lab-split-divider::before {
+  content: '';
+  position: absolute;
+  inset-block-start: 50%;
+  block-size: min(30px, 100%);
+  transform: translateY(-50%);
+  inset-inline-start: -1px;
+  inline-size: 2px;
+  border-radius: var(--lab-radius-small);
+  background: var(--lab-line);
+}
+/* A wide invisible grip around the hairline. */
+.lab-split-divider[data-resizable]::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline: -6px;
+  cursor: col-resize;
+  touch-action: none;
+}
+@media (hover: hover) {
+  .lab-split-divider[data-resizable]:hover::before {
+    background: var(--lab-primary);
+  }
+}
+.lab-split[data-resizing] .lab-split-divider::before,
+.lab-split-divider:focus-visible::before {
+  background: var(--lab-primary);
+}
+.lab-split-divider:focus-visible::before {
+  outline: var(--lab-focus-ring-width, 2px) solid var(--lab-primary);
+  outline-offset: var(--lab-focus-ring-offset, 2px);
+}
+.lab-split-divider:not([data-resizable])::before { display: none; }
+
+.lab-split-placeholder {
+  display: grid;
+  flex: 1;
+  align-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--lab-muted);
+  text-align: center;
+}
+.lab-split-placeholder-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 4px;
+  border-radius: var(--lab-radius-group);
+  background: color-mix(in srgb, var(--lab-ink) 5%, var(--lab-surface));
+}
+.lab-split-placeholder-icon > svg {
+  width: 26px;
+  height: 26px;
+}
+.lab-split-placeholder-title {
+  margin: 0;
+  color: var(--lab-ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+.lab-split-placeholder-body {
+  max-width: 34ch;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+@media (forced-colors: active) {
+  .lab-split-divider::before {
+    background: CanvasText;
+  }
+}

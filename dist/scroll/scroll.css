@@ -1,0 +1,115 @@
+.lab-scroll-area {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  flex: 1 1 0%;
+  /* clip, not hidden: focusing a float in a scaled or moving area must never scroll the root. */
+  overflow: hidden;
+  overflow: clip;
+  border-radius: inherit;
+  corner-shape: inherit;
+  /* The enclosing bordered surface owns opaque paint and continuous corners. */
+  background: transparent;
+}
+.lab-scroll-viewport {
+  position: absolute;
+  inset: 0;
+  /* Vertical only, like the Flutter twin: content that is wider brings its own scroller, and
+  glass shadows and rims reaching past the edge never make the page scroll sideways. */
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  /* Focus and find-in-page scroll targets clear the floating chrome (and a host's tab bar). */
+  scroll-padding-top: calc(var(--lab-scroll-top-reserve) + env(safe-area-inset-top, 0px));
+  scroll-padding-bottom: calc(
+    var(--lab-scroll-bottom-reserve) + var(--lab-scroll-extra-bottom, 0px) + env(safe-area-inset-bottom, 0px)
+  );
+}
+.lab-scroll-content {
+  min-height: 100%;
+  padding: calc(var(--lab-scroll-top-reserve) + env(safe-area-inset-top, 0px))
+    var(--lab-scroll-padding)
+    calc(var(--lab-scroll-bottom-reserve) + var(--lab-scroll-extra-bottom, 0px) + env(safe-area-inset-bottom, 0px));
+}
+/* Extra bottom space a host reserves for its own floating chrome (a tab bar); nested areas reset it. */
+.lab-scroll-content > * {
+  --lab-scroll-extra-bottom: 0px;
+}
+.lab-scroll-float {
+  position: absolute;
+  inset-inline: max(var(--lab-scroll-side-gap, var(--lab-scroll-gap)), env(safe-area-inset-left, 0px))
+    max(var(--lab-scroll-side-gap, var(--lab-scroll-gap)), env(safe-area-inset-right, 0px));
+  z-index: 2;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+}
+.lab-scroll-float > * {
+  pointer-events: auto;
+  max-width: 100%;
+}
+.lab-scroll-float--top {
+  top: calc(var(--lab-scroll-gap) + env(safe-area-inset-top, 0px));
+}
+.lab-scroll-float--bottom {
+  bottom: calc(var(--lab-scroll-gap) + var(--lab-scroll-extra-bottom, 0px) + env(safe-area-inset-bottom, 0px));
+}
+.lab-scroll-gradient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  color: var(--lab-scroll-wash-color, var(--lab-scroll-surface, var(--lab-surface)));
+  clip-path: var(--lab-corner-clip, inset(0 round var(--lab-radius-panel)));
+}
+.lab-scroll-wash {
+  position: absolute;
+  inset-inline: 0;
+  pointer-events: none;
+  opacity: var(--lab-scroll-wash-density, 0.8);
+}
+.lab-scroll-wash--top {
+  top: 0;
+}
+.lab-scroll-wash--bottom {
+  bottom: 0;
+
+  transform: rotate(180deg);
+}
+.lab-scroll-wash svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+  shape-rendering: crispEdges;
+}
+@media (forced-colors: active) {
+  .lab-scroll-gradient {
+    display: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .lab-scroll-gradient {
+    display: none;
+  }
+}
+/* Pull to refresh: the loader sits in the gap the pull opens, just below the top reservation and
+under the floats. It moves with transforms only; the viewport above it moves the same way. */
+.lab-scroll-refresh {
+  position: absolute;
+  z-index: 1;
+  inset-inline: 0;
+  top: calc(var(--lab-scroll-top-reserve) + env(safe-area-inset-top, 0px));
+  display: flex;
+  justify-content: center;
+  height: 0;
+  pointer-events: none;
+}
+.lab-scroll-refresh-loader {
+  display: grid;
+  height: max-content;
+  color: var(--lab-muted);
+}

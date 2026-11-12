@@ -1,0 +1,137 @@
+.lab-actions-bar {
+  --lab-actions-gap: var(--lab-space-1);
+  position: relative;
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  inline-size: 100%;
+  font-family: var(--lab-font);
+}
+.lab-actions-bar__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--lab-actions-gap);
+  min-block-size: var(--lab-control-height);
+}
+.lab-actions-bar[data-align='start'] .lab-actions-bar__row {
+  justify-content: flex-start;
+}
+.lab-actions-bar[data-measured='false'] .lab-actions-bar__row {
+  visibility: hidden;
+}
+.lab-actions-bar__entry {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+.lab-actions-bar__measure {
+  display: flex;
+  position: absolute;
+  inset-block-start: 0;
+  inset-block-end: auto;
+  inset-inline-start: 0;
+  inset-inline-end: auto;
+  inline-size: 0;
+  block-size: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+html[data-lab-theme] .lab-actions-bar__control {
+  position: relative;
+  isolation: isolate;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.lab-actions-bar[data-size='small'] .lab-actions-bar__row {
+  min-block-size: var(--lab-control-small);
+}
+html[data-lab-theme] .lab-actions-bar__control[aria-pressed='true'] {
+  border-color: var(--lab-focus);
+  background: var(--lab-surface-soft);
+}
+.lab-actions-bar__icon,
+.lab-actions-menu__leading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 18px;
+  inline-size: 18px;
+  block-size: 18px;
+}
+.lab-actions-bar__icon > svg,
+.lab-actions-menu__leading > svg {
+  inline-size: 18px;
+  block-size: 18px;
+}
+html[data-lab-theme] .lab-actions-bar__control[data-control-size='icon'] .lab-actions-bar__icon,
+html[data-lab-theme]
+  .lab-actions-bar__control[data-control-size='icon']
+  .lab-actions-bar__icon
+  > svg {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  inline-size: 20px;
+  block-size: 20px;
+}
+.lab-actions-bar__error {
+  display: block;
+  margin-block-start: var(--lab-space-2);
+  color: var(--lab-danger);
+  font-size: 13px;
+}
+/* The menu itself is a MenuSurface (menu/menu.css): glass, metrics and the morph live there. */
+.lab-actions-menu__item {
+  display: flex;
+  position: relative;
+  align-items: center;
+  gap: var(--lab-space-3);
+  outline: none;
+  cursor: default;
+  user-select: none;
+}
+.lab-actions-menu__label {
+  flex: 1 1 auto;
+  overflow-wrap: anywhere;
+}
+.lab-actions-menu__item[data-highlighted],
+.lab-actions-menu__item[data-state='open'] {
+  background: color-mix(in srgb, var(--lab-ink) 8%, transparent);
+}
+.lab-actions-menu__item[data-destructive] {
+  color: var(--lab-danger);
+}
+.lab-actions-menu__item[data-disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.lab-actions-menu__chevron {
+  flex: 0 0 auto;
+  margin-inline-start: var(--lab-space-3);
+}
+@media (pointer: coarse) {
+  .lab-actions-bar__row {
+    min-block-size: var(--lab-control-touch-target);
+  }
+}
+@media (forced-colors: active) {
+  .lab-actions-menu__item[data-highlighted],
+  .lab-actions-menu__item[data-state='open'] {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+  .lab-actions-menu__item[data-destructive] {
+    color: LinkText;
+  }
+}
+
+/* An action on its way into the More menu: the real element, inert, shrinking into the button. */
+.lab-actions-bar__ghost {
+  position: absolute;
+  margin: 0;
+  pointer-events: none;
+}
+

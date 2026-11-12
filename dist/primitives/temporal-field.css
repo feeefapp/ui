@@ -1,0 +1,84 @@
+html[data-lab-theme] .lab-text-field .lab-temporal-field-control {
+  cursor: pointer;
+}
+html[data-lab-theme] .lab-text-field .lab-temporal-field-control[aria-readonly='true'] {
+  cursor: default;
+}
+html[data-lab-theme] .lab-text-field .lab-temporal-field-control > .lab-temporal-field-value {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-lab-theme] .lab-text-field .lab-temporal-field-clear {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+}
+
+/* Popover: hugs its content (a calendar or a time row, then its actions). */
+.lab-temporal-field-popover {
+  display: grid;
+  gap: 12px;
+  width: min(352px, calc(100vw - 24px));
+  max-height: var(--radix-popover-content-available-height, 640px);
+  overflow-y: auto;
+  padding: 12px;
+}
+.lab-temporal-field-popover:has(.lab-temporal-editor[data-calendar='false']) {
+  width: min(320px, calc(100vw - 24px));
+}
+.lab-temporal-field-popover .lab-dock-host {
+  justify-content: flex-end;
+}
+.lab-temporal-field-editor {
+  min-width: 0;
+}
+
+@media (pointer: coarse) {
+  html[data-lab-theme] .lab-text-field .lab-temporal-field-clear {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+  }
+}
+
+/* Docs demo layouts (used by the kit's docs examples). */
+.lab-temporal-fields-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: 20px 16px;
+}
+.lab-temporal-fields-demo-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+  margin-block: 28px 12px;
+}
+.lab-temporal-fields-demo-form > .lab-text-field {
+  flex: 1 1 280px;
+}
+.lab-temporal-fields-demo-form > .lab-control {
+  flex: none;
+}
+
+/* The popover footer's glass row (a GlassScope around the actions group). */
+.lab-temporal-actions-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* The trigger is a kit Button (for its focus and press states) but it reads as a field: the
+   field's ink instead of the outlined/text buttons' focus colour, and no filled-button texture. */
+html[data-lab-theme] .lab-text-field .lab-temporal-field-control.lab-control[data-variant] {
+  color: var(--lab-variant-ink, var(--lab-ink));
+}
+html[data-lab-theme] .lab-text-field .lab-temporal-field-control > .lab-pixel-texture {
+  display: none;
+}

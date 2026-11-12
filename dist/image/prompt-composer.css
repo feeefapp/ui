@@ -1,0 +1,186 @@
+/* Image studio composer: its menus, settings chip and panel. The bar itself is the composer family's
+(composer/composer.css). Colours come from the --lab-* tokens. */
+.lab-pc-popover,
+.lab-pc-menu {
+  font-family: var(--lab-font);
+}
+
+/* The settings chip: a toolbar button with an icon and the current summary ("1:1"). */
+.lab-pc-chip > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html[data-lab-theme] .lab-pc-chip.lab-control[data-variant] {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Popovers & menus ------------------------------------------------------------------------ */
+.lab-pc-popover {
+  z-index: 60;
+  outline: none;
+  animation: lab-pc-pop 200ms var(--lab-ease);
+}
+.lab-pc-panel {
+  display: flex;
+  width: min(360px, calc(100vw - 24px));
+  height: min(
+    var(--lab-pc-settings-height, 420px),
+    70dvh,
+    var(--radix-popover-content-available-height, 420px)
+  );
+  min-height: 0;
+  padding: 0;
+  border: 1px solid var(--lab-line);
+  border-radius: calc(22px * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
+  background: var(--lab-surface);
+  box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
+  color: var(--lab-ink);
+  --lab-scroll-surface: var(--lab-surface);
+}
+.lab-pc-panel-head {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-inline-start: 8px;
+  border-radius: var(--lab-radius-control);
+  background: var(--lab-surface);
+}
+.lab-pc-panel-head strong {
+  font-size: 14px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.lab-pc-panel-content {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+/* The + menu is a MenuSurface (menu/menu.css): glass, row metrics and the morph live there. */
+.lab-pc-menu-label {
+  padding: 6px 10px 4px;
+  font-size: 11px;
+  color: var(--lab-muted);
+}
+.lab-pc-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+.lab-pc-menu-item[data-highlighted],
+.lab-pc-menu-item[data-state='open'] {
+  background: color-mix(in srgb, var(--lab-primary) 16%, transparent);
+}
+.lab-pc-menu-item[data-disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+.lab-pc-recent .lab-menu__body {
+  display: grid;
+  grid-template-columns: repeat(4, 56px);
+  gap: 6px;
+  min-width: 0;
+}
+.lab-pc-recent-item {
+  width: 56px;
+  height: 56px;
+  border-radius: calc(14px * var(--lab-corner-scale, 1));
+  overflow: hidden;
+  cursor: pointer;
+  outline: none;
+  border: 2px solid transparent;
+}
+.lab-pc-recent-item[data-highlighted] {
+  border-color: var(--lab-primary);
+}
+.lab-pc-recent-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.lab-menu.lab-pc-idea-menu {
+  inline-size: min(300px, var(--radix-popper-available-width, 100vw));
+}
+.lab-pc-idea {
+  height: auto !important;
+  display: grid !important;
+  gap: 2px;
+  padding: 8px 10px !important;
+}
+.lab-pc-idea b {
+  font-size: 13px;
+  font-weight: 500;
+}
+.lab-pc-idea small {
+  font-size: 11px;
+  color: var(--lab-muted);
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Settings panel content (shape + option chips) --------------------------------------------- */
+.lab-pc-setting {
+  display: grid;
+  gap: 7px;
+}
+.lab-pc-setting > b {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lab-muted);
+}
+/* Output choices sit on a recessed box; options keep the segmented inset as their gap. */
+.lab-pc-options.lab-segmented {
+  display: flex;
+  background: var(--lab-surface-soft);
+}
+/* AI proposals and conflicts above the composer. */
+.lab-pc .lab-img-proposal {
+  margin: 0;
+  animation: lab-pc-pop 220ms var(--lab-ease);
+}
+
+@keyframes lab-pc-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab-pc-popover,
+  .lab-pc .lab-img-proposal {
+    animation: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .lab-pc-panel {
+    background: var(--lab-surface);
+  }
+}
+@media (forced-colors: active) {
+  .lab-pc-panel,
+  .lab-pc-panel-head {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+    box-shadow: none;
+  }
+  .lab-pc-menu-item[data-highlighted],
+  .lab-pc-menu-item[data-state='open'] {
+    background: Highlight;
+    color: HighlightText;
+  }
+}

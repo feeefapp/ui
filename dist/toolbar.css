@@ -1,0 +1,119 @@
+.lab-toolbar-layout[role='group'] {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--lab-toolbar-gap);
+  inline-size: 100%;
+  min-inline-size: 0;
+  container: lab-toolbar / inline-size;
+  /* Empty space between groups must let the manuscript receive pointer input. */
+  pointer-events: none;
+}
+.lab-toolbar-leading {
+  display: flex;
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.lab-toolbar-trailing {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--lab-toolbar-gap);
+  min-inline-size: 0;
+}
+.lab-toolbar-group {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  /* A capsule bubble --lab-toolbar-item tall (44px comfortable, iOS's bar item); its regular
+  controls fill it less the 2px padding and 1px border a side (--lab-toolbar-control). The bubble is
+  the touch target, so its controls don't grow on touch screens; the bubble itself does. */
+  --lab-control-height: var(--lab-toolbar-control);
+  --lab-glass-radius: calc((var(--lab-toolbar-control) + 6px) / 2 * var(--lab-capsule-scale, 1));
+  display: flex;
+  align-items: center;
+  gap: 0;
+  min-inline-size: 0;
+  min-block-size: calc(var(--lab-toolbar-control) + 6px);
+  padding: 2px;
+  pointer-events: auto;
+}
+.lab-toolbar-group[data-orientation='vertical'] {
+  flex-direction: column;
+  inline-size: auto;
+  min-block-size: 0;
+  min-inline-size: calc(var(--lab-toolbar-control) + 6px);
+}
+.lab-toolbar-group > .lab-control[data-variant] {
+  border-radius: calc(var(--lab-glass-radius) - 2px);
+}
+
+@media (pointer: coarse) {
+  .lab-toolbar-group {
+    --lab-toolbar-control: calc(max(var(--lab-toolbar-item), var(--lab-control-touch-target)) - 6px);
+  }
+  html[data-lab-theme] .lab-toolbar-group .lab-control[data-variant] {
+    height: max(var(--lab-control-size), var(--lab-toolbar-control));
+    min-height: max(var(--lab-control-size), var(--lab-toolbar-control));
+    min-width: var(--lab-toolbar-control);
+  }
+  html[data-lab-theme] .lab-toolbar-group .lab-control[data-control-size='icon'] {
+    width: max(var(--lab-control-size), var(--lab-toolbar-control));
+  }
+}
+
+/* Field-like controls (Select, TextField) take the bubble's control height like buttons do: a
+regular one fills it, a small one keeps its size, and touch growth stops at the bubble (the bubble
+is the target), so a bubble holding a field is as tall as one holding a button. */
+html[data-lab-theme] .lab-toolbar-group .lab-select[data-surface-variant][data-control-size] {
+  border-radius: calc(var(--lab-glass-radius) - 2px);
+}
+html[data-lab-theme] .lab-toolbar-group .lab-text-field {
+  --lab-text-field-height: var(--lab-toolbar-control);
+}
+html[data-lab-theme] .lab-toolbar-group .lab-text-field[data-control-size='small'] {
+  --lab-text-field-height: min(var(--lab-field-height-small), var(--lab-toolbar-control));
+}
+@media (pointer: coarse) {
+  html[data-lab-theme] .lab-toolbar-group .lab-select[data-surface-variant][data-control-size] {
+    height: var(--lab-toolbar-control);
+    min-height: var(--lab-toolbar-control);
+  }
+  html[data-lab-theme] .lab-toolbar-group .lab-text-field[data-control-size='small'] {
+    --lab-text-field-height: var(--lab-toolbar-control);
+  }
+}
+
+/* A toolbar is one size class, including legacy callers passing small. Text and icon
+   controls use the same metric as Close, Filter and the navigation toggle. */
+html[data-lab-theme] .lab-toolbar-group .lab-control[data-control-appearance='toolbar'] {
+  --lab-control-size: var(--lab-toolbar-control);
+  --lab-control-label: var(--lab-control-font);
+}
+html[data-lab-theme] .lab-toolbar-group .lab-control[data-control-appearance='toolbar'] > svg:not(.lab-pixel-texture, .lab-pixel-loader, .lab-pixel-art, .lab-shader) {
+  width: 20px;
+  height: 20px;
+}
+/* Bare selection is a square control, not a mark inside an app-sized spacer. Labeled
+   choices still hug their text. Form/list choices outside a toolbar retain their own sizes. */
+html[data-lab-theme] .lab-toolbar-group .lab-choice[data-bare] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  inline-size: var(--lab-toolbar-control);
+  block-size: var(--lab-toolbar-control);
+  min-inline-size: var(--lab-toolbar-control);
+  min-block-size: var(--lab-toolbar-control);
+  padding: 0;
+}
+html[data-lab-theme] .lab-toolbar-group .lab-choice[data-bare] .lab-choice-mark {
+  width: 20px;
+  height: 20px;
+}
+
+/* Nested action bars and direct controls share the same inset curve. */
+html[data-lab-theme] .lab-toolbar-group .lab-control[data-variant] {
+  border-radius: calc(var(--lab-glass-radius) - 2px);
+  --lab-radius-control: calc(var(--lab-glass-radius) - 2px);
+}

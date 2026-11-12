@@ -1,0 +1,178 @@
+.lab-scaffold {
+  --lab-rail-edge: left;
+  --lab-player-reserve: 0px;
+  --lab-header-reserve: 0px;
+  --lab-rail-reserve: 0px;
+  --lab-rail-width: 0px;
+  --lab-rail-height: 0px;
+  --lab-notice-reserve: 0px;
+  --lab-viewport-bottom: 0px;
+  min-height: 100dvh;
+}
+
+.lab-scaffold .lab-app {
+  padding-bottom: max(var(--lab-player-reserve, 0px), var(--lab-notice-reserve, 0px));
+}
+
+.lab-floating-root,
+.lab-floating-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  /* A root transform or backdrop-filter would trap the viewport-fixed player. */
+  transform: none;
+  filter: none;
+  perspective: none;
+  contain: none;
+}
+
+.lab-floating-root {
+  z-index: 40;
+  color: var(--lab-ink);
+  font: 13px/20px var(--lab-font);
+}
+
+.lab-floating-root *,
+.lab-floating-layer * {
+  box-sizing: border-box;
+}
+
+.lab-floating-layer > * {
+  pointer-events: auto;
+}
+
+.lab-floating-layer--header,
+.lab-floating-layer--rail {
+  z-index: 1;
+}
+
+.lab-floating-layer--player {
+  z-index: 2;
+}
+
+.lab-floating-layer--notice {
+  z-index: 3;
+}
+
+.lab-floating-layer--notice > * {
+  /* The shell gap G above the other bottom chrome. */
+  bottom: calc(var(--lab-floating-bottom, 0px) + var(--lab-shell-gap));
+}
+
+/* One material layer per floating group; controls share it. */
+/* Zero specificity: floating groups (zoom rail, docks) set their own `position`, and must win
+   no matter which stylesheet the bundler loads last. */
+:where(.lab-glass-group) {
+  position: relative;
+}
+.lab-glass-group {
+  --lab-glass-radius: var(--lab-radius-glass, 32px);
+  isolation: isolate;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-glass-radius);
+  corner-shape: superellipse(1.5);
+  background: var(--lab-glass-fill);
+  backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate)) var(--lab-glass-lift);
+  -webkit-backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate)) var(--lab-glass-lift);
+  box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
+}
+.lab-glass-group::before {
+  display: none;
+}
+/* Toolbar bubbles and docks are capsules: their corners are round at full radius (system.css
+--lab-corner-shape-capsule), not the superellipse that squares a capsule's ends. */
+.lab-glass-group:is(.lab-toolbar-group, .lab-dock) {
+  corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
+}
+
+.lab-view-transition {
+  view-transition-name: lab-content;
+}
+
+html[data-lab-transition]::view-transition-old(root),
+html[data-lab-transition]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html[data-lab-transition]::view-transition-group(lab-content) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+html[data-lab-transition]::view-transition-old(lab-content) {
+  animation: lab-view-leave 160ms ease both;
+}
+
+html[data-lab-transition]::view-transition-new(lab-content) {
+  animation: lab-view-enter 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes lab-view-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes lab-view-leave {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+}
+
+@media (max-width: 720px) {
+  .lab-scaffold,
+  .lab-floating-root {
+    --lab-rail-edge: top;
+  }
+
+  .lab-glass-group {
+    --lab-glass-radius: calc(27px * var(--lab-corner-scale, 1));
+  }
+}
+
+@supports (corner-shape: superellipse(1.5)) {
+  .lab-glass-group::before,
+  .lab-glass-group::after {
+    corner-shape: inherit;
+    overflow: hidden;
+  }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .lab-glass-group {
+    background-color: var(--lab-surface);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .lab-glass-group {
+    background: var(--lab-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .lab-glass-group::before {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-view-transition {
+    view-transition-name: none;
+  }
+  html[data-lab-transition]::view-transition-old(lab-content),
+  html[data-lab-transition]::view-transition-new(lab-content) {
+    animation: none;
+  }
+}

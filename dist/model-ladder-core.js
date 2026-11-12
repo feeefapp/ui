@@ -1,0 +1,64 @@
+export const LADDER_COPY = {
+    quality: 'Quality',
+    reset: 'Reset to default',
+    fast: 'Fast',
+    balanced: 'Balanced',
+    best: 'Best',
+    pickModel: 'Choose a model',
+    searchModels: 'Search models…',
+    noMatches: 'No models match.',
+    back: 'Back to quality',
+    typical: (price) => `Usually about ${price}`,
+};
+export const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+/** Tier word for a stop; a label that copies the name or id becomes Fast / Balanced / Best. */
+export function visibleLabel(stop, index, count, copy = LADDER_COPY) {
+    const label = stop.label.trim();
+    if (label && label !== stop.modelName.trim() && label !== stop.modelId.trim())
+        return label;
+    if (count <= 1 || index >= count - 1)
+        return copy.best;
+    if (index <= 0)
+        return copy.fast;
+    return copy.balanced;
+}
+/** Human name for a list row; keeps the model id when no distinct name is available. */
+export function displayName(stop, index, count, copy = LADDER_COPY) {
+    const name = stop.modelName.trim();
+    const id = stop.modelId.trim();
+    if (name && name !== id)
+        return name;
+    const label = stop.label.trim();
+    if (label && label !== id && label !== name)
+        return label;
+    return name || id || visibleLabel(stop, index, count, copy);
+}
+/** The ladder's middle rung is the balanced default, as in marchant. */
+export const middleIndex = (count) => Math.max(0, Math.floor((count - 1) / 2));
+/** Heat of the top rung: 0 until the thumb passes the second-to-last stop, 1 on the last. */
+export const heatAt = (position, count) => count <= 1 ? 1 : clamp(position - (count - 2), 0, 1);
+/** USD with enough precision for cents-level AI prices. */
+export const formatUsd = (value) => value <= 0
+    ? '$0'
+    : value < 0.01
+        ? '<$0.01'
+        : value < 0.1
+            ? `$${value.toFixed(3)}`
+            : `$${value.toFixed(2)}`;
+export const FIRE_CELL = 5;
+export const FIRE_PALETTE = ['#3b0a04', '#a32008', '#ff4d0a', '#ff9a1f', '#ffd54a', '#fff6c4'];
+/** Cheap deterministic noise in [0, 1) for one cell and frame. */
+export const fireNoise = (x, y, frame) => {
+    const s = Math.sin(x * 127.1 + y * 311.7 + frame * 74.7) * 43758.5453;
+    return s - Math.floor(s);
+};
+/** Palette index for a cell, or -1 when it stays dark. `rise` is 0 at the top edge, 1 at the bottom. */
+export function fireCell(col, row, rows, frame) {
+    const rise = rows <= 1 ? 1 : row / (rows - 1);
+    const n = fireNoise(col, row, frame);
+    const v = rise * rise * (0.55 + 0.45 * n) + 0.12 * n;
+    if (v < 0.18)
+        return -1;
+    return clamp(Math.floor(v * FIRE_PALETTE.length), 0, FIRE_PALETTE.length - 1);
+}
+//# sourceMappingURL=model-ladder-core.js.map

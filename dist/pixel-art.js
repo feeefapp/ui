@@ -1,0 +1,102 @@
+'use client';
+import { jsx as _jsx } from "react/jsx-runtime";
+import { useEffect, useMemo, useRef } from 'react';
+import { useI18n } from './i18n.js';
+import { installFoPixelFallback } from './brand/pixel-fallback.js';
+import './pixel-art.css';
+import { voiceFingerprint } from './avatar-fingerprint.js';
+import { randomSequence, texturePixels } from './brand/pixel-noise.js';
+const bayer = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+function artworkPixels(variant, seed) {
+    if (variant === 'voice')
+        return voiceFingerprint(seed);
+    const random = randomSequence(seed);
+    const phase = random() * Math.PI * 2;
+    const columns = variant === 'wave' ? 32 : 24;
+    const rows = variant === 'wave' ? 16 : 24;
+    const pixels = [];
+    for (let row = 0; row < rows; row++) {
+        for (let column = 0; column < columns; column++) {
+            const x = ((column + 0.5) / columns) * 2 - 1;
+            const y = ((row + 0.5) / rows) * 2 - 1;
+            const radius = Math.hypot(x, y);
+            const angle = Math.atan2(y, x);
+            let strength = 0;
+            if (variant === 'wave') {
+                const crest = Math.sin(x * Math.PI * 2.3 + phase) * 0.22;
+                const envelope = Math.pow(Math.max(0, 1 - x * x), 0.6);
+                const amplitude = 0.12 + 0.46 * envelope * (0.55 + 0.45 * Math.sin(x * 11 + phase) ** 2);
+                strength = Math.max(0, 1 - Math.abs(y - crest) / amplitude);
+                strength *= 0.72 + 0.28 * Math.cos(column * Math.PI);
+            }
+            else if (variant === 'orbit') {
+                const ring = Math.max(0, 1 - Math.abs(radius - 0.62) / 0.17);
+                const diagonal = Math.max(0, 1 - Math.abs(y + x * 0.47) / 0.13);
+                const core = Math.max(0, 1 - Math.hypot(x - 0.16, y + 0.03) / 0.2);
+                strength = Math.max(ring * (0.55 + 0.45 * Math.sin(angle + phase) ** 2), diagonal * 0.67, core);
+                if (radius > 0.92)
+                    strength = 0;
+            }
+            else {
+                const cross = Math.max(0, 1 - Math.min(Math.abs(x), Math.abs(y)) / 0.13);
+                const diagonal = Math.max(0, 1 - Math.min(Math.abs(x + y), Math.abs(x - y)) / 0.095);
+                const taper = Math.max(0, 1 - radius / 0.86);
+                strength = Math.max(cross * taper * 1.45, diagonal * taper * 0.7);
+            }
+            const threshold = (bayer[(row % 4) * 4 + (column % 4)] + 0.5) / 16;
+            if (strength > threshold * 0.81 + 0.055) {
+                pixels.push({
+                    x: column * 4,
+                    y: row * 4,
+                    opacity: strength > 0.72 ? 1 : strength > 0.44 ? 0.7 : 0.35,
+                });
+            }
+        }
+    }
+    return { pixels, width: columns * 4, height: rows * 4 };
+}
+/** Seeded pixel artwork for identity: avatars, empty states, cards. Decorative unless `title` is set. */
+export function PixelArtwork({ variant = 'voice', seed = 'feeef', size = 48, tone = 'ink', animated = false, className = '', style, title, }) {
+    const art = useMemo(() => artworkPixels(variant, seed), [variant, seed]);
+    return (_jsx("svg", { className: `lab-pixel-art lab-pixel-tone-${tone} ${animated ? 'lab-pixel-art-animated' : ''} ${className}`, width: size, height: (size * art.height) / art.width, viewBox: `0 0 ${art.width} ${art.height}`, fill: "currentColor", "aria-hidden": title ? undefined : true, "aria-label": title, role: title ? 'img' : undefined, focusable: "false", style: style, children: art.pixels.map((pixel) => (_jsx("rect", { x: pixel.x, y: pixel.y, width: "3", height: "3", opacity: pixel.opacity, fill: pixel.color }, `${pixel.x}-${pixel.y}`))) }));
+}
+/**
+ * Decorative pixel paint for a surface. Absolutely positioned to fill its nearest positioned
+ * ancestor, `aria-hidden` and pointer-transparent. It inherits the surface's ink color.
+ */
+export function PixelTexture({ variant = 'corner', seed = 'feeef-surface', density = 'medium', tone, animated = false, className = '', style, }) {
+    const pixels = useMemo(() => texturePixels(variant, seed, density), [variant, seed, density]);
+    return (_jsx("svg", { className: `lab-pixel-texture ${tone ? `lab-pixel-tone-${tone}` : ''} ${animated ? 'lab-pixel-texture-animated' : ''} ${className}`, viewBox: "0 0 256 96", preserveAspectRatio: "xMidYMid slice", fill: "currentColor", "aria-hidden": "true", focusable: "false", style: style, children: pixels.map((pixel) => (_jsx("rect", { x: pixel.x, y: pixel.y, width: "2", height: "2", opacity: pixel.opacity }, `${pixel.x}-${pixel.y}`))) }));
+}
+/** Squares in wave order: by their wave delay (column 110ms, row 80ms). */
+const LOADER_ORDER = [0, 3, 1, 6, 4, 2, 7, 5, 8];
+/** How lit square `index` is (0 … 1) at `progress` (0 … 1): one square per ninth, in wave order. */
+export function pixelLoaderCell(index, progress) {
+    return Math.min(1, Math.max(0, progress * 9 - LOADER_ORDER.indexOf(index)));
+}
+/** A nine-pixel loading wave; use decorative when adjacent text already announces status. */
+export function PixelLoader({ size = 20, label, decorative = false, progress, className = '', }) {
+    const { t } = useI18n();
+    const resolvedLabel = label ?? t('lab.common.loading');
+    return (_jsx("span", { className: `lab-pixel-loader ${className}`, role: decorative ? undefined : 'status', "aria-label": decorative ? undefined : resolvedLabel, "aria-hidden": decorative || undefined, style: { '--pixel-loader-size': `${size}px` }, children: Array.from({ length: 9 }, (_, index) => (_jsx("span", { className: "lab-pixel-loader-cell", style: progress == null
+                ? { '--pixel-delay': `${(index % 3) * 110 + Math.floor(index / 3) * 80}ms` }
+                : (() => {
+                    // The wave's resting and peak frames (opacity 0.22 → 1, scale 0.7 → 1).
+                    const lit = pixelLoaderCell(index, progress);
+                    return { animation: 'none', opacity: 0.22 + 0.78 * lit, transform: `scale(${0.7 + 0.3 * lit})` };
+                })() }, index))) }));
+}
+/**
+ * Animated, transparent pixel field on a canvas, painted with ordered dithering in the theme's
+ * `--lab-pixel-ink`. Runs at up to 18 fps, pauses off screen and in hidden tabs, and draws one still
+ * frame under reduced motion. The CPU renderer keeps it consistent across browser GPU drivers.
+ */
+export function PixelShader({ className = '', density = 1.2, speed = 0.35, style, }) {
+    const canvas = useRef(null);
+    useEffect(() => {
+        if (canvas.current)
+            return installFoPixelFallback(canvas.current, { density, speed });
+    }, [density, speed]);
+    return (_jsx("canvas", { ref: canvas, className: `lab-shader lab-pixel-shader ${className}`, "aria-hidden": "true", style: style }));
+}
+//# sourceMappingURL=pixel-art.js.map

@@ -1,0 +1,107 @@
+/* Image Lab workspace vocabulary, shared with the UI reference. */
+.lab-creation-workspace {
+  --lab-workspace-space: 8px;
+  --lab-workspace-gap: 16px;
+  --lab-workspace-rail: 288px;
+  --lab-workspace-panel-radius: calc(28px * var(--lab-corner-scale, 1));
+  --lab-workspace-composer: 780px;
+}
+.lab-workspace-canvas,
+html[data-lab-theme] .lab-creation-workspace.lab-workspace-canvas {
+  background-color: var(--lab-ground, #f3f6ef);
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--lab-ink, #17261b) 16%, transparent) 1.1px,
+    transparent 1.3px
+  );
+  background-size: 24px 24px;
+}
+html[data-lab-theme] .lab-workspace-actions {
+  display: flex;
+  align-items: center;
+  height: 52px;
+  /* Never a gap wider than the inset around the buttons. */
+  padding: 4px;
+  gap: 4px;
+  --lab-glass-radius: calc(26px * var(--lab-corner-scale, 1));
+}
+html[data-lab-theme] .lab-workspace-actions > :is(button, a),
+html[data-lab-theme] .lab-workspace-actions > .lab-control[data-variant] {
+  height: var(--lab-row-height);
+  min-height: var(--lab-row-height);
+  padding: 0 var(--lab-control-padding);
+  gap: 8px;
+  border-radius: calc(var(--lab-control-height) / 2 * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
+  font-size: 13px;
+  font-weight: 400;
+  --lab-control-elevation: none;
+}
+html[data-lab-theme] .lab-workspace-actions > .lab-control[data-control-size='icon'] {
+  width: var(--lab-row-height);
+  min-width: var(--lab-row-height);
+  padding: 0;
+}
+html[data-lab-theme] .lab-workspace-rail {
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-workspace-panel-radius, calc(28px * var(--lab-corner-scale, 1)));
+  corner-shape: superellipse(1.5);
+  /* The kit's panel-sized glass material (research/liquid-glass). */
+  background: var(--lab-glass-fill-large);
+  -webkit-backdrop-filter: blur(var(--lab-glass-blur-large)) saturate(var(--lab-glass-saturate-large)) var(--lab-glass-lift);
+  backdrop-filter: blur(var(--lab-glass-blur-large)) saturate(var(--lab-glass-saturate-large)) var(--lab-glass-lift);
+  box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
+}
+html[data-lab-theme] .lab-workspace-toolgroup {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  --lab-glass-radius: calc(24px * var(--lab-corner-scale, 1));
+}
+html[data-lab-theme] .lab-workspace-toolgroup > :is(button, a)[data-variant],
+html[data-lab-theme] .lab-workspace-toolgroup > div > button[data-variant] {
+  height: var(--lab-toolbar-control);
+  min-height: var(--lab-toolbar-control);
+  min-width: var(--lab-toolbar-control);
+  padding: 0 9px;
+  border-radius: var(--lab-radius-control);
+  --lab-control-elevation: none;
+}
+@media (pointer: coarse) {
+  html[data-lab-theme] .lab-workspace-toolgroup :is(button, a)[data-variant] {
+    height: var(--lab-control-touch-target);
+    min-height: var(--lab-control-touch-target);
+    min-width: var(--lab-control-touch-target);
+  }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  html[data-lab-theme] .lab-workspace-rail {
+    background: var(--lab-surface);
+  }
+}
+@media (prefers-contrast: more) {
+  html[data-lab-theme] .lab-workspace-rail {
+    background: var(--lab-surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--lab-ink);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  html[data-lab-theme] .lab-workspace-rail {
+    background: var(--lab-surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+@media (forced-colors: active) {
+  .lab-workspace-canvas {
+    background: Canvas;
+  }
+  html[data-lab-theme] .lab-workspace-rail {
+    background: Canvas;
+    border-color: CanvasText;
+    box-shadow: none;
+  }
+}

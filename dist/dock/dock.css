@@ -1,0 +1,130 @@
+.lab-dock-host {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.lab-dock-host--start {
+  justify-content: flex-start;
+}
+.lab-dock-host--end {
+  justify-content: flex-end;
+}
+.lab-dock-host > .lab-dock {
+  /* Tile and actions sit as far apart as from the edge: a gap wider than the inset looks loose. */
+  --lab-dock-inset: 4px;
+  pointer-events: auto;
+  width: max-content;
+  max-width: 100%;
+  min-width: 0;
+  padding: var(--lab-dock-inset);
+  /* A capsule one row tall (the toolbar control, the inset and the 1px border a side). */
+  --lab-glass-radius: calc((var(--lab-toolbar-control) + 2 * var(--lab-dock-inset) + 2px) / 2 * var(--lab-capsule-scale, 1));
+  /* Regular controls take the toolbar control height: 38 + the 4px inset and 1px border a side is
+  48 at comfortable density, iOS's bottom bar. */
+  --lab-control-height: var(--lab-toolbar-control);
+}
+.lab-dock-host--stretch > .lab-dock {
+  width: 100%;
+}
+.lab-dock-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: var(--lab-dock-inset, 4px);
+}
+.lab-dock-content {
+  flex: 0 1 auto;
+  min-width: 64px;
+  max-width: 32ch;
+  padding-inline: 10px;
+  font-size: 13px;
+}
+.lab-dock-content > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+.lab-dock-content small {
+  color: var(--lab-muted);
+  font-size: 11px;
+}
+/* Buttons passed straight to the dock sit in one row; a ActionsBar child overflows into its menu. */
+.lab-dock-actions {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  min-width: var(--lab-toolbar-control);
+  max-width: 100%;
+}
+.lab-dock-swap {
+  min-width: 0;
+}
+.lab-dock-swap--out {
+  opacity: 0;
+  transform: translateY(3px);
+  transition:
+    opacity 100ms,
+    transform 100ms;
+}
+.lab-dock-swap--in {
+  animation: lab-dock-content-in 160ms var(--lab-ease) both;
+}
+@keyframes lab-dock-content-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab-dock-swap {
+    animation: none;
+    transition: none;
+    transform: none;
+    opacity: 1;
+  }
+}
+@media (max-width: 420px) {
+  .lab-dock-content {
+    padding-inline: 6px;
+    min-width: 48px;
+    max-width: 20ch;
+  }
+}
+
+.lab-dock-host > .lab-dock {
+  transition:
+    width var(--lab-duration-normal) var(--lab-ease),
+    height var(--lab-duration-normal) var(--lab-ease);
+}
+.lab-dock-body {
+  width: max-content;
+  max-width: var(--lab-dock-body-max, 100%);
+  min-width: 0;
+}
+.lab-dock-host--stretch > .lab-dock {
+  width: 100% !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab-dock-host > .lab-dock {
+    transition: none;
+  }
+}
+
+.lab-dock-content {
+  max-width: var(--lab-dock-tile-max, 32ch);
+  min-width: 0;
+}
+
+/* Child curves follow the dock's 24px shell and 4px inset. */
+html[data-lab-theme] .lab-dock .lab-actions-bar__control[data-variant] {
+  border-radius: calc(var(--lab-glass-radius) - 4px);
+}

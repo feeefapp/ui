@@ -1,0 +1,273 @@
+/* One shared, borderless navigation shell for Voice, Image and Billing. */
+.lab-scaffold {
+  --lab-navigation-width: 240px;
+  --lab-navigation-inset: calc(var(--lab-navigation-width) + 16px);
+}
+.lab-scaffold[data-navigation-collapsed='true'] {
+  --lab-navigation-width: 72px;
+}
+.lab-scaffold .lab-workspace-header {
+  position: fixed;
+  inset: 16px 16px auto;
+  z-index: 23;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  height: 46px;
+  color: var(--lab-ink);
+  font-family: var(--lab-font);
+  pointer-events: none;
+}
+.lab-workspace-header > * {
+  pointer-events: auto;
+}
+.lab-workspace-header-leading,
+.lab-workspace-header-actions,
+.lab-workspace-header-tools {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 2px;
+  flex: none;
+}
+.lab-workspace-header-leading {
+  padding-inline-end: 14px;
+}
+.lab-workspace-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+/* The suffix only: `> span` also matched the logo's own span (muting the wordmark, and hiding it
+entirely on small screens). */
+.lab-workspace-brand-suffix {
+  font: 400 18px/24px var(--lab-font);
+  color: var(--lab-muted);
+}
+.lab-workspace-brand .fo-logo {
+  width: 100px;
+  height: 27px;
+}
+.lab-workspace-header .lab-toolbar-leading {
+  align-items: center;
+  gap: 16px;
+}
+.lab-workspace-header .lab-toolbar-trailing {
+  margin-inline-start: auto;
+}
+.lab-workspace-context {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  pointer-events: none;
+}
+.lab-workspace-context strong {
+  font: 500 14px/20px var(--lab-font);
+}
+.lab-workspace-context > span {
+  font: 400 12px/16px var(--lab-font);
+  color: var(--lab-muted);
+  max-width: 30ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lab-scaffold .lab-account-sidebar {
+  position: fixed;
+  z-index: 22;
+  inset-block: 84px 0;
+  inset-inline: 0 auto;
+  width: var(--lab-navigation-width);
+  min-height: 0;
+  padding: 0;
+  color: var(--lab-ink);
+  font-family: var(--lab-font);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: hidden;
+  --lab-scroll-surface: var(--lab-ground);
+}
+.lab-account-scroll .lab-scroll-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lab-account-scroll .lab-scroll-viewport {
+  scrollbar-gutter: auto;
+  scrollbar-width: thin;
+}
+.lab-account-sidebar nav {
+  display: grid;
+  gap: 0;
+}
+.lab-account-sidebar small {
+  display: block;
+  font: 400 12px/18px var(--lab-font);
+  color: var(--lab-muted);
+}
+.lab-account-group-label {
+  padding: 8px;
+}
+.lab-account-bottom {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  background: var(--lab-ground);
+  border-radius: calc(16px * var(--lab-corner-scale, 1));
+}
+.lab-account-sidebar[data-collapsed='true'] .lab-account-group-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.lab-account-sidebar[data-collapsed='true'] .lab-account-scroll .lab-scroll-content {
+  gap: 8px;
+}
+.lab-account-scrim,
+.lab-account-drawer-heading {
+  display: none;
+}
+/* Feature layouts consume the same inset in both sidebar sizes. */
+.lab-img-app[data-account-sidebar] :is(.lab-img-rail, .lab-img-rail-open) {
+  inset-inline-start: var(--lab-navigation-inset);
+}
+.lab-img-app[data-account-sidebar] .lab-img-dock {
+  inset-inline-start: var(--lab-navigation-inset);
+}
+/* Only a side column consumes canvas width. Phone sheets overlay it. */
+@media (min-width: 901px) {
+  .lab-img-app[data-account-sidebar][data-rail='true'] .lab-img-dock {
+    inset-inline-start: calc(var(--lab-navigation-inset) + var(--img-rail-w) + 16px);
+  }
+}
+.lab-scaffold .lab-account-voice.lab-studio .lab-main {
+  margin-inline-start: 0;
+}
+.lab-billing-app .lab-billing-main {
+  width: min(960px, calc(100% - var(--lab-navigation-inset) - 32px));
+  margin-inline-start: calc(var(--lab-navigation-inset) + 8px);
+  padding-top: 100px;
+}
+
+@media (max-width: 1180px) {
+  .lab-scaffold,
+  .lab-scaffold[data-navigation-collapsed='true'] {
+    --lab-navigation-width: 0px;
+  }
+  .lab-scaffold .lab-account-sidebar {
+    display: none;
+    inset-block: 84px 16px;
+    inset-inline: 16px auto;
+    width: min(288px, calc(100vw - 32px));
+    background: var(--lab-surface);
+    border-radius: calc(24px * var(--lab-corner-scale, 1));
+    corner-shape: superellipse(1.5);
+    z-index: 25;
+    --lab-scroll-surface: var(--lab-surface);
+  }
+  .lab-scaffold .lab-account-sidebar[data-open='true'] {
+    display: block;
+  }
+  .lab-account-sidebar .lab-account-bottom {
+    background: var(--lab-surface);
+  }
+  .lab-account-drawer-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: var(--lab-surface);
+    border-radius: var(--lab-radius-control);
+    padding-inline-start: 8px;
+  }
+  .lab-account-drawer-heading strong {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .lab-account-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 20%);
+    z-index: 24;
+  }
+
+  .lab-billing-app .lab-billing-main {
+    margin-inline: 16px;
+    width: auto;
+  }
+}
+@media (max-width: 900px) {
+  .lab-workspace-context {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .lab-scaffold .lab-workspace-header {
+    gap: 8px;
+    inset-inline: 12px;
+  }
+  .lab-workspace-brand {
+    --lab-navigation-logo-width: 88px;
+    --lab-navigation-logo-height: 24px;
+  }
+  .lab-workspace-brand-suffix {
+    font-size: 16px;
+  }
+  .lab-workspace-header-leading {
+    padding-inline-end: 10px;
+  }
+  .lab-workspace-header .lab-image-new-label {
+    display: none;
+  }
+  html[data-lab-theme] .lab-workspace-header .lab-new-project-action[data-variant] {
+    width: 44px;
+    padding: 0;
+  }
+  html[data-lab-theme] .lab-workspace-header .lab-header-login[data-variant] {
+    display: none;
+  }
+}
+@media (forced-colors: active) {
+  .lab-scaffold .lab-account-sidebar {
+    background: Canvas;
+  }
+  .lab-account-scrim {
+    background: transparent;
+  }
+}
+.lab-workspace-brand {
+  min-height: var(--lab-control-height);
+}
+.lab-scaffold .lab-workspace-header[data-embedded='true'] {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  min-height: 54px;
+  height: auto;
+  z-index: auto;
+}
+
+@media (max-width: 340px) {
+  .lab-scaffold .lab-workspace-header {
+    inset-inline: 8px;
+    gap: 0;
+  }
+  .lab-workspace-header-leading {
+    padding-inline-end: 8px;
+  }
+  .lab-workspace-brand {
+    --lab-navigation-logo-width: 60px;
+    --lab-navigation-logo-height: 18px;
+  }
+  .lab-workspace-brand-suffix {
+    display: none;
+  }
+}

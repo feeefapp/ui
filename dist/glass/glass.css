@@ -1,0 +1,322 @@
+/* GlassContainer: one material behind every bubble in a row. The container keeps the caller's
+layout; the material covers exactly its box and draws in the container's own pixels. Glass that
+overshoots it is painted outside (SVG overflow), which never widens the page's scroll area.
+Never set filter, opacity, mask or clip-path on a container or its ancestors: they would stop the
+backdrop blur from seeing the page. */
+:where(.lab-glass-container) {
+  position: relative;
+  z-index: 0;
+}
+.lab-glass-material {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.lab-glass-material > * {
+  /* Not painted: the scene reads the veil's colour from here for the edge terms. */
+  stop-color: var(--lab-surface);
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.lab-glass-backdrop {
+  position: absolute;
+  box-sizing: border-box;
+  corner-shape: superellipse(1.5);
+  /* Our fit of rendered Liquid Glass (research/liquid-glass), at the theme's tint: the blur when
+  ThemeConfig glassBlur is on (the scene sets --lab-glass-blur per cluster from its size, 0 when
+  off), saturation, the clear lift, then the surface veil. Refraction (Chromium) replaces this
+  backdrop-filter with an SVG filter doing the same plus a continuous bend. */
+  background: var(--lab-glass-fill);
+  backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate)) var(--lab-glass-lift);
+  -webkit-backdrop-filter: blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturate)) var(--lab-glass-lift);
+}
+.lab-glass-backdrop[data-glass-size='large'] {
+  --lab-glass-saturate: var(--lab-glass-saturate-large);
+  background: var(--lab-glass-fill-large);
+}
+.lab-glass-edge,
+.lab-glass-rim {
+  fill: none;
+  stroke-width: 2;
+}
+/* Keep a theme-aware 1px inside border beneath the reflective rim, even without highlights.
+   The scene clips this 2px stroke to the shared silhouette, so merged bubbles have one border. */
+.lab-glass-edge {
+  stroke: var(--lab-line);
+}
+.lab-glass-rim-base {
+  stroke: var(--lab-glass-edge-low);
+}
+.lab-glass-stop-light {
+  stop-color: var(--lab-glass-rim-light);
+}
+.lab-glass-stop-low {
+  stop-color: var(--lab-glass-rim-low);
+}
+.lab-glass-stop-none {
+  stop-color: transparent;
+}
+/* Original directional edge colours, independent of the newer material optics. */
+:where(.lab-glass-container) {
+  --lab-glass-rim-light: rgb(255 255 255 / 76%);
+  --lab-glass-rim-low: rgb(255 255 255 / 20%);
+}
+html[data-lab-theme='dark'] .lab-glass-container {
+  --lab-glass-rim-light: rgb(255 255 255 / 30%);
+  --lab-glass-rim-low: rgb(255 255 255 / 10%);
+}
+html[data-lab-theme] .lab-glass-container[data-glass-backdrop='light'] {
+  --lab-glass-rim-light: rgb(255 255 255 / 76%);
+  --lab-glass-rim-low: rgb(255 255 255 / 20%);
+}
+html[data-lab-theme] .lab-glass-container[data-glass-backdrop='dark'] {
+  --lab-glass-rim-light: rgb(255 255 255 / 30%);
+  --lab-glass-rim-low: rgb(255 255 255 / 10%);
+}
+.lab-glass-shadow-shape {
+  fill: var(--lab-glass-shadow-color);
+}
+/* iOS 27's hairline (material.ts GLASS_HAIRLINE): outside every glass shape, the ring and side
+slivers as even-odd paths filled black at their strength (the scene sets fill-opacity). It stays
+with reduced transparency and more contrast: it is the contrast cue. */
+.lab-glass-hairline {
+  fill: #000;
+}
+
+/* Once the container has measured, its bubbles stop painting their own glass (a solo container,
+a GlassGroup with none around it, is its own bubble). Layout (the 1px
+border) is unchanged, so nothing moves when the container takes over. The html[data-lab-theme]
+prefix out-specifies the theme's glass rules (renderer fill, solid), which would otherwise keep
+painting each bubble over the container's edge and light. */
+@media not (forced-colors: active) {
+  html[data-lab-theme] .lab-glass-container[data-glass-ready] [data-glass-member],
+  html[data-lab-theme] .lab-glass-container[data-glass-ready][data-glass-member] {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  html[data-lab-theme] .lab-glass-container[data-glass-ready] [data-glass-member]::before,
+  html[data-lab-theme] .lab-glass-container[data-glass-ready] [data-glass-member]::after,
+  html[data-lab-theme] .lab-glass-container[data-glass-ready][data-glass-member]::before,
+  html[data-lab-theme] .lab-glass-container[data-glass-ready][data-glass-member]::after {
+    display: none;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .lab-glass-backdrop {
+    background: var(--lab-surface);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .lab-glass-backdrop {
+    background: var(--lab-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .lab-glass-rim {
+    display: none;
+  }
+}
+@media (prefers-contrast: more) {
+  .lab-glass-backdrop {
+    background: var(--lab-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .lab-glass-edge {
+    stroke: var(--lab-ink);
+  }
+  .lab-glass-rim {
+    display: none;
+  }
+}
+@media (forced-colors: active) {
+  .lab-glass-material {
+    display: none;
+  }
+}
+.lab-glass-glow-stop {
+  stop-color: var(--lab-glass-glow);
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .lab-glass-glow-stop {
+    stop-color: transparent;
+  }
+}
+
+/* ThemeConfig glass: 'solid' paints chrome on opaque surfaces, for dense tools and consoles. */
+html[data-lab-glass='solid'] .lab-glass-backdrop {
+  background: var(--lab-surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+html[data-lab-glass='solid'] .lab-glass-rim,
+html[data-lab-glass='solid'] .lab-glass-glow-stop,
+html[data-lab-glass='solid'] .lab-glass-hairline {
+  display: none;
+}
+html[data-lab-glass='solid'] .lab-glass-edge {
+  stroke: var(--lab-line);
+}
+
+/* Adaptive tint: the scene sets data-glass-backdrop when small glass sits over content of the
+opposite tone. Neutral tokens and that tone's measured anchors, then every token derived from them
+is declared again here, because custom properties derived on <html> keep the values computed there.
+The material formulas are system.css's (glass/material.ts glassMaterial). */
+.lab-glass-container[data-glass-backdrop] {
+  --lab-glass-fill: color-mix(in srgb, var(--lab-surface) calc(max(var(--lab-glass-tint) * var(--lab-glass-veil), var(--lab-glass-floor, 0)) * 100%), transparent);
+  --lab-glass-fill-large: color-mix(in srgb, var(--lab-surface) calc(max(var(--lab-glass-tint) * var(--lab-glass-veil-large), var(--lab-glass-floor, 0)) * 100%), transparent);
+  --lab-glass-saturate: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil)));
+  --lab-glass-saturate-large: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss-large)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil-large)));
+  --lab-glass-shadow-color: rgb(0 0 0 / var(--lab-glass-shadow-alpha));
+  --lab-glass-lift: contrast(calc((1.03 + (var(--lab-glass-lift-gain) - 1.03) * var(--lab-glass-tint)) / (1.182 + (var(--lab-glass-lift-gain) + 2 * var(--lab-glass-lift-offset) - 1.182) * var(--lab-glass-tint)))) brightness(calc(1.182 + (var(--lab-glass-lift-gain) + 2 * var(--lab-glass-lift-offset) - 1.182) * var(--lab-glass-tint)));
+  --lab-control-surface: var(--lab-surface);
+  --lab-control-border: color-mix(in srgb, var(--lab-ink) 15%, var(--lab-surface));
+  --lab-control-hover: color-mix(in srgb, var(--lab-ink) 6%, var(--lab-surface));
+  --lab-control-pressed: color-mix(in srgb, var(--lab-ink) 12%, var(--lab-surface));
+  --lab-control-selected: color-mix(in srgb, var(--lab-primary) 24%, var(--lab-surface));
+  --lab-focus: var(--lab-ink);
+  color: var(--lab-ink);
+}
+.lab-glass-container[data-glass-backdrop='dark'] {
+  --lab-surface: #1d211e;
+  --lab-surface-soft: #262b27;
+  --lab-ink: #f2f5f0;
+  --lab-muted: #b7c0b4;
+  --lab-line: rgb(255 255 255 / 16%);
+  --lab-glass-veil: 0.05;
+  --lab-glass-veil-large: 0.05;
+  --lab-glass-colour-loss: -0.147;
+  --lab-glass-colour-loss-large: -0.147;
+  --lab-glass-lift-gain: 0.863;
+  --lab-glass-lift-offset: 0.095;
+  --lab-glass-shadow-alpha: 0.04;
+  --lab-control-highlight: rgb(255 255 255 / 20%);
+}
+.lab-glass-container[data-glass-backdrop='light'] {
+  --lab-surface: #fbfcfa;
+  --lab-surface-soft: #eef1ec;
+  --lab-ink: #151a16;
+  --lab-muted: #5d675a;
+  --lab-line: rgb(0 0 0 / 12%);
+  --lab-glass-veil: 0.52;
+  --lab-glass-veil-large: 0.52;
+  --lab-glass-colour-loss: 0.435;
+  --lab-glass-colour-loss-large: 0.435;
+  --lab-glass-lift-gain: 0.92;
+  --lab-glass-lift-offset: 0;
+  --lab-glass-shadow-alpha: 0.02;
+  --lab-control-highlight: rgb(255 255 255 / 76%);
+}
+.lab-glass-material > .lab-glass-filters {
+  width: 0;
+  height: 0;
+}
+/* Adaptive contrast changes the foreground/veil, never the reflection lighting model.
+   The rim, edge and glow continue inheriting the theme optics. */
+.lab-glass-backdrop {
+  transition: background-color 240ms var(--lab-ease);
+}
+:where(.lab-glass-container) {
+  transition: color 240ms var(--lab-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab-glass-backdrop,
+  :where(.lab-glass-container) {
+    transition: none;
+  }
+}
+
+
+/* Each reflected segment is shaded by its surface normal, not its position in the box. */
+.lab-glass-rim-reflection {
+  stroke: var(--lab-glass-edge-light);
+}
+
+/* A convex bevel catches light across a soft band, rather than a one-pixel outline. */
+.lab-glass-surface-highlight {
+  fill: var(--lab-glass-edge-light);
+  fill: rgb(from var(--lab-glass-edge-light) r g b / calc(alpha * 2.5 + 0.24));
+  stroke: none;
+}
+
+.lab-glass-surface-shade {
+  fill: var(--lab-glass-shadow-color);
+  fill: rgb(from var(--lab-glass-shadow-color) r g b / calc(alpha * 2));
+  stroke: none;
+}
+
+/* Recompute derived colours locally: root custom-property formulas otherwise keep root tint. */
+.lab-glass-container[data-glass-local-tint] {
+  --lab-glass-fill: color-mix(in srgb, var(--lab-surface) calc(max(var(--lab-glass-tint) * var(--lab-glass-veil), var(--lab-glass-floor, 0)) * 100%), transparent);
+  --lab-glass-fill-large: color-mix(in srgb, var(--lab-surface) calc(max(var(--lab-glass-tint) * var(--lab-glass-veil-large), var(--lab-glass-floor, 0)) * 100%), transparent);
+  --lab-glass-saturate: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil)));
+  --lab-glass-saturate-large: calc((1 - var(--lab-glass-tint) * var(--lab-glass-colour-loss-large)) / (1 - var(--lab-glass-tint) * var(--lab-glass-veil-large)));
+  --lab-glass-lift: contrast(calc((1.03 + (var(--lab-glass-lift-gain) - 1.03) * var(--lab-glass-tint)) / (1.182 + (var(--lab-glass-lift-gain) + 2 * var(--lab-glass-lift-offset) - 1.182) * var(--lab-glass-tint)))) brightness(calc(1.182 + (var(--lab-glass-lift-gain) + 2 * var(--lab-glass-lift-offset) - 1.182) * var(--lab-glass-tint)));
+  --lab-glass-shadow-color: rgb(0 0 0 / var(--lab-glass-shadow-alpha));
+}
+
+.lab-glass-reflection-layer { pointer-events: none; }
+.lab-glass-reflection-canvas { position: absolute; pointer-events: none; }
+
+/* Firefox samples a separate live paint layer; the shared SVG optics run as a normal filter. */
+.lab-glass-backdrop[data-glass-source] {
+  /* Clip the current outline once, independently from the asynchronously decoded lens map. */
+  overflow: clip;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.lab-glass-source { position: absolute; inset: 0; background-repeat: no-repeat; pointer-events: none; }
+.lab-glass-backdrop[data-glass-source]::after {
+  content: ''; position: absolute; inset: 0; background: var(--lab-glass-fill); pointer-events: none;
+}
+.lab-glass-backdrop[data-glass-source][data-glass-size='large']::after { background: var(--lab-glass-fill-large); }
+.lab-glass-backdrop[data-glass-source]::after { border-radius: inherit; corner-shape: inherit; }
+
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .lab-glass-source { display: none; }
+  .lab-glass-backdrop[data-glass-source]::after { background: var(--lab-surface); }
+}
+html[data-lab-glass='solid'] .lab-glass-source { display: none; }
+html[data-lab-glass='solid'] .lab-glass-backdrop[data-glass-source]::after { background: var(--lab-surface); }
+
+/* Circular glass must share its profile with the native member and the optical renderer. */
+.lab-glass-container[data-glass-corners='round'] [data-glass-member] { corner-shape: round; }
+
+/* GlassBar: layout-neutral; only carries the raised --lab-glass-tint to its glass. */
+.lab-glass-bar {
+  display: contents;
+}
+
+/* The menu material (GlassContainer material="menu", material.ts GLASS_MENU): menus carry text over
+anything, so their glass is the full regular material (tint 1, large), veiled at least 88 % and
+blurred at least 20px (the scene sets --lab-glass-blur per piece), with a deeper shadow. Alerts
+paint the same thick glass from these tokens. */
+html[data-lab-theme] {
+  --lab-menu-tint: 1;
+  --lab-menu-veil: max(var(--lab-glass-veil-large), 0.88);
+  --lab-menu-blur: max(var(--lab-glass-blur-large), 20px);
+  --lab-menu-fill: color-mix(in srgb, var(--lab-surface) calc(var(--lab-menu-veil) * 100%), transparent);
+  --lab-menu-saturate: calc(
+    (1 - var(--lab-menu-tint) * var(--lab-glass-colour-loss-large)) / (1 - var(--lab-menu-tint) * var(--lab-glass-veil-large))
+  );
+  --lab-menu-lift: contrast(calc((1.03 - 0.03 * var(--lab-menu-tint)) / (1.182 - 0.182 * var(--lab-menu-tint))))
+    brightness(calc(1.182 - 0.182 * var(--lab-menu-tint)));
+  --lab-menu-shadow: 0 14px 40px -12px rgb(0 0 0 / 24%);
+}
+.lab-glass-container[data-glass-local-tint][data-glass-material='menu'] {
+  --lab-glass-fill: var(--lab-menu-fill);
+  --lab-glass-fill-large: var(--lab-menu-fill);
+  --lab-glass-saturate: var(--lab-menu-saturate);
+  --lab-glass-saturate-large: var(--lab-menu-saturate);
+  --lab-glass-lift: var(--lab-menu-lift);
+  --lab-glass-shadow-color: rgb(0 0 0 / 24%);
+}

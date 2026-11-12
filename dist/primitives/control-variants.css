@@ -1,0 +1,175 @@
+/* Shared paint recipe. Components retain their own geometry and interaction semantics. */
+html[data-lab-theme] [data-surface-variant] {
+  --lab-variant-fill: transparent;
+  --lab-variant-hover: var(--lab-control-hover);
+  --lab-variant-pressed: var(--lab-control-pressed);
+  --lab-variant-edge: transparent;
+  --lab-variant-shadow: none;
+  --lab-variant-ink: var(--lab-ink);
+  --lab-variant-label: var(--lab-muted);
+  --lab-variant-label-surface: var(--lab-surface);
+}
+html[data-lab-theme] [data-surface-variant='filled'] {
+  --lab-variant-fill: var(--lab-primary);
+  --lab-variant-hover: color-mix(in srgb, var(--lab-primary) 92%, white);
+  --lab-variant-pressed: color-mix(in srgb, var(--lab-primary) 90%, var(--lab-on-primary));
+  --lab-variant-edge: color-mix(in srgb, var(--lab-on-primary) 12%, var(--lab-primary));
+  --lab-variant-ink: var(--lab-on-primary);
+  --lab-variant-label: var(--lab-on-primary);
+  --lab-variant-label-surface: var(--lab-primary);
+}
+html[data-lab-theme] [data-surface-variant='tonal'] {
+  --lab-variant-fill: color-mix(in srgb, var(--lab-primary) 22%, var(--lab-surface));
+  --lab-variant-hover: color-mix(in srgb, var(--lab-primary) 30%, var(--lab-surface));
+  --lab-variant-pressed: color-mix(in srgb, var(--lab-primary) 36%, var(--lab-surface));
+  --lab-variant-label-surface: var(--lab-variant-fill);
+}
+html[data-lab-theme] [data-surface-variant='elevated'] {
+  --lab-variant-fill: var(--lab-control-surface);
+  --lab-variant-edge: var(--lab-control-border);
+  --lab-variant-shadow: var(--lab-control-raised-shadow);
+  --lab-variant-label-surface: var(--lab-control-surface);
+}
+html[data-lab-theme] [data-surface-variant='outlined'] {
+  --lab-variant-edge: var(--lab-control-border);
+}
+/* Adapt the shared recipe to the existing button state engine. */
+html[data-lab-theme] .lab-control[data-surface-variant] {
+  --lab-control-fill: var(--lab-variant-fill);
+  --lab-control-fill-hover: var(--lab-variant-hover);
+  --lab-control-fill-pressed: var(--lab-variant-pressed);
+  --lab-control-edge: var(--lab-variant-edge);
+  --lab-control-elevation: var(--lab-variant-shadow);
+  color: var(--lab-variant-ink);
+}
+html[data-lab-theme]
+  .lab-control[data-surface-variant]:is(
+    [data-surface-variant='outlined'],
+    [data-surface-variant='text']
+  ) {
+  color: var(--lab-focus);
+}
+html[data-lab-theme]
+  .lab-control[data-surface-variant][data-control-appearance='toolbar']:not(
+    [data-surface-variant='filled'],
+    [aria-pressed='true'],
+    [data-state='on'],
+    [aria-current='page']
+  ) {
+  --lab-control-fill: transparent;
+  --lab-control-edge: transparent;
+  --lab-control-elevation: none;
+}
+html[data-lab-theme]
+  .lab-control[data-surface-variant]:is([aria-pressed='true'], [data-state='on'], [aria-current='page']) {
+  --lab-control-fill: var(--lab-control-selected);
+  --lab-control-fill-hover: color-mix(in srgb, var(--lab-primary) 30%, var(--lab-surface));
+  --lab-control-fill-pressed: color-mix(in srgb, var(--lab-primary) 36%, var(--lab-surface));
+  --lab-control-edge: color-mix(in srgb, var(--lab-primary) 38%, var(--lab-line));
+  --lab-control-elevation: inset 0 1px 2px rgb(0 0 0 / 6%);
+  color: var(--lab-ink);
+}
+html[data-lab-theme] .lab-select[data-surface-variant] {
+  box-sizing: border-box;
+  height: var(--lab-control-height);
+  min-height: var(--lab-control-height);
+  border: 1px solid var(--lab-variant-edge);
+  background: var(--lab-variant-fill);
+  color: var(--lab-variant-ink);
+  box-shadow: var(--lab-variant-shadow);
+  border-radius: var(--lab-radius-control);
+  corner-shape: var(--lab-corner-shape-capsule, superellipse(1.5));
+}
+html[data-lab-theme] .lab-select[data-surface-variant][data-control-size='small'] {
+  height: var(--lab-control-small);
+  min-height: var(--lab-control-small);
+  padding-inline: var(--lab-control-padding-small);
+  border-radius: var(--lab-radius-control-small);
+}
+html[data-lab-theme] .lab-select[data-surface-variant]:hover:not(:disabled) {
+  background: var(--lab-variant-hover);
+}
+html[data-lab-theme] .lab-select[data-surface-variant][data-state='open'] {
+  background: var(--lab-variant-pressed);
+}
+html[data-lab-theme] .lab-select[data-surface-variant][aria-invalid='true'] {
+  border-color: var(--lab-danger);
+}
+@media (pointer: coarse) {
+  html[data-lab-theme] .lab-select[data-surface-variant][data-control-size] {
+    height: max(var(--lab-control-height), var(--lab-control-touch-target));
+    min-height: max(var(--lab-control-height), var(--lab-control-touch-target));
+  }
+}
+@media (forced-colors: active) {
+  html[data-lab-theme] [data-surface-variant] {
+    --lab-variant-fill: Canvas;
+    --lab-variant-ink: CanvasText;
+    --lab-variant-label: CanvasText;
+    --lab-variant-edge: ButtonText;
+    --lab-variant-shadow: none;
+    --lab-variant-label-surface: Canvas;
+  }
+  html[data-lab-theme] .lab-control[data-surface-variant] {
+    color: ButtonText;
+  }
+  html[data-lab-theme] .lab-control[data-surface-variant='filled'] {
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
+/* Filled is the canonical raised primary action; fields keep their own elevation. */
+html[data-lab-theme] .lab-control[data-surface-variant='filled'] {
+  --lab-control-elevation: var(--lab-control-raised-shadow);
+}
+
+/* Prominent buttons (filled, primary, destructive) are iOS 27's prominent glass (research/
+liquid-glass/FIGMA-27.md): a white backing burned by the tint lets a little of the blurred backdrop
+through (`tint - 0.03 + 0.03 · backdrop`: the tint pre-darkened at 97 % over a 6px backdrop blur;
+iOS lets ~6 % through, but an alpha blend can't take a channel below the share it lets through, so
+less keeps saturated tints exact on white),
+a bright rim at the very edge strongest at top and bottom (the border), a slightly shaded upper third
+and a lighter lower edge, outside the faint glass shadow and the two side slivers (no full ring). The shade gradient is
+a layer of the fill, so hover, press and focus keep working; the pixel texture stays on top. */
+html[data-lab-theme] .lab-control[data-variant][data-prominent] {
+  --lab-prominent-tint: var(--lab-primary);
+  --lab-prominent-shade: linear-gradient(to bottom, transparent 6%, rgb(0 0 0 / 5%) 24%, transparent 46%);
+  --lab-prominent-base: rgb(from var(--lab-prominent-tint) calc((r - 7.65) / 0.97) calc((g - 7.65) / 0.97) calc((b - 7.65) / 0.97) / 0.97);
+  --lab-prominent-hover: rgb(from color-mix(in srgb, var(--lab-prominent-tint) 92%, white) calc((r - 7.65) / 0.97) calc((g - 7.65) / 0.97) calc((b - 7.65) / 0.97) / 0.97);
+  --lab-prominent-pressed: rgb(from color-mix(in srgb, var(--lab-prominent-tint) 88%, black) calc((r - 7.65) / 0.97) calc((g - 7.65) / 0.97) calc((b - 7.65) / 0.97) / 0.97);
+  --lab-control-fill: var(--lab-prominent-shade), var(--lab-prominent-base);
+  --lab-control-fill-hover: var(--lab-prominent-shade), var(--lab-prominent-hover);
+  --lab-control-fill-pressed: var(--lab-prominent-shade), var(--lab-prominent-pressed);
+  --lab-control-edge: transparent;
+  /* The bright rim is the 1px border itself, at the very edge: top and bottom sides meet the
+  left and right ones at 45° on a capsule, so it is strongest at the top and bottom, as in iOS 27. */
+  border-color: rgb(255 255 255 / 55%) rgb(255 255 255 / 15%);
+  --lab-control-elevation:
+    inset 0 -8px 8px -4px rgb(255 255 255 / 6%),
+    -1.25px 0 0 -0.75px rgb(0 0 0 / 9.8%),
+    1.25px 0 0 -0.75px rgb(0 0 0 / 9.8%),
+    0 8px 15px rgb(0 0 0 / var(--lab-glass-shadow-alpha));
+  color: var(--lab-on-primary);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+html[data-lab-theme] .lab-control[data-variant='destructive'][data-prominent] {
+  --lab-prominent-tint: var(--lab-danger);
+  color: var(--lab-on-danger);
+}
+/* A press keeps the glass's rim (the shared press inset would replace it). */
+html[data-lab-theme] .lab-control[data-variant][data-prominent]:active:not(:disabled, [data-disabled]) {
+  box-shadow: var(--lab-control-elevation);
+}
+/* Reduced transparency: the flat tint, no backdrop; the rim stays. */
+@media (prefers-reduced-transparency: reduce) {
+  html[data-lab-theme] .lab-control[data-variant][data-prominent] {
+    --lab-prominent-base: var(--lab-prominent-tint);
+    --lab-prominent-hover: color-mix(in srgb, var(--lab-prominent-tint) 92%, white);
+    --lab-prominent-pressed: color-mix(in srgb, var(--lab-prominent-tint) 88%, black);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+

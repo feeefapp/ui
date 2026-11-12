@@ -1,0 +1,556 @@
+/* Model quality ladder (port of marchant ModelLadderSelector). Colours come from the --lab-* tokens. */
+.lab-ladder-trigger,
+.lab-ladder-popover,
+.lab-ladder-card {
+  --ladder-ink: var(--lab-ink);
+  --ladder-muted: var(--lab-muted);
+  --ladder-line: var(--lab-line);
+  --ladder-surface: var(--lab-surface);
+  --ladder-primary: var(--lab-primary);
+  --ladder-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Trigger ---------------------------------------------------------------------------------- */
+html[data-lab-theme] .lab-control.lab-ladder-trigger[data-variant] {
+  --lab-control-fill-hover: color-mix(in srgb, var(--ladder-primary) 14%, transparent);
+  --lab-control-fill-pressed: color-mix(in srgb, var(--ladder-primary) 20%, transparent);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  height: 44px;
+  padding-block: 4px;
+  padding-inline-start: 5px;
+  padding-inline-end: 12px;
+  border: 1px solid transparent;
+  border-radius: calc(18px * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
+  background: transparent;
+  color: var(--ladder-ink);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background 160ms,
+    border-color 160ms;
+}
+html[data-lab-theme] .lab-control.lab-ladder-trigger[data-state='open'] {
+  background: color-mix(in srgb, var(--ladder-primary) 14%, transparent);
+  border-color: color-mix(in srgb, var(--ladder-primary) 30%, var(--ladder-line));
+}
+.lab-ladder-trigger:focus-visible {
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
+}
+.lab-ladder-trigger:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.lab-ladder-trigger-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: calc(12px * var(--lab-corner-scale, 1));
+  background: color-mix(in srgb, var(--ladder-primary) 18%, var(--ladder-surface));
+  color: var(--ladder-ink);
+}
+.lab-ladder-trigger[data-top='true'] .lab-ladder-trigger-icon {
+  background: linear-gradient(160deg, #ffd54a, #ff4d0a 70%, #a32008);
+  color: #fff6c4;
+}
+.lab-ladder-trigger-text {
+  display: grid;
+  min-width: 0;
+  text-align: start;
+}
+.lab-ladder-trigger-text b {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 15px;
+}
+.lab-ladder-trigger-text small {
+  font-size: 10px;
+  line-height: 12px;
+  color: var(--ladder-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-lab-theme] .lab-control.lab-ladder-trigger--icon[data-variant] {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  justify-content: center;
+  border-radius: calc(14px * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
+}
+.lab-ladder-trigger--icon .lab-ladder-trigger-icon {
+  background: transparent;
+}
+.lab-ladder-trigger--icon .lab-ladder-trigger-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.lab-ladder-swap {
+  animation: lab-ladder-in 260ms var(--ladder-ease);
+}
+
+/* Popover ---------------------------------------------------------------------------------- */
+.lab-ladder-popover {
+  z-index: 60;
+  width: min(350px, calc(100vw - 24px));
+  outline: none;
+  transform-origin: var(--radix-popover-content-transform-origin);
+  animation: lab-ladder-pop 220ms var(--ladder-ease);
+}
+.lab-ladder-popover[data-state='closed'] {
+  animation: lab-ladder-pop-out 140ms ease-in forwards;
+}
+.lab-ladder-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 12px;
+  border: 1px solid var(--ladder-line);
+  border-radius: calc(26px * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
+  background: var(--ladder-surface);
+  box-shadow: var(--lab-glass-light), var(--lab-glass-shadow);
+  color: var(--ladder-ink);
+  font-family: var(--lab-font);
+}
+.lab-ladder-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lab-ladder-bolt {
+  flex: none;
+  color: var(--ladder-muted);
+}
+html[data-lab-theme] .lab-control.lab-ladder-title[data-variant] {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-start;
+  height: auto;
+  min-height: var(--lab-control-height);
+  padding: 2px 6px;
+  border: 0;
+  border-radius: calc(10px * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.lab-ladder-title:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ladder-ink) 6%, transparent);
+}
+/* A title with no model list to open is a label, not a dimmed disabled button. */
+html[data-lab-theme] .lab-control.lab-ladder-title:disabled {
+  cursor: default;
+  opacity: 1;
+}
+.lab-ladder-title:focus-visible,
+.lab-ladder-reset:focus-visible,
+.lab-ladder-option:focus-visible {
+  outline: var(--lab-focus-ring-width) solid var(--lab-focus-ring-color);
+  outline-offset: var(--lab-focus-ring-offset);
+}
+html[data-lab-theme] .lab-control.lab-ladder-title[data-variant] > svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--ladder-muted);
+}
+.lab-ladder-title-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.lab-ladder-tier-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.lab-ladder-tier {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 20px;
+  animation: lab-ladder-in 260ms var(--ladder-ease);
+}
+.lab-ladder-tier[data-top='true'] {
+  background: linear-gradient(95deg, #ff4d0a, #ff9a1f 55%, #ffd54a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.lab-ladder-name {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ladder-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-lab-theme] .lab-control.lab-ladder-reset[data-variant] {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--lab-control-height);
+  min-width: var(--lab-control-height);
+  height: var(--lab-control-height);
+  min-height: var(--lab-control-height);
+  padding: 0;
+  border: 0;
+  border-radius: var(--lab-radius-control);
+  background: transparent;
+  color: var(--ladder-ink);
+  cursor: pointer;
+  transition:
+    background 140ms,
+    opacity 140ms;
+}
+.lab-ladder-reset:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ladder-ink) 7%, transparent);
+}
+.lab-ladder-reset:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+/* Two classes: `.lab-app p { margin: 0 }` (system.css) would otherwise drop the inset. */
+.lab-ladder-card .lab-ladder-price {
+  margin-block: 4px 0;
+  margin-inline-start: 34px;
+  margin-inline-end: 0;
+  font-size: 11px;
+  color: var(--ladder-muted);
+}
+.lab-ladder-canvas {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-inline-start: 4px;
+  direction: ltr;
+}
+.lab-ladder-aspect-box {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+}
+.lab-ladder-aspect-box i {
+  display: block;
+  border: 1.5px solid var(--ladder-primary);
+  border-radius: 2px;
+}
+.lab-ladder-size {
+  font-size: 14px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.lab-ladder-aspect {
+  font-size: 12px;
+  color: var(--ladder-muted);
+}
+.lab-ladder-below {
+  margin-top: 12px;
+}
+
+/* Track ------------------------------------------------------------------------------------ */
+/* Geometry and interaction are shared with Slider. */
+.lab-ladder-track {
+  margin-top: 14px;
+}
+.lab-ladder-fire {
+  position: absolute;
+  inset: 0;
+  transition: opacity 320ms var(--ladder-ease);
+}
+.lab-ladder-fire-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+.lab-ladder-track[data-dragging='true'] .lab-ladder-fire {
+  transition: none;
+}
+
+/* Model list ------------------------------------------------------------------------------- */
+.lab-ladder-list {
+  --lab-scroll-surface: var(--ladder-surface);
+  padding: 0;
+  height: min(440px, calc(100dvh - 24px), var(--radix-popover-content-available-height, 440px));
+  min-height: 0;
+}
+.lab-ladder-list-scroll {
+  min-height: 0;
+}
+.lab-ladder-list-tools {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  border-radius: var(--lab-radius-control);
+  corner-shape: superellipse(1.5);
+  background: var(--ladder-surface);
+}
+.lab-ladder-list-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: var(--lab-control-height);
+}
+.lab-ladder-list-head b {
+  font-size: 15px;
+  font-weight: 500;
+}
+.lab-ladder-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+  color: var(--ladder-muted);
+}
+html[data-lab-theme] .lab-ladder-search .lab-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ladder-ink);
+  box-shadow: none;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+html[data-lab-theme] .lab-ladder-search .lab-input:focus-visible {
+  border: 0;
+  outline: none;
+  box-shadow: none;
+}
+@media (pointer: coarse) {
+  html[data-lab-theme] .lab-control.lab-ladder-trigger--icon[data-variant] {
+    width: var(--lab-control-touch-target);
+    min-width: var(--lab-control-touch-target);
+    height: var(--lab-control-touch-target);
+    min-height: var(--lab-control-touch-target);
+  }
+  .lab-ladder-search {
+  }
+}
+.lab-ladder-options {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+html[data-lab-theme] .lab-control.lab-ladder-option[data-variant] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  height: auto;
+  min-height: var(--lab-control-height);
+  padding: 9px 10px;
+  border: 0;
+  border-radius: calc(14px * var(--lab-corner-scale, 1));
+  corner-shape: superellipse(1.5);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+html[data-lab-theme] .lab-control.lab-ladder-option[aria-selected='true'] {
+  --lab-control-fill: color-mix(in srgb, var(--ladder-primary) 16%, transparent);
+  background: color-mix(in srgb, var(--ladder-primary) 16%, transparent);
+}
+.lab-ladder-option-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+  white-space: normal;
+}
+.lab-ladder-option b {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+}
+.lab-ladder-option small {
+  font-size: 11px;
+  color: var(--ladder-muted);
+  line-height: 15px;
+}
+.lab-ladder-option > svg {
+  flex: none;
+  color: var(--ladder-primary);
+}
+.lab-ladder-option .lab-model-access {
+  flex: none;
+  align-self: center;
+}
+.lab-ladder-options .lab-ladder-empty {
+  margin: 8px 4px;
+  font-size: 12px;
+  color: var(--ladder-muted);
+}
+
+@keyframes lab-ladder-in {
+  from {
+    opacity: 0;
+    transform: translateY(25%);
+  }
+}
+@keyframes lab-ladder-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+}
+@keyframes lab-ladder-pop-out {
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab-ladder-popover,
+  .lab-ladder-popover[data-state='closed'],
+  .lab-ladder-tier,
+  .lab-ladder-swap {
+    animation: none;
+  }
+  .lab-ladder-fire {
+    transition: none;
+  }
+}
+.lab-ladder-option-price {
+  margin-inline-start: auto;
+  font-style: normal;
+  font-size: 11px;
+  color: var(--ladder-muted);
+  white-space: nowrap;
+}
+/* Shape picker inside the card: one tidy scrolling row of proportion tiles. */
+.lab-ladder-shapes {
+  display: grid;
+  gap: 8px;
+}
+.lab-ladder-shapes-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ladder-muted);
+}
+.lab-ladder-shape-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 2px 4px;
+  scrollbar-width: none;
+}
+.lab-ladder-shape-row::-webkit-scrollbar {
+  display: none;
+}
+.lab-ladder-shape-options.lab-segmented {
+  width: max-content;
+  max-width: none;
+}
+/* Shape tiles: the segmented pill marks the chosen one (it takes the tile's size). Out-specifies the
+kit's `.lab-segmented-track > .lab-segmented-option.lab-control[data-variant]`. */
+html[data-lab-theme] .lab-ladder-shape-options.lab-segmented .lab-segmented-track > .lab-segmented-option.lab-control[data-variant] {
+  flex: none;
+  width: 52px;
+  min-width: 52px;
+  height: 58px;
+  min-height: 58px;
+  padding: 4px;
+  border: 1px solid var(--ladder-line);
+  border-radius: calc(15px * var(--lab-corner-scale, 1));
+  color: var(--ladder-ink);
+  font: inherit;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.lab-ladder-shape-options .lab-segmented-content {
+  flex-direction: column;
+  gap: 5px;
+}
+/* Tiles never fold into a menu: the chevron only took the selected copy's room and squeezed its label. */
+.lab-ladder-shape-options .lab-segmented-chevron {
+  display: none;
+}
+.lab-ladder-shape-options .lab-segmented-label {
+  flex-shrink: 0;
+}
+.lab-ladder-shape-options i {
+  display: block;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+}
+.lab-ladder-shape-options i.auto {
+  border-style: dashed;
+}
+.lab-model-access {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: 4px;
+  padding: 2px 6px;
+  border: 1px solid var(--lab-line);
+  border-radius: 6px;
+  color: var(--lab-muted);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 17px;
+}
+.lab-model-access[data-access='free'] {
+  background: var(--lab-surface-soft);
+  color: var(--lab-ink);
+}
+
+/* Compact trigger: a toolbar button one control tall (brain, tier, chevron), for composer rows. */
+.lab-ladder-compact-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html[data-lab-theme] .lab-control.lab-ladder-compact[data-variant] {
+  min-width: 0;
+  max-width: 100%;
+}
+html[data-lab-theme] .lab-control.lab-ladder-compact[data-state='open'] {
+  background: var(--lab-control-fill-hover);
+}
+html[data-lab-theme] .lab-control.lab-ladder-compact[data-variant] > svg.lab-ladder-compact-chevron {
+  width: 14px;
+  height: 14px;
+  color: var(--lab-muted);
+}
