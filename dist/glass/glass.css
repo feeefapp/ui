@@ -53,9 +53,11 @@ backdrop blur from seeing the page. */
 }
 .lab-glass-stop-light {
   stop-color: var(--lab-glass-rim-light);
+  stop-color: rgb(from var(--lab-glass-rim-light) r g b / calc(alpha * var(--lab-glass-rim-strength, 1)));
 }
 .lab-glass-stop-low {
   stop-color: var(--lab-glass-rim-low);
+  stop-color: rgb(from var(--lab-glass-rim-low) r g b / calc(alpha * var(--lab-glass-rim-strength, 1)));
 }
 .lab-glass-stop-none {
   stop-color: transparent;
