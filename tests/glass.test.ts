@@ -352,6 +352,15 @@ test('a container scaled by an ancestor measures bubbles in its own pixels', () 
   assert.deepEqual(toScreenPoint(frame, point.x, point.y), { x: 150, y: 45 })
 })
 
+test('a bordered container measures bubbles from inside its border, where the material starts', () => {
+  // A ToolbarGroup: 1px border, the material at inset 0 of its padding box.
+  const frame = hostFrame({ left: 100, top: 20, width: 52, height: 50 }, 52, 50, 1, 1)
+  assert.deepEqual(toLocalRect(frame, { left: 100, top: 20, width: 52, height: 50 }), { x: -1, y: -1, width: 52, height: 50 })
+  // Scaled by an ancestor, the border scales with it.
+  const half = hostFrame({ left: 100, top: 20, width: 26, height: 25 }, 52, 50, 1, 1)
+  assert.deepEqual(toLocalPoint(half, 100.5, 20.5), { x: 0, y: 0 })
+})
+
 test('an unscaled or empty container keeps a scale of 1', () => {
   assert.deepEqual(hostFrame({ left: 0, top: 0, width: 300, height: 40 }, 300, 40), { left: 0, top: 0, scaleX: 1, scaleY: 1 })
   assert.equal(hostFrame({ left: 0, top: 0, width: 0, height: 0 }, 0, 0).scaleX, 1)
