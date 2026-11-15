@@ -572,7 +572,8 @@ export class GlassScene {
             if (animated)
                 tracking = true;
             // In the container's own pixels (ancestors may scale it), minus our own content offset.
-            const local = solo ? { x: 0, y: 0, width: size.width, height: size.height } : toLocalRect(frame, box);
+            // Material pixels start inside the border: a solo bubble covers its whole border box.
+            const local = solo ? { x: -this.host.clientLeft, y: -this.host.clientTop, width: size.width, height: size.height } : toLocalRect(frame, box);
             // A broken layout (an error box overflowing by thousands of px) is not glass, and nothing
             // is ever drawn past the material's reach around the container.
             const rect = glassMemberRect(glassLayoutRect(local, offset, shape?.contentScale), size, viewport, GLASS_MARGIN);
@@ -1231,7 +1232,8 @@ export class GlassScene {
     }
     /** The container on screen and the scale its ancestors apply to it. */
     frame() {
-        return hostFrame(this.host.getBoundingClientRect(), this.host.offsetWidth, this.host.offsetHeight);
+        const host = this.host;
+        return hostFrame(host.getBoundingClientRect(), host.offsetWidth, host.offsetHeight, host.clientLeft, host.clientTop);
     }
 }
 /** Shorter side of the smallest bubble in a cluster: the material and bend follow it. */

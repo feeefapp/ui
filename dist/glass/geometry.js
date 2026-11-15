@@ -343,11 +343,16 @@ export function glassPaths(shapes, spacing, cell = 2) {
         return { shapes: cluster, bounds, d: loops.map(loopPath).join('') };
     });
 }
-/** The frame of a container from its screen box and its own layout size (`offsetWidth/Height`). */
-export function hostFrame(box, layoutWidth, layoutHeight) {
+/**
+ * The frame of a container from its screen box, its own layout size (`offsetWidth/Height`) and its
+ * border (`clientLeft/Top`). The material layer is `position: absolute; inset: 0`, so it starts at
+ * the padding box: glass is drawn in those pixels, and a bordered container (a ToolbarGroup) would
+ * otherwise get its glass shifted by the border and overhanging its far edges.
+ */
+export function hostFrame(box, layoutWidth, layoutHeight, borderLeft = 0, borderTop = 0) {
     const scaleX = layoutWidth > 0 && box.width > 0 ? box.width / layoutWidth : 1;
     const scaleY = layoutHeight > 0 && box.height > 0 ? box.height / layoutHeight : 1;
-    return { left: box.left, top: box.top, scaleX, scaleY };
+    return { left: box.left + borderLeft * scaleX, top: box.top + borderTop * scaleY, scaleX, scaleY };
 }
 /** A screen point in the container's own pixels. */
 export function toLocalPoint(frame, x, y) {

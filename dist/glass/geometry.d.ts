@@ -98,13 +98,18 @@ export type HostFrame = {
     scaleX: number;
     scaleY: number;
 };
-/** The frame of a container from its screen box and its own layout size (`offsetWidth/Height`). */
+/**
+ * The frame of a container from its screen box, its own layout size (`offsetWidth/Height`) and its
+ * border (`clientLeft/Top`). The material layer is `position: absolute; inset: 0`, so it starts at
+ * the padding box: glass is drawn in those pixels, and a bordered container (a ToolbarGroup) would
+ * otherwise get its glass shifted by the border and overhanging its far edges.
+ */
 export declare function hostFrame(box: {
     left: number;
     top: number;
     width: number;
     height: number;
-}, layoutWidth: number, layoutHeight: number): HostFrame;
+}, layoutWidth: number, layoutHeight: number, borderLeft?: number, borderTop?: number): HostFrame;
 /** A screen point in the container's own pixels. */
 export declare function toLocalPoint(frame: HostFrame, x: number, y: number): {
     x: number;
