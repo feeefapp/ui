@@ -1668,6 +1668,23 @@ class _SheetState extends State<_BottomSheet> {
       // while it dims).
       view = PassThrough(child: view);
     }
+    // The on-screen keyboard: the sheet's host ends at its top edge, so detents, the dock and the
+    // focused field stay above it. Children see no inset (it is already applied here).
+    // Always wrapped (even at 0) so the tree does not change as the keyboard opens.
+    final media = MediaQuery.of(context);
+    final keyboard = media.viewInsets.bottom;
+    view = Padding(
+      padding: EdgeInsets.only(bottom: keyboard),
+      child: MediaQuery(
+        data: keyboard > 0
+            ? media.copyWith(
+                viewInsets: media.viewInsets.copyWith(bottom: 0),
+                padding: media.padding.copyWith(bottom: 0),
+              )
+            : media,
+        child: view,
+      ),
+    );
     return PresentationRouteScope.none(
       child: PresentationHost(
         label: widget.sheet.label,

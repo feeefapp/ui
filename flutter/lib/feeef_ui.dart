@@ -117,7 +117,7 @@ export 'speech/block.dart';
 export 'speech/block_order.dart';
 export 'speech/reorder.dart';
 export 'theme.dart';
-export 'theme/color_mix.dart' show readableTextOn;
+export 'theme/color_mix.dart' show readableTextOn, mixSrgb;
 export 'theme/surfaces.dart' show FocusRing, FocusRingStyle, paintFocusRing;
 export 'theme_switch.dart';
 export 'toolbar.dart';

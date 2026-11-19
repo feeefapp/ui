@@ -344,6 +344,8 @@ class _AlertState extends State<Alert> with PresentationStateMixin<Alert> {
     );
 
     final screen = MediaQuery.sizeOf(context);
+    // The on-screen keyboard (a prompt's field): the alert centres in the room left above it.
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
     surface = ConstrainedBox(
       constraints: BoxConstraints(
         maxWidth: math.max(
@@ -354,7 +356,7 @@ class _AlertState extends State<Alert> with PresentationStateMixin<Alert> {
           0,
           math.min(tokens.width, screen.width - 2 * tokens.inset),
         ),
-        maxHeight: math.max(0, screen.height - 2 * tokens.inset),
+        maxHeight: math.max(0, screen.height - keyboard - 2 * tokens.inset),
       ),
       child: _AlertMaterial(
         radius: tokens.radius,
@@ -388,10 +390,13 @@ class _AlertState extends State<Alert> with PresentationStateMixin<Alert> {
                 ),
               ),
             ),
-            Center(
-              child: IgnorePointer(
-                ignoring: !open,
-                child: PopTransition(controller: _motion, child: surface),
+            Padding(
+              padding: EdgeInsets.only(bottom: keyboard),
+              child: Center(
+                child: IgnorePointer(
+                  ignoring: !open,
+                  child: PopTransition(controller: _motion, child: surface),
+                ),
               ),
             ),
           ],

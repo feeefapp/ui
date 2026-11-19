@@ -226,9 +226,11 @@ class _ModalState extends State<Modal> with PresentationStateMixin<Modal> {
     final shown = _shown;
     final open = isOpen;
     final screen = MediaQuery.sizeOf(context);
+    // The on-screen keyboard: the dialog centres in the room left above it.
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
     final margin = 4 * s.shellGap;
     final width = shown.width ?? (shown.wide ? 980.0 : 560.0);
-    final maxHeight = math.max(0.0, screen.height - margin);
+    final maxHeight = math.max(0.0, screen.height - keyboard - margin);
     final radius = s.radiusPanel;
     final header =
         shown.header ??
@@ -289,14 +291,21 @@ class _ModalState extends State<Modal> with PresentationStateMixin<Modal> {
                   leadingDistribution: TextLeadingDistribution.even,
                   color: c.ink,
                 ),
-                // The dialog sits away from the screen edges: no safe-area insets inside it.
-                child: MediaQuery.removePadding(
+                // The dialog sits away from the screen edges and above the keyboard: no
+                // safe-area or keyboard insets inside it.
+                child: MediaQuery.removeViewInsets(
                   context: context,
-                  removeTop: true,
                   removeBottom: true,
-                  removeLeft: true,
-                  removeRight: true,
-                  child: body,
+                  child: Builder(
+                    builder: (context) => MediaQuery.removePadding(
+                      context: context,
+                      removeTop: true,
+                      removeBottom: true,
+                      removeLeft: true,
+                      removeRight: true,
+                      child: body,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -331,13 +340,16 @@ class _ModalState extends State<Modal> with PresentationStateMixin<Modal> {
                 ),
               ),
             ),
-            Center(
-              child: IgnorePointer(
-                ignoring: !open,
-                child: PopTransition(
-                  controller: _motion,
-                  // Taps inside the dialog never reach the backdrop.
-                  child: GestureDetector(onTap: () {}, child: card),
+            Padding(
+              padding: EdgeInsets.only(bottom: keyboard),
+              child: Center(
+                child: IgnorePointer(
+                  ignoring: !open,
+                  child: PopTransition(
+                    controller: _motion,
+                    // Taps inside the dialog never reach the backdrop.
+                    child: GestureDetector(onTap: () {}, child: card),
+                  ),
                 ),
               ),
             ),
