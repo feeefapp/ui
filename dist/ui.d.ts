@@ -4,7 +4,7 @@ import './primitives/control-variants.css';
 export { Button, IconButton } from './primitives/button.js';
 export { SquareSlot } from './primitives/square-slot.js';
 export type { SquareSlotProps } from './primitives/square-slot.js';
-export { Input, Textarea, Label, Image } from './primitives/fields.js';
+export { Input, Textarea, Label, Image, type ImageProps } from './primitives/fields.js';
 export { Select, Option } from './primitives/select.js';
 export { Alert, Modal } from './presentation/index.js';
 export { Sheet, useSheet } from './containers/sheet.js';

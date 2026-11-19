@@ -34,9 +34,28 @@ export const Label = React.forwardRef<
 ))
 Label.displayName = 'Label'
 
-export const Image = React.forwardRef<
-  HTMLImageElement,
-  React.ImgHTMLAttributes<HTMLImageElement>
->((props, ref) => <img {...props} ref={ref} />)
+export interface ImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+  /**
+   * The page's largest image above the fold (its LCP): loads eagerly at high fetch priority.
+   * Give it to at most one image per page; several "priority" images compete for bandwidth
+   * and all arrive later. Every other image loads lazily.
+   */
+  priority?: boolean
+}
+
+/**
+ * A plain `<img>` with fast defaults: decoded off the main thread, lazy unless `priority`.
+ * Always pass `width` and `height` (or size the box with CSS `aspect-ratio`) so the layout
+ * does not shift when the file arrives.
+ */
+export const Image = React.forwardRef<HTMLImageElement, ImageProps>(({ priority = false, ...props }, ref) => (
+  <img
+    decoding="async"
+    loading={priority ? 'eager' : 'lazy'}
+    fetchPriority={priority ? 'high' : undefined}
+    {...props}
+    ref={ref}
+  />
+))
 
 Image.displayName = 'Image'

@@ -8,6 +8,11 @@ export const Textarea = React.forwardRef(({ className, ...props }, ref) => (_jsx
 Textarea.displayName = 'Textarea';
 export const Label = React.forwardRef(({ className, ...props }, ref) => (_jsx("label", { ref: ref, className: cn('lab-label', className), ...props })));
 Label.displayName = 'Label';
-export const Image = React.forwardRef((props, ref) => _jsx("img", { ...props, ref: ref }));
+/**
+ * A plain `<img>` with fast defaults: decoded off the main thread, lazy unless `priority`.
+ * Always pass `width` and `height` (or size the box with CSS `aspect-ratio`) so the layout
+ * does not shift when the file arrives.
+ */
+export const Image = React.forwardRef(({ priority = false, ...props }, ref) => (_jsx("img", { decoding: "async", loading: priority ? 'eager' : 'lazy', fetchPriority: priority ? 'high' : undefined, ...props, ref: ref })));
 Image.displayName = 'Image';
 //# sourceMappingURL=fields.js.map

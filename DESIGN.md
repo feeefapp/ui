@@ -162,6 +162,29 @@ decides by momentum projection (`projectMomentum`), rubber-bands at limits and s
 (`SPRINGS`: smooth for layout, snappy for small changes, release after drags). Only transform and
 opacity animate; layout switches once at rest. Gestures never replace a visible control.
 
+## Page speed (web)
+
+Measured on the Helium storefronts (Lighthouse mobile, 78–94 → 92–100); the same rules hold for
+any page built with the kit.
+
+- **One priority image.** Only the page's largest above-the-fold image (its LCP) gets
+  `<Image priority>` (eager, `fetchpriority=high`); everything else stays lazy. Ten "high" images
+  compete for bandwidth and the hero arrives last. A preload for it must name the same
+  `srcset`/`sizes` the `<picture>` uses, or the browser downloads two files.
+- **Reserve every box.** Images carry `width`+`height` or an `aspect-ratio` container, including
+  the `<picture>` wrapper when the `<img>` is sized in %, so nothing shifts when the file lands (CLS).
+- **No binary in CSS or HTML.** Never inline images as `data:` URIs over a few KB; serve them as
+  cacheable files (AVIF/WebP). Inline SVG repeated on a page gets integer coordinates or a `<use>`.
+- **Fonts:** WOFF2 subsets with `unicode-range` and `font-display: swap` (the kit's `Provider`
+  ships these); never whole TTF files.
+- **Below the fold:** long marketing sections take `content-visibility: auto` with a
+  `contain-intrinsic-size`, except around sticky elements and forms.
+- **Scripts that hydrate after paint** load at low priority (`modulepreload` with
+  `fetchpriority="low"`) so they never delay the first frame.
+- **Load animations stay compositable:** transform and opacity only. Never animate `filter: blur`,
+  `box-shadow` or `background-position` on large or LCP elements; the hero appears without a
+  blur-in. Every decorative loop respects reduced motion.
+
 ## Before shipping a screen
 
 - One filled action; destructive actions confirm; nothing important only on hover.

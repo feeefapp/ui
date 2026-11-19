@@ -52,6 +52,11 @@ JS reads `prefersReducedMotion()` / `motionOf()` / `useReducedMotion()` / `reduc
 `matchMedia('(prefers-reduced-motion…)')` or `MediaQuery.disableAnimations` directly. Under `none`
 ambient loops (tickers, rAF, polling) must not run.
 
+Page speed (DESIGN.md "Page speed"): kit images use `Image` (lazy + async decode by default;
+`priority` only for the one LCP image), fonts stay WOFF2 `unicode-range` subsets
+(`brand/fonts.ts`), no `data:` images over a few KB in kit CSS/JS, and kit animations move
+transform/opacity only (no animated `filter`, `box-shadow`, `background-position` on large areas).
+
 Architecture: use Provider as the composition root. Keep primitives in focused
 modules behind ui.tsx. Use typed props/callbacks for independent widgets, local
 state for local interactions, and context only for inherited/shared dependencies.
