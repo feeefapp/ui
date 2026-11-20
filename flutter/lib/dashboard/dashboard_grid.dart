@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -278,16 +279,22 @@ class _DashboardGridState extends State<DashboardGrid> {
             ? 0.0
             : rows * (widget.rowHeight + widget.gap) - widget.gap;
         final radius = theme.sizes.radiusPanel;
-        final children = <Widget>[];
-        String? activeTileId;
+        // Every tile keeps the same widget type and key in every state (idle, editing, held),
+        // so its element, its content's state and the recognizer driving a gesture survive
+        // the rebuilds a drag causes. Only the held tile moves to the end (paints on top);
+        // keyed reordering keeps its element.
+        final slots = <Widget>[];
+        final tiles = <Widget>[];
+        Widget? held;
         for (final p in shown) {
           final tile = _tile(p.id);
           if (tile == null) continue;
           final rect = _rectOf(p, width, _rtl);
-          if (p.id == _active) {
-            activeTileId = p.id;
+          final active = p.id == _active && floating != null;
+          if (active) {
             // Where it will land.
-            children.add(
+            // animation_level: 1
+            slots.add(
               AnimatedPositioned.fromRect(
                 key: ValueKey('slot:${p.id}'),
                 rect: rect,
@@ -306,42 +313,38 @@ class _DashboardGridState extends State<DashboardGrid> {
                 ),
               ),
             );
-            continue;
           }
-          children.add(
-            AnimatedPositioned.fromRect(
-              key: ValueKey(p.id),
-              rect: rect,
-              duration: reduced
-                  ? Duration.zero
-                  : const Duration(milliseconds: 200),
-              curve: Curves.easeOutCubic,
-              child: _framed(tile, width),
-            ),
-          );
-        }
-        if (activeTileId != null && floating != null) {
-          final tile = _tile(activeTileId)!;
-          children.add(
-            Positioned.fromRect(
-              key: ValueKey(activeTileId),
-              rect: floating,
-              child: DecoratedBox(
-                decoration: ShapeDecoration(
-                  shape: SuperellipseBorder(radius: radius),
-                  shadows: [
+          // animation_level: 2 — tiles make way; the held one follows the pointer (no tween)
+          // and glides into its slot on release.
+          final positioned = AnimatedPositioned.fromRect(
+            key: ValueKey(p.id),
+            rect: active ? floating : rect,
+            duration: reduced || active
+                ? Duration.zero
+                : const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            child: DecoratedBox(
+              decoration: ShapeDecoration(
+                shape: SuperellipseBorder(radius: radius),
+                shadows: [
+                  if (active)
                     BoxShadow(
                       color: c.ink.withValues(alpha: 0.16),
                       blurRadius: 28,
                       offset: const Offset(0, 12),
                     ),
-                  ],
-                ),
-                child: _framed(tile, width),
+                ],
               ),
+              child: _framed(tile, active: active),
             ),
           );
+          if (active) {
+            held = positioned;
+          } else {
+            tiles.add(positioned);
+          }
         }
+        final children = [...slots, ...tiles, ?held];
         return SizedBox(
           key: _boardKey,
           height: height,
@@ -351,34 +354,110 @@ class _DashboardGridState extends State<DashboardGrid> {
     );
   }
 
-  /// A tile's content with, while editing, its drag surface, remove badge and corner handle.
-  Widget _framed(DashboardTile tile, double width) {
-    if (!widget.editing) {
-      if (widget.onEditRequest == null) return tile.child;
-      return GestureDetector(
-        onLongPress: () {
-          HapticFeedback.mediumImpact();
-          widget.onEditRequest!();
-        },
-        child: tile.child,
-      );
+  /// Starts moving [id] from a hold (touch) or a drag (mouse). A hold outside editing first
+  /// asks to edit, then keeps carrying the tile in the same gesture (iOS home screen).
+  void _pickUp(String id) {
+    if (_active != null) return;
+    HapticFeedback.mediumImpact();
+    if (!widget.editing) widget.onEditRequest?.call();
+    _start(id, _Gesture.move, _width, _rtl);
+  }
+
+  void _drag(String id, Offset global) {
+    final last = _lastGlobal;
+    if (_active != id || last == null) {
+      _lastGlobal = global;
+      return;
     }
+    _update(global - last, global, _width, _rtl);
+  }
+
+  void _drop(String id) {
+    if (_active == id) _end();
+  }
+
+  /// The gestures on a tile. The recognizer types never change between idle and editing, so a
+  /// hold that turns editing on keeps driving the drag (a removed recognizer drops its pointer).
+  Map<Type, GestureRecognizerFactory> _tileGestures(DashboardTile tile) {
+    final id = tile.id;
+    final editing = widget.editing;
+    // The idle hold stays wired while it carries this tile (the hold that turned editing on).
+    final canHold =
+        (!editing && widget.onEditRequest != null) ||
+        (editing && _active == id);
+    void holdStart(LongPressStartDetails d) {
+      _lastGlobal = d.globalPosition;
+      _pickUp(id);
+    }
+
+    void holdMove(LongPressMoveUpdateDetails d) => _drag(id, d.globalPosition);
+    void holdEnd(LongPressEndDetails _) => _drop(id);
+    void holdCancel() => _drop(id);
+    return {
+      // Touch, outside editing: a long press enters editing and picks the tile up. Quick swipes
+      // still scroll the page and taps reach the tile's content.
+      _IdleHoldRecognizer: GestureRecognizerFactoryWithHandlers<_IdleHoldRecognizer>(
+        () => _IdleHoldRecognizer(debugOwner: this),
+        (r) => r
+          ..onLongPressStart = canHold ? holdStart : null
+          ..onLongPressMoveUpdate = canHold ? holdMove : null
+          ..onLongPressEnd = canHold ? holdEnd : null
+          ..onLongPressCancel = canHold ? holdCancel : null,
+      ),
+      // Touch, editing: a short hold picks the tile up; a quick swipe scrolls the board.
+      _EditHoldRecognizer: GestureRecognizerFactoryWithHandlers<_EditHoldRecognizer>(
+        () => _EditHoldRecognizer(debugOwner: this),
+        (r) => r
+          ..onLongPressStart = editing ? holdStart : null
+          ..onLongPressMoveUpdate = editing ? holdMove : null
+          ..onLongPressEnd = editing ? holdEnd : null
+          ..onLongPressCancel = editing ? holdCancel : null,
+      ),
+      // Mouse, editing: drag right away (a mouse never scrolls the page by dragging).
+      PanGestureRecognizer: GestureRecognizerFactoryWithHandlers<PanGestureRecognizer>(
+        () => PanGestureRecognizer(
+          debugOwner: this,
+          supportedDevices: const {PointerDeviceKind.mouse},
+        ),
+        (r) => r
+          ..onStart = editing
+              ? (d) {
+                  _lastGlobal = d.globalPosition;
+                  _pickUp(id);
+                }
+              : null
+          ..onUpdate = editing ? (d) => _drag(id, d.globalPosition) : null
+          ..onEnd = editing ? (_) => _drop(id) : null
+          ..onCancel = editing ? () => _drop(id) : null,
+      ),
+    };
+  }
+
+  /// A tile's content with, while editing, its drag surface, remove badge and corner handle.
+  ///
+  /// The tree is the same in every state (idle, editing, held) so the content keeps its state
+  /// (no refetch, no flash) and the gesture in progress survives each rebuild.
+  Widget _framed(DashboardTile tile, {required bool active}) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
-    final active = tile.id == _active;
+    final editing = widget.editing;
     final radius = theme.sizes.radiusPanel;
     // Soft rim like iOS widgets in arrange mode; stronger while this tile is held.
-    final rim = BorderSide(
-      color: c.ink.withValues(alpha: active ? 0.28 : 0.12),
-      width: active ? 1.5 : 1,
-    );
-    // animation_level: 1 — barely-there jiggle; the minus + corner handle carry the mode
+    final rim = editing
+        ? BorderSide(
+            color: c.ink.withValues(alpha: active ? 0.28 : 0.12),
+            width: active ? 1.5 : 1,
+          )
+        : BorderSide.none;
     final body = Stack(
       fit: StackFit.expand,
       clipBehavior: Clip.none,
       children: [
+        // While editing the content is a picture: its own taps and scrolls are off.
         IgnorePointer(
+          ignoring: editing,
           child: DecoratedBox(
+            position: DecorationPosition.foreground,
             decoration: ShapeDecoration(
               shape: SuperellipseBorder(radius: radius, side: rim),
             ),
@@ -390,23 +469,7 @@ class _DashboardGridState extends State<DashboardGrid> {
             ),
           ),
         ),
-        MouseRegion(
-          cursor: active
-              ? SystemMouseCursors.grabbing
-              : SystemMouseCursors.grab,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onPanStart: (_) {
-              HapticFeedback.selectionClick();
-              _start(tile.id, _Gesture.move, width, _rtl);
-            },
-            onPanUpdate: (d) =>
-                _update(d.delta, d.globalPosition, width, _rtl),
-            onPanEnd: (_) => _end(),
-            onPanCancel: _end,
-          ),
-        ),
-        if (widget.onRemove != null)
+        if (editing && widget.onRemove != null)
           // iOS: grey (−) badge on the top-leading corner, half outside the tile.
           PositionedDirectional(
             top: -6,
@@ -420,57 +483,111 @@ class _DashboardGridState extends State<DashboardGrid> {
               color: c,
             ),
           ),
-        // iOS widget resize: thick curved stroke on the bottom-trailing corner.
-        PositionedDirectional(
-          bottom: 0,
-          end: 0,
-          child: MouseRegion(
-            cursor: _rtl
-                ? SystemMouseCursors.resizeDownLeft
-                : SystemMouseCursors.resizeDownRight,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onPanStart: (_) {
-                HapticFeedback.selectionClick();
-                _start(tile.id, _Gesture.resize, width, _rtl);
-              },
-              onPanUpdate: (d) =>
-                  _update(d.delta, d.globalPosition, width, _rtl),
-              onPanEnd: (_) => _end(),
-              onPanCancel: _end,
-              child: Semantics(
-                label: '${widget.resizeLabel} ${tile.label}',
-                child: SizedBox.square(
-                  dimension: 44,
-                  child: CustomPaint(
-                    painter: _CornerHandlePainter(
-                      color: c.ink.withValues(alpha: 0.45),
-                      rtl: _rtl,
+        if (editing)
+          // iOS widget resize: thick curved stroke on the bottom-trailing corner. It claims the
+          // pointer on touch down, so the page's scroll never takes a drag that starts on it.
+          PositionedDirectional(
+            bottom: 0,
+            end: 0,
+            child: MouseRegion(
+              cursor: _rtl
+                  ? SystemMouseCursors.resizeDownLeft
+                  : SystemMouseCursors.resizeDownRight,
+              child: RawGestureDetector(
+                behavior: HitTestBehavior.opaque,
+                gestures: {
+                  _EagerPanRecognizer:
+                      GestureRecognizerFactoryWithHandlers<_EagerPanRecognizer>(
+                        () => _EagerPanRecognizer(debugOwner: this),
+                        (r) => r
+                          ..onStart = (d) {
+                            if (_active != null) return;
+                            HapticFeedback.selectionClick();
+                            _lastGlobal = d.globalPosition;
+                            _start(tile.id, _Gesture.resize, _width, _rtl);
+                          }
+                          ..onUpdate = (d) {
+                            if (_active != tile.id) return;
+                            _update(d.delta, d.globalPosition, _width, _rtl);
+                          }
+                          ..onEnd = ((_) => _drop(tile.id))
+                          ..onCancel = (() => _drop(tile.id)),
+                      ),
+                },
+                child: Semantics(
+                  label: '${widget.resizeLabel} ${tile.label}',
+                  child: SizedBox.square(
+                    dimension: 44,
+                    child: CustomPaint(
+                      painter: _CornerHandlePainter(
+                        color: c.ink.withValues(alpha: 0.45),
+                        rtl: _rtl,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
       ],
     );
     return Semantics(
       label: tile.label,
-      child: active
-          ? body
-          : _ArrangeMotion(seed: tile.id.hashCode, child: body),
+      child: MouseRegion(
+        cursor: !editing
+            ? MouseCursor.defer
+            : active
+            ? SystemMouseCursors.grabbing
+            : SystemMouseCursors.grab,
+        child: RawGestureDetector(
+          behavior: HitTestBehavior.translucent,
+          gestures: _tileGestures(tile),
+          child: _ArrangeMotion(
+            seed: tile.id.hashCode,
+            enabled: editing && !active,
+            child: body,
+          ),
+        ),
+      ),
     );
   }
 }
 
-/// Barely-perceptible jiggle — Apple home-screen amplitude, not a shake.
+/// Outside editing: the platform long press (500ms) enters editing.
+class _IdleHoldRecognizer extends LongPressGestureRecognizer {
+  _IdleHoldRecognizer({super.debugOwner});
+}
+
+/// While editing: a short hold picks a tile up; moving sooner scrolls the page instead.
+class _EditHoldRecognizer extends LongPressGestureRecognizer {
+  _EditHoldRecognizer({super.debugOwner})
+    : super(duration: const Duration(milliseconds: 180));
+}
+
+/// A pan that wins the arena on pointer down: used by the small resize grip only.
+class _EagerPanRecognizer extends PanGestureRecognizer {
+  _EagerPanRecognizer({super.debugOwner});
+
+  @override
+  void addAllowedPointer(PointerDownEvent event) {
+    super.addAllowedPointer(event);
+    resolvePointer(event.pointer, GestureDisposition.accepted);
+  }
+}
+
+/// Barely-perceptible jiggle — Apple home-screen amplitude, not a shake. Always in the tree (a
+/// still transform when off), so toggling it never rebuilds the tile's content.
 ///
 /// animation_level: 1
 class _ArrangeMotion extends StatefulWidget {
-  const _ArrangeMotion({required this.seed, required this.child});
+  const _ArrangeMotion({
+    required this.seed,
+    required this.enabled,
+    required this.child,
+  });
 
   final int seed;
+  final bool enabled;
   final Widget child;
 
   @override
@@ -481,39 +598,43 @@ class _ArrangeMotion extends StatefulWidget {
     super.debugFillProperties(properties);
     properties
       ..add(IntProperty('seed', seed))
+      ..add(FlagProperty('enabled', value: enabled, ifTrue: 'jiggling'))
       ..add(DiagnosticsProperty<Widget>('child', child));
   }
 }
 
 class _ArrangeMotionState extends State<_ArrangeMotion>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  bool? _reduced;
+  // Slow cycle; repeat + sin() so neighbours stay out of phase without snapping.
+  late final AnimationController _ctrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 520),
+  );
 
-  @override
-  void initState() {
-    super.initState();
-    // Slow cycle; reverse:false + sin() so neighbours stay out of phase without snapping.
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 520),
-    );
+  void _sync() {
+    final run =
+        widget.enabled &&
+        !reducedMotionOf(context) &&
+        TickerMode.valuesOf(context).enabled;
+    if (run && !_ctrl.isAnimating) {
+      _ctrl.repeat();
+    } else if (!run && (_ctrl.isAnimating || _ctrl.value != 0)) {
+      _ctrl
+        ..stop()
+        ..value = 0;
+    }
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final reduced =
-        reducedMotionOf(context) || !TickerMode.valuesOf(context).enabled;
-    if (_reduced == reduced) return;
-    _reduced = reduced;
-    if (reduced) {
-      _ctrl
-        ..stop()
-        ..value = 0;
-    } else if (!_ctrl.isAnimating) {
-      _ctrl.repeat();
-    }
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(_ArrangeMotion old) {
+    super.didUpdateWidget(old);
+    if (old.enabled != widget.enabled) _sync();
   }
 
   @override
@@ -524,18 +645,16 @@ class _ArrangeMotionState extends State<_ArrangeMotion>
 
   @override
   Widget build(BuildContext context) {
-    if (reducedMotionOf(context)) return widget.child;
     // Unique phase + tiny amplitude (~0.3°) so the board reads "editing", not vibrating.
     final phase = (widget.seed % 11) / 11 * 2 * math.pi;
     return AnimatedBuilder(
       animation: _ctrl,
-      builder: (context, child) {
-        final t = _ctrl.value * 2 * math.pi + phase;
-        return Transform.rotate(
-          angle: math.sin(t) * 0.0055,
-          child: child,
-        );
-      },
+      builder: (context, child) => Transform.rotate(
+        angle: _ctrl.isAnimating
+            ? math.sin(_ctrl.value * 2 * math.pi + phase) * 0.0055
+            : 0,
+        child: child,
+      ),
       child: widget.child,
     );
   }

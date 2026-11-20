@@ -1,4 +1,5 @@
 import 'package:feeef_ui/feeef_ui.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -166,9 +167,13 @@ void main() {
           ),
         ),
       );
-      // Drag c (full width, second band) up to the top.
+      // Drag c (full width, second band) up to the top with a mouse (drags right away).
       // Arrange-mode jiggle is an infinite ticker — pump frames, don't pumpAndSettle.
-      await tester.dragFrom(const Offset(600, 160), const Offset(0, -120));
+      await tester.dragFrom(
+        const Offset(600, 160),
+        const Offset(0, -120),
+        kind: PointerDeviceKind.mouse,
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 220));
       expect(tester.takeException(), isNull);
@@ -177,6 +182,117 @@ void main() {
       expect(of(reported!, 'a').y, 2);
     },
   );
+
+  Widget touchBoard({
+    required bool Function() editing,
+    required void Function() onEdit,
+    required List<GridPlacement> Function() layout,
+    required ValueChanged<List<GridPlacement>> onChanged,
+  }) => ThemeProvider(
+    config: const ThemeConfig(),
+    brightness: Brightness.light,
+    child: Directionality(
+      textDirection: TextDirection.ltr,
+      child: Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+          width: 400,
+          child: StatefulBuilder(
+            builder: (context, setState) => DashboardGrid(
+              columns: 4,
+              rowHeight: 50,
+              gap: 10,
+              editing: editing(),
+              layout: layout(),
+              onEditRequest: () => setState(onEdit),
+              onLayoutChanged: (next) => setState(() => onChanged(next)),
+              onRemove: (_) {},
+              tiles: [
+                for (final id in ['a', 'b', 'c'])
+                  DashboardTile(id: id, label: id, child: Text(id)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  testWidgets(
+    'touch: a long press outside editing enters editing and carries the tile',
+    (tester) async {
+      var editing = false;
+      List<GridPlacement>? reported;
+      var layout = [p('a', 0, 0, 4, 2), p('b', 0, 2, 4, 2), p('c', 0, 4, 4, 2)];
+      await tester.pumpWidget(
+        touchBoard(
+          editing: () => editing,
+          onEdit: () => editing = true,
+          layout: () => layout,
+          onChanged: (next) => layout = reported = next,
+        ),
+      );
+      // Hold on c, then move it to the top in the same gesture.
+      final g = await tester.startGesture(const Offset(200, 280));
+      await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+      expect(editing, isTrue);
+      for (var i = 0; i < 6; i++) {
+        await g.moveBy(const Offset(0, -45));
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await g.up();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 220));
+      expect(tester.takeException(), isNull);
+      expect(reported, isNotNull);
+      expect(of(reported!, 'c').y, 0);
+    },
+  );
+
+  testWidgets('touch: while editing a short hold picks a tile up', (
+    tester,
+  ) async {
+    List<GridPlacement>? reported;
+    var layout = [p('a', 0, 0, 4, 2), p('b', 0, 2, 4, 2), p('c', 0, 4, 4, 2)];
+    await tester.pumpWidget(
+      touchBoard(
+        editing: () => true,
+        onEdit: () {},
+        layout: () => layout,
+        onChanged: (next) => layout = reported = next,
+      ),
+    );
+    final g = await tester.startGesture(const Offset(200, 280));
+    await tester.pump(const Duration(milliseconds: 250));
+    for (var i = 0; i < 6; i++) {
+      await g.moveBy(const Offset(0, -45));
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    await g.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+    expect(tester.takeException(), isNull);
+    expect(of(reported!, 'c').y, 0);
+  });
+
+  testWidgets('touch: the corner grip resizes right away', (tester) async {
+    List<GridPlacement>? reported;
+    var layout = [p('a', 0, 0, 2, 2), p('b', 2, 0, 2, 2)];
+    await tester.pumpWidget(
+      touchBoard(
+        editing: () => true,
+        onEdit: () {},
+        layout: () => layout,
+        onChanged: (next) => layout = reported = next,
+      ),
+    );
+    // a is 195×110; its grip sits on the bottom-right corner.
+    await tester.dragFrom(const Offset(185, 100), const Offset(0, 120));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+    expect(tester.takeException(), isNull);
+    expect(of(reported!, 'a').h, greaterThan(2));
+  });
 
   testWidgets('Heatmap and DonutChart lay out in RTL', (tester) async {
     await tester.pumpWidget(
