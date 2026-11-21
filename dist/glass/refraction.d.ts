@@ -1,13 +1,7 @@
 import { type GlassShape, type GlassRect } from './geometry.js';
-/**
- * Refraction for the canvas renderer: glass that bends the content behind it near its edges, as a
- * displacement map (red = x, green = y, 128 = no shift) for SVG `feDisplacementMap`. Only the
- * bevel bends; the flat middle shows the backdrop straight. The profile is our own fit to
- * measurements of rendered Liquid Glass (ui/research/liquid-glass/FINDINGS.md): at depth `t` from
- * the edge a pixel shows the backdrop from `shift · (1 - t / bezel)^4` deeper inside, so the rim
- * compresses the background. The default web map caps the shift to prevent mirrored folds; the measured profile restores the native fit. Pure, so the Flutter twin (a fragment
- * shader there) follows the same profile.
- */
+/** Regular uses the quarter-circle bevel in liquid_glass_renderer 1.0.0-dev.2.
+ * Gentle and measured retain Feeef's earlier quartic optics. */
+export type RefractionProfile = 'regular' | 'gentle' | 'measured';
 /** Bezel width (px) of large glass: where the bend fades to nothing. */
 export declare const GLASS_BEZEL = 27;
 /** Largest shift (px), at the very edge of large glass. */
@@ -39,12 +33,12 @@ export declare function refractionAt(d: number, nx: number, ny: number, bezel?: 
  * for `backdrop-filter: url()`. Each cluster bends by its own size (its smallest shape).
  */
 /**
- * The gentle lens (the default; iOS 27's lens never folds the backdrop back): for the quartic bezel,
+ * The gentle lens (the opt-in non-mirroring profile): for the quartic bezel,
  * max |d(shift)/d(depth)| = 4 × shift / bezel, kept below one so the sampled background cannot
  * reverse direction along an edge. Flutter's `gentleRefractionShift` matches.
  */
 export declare function gentleRefractionShift(side: number, bezel?: number): number;
-export declare function displacementMap(width: number, height: number, clusters: readonly (readonly GlassShape[])[], spacing: number, bezel?: number, profile?: 'gentle' | 'measured'): {
+export declare function displacementMap(width: number, height: number, clusters: readonly (readonly GlassShape[])[], spacing: number, bezel?: number | undefined, profile?: RefractionProfile): {
     width: number;
     height: number;
     data: Uint8ClampedArray<ArrayBuffer>;
@@ -58,7 +52,7 @@ export declare const GLASS_LIVE_MAP_PIXELS = 32768;
  * pixels. The caller stretches this image to the logical width/height. One density policy for
  * motion and rest avoids a visible change of lens when a gesture finishes.
  */
-export declare function liveDisplacementMap(width: number, height: number, clusters: readonly (readonly GlassShape[])[], spacing: number, profile?: 'gentle' | 'measured'): {
+export declare function liveDisplacementMap(width: number, height: number, clusters: readonly (readonly GlassShape[])[], spacing: number, profile?: RefractionProfile, glintWidth?: number, regularity?: number): {
     width: number;
     height: number;
     data: Uint8ClampedArray<ArrayBuffer>;

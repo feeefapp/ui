@@ -1,7 +1,7 @@
 import { liveDisplacementMap, rgbaBmpBytes } from './refraction.js';
 /** The worker and its CSP/unsupported-browser fallback use this same pixel calculation. */
 export function buildRefractionBitmap(request) {
-    const pixels = liveDisplacementMap(request.width, request.height, [request.shapes], request.spacing, request.profile);
+    const pixels = liveDisplacementMap(request.width, request.height, [request.shapes], request.spacing, request.profile, request.glintWidth, request.regularity);
     // Firefox clips the live element to the current CSS outline. An opaque map keeps an older
     // decoded lens from imposing its previous silhouette while the next shape is prepared.
     for (let pixel = 3; pixel < pixels.data.length; pixel += 4)

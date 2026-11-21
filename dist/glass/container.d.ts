@@ -1,3 +1,4 @@
+import type { RefractionProfile } from './refraction.js';
 import * as React from 'react';
 import { type GlassMemberOptions } from './context.js';
 import { type GlassKind } from './material.js';
@@ -29,7 +30,7 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
      * continuous curve; `round` draws circular corners at every radius.
      */
     cornerShape?: 'superellipse' | 'round';
-    /** `pointer` (default) turns the light toward a mouse or pen; `static` keeps it at the top-left. */
+    /** `pointer` (default) turns the light toward a mouse or pen; `static` holds the light still. The regular glint starts on the vertical axis. */
     light?: 'pointer' | 'static';
     /**
      * Bubbles respond to a press like Apple's interactive glass: they swell, stretch toward a
@@ -43,9 +44,9 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
      * colour. Glass taller than 72px never flips. Default true.
      */
     adaptive?: boolean;
-    /** Reflective bevel width in CSS px, 0–100; default 1. Small bubbles cap it to fit. */
+    /** Highlight width, 0–100. The default 1 gives the regular lens a 1.2px glint. */
     highlightWidth?: number;
-    /** `surface` uses a convex bevel; `rim` (default) uses the original thin, directional five-stop gradient. */
+    /** `surface` uses a convex bevel; `rim` (default) lights the two opposing walls of the regular lens. */
     highlightProfile?: 'surface' | 'rim';
     /** Local material tint, 0 clear–1 tinted (clear lifts what is behind it, clipping light content to white like iOS); omitted inherits ThemeConfig glassTint. */
     tint?: number;
@@ -53,8 +54,8 @@ export type GlassContainerProps = React.HTMLAttributes<HTMLElement> & {
     highlightStrength?: number;
     /** Backdrop bend multiplier, 0–10; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
     refractionStrength?: number;
-    /** `gentle` (default, iOS 27's lens: it never folds the backdrop back) or `measured` (the iOS 26.2 screenshot fit, with its mirrored band at the rim). */
-    refractionProfile?: 'gentle' | 'measured';
+    /** Default `regular` mirrors the backdrop through a rounded bevel. `gentle` and `measured` select the earlier quartic profiles. */
+    refractionProfile?: RefractionProfile;
     /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
     backdropSource?: string;
     /**
@@ -96,7 +97,7 @@ export declare const GlassContainer: React.ForwardRefExoticComponent<React.HTMLA
      * continuous curve; `round` draws circular corners at every radius.
      */
     cornerShape?: "superellipse" | "round";
-    /** `pointer` (default) turns the light toward a mouse or pen; `static` keeps it at the top-left. */
+    /** `pointer` (default) turns the light toward a mouse or pen; `static` holds the light still. The regular glint starts on the vertical axis. */
     light?: "pointer" | "static";
     /**
      * Bubbles respond to a press like Apple's interactive glass: they swell, stretch toward a
@@ -110,9 +111,9 @@ export declare const GlassContainer: React.ForwardRefExoticComponent<React.HTMLA
      * colour. Glass taller than 72px never flips. Default true.
      */
     adaptive?: boolean;
-    /** Reflective bevel width in CSS px, 0–100; default 1. Small bubbles cap it to fit. */
+    /** Highlight width, 0–100. The default 1 gives the regular lens a 1.2px glint. */
     highlightWidth?: number;
-    /** `surface` uses a convex bevel; `rim` (default) uses the original thin, directional five-stop gradient. */
+    /** `surface` uses a convex bevel; `rim` (default) lights the two opposing walls of the regular lens. */
     highlightProfile?: "surface" | "rim";
     /** Local material tint, 0 clear–1 tinted (clear lifts what is behind it, clipping light content to white like iOS); omitted inherits ThemeConfig glassTint. */
     tint?: number;
@@ -120,8 +121,8 @@ export declare const GlassContainer: React.ForwardRefExoticComponent<React.HTMLA
     highlightStrength?: number;
     /** Backdrop bend multiplier, 0–10; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
     refractionStrength?: number;
-    /** `gentle` (default, iOS 27's lens: it never folds the backdrop back) or `measured` (the iOS 26.2 screenshot fit, with its mirrored band at the rim). */
-    refractionProfile?: "gentle" | "measured";
+    /** Default `regular` mirrors the backdrop through a rounded bevel. `gentle` and `measured` select the earlier quartic profiles. */
+    refractionProfile?: RefractionProfile;
     /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
     backdropSource?: string;
     /**
@@ -157,7 +158,7 @@ export declare const GlassScope: React.ForwardRefExoticComponent<React.HTMLAttri
      * continuous curve; `round` draws circular corners at every radius.
      */
     cornerShape?: "superellipse" | "round";
-    /** `pointer` (default) turns the light toward a mouse or pen; `static` keeps it at the top-left. */
+    /** `pointer` (default) turns the light toward a mouse or pen; `static` holds the light still. The regular glint starts on the vertical axis. */
     light?: "pointer" | "static";
     /**
      * Bubbles respond to a press like Apple's interactive glass: they swell, stretch toward a
@@ -171,9 +172,9 @@ export declare const GlassScope: React.ForwardRefExoticComponent<React.HTMLAttri
      * colour. Glass taller than 72px never flips. Default true.
      */
     adaptive?: boolean;
-    /** Reflective bevel width in CSS px, 0–100; default 1. Small bubbles cap it to fit. */
+    /** Highlight width, 0–100. The default 1 gives the regular lens a 1.2px glint. */
     highlightWidth?: number;
-    /** `surface` uses a convex bevel; `rim` (default) uses the original thin, directional five-stop gradient. */
+    /** `surface` uses a convex bevel; `rim` (default) lights the two opposing walls of the regular lens. */
     highlightProfile?: "surface" | "rim";
     /** Local material tint, 0 clear–1 tinted (clear lifts what is behind it, clipping light content to white like iOS); omitted inherits ThemeConfig glassTint. */
     tint?: number;
@@ -181,8 +182,8 @@ export declare const GlassScope: React.ForwardRefExoticComponent<React.HTMLAttri
     highlightStrength?: number;
     /** Backdrop bend multiplier, 0–10; default 1. Values above 1 allow stronger lens distortion. Still respects the theme’s refraction setting. */
     refractionStrength?: number;
-    /** `gentle` (default, iOS 27's lens: it never folds the backdrop back) or `measured` (the iOS 26.2 screenshot fit, with its mirrored band at the rim). */
-    refractionProfile?: "gentle" | "measured";
+    /** Default `regular` mirrors the backdrop through a rounded bevel. `gentle` and `measured` select the earlier quartic profiles. */
+    refractionProfile?: RefractionProfile;
     /** ID of a separate background-only element to sample live for Firefox refraction. Must not contain this container. */
     backdropSource?: string;
     /**

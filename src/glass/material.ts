@@ -384,3 +384,56 @@ export function glassKindBlur(kind: GlassKind, side: number, tint: number, blurO
   const blur = kind === 'menu' ? Math.max(glassBlur(side), GLASS_MENU.blur) : glassBlurAt(side, tint, blurOn)
   return frosted ? Math.max(blur, glassFrostedBlur(side)) : blur
 }
+
+/** Untinted face of liquid_glass_renderer 1.0.0-dev.2. Feeef's slider passes
+ * through clear, regular, and fully tinted regular at 0, 0.5 and 1. */
+export function liquidFace(tint: number, dark: boolean) {
+  const t = clampGlassTint(tint) * 2
+  const mix = (clear: number, regular: number, tinted: number) => t < 1
+    ? clear + (regular - clear) * t
+    : regular + (tinted - regular) * (t - 1)
+  const emission = (channel: number) => dark
+    ? mix(0.126, 32 / 255, 32 / 255)
+    : mix(0.126, 0.4032 * channel / 255, 0.7262 * channel / 255)
+  return {
+    transmission: dark ? mix(0.954, 0.52625, 0.2533) : mix(0.954, 0.5994, 0.2742),
+    lift: dark ? mix(0, 0.583, 0.647) : mix(0, 0.216, 0.270),
+    chroma: dark ? mix(1.057, 1.005, 0.7855) : mix(1.057, 1.169, 0.755),
+    red: emission(253), green: emission(252), blue: emission(253),
+  }
+}
+
+/** Base face matrix. The reference adds transmission * lift * Y * (1-Y) in the shader. */
+export function liquidFaceMatrix(face: ReturnType<typeof liquidFace>) {
+  const luma = [0.2126, 0.7152, 0.0722]
+  return [face.red, face.green, face.blue].flatMap((emission, row) => [
+    ...luma.map((w, col) => w * (face.transmission - face.chroma) + (row === col ? face.chroma : 0)),
+    0, emission,
+  ]).concat(0, 0, 0, 1, 0)
+}
+
+/** Regular preset frost in logical pixels. Apply the Impeller downsample floor
+ * at the device scale. Feeef's clear endpoint has no frost. */
+export function liquidFrost(side: number, tint: number, dpr: number) {
+  const amount = 2 * clampGlassTint(tint)
+  const slider = Math.max(0, amount - 1)
+  const smooth = (v: number) => {
+    const x = Math.min(1, Math.max(0, v))
+    return x * x * (3 - 2 * x)
+  }
+  const size = 2.1 + 2.4 * smooth((side - 63) / 31) + 1.1 * smooth((side - 94) / 24)
+    + 2.4 * Math.min(1, Math.max(0, (side - 118) / 32))
+  const growth = Math.exp(0.85 * Math.min(slider, 0.5) + 2 * Math.max(0, slider - 0.5))
+  return Math.min(1, amount) * Math.max(5.8 / Math.max(2, dpr), size * growth)
+}
+
+/** Integrated coverage of the reference's 0.75 px exterior border in the
+ * kit's half-pixel ring and side bands. A dark regular face has bare poles. */
+export function liquidHairline(tint: number, dark: boolean) {
+  const regular = Math.min(1, 2 * tint)
+  const slider = Math.max(0, 2 * tint - 1)
+  const border = 0.36 + ((dark ? 0.88 : 0.43) - 0.36) * regular
+  const direction = 1 - (dark ? 0 : 0.23 * regular)
+  const strength = border * (dark ? 1 + 0.95 * (0.52625 - 0.2533) * slider : 1) * 0.75
+  return { ring: strength * (1 - direction), sliver: Math.min(1, strength * direction) }
+}

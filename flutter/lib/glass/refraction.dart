@@ -43,7 +43,7 @@ double refractionScale(double side) {
   return (x: -nx * bend, y: -ny * bend);
 }
 
-/// The gentle lens (the default, like iOS 27's: it never folds the backdrop back), the twin of
+/// The legacy gentle lens with a non-reversing quartic bevel, the twin of
 /// the web kit's `gentleRefractionShift`: the largest shift (px) for glass whose shorter side is
 /// [side] px, capped so the quartic bezel's slope `4 · shift / band` stays below one.
 double gentleRefractionShift(double side, [double bezel = glassBezel]) {

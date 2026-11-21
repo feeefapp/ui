@@ -283,6 +283,12 @@ The material formulas are system.css's (glass/material.ts glassMaterial). */
 .lab-glass-backdrop[data-glass-source][data-glass-size='large']::after { background: var(--lab-glass-fill-large); }
 .lab-glass-backdrop[data-glass-source]::after { border-radius: inherit; corner-shape: inherit; }
 
+/* The regular filter includes the wash in its sampled face. */
+.lab-glass-backdrop[data-glass-face] {
+  --lab-glass-fill: transparent;
+  --lab-glass-fill-large: transparent;
+}
+
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
   .lab-glass-source { display: none; }
   .lab-glass-backdrop[data-glass-source]::after { background: var(--lab-surface); }

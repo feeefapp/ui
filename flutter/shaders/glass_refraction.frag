@@ -1,9 +1,5 @@
-// Glass refraction as a backdrop filter (Impeller): the twin of the web kit's displacement map
-// (src/glass/refraction.ts). Each pixel inside the bezel samples the backdrop from
-// shift * (1 - t / bezel)^4 deeper inside, along the blended outline's inward normal. Our own
-// profile, fitted to measurements of rendered Liquid Glass (ui/research/liquid-glass). The input
-// already carries the material's colour; over the outer pixel the edge terms apply
-// (x + k1 * x * E + k3 * E, glass/material.dart glassEdgeTerms, edgeMask).
+// Regular material adapted from liquid_glass_renderer 1.0.0-dev.2.
+// Copyright 2025 Tim Lehmann for whynotmake.it. See licenses/liquid_glass_renderer.txt.
 #version 460 core
 #include <flutter/runtime_effect.glsl>
 
@@ -39,43 +35,50 @@ uniform vec2 uEdge;
 // terms are unused. The slider thumb also softens its band (lensSoftBlur, lensSoftWeight) and the
 // switch thumb zooms its middle out (lensSwitchZoomX/Y).
 uniform float uLens;
+// Nonzero transmission selects the regular face. Emission is premultiplied.
+uniform vec3 uFace; // transmission, luminance lift, chroma gain
+uniform vec3 uEmission;
+uniform float uRegularity;
+uniform vec2 uGlint; // strength, width in logical px
 
 uniform sampler2D uTexture;
 
 out vec4 fragColor;
 
-float boxDistance(vec2 p, vec4 rect, float radius) {
+// Distance, outward unit normal and half the shorter side. Straight edges and
+// circles take no powers. Blending these samples gives the optical normal and
+// the local control size in the same pass as the distance.
+vec4 boxField(vec2 p, vec4 rect, float radius) {
   vec2 hs = rect.zw * 0.5;
   float halfSide = min(hs.x, hs.y);
   float r = clamp(radius, 0.0, max(halfSide, 0.0));
-  vec2 q = abs(p - (rect.xy + hs)) - hs + r;
-  // Match glass/geometry.dart and brand/geometry.dart. A circular SDF here puts
-  // the refracted edge inside the continuous-corner clip, drawing a second rim.
-  float fill = halfSide > 0.0 ? r / halfSide : 1.0;
-  float smoothing = 1.0 - smoothstep(0.75, 1.0, fill);
+  vec2 delta = p - (rect.xy + hs);
+  vec2 q = abs(delta) - hs + r;
+  float hi = max(q.x, q.y);
+  float lo = min(q.x, q.y);
+  vec2 n = q.x > q.y ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+  if (lo <= 0.0) return vec4(hi - r, sign(delta) * n, halfSide);
+  float smoothing = 1.0 - smoothstep(0.75, 1.0, r / max(halfSide, 1e-5));
+  if (smoothing == 0.0) return vec4(length(q) - r, sign(delta) * normalize(q), halfSide);
   float exponent = exp2(1.0 + smoothing * 0.5);
-  vec2 outside = max(q, 0.0);
-  float high = max(outside.x, outside.y);
-  float low = min(outside.x, outside.y);
-  float norm = high > 0.0
-    ? high * pow(1.0 + pow(low / high, exponent), 1.0 / exponent)
-    : 0.0;
-  return norm + min(max(q.x, q.y), 0.0) - r;
+  float ratio = lo / hi;
+  float power = pow(ratio, exponent);
+  float norm = hi * pow(1.0 + power, 1.0 / exponent);
+  vec2 direction = n + (1.0 - n) * (power / ratio);
+  return vec4(norm - r, sign(delta) * normalize(direction), halfSide);
 }
 
-float smoothMin(float a, float b, float k) {
-  if (k <= 0.0) return min(a, b);
-  float h = max(k - abs(a - b), 0.0) / k;
-  return min(a, b) - h * h * k * 0.25;
+float boxDistance(vec2 p, vec4 rect, float radius) {
+  return boxField(p, rect, radius).x;
 }
 
-float shapeAt(int i, vec2 p) {
-  if (i == 0) return boxDistance(p, uRect0, uRadiusA.x);
-  if (i == 1) return boxDistance(p, uRect1, uRadiusA.y);
-  if (i == 2) return boxDistance(p, uRect2, uRadiusA.z);
-  if (i == 3) return boxDistance(p, uRect3, uRadiusA.w);
-  if (i == 4) return boxDistance(p, uRect4, uRadiusB.x);
-  return boxDistance(p, uRect5, uRadiusB.y);
+vec4 shapeAt(int i, vec2 p) {
+  if (i == 0) return boxField(p, uRect0, uRadiusA.x);
+  if (i == 1) return boxField(p, uRect1, uRadiusA.y);
+  if (i == 2) return boxField(p, uRect2, uRadiusA.z);
+  if (i == 3) return boxField(p, uRect3, uRadiusA.w);
+  if (i == 4) return boxField(p, uRect4, uRadiusB.x);
+  return boxField(p, uRect5, uRadiusB.y);
 }
 
 float blendAt(int i) {
@@ -87,13 +90,21 @@ float blendAt(int i) {
   return 0.0;
 }
 
-float unionDistance(vec2 p) {
-  float d = shapeAt(0, p);
+vec4 unionField(vec2 p) {
+  vec4 field = shapeAt(0, p);
   for (int i = 1; i < 6; i++) {
     if (float(i) >= uCount) break;
-    d = smoothMin(d, shapeAt(i, p), blendAt(i));
+    vec4 next = shapeAt(i, p);
+    float k = blendAt(i);
+    if (k <= 0.0) {
+      if (next.x < field.x) field = next;
+    } else {
+      float share = clamp(0.5 + 0.5 * (field.x - next.x) / k, 0.0, 1.0);
+      field = mix(field, next, share);
+      field.x -= k * share * (1.0 - share);
+    }
   }
-  return d;
+  return field;
 }
 
 // The lens bend (px, positive inward) at depth d px: glass/refraction.dart lensBend. The pill's is a
@@ -190,35 +201,71 @@ vec4 lens(vec2 frag, vec2 p) {
   return mix(sharp, blurredAt(frag + offset, 2.0 * uDpr), soft);
 }
 
-void main() {
-  vec2 frag = FlutterFragCoord().xy;
-  vec2 p = (frag - uOrigin) / uDpr;
-  if (uLens > 0.5) {
-    fragColor = lens(frag, p);
-    return;
+vec4 containerGlass(vec2 frag, vec2 p) {
+  vec4 field = unionField(p);
+  float d = field.x;
+  float bevel = uBezel, shift = uShift;
+  if (uFace.x > 0.0) {
+    float clearScale = min(1.0, field.w / 20.0);
+    bevel = mix(20.0 * clearScale, min(20.0, field.w / 2.0), uRegularity);
+    shift *= mix(50.0 * clearScale, min(60.0, field.w), uRegularity);
   }
-  float d = unionDistance(p);
   vec2 offset = vec2(0.0);
   float edge = 0.0;
-  if (d < 0.0 && -d < max(uBezel, 1.0)) {
-    vec2 e = vec2(0.5, 0.0);
-    vec2 n = vec2(unionDistance(p + e.xy) - unionDistance(p - e.xy), unionDistance(p + e.yx) - unionDistance(p - e.yx));
+  float glint = 0.0;
+  float shade = 0.0;
+  if (d < 0.0 && -d < max(max(bevel, 1.0), uFace.x > 0.0 ? max(22.0, 4.0 * uGlint.y) : 0.0)) {
+    vec2 n = field.yz;
     float len = length(n);
     if (len > 1e-5) {
-      float t = min(1.0, -d / max(uBezel, 1e-5));
-      float bend = pow(1.0 - t, 4.0) * uShift;
+      float t = min(1.0, -d / max(bevel, 1e-5));
+      float shoulder = 1.0 - t;
+      float bend = (1.0 - sqrt(1.0 - shoulder * shoulder)) * shift * sqrt(min(len, 1.0));
       offset = -n / len * bend * uDpr;
       // Edge mask: 1 px wide, (1 - depth^3), 0.2 + 0.8 |cos a| against the light axis.
       float depth = -d;
-      if (depth < 1.0) {
+      if (uFace.x > 0.0 && uGlint.y > 0.0 && depth < 4.0 * uGlint.y) {
+        float tangency = abs(dot(n / len, vec2(-uLight.y, uLight.x)));
+        float z = depth / uGlint.y;
+        float profile = max(0.0, 1.0 - z) + 0.21 * max(0.0, 1.0 - z * 0.25);
+        glint = clamp(0.1512 * uGlint.x * (1.0 - tangency) * profile, 0.0, 1.0);
+      }
+      if (uFace.x > 0.0 && uRegularity > 0.0) {
+        float facing = dot(n / len, uLight);
+        float castOffset = 6.0 * facing;
+        float lead = castOffset > 0.0 ? smoothstep(0.0, 2.0 * castOffset, depth) : 1.0;
+        shade = 0.036 * uRegularity * lead * (1.0 - smoothstep(0.0, 16.0, depth - castOffset))
+            * (0.5 + 0.5 * smoothstep(-1.0, 1.0, facing));
+      }
+      if (uFace.x <= 0.0 && depth < 1.0) {
         float c = abs(dot(n / len, uLight));
         edge = (1.0 - depth * depth * depth) * (0.2 + 0.8 * min(c, 1.0));
       }
     }
   }
   vec4 colour = sampleAt(frag + offset);
+  if (uFace.x > 0.0) {
+    const vec3 luma = vec3(0.2126, 0.7152, 0.0722);
+    vec3 rgb = colour.rgb / max(colour.a, 1e-5);
+    float y = dot(rgb, luma);
+    vec3 transmitted = uFace.x * y * (1.0 + uFace.y * (1.0 - y)) + uFace.z * (rgb - y);
+    vec3 face = max(vec3(0.0), clamp(uEmission + transmitted, 0.0, 1.0) - shade * transmitted);
+    vec3 target = vec3(mix(2.34, 1.6, uRegularity)) + 3.58 * (1.0 - uRegularity) * face
+        + mix(0.78, 2.85, uRegularity) * (face - dot(face, luma));
+    return vec4(clamp(mix(face, target, glint), 0.0, 1.0) * colour.a, colour.a);
+  }
   // Premultiplied: the backdrop is opaque inside the glass, so treat rgb as straight colour.
   vec3 x = colour.rgb;
   colour.rgb = clamp(x + uEdge.x * x * edge + uEdge.y * edge * colour.a, vec3(0.0), vec3(colour.a));
-  fragColor = colour;
+  return colour;
+}
+
+void main() {
+  vec2 frag = FlutterFragCoord().xy;
+  vec2 p = (frag - uOrigin) / uDpr;
+  if (uLens > 0.5) {
+    fragColor = lens(frag, p);
+  } else {
+    fragColor = containerGlass(frag, p);
+  }
 }

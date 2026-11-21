@@ -1,13 +1,26 @@
 # Liquid Glass, measured
 
-How rendered iOS 26 Liquid Glass behaves, measured from screenshots only, and the model the kit now
-uses (`src/glass/material.ts`, `refraction.ts`, `geometry.ts` and their Dart twins). Nothing here
+How rendered iOS 26 Liquid Glass behaves, measured from screenshots, and the earlier kit model (`src/glass/material.ts`, `refraction.ts`, `geometry.ts` and their Dart twins). Nothing here
 comes from Apple code: a small app draws glass with public SwiftUI API (`glassEffect(_:in:)`,
 `Glass.regular/.clear`, `GlassEffectContainer(spacing:)`, `glassEffectUnion`) over backgrounds we
 control, we screenshot the simulator, and we fit our own functions to the pixels.
 
 Setup: Xcode 26.2, iOS 26.2 simulator, iPhone 17 Pro (402 × 874 pt, 3×). All lengths are points =
 CSS px = Flutter logical px. Raw numbers: `data/*.json`; fit plots: `data/model-fit.png`.
+
+## Current regular lens
+
+Feeef’s default refracting surface uses the neutral face, rounded bevel and glint from
+[liquid_glass_renderer 1.0.0-dev.2](https://pub.dev/packages/liquid_glass_renderer/versions/1.0.0-dev.2).
+Feeef tint 0 selects clear, 0.5 selects the regular preset at slider 0, and 1 selects fully tinted
+regular. The existing blur switch controls frost. The web profiles `gentle` and `measured` retain
+the quartic optics described below.
+
+The pixel fixtures in `flutter/test/fixtures/glass-reference-*.png` were rendered with the package
+on macOS Impeller, using a 192 × 56 capsule, DPR 1, `ios27Regular` settings and appearance,
+and explicit frost 0. The fixture test recreates the same stripes through Feeef’s normal
+GlassContainer and compares the interior, bevel and flat face separately. Run it with
+`flutter test --enable-impeller test/glass_reference_test.dart` from the Flutter package.
 
 ## How it was measured
 

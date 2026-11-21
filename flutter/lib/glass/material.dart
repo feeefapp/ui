@@ -392,3 +392,95 @@ double glassKindBlur(
       : glassBlurAt(side, tint, blurOn: blurOn);
   return frosted ? math.max(blur, glassFrostedBlur(side)) : blur;
 }
+
+/// The neutral face of liquid_glass_renderer 1.0.0-dev.2. The kit's tint slider
+/// crosses clear, regular and fully tinted regular at 0, 0.5 and 1.
+typedef LiquidFace = ({
+  double regularity,
+  double transmission,
+  double lift,
+  double chroma,
+  double red,
+  double green,
+  double blue,
+});
+
+LiquidFace liquidFace(double tint, {required bool dark}) {
+  final t = 2 * clampGlassTint(tint);
+  double mix(double clear, double regular, double tinted) => t < 1
+      ? clear + (regular - clear) * t
+      : regular + (tinted - regular) * (t - 1);
+  double emission(double channel) => dark
+      ? mix(.126, 32 / 255, 32 / 255)
+      : mix(.126, .4032 * channel / 255, .7262 * channel / 255);
+  return (
+    regularity: math.min(1.0, t),
+    transmission: dark ? mix(.954, .52625, .2533) : mix(.954, .5994, .2742),
+    lift: dark ? mix(0, .583, .647) : mix(0, .216, .270),
+    chroma: dark ? mix(1.057, 1.005, .7855) : mix(1.057, 1.169, .755),
+    red: emission(253),
+    green: emission(252),
+    blue: emission(253),
+  );
+}
+
+/// Regular preset frost, including the device-space Impeller downsample floor.
+double liquidFrost(double side, double tint, double dpr) {
+  final amount = 2 * clampGlassTint(tint);
+  final slider = math.max(0.0, amount - 1);
+  double smooth(double v) {
+    final x = v.clamp(0.0, 1.0);
+    return x * x * (3 - 2 * x);
+  }
+
+  final size =
+      2.1 +
+      2.4 * smooth((side - 63) / 31) +
+      1.1 * smooth((side - 94) / 24) +
+      2.4 * ((side - 118) / 32).clamp(0.0, 1.0);
+  final growth = math.exp(
+    .85 * math.min(slider, .5) + 2 * math.max(0.0, slider - .5),
+  );
+  return math.min(1.0, amount) *
+      math.max(5.8 / math.max(2, dpr), size * growth);
+}
+
+/// Linear face for the first frame while the runtime shader loads.
+List<double> liquidFaceMatrix(LiquidFace face) {
+  const luma = [.2126, .7152, .0722];
+  return [
+    for (final (row, emission) in [
+      face.red,
+      face.green,
+      face.blue,
+    ].indexed) ...[
+      for (var col = 0; col < 3; col++)
+        luma[col] * (face.transmission - face.chroma) +
+            (col == row ? face.chroma : 0),
+      0,
+      emission * 255,
+    ],
+    0,
+    0,
+    0,
+    1,
+    0,
+  ];
+}
+
+/// Integrated opacity of the exterior contour, shared with liquidHairline on web.
+({double ring, double sliver}) liquidHairline(
+  double tint, {
+  required bool dark,
+}) {
+  final regular = math.min(1.0, 2 * tint);
+  final slider = math.max(0.0, 2 * tint - 1);
+  final border = .36 + ((dark ? .88 : .43) - .36) * regular;
+  final direction = 1 - (dark ? 0 : .23 * regular);
+  final strength =
+      border * (dark ? 1 + .95 * (.52625 - .2533) * slider : 1) * .75;
+  return (
+    ring: strength * (1 - direction),
+    sliver: math.min(1.0, strength * direction),
+  );
+}

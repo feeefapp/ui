@@ -53,6 +53,9 @@ export declare function unionDistance(px: number, py: number, shapes: readonly G
  * blend widths resolved once instead of on every sample. Rebuild after changing a shape.
  */
 export declare function prepareUnionDistance(shapes: readonly GlassShape[], spacing: number): (px: number, py: number) => number;
+/** Local short side of a heterogeneous blend. The smooth minimum's weights
+ * carry each member's bevel size continuously through the joining neck. */
+export declare function prepareUnionSide(shapes: readonly GlassShape[], spacing: number): (x: number, y: number) => number;
 /** Gap between two boxes (0 when they touch or overlap). */
 export declare function rectGap(a: GlassRect, b: GlassRect): number;
 /** Groups shapes that are close enough to blend (gap below `spacing`), in input order. */

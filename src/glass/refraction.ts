@@ -1,16 +1,10 @@
-import { prepareUnionDistance, unionBounds, type GlassShape, type GlassRect } from './geometry'
+import { prepareUnionDistance, prepareUnionSide, unionBounds, type GlassShape, type GlassRect } from './geometry'
 import { DEFAULT_GLASS_LIGHT } from './light'
 import { edgeMask } from './material'
 
-/**
- * Refraction for the canvas renderer: glass that bends the content behind it near its edges, as a
- * displacement map (red = x, green = y, 128 = no shift) for SVG `feDisplacementMap`. Only the
- * bevel bends; the flat middle shows the backdrop straight. The profile is our own fit to
- * measurements of rendered Liquid Glass (ui/research/liquid-glass/FINDINGS.md): at depth `t` from
- * the edge a pixel shows the backdrop from `shift · (1 - t / bezel)^4` deeper inside, so the rim
- * compresses the background. The default web map caps the shift to prevent mirrored folds; the measured profile restores the native fit. Pure, so the Flutter twin (a fragment
- * shader there) follows the same profile.
- */
+/** Regular uses the quarter-circle bevel in liquid_glass_renderer 1.0.0-dev.2.
+ * Gentle and measured retain Feeef's earlier quartic optics. */
+export type RefractionProfile = 'regular' | 'gentle' | 'measured'
 
 /** Bezel width (px) of large glass: where the bend fades to nothing. */
 export const GLASS_BEZEL = 27
@@ -52,7 +46,7 @@ export function refractionAt(d: number, nx: number, ny: number, bezel = GLASS_BE
  * for `backdrop-filter: url()`. Each cluster bends by its own size (its smallest shape).
  */
 /**
- * The gentle lens (the default; iOS 27's lens never folds the backdrop back): for the quartic bezel,
+ * The gentle lens (the opt-in non-mirroring profile): for the quartic bezel,
  * max |d(shift)/d(depth)| = 4 × shift / bezel, kept below one so the sampled background cannot
  * reverse direction along an edge. Flutter's `gentleRefractionShift` matches.
  */
@@ -67,12 +61,12 @@ export function displacementMap(
   height: number,
   clusters: readonly (readonly GlassShape[])[],
   spacing: number,
-  bezel = GLASS_BEZEL,
-  profile: 'gentle' | 'measured' = 'gentle'
+  bezel: number | undefined = undefined,
+  profile: RefractionProfile = 'regular'
 ) {
   const w = Math.max(1, Math.round(width))
   const h = Math.max(1, Math.round(height))
-  return sampleDisplacementMap(w, h, w, h, clusters, spacing, bezel, profile)
+  return sampleDisplacementMap(w, h, w, h, clusters, spacing, bezel ?? (profile === 'regular' ? 20 : GLASS_BEZEL), profile)
 }
 
 /** Maximum raster work per live map, independent of browser zoom or the host's area. */
@@ -89,7 +83,9 @@ export function liveDisplacementMap(
   height: number,
   clusters: readonly (readonly GlassShape[])[],
   spacing: number,
-  profile: 'gentle' | 'measured' = 'measured'
+  profile: RefractionProfile = 'regular',
+  glintWidth = 0,
+  regularity = 1
 ) {
   const logicalWidth = Number.isFinite(width) ? Math.max(1, width) : 1
   const logicalHeight = Number.isFinite(height) ? Math.max(1, height) : 1
@@ -98,7 +94,7 @@ export function liveDisplacementMap(
   // the minimum one-pixel short side otherwise makes the total exceed the work budget.
   const w = Math.max(1, Math.min(GLASS_LIVE_MAP_PIXELS, Math.floor(logicalWidth * density)))
   const h = Math.max(1, Math.min(Math.floor(GLASS_LIVE_MAP_PIXELS / w), Math.floor(logicalHeight * density)))
-  return sampleDisplacementMap(logicalWidth, logicalHeight, w, h, clusters, spacing, GLASS_BEZEL, profile)
+  return sampleDisplacementMap(logicalWidth, logicalHeight, w, h, clusters, spacing, profile === 'regular' ? 20 : GLASS_BEZEL, profile, glintWidth, regularity)
 }
 
 function sampleDisplacementMap(
@@ -109,26 +105,49 @@ function sampleDisplacementMap(
   clusters: readonly (readonly GlassShape[])[],
   spacing: number,
   bezel: number,
-  profile: 'gentle' | 'measured'
+  profile: RefractionProfile,
+  glintWidth = 0,
+  regularity = 1
 ) {
   const pixelWidth = logicalWidth / w
   const pixelHeight = logicalHeight / h
   const coverageWidth = Math.max(pixelWidth, pixelHeight)
-  const data = new Uint8ClampedArray(w * h * 4)
+  // Pack the optional lighting field below the displacement map in one decoded image.
+  // R/G store the weighted normal, B its weight. Rotating the light then costs one
+  // filter matrix update, without another distance walk or bitmap upload.
+  const plane = w * h * 4
+  const data = new Uint8ClampedArray(glintWidth > 0 ? plane * 2 : plane)
   for (let i = 0; i < data.length; i += 4) {
     data[i] = 128
     data[i + 1] = 128
+    if (i >= plane) data[i + 3] = 255
   }
-  const sizes = clusters.map((shapes) => (shapes.length ? refractionScale(Math.min(...shapes.map((s) => Math.min(s.width, s.height)))) : 0))
-  const shifts = clusters.map((shapes, index) => profile === 'measured'
-    ? GLASS_REFRACTION * sizes[index]
-    : shapes.length ? gentleRefractionShift(Math.min(...shapes.map(s => Math.min(s.width, s.height))), bezel) : 0)
-  const largest = Math.max(0, ...shifts)
+  function regularOptics(side: number) {
+    const clearScale = Math.min(1, side / 40)
+    return {
+      band: bezel * clearScale * (1 - regularity) + Math.min(bezel, side / 4) * regularity,
+      shift: 50 * clearScale * (1 - regularity) + Math.min(60, side / 2) * regularity,
+    }
+  }
+  const optics = clusters.map(shapes => {
+    const sides = shapes.map(s => Math.min(s.width, s.height))
+    if (profile === 'regular') return regularOptics(Math.max(0, ...sides))
+    const side = shapes.length ? Math.min(...sides) : 0
+    const size = refractionScale(side)
+    return {
+      band: Math.min(bezel * size, side / 2),
+      shift: profile === 'measured' ? GLASS_REFRACTION * size : gentleRefractionShift(side, bezel),
+    }
+  })
+  const largest = Math.max(0, ...optics.map(o => o.shift))
   clusters.forEach((shapes, index) => {
     if (!shapes.length) return
-    const size = sizes[index]
+    const { band, shift } = optics[index]
+    const firstSide = Math.min(shapes[0].width, shapes[0].height)
+    const localSide = profile === 'regular' && shapes.some(s => Math.min(s.width, s.height) !== firstSide)
+      ? prepareUnionSide(shapes, spacing) : null
     // This cluster's shift as a share of the map's (the largest cluster's) shift.
-    const share = largest > 0 ? shifts[index] / largest : 0
+    const share = largest > 0 ? shift / largest : 0
     // A blended contour can extend outside all member boxes. Its map must cover the same
     // expanded surface as the clip and reflection, including the antialiased outer samples.
     const bounds = unionBounds(shapes, spacing)
@@ -137,7 +156,6 @@ function sampleDisplacementMap(
     const x1 = Math.min(w, Math.ceil((bounds.x + bounds.width) / pixelWidth) + 1)
     const y1 = Math.min(h, Math.ceil((bounds.y + bounds.height) / pixelHeight) + 1)
     if (x1 <= x0 || y1 <= y0) return
-    const band = Math.min(bezel * size, ...shapes.map((s) => Math.min(s.width, s.height) / 2))
     const distance = prepareUnionDistance(shapes, spacing)
     const stride = x1 - x0 + 2
     // At one pixel per CSS pixel, the unchanged +/-1 normal stencil lands on neighbouring
@@ -152,7 +170,8 @@ function sampleDisplacementMap(
     // work. Keep a small safety margin for interpolation of the superellipse norm table.
     const tile = 8
     const canCull = shapes.every(shape => shape.cornerExponent === undefined || shape.cornerExponent >= 2)
-    const neutralDepth = Math.max(band, coverageWidth / 2)
+    const reachInside = Math.max(band, 4 * glintWidth)
+    const neutralDepth = Math.max(reachInside, coverageWidth / 2)
     for (let row = y0; row < y1; row += tile) for (let column = x0; column < x1; column += tile) {
       const bottom = Math.min(y1, row + tile)
       const right = Math.min(x1, column + tile)
@@ -175,22 +194,36 @@ function sampleDisplacementMap(
         const i = (y * w + x) * 4
         // Clusters' boxes can overlap: only ever add coverage.
         data[i + 3] = Math.max(data[i + 3], Math.round(Math.min(1, Math.max(0, 0.5 - d / coverageWidth)) * 255))
-        if (d >= coverageWidth / 2 || d <= -band) continue
+        if (d >= coverageWidth / 2 || d <= -reachInside) continue
         const gx = field ? field[fieldIndex + 1] - field[fieldIndex - 1] : distance(px + 1, py) - distance(px - 1, py)
         const gy = field ? field[fieldIndex + stride] - field[fieldIndex - stride] : distance(px, py + 1) - distance(px, py - 1)
         const length = Math.hypot(gx, gy) || 1
-        const cosine = (gx * DEFAULT_GLASS_LIGHT.x + gy * DEFAULT_GLASS_LIGHT.y) / length
-        // The mask is ~1 px wide: average it across a coarse map pixel so its weight survives.
-        let edge = 0
-        for (let k = 0; k < 4; k++) edge += edgeMask(-d + ((k + 0.5) / 4 - 0.5) * coverageWidth, cosine)
-        data[i + 2] = Math.max(data[i + 2], Math.round((edge / 4) * 255))
-        const bend = refractionAt(Math.min(d, -1e-3), gx / length, gy / length, band)
-        data[i] = Math.round(128 + bend.x * share * 127)
-        data[i + 1] = Math.round(128 + bend.y * share * 127)
+        if (glintWidth > 0) {
+          const z = Math.max(0, -d) / glintWidth
+          const weight = (Math.max(0, 1 - z) + 0.21 * Math.max(0, 1 - z / 4)) / 1.21
+          data[plane + i] = Math.round(128 + 127 * weight * gx / length)
+          data[plane + i + 1] = Math.round(128 + 127 * weight * gy / length)
+          data[plane + i + 2] = Math.round(255 * weight)
+        } else {
+          const cosine = (gx * DEFAULT_GLASS_LIGHT.x + gy * DEFAULT_GLASS_LIGHT.y) / length
+          // The mask is ~1 px wide: average it across a coarse map pixel so its weight survives.
+          let edge = 0
+          for (let k = 0; k < 4; k++) edge += edgeMask(-d + ((k + 0.5) / 4 - 0.5) * coverageWidth, cosine)
+          data[i + 2] = Math.max(data[i + 2], Math.round((edge / 4) * 255))
+        }
+        const local = localSide ? regularOptics(localSide(px, py)) : null
+        const localShare = local && largest > 0 ? local.shift / largest : share
+        const shoulder = Math.max(0, 1 - Math.max(-d, 0.001) / (local?.band ?? band))
+        const shortening = profile === 'regular' && shapes.length > 1 ? Math.sqrt(Math.min(1, length / 2)) : 1
+        const amount = profile === 'regular'
+          ? 1 - Math.sqrt(1 - shoulder * shoulder)
+          : shoulder ** GLASS_BEZEL_POWER
+        data[i] = Math.round(128 - (gx / length) * amount * localShare * shortening * 127)
+        data[i + 1] = Math.round(128 - (gy / length) * amount * localShare * shortening * 127)
       }
     }
   })
-  return { width: w, height: h, data, scale: 2 * largest }
+  return { width: w, height: glintWidth > 0 ? h * 2 : h, data, scale: 2 * largest }
 }
 
 /** A control lens's kind: a pill (segmented control, tab bar), a slider thumb or a switch thumb. */

@@ -128,6 +128,24 @@ export function prepareUnionDistance(shapes, spacing) {
     };
     return distance;
 }
+/** Local short side of a heterogeneous blend. The smooth minimum's weights
+ * carry each member's bevel size continuously through the joining neck. */
+export function prepareUnionSide(shapes, spacing) {
+    const widths = blendWidths(shapes, spacing);
+    const sides = shapes.map(s => Math.min(s.width, s.height));
+    return (x, y) => {
+        let distance = shapeDistance(x, y, shapes[0]);
+        let side = sides[0];
+        for (let i = 1; i < shapes.length; i++) {
+            const next = shapeDistance(x, y, shapes[i]);
+            const k = widths[i];
+            const share = k > 0 ? Math.max(0, Math.min(1, 0.5 + (distance - next) / (2 * k))) : Number(next < distance);
+            side += (sides[i] - side) * share;
+            distance = smoothMin(distance, next, k);
+        }
+        return side;
+    };
+}
 /** Gap between two boxes (0 when they touch or overlap). */
 export function rectGap(a, b) {
     const dx = Math.max(a.x - (b.x + b.width), b.x - (a.x + a.width), 0);

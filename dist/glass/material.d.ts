@@ -514,4 +514,25 @@ export declare function glassFrostedBlur(side: number): number;
  * (`glassFrostedBlur`) rather than turning into a bare veil.
  */
 export declare function glassKindBlur(kind: GlassKind, side: number, tint: number, blurOn: boolean, frosted?: boolean): number;
+/** Untinted face of liquid_glass_renderer 1.0.0-dev.2. Feeef's slider passes
+ * through clear, regular, and fully tinted regular at 0, 0.5 and 1. */
+export declare function liquidFace(tint: number, dark: boolean): {
+    transmission: number;
+    lift: number;
+    chroma: number;
+    red: number;
+    green: number;
+    blue: number;
+};
+/** Base face matrix. The reference adds transmission * lift * Y * (1-Y) in the shader. */
+export declare function liquidFaceMatrix(face: ReturnType<typeof liquidFace>): number[];
+/** Regular preset frost in logical pixels. Apply the Impeller downsample floor
+ * at the device scale. Feeef's clear endpoint has no frost. */
+export declare function liquidFrost(side: number, tint: number, dpr: number): number;
+/** Integrated coverage of the reference's 0.75 px exterior border in the
+ * kit's half-pixel ring and side bands. A dark regular face has bare poles. */
+export declare function liquidHairline(tint: number, dark: boolean): {
+    ring: number;
+    sliver: number;
+};
 //# sourceMappingURL=material.d.ts.map

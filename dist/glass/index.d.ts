@@ -13,7 +13,7 @@ export type { GlassBirth, GlassDeath, GlassPlan } from './transitions.js';
 export { GLASS_BEZEL, GLASS_BEZEL_POWER, GLASS_LARGE_SIDE, GLASS_REFRACTION, GLASS_SIZE_EXPONENT, displacementMap, glassCapabilities, LENS_BEND, lensBend, lensDisplacementMap, refractionAt, refractionScale, supportsRefraction, supportsElementRefraction, } from './refraction.js';
 export { GLASS_BLUR, GLASS_CLEAR, GLASS_CLEAR_BLUR, GLASS_EDGE, GLASS_HAIRLINE, GLASS_MENU, GLASS_REGULAR_LIFT, GLASS_RIM, GLASS_RIM_MAX_WIDTH, GLASS_SATURATE, GLASS_SHADOW, GLASS_SMALL_SIDE, GLASS_BAR_TINT, GLASS_FROSTED_BLUR_SCALE, GLASS_FLAT_FLOOR, GLASS_TINT_DEFAULT, GLASS_VEIL, clampGlassTint, edgeMask, glassBlur, glassBlurAt, glassEdgeTerms, glassFrostedBlur, glassHairline, glassKindBlur, glassMenuMaterial, glassMaterial, glassRim, glassSize, LENS_MATERIAL, LENS_SHADOW, lensMaterial, liftFilter, rimLayer, } from './material.js';
 export type { GlassKind, GlassMaterial, GlassRim, GlassSize } from './material.js';
-export type { LensKind } from './refraction.js';
+export type { LensKind, RefractionProfile } from './refraction.js';
 export { GlassLensLayer, lensBends, lensMode } from './lens-layer.js';
 export type { LensMode } from './lens-layer.js';
 export { adaptiveGlassTone, backdropTone } from './adaptive.js';

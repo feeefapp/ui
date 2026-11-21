@@ -183,7 +183,7 @@ test('a failed fallback calculation leaves the existing lens intact and cannot b
 })
 
 test('worker and main-thread fallback retain every existing displacement pixel and BMP byte', () => {
-  for (const profile of ['gentle', 'measured'] as const) {
+  for (const profile of ['regular', 'gentle', 'measured'] as const) {
     const input: RefractionWorkRequest = {
       key: profile, width: 200.25, height: 72.75, spacing: 20, profile,
       shapes: [

@@ -1,3 +1,4 @@
+import type { RefractionProfile } from './refraction.js';
 import type { GlassMemberOptions } from './context.js';
 import { type GlassKind } from './material.js';
 /** How far (px) a member may reach past the container and still be drawn (overshoot, growing bubbles). */
@@ -59,7 +60,7 @@ export declare class GlassScene {
     highlightWidth: number;
     highlightProfile: 'surface' | 'rim';
     highlightStrength: number;
-    refractionProfile: 'gentle' | 'measured';
+    refractionProfile: RefractionProfile;
     refractionStrength: number;
     /** Grey level (0–1) of the veil's colour, `--lab-surface`, for the edge terms. */
     private surfaceGrey;
@@ -151,6 +152,7 @@ export declare class GlassScene {
      * bend the backdrop (no SVG backdrop filters, and no backdrop source for Firefox's lens).
      */
     private frosted;
+    private wantsRefraction;
     /** Keep the same optical layer alive through motion, merges and adaptive tone changes. */
     private updateRefraction;
     /** Sampling a separate paint layer avoids Firefox's recursive element-image prohibition. */

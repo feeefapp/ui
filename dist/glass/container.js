@@ -43,7 +43,7 @@ export function useGlassOptions() {
  * bubble materializes. Bubbles keep their layout, focus and semantics; only the paint moves here. Without
  * JavaScript, or in forced colors, every bubble paints its own glass as before.
  */
-export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'div', spacing = 8, cornerShape = 'superellipse', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 1, highlightProfile = 'rim', highlightStrength = 1, refractionStrength = 1, refractionProfile = 'gentle', tint, backdropSource, material = 'regular', solo, className, children, ...props }, ref) {
+export const GlassContainer = React.forwardRef(function GlassContainer({ as = 'div', spacing = 8, cornerShape = 'superellipse', light = 'pointer', interactive = true, adaptive = true, highlightWidth = 1, highlightProfile = 'rim', highlightStrength = 1, refractionStrength = 1, refractionProfile = 'regular', tint, backdropSource, material = 'regular', solo, className, children, ...props }, ref) {
     const host = React.useRef(null);
     const backdrop = React.useRef(null);
     const paint = React.useRef(null);

@@ -205,8 +205,7 @@ keys (`lab.*`) keep the `lab` namespace so they never collide with app styles. N
 prefixed alias.
 
 Liquid glass uses the kit's clamped continuous corners by default (`cornerShape` 'superellipse':
-bubbles and capsules come out round; 'round' forces circular corners at every radius), a 1px
-reference rim and the measured refraction profile. Keep these defaults shared by
+bubbles and capsules come out round; 'round' forces circular corners at every radius), the rounded regular bevel and 1.2px directional glint from liquid_glass_renderer 1.0.0-dev.2. Keep these defaults shared by
 GlassContainer and GlassScene so GlassScope consumers inherit them. Theme tint/blur and
 member CSS radii remain configurable.
 Liquid glass (`src/glass`): `GlassContainer` paints ONE material for every GlassGroup, ToolbarGroup
@@ -251,8 +250,7 @@ no standalone glass look (Flutter's `GlassSurface` is gone). Containers draw the
 before the browser paints, so a bubble never shows its CSS fallback while JavaScript runs.
 Bubbles leave the glass when they or an ancestor are `inert`, `hidden` or `data-glass-hidden`
 (use it for a bubble that fades out but stays mounted).
-The material (blur, saturation, veil, rim, shadow), the refraction profile and the merge width are
-our own fit to measured Liquid Glass (`research/liquid-glass/FINDINGS.md`, `data/model.json`); change
+The regular liquid face, bevel and glint follow liquid_glass_renderer 1.0.0-dev.2. Fallback materials, the legacy refraction profiles and the merge width follow our fit to measured Liquid Glass (`research/liquid-glass/FINDINGS.md`, `data/model.json`); change
 them there first and keep `material.ts`/`refraction.ts`/`geometry.ts`, their Dart twins,
 `shaders/glass_refraction.frag` and the tokens in step.
 ThemeConfig `glass` (liquid/still/solid), `glassTint` (0 clear … 1 tinted, `--lab-glass-tint`),

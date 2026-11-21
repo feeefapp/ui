@@ -1,3 +1,4 @@
+import type { RefractionProfile } from './refraction'
 import type { GlassShape } from './geometry'
 import { liveDisplacementMap, rgbaBmpBytes } from './refraction'
 
@@ -8,7 +9,9 @@ export type RefractionWorkRequest = {
   height: number
   shapes: readonly GlassShape[]
   spacing: number
-  profile: 'gentle' | 'measured'
+  glintWidth?: number
+  regularity?: number
+  profile: RefractionProfile
 }
 /** Exact opaque Firefox map encoded as a BMP, ready for a Blob URL and image decoding. */
 export type RefractionWorkResult = { key: string; scale: number; bytes: ArrayBuffer }
@@ -19,7 +22,7 @@ export type RefractionWorkerReply =
 
 /** The worker and its CSP/unsupported-browser fallback use this same pixel calculation. */
 export function buildRefractionBitmap(request: RefractionWorkRequest): RefractionWorkResult {
-  const pixels = liveDisplacementMap(request.width, request.height, [request.shapes], request.spacing, request.profile)
+  const pixels = liveDisplacementMap(request.width, request.height, [request.shapes], request.spacing, request.profile, request.glintWidth, request.regularity)
   // Firefox clips the live element to the current CSS outline. An opaque map keeps an older
   // decoded lens from imposing its previous silhouette while the next shape is prepared.
   for (let pixel = 3; pixel < pixels.data.length; pixel += 4) pixels.data[pixel] = 255

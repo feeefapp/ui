@@ -90,13 +90,6 @@ class GlassLens extends StatelessWidget {
   static bool enabledOf(BuildContext context) =>
       glassStyleOf(context) != GlassStyle.solid;
 
-  static const _identity = [
-    1.0, 0.0, 0.0, 0.0, 0.0, //
-    0.0, 1.0, 0.0, 0.0, 0.0, //
-    0.0, 0.0, 1.0, 0.0, 0.0, //
-    0.0, 0.0, 0.0, 1.0, 0.0, //
-  ];
-
   @override
   Widget build(BuildContext context) {
     final t = lens.isFinite ? lens.clamp(0.0, 1.0) : 0.0;
@@ -148,7 +141,7 @@ class GlassLens extends StatelessWidget {
                       // Lenses stay sharp and untinted, as iOS's: whatever they cross reads
                       // through them.
                       blur: 0,
-                      colour: _identity,
+                      colour: GlassRefraction.identityColour,
                       // A pill's bend eases in with its lift (its gap to the rest pill).
                       strength: rest == null ? t : 1,
                       lens: kind,

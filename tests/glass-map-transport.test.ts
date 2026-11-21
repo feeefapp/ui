@@ -9,7 +9,7 @@ import {
 
 test('a live map at full density keeps the reference lens and coverage unchanged', () => {
   const shapes = [[{ x: 4, y: 4, width: 88, height: 88, radius: 44, cornerExponent: 2 }]]
-  for (const profile of ['gentle', 'measured'] as const) {
+  for (const profile of ['regular', 'gentle', 'measured'] as const) {
     assert.deepEqual(liveDisplacementMap(96, 96, shapes, 8, profile), displacementMap(96, 96, shapes, 8, undefined, profile))
   }
 })
@@ -27,7 +27,7 @@ test('live maps bound raster work even for large or extremely thin hosts', () =>
 
 test('map density never changes displacement strength or the physical size of its lens', () => {
   const shapes = [[{ x: 8, y: 8, width: 44, height: 44, radius: 22, cornerExponent: 2 }]]
-  for (const profile of ['gentle', 'measured'] as const) {
+  for (const profile of ['regular', 'gentle', 'measured'] as const) {
     const reference = displacementMap(60, 60, shapes, 8, undefined, profile)
     const expanded = liveDisplacementMap(480, 480, shapes, 8, profile)
     assert.equal(expanded.scale, reference.scale)

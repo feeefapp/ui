@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart';
 
 import '../devtools/devtools.dart';
 import 'geometry.dart';
+import 'material.dart' show LiquidFace, liquidFaceMatrix;
 import 'refraction.dart';
 
 /// What glass can do on this device, for apps that show or log it (the twin of the web kit's
@@ -34,6 +35,9 @@ class GlassRefraction extends StatefulWidget {
     this.light = const Offset(-0.7071067811865476, -0.7071067811865476),
     this.strength = 1,
     this.lens,
+    this.face,
+    this.glintWidth = 1,
+    this.glintStrength = 1,
     this.backdropKey,
   });
 
@@ -41,6 +45,8 @@ class GlassRefraction extends StatefulWidget {
   /// of its kind (a pill bounded by its rest pill, the second shape) instead of the container's bezel, eased
   /// in by [strength] (0 … 1). Null for container glass.
   final LensKind? lens;
+  final LiquidFace? face;
+  final double glintWidth, glintStrength;
 
   /// Lens strength, a share of the measured shift (ThemeConfig `glassRefractionStrength`); for a
   /// control [lens], how much of its bend shows.
@@ -71,6 +77,9 @@ class GlassRefraction extends StatefulWidget {
     super.debugFillProperties(properties);
     properties
       ..add(EnumProperty<LensKind?>('lens', lens, defaultValue: null))
+      ..add(DiagnosticsProperty<LiquidFace?>('face', face, defaultValue: null))
+      ..add(DoubleProperty('glintStrength', glintStrength, defaultValue: 1))
+      ..add(DoubleProperty('glintWidth', glintWidth, defaultValue: 1))
       ..add(DoubleProperty('strength', strength, defaultValue: 1))
       ..add(
         DiagnosticsProperty<BackdropKey?>(
@@ -115,6 +124,14 @@ class GlassRefraction extends StatefulWidget {
         ),
       );
   }
+
+  /// Identity for callers that colour the backdrop in the shader.
+  static const identityColour = [
+    1.0, 0.0, 0.0, 0.0, 0.0, //
+    0.0, 1.0, 0.0, 0.0, 0.0, //
+    0.0, 0.0, 1.0, 0.0, 0.0, //
+    0.0, 0.0, 0.0, 1.0, 0.0, //
+  ];
 
   /// Shapes the shader can blend in one cluster; larger clusters bend their first six.
   static const maxShapes = 6;
@@ -182,17 +199,20 @@ class _GlassRefractionState extends State<GlassRefraction> {
   @override
   Widget build(BuildContext context) {
     final program = GlassRefraction._loaded;
-    final colour = ColorFilter.matrix(widget.colour);
-    final fallback = widget.blur > 0
-        ? ui.ImageFilter.compose(
-            outer: colour,
-            inner: ui.ImageFilter.blur(
-              sigmaX: widget.blur,
-              sigmaY: widget.blur,
-            ),
-          )
-        : colour;
     if (program == null) {
+      final face = widget.face;
+      final colour = ColorFilter.matrix(
+        face == null ? widget.colour : liquidFaceMatrix(face),
+      );
+      final fallback = widget.blur > 0
+          ? ui.ImageFilter.compose(
+              outer: colour,
+              inner: ui.ImageFilter.blur(
+                sigmaX: widget.blur,
+                sigmaY: widget.blur,
+              ),
+            )
+          : colour;
       return BackdropFilter(
         filter: fallback,
         backdropGroupKey: widget.backdropKey,
@@ -209,6 +229,9 @@ class _GlassRefractionState extends State<GlassRefraction> {
       light: widget.light,
       strength: widget.strength,
       lens: widget.lens,
+      face: widget.face,
+      glintStrength: widget.glintStrength,
+      glintWidth: widget.glintWidth,
       dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
       backdropKey: widget.backdropKey,
     );
@@ -226,6 +249,9 @@ class _RefractionBackdrop extends LeafRenderObjectWidget {
     required this.light,
     required this.strength,
     required this.lens,
+    required this.face,
+    required this.glintStrength,
+    required this.glintWidth,
     required this.dpr,
     required this.backdropKey,
   });
@@ -233,6 +259,8 @@ class _RefractionBackdrop extends LeafRenderObjectWidget {
   final GlassPath path;
   final double spacing, blur, strength, dpr;
   final LensKind? lens;
+  final LiquidFace? face;
+  final double glintWidth, glintStrength;
   final List<double> colour;
   final ({double k1, double k3}) edge;
   final Offset light;
@@ -258,6 +286,9 @@ class _RefractionBackdrop extends LeafRenderObjectWidget {
       ..add(DoubleProperty('strength', strength))
       ..add(DoubleProperty('dpr', dpr))
       ..add(EnumProperty<LensKind?>('lens', lens, defaultValue: null))
+      ..add(DiagnosticsProperty<LiquidFace?>('face', face, defaultValue: null))
+      ..add(DoubleProperty('glintStrength', glintStrength, defaultValue: 1))
+      ..add(DoubleProperty('glintWidth', glintWidth, defaultValue: 1))
       ..add(IterableProperty<double>('colour', colour))
       ..add(DiagnosticsProperty<({double k1, double k3})>('edge', edge))
       ..add(DiagnosticsProperty<Offset>('light', light))
@@ -384,8 +415,7 @@ class _RenderRefraction extends RenderBox {
     final side = shapes
         .map((s) => math.min(s.width, s.height))
         .reduce(math.min);
-    final scale = refractionScale(side);
-    final bezel = math.min(glassBezel * scale, side / 2);
+    final bezel = math.min(20.0, side / 4);
     // The backdrop texture is in physical pixels of the layer the filter paints into.
     final origin = _painted = _origin();
     final blends = <double>[
@@ -404,13 +434,12 @@ class _RenderRefraction extends RenderBox {
     set(origin.dy);
     set(config.dpr);
     set(bezel);
-    // The gentle lens (iOS 27): no mirrored band at the rim. A control lens's bend is its own
-    // measured profile, eased in by the strength.
+    // Regular glass can mirror up to its centre line. Control lenses have their own profiles.
     final lens = config.lens;
     set(
-      lens != null
+      lens != null || config.face != null
           ? config.strength
-          : gentleRefractionShift(side) * config.strength,
+          : math.min(60.0, side / 2) * config.strength,
     );
     set(shapes.length.toDouble());
     for (var i = 0; i < GlassRefraction.maxShapes; i++) {
@@ -436,27 +465,36 @@ class _RenderRefraction extends RenderBox {
       LensKind.thumb => 2,
       LensKind.switchThumb => 3,
     });
+    final face = config.face;
+    set(face?.transmission ?? 0);
+    set(face?.lift ?? 0);
+    set(face?.chroma ?? 0);
+    set(face?.red ?? 0);
+    set(face?.green ?? 0);
+    set(face?.blue ?? 0);
+    set(face?.regularity ?? 1);
+    set(config.glintStrength);
+    set(config.glintWidth * 1.2);
     // Two passes, never one composed filter: blur and colour first (sharing the container's
     // backdrop read), then the bend alone, which reads that result. Under a composed filter
     // Impeller may crop the shader's input to the clip and count FlutterFragCoord from the
     // crop's corner, depending on the engine; a plain shader pass always counts in the surface
     // frame, which is what [_origin] measures.
-    final colour = ColorFilter.matrix(config.colour);
-    if (config.blur <= 0 && _isIdentity(config.colour)) {
-      // Nothing to blur or tint (a control lens): the bend alone.
+    // The regular shader applies its colour transfer to the refracted sample. An
+    // unfrosted surface therefore needs only the bend pass.
+    final colour = face == null && !_isIdentity(config.colour)
+        ? ColorFilter.matrix(config.colour)
+        : null;
+    final blur = config.blur > 0
+        ? ui.ImageFilter.blur(sigmaX: config.blur, sigmaY: config.blur)
+        : null;
+    if (colour == null && blur == null) {
       _base.layer = null;
     } else {
       _base.layer = (_base.layer ?? BackdropFilterLayer())
-        // Without blur the colour reads the backdrop itself: no blur stage at all.
-        ..filter = config.blur > 0
-            ? ui.ImageFilter.compose(
-                outer: colour,
-                inner: ui.ImageFilter.blur(
-                  sigmaX: config.blur,
-                  sigmaY: config.blur,
-                ),
-              )
-            : colour
+        ..filter = colour != null && blur != null
+            ? ui.ImageFilter.compose(outer: colour, inner: blur)
+            : (colour ?? blur!)
         ..backdropKey = config.backdropKey;
       context.pushLayer(_base.layer!, (context, offset) {}, offset);
     }

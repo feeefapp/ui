@@ -388,7 +388,7 @@ test('the bend follows the fitted profile: (1 - t)^4 of the bezel, smaller glass
   assert.equal(refractionScale(200), 1)
   assert.equal(refractionScale(88), 1)
   assert.ok(Math.abs(refractionScale(44) - 0.5 ** 0.78) < 1e-9)
-  const small = displacementMap(60, 60, [[{ x: 8, y: 8, width: 44, height: 44, radius: 22 }]], 8)
+  const small = displacementMap(60, 60, [[{ x: 8, y: 8, width: 44, height: 44, radius: 22 }]], 8, undefined, 'gentle')
   assert.ok(Math.abs(small.scale - 2 * gentleRefractionShift(44)) < 1e-9, 'filter scale follows the size')
 })
 
@@ -494,10 +494,10 @@ test('highlight samples stay within the blended bevel and remain finite at merge
 })
 
 
-test('web bezel transport never reverses straight background lines', () => {
+test('gentle bezel transport never reverses straight background lines', () => {
   for (const side of [28, 44, 88, 180]) {
     const shape = { x: 0, y: 0, width: 240, height: side, radius: 12 }
-    const map = displacementMap(240, side, [[shape]], 8)
+    const map = displacementMap(240, side, [[shape]], 8, undefined, 'gentle')
     let previous = -Infinity
     for (let y = 0; y < side / 2; y++) {
       const green = map.data[(y * map.width + 120) * 4 + 1]
@@ -562,9 +562,9 @@ test('round glass corner radius follows its full visible range and clamps at a c
 })
 
 
-test('measured lens restores native shift while preserving gentle default and shape coverage', () => {
+test('the legacy measured and gentle profiles preserve their shift and coverage', () => {
   const shapes = [[{ x: 0, y: 0, width: 88, height: 88, radius: 44, cornerExponent: 2 }]]
-  const gentle = displacementMap(88, 88, shapes, 0)
+  const gentle = displacementMap(88, 88, shapes, 0, undefined, 'gentle')
   const measured = displacementMap(88, 88, shapes, 0, undefined, 'measured')
   assert.equal(measured.scale, 94)
   assert.ok(measured.scale > gentle.scale * 8)

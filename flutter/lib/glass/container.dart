@@ -545,6 +545,9 @@ class _GlassContainerState extends State<GlassContainer> {
       highContrast: glassHighContrastOf(context),
       brightness: theme.brightness,
     );
+    _scene.baseLight = material.shaderFace
+        ? const Offset(0, -1)
+        : defaultGlassLight;
     return _GlassRegistryScope(
       registry: _registry,
       // The glass repaints whenever its light, glow or shapes move: only the container (glass and
@@ -638,6 +641,12 @@ class _GlassMaterial {
         : glassFlatFill(fill, colors.surface);
   }
 
+  bool get shaderFace =>
+      refraction &&
+      !highContrast &&
+      kind == GlassKind.regular &&
+      GlassRefraction.supported;
+
   bool get rim => style != GlassStyle.solid;
 
   /// The outline's colour: the ink when the platform asks for more contrast.
@@ -676,8 +685,9 @@ class _GlassMaterial {
   }
 
   /// The hairline's strengths at this tint and brightness.
-  ({double ring, double sliver}) get hairline =>
-      glassHairline(tint, dark: dark);
+  ({double ring, double sliver}) get hairline => shaderFace
+      ? liquidHairline(tint, dark: dark)
+      : glassHairline(tint, dark: dark);
 }
 
 /// Shorter side of the smallest bubble in a cluster: the material and bend follow it.
@@ -823,7 +833,10 @@ class _GlassBackdrops extends StatefulWidget {
 }
 
 class _GlassBackdropsState extends State<_GlassBackdrops> {
-  bool get _refract => widget.material.refraction && GlassRefraction.supported;
+  bool get _refract =>
+      widget.material.refraction &&
+      (widget.material.refractionStrength > 0 || widget.material.shaderFace) &&
+      GlassRefraction.supported;
 
   @override
   void initState() {
@@ -863,7 +876,42 @@ class _GlassBackdropsState extends State<_GlassBackdrops> {
   Widget build(BuildContext context) {
     final scene = widget.scene;
     final material = widget.material;
-    final refract = _refract;
+    final face = material.shaderFace
+        ? liquidFace(material.tint, dark: material.dark)
+        : null;
+    final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 1;
+
+    Widget backdrop(GlassPath path) {
+      final side = _materialSide(scene, path);
+      if (!_refract) {
+        return BackdropFilter(
+          filter: material.backdropFor(side),
+          backdropGroupKey: scene.backdropKey,
+          child: const SizedBox.expand(),
+        );
+      }
+      final blur = face == null
+          ? material.blurFor(side)
+          : material.blur
+          ? liquidFrost(_smallestSide(path), material.tint, dpr)
+          : 0.0;
+      return GlassRefraction(
+        path: path,
+        spacing: scene.spacing,
+        backdropKey: scene.backdropKey,
+        blur: blur,
+        strength: material.refractionStrength,
+        colour: face == null
+            ? glassBackdropMatrix(material.materialFor(side))
+            : GlassRefraction.identityColour,
+        face: face,
+        glintStrength: material.highlight,
+        glintWidth: material.highlightWidth,
+        edge: face == null ? material.edgeFor(side) : (k1: 0, k3: 0),
+        light: scene.lightFor(path.bounds),
+      );
+    }
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -871,24 +919,7 @@ class _GlassBackdropsState extends State<_GlassBackdrops> {
           Positioned.fill(
             child: ClipPath(
               clipper: _PathClipper(scene, index),
-              child: refract
-                  ? GlassRefraction(
-                      path: path,
-                      spacing: scene.spacing,
-                      backdropKey: scene.backdropKey,
-                      blur: material.blurFor(_materialSide(scene, path)),
-                      strength: material.refractionStrength,
-                      colour: glassBackdropMatrix(
-                        material.materialFor(_materialSide(scene, path)),
-                      ),
-                      edge: material.edgeFor(_materialSide(scene, path)),
-                      light: scene.lightFor(path.bounds),
-                    )
-                  : BackdropFilter(
-                      filter: material.backdropFor(_materialSide(scene, path)),
-                      backdropGroupKey: scene.backdropKey,
-                      child: const SizedBox.expand(),
-                    ),
+              child: backdrop(path),
             ),
           ),
       ],
@@ -1112,13 +1143,15 @@ class _GlassPainter extends CustomPainter {
     canvas.clipPath(shape.outside);
     if (!_cachedShadows(canvas, paths, shape.region)) _shadows(canvas, paths);
     canvas.restore();
-    for (final p in paths) {
-      scissor(p);
-      canvas.drawPath(
-        p.path,
-        Paint()..color = material.fillFor(_materialSide(scene, p)),
-      );
-      canvas.restore();
+    if (!(hairline && material.shaderFace)) {
+      for (final p in paths) {
+        scissor(p);
+        canvas.drawPath(
+          p.path,
+          Paint()..color = material.fillFor(_materialSide(scene, p)),
+        );
+        canvas.restore();
+      }
     }
     if (hairline) {
       // The dark hairline iOS 27 draws outside every glass shape, small or large (the web
@@ -1150,56 +1183,62 @@ class _GlassPainter extends CustomPainter {
         );
       }
     }
-    for (final p in paths) {
-      // Edge and rim are 2px strokes clipped to the outline: 1px inside, like a CSS border.
-      scissor(p);
-      canvas.clipPath(p.path);
-      // All glass keeps the theme line beneath its reflection, including when highlights
-      // are disabled. Paint the shared silhouette, never individual member borders.
-      canvas.drawPath(
-        p.path,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = material.outlineColor,
-      );
-      if (material.rim) {
-        // Original directional rim, shared with the web SVG stops. The gradient spans the
-        // merged silhouette, so a straight edge fades too instead of becoming a uniform line.
-        final light = scene.lightFor(p.bounds);
-        final half =
-            (p.bounds.width * light.dx).abs() / 2 +
-            (p.bounds.height * light.dy).abs() / 2;
-        if (half > 0 && material.highlight > 0 && material.highlightWidth > 0) {
-          final key = material.dark ? 0.30 : 0.76;
-          final low = material.dark ? 0.10 : 0.20;
-          Color white(double alpha) => Color.from(
-            alpha: (alpha * material.highlight).clamp(0.0, 1.0),
-            red: 1,
-            green: 1,
-            blue: 1,
-          );
-          canvas.drawPath(
-            p.path,
-            Paint()
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = 2 * material.highlightWidth
-              ..shader = ui.Gradient.linear(
-                p.bounds.center + light * half,
-                p.bounds.center - light * half,
-                [
-                  white(key),
-                  white(low),
-                  const Color(0x00ffffff),
-                  const Color(0x00ffffff),
-                  white(low),
-                ],
-                const [0, 0.22, 0.48, 0.72, 1],
-              ),
-          );
+    if (!(hairline && material.shaderFace) ||
+        material.highlight == 0 ||
+        material.highlightWidth == 0) {
+      for (final p in paths) {
+        // Edge and rim are 2px strokes clipped to the outline: 1px inside, like a CSS border.
+        scissor(p);
+        canvas.clipPath(p.path);
+        // All glass keeps the theme line beneath its reflection, including when highlights
+        // are disabled. Paint the shared silhouette, never individual member borders.
+        canvas.drawPath(
+          p.path,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2
+            ..color = material.outlineColor,
+        );
+        if (material.rim) {
+          // Original directional rim, shared with the web SVG stops. The gradient spans the
+          // merged silhouette, so a straight edge fades too instead of becoming a uniform line.
+          final light = scene.lightFor(p.bounds);
+          final half =
+              (p.bounds.width * light.dx).abs() / 2 +
+              (p.bounds.height * light.dy).abs() / 2;
+          if (half > 0 &&
+              material.highlight > 0 &&
+              material.highlightWidth > 0) {
+            final key = material.dark ? 0.30 : 0.76;
+            final low = material.dark ? 0.10 : 0.20;
+            Color white(double alpha) => Color.from(
+              alpha: (alpha * material.highlight).clamp(0.0, 1.0),
+              red: 1,
+              green: 1,
+              blue: 1,
+            );
+            canvas.drawPath(
+              p.path,
+              Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 2 * material.highlightWidth
+                ..shader = ui.Gradient.linear(
+                  p.bounds.center + light * half,
+                  p.bounds.center - light * half,
+                  [
+                    white(key),
+                    white(low),
+                    const Color(0x00ffffff),
+                    const Color(0x00ffffff),
+                    white(low),
+                  ],
+                  const [0, 0.22, 0.48, 0.72, 1],
+                ),
+            );
+          }
         }
+        canvas.restore();
       }
-      canvas.restore();
     }
     final glow = scene.glow;
     if (glow != null && glow.opacity.get() > 0.01 && material.rim) {
@@ -1230,6 +1269,7 @@ class _GlassPainter extends CustomPainter {
       old.material.kind != material.kind ||
       old.material.tint != material.tint ||
       old.material.highContrast != material.highContrast ||
+      old.material.shaderFace != material.shaderFace ||
       old.material.rim != material.rim ||
       old.material.highlight != material.highlight ||
       old.material.highlightWidth != material.highlightWidth ||
@@ -1398,6 +1438,7 @@ class _GlassScene extends ChangeNotifier {
   /// The window, for the absurd-size rule ([glassMemberRect]).
   Size viewport = Size.zero;
   bool followPointer = true;
+  Offset baseLight = defaultGlassLight;
   bool interactive = true;
 
   /// One backdrop read for all of this container's clusters: they never overlap and nothing paints
@@ -1948,9 +1989,11 @@ class _GlassScene extends ChangeNotifier {
   /// then repaints when the light visibly moves rather than on every pointer event.
   Offset lightFor(Rect bounds) {
     if (!followPointer || reduceMotion || _pointer == null) {
-      return defaultGlassLight;
+      return baseLight;
     }
-    return _quantizeLight(glassLightToward(bounds.center, _pointer));
+    return _quantizeLight(
+      glassLightToward(bounds.center, _pointer, base: baseLight),
+    );
   }
 
   /// Directions per turn the light is kept to (2° apart).

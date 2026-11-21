@@ -604,7 +604,9 @@ void main() {
         expect(red(2, 29), greaterThanOrEqualTo(250));
         expect(red(87, 2), greaterThanOrEqualTo(250));
         expect(red(7, 29), lessThan(235));
-        expect(red(87, 7), lessThan(245));
+        // Regular light at the pole integrates 0.43 × 0.23 × (0.75 / 2)
+        // over the exterior pixel, yielding about 246 on white before the shadow.
+        expect(red(87, 7), lessThanOrEqualTo(247));
         expect(red(7, 29), lessThan(red(87, 7)));
         image.dispose();
       });

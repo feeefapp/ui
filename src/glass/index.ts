@@ -77,7 +77,7 @@ export {
   rimLayer,
 } from './material'
 export type { GlassKind, GlassMaterial, GlassRim, GlassSize } from './material'
-export type { LensKind } from './refraction'
+export type { LensKind, RefractionProfile } from './refraction'
 export { GlassLensLayer, lensBends, lensMode } from './lens-layer'
 export type { LensMode } from './lens-layer'
 export { adaptiveGlassTone, backdropTone } from './adaptive'

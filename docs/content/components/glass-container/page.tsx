@@ -12,7 +12,7 @@ function Overview() {
   return (
     <>
       <SplitMerge />
-      <p>These examples use the clear reference material: a 1px curved rim, the kit’s clamped continuous corners and the measured lens. Each example supplies its background separately so Firefox refracts it too. The <a href="/foundations/glass-reflections">Glass reflections controls</a> let you tune these same component parameters.</p>
+      <p>These examples use the clear reference material: a rounded bevel, a 1.2px directional glint and the kit’s clamped continuous corners. Each example supplies its background separately so Firefox refracts it too. The <a href="/foundations/glass-reflections">Glass reflections controls</a> let you tune these same component parameters.</p>
 
       <Section title="Flutter floating controls">
         <p>Web and Flutter glass keep one theme-aware 1px inside border beneath the reflective rim, in both light and dark themes and in every glass style. The original five-stop directional rim fades from the lit end through a low highlight to clear, with a faint opposite edge; it is not a uniform or symmetric ring. The border stays visible when highlights are disabled; high-contrast surfaces use ink. Toolbar groups and standalone bubbles use the same shared silhouette, without per-member borders or a second inset contour. ToolbarGroup keeps one reflective rim at every width, including vertical rails with text controls; its width does not turn it into a panel. Exterior hairlines remain part of the glass material.</p>
@@ -56,11 +56,11 @@ function Overview() {
           head={['Prop', 'On', 'Use']}
           rows={[
             [<C>tint</C>, 'GlassContainer', 'Local clear-to-tinted material, 0–1. Omit to inherit ThemeConfig.'],
-            [<C>highlightProfile</C>, 'GlassContainer', 'surface: convex bevel; rim (default): the original thin directional five-stop highlight. Use width 1 and strength 1 for the reference rim.'],
-            [<C>highlightWidth</C>, 'GlassContainer', 'Reflective bevel width in px, 0–100 (default 1).'],
+            [<C>highlightProfile</C>, 'GlassContainer', 'The default rim lights opposing edges of the regular lens. Surface selects a broader convex highlight.'],
+            [<C>highlightWidth</C>, 'GlassContainer', 'Width control, 0–100. At 1 the regular glint spans 1.2px with a faint bleed to 4.8px.'],
             [<C>highlightStrength</C>, 'GlassContainer', 'Highlight strength, 0–10 (default 1).'],
             [<C>backdropSource</C>, 'GlassContainer', 'ID of a separate background-only element. Enables live background refraction in Firefox; the source must not contain the glass.'],
-            [<C>refractionProfile</C>, 'GlassContainer', 'gentle (default): the iOS 27 lens, it never folds the backdrop back; measured: the iOS 26.2 screenshot fit with its mirrored edge band.'],
+            [<C>refractionProfile</C>, 'GlassContainer', 'Regular (default) uses the rounded bevel from liquid_glass_renderer. Gentle limits the bend and measured selects the earlier iOS 26.2 fit.'],
             [<C>refractionStrength</C>, 'GlassContainer', 'Backdrop bend, 0–10 (default 1). Above 1 allows stronger distortion. Theme refraction must be enabled.'],
             [<C>cornerShape</C>, 'GlassContainer', 'The kit\'s clamped continuous corner by default (superellipse that turns round at full radius, so bubbles are circles and capsules), used consistently across the outline, highlights and refraction; round forces circular corners at every radius. Supply member radii in CSS px.'],
             [<C>spacing</C>, 'GlassContainer', 'Blend distance in px (default 8). Keep it below the gap between bubbles at rest.'],
@@ -110,16 +110,15 @@ function Overview() {
 
       <Section title="Clear to tinted, blur and refraction">
         <p>
-          Like the Liquid Glass setting on iOS, one number moves the material:{' '}
-          <C>ThemeConfig</C> <C>glassTint</C>, from <C>0</C> (clear: no veil, a slight brightness lift)
-          to <C>1</C> (tinted: iOS 27's regular material, a 52 % veil in light, a light lift in dark).
-          Every glass casts the same faint shadow and draws iOS 27's dark hairline just outside its
-          outline, which keeps it readable on white; the hairline stays with reduced transparency. The web default is <C>0</C>, matching the clear reference across headers, docks and other glass. Increase tint in Customize when you need a stronger veil. The rim light follows the local curve of the blended outline and stays the same at every tint. Inspect it on plain, grid and colored backgrounds in the <a href="/foundations/glass-reflections">Glass reflections</a> guide.
+          On the regular lens, <C>glassTint</C> moves from clear at <C>0</C> through the regular
+          material at the default <C>0.5</C> to fully tinted regular at <C>1</C>. Light and dark
+          appearances have separate transmission and color curves. The glint follows the outline
+          and picks up color from the backdrop. Compare the three on the grid and color backgrounds
+          in the <a href="/foundations/glass-reflections">Glass reflections</a> guide.
         </p>
         <p>
           <C>glassRefraction</C> (default on) bends what is behind the glass at its edges, like a lens,
-          with iOS 27's gentle lens (choose the measured profile for the iOS 26.2 mirrored edge band). A bounded displacement map follows the outline during presses, dragging and merges; rigid moves reuse the same map. The lens stays active throughout the motion. Chromium filters the actual backdrop directly. In Firefox, pass <C>backdropSource</C>, the ID of a separate background-only element: the glass captures that layer as a live element image and filters it normally. Keep the source and glass as siblings: capturing an ancestor containing the glass would create a recursive image. A scroller can't be a source (Firefox scrolls it on the compositor, so a copy of it trails the content), so glass floating over a ScrollArea keeps CSS glass in Firefox. Without a source, Firefox keeps CSS glass. Safari keeps CSS glass without the bend. <C>glassBlur</C> (default off) adds the measured
-          backdrop blur, 2.9px on controls growing to 5.2px on panels. Reduced transparency and
+          through a quarter-circle bevel. The regular face uses a bevel up to 20px wide with an inward displacement up to 60px, capped to fit the bubble. A bounded displacement map follows the outline during presses, dragging and merges; rigid moves reuse the same map. The lens stays active throughout the motion. Chromium filters the actual backdrop directly. In Firefox, pass <C>backdropSource</C>, the ID of a separate background-only element: the glass captures that layer as a live element image and filters it normally. Keep the source and glass as siblings: capturing an ancestor containing the glass would create a recursive image. A scroller can't be a source (Firefox scrolls it on the compositor, so a copy of it trails the content), so glass floating over a ScrollArea keeps CSS glass in Firefox. Without a source, Firefox keeps CSS glass. Safari keeps CSS glass without the bend. <C>glassBlur</C> (default off) adds frost according to tint and the shorter side of the glass. Reduced transparency and
           increased contrast turn all of it into an opaque surface; increased contrast also draws an
           outline. Try the Liquid Glass slider in Customize.
         </p>

@@ -1,5 +1,15 @@
 {
  "units": "pt (CSS px, Flutter logical px)",
+ "renderer_regular": {
+  "source": "liquid_glass_renderer 1.0.0-dev.2, ios27Regular",
+  "bevel": 20,
+  "shift": 60,
+  "max_bevel_share_of_short_side": 0.25,
+  "max_shift_share_of_short_side": 0.5,
+  "glint_width": 1.2,
+  "glint_bleed": 0.21,
+  "glint_bleed_widths": 4
+ },
  "refraction": {
   "edge_shift": 47.2,
   "bezel": 27.1,

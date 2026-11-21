@@ -34,19 +34,20 @@ function referenceUnion(shapes: readonly GlassShape[], spacing: number) {
   }
 }
 
-function denseMap(width: number, height: number, w: number, h: number, clusters: GlassShape[][], spacing: number, profile: 'gentle' | 'measured') {
+function denseMap(width: number, height: number, w: number, h: number, clusters: GlassShape[][], spacing: number, profile: 'regular' | 'gentle' | 'measured') {
   const pixelWidth = width / w
   const pixelHeight = height / h
   const coverage = Math.max(pixelWidth, pixelHeight)
   const sides = clusters.map(shapes => shapes.length ? Math.min(...shapes.map(s => Math.min(s.width, s.height))) : 0)
-  const shifts = sides.map(side => profile === 'measured' ? GLASS_REFRACTION * refractionScale(side) : gentleRefractionShift(side))
+  const maxSides = clusters.map(shapes => Math.max(0, ...shapes.map(s => Math.min(s.width, s.height))))
+  const shifts = sides.map((side, i) => profile === 'regular' ? Math.min(60, maxSides[i] / 2) : profile === 'measured' ? GLASS_REFRACTION * refractionScale(side) : gentleRefractionShift(side))
   const maximum = Math.max(0, ...shifts)
   const data = new Uint8ClampedArray(w * h * 4)
   for (let i = 0; i < data.length; i += 4) data[i] = data[i + 1] = 128
   clusters.forEach((shapes, cluster) => {
     if (!shapes.length) return
     const distance = referenceUnion(shapes, spacing)
-    const band = Math.min(GLASS_BEZEL * refractionScale(sides[cluster]), sides[cluster] / 2)
+    const band = profile === 'regular' ? Math.min(20, maxSides[cluster] / 4) : Math.min(GLASS_BEZEL * refractionScale(sides[cluster]), sides[cluster] / 2)
     const share = maximum ? shifts[cluster] / maximum : 0
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
       const px = (x + 0.5) * pixelWidth
@@ -63,9 +64,23 @@ function denseMap(width: number, height: number, w: number, h: number, clusters:
       let edge = 0
       for (let k = 0; k < 4; k++) edge += edgeMask(-d + ((k + 0.5) / 4 - 0.5) * coverage, cosine)
       data[i + 2] = Math.max(data[i + 2], Math.round((edge / 4) * 255))
-      const bend = refractionAt(Math.min(d, -1e-3), gx / length, gy / length, band)
-      data[i] = Math.round(128 + bend.x * share * 127)
-      data[i + 1] = Math.round(128 + bend.y * share * 127)
+      const depth = Math.max(0.001, -d)
+      let side = Math.min(shapes[0].width, shapes[0].height)
+      let previous = referenceShapeDistance(px, py, shapes[0])
+      for (let j = 1; profile === 'regular' && j < shapes.length; j++) {
+        const next = referenceShapeDistance(px, py, shapes[j])
+        const k = mergeWidth(Math.min(...shapes.slice(0, j).map(other => rectGap(other, shapes[j]))), spacing)
+        const weight = k > 0 ? Math.min(1, Math.max(0, .5 + (previous - next) / (2 * k))) : Number(next < previous)
+        side += (Math.min(shapes[j].width, shapes[j].height) - side) * weight
+        previous = smoothMin(previous, next, k)
+      }
+      const xBevel = Math.max(0, 1 - depth / Math.min(side / 4, 20))
+      const dome = 1 - Math.sqrt(1 - xBevel * xBevel)
+      const bend = profile === 'regular' ? { x: -gx / length * dome, y: -gy / length * dome } : refractionAt(Math.min(d, -1e-3), gx / length, gy / length, band)
+      const localShare = profile === 'regular' ? Math.min(side / 2, 60) / maximum : share
+      const shortening = profile === 'regular' && shapes.length > 1 ? Math.sqrt(Math.min(1, length / 2)) : 1
+      data[i] = Math.round(128 + bend.x * localShare * shortening * 127)
+      data[i + 1] = Math.round(128 + bend.y * localShare * shortening * 127)
     }
   })
   return data
@@ -100,9 +115,33 @@ test('prepared distances preserve dense shape/blend arithmetic at sample and nor
 })
 
 test('culled live maps preserve every RGBA byte of dense sampling, including overlapping clusters', () => {
-  for (const fixture of fixtures) for (const profile of ['gentle', 'measured'] as const) {
+  for (const fixture of fixtures) for (const profile of ['regular', 'gentle', 'measured'] as const) {
     const map = liveDisplacementMap(fixture.width, fixture.height, fixture.clusters, fixture.spacing, profile)
     const expected = denseMap(fixture.width, fixture.height, map.width, map.height, fixture.clusters, fixture.spacing, profile)
     assert.deepEqual(map.data, expected, `${fixture.width}×${fixture.height}, ${profile}`)
   }
+})
+
+test('the packed lighting map reconstructs the glint as the light turns without changing the bend', () => {
+  const shapes = [[shape(0, 0, 120, 44, 22)]]
+  const map = liveDisplacementMap(120, 44, shapes, 8, 'regular', 1.2)
+  const plain = liveDisplacementMap(120, 44, shapes, 8, 'regular')
+  assert.equal(map.height, 88)
+  const plane = plain.data.length
+  const index = (x: number, y: number) => 4 * (y * 120 + x)
+  for (const y of [0, 1, 4, 10, 22, 43]) {
+    const i = index(60, y)
+    assert.equal(map.data[i + 1], plain.data[i + 1], 'same refracted backdrop')
+    assert.equal(map.data[i + 3], plain.data[i + 3], 'same silhouette')
+    const w = map.data[plane + i + 2] / 255
+    const nx = (map.data[plane + i] - 128) / 127
+    const ny = (map.data[plane + i + 1] - 128) / 127
+    const depth = Math.min(y + .5, 43.5 - y)
+    const line = Math.max(0, 1 - depth / 1.2) + .21 * Math.max(0, 1 - depth / 4.8)
+    assert.ok(Math.abs((w - Math.abs(nx)) * 1.21 - line) < .01, 'vertical light')
+    assert.ok(Math.abs(w - Math.abs(ny)) < .01, 'orthogonal light')
+  }
+  const clear = liveDisplacementMap(120, 44, shapes, 8, 'regular', 1.2, 0)
+  assert.equal(clear.scale, 100, 'clear glass uses the 50px rim shift')
+  assert.equal(map.scale, 44, 'regular glass caps the rim shift at half the short side')
 })

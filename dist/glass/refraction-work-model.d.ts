@@ -1,3 +1,4 @@
+import type { RefractionProfile } from './refraction.js';
 import type { GlassShape } from './geometry.js';
 /** Geometry in material coordinates; the key identifies its exact optical configuration. */
 export type RefractionWorkRequest = {
@@ -6,7 +7,9 @@ export type RefractionWorkRequest = {
     height: number;
     shapes: readonly GlassShape[];
     spacing: number;
-    profile: 'gentle' | 'measured';
+    glintWidth?: number;
+    regularity?: number;
+    profile: RefractionProfile;
 };
 /** Exact opaque Firefox map encoded as a BMP, ready for a Blob URL and image decoding. */
 export type RefractionWorkResult = {
