@@ -24,4 +24,5 @@ export { englishText, flattenTranslations, translateLab } from './i18n-core.js';
 export { localeUrl } from './i18n.js';
 export { cn } from './utils.js';
 export { ToolbarSearch } from './toolbar-search.js';
+export { Notice } from './primitives/notice.js';
 //# sourceMappingURL=index.js.map

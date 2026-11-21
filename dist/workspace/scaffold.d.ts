@@ -31,9 +31,12 @@ export type ScaffoldProps = {
         appBar: React.ReactNode;
         bottom: React.ReactNode;
     }) => React.ReactNode;
-    /** Outer content paint. Defaults to `card`; use `none` for independently painted Panels.
+    /** Outer content paint when glassSidebar is false. Defaults to `card`; use `none` for independently painted Panels.
      * Shell spacing and focus remain in either mode, independently of `renderViewport`. */
     contentSurface?: 'card' | 'none';
+    /** Enabled by default. Float navigation on glass and give the main viewport the full unframed area.
+     * Page-owned panels and the floating toolbar's safe spacing remain independent. */
+    glassSidebar?: boolean;
     /** Page content, rendered inside the content panel's scroll area. Can be a function of the state. */
     children: ScaffoldSlot;
     /** Sidebar content, usually a ScaffoldSide. Rendered in the drawer when compact. */
@@ -69,10 +72,10 @@ export type ScaffoldProps = {
 };
 /**
  * Workspace layout: optional top row, a sidebar (expanded, rail or hidden) and a content viewport
- * (rounded card by default) with floating app bar and bottom slots. Fills its parent's height. Below the compact
+ * (edge to edge by default) with floating app bar and bottom slots. Fills its parent's height. Below the compact
  * breakpoint the sidebar moves into a modal drawer. Provider owns theme, services and portals.
  */
-export declare function Scaffold({ children, renderViewport, contentSurface, side, topSide, appBar, bottom, contentLabel, contentViewportRef, sideMode: controlledMode, defaultSideMode, onSideModeChange, compact: compactOverride, compactBreakpoint, drawerLabel, drawerReturnFocusRef, className, style, dir, }: ScaffoldProps): React.JSX.Element;
+export declare function Scaffold({ children, renderViewport, contentSurface, glassSidebar, side, topSide, appBar, bottom, contentLabel, contentViewportRef, sideMode: controlledMode, defaultSideMode, onSideModeChange, compact: compactOverride, compactBreakpoint, drawerLabel, drawerReturnFocusRef, className, style, dir, }: ScaffoldProps): React.JSX.Element;
 type ThreeSlots = {
     /** Start content: a brand, back button or toggle. Pinned at the top in a sidebar. */
     leading?: React.ReactNode;

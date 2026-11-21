@@ -10,7 +10,7 @@ import { usePresence } from '../motion.js';
 import { useI18n } from '../i18n.js';
 import { cn } from '../utils.js';
 import './scaffold.css';
-import { GlassScope } from '../glass/container.js';
+import { GlassContainer, GlassScope } from '../glass/container.js';
 import { ToolbarOrientationContext } from '../toolbar.js';
 import { LayoutGroup } from '../physics/layout-group.js';
 const WorkspaceScaffoldContext = React.createContext(null);
@@ -23,10 +23,10 @@ export function useScaffold() {
 }
 /**
  * Workspace layout: optional top row, a sidebar (expanded, rail or hidden) and a content viewport
- * (rounded card by default) with floating app bar and bottom slots. Fills its parent's height. Below the compact
+ * (edge to edge by default) with floating app bar and bottom slots. Fills its parent's height. Below the compact
  * breakpoint the sidebar moves into a modal drawer. Provider owns theme, services and portals.
  */
-export function Scaffold({ children, renderViewport, contentSurface = 'card', side, topSide, appBar, bottom, contentLabel = 'Workspace content', contentViewportRef, sideMode: controlledMode, defaultSideMode = 'expanded', onSideModeChange, compact: compactOverride, compactBreakpoint = 720, drawerLabel = 'Workspace navigation', drawerReturnFocusRef, className, style, dir, }) {
+export function Scaffold({ children, renderViewport, contentSurface = 'card', glassSidebar = true, side, topSide, appBar, bottom, contentLabel = 'Workspace content', contentViewportRef, sideMode: controlledMode, defaultSideMode = 'expanded', onSideModeChange, compact: compactOverride, compactBreakpoint = 720, drawerLabel = 'Workspace navigation', drawerReturnFocusRef, className, style, dir, }) {
     const host = React.useRef(null);
     const main = React.useRef(null);
     const [localMode, setLocalMode] = React.useState(defaultSideMode);
@@ -72,7 +72,7 @@ export function Scaffold({ children, renderViewport, contentSurface = 'card', si
     // The default card is inset only when something frames it (a top row or visible sidebar).
     // Surface-free viewports retain shell spacing so independent Panels sit clear of the window.
     const framed = Boolean(topSide) || visibleSide;
-    return (_jsx(WorkspaceScaffoldContext.Provider, { value: state, children: _jsxs("div", { ref: host, className: cn('lab-workspace-scaffold', className), style: style, dir: dir, "data-side-mode": visibleSide ? sideMode : 'hidden', "data-framed": framed, "data-compact": compact, "data-lab-sheet-backdrop": "", children: [_jsx(PixelShader, { className: "lab-workspace-scaffold-pixels", density: 0.8, speed: 0.18 }), topSide && _jsx("div", { className: "lab-workspace-top-side", children: render(topSide) }), _jsxs("div", { className: "lab-workspace-scaffold-row", children: [_jsx("div", { className: "lab-workspace-side-boundary", inert: !visibleSide || undefined, "aria-hidden": !visibleSide || undefined, children: _jsx("div", { id: sideId, className: "lab-workspace-side-content", children: !compact && !drawerOpen && render(side) }) }), _jsx("div", { ref: main, className: "lab-workspace-main", "data-content-surface": contentSurface, tabIndex: -1, children: renderViewport ? (renderViewport({ appBar: render(appBar), bottom: render(bottom) })) : (_jsx(ScrollArea, { ref: contentViewportRef, className: "lab-workspace-route", label: contentLabel, top: appBar ? render(appBar) : undefined, bottom: bottom ? render(bottom) : undefined, children: render(children) })) })] }), compact && (_jsx(WorkspaceDrawer, { open: drawerOpen, label: drawerLabel, returnFocusRef: drawerReturnFocusRef, onClose: () => setDrawerOpen(false), children: _jsx("div", { dir: dir, className: "lab-workspace-drawer-side", children: render(side) }) }))] }) }));
+    return (_jsx(WorkspaceScaffoldContext.Provider, { value: state, children: _jsxs("div", { ref: host, className: cn('lab-workspace-scaffold', className), style: style, dir: dir, "data-side-mode": visibleSide ? sideMode : 'hidden', "data-glass-sidebar": glassSidebar || undefined, "data-framed": framed, "data-compact": compact, "data-lab-sheet-backdrop": "", children: [_jsx(PixelShader, { className: "lab-workspace-scaffold-pixels", density: 0.8, speed: 0.18 }), topSide && _jsx("div", { className: "lab-workspace-top-side", children: render(topSide) }), _jsxs("div", { className: "lab-workspace-scaffold-row", children: [_jsxs("div", { className: "lab-workspace-side-boundary", inert: !visibleSide || undefined, "aria-hidden": !visibleSide || undefined, children: [glassSidebar && visibleSide && _jsx(SidebarGlass, {}), _jsx("div", { id: sideId, className: "lab-workspace-side-content", children: !compact && !drawerOpen && render(side) })] }), _jsx("div", { ref: main, className: "lab-workspace-main", "data-content-surface": glassSidebar ? 'none' : contentSurface, tabIndex: -1, children: renderViewport ? (renderViewport({ appBar: render(appBar), bottom: render(bottom) })) : (_jsx(ScrollArea, { ref: contentViewportRef, className: "lab-workspace-route", label: contentLabel, contentPadding: glassSidebar ? 0 : undefined, top: appBar ? render(appBar) : undefined, bottom: bottom ? render(bottom) : undefined, children: render(children) })) })] }), compact && (_jsx(WorkspaceDrawer, { glassSidebar: glassSidebar, open: drawerOpen, label: drawerLabel, returnFocusRef: drawerReturnFocusRef, onClose: () => setDrawerOpen(false), children: _jsx("div", { dir: dir, className: "lab-workspace-drawer-side", children: render(side) }) }))] }) }));
 }
 /** Sidebar body: a scroll area with `leading` floating at the top and `trailing` at the bottom. */
 export function ScaffoldSide({ leading, children, trailing, className }) {
@@ -144,8 +144,24 @@ export function ScaffoldToggleButton({ action = 'cycle', label, }) {
                 ? state.setSideMode('expanded')
                 : state.cycleSide(), children: drawer ? (_jsx(Menu, {})) : state.sideMode === 'expanded' ? (_jsx(PanelLeftClose, { className: "lab-dir-flip" })) : (_jsx(PanelLeftOpen, { className: "lab-dir-flip" })) }));
 }
+// Keep the stationary material behind navigation. Its links, search and floating
+// controls retain their own focus, press feedback and glass membership.
+function subscribeWindowFocus(update) {
+    window.addEventListener('focus', update);
+    window.addEventListener('blur', update);
+    return () => {
+        window.removeEventListener('focus', update);
+        window.removeEventListener('blur', update);
+    };
+}
+const windowFocused = () => document.hasFocus();
+const initialFocus = () => true;
+function SidebarGlass({ drawer = false }) {
+    const focused = React.useSyncExternalStore(subscribeWindowFocus, windowFocused, initialFocus);
+    return (_jsx("div", { "aria-hidden": "true", className: "lab-workspace-sidebar-glass", "data-focused": focused, children: _jsx(GlassContainer, { solo: {}, light: "static", material: drawer ? 'menu' : 'regular', interactive: false, adaptive: false }) }));
+}
 /** The compact navigation drawer: a full-height panel from the logical start over a dimmed page. */
-function WorkspaceDrawer({ open, label, returnFocusRef, onClose, children, }) {
+function WorkspaceDrawer({ glassSidebar, open, label, returnFocusRef, onClose, children, }) {
     const { t } = useI18n();
     const { mounted, state } = usePresence(open, 240);
     if (!mounted)
@@ -154,6 +170,6 @@ function WorkspaceDrawer({ open, label, returnFocusRef, onClose, children, }) {
         if (state === 'open')
             onClose();
     };
-    return (_jsxs(PresentationHost, { kind: "drawer", label: label, returnFocusRef: returnFocusRef, onEscape: close, children: [_jsx("div", { className: "lab-presentation-scrim lab-workspace-drawer-scrim", "data-state": state, "aria-hidden": "true", onClick: close }), _jsxs("div", { className: "lab-workspace-drawer", "data-state": state, children: [_jsx("span", { className: "lab-workspace-drawer-paint", "aria-hidden": "true", children: _jsx(PixelTexture, { variant: "grain", seed: "workspace-drawer", density: "sparse" }) }), _jsx(IconButton, { variant: "ghost", controlSize: "regular", className: "lab-workspace-drawer-close", "aria-label": t('lab.common.close'), onClick: close, children: _jsx(X, { size: 18 }) }), children] })] }));
+    return (_jsxs(PresentationHost, { kind: "drawer", label: label, returnFocusRef: returnFocusRef, onEscape: close, children: [_jsx("div", { className: "lab-presentation-scrim lab-workspace-drawer-scrim", "data-state": state, "aria-hidden": "true", onClick: close }), _jsxs("div", { className: "lab-workspace-drawer", "data-state": state, "data-glass-sidebar": glassSidebar || undefined, children: [glassSidebar ? _jsx(SidebarGlass, { drawer: true }) : (_jsx("span", { className: "lab-workspace-drawer-paint", "aria-hidden": "true", children: _jsx(PixelTexture, { variant: "grain", seed: "workspace-drawer", density: "sparse" }) })), _jsx(IconButton, { variant: "ghost", controlSize: "regular", className: "lab-workspace-drawer-close", "aria-label": t('lab.common.close'), onClick: close, children: _jsx(X, { size: 18 }) }), children] })] }));
 }
 //# sourceMappingURL=scaffold.js.map

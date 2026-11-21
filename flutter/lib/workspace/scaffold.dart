@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show ViewFocusEvent, ViewFocusState;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -9,7 +10,8 @@ import '../brand/pixel_shader.dart';
 import '../brand/pixel_noise.dart' show TextureDensity, TextureVariant;
 import '../brand/pixel_texture.dart';
 import '../glass/container.dart';
-import '../glass/member.dart' show GlassHidden;
+import '../glass/member.dart' show GlassHidden, GlassMemberBox;
+import '../glass/material.dart' show GlassKind;
 import '../icons/lucide.dart';
 import '../physics/layout_group.dart';
 import '../primitives/button.dart';
@@ -97,8 +99,8 @@ double scaffoldRailWidth(
       Density.thin => 44,
     };
 
-/// Workspace layout: optional top row, a sidebar (expanded, rail or hidden) and one rounded
-/// content panel with floating app bar and bottom slots. Fills its parent's height. Below the
+/// Workspace layout: optional top row, a glass sidebar (expanded, rail or hidden) and an edge-to-edge
+/// content viewport with floating app bar and bottom slots. Fills its parent's height. Below the
 /// compact breakpoint the sidebar moves into a modal drawer. The twin of `Scaffold` in
 /// `@feeef.dev/ui/workspace/scaffold`; read its state below it with [Scaffold.of].
 class Scaffold extends StatefulWidget {
@@ -110,6 +112,7 @@ class Scaffold extends StatefulWidget {
     this.topSide,
     this.appBar,
     this.bottom,
+    this.glassSidebar = true,
     this.contentController,
     this.contentLabel = 'Workspace content',
     this.sideMode,
@@ -140,6 +143,9 @@ class Scaffold extends StatefulWidget {
 
   /// Floats over the bottom of the content panel, usually a Dock.
   final Widget? bottom;
+
+  /// Floats navigation on glass and leaves the main viewport edge to edge.
+  final bool glassSidebar;
 
   /// Controller of the content scroll viewport (the web kit's `contentViewportRef`).
   final ScrollController? contentController;
@@ -178,6 +184,13 @@ class Scaffold extends StatefulWidget {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties
+      ..add(
+        DiagnosticsProperty<bool>(
+          'glassSidebar',
+          glassSidebar,
+          defaultValue: true,
+        ),
+      )
       ..add(
         ObjectFlagProperty<ScaffoldViewportBuilder?>.has(
           'renderViewport',
@@ -390,7 +403,8 @@ class _ScaffoldWidgetState extends State<Scaffold> {
             controller: widget.contentController,
             // Content and floats sit the shell gap G from the panel; the app bar and dock sit
             // --lab-toolbar-inset (G by default) from its sides.
-            sideGap: ThemeProvider.of(context).sizes.toolbarInset,
+            sideGap: theme.sizes.toolbarInset,
+            contentPadding: widget.glassSidebar ? 0 : null,
             top: widget.appBar,
             bottom: widget.bottom,
             child: widget.child ?? const SizedBox.shrink(),
@@ -403,10 +417,14 @@ class _ScaffoldWidgetState extends State<Scaffold> {
           fit: StackFit.expand,
           children: [
             // Ambient texture, not content: kept quiet so it never competes with the page.
-            const Positioned.fill(
+            Positioned.fill(
               child: IgnorePointer(
                 child: ExcludeSemantics(
-                  child: PixelShader(density: 0.8, speed: 0.18, opacity: 0.18),
+                  child: PixelShader(
+                    density: 0.8,
+                    speed: 0.18,
+                    opacity: widget.glassSidebar ? 0.09 : 0.18,
+                  ),
                 ),
               ),
             ),
@@ -428,17 +446,35 @@ class _ScaffoldWidgetState extends State<Scaffold> {
                         mode: visibleSide ? _sideMode : ScaffoldSideMode.hidden,
                         density: theme.config.density,
                         rtl: direction == TextDirection.rtl,
-                        child: Focus(
-                          focusNode: _sideFocus,
-                          skipTraversal: true,
-                          child: !compact && !_drawerOpen
-                              ? widget.side ?? const SizedBox.shrink()
-                              : const SizedBox.shrink(),
+                        child: Padding(
+                          padding: widget.glassSidebar && visibleSide
+                              ? EdgeInsetsDirectional.fromSTEB(
+                                  theme.sizes.shellGap,
+                                  theme.sizes.shellGap,
+                                  0,
+                                  theme.sizes.shellGap,
+                                )
+                              : EdgeInsets.zero,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              if (widget.glassSidebar && visibleSide)
+                                const _SidebarGlass(),
+                              Focus(
+                                focusNode: _sideFocus,
+                                skipTraversal: true,
+                                child: !compact && !_drawerOpen
+                                    ? widget.side ?? const SizedBox.shrink()
+                                    : const SizedBox.shrink(),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       Expanded(
                         child: _MainPanel(
                           focusNode: _main,
+                          bare: widget.glassSidebar,
                           // A card only when a top row or a visible sidebar frames it.
                           framed: widget.topSide != null || visibleSide,
                           besideSide: visibleSide,
@@ -452,6 +488,7 @@ class _ScaffoldWidgetState extends State<Scaffold> {
             ),
             if (compact)
               _WorkspaceDrawer(
+                glassSidebar: widget.glassSidebar,
                 open: _drawerOpen,
                 label: widget.drawerLabel,
                 closeLabel: widget.drawerCloseLabel,
@@ -460,6 +497,103 @@ class _ScaffoldWidgetState extends State<Scaffold> {
                 close: () => _setDrawerOpen(false),
                 child: widget.side ?? const SizedBox.shrink(),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A stationary glass layer, independent of the navigation and its interactive controls.
+class _SidebarGlass extends StatefulWidget {
+  const _SidebarGlass({this.drawer = false});
+  final bool drawer;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<bool>('drawer', drawer));
+  }
+
+  @override
+  State<_SidebarGlass> createState() => _SidebarGlassState();
+}
+
+class _SidebarGlassState extends State<_SidebarGlass>
+    with WidgetsBindingObserver {
+  late bool _focused;
+  @override
+  void initState() {
+    super.initState();
+    final binding = WidgetsBinding.instance;
+    _focused =
+        binding.lifecycleState == null ||
+        binding.lifecycleState == AppLifecycleState.resumed;
+    binding.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) =>
+      _setFocused(state == AppLifecycleState.resumed);
+
+  @override
+  void didChangeViewFocus(ViewFocusEvent event) {
+    if (event.viewId == View.of(context).viewId) {
+      _setFocused(event.state == ViewFocusState.focused);
+    }
+  }
+
+  void _setFocused(bool value) {
+    if (_focused != value) setState(() => _focused = value);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ThemeProvider.of(context);
+    final c = theme.colors;
+    final dark = theme.brightness == Brightness.dark;
+    final fill = !_focused
+        ? c.surface.withValues(alpha: 0.85)
+        : dark
+        ? mixSrgb(
+            c.ground,
+            0.76,
+            const Color(0xff000000),
+          ).withValues(alpha: 0.82)
+        : c.ground.withValues(alpha: 0.52);
+    final radius = theme.sizes.radiusPanel;
+    return IgnorePointer(
+      child: ExcludeSemantics(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            GlassContainer(
+              light: GlassLightMode.static,
+              interactive: false,
+              adaptive: false,
+              material: widget.drawer ? GlassKind.menu : GlassKind.regular,
+              child: GlassMemberBox(
+                motion: GlassMotion.follow,
+                radius: radius,
+                standalone: (child) => child,
+                child: const SizedBox.expand(),
+              ),
+            ),
+            DecoratedBox(
+              decoration: ShapeDecoration(
+                color: fill,
+                shape: SuperellipseBorder(
+                  radius: radius,
+                  side: _focused ? BorderSide(color: c.line) : BorderSide.none,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -573,11 +707,13 @@ class _MainPanel extends StatefulWidget {
   const _MainPanel({
     required this.focusNode,
     required this.framed,
+    required this.bare,
     this.besideSide = false,
     required this.child,
   });
   final FocusNode focusNode;
   final bool framed;
+  final bool bare;
 
   /// A visible sidebar's own shell gap separates it: no start margin.
   final bool besideSide;
@@ -587,6 +723,7 @@ class _MainPanel extends StatefulWidget {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties
+      ..add(DiagnosticsProperty<bool>('bare', bare))
       ..add(DiagnosticsProperty<FocusNode>('focusNode', focusNode))
       ..add(
         FlagProperty(
@@ -624,6 +761,19 @@ class _MainPanelState extends State<_MainPanel> {
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
+    if (widget.bare) {
+      return Focus(
+        focusNode: widget.focusNode,
+        skipTraversal: true,
+        onFocusChange: _update,
+        child: FocusRing(
+          visible: _ring,
+          inside: true,
+          radius: 0,
+          child: widget.child,
+        ),
+      );
+    }
     final reduced = reducedMotionOf(context);
     return TweenAnimationBuilder<double>(
       tween: Tween(end: widget.framed ? 1 : 0),
@@ -683,6 +833,7 @@ class _MainPanelState extends State<_MainPanel> {
 /// (ease-in). Traps focus, closes on Escape and a backdrop tap, and returns focus afterwards.
 class _WorkspaceDrawer extends StatefulWidget {
   const _WorkspaceDrawer({
+    required this.glassSidebar,
     required this.open,
     required this.label,
     required this.closeLabel,
@@ -692,6 +843,7 @@ class _WorkspaceDrawer extends StatefulWidget {
     required this.child,
   });
   final bool open;
+  final bool glassSidebar;
   final String label, closeLabel;
   final FocusNode? returnFocus;
   final TextDirection textDirection;
@@ -705,6 +857,7 @@ class _WorkspaceDrawer extends StatefulWidget {
       ..add(
         FlagProperty('open', value: open, ifTrue: 'open', ifFalse: 'closed'),
       )
+      ..add(DiagnosticsProperty<bool>('glassSidebar', glassSidebar))
       ..add(StringProperty('label', label))
       ..add(StringProperty('closeLabel', closeLabel))
       ..add(
@@ -796,23 +949,35 @@ class _WorkspaceDrawerState extends State<_WorkspaceDrawer>
     final screen = MediaQuery.sizeOf(context);
     final rtl = widget.textDirection == TextDirection.rtl;
     final width = math.max(0.0, math.min(320.0, screen.width - 56));
-    final r = 20 * theme.sizes.radiusScale;
+    final gap = widget.glassSidebar ? theme.sizes.shellGap : 0.0;
+    final r = widget.glassSidebar
+        ? theme.sizes.radiusPanel
+        : 20 * theme.sizes.radiusScale;
     // Top-left, top-right, bottom-right, bottom-left: only the end edge is rounded.
-    final radii = rtl ? [r, 0.0, 0.0, r] : [0.0, r, r, 0.0];
+    final radii = widget.glassSidebar
+        ? List.filled(4, r)
+        : rtl
+        ? [r, 0.0, 0.0, r]
+        : [0.0, r, r, 0.0];
     final panel = SizedBox(
       width: width,
       height: screen.height,
       child: ClipPath(
         clipper: _RadiiClipper(radii),
         child: ColoredBox(
-          color: mixSrgb(c.primary, 0.03, c.surface),
+          color: widget.glassSidebar
+              ? const Color(0x00000000)
+              : mixSrgb(c.primary, 0.03, c.surface),
           child: Stack(
             children: [
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: CustomPaint(painter: _GrainPainter(c.primary)),
+              if (widget.glassSidebar)
+                const Positioned.fill(child: _SidebarGlass(drawer: true))
+              else
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(painter: _GrainPainter(c.primary)),
+                  ),
                 ),
-              ),
               Positioned.fill(child: widget.child),
               PositionedDirectional(
                 top: 12,
@@ -872,9 +1037,13 @@ class _WorkspaceDrawerState extends State<_WorkspaceDrawer>
                       ),
                     ),
                     PositionedDirectional(
-                      start: 0,
-                      top: 0,
-                      bottom: 0,
+                      start: gap,
+                      top: widget.glassSidebar
+                          ? math.max(gap, MediaQuery.paddingOf(context).top)
+                          : 0,
+                      bottom: widget.glassSidebar
+                          ? math.max(gap, MediaQuery.paddingOf(context).bottom)
+                          : 0,
                       child: IgnorePointer(
                         ignoring: !widget.open,
                         child: Transform.translate(

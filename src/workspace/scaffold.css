@@ -309,3 +309,61 @@ html:is([data-lab-motion='reduced'], [data-lab-motion='none']) :is(.lab-workspac
 .lab-workspace-drawer .lab-workspace-side {
   padding: 0;
 }
+
+/* Only the navigation owns a shell surface in this layout. Scope to direct slots
+   so embedded scaffolds and independently painted detail panels keep their layout. */
+.lab-workspace-scaffold[data-glass-sidebar] > .lab-workspace-scaffold-row > .lab-workspace-main {
+  margin: 0;
+}
+.lab-workspace-scaffold[data-glass-sidebar] > .lab-workspace-scaffold-row > .lab-workspace-main > .lab-workspace-route > .lab-scroll-gradient {
+  clip-path: none;
+}
+.lab-workspace-scaffold[data-glass-sidebar] > .lab-workspace-scaffold-row > .lab-workspace-side-boundary {
+  position: relative;
+  margin-block: var(--lab-shell-gap);
+  margin-inline: var(--lab-shell-gap) 0;
+  border-radius: var(--lab-radius-panel);
+  corner-shape: superellipse(1.5);
+  overflow: clip;
+}
+.lab-workspace-scaffold[data-glass-sidebar] > .lab-workspace-scaffold-pixels {
+  opacity: calc(var(--lab-ground-pixels-opacity) * 0.5);
+}
+.lab-workspace-sidebar-glass {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.lab-workspace-sidebar-glass > .lab-glass-container,
+.lab-workspace-sidebar-glass::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  corner-shape: inherit;
+}
+.lab-workspace-sidebar-glass::after {
+  content: '';
+  background: color-mix(in srgb, var(--lab-ground) 52%, transparent);
+  box-shadow: inset 0 0 0 1px var(--lab-line);
+}
+[data-lab-theme='dark'] .lab-workspace-sidebar-glass::after {
+  background: color-mix(in srgb, color-mix(in srgb, var(--lab-ground) 76%, black) 82%, transparent);
+}
+.lab-workspace-sidebar-glass[data-focused='false']::after {
+  background: color-mix(in srgb, var(--lab-surface) 85%, transparent);
+  box-shadow: none;
+}
+.lab-workspace-sidebar-glass + .lab-workspace-side-content,
+.lab-workspace-sidebar-glass ~ .lab-workspace-drawer-side {
+  position: relative;
+}
+html[data-lab-theme] .lab-workspace-drawer[data-glass-sidebar] {
+  inset-block: max(var(--lab-shell-gap), env(safe-area-inset-top)) max(var(--lab-shell-gap), env(safe-area-inset-bottom));
+  inset-inline-start: var(--lab-shell-gap);
+  height: auto;
+  border: 0;
+  border-radius: var(--lab-radius-panel);
+  corner-shape: superellipse(1.5);
+  background: transparent;
+}

@@ -29,8 +29,7 @@ Pages are discovered automatically. Navigation order comes from `section`, `grou
 ## The site is built with the kit
 
 The docs shell is a normal Feeef workspace, so it doubles as the kit's largest integration test:
-`Scaffold` (sidebar modes, compact drawer, content `ScrollArea`), `ScaffoldSide` with
-`NavigationItem`s and a `ToolbarSearch` filter, a floating `ScaffoldAppBar` with
+`Scaffold` (sidebar modes, compact drawer, content `ScrollArea`), a filterable documentation tree with compact `NavigationItem` links in rail mode, a floating `ScaffoldAppBar` with
 `ToolbarGroup`s and a `SegmentedControl` for Overview / Examples / API, `Modal` search,
 `PopoverSurface` customize panel, `ThemeSwitch`. The small blocks follow the same rules: code
 boxes are opaque surfaces whose tools float in `ToolbarGroup` glass bubbles over a `ScrollArea`

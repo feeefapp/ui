@@ -119,3 +119,5 @@ export type {
   TemporalSingleFieldProps,
   TemporalRangeFieldProps,
 } from './primitives/temporal-field'
+
+export { Notice, type NoticeProps } from './primitives/notice'

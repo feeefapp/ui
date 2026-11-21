@@ -42,4 +42,5 @@ export { localeUrl } from './i18n.js';
 export { cn } from './utils.js';
 export { ToolbarSearch } from './toolbar-search.js';
 export type { ToolbarSearchProps } from './toolbar-search.js';
+export { Notice, type NoticeProps } from './primitives/notice.js';
 //# sourceMappingURL=index.d.ts.map

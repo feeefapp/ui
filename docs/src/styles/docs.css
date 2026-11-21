@@ -145,69 +145,11 @@ h3.docs-heading {
   background: var(--docs-code-bg);
   font: 0.88em var(--docs-mono);
 }
-.docs-callout {
-  display: flex;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: var(--docs-radius-small);
-  background: color-mix(in srgb, var(--lab-primary) 12%, var(--lab-surface));
-}
-.docs-callout[data-tone='warning'] {
-  background: color-mix(in srgb, var(--lab-warning, #8a5300) 12%, var(--lab-surface));
-}
-.docs-callout > svg {
-  flex-shrink: 0;
-  margin-top: 3px;
-}
-.docs-callout strong {
-  display: block;
-  margin-bottom: 2px;
-}
-.docs-callout p:last-child {
-  margin-bottom: 0;
-}
 .docs-dodont {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 12px;
 }
-/* The do / don't indicator is a rounded bar inside the card, inset by the same space as the text. */
-.docs-dodont > div {
-  --docs-dodont-pad: 18px;
-  --docs-dodont-bar: 4px;
-  position: relative;
-  padding: var(--docs-dodont-pad);
-  padding-inline-start: calc(var(--docs-dodont-pad) * 2 + var(--docs-dodont-bar));
-  border-radius: var(--lab-radius-panel);
-  background: var(--docs-code-bg);
-}
-.docs-dodont > div::before {
-  content: '';
-  position: absolute;
-  inset-block: var(--docs-dodont-pad);
-  inset-inline-start: var(--docs-dodont-pad);
-  width: var(--docs-dodont-bar);
-  border-radius: 999px;
-  background: var(--docs-dodont-tone);
-}
-.docs-dodont [data-kind='do'] {
-  --docs-dodont-tone: var(--lab-success, #2f6b28);
-}
-.docs-dodont [data-kind='dont'] {
-  --docs-dodont-tone: var(--lab-danger);
-}
-.docs-dodont strong svg {
-  color: var(--docs-dodont-tone);
-}
-.docs-dodont strong {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.docs-dodont ul {
-  margin: 8px 0 0;
-}
-
 /* ---------- Code ---------- */
 
 /* ---------- Examples ---------- */

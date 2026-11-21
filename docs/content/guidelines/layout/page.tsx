@@ -67,13 +67,13 @@ function Anatomy() {
       </DemoScreen>
       <ol className="gl-legend">
         {[
-          ['Ground', 'the tinted pixel background behind everything. Nothing you read sits on it.'],
-          ['Sidebar', 'navigation, transparent on the ground. Expanded, rail, hidden or a drawer.'],
+          ['Ground', 'the tinted pixel background behind the workspace.'],
+          ['Sidebar', 'navigation on an inset glass surface. Expanded, rail, hidden or a drawer.'],
           ['Navigation and identity bubble', 'the menu toggle and the logo, once the sidebar is too small to hold them.'],
           ['Title bubble', 'the page name, when the large title is not on screen.'],
           ['Page views bubble', 'switches between views of the same thing (Order, Calls).'],
           ['Tools bubble', 'actions on the whole page: print, search, open details.'],
-          ['Content panel', 'one rounded opaque panel. Only it scrolls; content sits on surfaces inside.'],
+          ['Main viewport', 'the edge-to-edge reading area. Secondary panels carry their own surfaces.'],
           ['Inspector', 'details of the thing in front of you, at the end of the reading direction.'],
           ['Dock', 'the task’s actions, with the one primary action, floating at the bottom.'],
         ].map(([name, text], i) => (
@@ -326,7 +326,7 @@ function Overview() {
 
       <Section title="Anatomy">
         <p>
-          A screen is a <Link to="/components/scaffold">Scaffold</Link>: a sidebar and one content panel on
+          A screen is a <Link to="/components/scaffold">Scaffold</Link>: a glass sidebar and an edge-to-edge viewport on
           a tinted ground. The app bar and the dock float over the content panel; they are not rows that
           push it down. This is the real order screen of a merchant app, scaled down. Click around: the
           sidebar toggle, the views and the dock all work.
@@ -495,9 +495,9 @@ function Overview() {
         <Table
           head={['Material', 'Use it for', 'Never for']}
           rows={[
-            ['Ground', 'The page behind the scaffold; the sidebar sits on it', 'Text people read or edit'],
-            ['Surface (opaque)', 'The content panel, cards, rows, forms, dialogs, menus, the inspector', 'Floating tools'],
-            ['Glass (ToolbarGroup, Dock, GlassGroup)', 'Chrome that floats over content: app bar bubbles, docks', 'Content, long text, forms, whole panels'],
+            ['Ground', 'The page and main reading area', 'Floating controls'],
+            ['Surface (opaque)', 'Cards, rows, forms, dialogs and the inspector', 'Floating tools'],
+            ['Glass (ToolbarGroup, Dock, GlassGroup)', 'Navigation sidebar, app bar bubbles and docks', 'Content, long text, forms, whole panels'],
           ]}
         />
       </Section>

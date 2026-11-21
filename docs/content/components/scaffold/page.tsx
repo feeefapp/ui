@@ -26,6 +26,7 @@ const controls = {
   sideMode: { type: 'select', label: 'Default side mode', options: ['expanded', 'rail', 'hidden'], default: 'expanded' },
   layout: { type: 'select', options: ['auto', 'wide', 'compact'], default: 'auto' },
   dir: { type: 'select', label: 'Direction', options: ['ltr', 'rtl'], default: 'ltr' },
+  glassSidebar: { type: 'boolean', label: 'Glass sidebar', default: true },
   appBar: { type: 'boolean', label: 'App bar', default: true },
   bottom: { type: 'boolean', label: 'Bottom dock', default: true },
 } as const
@@ -34,6 +35,7 @@ function PlaygroundScaffold(v: {
   sideMode: string
   layout: string
   dir: string
+  glassSidebar: boolean
   appBar: boolean
   bottom: boolean
 }) {
@@ -41,6 +43,7 @@ function PlaygroundScaffold(v: {
     <div className="scaffold-demo-frame" style={{ height: 360 }}>
       <Scaffold
         key={v.sideMode}
+        glassSidebar={v.glassSidebar}
         compactBreakpoint={560}
         dir={v.dir as 'ltr' | 'rtl'}
         defaultSideMode={v.sideMode as ScaffoldSideMode}
@@ -118,8 +121,9 @@ function PlaygroundScaffold(v: {
   )
 }
 
-function playgroundCode(v: { sideMode: string; layout: string; dir: string; appBar: boolean; bottom: boolean }) {
+function playgroundCode(v: { sideMode: string; layout: string; dir: string; glassSidebar: boolean; appBar: boolean; bottom: boolean }) {
   const props = [
+    !v.glassSidebar && '  glassSidebar={false}',
     v.sideMode !== 'expanded' && `  defaultSideMode="${v.sideMode}"`,
     v.layout !== 'auto' && `  compact={${v.layout === 'compact'}}`,
     v.dir !== 'ltr' && `  dir="${v.dir}"`,
@@ -175,16 +179,14 @@ function Overview() {
             <C>ScaffoldTopBar</C>. Empty means no row.
           </li>
           <li>
-            <strong>Sidebar</strong> (<C>side</C>): usually a <C>ScaffoldSide</C>, transparent on the
-            ground. 304px expanded, 64px as a rail, or hidden. In compact layouts it moves into a drawer.
+            <strong>Sidebar</strong> (<C>side</C>): usually a <C>ScaffoldSide</C>, on inset glass. 304px expanded, 64px as a rail, or hidden. In compact layouts it moves into a drawer.
           </li>
           <li>
             <strong>App bar</strong> (<C>appBar</C>): floats over the top of the content panel, usually a{' '}
             <C>ScaffoldAppBar</C> with <C>ToolbarGroup</C>s.
           </li>
           <li>
-            <strong>Content</strong> (<C>children</C>): the only part that scrolls. It sits in one rounded,
-            opaque panel inset 8px from the ground, inside a <C>ScrollArea</C> that reserves room for the
+            <strong>Content</strong> (<C>children</C>): the only part that scrolls. It fills the main viewport inside a <C>ScrollArea</C> that reserves room for the
             floats so the first and last rows can always scroll clear of them.
           </li>
           <li>
@@ -262,7 +264,12 @@ function Overview() {
           float itself.
         </p>
         <p>
-          <C>contentSurface?: 'card' | 'none'</C> defaults to <C>card</C>, preserving the outer content
+          By default navigation floats on glass and the main viewport has no outer card or
+          horizontal content padding. The compact drawer uses thicker glass over page text.
+          Secondary panels keep their own surfaces.
+        </p>
+        <p>
+          With <C>{'glassSidebar={false}'}</C>, <C>contentSurface</C> defaults to <C>card</C>, preserving the outer content
           surface even with <C>renderViewport</C> (an editor may still need it). For a <C>PanelHost</C>
           whose independent <C>Panel</C>s paint their own surfaces, set <C>contentSurface="none"</C>:
           the viewport becomes transparent with no border, radius or shadow. Shell spacing and keyboard
@@ -287,7 +294,7 @@ function Overview() {
           ]}
           dontItems={[
             'Add bottom padding to make room for the dock; the scroll area measures it for you.',
-            'Make the sidebar opaque or give it its own card; it sits on the ground.',
+            'Add a second background behind navigation items inside the glass sidebar.',
             'Put scrolling content in the sidebar and the content panel at the same time for the same task.',
             'Wrap the scaffold in a parent without a bounded height.',
           ]}
@@ -323,7 +330,7 @@ export default definePage({
   group: 'Navigation and layout',
   order: 1,
   summary:
-    'The workspace frame: a sidebar that expands, collapses to a rail or hides, and one content panel with floating app bar and dock.',
+    'The workspace frame: a sidebar that expands, collapses to a rail or hides, and an edge-to-edge viewport with a floating app bar and dock.',
   importLine:
     "import { Scaffold, ScaffoldSide, ScaffoldAppBar, ScaffoldToggleButton } from '@feeef.dev/ui/workspace/scaffold'",
   source: 'src/workspace/scaffold.tsx',

@@ -209,3 +209,9 @@ test('disposing glass between its read and render phases cancels pending paint a
   assert.equal(counts.paints, 0)
   assert.equal(clock.pending.size, 0)
 })
+
+test('a solo lens moving with its drawer has no member-local clip', () => {
+  const host = { parentElement: {}, contains: () => true }
+  const scene = Object.assign(Object.create(GlassScene.prototype), { host })
+  assert.deepEqual(scene.clipOf(host, {}), { scrolled: false })
+})

@@ -46,4 +46,5 @@ export { Checkbox, Radio, RadioGroup } from './primitives/choice.js';
 export type { CheckboxProps, RadioProps, RadioGroupProps, RadioOption, } from './primitives/choice.js';
 export { TemporalField, DateField, TimeField, DateTimeField, DateRangeField, TimeRangeField, DateTimeRangeField, } from './primitives/temporal-field.js';
 export type { TemporalFieldProps, TemporalSingleFieldProps, TemporalRangeFieldProps, } from './primitives/temporal-field.js';
+export { Notice, type NoticeProps } from './primitives/notice.js';
 //# sourceMappingURL=ui.d.ts.map

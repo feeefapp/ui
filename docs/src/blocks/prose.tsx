@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { AlertTriangle, Check, Info, X } from 'lucide-react'
+import { Notice } from '@feeef.dev/ui/primitives/notice'
+import { X } from 'lucide-react'
 
 export function Heading({
   level = 2,
@@ -63,16 +64,7 @@ export function Callout({
   title?: string
   children: ReactNode
 }) {
-  const Icon = tone === 'warning' ? AlertTriangle : Info
-  return (
-    <aside className="docs-callout" data-tone={tone}>
-      <Icon size={18} aria-hidden="true" />
-      <div>
-        {title && <strong>{title}</strong>}
-        {children}
-      </div>
-    </aside>
-  )
+  return <Notice tone={tone === 'warning' ? 'warning' : 'info'} title={title}>{children}</Notice>
 }
 
 /** Side-by-side guidance: what to do and what to avoid. */
@@ -89,26 +81,20 @@ export function DoDont({
 }) {
   return (
     <div className="docs-dodont">
-      <div data-kind="do">
-        <strong>
-          <Check size={16} aria-hidden="true" /> {doTitle}
-        </strong>
+      <Notice tone="success" title={doTitle}>
         <ul>
           {doItems.map((item, i) => (
             <li key={i}>{item}</li>
           ))}
         </ul>
-      </div>
-      <div data-kind="dont">
-        <strong>
-          <X size={16} aria-hidden="true" /> {dontTitle}
-        </strong>
+      </Notice>
+      <Notice tone="danger" title={dontTitle} icon={<X size={16} />}>
         <ul>
           {dontItems.map((item, i) => (
             <li key={i}>{item}</li>
           ))}
         </ul>
-      </div>
+      </Notice>
     </div>
   )
 }

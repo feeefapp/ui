@@ -218,6 +218,7 @@ export function Customize() {
                 ]}
               />
             </Row>
+            <SwitchRow label="Glass sidebar" checked={settings.glassSidebar} onChange={(glassSidebar) => update({ glassSidebar })} />
             <Row label="Color">
               <ColorPicker />
             </Row>

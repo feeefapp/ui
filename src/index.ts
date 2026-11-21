@@ -94,3 +94,5 @@ export { cn } from './utils'
 
 export { ToolbarSearch } from './toolbar-search'
 export type { ToolbarSearchProps } from './toolbar-search'
+
+export { Notice, type NoticeProps } from './primitives/notice'

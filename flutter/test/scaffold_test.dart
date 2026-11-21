@@ -167,19 +167,18 @@ void main() {
     final modes = <ScaffoldSideMode>[];
     await tester.pumpWidget(app(workspace(onSideModeChange: modes.add)));
     await settle(tester);
-    // 304px sidebar (its own 8px shell gap on the panel side), no panel start margin, 1px
-    // border, the shell gap G (8) of content padding.
-    expect(tester.getTopLeft(find.text('Page content')).dx, 304 + 1 + 8);
+    // The default viewport starts immediately after the sidebar.
+    expect(tester.getTopLeft(find.text('Page content')).dx, 304);
     expect(find.text('Nav item').hitTestable(), findsOneWidget);
 
     await tester.tap(find.bySemanticsLabel('Minimize workspace sidebar'));
     await settle(tester);
-    expect(tester.getTopLeft(find.text('Page content')).dx, 64 + 1 + 8);
+    expect(tester.getTopLeft(find.text('Page content')).dx, 64);
 
     await tester.tap(find.bySemanticsLabel('Hide workspace sidebar'));
     await settle(tester);
-    // Nothing frames the content any more: no card margin (1px border + the shell gap G of padding).
-    expect(tester.getTopLeft(find.text('Page content')).dx, 1 + 8);
+    // The hidden mode gives the full width to the page.
+    expect(tester.getTopLeft(find.text('Page content')).dx, 0);
     expect(find.text('Nav item').hitTestable(), findsNothing, reason: 'inert');
 
     await tester.tap(find.bySemanticsLabel('Expand workspace sidebar'));
@@ -215,7 +214,7 @@ void main() {
       ),
     );
     await settle(tester);
-    expect(tester.getTopLeft(find.text('Page content')).dx, 248 + 1 + 8);
+    expect(tester.getTopLeft(find.text('Page content')).dx, 248);
   });
 
   testWidgets(
@@ -228,7 +227,7 @@ void main() {
       await settle(tester);
       expect(find.text('Nav item'), findsNothing);
       // Compact: the sidebar is a drawer, so the content fills the window edge to edge.
-      expect(tester.getTopLeft(find.text('Page content')).dx, 1 + 8);
+      expect(tester.getTopLeft(find.text('Page content')).dx, 0);
 
       await tester.tap(find.bySemanticsLabel('Open workspace navigation'));
       await settle(tester);
@@ -275,13 +274,14 @@ void main() {
   });
 
   testWidgets(
-    'one shell gap between window, top bar, panel and sidebar items',
+    'card layout keeps one shell gap between window, top bar, panel and sidebar items',
     (tester) async {
       await tester.binding.setSurfaceSize(const Size(1200, 800));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.pumpWidget(
         app(
           Scaffold(
+            glassSidebar: false,
             topSide: const ScaffoldTopBar(
               leading: SizedBox(key: ValueKey('top'), width: 40, height: 40),
             ),

@@ -8,8 +8,6 @@
 .docs-playground,
 .docs-table-wrap,
 .docs-card,
-.docs-callout,
-.docs-dodont > div,
 .docs-hero-demo,
 .docs-feature {
   corner-shape: superellipse(1.5);
@@ -137,10 +135,6 @@ html[data-lab-theme='dark'] .docs-code .shiki span {
 .docs-card {
   border-radius: var(--lab-radius-panel);
   background: var(--lab-surface);
-}
-.docs-callout,
-.docs-dodont > div {
-  border-radius: var(--lab-radius-panel);
 }
 
 /* ---------- Search: back bubble + field bubble floating over a scrolling result list ---------- */

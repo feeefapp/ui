@@ -1,0 +1,29 @@
+.lab-notice {
+  --notice-tone: var(--lab-primary);
+  --notice-pad: calc(var(--lab-shell-gap) + 10px);
+  position: relative;
+  min-inline-size: 0;
+  padding: var(--notice-pad);
+  padding-inline-start: calc(2 * var(--notice-pad) + 4px);
+  background: color-mix(in srgb, var(--lab-surface-soft) 55%, var(--lab-surface));
+  color: var(--lab-ink);
+  border-radius: var(--lab-radius-panel);
+  corner-shape: superellipse(1.5);
+  overflow-wrap: anywhere;
+}
+.lab-notice[data-tone='success'] { --notice-tone: var(--lab-success); }
+.lab-notice[data-tone='warning'] { --notice-tone: var(--lab-warning); }
+.lab-notice[data-tone='danger'] { --notice-tone: var(--lab-danger); }
+.lab-notice::before {
+  content: '';
+  position: absolute;
+  inset-block: var(--notice-pad);
+  inset-inline-start: var(--notice-pad);
+  border-inline-start: 4px solid var(--notice-tone);
+  border-radius: 4px;
+}
+.lab-notice-heading { display: flex; align-items: center; gap: 6px; margin-block-end: 8px; }
+.lab-notice-icon { display: inline-flex; color: var(--notice-tone); flex: none; }
+.lab-notice > .lab-notice-icon { float: inline-start; margin-block-start: .2em; margin-inline-end: 6px; }
+.lab-notice-body > :first-child { margin-block-start: 0; }
+.lab-notice-body > :last-child { margin-block-end: 0; }

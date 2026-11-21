@@ -53,6 +53,7 @@ export function DocPageView({ route }: { route: Extract<Route, { kind: 'page' }>
             </div>
           )}
         </header>
+        <Toc key={`${page.section}/${page.id}/${tab}`} />
         <div className="docs-page-body">
           {tab === 'overview' && <Overview />}
           {tab === 'examples' && page.examples?.map((example) => <Example key={example.id} example={example} />)}
@@ -60,7 +61,6 @@ export function DocPageView({ route }: { route: Extract<Route, { kind: 'page' }>
         </div>
         <PageFooter page={page} />
       </article>
-      <Toc key={`${page.section}/${page.id}/${tab}`} />
     </div>
   )
 }

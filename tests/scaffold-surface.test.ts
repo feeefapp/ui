@@ -10,7 +10,7 @@ test('Scaffold explicitly opts out of outer paint without inferring it from rend
   assert.match(source, /contentSurface\s*=\s*'card'/)
   const main = source.match(/<div\s+ref=\{main\}[\s\S]*?>/)?.[0] ?? ''
   assert.match(main, /className="lab-workspace-main"/)
-  assert.match(main, /data-content-surface=\{contentSurface\}/)
+  assert.match(main, /data-content-surface=\{glassSidebar \? 'none' : contentSurface\}/)
   assert.match(main, /tabIndex=\{-1\}/)
   assert.doesNotMatch(main, /renderViewport/)
 })
@@ -41,4 +41,11 @@ test('surface-free Scaffold does not suppress independent Panel boundaries', () 
   const panelCss = readFileSync(new URL('../src/containers/panel.css', import.meta.url), 'utf8')
   const column = panelCss.match(/\.lab-presentation\[data-in-place='column'\] \{([^}]+)\}/)?.[1] ?? ''
   assert.match(column, /box-shadow:\s*inset[^;]*var\(--lab-line\)/)
+})
+
+test('glass navigation is the default and the main route removes its own inset', () => {
+  assert.match(source, /glassSidebar = true/)
+  assert.match(source, /contentPadding=\{glassSidebar \? 0 : undefined\}/)
+  assert.match(source, /glassSidebar && visibleSide && <SidebarGlass/)
+  assert.match(css, /\[data-glass-sidebar\] > \.lab-workspace-scaffold-row > \.lab-workspace-main \{\s*margin: 0/)
 })

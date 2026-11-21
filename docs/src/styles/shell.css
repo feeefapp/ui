@@ -41,45 +41,78 @@ body {
   font-size: 12px;
   font-weight: 500;
 }
-.docs-side-leading {
+.docs-side {
   display: grid;
-  gap: 8px;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100%;
+  min-width: 0;
 }
-.docs-side-brand {
+.docs-side-head, .docs-side-foot { padding: var(--lab-shell-gap); }
+.docs-side-head { display: grid; gap: 10px; }
+.docs-side-brand, .docs-page-filter { display: flex; align-items: center; gap: 8px; }
+.docs-side-brand { justify-content: space-between; }
+.docs-side-brand[data-rail] { justify-content: center; }
+.docs-page-filter {
+  margin-inline: 4px;
+  padding-inline: 10px;
+  min-height: 36px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--docs-radius-small);
+  background: color-mix(in srgb, var(--lab-surface) 60%, transparent);
+  color: var(--lab-muted);
+}
+.docs-page-filter input { flex: 1; min-width: 0; font-size: 13px; }
+.docs-page-filter:focus-within { outline: 2px solid var(--lab-focus); }
+.docs-side-nav { overflow: auto; overscroll-behavior: contain; padding: 4px 12px; scrollbar-width: thin; }
+.docs-side-nav ul { list-style: none; padding: 0; margin: 0; }
+.docs-nav-tree > li + li { margin-top: 5px; }
+.docs-branch-toggle, .docs-page-link {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 4px;
-}
-.docs-side-brand[data-rail] {
-  justify-content: center;
-}
-.docs-side-nav {
-  display: grid;
-  gap: 18px;
-}
-.docs-side-heading {
-  margin: 4px 0 2px;
-  padding-inline: 12px;
-  color: var(--lab-ink);
+  gap: 9px;
+  width: 100%;
+  min-height: 32px;
+  padding: 5px 9px;
+  border: 0;
+  border-radius: var(--docs-radius-small);
+  background: transparent;
+  color: var(--lab-muted);
+  text-align: start;
+  text-decoration: none;
+  font: inherit;
   font-size: 13px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.docs-nav-tree > li > .docs-branch-toggle { color: var(--lab-ink); font-weight: 600; font-size: 14px; }
+.docs-branch-chevron { margin-inline-start: auto; }
+.docs-branch-toggle[aria-expanded='false'] .docs-branch-chevron { transform: rotate(-90deg); }
+.docs-side-nav .docs-branch-items {
+  margin: 2px 0 6px 17px;
+  padding-inline-start: 8px;
+  border-inline-start: 1px solid var(--lab-line);
+}
+.docs-page-link:hover, .docs-branch-toggle:hover { background: var(--lab-surface-soft); color: var(--lab-ink); }
+.docs-page-link[aria-current] {
+  position: relative;
+  color: var(--lab-ink);
+  background: color-mix(in srgb, var(--lab-primary) 15%, transparent);
   font-weight: 600;
 }
-.docs-side-subheading {
-  margin: 10px 0 2px;
-  padding-inline: 12px;
-  color: var(--lab-muted);
-  font-size: 12px;
-  font-weight: 500;
+.docs-page-link[aria-current]::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: -9px;
+  inset-block: 6px;
+  width: 2px;
+  background: var(--lab-primary);
 }
-.docs-side-group {
-  display: grid;
-  gap: 2px;
-}
-.docs-side-empty {
-  padding-inline: 12px;
-  color: var(--lab-muted);
-  font-size: 13px;
+.docs-side-foot { display: flex; align-items: center; }
+.docs-side[data-rail] :is(.docs-side-nav, .docs-side-head, .docs-side-foot) { padding-inline: 0; }
+.docs-side[data-rail] .docs-side-foot { justify-content: center; }
+.docs-side-empty { color: var(--lab-muted); font-size: 13px; }
+@media (pointer: coarse) {
+  .docs-page-link, .docs-branch-toggle, .docs-toc-toggle { min-height: 44px; }
 }
 
 /* App bar contents */
@@ -92,25 +125,56 @@ body {
   white-space: nowrap;
 }
 
-/* Page + "On this page" rail, inside the scaffold's scroll area */
+/* The article owns its outline. Wide pages reserve a trailing column for it. */
 .docs-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--docs-toc);
-  gap: 40px;
-  max-width: calc(var(--docs-content) + var(--docs-toc) + 40px);
+  max-width: var(--docs-content);
   margin: 0 auto;
-  /* Reading text: the scaffold's content padding is the shell gap G (8px); prose wants at least
-  16px from the panel edge, so the page adds the rest itself. */
-  padding: 16px clamp(8px, 2vw, 24px) 64px;
+  padding: 16px clamp(16px, 2vw, 28px) 64px;
 }
-.docs-toc {
-  position: sticky;
-  top: 0;
-  align-self: start;
-  max-height: calc(100dvh - var(--lab-scroll-top-reserve, 0px) - 24px);
-  overflow-y: auto;
-  padding-top: 12px;
-  font-size: 13px;
+.docs-toc { min-width: 0; color: var(--lab-muted); font-size: 13px; }
+.docs-toc-toggle, .docs-toc-caption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--lab-ink);
+  font: inherit;
+  font-weight: 600;
+}
+.docs-toc-caption { display: none; }
+.docs-toc-toggle {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 10px 0;
+  cursor: pointer;
+}
+.docs-toc-toggle svg:last-child { margin-inline-start: auto; }
+.docs-toc[data-expanded='true'] .docs-toc-toggle svg:last-child { transform: rotate(180deg); }
+@media (max-width: 1199px) {
+  .docs-toc { border-block: 1px solid var(--lab-line); margin-block: 0 24px; }
+  .docs-toc[data-expanded='false'] ul { display: none; }
+  .docs-toc[data-expanded='true'] ul { margin-bottom: 12px; }
+}
+@media (min-width: 1200px) {
+  .docs-layout:has(.docs-toc) { max-width: calc(var(--docs-content) + var(--docs-toc) + 32px); }
+  .docs-page:has(> .docs-toc) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(144px, 13vw, var(--docs-toc));
+    column-gap: clamp(20px, 3vw, 40px);
+    max-width: none;
+  }
+  .docs-page > :is(.docs-page-header, .docs-page-body, .docs-pager) { grid-column: 1; }
+  .docs-toc {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    position: sticky;
+    top: var(--lab-scroll-top-reserve, 0px);
+    align-self: start;
+    max-height: calc(100dvh - var(--lab-scroll-top-reserve, 0px) - 20px);
+    overflow: auto;
+  }
+  .docs-toc-toggle { display: none; }
+  .docs-toc-caption { display: flex; margin: 4px 0 12px; }
 }
 /* Two-line pager links: out-specify the kit's fixed control height (html[data-lab-theme]
 .lab-control[data-variant]) so the capsule grows around both lines. */
@@ -126,21 +190,6 @@ html[data-lab-theme] .docs-pager .lab-control[data-variant] {
 }
 .docs-pager [data-dir='next'] span {
   text-align: end;
-}
-
-@media (max-width: 1200px) {
-  .docs-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .docs-toc {
-    display: none;
-  }
-}
-@media (max-width: 640px) {
-  .docs-layout {
-    /* + the scaffold's G (8px) = 16px from the panel edge. */
-    padding: 8px 8px 48px;
-  }
 }
 
 .docs-chip {
@@ -171,13 +220,7 @@ kbd {
   font: 500 12px/18px var(--docs-mono);
   text-align: center;
 }
-.docs-toc h2 {
-  margin: 0 0 8px;
-  color: var(--lab-ink);
-  font-size: 13px;
-  font-weight: 600;
-}
-.docs-toc ul {
+.docs-page .docs-toc ul {
   margin: 0;
   padding: 0;
   list-style: none;

@@ -25,7 +25,7 @@ keep all three locales in sync.
 
 - Toolbar icon actions use `appearance="toolbar"`, regular sizing and accessible names. Refresh, Filter, Close, Back and selection share the same geometry; no small icon exceptions.
 - Bare `Checkbox` goes directly into `ToolbarGroup`; its shared square footprint equals an icon button. Never compensate for row alignment with a sized wrapper. Labeled choices put the name/count in `label`.
-- Independent `PanelHost` surfaces inside `Scaffold renderViewport` require `contentSurface="none"`. No outer painted card. Preserve the default card for ordinary pages/custom scroll areas without their own surfaces.
+- Default to the glass sidebar and an edge-to-edge main viewport. With `glassSidebar={false}`, independent `PanelHost` surfaces should set `contentSurface="none"`.
 - Regressions require shared tests plus browser measurements at desktop/phone, light/dark and RTL. Keep `tests/toolbar-workspace-browser.*` and `DESIGN.md` consistent. Apply consumer fixes across shared and page-specific toolbar entry points, not one screenshot.
 
 The live contract is lab.feeef.org/ui and the Lab README.

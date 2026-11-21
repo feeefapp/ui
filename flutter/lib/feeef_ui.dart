@@ -77,6 +77,7 @@ export 'physics/spring.dart';
 export 'physics/velocity.dart';
 export 'pixel_art.dart';
 export 'primitives/badge.dart';
+export 'primitives/notice.dart';
 export 'primitives/button.dart';
 export 'primitives/choice.dart';
 export 'primitives/fields.dart';

@@ -26,4 +26,5 @@ export { TemporalDialog } from './filters/temporal-dialog.js';
 export { temporalPresets, validateTemporal } from './filters/temporal.js';
 export { Checkbox, Radio, RadioGroup } from './primitives/choice.js';
 export { TemporalField, DateField, TimeField, DateTimeField, DateRangeField, TimeRangeField, DateTimeRangeField, } from './primitives/temporal-field.js';
+export { Notice } from './primitives/notice.js';
 //# sourceMappingURL=ui.js.map

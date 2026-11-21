@@ -133,9 +133,7 @@ Provider (theme once)
 ```
 
 Drill-down areas swap the scaffold's scroll area for a container (`renderViewport`).
-When that container owns independent painted panels (`PanelHost`), set
-`Scaffold contentSurface="none"`: the scaffold is structural, not an extra card around the panels.
-Keep the default `card` for ordinary pages or custom scroll areas that still need its surface.
+Navigation sits in a glass sidebar by default on web and Flutter. The main viewport runs edge to edge, and secondary panels keep their own surfaces. Set `glassSidebar` to false for the inset content card. In that layout a React `PanelHost` can still use `contentSurface="none"`.
 Toolbar controls always use `appearance="toolbar"` and regular sizing, including Refresh and Back;
 never resize individual toolbar controls in app CSS or keep a legacy small icon beside Close.
 

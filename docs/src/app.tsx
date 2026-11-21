@@ -54,6 +54,7 @@ function routeLinks(event: MouseEvent) {
 }
 
 function Shell() {
+  const { settings: { glassSidebar } } = useDocsSettings()
   const path = usePath()
   const route = resolveRoute(path)
   const title = titleOf(route)
@@ -87,8 +88,9 @@ function Shell() {
         <Scaffold
           className="docs-scaffold"
           dir="ltr"
-          contentLabel={title}
+          glassSidebar={glassSidebar}
           contentViewportRef={viewport}
+          contentLabel={title}
           drawerLabel="Documentation navigation"
           side={<DocsSide path={path} />}
           appBar={<DocsAppBar route={route} title={title} path={path} onSearch={() => setSearchOpen(true)} />}

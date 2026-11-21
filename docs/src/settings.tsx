@@ -8,15 +8,16 @@ import { directionFor } from '@feeef.dev/ui/i18n-core'
  * text stays English and left-to-right; demo stages take the language's direction.
  */
 export interface DocsSettings {
+  glassSidebar: boolean
   locale: 'en' | 'ar' | 'fr'
   /** Which kit the example code shows: the React kit or its Flutter twin. */
   code: 'react' | 'flutter'
   theme: typeof THEME_DEFAULTS & { primary?: string }
 }
 
-type SettingsPatch = { locale?: DocsSettings['locale']; code?: DocsSettings['code']; theme?: ThemeConfig }
+type SettingsPatch = { glassSidebar?: boolean; locale?: DocsSettings['locale']; code?: DocsSettings['code']; theme?: ThemeConfig }
 
-const DEFAULTS: DocsSettings = { locale: 'en', code: 'react', theme: { ...THEME_DEFAULTS } }
+const DEFAULTS: DocsSettings = { glassSidebar: true, locale: 'en', code: 'react', theme: { ...THEME_DEFAULTS } }
 const KEY = 'feeef-ui-docs-settings'
 const GLASS_SETTINGS_VERSION = 2
 
@@ -53,6 +54,7 @@ function readSaved(): DocsSettings {
     const saved = JSON.parse(localStorage.getItem(KEY) ?? 'null')
     if (saved && typeof saved === 'object')
       return {
+        glassSidebar: saved.glassSidebar !== false,
         locale: saved.locale ?? 'en',
         code: platform ?? (saved.code === 'flutter' ? 'flutter' : 'react'),
         theme: savedTheme(saved.glassSettingsVersion === GLASS_SETTINGS_VERSION ? saved.theme : { ...saved.theme, glassTint: THEME_DEFAULTS.glassTint }),
@@ -63,7 +65,8 @@ function readSaved(): DocsSettings {
 
 function read(): DocsSettings {
   const settings = readSaved()
-  return { ...settings, theme: { ...settings.theme, ...profileFromUrl() } }
+  const layout = new URLSearchParams(location.search).get('layout')
+  return { ...settings, glassSidebar: layout === 'glass' || (layout !== 'card' && settings.glassSidebar), theme: { ...settings.theme, ...profileFromUrl() } }
 }
 
 const Context = createContext<{

@@ -55,3 +55,4 @@ class _RecordChainExampleState extends State<RecordChainExample> {
       ),
     ),
   );
+}

@@ -10,7 +10,7 @@ import { usePresence } from '../motion'
 import { useI18n } from '../i18n'
 import { cn } from '../utils'
 import './scaffold.css'
-import { GlassScope } from '../glass/container'
+import { GlassContainer, GlassScope } from '../glass/container'
 import { ToolbarOrientationContext } from '../toolbar'
 import { LayoutGroup } from '../physics/layout-group'
 
@@ -47,9 +47,12 @@ export type ScaffoldProps = {
    * editor with its own ScrollArea can float them itself; `children` is then not rendered.
    */
   renderViewport?: (slots: { appBar: React.ReactNode; bottom: React.ReactNode }) => React.ReactNode
-  /** Outer content paint. Defaults to `card`; use `none` for independently painted Panels.
+  /** Outer content paint when glassSidebar is false. Defaults to `card`; use `none` for independently painted Panels.
    * Shell spacing and focus remain in either mode, independently of `renderViewport`. */
   contentSurface?: 'card' | 'none'
+  /** Enabled by default. Float navigation on glass and give the main viewport the full unframed area.
+   * Page-owned panels and the floating toolbar's safe spacing remain independent. */
+  glassSidebar?: boolean
   /** Page content, rendered inside the content panel's scroll area. Can be a function of the state. */
   children: ScaffoldSlot
   /** Sidebar content, usually a ScaffoldSide. Rendered in the drawer when compact. */
@@ -86,13 +89,14 @@ export type ScaffoldProps = {
 
 /**
  * Workspace layout: optional top row, a sidebar (expanded, rail or hidden) and a content viewport
- * (rounded card by default) with floating app bar and bottom slots. Fills its parent's height. Below the compact
+ * (edge to edge by default) with floating app bar and bottom slots. Fills its parent's height. Below the compact
  * breakpoint the sidebar moves into a modal drawer. Provider owns theme, services and portals.
  */
 export function Scaffold({
   children,
   renderViewport,
   contentSurface = 'card',
+  glassSidebar = true,
   side,
   topSide,
   appBar,
@@ -168,6 +172,7 @@ export function Scaffold({
         style={style}
         dir={dir}
         data-side-mode={visibleSide ? sideMode : 'hidden'}
+        data-glass-sidebar={glassSidebar || undefined}
         data-framed={framed}
         data-compact={compact}
         // A full-height Sheet makes the workspace recede behind it.
@@ -181,11 +186,12 @@ export function Scaffold({
             inert={!visibleSide || undefined}
             aria-hidden={!visibleSide || undefined}
           >
+            {glassSidebar && visibleSide && <SidebarGlass />}
             <div id={sideId} className="lab-workspace-side-content">
               {!compact && !drawerOpen && render(side)}
             </div>
           </div>
-          <div ref={main} className="lab-workspace-main" data-content-surface={contentSurface} tabIndex={-1}>
+          <div ref={main} className="lab-workspace-main" data-content-surface={glassSidebar ? 'none' : contentSurface} tabIndex={-1}>
             {renderViewport ? (
               renderViewport({ appBar: render(appBar), bottom: render(bottom) })
             ) : (
@@ -193,6 +199,7 @@ export function Scaffold({
                 ref={contentViewportRef}
                 className="lab-workspace-route"
                 label={contentLabel}
+                contentPadding={glassSidebar ? 0 : undefined}
                 top={appBar ? render(appBar) : undefined}
                 bottom={bottom ? render(bottom) : undefined}
               >
@@ -203,6 +210,7 @@ export function Scaffold({
         </div>
         {compact && (
           <WorkspaceDrawer
+            glassSidebar={glassSidebar}
             open={drawerOpen}
             label={drawerLabel}
             returnFocusRef={drawerReturnFocusRef}
@@ -369,14 +377,38 @@ export function ScaffoldToggleButton({
   )
 }
 
+// Keep the stationary material behind navigation. Its links, search and floating
+// controls retain their own focus, press feedback and glass membership.
+function subscribeWindowFocus(update: () => void) {
+  window.addEventListener('focus', update)
+  window.addEventListener('blur', update)
+  return () => {
+    window.removeEventListener('focus', update)
+    window.removeEventListener('blur', update)
+  }
+}
+const windowFocused = () => document.hasFocus()
+const initialFocus = () => true
+
+function SidebarGlass({ drawer = false }: { drawer?: boolean }) {
+  const focused = React.useSyncExternalStore(subscribeWindowFocus, windowFocused, initialFocus)
+  return (
+    <div aria-hidden="true" className="lab-workspace-sidebar-glass" data-focused={focused}>
+      <GlassContainer solo={{}} light="static" material={drawer ? 'menu' : 'regular'} interactive={false} adaptive={false} />
+    </div>
+  )
+}
+
 /** The compact navigation drawer: a full-height panel from the logical start over a dimmed page. */
 function WorkspaceDrawer({
+  glassSidebar,
   open,
   label,
   returnFocusRef,
   onClose,
   children,
 }: {
+  glassSidebar: boolean
   open: boolean
   label: string
   returnFocusRef?: React.RefObject<HTMLElement | null>
@@ -392,10 +424,12 @@ function WorkspaceDrawer({
   return (
     <PresentationHost kind="drawer" label={label} returnFocusRef={returnFocusRef} onEscape={close}>
       <div className="lab-presentation-scrim lab-workspace-drawer-scrim" data-state={state} aria-hidden="true" onClick={close} />
-      <div className="lab-workspace-drawer" data-state={state}>
-        <span className="lab-workspace-drawer-paint" aria-hidden="true">
-          <PixelTexture variant="grain" seed="workspace-drawer" density="sparse" />
-        </span>
+      <div className="lab-workspace-drawer" data-state={state} data-glass-sidebar={glassSidebar || undefined}>
+        {glassSidebar ? <SidebarGlass drawer /> : (
+          <span className="lab-workspace-drawer-paint" aria-hidden="true">
+            <PixelTexture variant="grain" seed="workspace-drawer" density="sparse" />
+          </span>
+        )}
         <IconButton
           variant="ghost"
           controlSize="regular"

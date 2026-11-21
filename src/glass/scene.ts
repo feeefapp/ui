@@ -753,7 +753,9 @@ export class GlassScene {
   private clipOf(element: HTMLElement, frame: HostFrame): { clip?: GlassRect; scrolled: boolean } {
     const clips: GlassRect[] = []
     let scrolled = false
-    if (!this.host.contains(element)) return { scrolled }
+    // A solo member is the host. Its ancestors already clip the whole material in CSS;
+    // recording their current screen positions would freeze the clip mid-drawer animation.
+    if (element === this.host || !this.host.contains(element)) return { scrolled }
     for (let node = element.parentElement; node && node !== this.host; node = node.parentElement) {
       if (this.scrolled.has(node)) scrolled = true
       const axes = clipAxes(getComputedStyle(node))
