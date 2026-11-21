@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Download, ListFilter, Phone, Plus, Search, X } from 'lucide-react'
+import { Download, ListFilter, Plus, Search, X } from 'lucide-react'
 import { Button, IconButton } from '@feeef.dev/ui/primitives/button'
 import { Checkbox } from '@feeef.dev/ui/primitives/choice'
 import { Slider } from '@feeef.dev/ui/primitives/slider'
@@ -25,7 +25,7 @@ const ORDERS = [
   { id: '#1043', name: 'Omar Belkacem', city: 'Annaba', total: '1 800 DA' },
 ]
 
-function Rows({ check }: { check?: string[] }) {
+function Rows({ actions }: { actions?: (order: (typeof ORDERS)[number]) => ReactNode }) {
   return (
     <div className="gl-mini-rows">
       {ORDERS.map((order) => (
@@ -38,7 +38,7 @@ function Rows({ check }: { check?: string[] }) {
               {order.city} · {order.total}
             </small>
           </span>
-          {check && <Checkbox controlSize="small" aria-label={`Select order ${order.id}`} defaultChecked={check.includes(order.id)} />}
+          {actions?.(order)}
         </div>
       ))}
     </div>
@@ -216,58 +216,43 @@ function GoodFloating() {
 
 /* ---------- Dock ---------- */
 
-function GoodDock() {
+function OrderActionsExample({ repeatBulkAction = false }: { repeatBulkAction?: boolean }) {
+  const [selected, setSelected] = useState(['#1048', '#1046'])
+  const [confirmed, setConfirmed] = useState<string[]>([])
+  function confirm(ids: string[]) {
+    setConfirmed((current) => [...current, ...ids])
+    setSelected((current) => current.filter((id) => !ids.includes(id)))
+  }
+  const bulkAction = (
+    <Button variant="filled" controlSize="small" onClick={() => confirm(selected)}>
+      Confirm {selected.length} {selected.length === 1 ? 'order' : 'orders'}
+    </Button>
+  )
   return (
     <div className="gl-mini">
       <ScrollArea
         label="Orders to confirm"
-        edgeGap={8}
-        contentPadding={8}
-        bottom={
-          <Dock label="Selected orders" content={<span className="gl-dock-status">2 selected</span>}>
-            <div className="gl-dock-row">
-              <IconButton variant="text" appearance="toolbar" aria-label="Clear selection">
-                <X />
-              </IconButton>
-              <Button variant="filled">
-                Confirm 2 orders
-              </Button>
-            </div>
+        bottom={!repeatBulkAction && selected.length > 0 && (
+          <Dock label="Selected orders">
+            <IconButton variant="text" appearance="toolbar" aria-label="Clear selection" onClick={() => setSelected([])}>
+              <X />
+            </IconButton>
+            {bulkAction}
           </Dock>
-        }
+        )}
       >
-        <Rows check={['#1048', '#1046']} />
-      </ScrollArea>
-    </div>
-  )
-}
-
-function BadScattered() {
-  return (
-    <div className="gl-mini">
-      <div className="gl-mini-scroll">
-        {ORDERS.slice(0, 4).map((order) => (
-          <div key={order.id} className="gl-mini-row">
-            <span>
-              <strong>
-                {order.id} · {order.name}
-              </strong>
-              <small>{order.total}</small>
-            </span>
-            <span style={{ display: 'flex', gap: 4 }}>
-              <IconButton variant="outlined" controlSize="small" aria-label={`Call ${order.name}`}>
-                <Phone />
-              </IconButton>
-              <Button variant="filled" controlSize="small">
-                Confirm
-              </Button>
-              <Button variant="destructive" controlSize="small">
-                Cancel
-              </Button>
-            </span>
+        <Rows actions={({ id }) => confirmed.includes(id) ? <small>Confirmed</small> : (
+          <div className="gl-order-actions">
+            <Button variant="text" controlSize="small" aria-label={`Confirm order ${id}`} onClick={() => confirm([id])}>
+              Confirm
+            </Button>
+            <Checkbox controlSize="small" aria-label={`Select order ${id}`} checked={selected.includes(id)}
+              onCheckedChange={(checked) => setSelected((current) => checked ? [...current, id] : current.filter((item) => item !== id))}
+            />
+            {repeatBulkAction && selected.includes(id) && bulkAction}
           </div>
-        ))}
-      </div>
+        )} />
+      </ScrollArea>
     </div>
   )
 }
@@ -434,21 +419,20 @@ function Overview() {
         />
       </Section>
 
-      <Section title="Actions go in a dock">
+      <Section title="Bulk actions go in the dock" id="actions-go-in-a-dock">
         <p>
-          The actions of the task in front of people (confirm, ship, save) float in a{' '}
-          <Link to="/components/dock">Dock</Link> at the bottom of the content, where a thumb reaches them
-          and where they are in the same place on every screen. The dock holds the{' '}
-          <Link to="/guidelines/principles#one-primary-action">one primary action</Link>. When a selection
-          starts, the dock changes to act on the selection; it does not add buttons to each row. When
-          actions don’t fit, use <Link to="/components/actions-bar">ActionsBar</Link> inside the dock so
-          the low-priority ones move into a menu.
+          Put an action on a row when it affects that item. In this list, Confirm updates just the
+          order beside it, even when other orders are selected. To confirm several orders together,
+          select their checkboxes and use the button in the <Link to="/components/dock">Dock</Link>.
+          Its label gives the number of orders it will change. If several bulk actions are available,
+          use <Link to="/components/actions-bar">ActionsBar</Link> in the dock to keep the primary
+          action visible as space narrows.
         </p>
         <Compare
-          good={<GoodDock />}
-          goodNote="Select rows, act once from the dock. One filled button, in one place."
-          bad={<BadScattered />}
-          badNote="Every row carries three buttons: twelve targets, four filled, and the list is unreadable."
+          good={<OrderActionsExample />}
+          goodNote="Confirm one order on its row. Confirm the whole selection once from the dock."
+          bad={<OrderActionsExample repeatBulkAction />}
+          badNote="Repeating “Confirm 2 orders” on each selected row makes a bulk action look local to that row."
         />
       </Section>
 
@@ -515,7 +499,7 @@ function Overview() {
           dontItems={[
             'Stack fixed header bars, or paint a toolbar edge to edge.',
             'Hardcode spacers or bottom padding for docks.',
-            'Put buttons on every row when people can select rows and act once.',
+            'Repeat a bulk action on each selected row.',
             'Hide a feature at a breakpoint.',
             'Put content on glass, or chrome on its own opaque card.',
           ]}

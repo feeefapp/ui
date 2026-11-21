@@ -88,12 +88,21 @@ a {
 }
 
 /* ---------- Prose ---------- */
-.docs-page-body > * + * {
-  margin-top: 24px;
+/* Prose containers own the space between blocks. Tables, notices and live
+   examples keep their own internal layout. */
+.docs-page-body, .docs-section, .docs-principle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  row-gap: 16px;
 }
-.docs-section + .docs-section {
-  margin-top: 48px;
+.docs-page-body { row-gap: 24px; }
+.docs-page :is(.docs-page-body, .docs-section, .docs-principle) > * {
+  margin-block: 0;
 }
+.docs-page-body > .docs-section + .docs-section { margin-block-start: 24px; }
+.docs-page-body > .docs-example + .docs-example { margin-block-start: 16px; }
+.docs-page-body > .docs-principle + .docs-principle { margin-block-start: 32px; }
 .docs-heading {
   position: relative;
   margin: 0 0 12px;
@@ -153,9 +162,6 @@ h3.docs-heading {
 /* ---------- Code ---------- */
 
 /* ---------- Examples ---------- */
-.docs-example + .docs-example {
-  margin-top: 40px;
-}
 .docs-example-description {
   color: var(--lab-muted);
 }

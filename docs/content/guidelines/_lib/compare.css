@@ -37,9 +37,6 @@
   color: var(--docs-compare-tone);
 }
 
-.docs-principle + .docs-principle {
-  margin-top: 56px;
-}
 .docs-principle .docs-heading {
   display: flex;
   align-items: center;

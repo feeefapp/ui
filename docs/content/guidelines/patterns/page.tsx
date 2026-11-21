@@ -93,7 +93,7 @@ function Overview() {
             'Keep rows short: identity first, numbers aligned at the end.',
           ]}
           dontItems={[
-            'Put Confirm, Call and Cancel buttons on every row.',
+            'Put a command that changes all selected orders inside an individual order row.',
             'Paint a header row of column titles over a phone list.',
             'Leave a blank area when nothing matches.',
             'Add a second toolbar for bulk actions above the list.',
