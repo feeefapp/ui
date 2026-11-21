@@ -16,11 +16,17 @@ function Overview() {
       </Section>
 
       <Section title="Rows">
+        <p>
+          Give the row’s primary action the full visible surface, including leading media, trailing
+          values, gaps and padding. For navigation, pass the link to <C>ListRow</C> with <C>asChild</C>.
+          For selection, use a full-width <Link to="/components/checkbox#selectable-rows">checkbox row</Link>.
+          A separate action such as a menu gets its own sibling button and keyboard stop.
+        </p>
         <Table
           head={['Prop', 'Use']}
           rows={[
             [<C>chevron</C>, 'The row opens another page. Not on wide split views, where the item opens beside the list.'],
-            [<C>leading</C>, 'An icon, avatar, thumbnail or a checkbox without a label (name it with aria-label). Hairlines start after it.'],
+            [<C>leading</C>, 'An icon, avatar or thumbnail inside the row target. Hairlines start after it.'],
             [<C>trailing</C>, 'A value, count, badge or control (a switch). It takes up to 45% of the row’s width inside its insets; longer text ellipsizes.'],
             [<C>selected</C>, 'The open item in a split view.'],
             [<C>static</C>, 'Not interactive: information or a row that holds its own control.'],

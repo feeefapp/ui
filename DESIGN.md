@@ -40,7 +40,9 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
      menu holds them (`ActionsBar`, `FilterBar` chips). A chip is one control; its secondary
      actions (clear, unpin) live in what it opens.
    - **Selection lines up.** A list's select-all checkbox sits in its top bar, and every row's
-     checkbox sits in one column right under it.
+     checkbox sits in one column right under it. When selection is the row action, its checkbox
+     spans the painted row, including the amount, status and padding. A navigable row gives the
+     same area to its link. Independent actions such as an overflow menu have their own controls.
    - **One glass.** Every bubble paints the same material, edge and light. A bubble on its own is
      its own container; never give one a look of its own.
    - **Selected runs read as one block.** Selected rows next to each other alternate between two

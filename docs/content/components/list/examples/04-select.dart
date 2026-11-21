@@ -24,17 +24,23 @@ class _SelectRowsState extends State<SelectRows> {
       header: const Text('Courier payouts'),
       children: [
         for (final payout in _payouts)
-          ListRow(
-            leading: Checkbox(
-              ariaLabel: 'Select payout #${payout.id}',
-              checked: selected.contains(payout.id),
-              onCheckedChange: (on) => setState(
-                () => on ? selected.add(payout.id) : selected.remove(payout.id),
-              ),
+          Checkbox(
+            checked: selected.contains(payout.id),
+            onCheckedChange: (on) => setState(
+              () => on ? selected.add(payout.id) : selected.remove(payout.id),
             ),
-            title: Text(payout.name),
-            subtitle: Text('Payout #${payout.id}'),
-            trailing: Text(payout.amount),
+            label: Row(
+              spacing: 12,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [Text(payout.name), Text('Payout #${payout.id}')],
+                  ),
+                ),
+                Flexible(child: Text(payout.amount, textAlign: TextAlign.end)),
+              ],
+            ),
           ),
       ],
     ),

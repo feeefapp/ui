@@ -283,45 +283,10 @@ class _OrdersListState extends State<OrdersList> {
                     ),
                   ),
                   for (final order in rows)
-                    _Row(
+                    _OrderRow(
+                      order: order,
                       selected: _selected.contains(order.id),
-                      children: [
-                        Flexible(
-                          child: Checkbox(
-                            label: Text('#${order.id} · ${order.customer}'),
-                            description: Text(
-                              '${order.wilaya} · ${order.courier}',
-                            ),
-                            checked: _selected.contains(order.id),
-                            onCheckedChange: (on) => _toggle(order.id, on),
-                          ),
-                        ),
-                        // `.pt-row-end`: 13px, end-aligned, 2px gap.
-                        DefaultTextStyle.merge(
-                          style: const TextStyle(fontSize: 13),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            spacing: 2,
-                            children: [
-                              Text(
-                                order.total,
-                                softWrap: false,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              _Tag(
-                                order.confirmed
-                                    ? 'Confirmed'
-                                    : order.called
-                                    ? 'Called'
-                                    : 'New',
-                                success: order.confirmed,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      onChanged: (on) => _toggle(order.id, on),
                     ),
                 ],
               )
@@ -386,31 +351,71 @@ class _NoResults extends StatelessWidget {
 }
 
 /// `.pt-row`: a bordered row; selected rows take a primary tint.
-class _Row extends StatelessWidget {
-  const _Row({required this.selected, required this.children});
+class _OrderRow extends StatelessWidget {
+  const _OrderRow({
+    required this.order,
+    required this.selected,
+    required this.onChanged,
+  });
 
+  final _Order order;
   final bool selected;
-  final List<Widget> children;
+  final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final c = ThemeProvider.of(context).colors;
-    final radius = ThemeProvider.of(context).sizes.radiusSmall;
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+    final theme = ThemeProvider.of(context);
+    final c = theme.colors;
+    return DecoratedBox(
       decoration: ShapeDecoration(
         color: selected ? Color.lerp(c.surface, c.primary, 0.06) : c.surface,
         shape: SuperellipseBorder(
-          radius: radius,
+          radius: theme.sizes.radiusSmall,
           side: BorderSide(
             color: selected ? Color.lerp(c.line, c.primary, 0.45)! : c.line,
           ),
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        spacing: 12,
-        children: children,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 64),
+        child: Checkbox(
+          checked: selected,
+          onCheckedChange: onChanged,
+          label: Row(
+            spacing: 12,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('#${order.id} · ${order.customer}'),
+                    Text(
+                      '${order.wilaya} · ${order.courier}',
+                      style: TextStyle(fontSize: 12, color: c.muted),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    order.total,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  _Tag(
+                    order.confirmed
+                        ? 'Confirmed'
+                        : order.called
+                        ? 'Called'
+                        : 'New',
+                    success: order.confirmed,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

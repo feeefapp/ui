@@ -14,5 +14,5 @@ export default function Unlabelled() {
 
 export const meta = {
   title: 'Without a visible label',
-  description: 'Only the box, for list rows and table cells; aria-label names it and touch still reaches 44px.',
+  description: 'An independent selection control for a toolbar or table cell. Give it an accessible name.',
 }

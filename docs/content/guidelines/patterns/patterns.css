@@ -54,7 +54,8 @@
   corner-shape: superellipse(1.5);
   background: var(--lab-surface);
 }
-.pt-row[data-selected] {
+.lab-choice.pt-row { min-height: 64px; }
+.pt-row:has(input:checked) {
   border-color: color-mix(in srgb, var(--lab-primary) 45%, var(--lab-line));
   background: color-mix(in srgb, var(--lab-primary) 6%, var(--lab-surface));
 }

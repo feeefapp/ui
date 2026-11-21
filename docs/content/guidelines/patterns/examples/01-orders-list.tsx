@@ -127,20 +127,26 @@ export default function OrdersList() {
               />
             </div>
             {rows.map((order) => (
-              <div key={order.id} className="pt-row" data-selected={selected.includes(order.id) || undefined}>
-                <Checkbox
-                  label={`#${order.id} · ${order.customer}`}
-                  description={`${order.wilaya} · ${order.courier}`}
-                  checked={selected.includes(order.id)}
-                  onCheckedChange={(on) => toggle(order.id, on)}
-                />
-                <span className="pt-row-end">
-                  <strong>{order.total}</strong>
-                  <span className="pt-tag" data-tone={order.confirmed ? 'success' : undefined}>
-                    {order.confirmed ? 'Confirmed' : order.called ? 'Called' : 'New'}
+              <Checkbox
+                key={order.id}
+                containerClassName="pt-row demo-choice-row"
+                checked={selected.includes(order.id)}
+                onCheckedChange={(on) => toggle(order.id, on)}
+                label={
+                  <span className="demo-choice-details">
+                    <span>
+                      #{order.id} · {order.customer}
+                      <small>{order.wilaya} · {order.courier}</small>
+                    </span>
+                    <span className="pt-row-end">
+                      <strong>{order.total}</strong>
+                      <span className="pt-tag" data-tone={order.confirmed ? 'success' : undefined}>
+                        {order.confirmed ? 'Confirmed' : order.called ? 'Called' : 'New'}
+                      </span>
+                    </span>
                   </span>
-                </span>
-              </div>
+                }
+              />
             ))}
           </div>
         ) : (

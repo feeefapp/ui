@@ -1,4 +1,4 @@
-import { ListRow, ListSection } from '@feeef.dev/ui/primitives/list'
+import { ListSection } from '@feeef.dev/ui/primitives/list'
 import { Checkbox } from '@feeef.dev/ui/primitives/choice'
 import { useState } from 'react'
 
@@ -16,20 +16,19 @@ export default function SelectRows() {
     <div className="demo-wide">
       <ListSection header="Courier payouts">
         {payouts.map((payout) => (
-          <ListRow
-            key={payout.id}
-            static
-            leading={
-              <Checkbox
-                aria-label={`Select payout #${payout.id}`}
-                checked={selected.includes(payout.id)}
-                onCheckedChange={(on) => toggle(payout.id, on)}
-              />
-            }
-            title={payout.name}
-            subtitle={`Payout #${payout.id}`}
-            trailing={payout.amount}
-          />
+          <div key={payout.id} role="listitem">
+            <Checkbox
+              containerClassName="demo-choice-row"
+              checked={selected.includes(payout.id)}
+              onCheckedChange={(on) => toggle(payout.id, on)}
+              label={
+                <span className="demo-choice-details">
+                  <span>{payout.name}<small>Payout #{payout.id}</small></span>
+                  <span>{payout.amount}</span>
+                </span>
+              }
+            />
+          </div>
         ))}
       </ListSection>
     </div>
@@ -39,5 +38,5 @@ export default function SelectRows() {
 export const meta = {
   title: 'Selection and wide values',
   description:
-    'An unlabelled checkbox is only its box, so it fits the leading slot; trailing values take up to 45% of the row.',
+    'Click the mark, name, amount or padding to toggle a payout. Each row has one keyboard stop.',
 }

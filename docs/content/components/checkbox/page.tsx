@@ -81,20 +81,31 @@ function Overview() {
         </p>
       </Section>
 
+      <Section title="Selectable rows">
+        <p>
+          When tapping a row selects it, make the checkbox span the row and put the row’s border and
+          padding on its label. Pass the customer, amount and status together as <C>label</C>.
+          In React, <C>containerClassName</C> styles the outer label. In Flutter, give the checkbox
+          the full row width and pass a <C>Row</C> as its label. Tab reaches the choice once and Space toggles it.
+        </p>
+        <Code code={`<Checkbox
+  containerClassName="payout-row"
+  label={<><strong>{payout.name}</strong><span>{payout.amount}</span></>}
+  checked={selected}
+  onCheckedChange={setSelected}
+/>`} />
+        <Code lang="css" code={`.payout-row { width: 100%; padding: 10px 14px; border: 1px solid var(--lab-line); }
+.payout-row .lab-choice-copy { flex: 1; }
+.payout-row .lab-choice-copy > span { display: flex; justify-content: space-between; gap: 12px; }`} />
+      </Section>
+
       <Section title="Without a visible label">
         <p>
           A checkbox with no <C>label</C>, <C>description</C> or <C>error</C> is only its box (20px,
-          18px when small), so it fits a list row’s leading slot or a table cell. On touch screens it
-          still reaches a 44px hit area around the box without changing layout. Name it for assistive
-          technology: <C>aria-label</C> on the web, <C>ariaLabel</C> in Flutter.
+          18px when small). Use it for independent selection in a toolbar or table cell. On touch
+          screens its target reaches 44px. Give it an accessible name describing what it selects.
         </p>
-        <Code
-          code={`<ListRow
-  static
-  leading={<Checkbox aria-label="Select payout #1042" checked={on} onCheckedChange={setOn} />}
-  title="Amina Benali"
-/>`}
-        />
+        <Code code={`<Checkbox aria-label="Select payout #1042" checked={on} onCheckedChange={setOn} />`} />
       </Section>
 
       <Section title="Toolbar selection">

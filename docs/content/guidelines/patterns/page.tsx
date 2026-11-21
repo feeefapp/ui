@@ -79,7 +79,7 @@ function Overview() {
           items={[
             ['Floating bar', 'the filter bar with pinned filters and search, floating over the list.'],
             ['Rows', 'one opaque row per item with the two or three facts people decide on: number and customer, wilaya and courier, total and state.'],
-            ['Selection', 'a checkbox per row and a select-all with a count. Selecting changes the dock.'],
+            ['Selection', 'the whole order is one checkbox. Tap its mark, customer, total, status or padding to select it. The dock shows the selection count.'],
             ['Dock', 'the page’s primary action when nothing is selected (New order); actions on the selection when something is (Confirm 3).'],
             ['No results', 'says why and offers to clear the search and filters.'],
           ]}

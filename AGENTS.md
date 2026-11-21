@@ -97,6 +97,12 @@ General selects supply a floating label through Select. Reuse FieldShell for
 new field decoration (icons, helper/error text, sizes and labels); keep behavior
 in the owning control. Supply actionable, localized validation messages.
 
+For a row with one primary action, give the interactive element the row’s full bounds.
+Place leading media, text, passive trailing values and padding inside it. For selection,
+style the outer Checkbox label and put the metadata inside its rich label. For navigation,
+use ListRow with a row-level link or action. Give independent actions their own sibling
+controls. Verify clicks on the leading mark, trailing value and empty padding, plus keyboard activation.
+
 Field interaction rule: the native input/textarea/select trigger fills the entire
 visible field and owns its outer border/focus ring. Use measured logical padding
 for overlay adornments; decorative overlays pass clicks through, independent

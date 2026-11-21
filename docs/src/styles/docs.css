@@ -195,6 +195,18 @@ h3.docs-heading {
   border-top: 1px solid var(--lab-line);
   background: var(--lab-surface);
 }
+/* Selection rows use the kit checkbox label as the entire surface. */
+.lab-choice.demo-choice-row { width: 100%; }
+.demo-choice-row .lab-choice-copy { flex: 1; }
+.demo-choice-details {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.demo-choice-details > span { min-width: 0; }
+.demo-choice-details > :last-child { max-width: 45%; text-align: end; }
+.demo-choice-details small { display: block; }
 /* Example demos lay out their own pieces with these helpers. */
 .demo-row {
   display: flex;

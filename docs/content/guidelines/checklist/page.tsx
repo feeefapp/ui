@@ -134,6 +134,7 @@ const GROUPS: Group[] = [
     items: [
       { id: 'density-once', label: 'Density is set once in the theme config', description: 'No screen shrunk by hand; a crowded screen is split or trimmed.', source: P('comfortable-by-default', 5) },
       { id: 'density-targets', label: 'Touch targets are at least 44px', description: 'Including icon buttons, chips and row actions.', source: { to: '/foundations/sizing', label: 'Sizing' } },
+      { id: 'density-row-target', label: 'The whole actionable row responds', description: 'Try the leading icon, trailing value and empty padding. Each activates the row once. An independent menu or button performs its own action.', source: { to: '/components/list#rows', label: 'List rows' } },
       { id: 'density-hover', label: 'Nothing depends on hover', description: 'Row actions and tooltips have a tap or focus equivalent.', source: P('comfortable-by-default', 5) },
       { id: 'density-thumb', label: 'The main action is in thumb reach on phones', description: 'In the bottom dock, not only in the app bar.', source: CHOOSING('actions', 'Choosing') },
       { id: 'density-keyboard', label: 'Phones show the right keyboard', description: 'type, inputMode and autoComplete on every field.', source: { to: '/components/text-field', label: 'Text field' } },
