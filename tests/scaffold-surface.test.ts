@@ -50,6 +50,16 @@ test('glass navigation is the default and the main route removes its own inset',
   assert.match(css, /\[data-glass-sidebar\] > \.lab-workspace-scaffold-row > \.lab-workspace-main \{\s*margin: 0/)
 })
 
+test('the sidebar tint inherits its container corners in every focus state', () => {
+  const rules = [...css.matchAll(/\.lab-workspace-sidebar-glass(?:\[[^\]]+\])?::after\s*\{([^}]+)\}/g)]
+  for (const property of ['border-radius', 'corner-shape']) {
+    const values = rules.flatMap(([, declarations]) =>
+      [...declarations.matchAll(new RegExp(`${property}:\\s*([^;]+);`, 'g'))].map(match => match[1].trim()),
+    )
+    assert.deepEqual([...new Set(values)], ['inherit'])
+  }
+})
+
 test('nested docs code can hand vertical scrolling back to the article', () => {
   const materials = readFileSync(new URL('../docs/src/styles/materials.css', import.meta.url), 'utf8')
   const codeViewport = materials.match(/\.docs-code\[data-layout='box'\] > \.lab-scroll-area > \.lab-scroll-viewport\s*\{([^}]+)\}/)?.[1]

@@ -588,9 +588,7 @@ class _SidebarGlassState extends State<_SidebarGlass>
             DecoratedBox(
               decoration: ShapeDecoration(
                 color: fill,
-                shape: SuperellipseBorder(
-                  radius: radius * (_focused ? 1.35 : 1),
-                ),
+                shape: SuperellipseBorder(radius: radius),
               ),
             ),
           ],

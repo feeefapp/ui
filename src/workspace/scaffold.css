@@ -356,7 +356,7 @@ html:is([data-lab-motion='reduced'], [data-lab-motion='none']) :is(.lab-workspac
   z-index: 1;
   background: var(--lab-sidebar-veil);
 }
-/* The stationary lens catches light where its two corner curves separate. */
+/* The focused glint follows the same corner curve as the tint and its clip. */
 .lab-workspace-sidebar-glass[data-focused='true']::before {
   content: '';
   position: absolute;
@@ -368,11 +368,6 @@ html:is([data-lab-motion='reduced'], [data-lab-motion='none']) :is(.lab-workspac
   background:
     radial-gradient(circle at top right, var(--lab-sidebar-glint), transparent var(--lab-radius-panel)),
     radial-gradient(circle at bottom left, var(--lab-sidebar-glint), transparent var(--lab-radius-panel));
-}
-/* Keep the tint inside the lens. A narrow crescent of the actual refracted glass
-   remains visible at the continuous corners, without drawing another outline. */
-.lab-workspace-sidebar-glass[data-focused='true']::after {
-  border-radius: calc(var(--lab-radius-panel) * 1.35);
 }
 .lab-workspace-sidebar-glass + .lab-workspace-side-content,
 .lab-workspace-sidebar-glass ~ .lab-workspace-drawer-side {
