@@ -331,9 +331,18 @@ html:is([data-lab-motion='reduced'], [data-lab-motion='none']) :is(.lab-workspac
 }
 .lab-workspace-sidebar-glass {
   position: absolute;
+  z-index: 0;
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
+  corner-shape: inherit;
+  --lab-sidebar-veil: color-mix(in srgb, var(--lab-ground) 52%, transparent);
+}
+[data-lab-theme='dark'] .lab-workspace-sidebar-glass {
+  --lab-sidebar-veil: color-mix(in srgb, color-mix(in srgb, var(--lab-ground) 76%, black) 82%, transparent);
+}
+.lab-workspace-sidebar-glass[data-focused='false'] {
+  --lab-sidebar-veil: color-mix(in srgb, var(--lab-surface) 85%, transparent);
 }
 .lab-workspace-sidebar-glass > .lab-glass-container,
 .lab-workspace-sidebar-glass::after {
@@ -344,15 +353,26 @@ html:is([data-lab-motion='reduced'], [data-lab-motion='none']) :is(.lab-workspac
 }
 .lab-workspace-sidebar-glass::after {
   content: '';
-  background: color-mix(in srgb, var(--lab-ground) 52%, transparent);
-  box-shadow: inset 0 0 0 1px var(--lab-line);
+  z-index: 1;
+  background: var(--lab-sidebar-veil);
 }
-[data-lab-theme='dark'] .lab-workspace-sidebar-glass::after {
-  background: color-mix(in srgb, color-mix(in srgb, var(--lab-ground) 76%, black) 82%, transparent);
+/* The stationary lens catches light where its two corner curves separate. */
+.lab-workspace-sidebar-glass[data-focused='true']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  corner-shape: inherit;
+  --lab-sidebar-glint: color-mix(in srgb, var(--lab-ink) 22%, transparent);
+  background:
+    radial-gradient(circle at top right, var(--lab-sidebar-glint), transparent var(--lab-radius-panel)),
+    radial-gradient(circle at bottom left, var(--lab-sidebar-glint), transparent var(--lab-radius-panel));
 }
-.lab-workspace-sidebar-glass[data-focused='false']::after {
-  background: color-mix(in srgb, var(--lab-surface) 85%, transparent);
-  box-shadow: none;
+/* Keep the tint inside the lens. A narrow crescent of the actual refracted glass
+   remains visible at the continuous corners, without drawing another outline. */
+.lab-workspace-sidebar-glass[data-focused='true']::after {
+  border-radius: calc(var(--lab-radius-panel) * 1.35);
 }
 .lab-workspace-sidebar-glass + .lab-workspace-side-content,
 .lab-workspace-sidebar-glass ~ .lab-workspace-drawer-side {

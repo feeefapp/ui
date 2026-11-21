@@ -158,7 +158,7 @@ const windowFocused = () => document.hasFocus();
 const initialFocus = () => true;
 function SidebarGlass({ drawer = false }) {
     const focused = React.useSyncExternalStore(subscribeWindowFocus, windowFocused, initialFocus);
-    return (_jsx("div", { "aria-hidden": "true", className: "lab-workspace-sidebar-glass", "data-focused": focused, children: _jsx(GlassContainer, { solo: {}, light: "static", material: drawer ? 'menu' : 'regular', interactive: false, adaptive: false }) }));
+    return (_jsx("div", { "aria-hidden": "true", className: "lab-workspace-sidebar-glass", "data-focused": focused, children: _jsx(GlassContainer, { solo: { motion: 'follow' }, light: "static", highlightWidth: 2, material: drawer ? 'menu' : 'regular', interactive: false, adaptive: false }) }));
 }
 /** The compact navigation drawer: a full-height panel from the logical start over a dimmed page. */
 function WorkspaceDrawer({ glassSidebar, open, label, returnFocusRef, onClose, children, }) {

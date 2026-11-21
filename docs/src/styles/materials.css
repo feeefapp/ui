@@ -29,8 +29,9 @@
   height: calc(var(--docs-code-rows) * var(--docs-code-line) + 92px);
   overflow: hidden;
 }
-.docs-code[data-layout='box'] .lab-scroll-area {
-  height: 100%;
+/* At either end of a snippet, wheel and touch continue scrolling the article. */
+.docs-code[data-layout='box'] > .lab-scroll-area > .lab-scroll-viewport {
+  overscroll-behavior-y: auto;
 }
 .docs-code-label {
   padding-inline: 10px;

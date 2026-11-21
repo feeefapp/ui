@@ -49,3 +49,9 @@ test('glass navigation is the default and the main route removes its own inset',
   assert.match(source, /glassSidebar && visibleSide && <SidebarGlass/)
   assert.match(css, /\[data-glass-sidebar\] > \.lab-workspace-scaffold-row > \.lab-workspace-main \{\s*margin: 0/)
 })
+
+test('nested docs code can hand vertical scrolling back to the article', () => {
+  const materials = readFileSync(new URL('../docs/src/styles/materials.css', import.meta.url), 'utf8')
+  const codeViewport = materials.match(/\.docs-code\[data-layout='box'\] > \.lab-scroll-area > \.lab-scroll-viewport\s*\{([^}]+)\}/)?.[1]
+  assert.match(codeViewport ?? '', /overscroll-behavior-y:\s*auto/)
+})

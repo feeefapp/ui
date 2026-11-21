@@ -1,11 +1,11 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
-import { BookOpen, ChevronDown, Compass, Folder, Layers, LayoutGrid, Search } from 'lucide-react'
+import { BookOpen, ChevronDown, Compass, Folder, Layers, LayoutGrid } from 'lucide-react'
 import { FoAnimatedLogo } from '@feeef.dev/ui/brand/logo'
 import { NavigationItem } from '@feeef.dev/ui/navigation/navigation-item'
-import { RawInput } from '@feeef.dev/ui/primitives/raw-input'
+import { ToolbarSearch } from '@feeef.dev/ui/toolbar-search'
 import { ToolbarGroup } from '@feeef.dev/ui/toolbar'
 import { ThemeSwitch } from '@feeef.dev/ui/theme'
-import { ScaffoldToggleButton, useScaffold } from '@feeef.dev/ui/workspace/scaffold'
+import { ScaffoldSide, ScaffoldToggleButton, useScaffold } from '@feeef.dev/ui/workspace/scaffold'
 import { GROUPS, SECTIONS, type DocPage } from '../model'
 import { pageHref, pagesIn } from '../registry'
 import { Link } from '../router'
@@ -110,36 +110,43 @@ export function DocsSide({ path }: { path: string }) {
     )
   }
   return (
-    <aside className="docs-side" aria-label="Workspace sidebar" data-rail={rail || undefined}>
-      <header className="docs-side-head">
-        <div className="docs-side-brand" data-rail={rail || undefined}>
+    <ScaffoldSide
+      className={rail ? 'docs-side docs-side-rail' : 'docs-side'}
+      leading={
+        <header className="docs-side-head">
+          <div className="docs-side-brand" data-rail={rail || undefined}>
+            {!rail && (
+              <Link
+                to="/"
+                className="docs-brand"
+                aria-label="Feeef UI home"
+                onClick={() => setDrawerOpen(false)}
+              >
+                <FoAnimatedLogo width={84} height={22} />
+                <span>UI</span>
+                <span className="docs-version">v{pkg.version}</span>
+              </Link>
+            )}
+            {!drawerOpen && <ScaffoldToggleButton />}
+          </div>
           {!rail && (
-            <Link
-              to="/"
-              className="docs-brand"
-              aria-label="Feeef UI home"
-              onClick={() => setDrawerOpen(false)}
-            >
-              <FoAnimatedLogo width={84} height={22} />
-              <span>UI</span>
-              <span className="docs-version">v{pkg.version}</span>
-            </Link>
+            <ToolbarSearch label="Filter pages" placeholder="Filter pages…" value={query} onValueChange={setQuery} defaultExpanded />
           )}
-          {!drawerOpen && <ScaffoldToggleButton />}
-        </div>
-        {!rail && (
-          <label className="docs-page-filter">
-            <Search size={16} />
-            <RawInput
-              type="search"
-              aria-label="Filter pages"
-              placeholder="Filter pages…"
-              value={query}
-              onValueChange={setQuery}
-            />
-          </label>
-        )}
-      </header>
+        </header>
+      }
+      trailing={
+        <footer className="docs-side-foot">
+          <ToolbarGroup
+            label="Appearance"
+            className="docs-side-trailing"
+            orientation={rail ? 'vertical' : 'horizontal'}
+          >
+            <Customize />
+            <ThemeSwitch />
+          </ToolbarGroup>
+        </footer>
+      }
+    >
       <nav ref={nav} aria-label="Documentation" className="docs-side-nav">
         <ul className="docs-nav-tree">
           {sections.map((section) => {
@@ -183,16 +190,6 @@ export function DocsSide({ path }: { path: string }) {
         </ul>
         {!sections.length && <p className="docs-side-empty">No pages match “{query}”.</p>}
       </nav>
-      <footer className="docs-side-foot">
-        <ToolbarGroup
-          label="Appearance"
-          className="docs-side-trailing"
-          orientation={rail ? 'vertical' : 'horizontal'}
-        >
-          <Customize />
-          <ThemeSwitch />
-        </ToolbarGroup>
-      </footer>
-    </aside>
+    </ScaffoldSide>
   )
 }
