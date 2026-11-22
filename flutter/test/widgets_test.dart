@@ -2,6 +2,7 @@ import 'dart:ui' show CheckedState;
 
 import 'package:feeef_ui/feeef_ui.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter/services.dart';
 // The kit's RadioGroup (same name as the web kit's) shadows Flutter's.
@@ -30,6 +31,58 @@ Widget host(
 );
 
 void main() {
+  testWidgets(
+    'IconButton shows its accessible name as a tooltip on hover and focus',
+    (tester) async {
+      final semantics = tester.ensureSemantics();
+      final focus = FocusNode();
+      addTearDown(focus.dispose);
+      var clicks = 0;
+      await tester.pumpWidget(
+        host(
+          FloatingBoundary(
+            child: Center(
+              child: IconButton(
+                ariaLabel: 'Refresh orders',
+                icon: const LucidePlus(),
+                focusNode: focus,
+                onClick: () => clicks++,
+              ),
+            ),
+          ),
+        ),
+      );
+      final size = tester.getSize(find.byType(IconButton));
+      expect(find.text('Refresh orders'), findsNothing);
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: Offset.zero);
+      await mouse.moveTo(tester.getCenter(find.byType(IconButton)));
+      await tester.pump(const Duration(milliseconds: 699));
+      expect(find.text('Refresh orders'), findsNothing);
+      await tester.pump(const Duration(milliseconds: 1));
+      await tester.pump();
+      expect(find.text('Refresh orders'), findsOneWidget);
+      expect(find.bySemanticsLabel('Refresh orders'), findsOneWidget);
+      expect(tester.getSize(find.byType(IconButton)), size);
+      await tester.tap(find.byType(IconButton));
+      await tester.pumpAndSettle();
+      expect(clicks, 1);
+      expect(find.text('Refresh orders'), findsNothing);
+      await mouse.removePointer();
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      focus.requestFocus();
+      await tester.pumpAndSettle();
+      expect(find.text('Refresh orders'), findsOneWidget);
+      expect(find.bySemanticsLabel('Refresh orders'), findsOneWidget);
+      focus.unfocus();
+      await tester.pumpAndSettle();
+      expect(find.text('Refresh orders'), findsNothing);
+      expect(tester.takeException(), isNull);
+      semantics.dispose();
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.macOS),
+  );
+
   group('Button', () {
     testWidgets('a long label ellipsizes in a bounded width; icons keep size', (
       tester,

@@ -113,6 +113,7 @@ class ComposerField extends StatelessWidget {
     this.disabled = false,
     this.readOnly = false,
     this.focusNode,
+    this.controller,
     this.onKeyEvent,
     this.onFocusChange,
   });
@@ -138,6 +139,9 @@ class ComposerField extends StatelessWidget {
   final int? maxLength;
   final bool disabled, readOnly;
   final FocusNode? focusNode;
+
+  /// Optional controller (caret-aware menus like `@` mentions read its selection).
+  final TextEditingController? controller;
 
   /// Runs before the built-in Enter handling; return `handled` to skip it.
   final KeyEventResult Function(KeyEvent event)? onKeyEvent;
@@ -234,6 +238,7 @@ class ComposerField extends StatelessWidget {
                 readOnly: readOnly,
                 maxLength: maxLength,
                 focusNode: focusNode,
+                controller: controller,
                 onFocusChange: onFocusChange,
                 onKeyEvent: (event, text) {
                   final own = onKeyEvent?.call(event);

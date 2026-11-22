@@ -119,10 +119,12 @@ class _MovingBrandState extends State<MovingBrand>
     if (scaffold != _scaffold || screen != _screen) {
       _scaffold = scaffold;
       _screen = screen;
-      // Stay above the drawer that just opened (a top-layer dialog on the web).
-      if (drawerOpened && _portal.isShowing) _portal.show();
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _wake();
+        if (!mounted) return;
+        // Stay above the drawer that just opened (a top-layer dialog on the web).
+        // `show()` may not run during build, so it waits for the frame to end.
+        if (drawerOpened && _portal.isShowing) _portal.show();
+        _wake();
       });
     }
   }

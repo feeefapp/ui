@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'i18n_core.dart';
+import 'list_messages.dart';
 import 'messages.g.dart';
 
 /// Locale, direction and `t()` for the kit's strings: the value of `useI18n()` in the web kit.
@@ -39,7 +40,7 @@ class I18n {
     'en',
     TextDirection.ltr,
     [for (final l in languages) l.code],
-    uiMessages['en']!,
+    {...uiMessages['en']!, ...listMessages['en']!},
     null,
   );
 
@@ -105,7 +106,11 @@ class I18nProvider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final base = locale.split(RegExp('[-_]')).first;
-    final messages = {...?uiMessages[base], ...translations};
+    final messages = {
+      ...?uiMessages[base],
+      ...?listMessages[base],
+      ...translations,
+    };
     final dir = direction ?? directionFor(locale);
     return _I18nScope(
       i18n: I18n._(

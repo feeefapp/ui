@@ -490,6 +490,28 @@ void main() {
       expect((end - headerNow).distance, lessThan(0.2));
     });
 
+    testWidgets('opening the drawer reorders the portal after build', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(600, 800);
+      addTearDown(tester.view.reset);
+      final host = GlobalKey();
+      await tester.pumpWidget(app(workspace(host, compact: true)));
+      await settle(tester);
+      await tester.tap(find.byType(ScaffoldToggleButton));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      await settle(tester);
+      final side = tester.getCenter(find.byKey(const ValueKey('side')));
+      expect((moving(tester).center - side).distance, lessThan(0.2));
+      // A route leaving with its drawer open must clean up its overlay and
+      // inherited dependents without leaving dirty elements in another scope.
+      await tester.pumpWidget(app(const SizedBox.shrink()));
+      await settle(tester);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('reduced motion jumps', (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = (const Size(1200, 800));

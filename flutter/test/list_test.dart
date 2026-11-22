@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:feeef_ui/feeef_ui.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter/widgets.dart' hide RadioGroup;
 import 'package:flutter_test/flutter_test.dart';
 
@@ -67,6 +68,82 @@ void main() {
     expect(await trailingWidth(360), closeTo((360 - 32) * 0.45, 0.01));
   });
 
+  testWidgets(
+    'subtitle wrapping is opt-in and keeps media centered in LTR/RTL',
+    (tester) async {
+      const subtitle =
+          'A long description that needs several lines in a narrow row';
+      const leading = Key('leading');
+      const trailing = Key('trailing');
+      for (final direction in TextDirection.values) {
+        Future<RenderParagraph> render({bool wrap = false}) async {
+          await tester.pumpWidget(
+            host(
+              SizedBox(
+                width: 240,
+                child: DefaultTextStyle.merge(
+                  maxLines: 1,
+                  child: ListRow(
+                    title: const Text('Title'),
+                    subtitle: const Text(subtitle),
+                    subtitleWrap: wrap,
+                    leading: const SizedBox(
+                      key: leading,
+                      width: 32,
+                      height: 32,
+                    ),
+                    trailing: const SizedBox(
+                      key: trailing,
+                      width: 20,
+                      height: 20,
+                    ),
+                  ),
+                ),
+              ),
+              direction: direction,
+            ),
+          );
+          return tester.renderObject<RenderParagraph>(
+            find.descendant(
+              of: find.text(subtitle),
+              matching: find.byType(RichText),
+            ),
+          );
+        }
+
+        final truncated = await render();
+        expect(truncated.maxLines, 1);
+        expect(truncated.overflow, TextOverflow.ellipsis);
+        expect(truncated.didExceedMaxLines, isTrue);
+        final defaultHeight = tester.getSize(find.byType(ListRow)).height;
+        final wrapped = await render(wrap: true);
+        expect(wrapped.maxLines, isNull);
+        expect(wrapped.softWrap, isTrue);
+        expect(wrapped.didExceedMaxLines, isFalse);
+        expect(wrapped.size.height, greaterThan(18));
+        expect(
+          tester.getSize(find.byType(ListRow)).height,
+          greaterThan(defaultHeight),
+        );
+        final textCenter = Rect.fromLTRB(
+          tester.getTopLeft(find.text('Title')).dx,
+          tester.getTopLeft(find.text('Title')).dy,
+          tester.getBottomRight(find.text(subtitle)).dx,
+          tester.getBottomRight(find.text(subtitle)).dy,
+        ).center.dy;
+        expect(
+          tester.getCenter(find.byKey(leading)).dy,
+          closeTo(textCenter, 0.01),
+        );
+        expect(
+          tester.getCenter(find.byKey(trailing)).dy,
+          closeTo(textCenter, 0.01),
+        );
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
+
   testWidgets('selected neighbours alternate tints with no hairline between', (
     tester,
   ) async {
@@ -98,9 +175,7 @@ void main() {
     expect(fill('A'), isNot(fill('B')));
     expect(fill('A'), fill('C'));
     // Hairlines: none inside the selected run, one before the unselected row.
-    final line = ThemeProvider.of(
-      tester.element(find.text('A')),
-    ).colors.line;
+    final line = ThemeProvider.of(tester.element(find.text('A'))).colors.line;
     expect(
       find.byWidgetPredicate((w) => w is ColoredBox && w.color == line),
       findsOneWidget,
@@ -161,6 +236,53 @@ void main() {
     expect(opened, 0, reason: 'the tap closed the row instead of opening it');
     expect(find.text('Archive'), findsNothing);
   }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+
+  testWidgets(
+    'reorder announces the position in every locale and honors overrides',
+    (tester) async {
+      for (final (locale, message) in const [
+        ('en', 'Moved to position 2 of 3.'),
+        ('ar', 'تم النقل إلى الموضع 2 من 3.'),
+        ('fr', 'Élément déplacé en position 2 sur 3.'),
+        ('fr-CA', 'Élément déplacé en position 2 sur 3.'),
+        ('custom', 'Placed 2 / 3'),
+      ]) {
+        await tester.pumpWidget(const SizedBox());
+        final moves = <(int, int)>[];
+        await tester.pumpWidget(
+          host(
+            I18nProvider(
+              locale: locale == 'custom' ? 'en' : locale,
+              translations: locale == 'custom'
+                  ? {'lab.list.moved': 'Placed {index} / {count}'}
+                  : const {},
+              child: SizedBox(
+                width: 360,
+                child: ListSection(
+                  onReorder: (from, to) => moves.add((from, to)),
+                  children: const [
+                    ListRow(title: Text('Confirm')),
+                    ListRow(title: Text('Pack')),
+                    ListRow(title: Text('Ship')),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+        tester.takeAnnouncements();
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.pump();
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+        await tester.pump();
+        expect(moves, [(0, 1)], reason: locale);
+        expect(tester.takeAnnouncements(), [
+          isAccessibilityAnnouncement(message),
+        ], reason: locale);
+      }
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.macOS),
+  );
 
   testWidgets('the grip moves a row with the arrow keys', (tester) async {
     final moves = <(int, int)>[];

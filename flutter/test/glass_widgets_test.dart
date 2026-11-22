@@ -2,7 +2,8 @@ import 'package:feeef_ui/feeef_ui.dart';
 
 import 'dart:ui' as ui;
 
-import 'package:flutter/gestures.dart' show PointerDeviceKind;
+import 'package:flutter/gestures.dart'
+    show GestureBinding, PointerDeviceKind, PointerHoverEvent;
 import 'package:flutter/rendering.dart'
     show BackdropFilterLayer, RenderRepaintBoundary;
 import 'package:flutter/widgets.dart' hide RadioGroup;
@@ -15,7 +16,69 @@ Widget bubble(String id, {double width = 80}) => GlassGroup(
   child: SizedBox(width: width, height: 38),
 );
 
+// Dispatch while the removed subtree is inactive, before end-of-frame disposal.
+// A mounted check alone cannot protect global pointer callbacks in this window.
+class _PointerOnDeactivate extends StatelessWidget {
+  const _PointerOnDeactivate({required this.child});
+
+  final Widget child;
+
+  @override
+  StatelessElement createElement() => _PointerOnDeactivateElement(this);
+
+  @override
+  Widget build(BuildContext context) => child;
+}
+
+class _PointerOnDeactivateElement extends StatelessElement {
+  _PointerOnDeactivateElement(super.widget);
+
+  @override
+  void deactivateChild(Element child) {
+    super.deactivateChild(child);
+    GestureBinding.instance.pointerRouter.route(
+      const PointerHoverEvent(position: Offset(20, 20)),
+    );
+  }
+}
+
 void main() {
+  testWidgets(
+    'glass ignores pointers while inactive and survives reparenting',
+    (tester) async {
+      final key = GlobalKey();
+      Widget tree(bool moved) => host(
+        Row(
+          children: [
+            _PointerOnDeactivate(
+              child: moved
+                  ? const SizedBox.shrink()
+                  : GlassContainer(key: key, child: bubble('lifecycle')),
+            ),
+            if (moved) GlassContainer(key: key, child: bubble('lifecycle')),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(tree(false));
+      await tester.pump();
+      final state = key.currentState;
+      await tester.pumpWidget(tree(true));
+      expect(tester.takeException(), isNull);
+      expect(key.currentState, same(state));
+      await tester.pump();
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: const Offset(20, 20));
+      await mouse.moveTo(const Offset(40, 20));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      await mouse.removePointer();
+      await tester.pumpWidget(host(const SizedBox.shrink()));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   for (final brightness in Brightness.values) {
     testWidgets(
       'original rim fades directionally across a straight edge: $brightness',

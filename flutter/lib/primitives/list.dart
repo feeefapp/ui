@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 
 import '../brand/geometry.dart';
 import '../icons/lucide.dart';
+import '../i18n/i18n.dart';
 import '../physics/motion_value.dart';
 import '../physics/spring.dart';
 import '../theme.dart';
@@ -96,7 +97,9 @@ class _ListSectionState extends State<ListSection> {
     widget.onReorder?.call(from, to);
     SemanticsService.sendAnnouncement(
       View.of(context),
-      'Moved to position ${to + 1} of ${widget.children.length}.',
+      I18n.of(
+        context,
+      ).t('lab.list.moved', {'index': to + 1, 'count': widget.children.length}),
       Directionality.of(context),
     );
   }
@@ -519,6 +522,7 @@ class ListRow extends StatefulWidget {
     super.key,
     required this.title,
     this.subtitle,
+    this.subtitleWrap = false,
     this.leading,
     this.trailing,
     this.chevron = false,
@@ -534,8 +538,13 @@ class ListRow extends StatefulWidget {
   /// Main text.
   final Widget title;
 
-  /// Second line in muted text.
+  /// Secondary text in muted styling; one line with an ellipsis by default.
   final Widget? subtitle;
+
+  /// Allows the subtitle to wrap to its content height instead of truncating.
+  /// Leading and trailing media stay centered against the entire text block.
+  /// An explicit [Text.maxLines] on the subtitle can still limit its lines.
+  final bool subtitleWrap;
 
   /// Icon, avatar or thumbnail at the start.
   final Widget? leading;
@@ -570,6 +579,7 @@ class ListRow extends StatefulWidget {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties
+      ..add(FlagProperty('subtitleWrap', value: subtitleWrap, ifTrue: 'wrap'))
       ..add(FlagProperty('chevron', value: chevron, ifTrue: 'chevron'))
       ..add(FlagProperty('selected', value: selected, ifTrue: 'selected'))
       ..add(ObjectFlagProperty<VoidCallback?>.has('onClick', onClick))
@@ -797,16 +807,19 @@ class _ListRowState extends State<ListRow> {
                 child: widget.title,
               ),
               if (widget.subtitle != null)
-                DefaultTextStyle.merge(
-                  style: TextStyle(
+                DefaultTextStyle(
+                  // A fresh style resets an ancestor's maxLines when wrapping is requested.
+                  style: DefaultTextStyle.of(context).style.copyWith(
                     fontSize: 13,
                     height: 18 / 13,
                     leadingDistribution: TextLeadingDistribution.even,
                     color: c.muted,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: false,
+                  maxLines: widget.subtitleWrap ? null : 1,
+                  overflow: widget.subtitleWrap
+                      ? TextOverflow.clip
+                      : TextOverflow.ellipsis,
+                  softWrap: widget.subtitleWrap,
                   child: widget.subtitle!,
                 ),
             ],

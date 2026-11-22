@@ -19,6 +19,7 @@ import 'lens.dart';
 import 'lens_model.dart';
 import 'square_slot.dart';
 import 'touch_target.dart';
+import 'tooltip.dart';
 
 /// Emphasis. Use filled for primary actions (the twin of `ButtonVariant` in the web kit).
 enum ButtonVariant {
@@ -1103,7 +1104,8 @@ Path _prominentSlivers(Rect rect, List<double> radii, Path shape) {
 }
 
 /// Icon-only actions reuse the button emphasis, loading and surface engines (the web kit's
-/// `IconButton`). [ariaLabel] is required: the icon is the only content.
+/// `IconButton`). [ariaLabel] is required: the icon is the only content. The kit's
+/// tooltip also shows that name on hover or keyboard focus without duplicating semantics.
 class IconButton extends StatelessWidget {
   const IconButton({
     super.key,
@@ -1172,17 +1174,21 @@ class IconButton extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => Button(
-    variant: variant,
-    controlSize: ControlSize.icon,
-    iconSize: controlSize,
-    appearance: appearance,
-    loading: loading,
-    disabled: disabled,
-    pressed: pressed,
-    onClick: onClick,
-    ariaLabel: ariaLabel,
-    focusNode: focusNode,
-    children: [icon],
+  Widget build(BuildContext context) => Tooltip(
+    label: ariaLabel,
+    side: TooltipSide.bottom,
+    child: Button(
+      variant: variant,
+      controlSize: ControlSize.icon,
+      iconSize: controlSize,
+      appearance: appearance,
+      loading: loading,
+      disabled: disabled,
+      pressed: pressed,
+      onClick: onClick,
+      ariaLabel: ariaLabel,
+      focusNode: focusNode,
+      children: [icon],
+    ),
   );
 }

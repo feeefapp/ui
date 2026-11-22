@@ -407,6 +407,7 @@ class _GlassContainerState extends State<GlassContainer> {
   late final _scene = _GlassScene();
   late final _registry = GlassMemberRegistry._(_scene);
   final _hostKey = GlobalKey();
+  bool _active = true;
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
@@ -428,19 +429,39 @@ class _GlassContainerState extends State<GlassContainer> {
   @override
   void initState() {
     super.initState();
-    _scene.host = () =>
-        _hostKey.currentContext?.findRenderObject() as RenderBox?;
+    _scene.host = () {
+      // State.mounted stays true during deactivation. Both queued measurements
+      // and global pointer events must stop before the host becomes inactive.
+      if (!_active || !mounted) return null;
+      return _hostKey.currentContext?.findRenderObject() as RenderBox?;
+    };
     GestureBinding.instance.pointerRouter.addGlobalRoute(_onPointer);
   }
 
   @override
-  void dispose() {
+  void deactivate() {
+    _active = false;
     GestureBinding.instance.pointerRouter.removeGlobalRoute(_onPointer);
+    super.deactivate();
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _active = true;
+    GestureBinding.instance.pointerRouter.addGlobalRoute(_onPointer);
+    _registry.requestMeasure();
+  }
+
+  @override
+  void dispose() {
+    // deactivate already removed the global route before end-of-frame disposal.
     _scene.dispose();
     super.dispose();
   }
 
   void _onPointer(PointerEvent event) {
+    if (!_active || !mounted) return;
     final host = _scene.host();
     if (host == null || !host.attached) return;
     if (event is PointerHoverEvent || event is PointerMoveEvent) {
