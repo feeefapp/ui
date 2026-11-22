@@ -399,7 +399,8 @@ class _TabViewState extends State<TabView> {
           child: SelectionTrack<String>(
             semantics: SelectionSemantics.tab,
             layout: SelectionLayout.stacked,
-            equalWidth: true,
+            // Side-by-side labels need their own width, as in the web tab bar.
+            equalWidth: !wide,
             sizes: wide ? _wideTabs : _tabs,
             label: widget.label,
             value: widget.value,
@@ -621,7 +622,6 @@ const _wideTabs = SelectionTrackSizes(
   height: 44,
   inset: 4,
   gap: 0,
-  overlap: 8,
   padding: 16,
   fontSize: 14,
   lineHeight: 17,

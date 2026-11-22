@@ -5,6 +5,7 @@ import 'package:feeef_ui/icons/lucide.dart';
 import 'package:feeef_ui/scaffold.dart' show GlassGroup;
 import 'package:feeef_ui/scroll/scroll_area.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -59,6 +60,7 @@ Widget app({
   Widget? accessory,
   double width = 390,
   TextDirection direction = TextDirection.ltr,
+  String ordersLabel = 'Orders',
 }) {
   var value = initial ?? 'home';
   return host(
@@ -83,7 +85,7 @@ Widget app({
             ),
             Tab(
               id: 'orders',
-              label: 'Orders',
+              label: ordersLabel,
               icon: const LucideIcon(LucideIcons.package),
               badge: '3',
               content: const Counter(name: 'orders'),
@@ -418,6 +420,22 @@ void main() {
       tester.getBottomLeft(accessory).dy,
       lessThan(tester.getTopLeft(tab('Home')).dy),
     );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('wide RTL tabs keep their natural label widths', (tester) async {
+    const label = 'Orders and returns';
+    await tester.pumpWidget(
+      app(width: 650, direction: TextDirection.rtl, ordersLabel: label),
+    );
+    await tester.pumpAndSettle();
+
+    final paragraph = tester.renderObject<RenderParagraph>(find.text(label));
+    expect(paragraph.didExceedMaxLines, isFalse);
+    final orders = tester.getRect(tab(label));
+    final home = tester.getRect(tab('Home'));
+    expect(orders.width, greaterThan(home.width));
+    expect(orders.right, lessThanOrEqualTo(home.left));
     expect(tester.takeException(), isNull);
   });
 
