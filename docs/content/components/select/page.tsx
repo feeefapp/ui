@@ -173,8 +173,9 @@ function Overview() {
         />
         <Callout title="Long lists">
           <p>
-            A select works for the list of wilayas because typeahead jumps to a name. For hundreds of
-            items, such as products or communes, use a searchable picker instead.
+            Typeahead jumps to an option by its first letters. When people need to narrow the list
+            by part of a name or a code, use the{' '}
+            <Link to="/components/select/examples#example-07-searchable-dropdown">searchable dropdown example</Link>.
           </p>
         </Callout>
       </Section>
@@ -192,7 +193,7 @@ export default definePage({
   importLine: "import { Option, Select } from '@feeef.dev/ui/primitives/select'",
   source: 'src/primitives/select.tsx',
   api: ['Select', 'Option'],
-  keywords: ['dropdown', 'picker', 'menu', 'listbox', 'combobox', 'option'],
+  keywords: ['dropdown', 'searchable dropdown', 'searchable menu', 'picker', 'menu', 'listbox', 'combobox', 'option'],
   Overview,
   examples: examplesFrom(
     import.meta.glob('./examples/*.tsx', { eager: true }),

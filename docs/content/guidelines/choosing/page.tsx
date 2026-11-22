@@ -410,8 +410,9 @@ function Overview() {
             [
               'Exactly one of a longer or familiar list: wilaya, courier, currency?',
               <>
-                <Link to="/components/select">Select</Link>. Hundreds of items, such as products or
-                communes, need a searchable picker instead.
+                <Link to="/components/select">Select</Link>. For longer lists that people need to
+                filter by name or code, use a{' '}
+                <Link to="/components/select/examples#example-07-searchable-dropdown">searchable dropdown</Link>.
               </>,
             ],
             [

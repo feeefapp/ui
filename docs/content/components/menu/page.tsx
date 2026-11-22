@@ -205,6 +205,10 @@ ActionsMenuAnchor(
       </Section>
 
       <Section title="Guidelines">
+        <p>
+          For a dropdown with a search field, see the{' '}
+          <Link to="/components/select/examples#example-07-searchable-dropdown">searchable wilaya picker</Link>.
+        </p>
         <DoDont
           doItems={[
             'Use a menu for choices and commands, a popover for forms and pickers.',
