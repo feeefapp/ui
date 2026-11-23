@@ -372,8 +372,14 @@ class _BlockSurface extends StatelessWidget {
         : focusWithin
         ? 0.6
         : 0.42;
+    // Light mode: a plain surface card so it stands off the ground; dark keeps the green tint.
+    final dark = theme.brightness == Brightness.dark;
+    final active = typing || dragging;
+    // animation_level: 1 — 180ms fill/texture tween while typing or dragging.
     return TweenAnimationBuilder<double>(
-      tween: Tween(end: typing || dragging ? 0.11 : 0.07),
+      tween: Tween(
+        end: dark ? (active ? 0.11 : 0.07) : (active ? 0.04 : 0.0),
+      ),
       duration: duration,
       curve: MotionTokens.ease,
       builder: (context, tint, child) => TweenAnimationBuilder<double>(
