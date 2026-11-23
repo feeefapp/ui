@@ -122,6 +122,14 @@ export type ComposerBarProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'child
     hasText: boolean;
     /** Dashed outline while a compatible file is dragged over the drop target. */
     dropActive?: boolean;
+    /**
+     * Keep `tools` on the first row, beside a one-line draft, so the chosen model stays visible while
+     * idle. Tools move to a second row under the text once the draft has a line break, no longer fits
+     * beside them, or `pinned` is set. Flutter twin: `ComposerBar.inlineTools`.
+     */
+    inlineTools?: boolean;
+    /** With `inlineTools`: keep the two-row layout (Flutter's `pinned`). */
+    pinned?: boolean;
 };
 /**
  * The composer's floating row, in iOS 26 Liquid Glass: a round `leading` bubble and one capsule
@@ -131,7 +139,7 @@ export type ComposerBarProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'child
  * Every layout change (rows, lines, attachments) springs on one `SPRINGS.snappy`. Both bubbles
  * share one glass container inside a `GlassBar`, so text stays readable over moving content.
  */
-export declare function ComposerBar({ leading, attachments, field, tools, actions, send, hasText, dropActive, className, onFocus, onBlur, onMouseDown, ...props }: ComposerBarProps): React.JSX.Element;
+export declare function ComposerBar({ leading, attachments, field, tools, actions, send, hasText, dropActive, inlineTools, pinned: pinnedProp, className, onFocus, onBlur, onMouseDown, ...props }: ComposerBarProps): React.JSX.Element;
 export type PromptComposerProps = Omit<React.FormHTMLAttributes<HTMLFormElement>, 'onSubmit' | 'onChange' | 'children'> & {
     /** The prompt text (controlled). */
     value: string;

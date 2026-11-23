@@ -94,6 +94,25 @@ grows. It is `position: relative` (glass group), so its slots measure against it
     'field field field'
     'tools actions send';
 }
+/* Inline tools (one line): the tools lead the row, so the chosen model stays visible while idle. */
+.lab-composer-capsule[data-inline-tools]:not([data-expanded='true']) .lab-composer-grid {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'attachments attachments attachments attachments'
+    'tools field actions send';
+}
+.lab-composer-capsule[data-inline-tools]:not([data-expanded='true']) .lab-composer-tools {
+  position: static;
+  visibility: visible;
+  max-inline-size: 50cqi;
+}
+.lab-composer-capsule[data-inline-tools] {
+  container-type: inline-size;
+}
+/* The draft starts right after the chip, not a chip's padding away. */
+.lab-composer-capsule[data-inline-tools]:not([data-expanded='true']) .lab-composer-field {
+  --lab-composer-text-start: var(--lab-space-1);
+}
 /* Attachments reach the capsule's border, so a tile's × badge can sit on its corner. */
 .lab-composer-slot-attachments {
   grid-area: attachments;

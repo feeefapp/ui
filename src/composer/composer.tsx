@@ -297,6 +297,25 @@ export type ComposerBarProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'child
   hasText: boolean
   /** Dashed outline while a compatible file is dragged over the drop target. */
   dropActive?: boolean
+  /**
+   * Keep `tools` on the first row, beside a one-line draft, so the chosen model stays visible while
+   * idle. Tools move to a second row under the text once the draft has a line break, no longer fits
+   * beside them, or `pinned` is set. Flutter twin: `ComposerBar.inlineTools`.
+   */
+  inlineTools?: boolean
+  /** With `inlineTools`: keep the two-row layout (Flutter's `pinned`). */
+  pinned?: boolean
+}
+
+/** Text width of a draft's longest line in the field's own font (canvas, so no reflow). */
+let measureCanvas: HTMLCanvasElement | null = null
+function draftWidth(field: HTMLTextAreaElement) {
+  measureCanvas ??= document.createElement('canvas')
+  const ctx = measureCanvas.getContext('2d')
+  if (!ctx) return 0
+  const style = getComputedStyle(field)
+  ctx.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
+  return Math.max(0, ...field.value.split('\n').map((line) => ctx.measureText(line).width))
 }
 
 /**
@@ -316,6 +335,8 @@ export function ComposerBar({
   send,
   hasText,
   dropActive,
+  inlineTools = false,
+  pinned: pinnedProp = false,
   className,
   onFocus,
   onBlur,
@@ -326,10 +347,48 @@ export function ComposerBar({
   const capsule = React.useRef<HTMLElement>(null)
   const [focusWithin, setFocusWithin] = React.useState(false)
   const [pinned, setPinned] = React.useState(false)
+  const [overflow, setOverflow] = React.useState(false)
   const frame = React.useRef(0)
   const hasTools = tools != null && tools !== false
-  const expanded = hasTools && composerExpanded({ hasText, focusWithin, pinned })
+  const expanded =
+    hasTools &&
+    (inlineTools ? pinnedProp || overflow : composerExpanded({ hasText, focusWithin, pinned: pinned || pinnedProp }))
   useComposerMotion(capsule)
+
+  // Inline tools: wrap to two rows once the draft no longer fits beside them. Measured against the
+  // one-row field width (capsule less tools, actions and send), whatever the current layout, so the
+  // decision is stable and never flips back and forth (Flutter `ComposerCapsuleLayout`).
+  React.useLayoutEffect(() => {
+    if (!inlineTools || !hasTools) return
+    const el = capsule.current
+    const field = el?.querySelector<HTMLTextAreaElement>('textarea.lab-composer-input')
+    if (!el || !field) return
+    const check = () => {
+      if (!field.value) return setOverflow(false)
+      if (field.value.includes('\n')) return setOverflow(true)
+      const width = (selector: string) => el.querySelector<HTMLElement>(selector)?.offsetWidth ?? 0
+      // The tools' own content: expanded, their slot spans the row's free column.
+      const toolsSlot = el.querySelector<HTMLElement>('.lab-composer-tools')
+      const tools = toolsSlot
+        ? Array.from(toolsSlot.children).reduce((sum, child) => sum + (child as HTMLElement).offsetWidth, 0)
+        : 0
+      const style = getComputedStyle(el)
+      const inner = el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+      const fieldStyle = getComputedStyle(field)
+      const room =
+        inner -
+        tools -
+        width('.lab-composer-actions') -
+        width('.lab-composer-slot-send') -
+        parseFloat(fieldStyle.paddingLeft) -
+        parseFloat(fieldStyle.paddingRight)
+      setOverflow(draftWidth(field) > room)
+    }
+    check()
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(check)
+    observer?.observe(el)
+    return () => observer?.disconnect()
+  })
 
   React.useEffect(() => {
     const el = root.current
@@ -381,6 +440,7 @@ export function ComposerBar({
             className="lab-composer-capsule"
             glassMotion="follow"
             data-expanded={expanded}
+            data-inline-tools={(inlineTools && hasTools) || undefined}
             data-dragging={dropActive || undefined}
           >
             <div className="lab-composer-grid">
@@ -391,7 +451,7 @@ export function ComposerBar({
                 {field}
               </div>
               {hasTools && (
-                <div data-composer-slot="tools" className="lab-composer-tools" inert={!expanded}>
+                <div data-composer-slot="tools" className="lab-composer-tools" inert={!expanded && !inlineTools}>
                   {tools}
                 </div>
               )}

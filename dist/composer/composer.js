@@ -107,6 +107,17 @@ export function ComposerAttachment({ id, src, preview, icon, title, label, badge
                     onRemove();
                 }, children: _jsx(X, { "aria-hidden": "true" }) }))] }));
 }
+/** Text width of a draft's longest line in the field's own font (canvas, so no reflow). */
+let measureCanvas = null;
+function draftWidth(field) {
+    measureCanvas ??= document.createElement('canvas');
+    const ctx = measureCanvas.getContext('2d');
+    if (!ctx)
+        return 0;
+    const style = getComputedStyle(field);
+    ctx.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    return Math.max(0, ...field.value.split('\n').map((line) => ctx.measureText(line).width));
+}
 /**
  * The composer's floating row, in iOS 26 Liquid Glass: a round `leading` bubble and one capsule
  * holding the attachments, the growing field and, at its trailing end, the actions and send. While
@@ -115,15 +126,54 @@ export function ComposerAttachment({ id, src, preview, icon, title, label, badge
  * Every layout change (rows, lines, attachments) springs on one `SPRINGS.snappy`. Both bubbles
  * share one glass container inside a `GlassBar`, so text stays readable over moving content.
  */
-export function ComposerBar({ leading, attachments, field, tools, actions, send, hasText, dropActive, className, onFocus, onBlur, onMouseDown, ...props }) {
+export function ComposerBar({ leading, attachments, field, tools, actions, send, hasText, dropActive, inlineTools = false, pinned: pinnedProp = false, className, onFocus, onBlur, onMouseDown, ...props }) {
     const root = React.useRef(null);
     const capsule = React.useRef(null);
     const [focusWithin, setFocusWithin] = React.useState(false);
     const [pinned, setPinned] = React.useState(false);
+    const [overflow, setOverflow] = React.useState(false);
     const frame = React.useRef(0);
     const hasTools = tools != null && tools !== false;
-    const expanded = hasTools && composerExpanded({ hasText, focusWithin, pinned });
+    const expanded = hasTools &&
+        (inlineTools ? pinnedProp || overflow : composerExpanded({ hasText, focusWithin, pinned: pinned || pinnedProp }));
     useComposerMotion(capsule);
+    // Inline tools: wrap to two rows once the draft no longer fits beside them. Measured against the
+    // one-row field width (capsule less tools, actions and send), whatever the current layout, so the
+    // decision is stable and never flips back and forth (Flutter `ComposerCapsuleLayout`).
+    React.useLayoutEffect(() => {
+        if (!inlineTools || !hasTools)
+            return;
+        const el = capsule.current;
+        const field = el?.querySelector('textarea.lab-composer-input');
+        if (!el || !field)
+            return;
+        const check = () => {
+            if (!field.value)
+                return setOverflow(false);
+            if (field.value.includes('\n'))
+                return setOverflow(true);
+            const width = (selector) => el.querySelector(selector)?.offsetWidth ?? 0;
+            // The tools' own content: expanded, their slot spans the row's free column.
+            const toolsSlot = el.querySelector('.lab-composer-tools');
+            const tools = toolsSlot
+                ? Array.from(toolsSlot.children).reduce((sum, child) => sum + child.offsetWidth, 0)
+                : 0;
+            const style = getComputedStyle(el);
+            const inner = el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+            const fieldStyle = getComputedStyle(field);
+            const room = inner -
+                tools -
+                width('.lab-composer-actions') -
+                width('.lab-composer-slot-send') -
+                parseFloat(fieldStyle.paddingLeft) -
+                parseFloat(fieldStyle.paddingRight);
+            setOverflow(draftWidth(field) > room);
+        };
+        check();
+        const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(check);
+        observer?.observe(el);
+        return () => observer?.disconnect();
+    });
     React.useEffect(() => {
         const el = root.current;
         if (!el)
@@ -155,7 +205,7 @@ export function ComposerBar({ leading, attachments, field, tools, actions, send,
             const active = document.activeElement;
             if (active instanceof HTMLTextAreaElement && event.currentTarget.contains(active) && event.target.closest('button'))
                 event.preventDefault();
-        }, children: _jsx(GlassBar, { children: _jsxs(GlassScope, { className: "lab-composer-row", children: [leading != null && leading !== false && (_jsx(GlassGroup, { className: "lab-toolbar-group lab-composer-leading", children: leading })), _jsx(GlassGroup, { ref: capsule, className: "lab-composer-capsule", glassMotion: "follow", "data-expanded": expanded, "data-dragging": dropActive || undefined, children: _jsxs("div", { className: "lab-composer-grid", children: [_jsx("div", { "data-composer-slot": "attachments", className: "lab-composer-slot-attachments", hidden: !attachments, children: attachments }), _jsx("div", { "data-composer-slot": "field", className: "lab-composer-slot-field", children: field }), hasTools && (_jsx("div", { "data-composer-slot": "tools", className: "lab-composer-tools", inert: !expanded, children: tools })), _jsx("div", { "data-composer-slot": "actions", className: "lab-composer-actions", hidden: actions == null || actions === false, children: actions }), _jsx("div", { "data-composer-slot": "send", className: "lab-composer-slot-send", children: send })] }) })] }) }) }));
+        }, children: _jsx(GlassBar, { children: _jsxs(GlassScope, { className: "lab-composer-row", children: [leading != null && leading !== false && (_jsx(GlassGroup, { className: "lab-toolbar-group lab-composer-leading", children: leading })), _jsx(GlassGroup, { ref: capsule, className: "lab-composer-capsule", glassMotion: "follow", "data-expanded": expanded, "data-inline-tools": (inlineTools && hasTools) || undefined, "data-dragging": dropActive || undefined, children: _jsxs("div", { className: "lab-composer-grid", children: [_jsx("div", { "data-composer-slot": "attachments", className: "lab-composer-slot-attachments", hidden: !attachments, children: attachments }), _jsx("div", { "data-composer-slot": "field", className: "lab-composer-slot-field", children: field }), hasTools && (_jsx("div", { "data-composer-slot": "tools", className: "lab-composer-tools", inert: !expanded && !inlineTools, children: tools })), _jsx("div", { "data-composer-slot": "actions", className: "lab-composer-actions", hidden: actions == null || actions === false, children: actions }), _jsx("div", { "data-composer-slot": "send", className: "lab-composer-slot-send", children: send })] }) })] }) }) }));
 }
 /**
  * The AI prompt composer: a round leading bubble and a glass capsule whose field grows from one
