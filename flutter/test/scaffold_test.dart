@@ -191,6 +191,101 @@ void main() {
     semantics.dispose();
   });
 
+  for (final direction in TextDirection.values) {
+    testWidgets(
+      'full viewport keeps its hit area while navigation moves ($direction)',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(1200, 800));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        const canvas = Key('canvas');
+        const controls = Key('controls');
+        const sidebar = Key('side');
+        var taps = 0;
+        late ScaffoldState navigation;
+        await tester.pumpWidget(
+          app(
+            Builder(
+              builder: (context) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 12, 16),
+                  viewInsets: const EdgeInsets.only(bottom: 130),
+                ),
+                child: Scaffold(
+                  extendBodyBehindSidebar: true,
+                  topSide: const SizedBox(height: 36),
+                  side: GestureDetector(
+                    key: sidebar,
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {},
+                  ),
+                  renderViewport: (context, _, _) {
+                    navigation = Scaffold.of(context);
+                    return GestureDetector(
+                      key: canvas,
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => taps++,
+                      child: const SafeArea(
+                        child: SizedBox.expand(key: controls),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            direction: direction,
+          ),
+        );
+        final rtl = direction == TextDirection.rtl;
+        for (final (mode, extent) in [
+          (ScaffoldSideMode.expanded, 304.0),
+          (ScaffoldSideMode.rail, 64.0),
+          (ScaffoldSideMode.hidden, 0.0),
+        ]) {
+          navigation.setSideMode(mode);
+          await settle(tester);
+          expect(
+            tester.getRect(find.byKey(canvas)),
+            const Rect.fromLTWH(0, 0, 1200, 800),
+          );
+          expect(
+            tester.getRect(find.byKey(controls)),
+            Rect.fromLTRB(
+              20 + (rtl ? 0 : extent),
+              60,
+              1188 - (rtl ? extent : 0),
+              670,
+            ),
+          );
+          final before = taps;
+          if (extent > 0) {
+            await tester.tapAt(tester.getCenter(find.byKey(sidebar)));
+            expect(taps, before, reason: 'navigation owns its hit area');
+          }
+          await tester.tapAt(Offset(rtl ? 1199 : 1, 400));
+          expect(
+            taps,
+            before + 1,
+            reason: 'the exposed margin belongs to the canvas',
+          );
+        }
+        await tester.binding.setSurfaceSize(const Size(390, 844));
+        await tester.pump();
+        expect(
+          tester.getRect(find.byKey(canvas)),
+          const Rect.fromLTWH(0, 0, 390, 844),
+        );
+        navigation.setDrawerOpen(true);
+        await settle(tester);
+        expect(tester.getSize(find.byKey(canvas)), const Size(390, 844));
+        final before = taps;
+        await tester.tapAt(Offset(rtl ? 1 : 389, 400));
+        await settle(tester);
+        expect(taps, before, reason: 'the modal backdrop owns the tap');
+        expect(navigation.drawerOpen, isFalse);
+      },
+    );
+  }
+
   testWidgets('the sidebar width follows the density', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1200, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));

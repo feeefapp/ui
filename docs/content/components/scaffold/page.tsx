@@ -266,7 +266,10 @@ function Overview() {
         <p>
           By default navigation floats on glass and the main viewport has no outer card or
           horizontal content padding. The compact drawer uses thicker glass over page text.
-          Secondary panels keep their own surfaces.
+          Secondary panels keep their own surfaces. In Flutter, set <C>extendBodyBehindSidebar</C> to let a
+          canvas or scroll viewport fill the space beneath navigation. <C>ScrollArea</C> positions its
+          content and floating controls using the sidebar and device safe insets. In a custom viewport,
+          leave the gesture surface full size and use <C>SafeArea</C> around its controls.
         </p>
         <p>
           With <C>{'glassSidebar={false}'}</C>, <C>contentSurface</C> defaults to <C>card</C>, preserving the outer content

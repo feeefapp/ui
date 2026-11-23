@@ -13,6 +13,7 @@ import '../glass/container.dart';
 import '../glass/member.dart' show GlassHidden, GlassMemberBox;
 import '../glass/material.dart' show GlassKind;
 import '../icons/lucide.dart';
+import '../layout/size_reporter.dart';
 import '../physics/layout_group.dart';
 import '../primitives/button.dart';
 import '../scroll/scroll_area.dart';
@@ -113,6 +114,7 @@ class Scaffold extends StatefulWidget {
     this.appBar,
     this.bottom,
     this.glassSidebar = true,
+    this.extendBodyBehindSidebar = false,
     this.contentController,
     this.contentLabel = 'Workspace content',
     this.sideMode,
@@ -146,6 +148,11 @@ class Scaffold extends StatefulWidget {
 
   /// Floats navigation on glass and leaves the main viewport edge to edge.
   final bool glassSidebar;
+
+  /// Places the viewport beneath the sidebar and adds its occupied width to
+  /// the viewport's directional MediaQuery padding. Canvas gestures can span
+  /// the workspace while SafeArea and ScrollArea keep controls in reach.
+  final bool extendBodyBehindSidebar;
 
   /// Controller of the content scroll viewport (the web kit's `contentViewportRef`).
   final ScrollController? contentController;
@@ -184,6 +191,13 @@ class Scaffold extends StatefulWidget {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties
+      ..add(
+        FlagProperty(
+          'extendBodyBehindSidebar',
+          value: extendBodyBehindSidebar,
+          ifTrue: 'full viewport',
+        ),
+      )
       ..add(
         DiagnosticsProperty<bool>(
           'glassSidebar',
@@ -309,6 +323,7 @@ class _ScaffoldScope extends InheritedWidget {
 class _ScaffoldWidgetState extends State<Scaffold> {
   late ScaffoldSideMode _localMode = widget.defaultSideMode;
   bool _drawerOpen = false;
+  double _topHeight = 0;
   final _main = FocusNode(debugLabel: 'Workspace main', skipTraversal: true);
   final _sideFocus = FocusNode(
     debugLabel: 'Workspace sidebar',
@@ -397,7 +412,10 @@ class _ScaffoldWidgetState extends State<Scaffold> {
         !_drawerOpen &&
         _sideMode != ScaffoldSideMode.hidden;
     final viewport = widget.renderViewport != null
-        ? widget.renderViewport!(context, widget.appBar, widget.bottom)
+        ? Builder(
+            builder: (context) =>
+                widget.renderViewport!(context, widget.appBar, widget.bottom),
+          )
         : ScrollArea(
             label: widget.contentLabel,
             controller: widget.contentController,
@@ -409,6 +427,88 @@ class _ScaffoldWidgetState extends State<Scaffold> {
             bottom: widget.bottom,
             child: widget.child ?? const SizedBox.shrink(),
           );
+    final main = _MainPanel(
+      focusNode: _main,
+      bare: widget.glassSidebar,
+      framed: widget.topSide != null || visibleSide,
+      besideSide: visibleSide,
+      child: viewport,
+    );
+    final gap = widget.glassSidebar ? theme.sizes.shellGap : 0.0;
+    final overlay = widget.extendBodyBehindSidebar;
+    final safe = MediaQuery.paddingOf(context);
+    final rtl = direction == TextDirection.rtl;
+    final start = overlay ? (rtl ? safe.right : safe.left) : 0.0;
+    final topSide = widget.topSide == null
+        ? null
+        : Focus(
+            focusNode: _topFocus,
+            skipTraversal: true,
+            child: widget.topSide!,
+          );
+    final top = safe.top + (topSide == null ? 0 : _topHeight);
+    final workspace = _SideBoundary(
+      immediate: compact,
+      mode: visibleSide ? _sideMode : ScaffoldSideMode.hidden,
+      density: theme.config.density,
+      rtl: rtl,
+      layout: (context, width, side) {
+        if (!overlay) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              side,
+              Expanded(child: main),
+            ],
+          );
+        }
+        final media = MediaQuery.of(context);
+        final reserved = start + width;
+        final bottom = math.max(safe.bottom, media.viewInsets.bottom);
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            MediaQuery(
+              data: media.copyWith(
+                padding: rtl
+                    ? safe.copyWith(right: reserved, top: top, bottom: bottom)
+                    : safe.copyWith(left: reserved, top: top, bottom: bottom),
+              ),
+              child: main,
+            ),
+            PositionedDirectional(
+              start: start,
+              top: top,
+              bottom: bottom,
+              child: MediaQuery.removePadding(
+                context: context,
+                removeLeft: true,
+                removeRight: true,
+                removeTop: true,
+                removeBottom: true,
+                child: side,
+              ),
+            ),
+          ],
+        );
+      },
+      child: Padding(
+        padding: EdgeInsetsDirectional.fromSTEB(gap, gap, 0, gap),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (widget.glassSidebar && visibleSide) const _SidebarGlass(),
+            Focus(
+              focusNode: _sideFocus,
+              skipTraversal: true,
+              child: !compact && !_drawerOpen
+                  ? widget.side ?? const SizedBox.shrink()
+                  : const SizedBox.shrink(),
+            ),
+          ],
+        ),
+      ),
+    );
     return ColoredBox(
       color: mixSrgb(c.primary, 0.03, c.ground),
       child: DefaultTextStyle.merge(
@@ -428,58 +528,30 @@ class _ScaffoldWidgetState extends State<Scaffold> {
                 ),
               ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (widget.topSide != null)
-                  Focus(
-                    focusNode: _topFocus,
-                    skipTraversal: true,
-                    child: widget.topSide!,
-                  ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      spacing: 12,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _SideBoundary(
-                          immediate: compact,
-                          mode: visibleSide ? _sideMode : ScaffoldSideMode.hidden,
-                          density: theme.config.density,
-                          rtl: direction == TextDirection.rtl,
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              if (widget.glassSidebar && visibleSide)
-                                const _SidebarGlass(),
-                              Focus(
-                                focusNode: _sideFocus,
-                                skipTraversal: true,
-                                child: !compact && !_drawerOpen
-                                    ? widget.side ?? const SizedBox.shrink()
-                                    : const SizedBox.shrink(),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: _MainPanel(
-                            focusNode: _main,
-                            bare: widget.glassSidebar,
-                            // A card only when a top row or a visible sidebar frames it.
-                            framed: widget.topSide != null || visibleSide,
-                            besideSide: visibleSide,
-                            child: viewport,
-                          ),
-                        ),
-                      ],
-                    ),
+            if (overlay) ...[
+              workspace,
+              if (topSide != null)
+                Positioned(
+                  left: safe.left,
+                  right: safe.right,
+                  top: safe.top,
+                  child: SizeReporter(
+                    onSize: (size) {
+                      if (mounted && _topHeight != size.height) {
+                        setState(() => _topHeight = size.height);
+                      }
+                    },
+                    child: topSide,
                   ),
                 ),
-              ],
-            ),
+            ] else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ?topSide,
+                  Expanded(child: workspace),
+                ],
+              ),
             if (compact)
               _WorkspaceDrawer(
                 glassSidebar: widget.glassSidebar,
@@ -597,6 +669,7 @@ class _SidebarGlassState extends State<_SidebarGlass>
 /// visible width while the column closes, clipped, so it never squeezes.
 class _SideBoundary extends StatefulWidget {
   const _SideBoundary({
+    required this.layout,
     required this.immediate,
     required this.mode,
     required this.density,
@@ -605,6 +678,7 @@ class _SideBoundary extends StatefulWidget {
   });
   final ScaffoldSideMode mode;
   final bool immediate;
+  final Widget Function(BuildContext, double, Widget) layout;
   final Density density;
   final bool rtl;
   final Widget child;
@@ -613,6 +687,7 @@ class _SideBoundary extends StatefulWidget {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties
+      ..add(ObjectFlagProperty.has('layout', layout))
       ..add(EnumProperty<ScaffoldSideMode>('mode', mode))
       ..add(FlagProperty('immediate', value: immediate, ifTrue: 'immediate'))
       ..add(EnumProperty<Density>('density', density))
@@ -649,17 +724,27 @@ class _SideBoundaryState extends State<_SideBoundary> {
       tween: Tween(end: target),
       duration: duration,
       curve: MotionTokens.ease,
-      builder: (context, width, child) => SizedBox(
-        width: widget.immediate ? target : math.max(0, width),
-        child: ClipRect(
-          child: OverflowBox(
-            alignment: AlignmentDirectional.centerStart,
-            minWidth: math.max(width, hidden ? _lastVisible ?? 0 : width),
-            maxWidth: math.max(width, hidden ? _lastVisible ?? 0 : width),
-            child: child,
+      builder: (context, width, child) {
+        final extent = widget.immediate ? target : math.max(0.0, width);
+        final innerWidth = hidden
+            ? math.max(extent, _lastVisible ?? 0)
+            : extent;
+        return widget.layout(
+          context,
+          extent,
+          SizedBox(
+            width: extent,
+            child: ClipRect(
+              child: OverflowBox(
+                alignment: AlignmentDirectional.centerStart,
+                minWidth: innerWidth,
+                maxWidth: innerWidth,
+                child: child,
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
       child: IgnorePointer(
         ignoring: hidden,
         child: ExcludeFocus(

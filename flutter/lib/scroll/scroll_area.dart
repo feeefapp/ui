@@ -407,13 +407,18 @@ class _ScrollAreaState extends State<ScrollArea> {
     // Space a host's own floating chrome (a tab bar) takes over this area's bottom edge.
     final extra = ScrollExtraBottom.of(context);
     Widget float(Widget child, bool top) => Positioned(
-      left: side > safe.left ? side : safe.left,
-      right: side > safe.right ? side : safe.right,
+      left: safe.left + side,
+      right: safe.right + side,
       top: top ? gap + safe.top : null,
       bottom: top ? null : gap + extra + safe.bottom,
       child: SizeReporter(
         onSize: (size) => _measured(top, size),
-        child: Center(heightFactor: 1, child: child),
+        child: MediaQuery.removePadding(
+          context: context,
+          removeLeft: true,
+          removeRight: true,
+          child: Center(heightFactor: 1, child: child),
+        ),
       ),
     );
     final refreshable = widget.onRefresh != null;
@@ -448,9 +453,9 @@ class _ScrollAreaState extends State<ScrollArea> {
                     ),
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(
-                        padding,
+                        padding + safe.left,
                         topReserve + safe.top,
-                        padding,
+                        padding + safe.right,
                         bottomReserve + extra + safe.bottom,
                       ),
                       // Nested areas start from zero (.lab-scroll-content > * resets it).
@@ -467,7 +472,12 @@ class _ScrollAreaState extends State<ScrollArea> {
                             // Areas inside this one keep their own controllers.
                             child: ScrollAreaPrimary(
                               controller: null,
-                              child: widget.child,
+                              child: MediaQuery.removePadding(
+                                context: context,
+                                removeLeft: true,
+                                removeRight: true,
+                                child: widget.child,
+                              ),
                             ),
                           ),
                         ),

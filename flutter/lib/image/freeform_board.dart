@@ -680,8 +680,8 @@ class _FreeformBoardState extends State<FreeformBoard>
       final ghost = ControlOverrides.maybeOf(context);
       children.add(
         Positioned(
-          top: 0,
-          bottom: 0,
+          top: insets.top,
+          bottom: insets.bottom,
           right: insets.right + 14,
           child: Center(
             child: _stop(
@@ -696,58 +696,60 @@ class _FreeformBoardState extends State<FreeformBoard>
                     child: ControlOverrides(
                       height: ghost?.height,
                       radius: ghost?.radius,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        spacing: 4,
-                        children: [
-                          IconButton(
-                            variant: ButtonVariant.ghost,
-                            appearance: ButtonAppearance.toolbar,
-                            ariaLabel: t('lab.board.zoomOut'),
-                            onClick: () => _zoomCentre(1 / 1.25),
-                            icon: const LucideIcon(LucideIcons.minus),
-                          ),
-                          Button(
-                            variant: ButtonVariant.ghost,
-                            appearance: ButtonAppearance.toolbar,
-                            controlSize: ControlSize.icon,
-                            ariaLabel: t('lab.board.fitSelection'),
-                            onClick: () => _fitCard(selected),
-                            children: [
-                              // The label may be wider than the square button; it overflows
-                              // centred, like the web's visible overflow.
-                              SizedBox(
-                                width: 24,
-                                child: OverflowBox(
-                                  maxWidth: double.infinity,
-                                  child: Text(
-                                    '${_jsRound(view.scale * 100).toInt()}%',
-                                    style: const TextStyle(
-                                      fontFeatures: [
-                                        FontFeature.tabularFigures(),
-                                      ],
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          spacing: 4,
+                          children: [
+                            IconButton(
+                              variant: ButtonVariant.ghost,
+                              appearance: ButtonAppearance.toolbar,
+                              ariaLabel: t('lab.board.zoomOut'),
+                              onClick: () => _zoomCentre(1 / 1.25),
+                              icon: const LucideIcon(LucideIcons.minus),
+                            ),
+                            Button(
+                              variant: ButtonVariant.ghost,
+                              appearance: ButtonAppearance.toolbar,
+                              controlSize: ControlSize.icon,
+                              ariaLabel: t('lab.board.fitSelection'),
+                              onClick: () => _fitCard(selected),
+                              children: [
+                                // The label may be wider than the square button; it overflows
+                                // centred, like the web's visible overflow.
+                                SizedBox(
+                                  width: 24,
+                                  child: OverflowBox(
+                                    maxWidth: double.infinity,
+                                    child: Text(
+                                      '${_jsRound(view.scale * 100).toInt()}%',
+                                      style: const TextStyle(
+                                        fontFeatures: [
+                                          FontFeature.tabularFigures(),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          IconButton(
-                            variant: ButtonVariant.ghost,
-                            appearance: ButtonAppearance.toolbar,
-                            ariaLabel: t('lab.board.zoomIn'),
-                            onClick: () => _zoomCentre(1.25),
-                            icon: const LucideIcon(LucideIcons.plus),
-                          ),
-                          IconButton(
-                            variant: ButtonVariant.ghost,
-                            appearance: ButtonAppearance.toolbar,
-                            ariaLabel: t('lab.board.showAllVersions'),
-                            disabled: _cards.length < 2,
-                            onClick: _fitAll,
-                            icon: const LucideIcon(LucideIcons.maximize),
-                          ),
-                        ],
+                              ],
+                            ),
+                            IconButton(
+                              variant: ButtonVariant.ghost,
+                              appearance: ButtonAppearance.toolbar,
+                              ariaLabel: t('lab.board.zoomIn'),
+                              onClick: () => _zoomCentre(1.25),
+                              icon: const LucideIcon(LucideIcons.plus),
+                            ),
+                            IconButton(
+                              variant: ButtonVariant.ghost,
+                              appearance: ButtonAppearance.toolbar,
+                              ariaLabel: t('lab.board.showAllVersions'),
+                              disabled: _cards.length < 2,
+                              onClick: _fitAll,
+                              icon: const LucideIcon(LucideIcons.maximize),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

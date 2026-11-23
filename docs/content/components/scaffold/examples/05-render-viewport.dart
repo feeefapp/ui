@@ -46,6 +46,8 @@ class _RenderViewportState extends State<RenderViewport> {
     );
     return _Frame(
       child: Scaffold(
+        extendBodyBehindSidebar: true,
+        side: const ScaffoldSide(child: Text('Invoices')),
         appBar: const ScaffoldAppBar(
           child: ToolbarGroup(
             label: 'Current page',

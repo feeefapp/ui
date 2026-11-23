@@ -525,8 +525,8 @@ class _TabViewState extends State<TabView> {
                 // the accessory --lab-toolbar-gap above it.
                 if (widget.showBar)
                   Positioned(
-                    left: inset,
-                    right: inset,
+                    left: inset + safe.left,
+                    right: inset + safe.right,
                     bottom: inset + safe.bottom,
                     child: SizeReporter(
                       onSize: (size) {
