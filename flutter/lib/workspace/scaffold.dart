@@ -438,23 +438,17 @@ class _ScaffoldWidgetState extends State<Scaffold> {
                     child: widget.topSide!,
                   ),
                 Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _SideBoundary(
-                        immediate: compact,
-                        mode: visibleSide ? _sideMode : ScaffoldSideMode.hidden,
-                        density: theme.config.density,
-                        rtl: direction == TextDirection.rtl,
-                        child: Padding(
-                          padding: widget.glassSidebar && visibleSide
-                              ? EdgeInsetsDirectional.fromSTEB(
-                                  theme.sizes.shellGap,
-                                  theme.sizes.shellGap,
-                                  0,
-                                  theme.sizes.shellGap,
-                                )
-                              : EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      spacing: 12,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _SideBoundary(
+                          immediate: compact,
+                          mode: visibleSide ? _sideMode : ScaffoldSideMode.hidden,
+                          density: theme.config.density,
+                          rtl: direction == TextDirection.rtl,
                           child: Stack(
                             fit: StackFit.expand,
                             children: [
@@ -470,18 +464,18 @@ class _ScaffoldWidgetState extends State<Scaffold> {
                             ],
                           ),
                         ),
-                      ),
-                      Expanded(
-                        child: _MainPanel(
-                          focusNode: _main,
-                          bare: widget.glassSidebar,
-                          // A card only when a top row or a visible sidebar frames it.
-                          framed: widget.topSide != null || visibleSide,
-                          besideSide: visibleSide,
-                          child: viewport,
+                        Expanded(
+                          child: _MainPanel(
+                            focusNode: _main,
+                            bare: widget.glassSidebar,
+                            // A card only when a top row or a visible sidebar frames it.
+                            framed: widget.topSide != null || visibleSide,
+                            besideSide: visibleSide,
+                            child: viewport,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],
