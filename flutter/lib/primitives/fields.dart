@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import '../glass/container.dart' show GlassOwnPress;
 import '../brand/geometry.dart';
 import '../theme.dart';
 import '../theme/css_text.dart';
@@ -566,24 +567,26 @@ class _RawFieldState extends State<_RawField> {
       ),
     );
     final ring = box;
-    return Semantics(
-      textField: true,
-      multiline: widget.multiline,
-      label: widget.ariaLabel,
-      hint: widget.placeholder,
-      enabled: !widget.disabled,
-      child: IgnorePointer(
-        ignoring: widget.disabled,
-        child: Opacity(
-          opacity: widget.disabled ? 0.5 : 1,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: widget.disabled ? null : _focus.requestFocus,
-            child: MouseRegion(
-              cursor: widget.disabled
-                  ? SystemMouseCursors.forbidden
-                  : SystemMouseCursors.text,
-              child: ring,
+    return GlassOwnPress(
+      child: Semantics(
+        textField: true,
+        multiline: widget.multiline,
+        label: widget.ariaLabel,
+        hint: widget.placeholder,
+        enabled: !widget.disabled,
+        child: IgnorePointer(
+          ignoring: widget.disabled,
+          child: Opacity(
+            opacity: widget.disabled ? 0.5 : 1,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: widget.disabled ? null : _focus.requestFocus,
+              child: MouseRegion(
+                cursor: widget.disabled
+                    ? SystemMouseCursors.forbidden
+                    : SystemMouseCursors.text,
+                child: ring,
+              ),
             ),
           ),
         ),

@@ -55,6 +55,8 @@ class ComposerCapsuleLayout extends MultiChildRenderObjectWidget {
   const ComposerCapsuleLayout({
     super.key,
     required this.expanded,
+    this.inlineTools = false,
+    this.measureDraft = false,
     this.inset = 0,
     this.rowGap = 0,
     required super.children,
@@ -62,6 +64,7 @@ class ComposerCapsuleLayout extends MultiChildRenderObjectWidget {
 
   /// Shows the second row.
   final bool expanded;
+  final bool inlineTools, measureDraft;
 
   /// Space between the rows and the capsule's edge (its padding).
   final double inset;
@@ -82,6 +85,8 @@ class ComposerCapsuleLayout extends MultiChildRenderObjectWidget {
   RenderComposerCapsule createRenderObject(BuildContext context) =>
       RenderComposerCapsule(
         expanded: expanded,
+        inlineTools: inlineTools,
+        measureDraft: measureDraft,
         inset: inset,
         rowGap: rowGap,
         textDirection: Directionality.of(context),
@@ -93,6 +98,8 @@ class ComposerCapsuleLayout extends MultiChildRenderObjectWidget {
     BuildContext context,
     RenderComposerCapsule renderObject,
   ) => renderObject
+    ..inlineTools = inlineTools
+    ..measureDraft = measureDraft
     ..expanded = expanded
     ..inset = inset
     ..rowGap = rowGap
@@ -106,14 +113,32 @@ class RenderComposerCapsule extends RenderBox
         RenderBoxContainerDefaultsMixin<RenderBox, _SlotData> {
   RenderComposerCapsule({
     required bool expanded,
+    bool inlineTools = false,
+    bool measureDraft = false,
     double inset = 0,
     double rowGap = 0,
     required TextDirection textDirection,
     required this.reducedMotion,
   }) : _expanded = expanded,
+       _inlineTools = inlineTools,
+       _measureDraft = measureDraft,
        _inset = inset,
        _rowGap = rowGap,
        _textDirection = textDirection;
+
+  bool _inlineTools;
+  set inlineTools(bool value) {
+    if (_inlineTools == value) return;
+    _inlineTools = value;
+    markNeedsLayout();
+  }
+
+  bool _measureDraft;
+  set measureDraft(bool value) {
+    if (_measureDraft == value) return;
+    _measureDraft = value;
+    markNeedsLayout();
+  }
 
   bool _expanded;
   set expanded(bool value) {
@@ -223,16 +248,19 @@ class RenderComposerCapsule extends RenderBox
     );
     // The first row starts under the attachments (a row gap below them), else at the inset.
     final top = attachments != null ? attachmentsSize.height + _rowGap : p;
-    final expanded = _expanded && tools != null;
+    final remaining = math.max(0.0, inner - trailing);
+    final toolsSize = sizeOf(tools, BoxConstraints(maxWidth: remaining));
+    final inlineWidth = _inlineTools ? toolsSize.width : 0.0;
+    final compactWidth = math.max(0.0, remaining - inlineWidth);
+    final expanded =
+        tools != null &&
+        (_expanded ||
+            (_measureDraft &&
+                (field?.getMaxIntrinsicWidth(double.infinity) ?? 0) >
+                    compactWidth));
     final fieldSize = sizeOf(
       field,
-      BoxConstraints.tightFor(
-        width: math.max(0, expanded ? inner : inner - trailing),
-      ),
-    );
-    final toolsSize = sizeOf(
-      tools,
-      BoxConstraints(maxWidth: math.max(0, inner - trailing)),
+      BoxConstraints.tightFor(width: expanded ? inner : compactWidth),
     );
     final slots = <ComposerSlotName, ComposerSlotBox>{};
     void place(
@@ -273,13 +301,14 @@ class RenderComposerCapsule extends RenderBox
       rowTop = top;
       row = [
         fieldSize.height,
+        if (_inlineTools) toolsSize.height,
         actionsSize.height,
         sendSize.height,
       ].reduce(math.max);
       place(
         ComposerSlotName.field,
         field,
-        p,
+        p + inlineWidth,
         rowTop + row - fieldSize.height,
         1,
       );
@@ -289,7 +318,7 @@ class RenderComposerCapsule extends RenderBox
         tools,
         p,
         rowTop + row - toolsSize.height,
-        0,
+        _inlineTools ? 1 : 0,
       );
     }
     place(

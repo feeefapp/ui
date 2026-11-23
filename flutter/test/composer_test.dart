@@ -255,7 +255,11 @@ void main() {
       await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
       final handled = await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-      expect(handled, isFalse, reason: 'Shift+Enter is left to the input');
+      expect(handled, isTrue);
+      expect(
+        tester.widget<EditableText>(find.byType(EditableText)).controller.text,
+        'Hello\n',
+      );
       expect(sent, 0);
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       expect(sent, 1);
@@ -314,6 +318,52 @@ void main() {
       await finish(tester);
       handle.dispose();
     }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+
+    testWidgets(
+      'inline tools stay visible until the draft wraps or adds a line',
+      (tester) async {
+        var value = '';
+        await tester.pumpWidget(
+          app(
+            StatefulBuilder(
+              builder: (context, update) {
+                return ComposerBar(
+                  inlineTools: true,
+                  hasText: value.isNotEmpty,
+                  pinned: value.contains('\n'),
+                  field: ComposerField(
+                    value: value,
+                    label: 'Message',
+                    onValueChange: (v) => update(() => value = v),
+                  ),
+                  tools: const [Text('Model')],
+                  send: const SizedBox.square(dimension: 30),
+                );
+              },
+            ),
+            width: 320,
+          ),
+        );
+        final field = find.byType(EditableText);
+        final initial = capsule(tester).height;
+        await tester.enterText(field, 'Hi');
+        await settle(tester);
+        expect(capsule(tester).height, initial);
+        expect(find.text('Model').hitTestable(), findsOneWidget);
+        for (final draft in ['wide ' * 12, 'x\ny']) {
+          await tester.enterText(field, draft);
+          await settle(tester, 30);
+          expect(
+            tester.getRect(field).bottom,
+            lessThan(tester.getRect(find.text('Model')).top),
+          );
+          await tester.enterText(field, 'x');
+          await settle(tester, 30);
+          expect(capsule(tester).height, initial);
+        }
+        await finish(tester);
+      },
+    );
 
     testWidgets(
       'calm on one line; focus or text opens the second row on a spring',
@@ -488,6 +538,52 @@ void main() {
       await finish(tester);
       handle.dispose();
     }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+
+    testWidgets(
+      'image prompt stays compact while editing and grows for wraps and newlines',
+      (tester) async {
+        var prompt = '';
+        var submissions = 0;
+        await tester.pumpWidget(
+          app(
+            StatefulBuilder(
+              builder: (context, update) => composer(
+                references: const [],
+                prompt: prompt,
+                onPrompt: (v) => update(() => prompt = v),
+                onSubmit: () => submissions++,
+              ),
+            ),
+          ),
+        );
+        await settle(tester);
+        final field = find.byType(EditableText);
+        final compact = capsule(tester);
+        final restingField = tester.getRect(field);
+        final press = await tester.startGesture(restingField.center);
+        await settle(tester);
+        expect(tester.getRect(field), restingField);
+        await press.up();
+        await tester.enterText(field, 'A vase');
+        await settle(tester);
+        expect(capsule(tester).height, compact.height);
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await settle(tester);
+        expect(prompt, contains('\n'));
+        expect(submissions, 0);
+        expect(capsule(tester).height, greaterThan(compact.height));
+        await tester.enterText(field, 'wide ' * 50);
+        await settle(tester);
+        expect(capsule(tester).height, greaterThan(compact.height));
+        await tester.enterText(field, 'A vase');
+        await settle(tester);
+        expect(capsule(tester).height, compact.height);
+        await finish(tester);
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.macOS),
+    );
 
     testWidgets('many references scroll sideways inside the capsule', (
       tester,

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import '../glass/container.dart' show GlassOwnPress;
 import '../theme.dart';
 import '../theme/color_mix.dart';
 import '../theme/css_text.dart';
@@ -400,9 +401,32 @@ class RawInputState extends State<RawInput>
     super.dispose();
   }
 
-  KeyEventResult _key(FocusNode node, KeyEvent event) =>
-      widget.onKeyEvent?.call(event, _controller.value) ??
-      KeyEventResult.ignored;
+  KeyEventResult _key(FocusNode node, KeyEvent event) {
+    final value = _controller.value;
+    final result =
+        widget.onKeyEvent?.call(event, value) ?? KeyEventResult.ignored;
+    if (result != KeyEventResult.ignored ||
+        !widget.multiline ||
+        widget.readOnly ||
+        widget.disabled ||
+        !value.composing.isCollapsed ||
+        !value.selection.isValid ||
+        !HardwareKeyboard.instance.isShiftPressed ||
+        (event.logicalKey != LogicalKeyboardKey.enter &&
+            event.logicalKey != LogicalKeyboardKey.numpadEnter)) {
+      return result;
+    }
+    if (event is KeyDownEvent) {
+      final next = value.replaced(value.selection, '\n');
+      _editableKey.currentState?.userUpdateTextEditingValue(
+        next.copyWith(
+          selection: TextSelection.collapsed(offset: value.selection.start + 1),
+        ),
+        SelectionChangedCause.keyboard,
+      );
+    }
+    return KeyEventResult.handled;
+  }
 
   void _changed() {
     final text = _controller.text;
@@ -525,29 +549,31 @@ class RawInputState extends State<RawInput>
             offset: Offset(caretMargin * rightShare, 0),
             child: editable,
           );
-    return Semantics(
-      label: widget.label,
-      hint: _message ?? '',
-      textField: true,
-      multiline: multiline,
-      readOnly: widget.readOnly,
-      enabled: !widget.disabled,
-      maxValueLength: widget.maxLength,
-      child: MouseRegion(
-        cursor: widget.disabled
-            ? SystemMouseCursors.forbidden
-            : SystemMouseCursors.text,
-        child: _gestures.buildGestureDetector(
-          behavior: HitTestBehavior.translucent,
-          // Sees keys before the app's text shortcuts and the IME (the focused input is below).
-          child: Focus(
-            canRequestFocus: false,
-            skipTraversal: true,
-            onKeyEvent: widget.onKeyEvent == null ? null : _key,
-            // CssBaseline measures the ambient text style: give it the input's own.
-            child: DefaultTextStyle.merge(
-              style: style,
-              child: CssBaseline(lineHeight: lineHeight, child: placed),
+    return GlassOwnPress(
+      child: Semantics(
+        label: widget.label,
+        hint: _message ?? '',
+        textField: true,
+        multiline: multiline,
+        readOnly: widget.readOnly,
+        enabled: !widget.disabled,
+        maxValueLength: widget.maxLength,
+        child: MouseRegion(
+          cursor: widget.disabled
+              ? SystemMouseCursors.forbidden
+              : SystemMouseCursors.text,
+          child: _gestures.buildGestureDetector(
+            behavior: HitTestBehavior.translucent,
+            // Sees keys before the app's text shortcuts and the IME (the focused input is below).
+            child: Focus(
+              canRequestFocus: false,
+              skipTraversal: true,
+              onKeyEvent: widget.onKeyEvent == null ? null : _key,
+              // CssBaseline measures the ambient text style: give it the input's own.
+              child: DefaultTextStyle.merge(
+                style: style,
+                child: CssBaseline(lineHeight: lineHeight, child: placed),
+              ),
             ),
           ),
         ),

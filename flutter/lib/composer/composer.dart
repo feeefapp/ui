@@ -793,6 +793,7 @@ class ComposerBar extends StatefulWidget {
     required this.send,
     required this.hasText,
     this.pinned = false,
+    this.inlineTools = false,
     this.dropActive = false,
   });
 
@@ -819,6 +820,10 @@ class ComposerBar extends StatefulWidget {
 
   /// One of its menus or panels is open (the web kit reads open triggers): keeps it open.
   final bool pinned;
+
+  /// Show tools beside a single-line draft. Wrap to two rows when the draft
+  /// exceeds the available width, contains a newline, or is explicitly pinned.
+  final bool inlineTools;
 
   /// Dashed outline while a compatible file is dragged over the drop target.
   final bool dropActive;
@@ -859,19 +864,23 @@ class _ComposerBarState extends State<ComposerBar> {
     final c = theme.colors;
     final s = theme.sizes;
     final m = ComposerMetrics.of(context);
-    final hasTools = widget.tools.isNotEmpty;
+    final hasTools = widget.tools.isNotEmpty || widget.inlineTools;
     final expanded =
         hasTools &&
-        composerExpanded(
-          hasText: widget.hasText,
-          focusWithin: _focusWithin,
-          pinned: widget.pinned,
-        );
+        (widget.inlineTools
+            ? widget.pinned
+            : composerExpanded(
+                hasText: widget.hasText,
+                focusWithin: _focusWithin,
+                pinned: widget.pinned,
+              ));
     final controls = ControlOverrides(
       height: m.control,
       radius: m.control / 2 * s.radiusScale,
       child: ComposerCapsuleLayout(
         expanded: expanded,
+        inlineTools: widget.inlineTools,
+        measureDraft: widget.inlineTools && widget.hasText,
         inset: m.inset - 1,
         rowGap: _space1(s),
         children: [
@@ -880,17 +889,23 @@ class _ComposerBarState extends State<ComposerBar> {
               name: ComposerSlotName.attachments,
               child: widget.attachments!,
             ),
-          ComposerSlot(name: ComposerSlotName.field, child: widget.field),
+          ComposerSlot(
+            name: ComposerSlotName.field,
+            child: GlassOwnPress(
+              behavior: HitTestBehavior.translucent,
+              child: widget.field,
+            ),
+          ),
           if (hasTools)
             ComposerSlot(
               name: ComposerSlotName.tools,
               // Calm, the tools row is hidden and out of reach (`inert`).
               child: ExcludeFocus(
-                excluding: !expanded,
+                excluding: !expanded && !widget.inlineTools,
                 child: ExcludeSemantics(
-                  excluding: !expanded,
+                  excluding: !expanded && !widget.inlineTools,
                   child: IgnorePointer(
-                    ignoring: !expanded,
+                    ignoring: !expanded && !widget.inlineTools,
                     // Chips take muted ink, so the prompt stays the main thing.
                     child: Builder(
                       builder: (context) => ControlOverrides.merge(
@@ -900,7 +915,16 @@ class _ComposerBarState extends State<ComposerBar> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             for (final tool in widget.tools)
-                              Flexible(child: tool),
+                              Flexible(
+                                child: widget.inlineTools
+                                    ? ConstrainedBox(
+                                        constraints: BoxConstraints(
+                                          maxHeight: m.control,
+                                        ),
+                                        child: tool,
+                                      )
+                                    : tool,
+                              ),
                           ],
                         ),
                       ),

@@ -387,13 +387,16 @@ class _ToolbarSearchState extends State<ToolbarSearch>
                           minWidth: size + space1 * 2 + 1,
                           children: [
                             Expanded(
-                              child: widget.renderInput != null
-                                  ? widget.renderInput!(context, props)
-                                  : _SearchInput(
-                                      props: props,
-                                      height: size,
-                                      paddingInline: space1,
-                                    ),
+                              child: GlassOwnPress(
+                                behavior: HitTestBehavior.translucent,
+                                child: widget.renderInput != null
+                                    ? widget.renderInput!(context, props)
+                                    : _SearchInput(
+                                        props: props,
+                                        height: size,
+                                        paddingInline: space1,
+                                      ),
+                              ),
                             ),
                             IconButton(
                               variant: ButtonVariant.text,

@@ -357,7 +357,12 @@ class GlassMemberRegistry {
 /// that starts on it doesn't swell, stretch or glow the bubble around it. The twin of the web kit's
 /// `data-glass-own-press`.
 class GlassOwnPress extends StatelessWidget {
-  const GlassOwnPress({super.key, required this.child});
+  const GlassOwnPress({
+    super.key,
+    required this.child,
+    this.behavior = HitTestBehavior.deferToChild,
+  });
+  final HitTestBehavior behavior;
   final Widget child;
 
   @override
@@ -366,6 +371,7 @@ class GlassOwnPress extends StatelessWidget {
     if (registry == null) return child;
     // Pointer listeners run before the container's global route, so the claim lands first.
     return Listener(
+      behavior: behavior,
       onPointerDown: (event) => registry._scene._ownPress.add(event.pointer),
       child: child,
     );

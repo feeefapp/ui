@@ -424,7 +424,6 @@ class _ImagePromptComposerState extends State<ImagePromptComposer> {
   late final FocusNode _ownFocus = FocusNode(debugLabel: 'image prompt');
   FocusNode get _field => widget.focusNode ?? _ownFocus;
   bool _settingsOpen = false;
-  bool _menuOpen = false;
 
   @override
   void didUpdateWidget(ImagePromptComposer oldWidget) {
@@ -560,9 +559,6 @@ class _ImagePromptComposerState extends State<ImagePromptComposer> {
       composer: widget,
       canReference: _canReference,
       full: _full,
-      onOpenChange: (open) {
-        if (open != _menuOpen) setState(() => _menuOpen = open);
-      },
       trigger: (open, toggle) => IconButton(
         variant: ButtonVariant.ghost,
         appearance: ButtonAppearance.toolbar,
@@ -620,7 +616,8 @@ class _ImagePromptComposerState extends State<ImagePromptComposer> {
       leading: add,
       attachments: attachments,
       hasText: widget.prompt.isNotEmpty,
-      pinned: _settingsOpen || _menuOpen || widget.settingsActive,
+      inlineTools: true,
+      pinned: widget.prompt.contains('\n'),
       dropActive: widget.dropActive,
       field: ComposerField(
         value: widget.prompt,
@@ -1078,7 +1075,6 @@ class _AddMenu extends StatefulWidget {
     required this.canReference,
     required this.full,
     required this.trigger,
-    required this.onOpenChange,
     required this.onUpload,
     required this.onPaste,
     required this.onEditPhoto,
@@ -1088,7 +1084,6 @@ class _AddMenu extends StatefulWidget {
   final Widget Function(bool open, VoidCallback toggle) trigger;
 
   /// Called when the menu opens or closes (it keeps the composer's second row in place).
-  final ValueChanged<bool> onOpenChange;
   final Future<void> Function() onUpload, onPaste, onEditPhoto;
 
   @override
@@ -1108,12 +1103,6 @@ class _AddMenu extends StatefulWidget {
         ObjectFlagProperty<Widget Function(bool open, VoidCallback toggle)>.has(
           'trigger',
           trigger,
-        ),
-      )
-      ..add(
-        ObjectFlagProperty<ValueChanged<bool>>.has(
-          'onOpenChange',
-          onOpenChange,
         ),
       )
       ..add(
@@ -1170,7 +1159,6 @@ class _AddMenuState extends State<_AddMenu> {
       _open = open;
       _sub = _Sub.none;
     });
-    widget.onOpenChange(open);
     if (open) _focusSoon(() => [_upload, _paste, _recent, _ideas, _edit]);
   }
 

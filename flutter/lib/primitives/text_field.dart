@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import '../glass/container.dart' show GlassOwnPress;
 import '../brand/geometry.dart';
 import '../theme.dart';
 import '../theme/surfaces.dart';
@@ -297,8 +298,9 @@ class _FieldShellState extends State<FieldShell> {
     // 12 start offset + gap after the adornment. Icon+prefix keeps 12px gap; a lone
     // interactive [leading] (dial, currency action) only needs 6 so the control isn't
     // padded away from the typed text.
-    final leadingGap =
-        widget.leadingIcon != null && widget.leading != null ? 12.0 : 6.0;
+    final leadingGap = widget.leadingIcon != null && widget.leading != null
+        ? 12.0
+        : 6.0;
     final insetStart = (widget.leadingIcon != null || widget.leading != null)
         ? _leadingWidth + 12 + leadingGap
         : 12.0;
@@ -1297,7 +1299,10 @@ class _TextFieldState extends State<TextField>
             hint: message ?? '',
             textField: true,
             enabled: !widget.disabled,
-            child: field,
+            child: GlassOwnPress(
+              behavior: HitTestBehavior.translucent,
+              child: field,
+            ),
           );
         },
       ),
