@@ -7,8 +7,15 @@
   padding: 8px;
   margin: 0;
   min-width: 0;
-  background: color-mix(in srgb, var(--lab-primary) 7%, var(--lab-surface));
+  /* Light: a plain surface card so it stands off the ground; dark keeps the green tint. */
+  --speech-tint: 0%;
+  --speech-tint-active: 4%;
+  background: color-mix(in srgb, var(--lab-primary) var(--speech-tint), var(--lab-surface));
   transition: background-color 180ms var(--lab-ease);
+}
+html[data-lab-theme='dark'] .lab-voice-paragraph {
+  --speech-tint: 7%;
+  --speech-tint-active: 11%;
 }
 .lab-speech-block-texture {
   position: absolute;
@@ -69,7 +76,7 @@ html[data-lab-theme] .lab-speech-voice-select[data-variant] > svg:last-child {
   flex-shrink: 0;
 }
 .lab-voice-paragraph[data-typing] {
-  background: color-mix(in srgb, var(--lab-primary) 11%, var(--lab-surface));
+  background: color-mix(in srgb, var(--lab-primary) var(--speech-tint-active), var(--lab-surface));
 }
 .lab-voice-paragraph:focus-within .lab-speech-block-texture {
   opacity: 0.6;
@@ -102,7 +109,7 @@ html[data-lab-theme] .lab-speech-voice-select[data-variant] > svg:last-child {
   z-index: 2;
   cursor: grabbing;
   border-color: var(--lab-focus);
-  background: color-mix(in srgb, var(--lab-primary) 11%, var(--lab-surface));
+  background: color-mix(in srgb, var(--lab-primary) var(--speech-tint-active), var(--lab-surface));
   box-shadow:
     0 12px 28px rgb(0 0 0 / 12%),
     0 2px 6px rgb(0 0 0 / 8%);
