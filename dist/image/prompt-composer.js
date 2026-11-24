@@ -105,7 +105,7 @@ export function ImagePromptComposer({ prompt, onPrompt, placeholder, maxLength, 
                     e.target.value = '';
                     if (file)
                         onEditPhoto(file);
-                } }), above, _jsx(ComposerBar, { leading: addMenu, attachments: attachments, hasText: !!prompt, dropActive: dragging, field: _jsx(ComposerField, { ref: field, id: "lab-img-prompt", value: prompt, onValueChange: onPrompt, label: mode === 'poster' ? t('lab.imgcomposer.describeProductOffer') : t('lab.imgcomposer.describeImage'), placeholder: placeholder, maxLength: maxLength, onPaste: pasteFiles, onKeyDown: onKeyDown, onSubmit: () => {
+                } }), above, _jsx(ComposerBar, { leading: addMenu, attachments: attachments, hasText: !!prompt, inlineTools: true, pinned: prompt.includes('\n'), dropActive: dragging, field: _jsx(ComposerField, { ref: field, id: "lab-img-prompt", value: prompt, onValueChange: onPrompt, label: mode === 'poster' ? t('lab.imgcomposer.describeProductOffer') : t('lab.imgcomposer.describeImage'), placeholder: placeholder, maxLength: maxLength, onPaste: pasteFiles, onKeyDown: onKeyDown, onSubmit: () => {
                         if (!submitDisabled && !submitting)
                             onSubmit();
                     } }), tools: _jsxs(_Fragment, { children: [ladder, settingsControl] }), actions: wand, send: _jsx(ComposerSend, { label: submitLabel, ready: !submitDisabled, submitting: submitting, onSend: onSubmit, onStop: onStop, stopLabel: stopLabel }) }), caption != null && caption !== false && caption !== '' && _jsx("p", { className: "lab-composer-caption", children: caption })] }));

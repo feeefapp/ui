@@ -221,6 +221,6 @@ export function PromptComposer({ value, onValueChange, onSubmit, label, placehol
     return (_jsxs("form", { ...props, className: cn('lab-composer', className), "aria-busy": busy || undefined, onSubmit: (event) => {
             event.preventDefault();
             submit();
-        }, children: [above, _jsx(ComposerBar, { leading: leading, attachments: attachments, tools: tools, actions: actions, hasText: !!value, dropActive: dropActive, field: _jsx(ComposerField, { value: value, onValueChange: onValueChange, label: label, placeholder: placeholder, maxLength: maxLength, maxLines: maxLines, disabled: disabled, readOnly: busy, onSubmit: submit }), send: _jsx(ComposerSend, { type: "submit", label: submitLabel, ready: canSubmit, submitting: !!busy, onStop: onStop, stopLabel: stopLabel }) }), footer] }));
+        }, children: [above, _jsx(ComposerBar, { leading: leading, attachments: attachments, tools: tools, actions: actions, hasText: !!value, inlineTools: true, pinned: value.includes('\n'), dropActive: dropActive, field: _jsx(ComposerField, { value: value, onValueChange: onValueChange, label: label, placeholder: placeholder, maxLength: maxLength, maxLines: maxLines, disabled: disabled, readOnly: busy, onSubmit: submit }), send: _jsx(ComposerSend, { type: "submit", label: submitLabel, ready: canSubmit, submitting: !!busy, onStop: onStop, stopLabel: stopLabel }) }), footer] }));
 }
 //# sourceMappingURL=composer.js.map
