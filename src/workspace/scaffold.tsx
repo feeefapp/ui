@@ -394,7 +394,7 @@ function SidebarGlass({ drawer = false }: { drawer?: boolean }) {
   const focused = React.useSyncExternalStore(subscribeWindowFocus, windowFocused, initialFocus)
   return (
     <div aria-hidden="true" className="lab-workspace-sidebar-glass" data-focused={focused}>
-      <GlassContainer solo={{ motion: 'follow' }} light="static" highlightWidth={2} material={drawer ? 'menu' : 'regular'} interactive={false} adaptive={false} />
+      <GlassContainer solo={{ motion: 'follow' }} highlightWidth={2} material={drawer ? 'menu' : 'regular'} interactive={false} adaptive={false} />
     </div>
   )
 }

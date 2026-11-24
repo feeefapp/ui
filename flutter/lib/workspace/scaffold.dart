@@ -496,6 +496,8 @@ class _ScaffoldWidgetState extends State<Scaffold> {
         padding: EdgeInsetsDirectional.fromSTEB(gap, gap, 0, gap),
         child: Stack(
           fit: StackFit.expand,
+          // The glass's shadow and rim paint outside the box, as on every other glass.
+          clipBehavior: Clip.none,
           children: [
             if (widget.glassSidebar && visibleSide) const _SidebarGlass(),
             Focus(
@@ -622,25 +624,18 @@ class _SidebarGlassState extends State<_SidebarGlass>
   @override
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
-    final c = theme.colors;
-    final dark = theme.brightness == Brightness.dark;
-    final fill = !_focused
-        ? c.surface.withValues(alpha: 0.85)
-        : dark
-        ? mixSrgb(
-            c.ground,
-            0.76,
-            const Color(0xff000000),
-          ).withValues(alpha: 0.82)
-        : c.ground.withValues(alpha: 0.52);
     final radius = theme.sizes.radiusPanel;
+    // Plain container glass, the same material as the toolbar buttons: no extra veil, so the
+    // rim, edge light and blur read exactly like every other glass surface.
     return IgnorePointer(
       child: ExcludeSemantics(
         child: Stack(
           fit: StackFit.expand,
+          clipBehavior: Clip.none,
           children: [
+            // Pointer light like the toolbar glass: the rim's highlight turns toward the cursor
+            // and the lens bends the page under the edge.
             GlassContainer(
-              light: GlassLightMode.static,
               interactive: false,
               adaptive: false,
               material: widget.drawer ? GlassKind.menu : GlassKind.regular,
@@ -649,12 +644,6 @@ class _SidebarGlassState extends State<_SidebarGlass>
                 radius: radius,
                 standalone: (child) => child,
                 child: const SizedBox.expand(),
-              ),
-            ),
-            DecoratedBox(
-              decoration: ShapeDecoration(
-                color: fill,
-                shape: SuperellipseBorder(radius: radius),
               ),
             ),
           ],
@@ -734,7 +723,10 @@ class _SideBoundaryState extends State<_SideBoundary> {
           extent,
           SizedBox(
             width: extent,
+            // Clip only while the column opens or closes: at rest the sidebar's glass must
+            // paint its shadow and outer rim past the column's end edge, like any glass box.
             child: ClipRect(
+              clipBehavior: extent >= innerWidth ? Clip.none : Clip.hardEdge,
               child: OverflowBox(
                 alignment: AlignmentDirectional.centerStart,
                 minWidth: innerWidth,

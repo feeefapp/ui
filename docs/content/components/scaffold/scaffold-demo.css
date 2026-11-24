@@ -34,6 +34,194 @@
   display: grid;
   gap: 2px;
 }
+
+/* Workspace sidebar: the merchant app's sidebar (one design family). Rows 38px, radius 15,
+regular 400 labels in muted ink; the current page is a flat ink tint (no glass, no edge) plus a
+thin leading bar. Scoped to .scaffold-demo-side so the other demos keep the kit default. */
+.scaffold-demo-side {
+  --scaffold-demo-row: 38px;
+  --scaffold-demo-row-radius: 15px;
+  --scaffold-demo-group-radius: 18px;
+  --scaffold-demo-group-inset: 8px;
+}
+.scaffold-demo-side .scaffold-demo-nav {
+  gap: 4px;
+}
+html[data-lab-theme] .scaffold-demo-side .lab-control.lab-navigation-item[data-variant] {
+  --lab-control-size: var(--scaffold-demo-row);
+  border-radius: var(--scaffold-demo-row-radius);
+  corner-shape: superellipse(1.5);
+  font-weight: 400;
+  color: var(--lab-muted);
+}
+html[data-lab-theme] .scaffold-demo-side .lab-control.lab-navigation-item[data-variant][aria-current='page'] {
+  --lab-control-fill: color-mix(in srgb, var(--lab-ink) 6%, transparent);
+  --lab-control-fill-hover: color-mix(in srgb, var(--lab-ink) 9%, transparent);
+  --lab-control-fill-pressed: color-mix(in srgb, var(--lab-ink) 12%, transparent);
+  --lab-control-edge: transparent;
+  --lab-control-elevation: none;
+  color: var(--lab-ink);
+}
+/* The leading marker: a 4px dot at rest, a 2×25 ink bar on the current page.
+animation_level: 1 — width/height tween, off with reduced motion. */
+.scaffold-demo-nav-row {
+  position: relative;
+}
+.scaffold-demo-nav-row::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  inset-inline-start: 3px;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  translate: 0 -50%;
+  border-radius: 28px;
+  background: var(--lab-muted);
+  pointer-events: none;
+  transition:
+    width 200ms var(--lab-ease),
+    height 200ms var(--lab-ease),
+    background-color 200ms var(--lab-ease);
+}
+.scaffold-demo-nav-row[data-current='true']::before {
+  width: 2px;
+  height: 25px;
+  background: var(--lab-ink);
+}
+.scaffold-demo-room-icon {
+  display: inline-flex;
+  opacity: 0.78;
+}
+[data-current='true'] .scaffold-demo-room-icon {
+  opacity: 1;
+}
+.scaffold-demo-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding-inline: 3px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  color: var(--lab-surface);
+  font: 900 10px/1 var(--lab-font);
+}
+/* animation_level: 1 — the group chevron turns. */
+.scaffold-demo-chevron {
+  width: 16px;
+  height: 16px;
+  rotate: 0deg;
+  transition: rotate 200ms var(--lab-ease);
+}
+.scaffold-demo-chevron[data-open='true'] {
+  rotate: 90deg;
+}
+/* Expanded group: muted liquid glass (the kit's glass under a dark veil, 38% dark / 6% light),
+radius 18; its rows inset an even 8px with radius 10 (18 − 8) so the corners nest. */
+.scaffold-demo-group {
+  position: relative;
+  isolation: isolate;
+}
+.scaffold-demo-group-glass,
+.scaffold-demo-group::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: var(--scaffold-demo-group-radius);
+  corner-shape: superellipse(1.5);
+  opacity: 0;
+  /* animation_level: 1 — the glass fades with the group's active state. */
+  transition: opacity 200ms var(--lab-ease);
+}
+.scaffold-demo-group-bubble {
+  position: absolute;
+  inset: 0;
+  --lab-glass-radius: var(--scaffold-demo-group-radius);
+}
+/* The veil uses the same corner curve as the glass, so the bright rim never pokes out. */
+.scaffold-demo-group::after {
+  content: '';
+  background: rgb(0 0 0 / 6%);
+}
+[data-lab-theme='dark'] .scaffold-demo-group::after {
+  background: rgb(0 0 0 / 38%);
+}
+.scaffold-demo-group[data-active='true'] > .scaffold-demo-group-glass,
+.scaffold-demo-group[data-active='true']::after {
+  opacity: 1;
+}
+.scaffold-demo-group-rows {
+  display: grid;
+  padding: 4px var(--scaffold-demo-group-inset) var(--scaffold-demo-group-inset);
+}
+html[data-lab-theme] .scaffold-demo-group-rows .lab-control.lab-navigation-item[data-variant] {
+  border-radius: calc(var(--scaffold-demo-group-radius) - var(--scaffold-demo-group-inset));
+}
+/* Footer: avatar and wallet as matching 44px glass chips in one container. */
+.scaffold-demo-account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.scaffold-demo-account[data-compact='true'] {
+  justify-content: center;
+}
+.scaffold-demo-chip {
+  --lab-glass-radius: 22px;
+  --lab-control-height: 42px;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  box-sizing: border-box;
+}
+.scaffold-demo-chip--avatar {
+  width: 44px;
+  justify-content: center;
+}
+.scaffold-demo-wallet {
+  gap: 8px;
+  padding-inline: 11px 15px;
+}
+.scaffold-demo-wallet > svg {
+  color: var(--lab-primary);
+}
+.scaffold-demo-wallet > span {
+  display: grid;
+  text-align: start;
+}
+.scaffold-demo-wallet small {
+  color: var(--lab-muted);
+  font-size: 10px;
+  line-height: 1.1;
+}
+.scaffold-demo-wallet strong {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+/* Overlay scrollbar scoped to the sidebar: hidden at rest, shown on hover or while scrolling,
+fading ~1 s after the last scroll (data-scrolling, set by the example).
+animation_level: 1 — colour fade only. */
+.scaffold-demo-side .lab-scroll-viewport {
+  scrollbar-width: thin;
+  scrollbar-gutter: auto;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 300ms var(--lab-ease);
+}
+.scaffold-demo-side .lab-scroll-viewport:is(:hover, [data-scrolling]) {
+  scrollbar-color: color-mix(in srgb, var(--lab-muted) 50%, transparent) transparent;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scaffold-demo-nav-row::before,
+  .scaffold-demo-chevron,
+  .scaffold-demo-group-glass,
+  .scaffold-demo-group::after,
+  .scaffold-demo-side .lab-scroll-viewport {
+    transition: none;
+  }
+}
 .scaffold-demo-title {
   padding-inline: 12px;
   font-size: 14px;
