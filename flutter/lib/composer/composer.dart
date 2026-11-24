@@ -1205,6 +1205,8 @@ class PromptComposer extends StatelessWidget {
               tools: tools,
               actions: actions,
               hasText: value.isNotEmpty,
+              inlineTools: tools.isNotEmpty,
+              pinned: value.contains('\n'),
               dropActive: dropActive,
               field: ComposerField(
                 value: value,

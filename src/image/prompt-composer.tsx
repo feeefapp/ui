@@ -468,6 +468,8 @@ export function ImagePromptComposer({
         leading={addMenu}
         attachments={attachments}
         hasText={!!prompt}
+        inlineTools
+        pinned={prompt.includes('\n')}
         dropActive={dragging}
         field={
           <ComposerField

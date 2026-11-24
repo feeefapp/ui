@@ -562,6 +562,8 @@ export function PromptComposer({
         tools={tools}
         actions={actions}
         hasText={!!value}
+        inlineTools
+        pinned={value.includes('\n')}
         dropActive={dropActive}
         field={
           <ComposerField
