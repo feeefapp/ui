@@ -821,9 +821,12 @@ class _MainPanel extends StatefulWidget {
 class _MainPanelState extends State<_MainPanel> {
   bool _ring = false;
 
-  void _update(bool focused) {
+  // `:focus-visible` on the panel itself, never `:focus-within`: a focused descendant (the
+  // composer) must not ring the whole viewport. That ring also paints over native platform views
+  // (macOS WebViews), which then lose every click, scroll and selection under it.
+  void _update(bool _) {
     final ring =
-        focused &&
+        widget.focusNode.hasPrimaryFocus &&
         FocusManager.instance.highlightMode == FocusHighlightMode.traditional;
     if (ring != _ring) setState(() => _ring = ring);
   }
