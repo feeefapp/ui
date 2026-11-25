@@ -111,6 +111,9 @@ class RenderComposerCapsule extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, _SlotData>,
         RenderBoxContainerDefaultsMixin<RenderBox, _SlotData> {
+  /// Narrowest single-row draft beside inline tools; below it the tools take their own row.
+  static const double _minInlineField = 140;
+
   RenderComposerCapsule({
     required bool expanded,
     bool inlineTools = false,
@@ -252,9 +255,11 @@ class RenderComposerCapsule extends RenderBox
     final toolsSize = sizeOf(tools, BoxConstraints(maxWidth: remaining));
     final inlineWidth = _inlineTools ? toolsSize.width : 0.0;
     final compactWidth = math.max(0.0, remaining - inlineWidth);
+    // Inline tools never squeeze the draft below a readable width (phones): wrap instead.
     final expanded =
         tools != null &&
         (_expanded ||
+            (_inlineTools && compactWidth < _minInlineField) ||
             (_measureDraft &&
                 (field?.getMaxIntrinsicWidth(double.infinity) ?? 0) >
                     compactWidth));
