@@ -165,36 +165,40 @@ class _ListSectionState extends State<ListSection> {
           ? null
           : ShapeBorderClipper(shape: SuperellipseBorder(radius: s.listRadius)),
       child: DecoratedBox(
-        decoration: ShapeDecoration(
-          color: mixSrgb(c.ink, 0.04, c.surface),
-          shape: SuperellipseBorder(radius: s.listRadius),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (var i = 0; i < widget.children.length; i++)
-              _RowSlot(
-                key: _key(i),
-                contentKey: _contentKey(i),
-                index: i,
-                // Hairline above every row but the first, after the leading icon (inset + 32 + 14).
-                // Selected neighbours read as one block: no hairline between them.
-                hairline:
-                    i == 0 ||
-                        (selected(widget.children[i]) &&
-                            selected(widget.children[i - 1]))
-                    ? null
-                    : (leading(widget.children[i]) ||
-                              leading(widget.children[i - 1])
-                          ? s.listInset + 32 + 14
-                          : s.listInset),
-                hairlineColor: _drag != null ? null : c.line,
-                offset: _offsets[i]?.get() ?? 0,
-                lifted: _lifted == i,
-                reorder: reorder ? this : null,
-                child: widget.children[i],
-              ),
-          ],
+        decoration: listCardDecoration(theme),
+        position: DecorationPosition.foreground,
+        child: DecoratedBox(
+          decoration: ShapeDecoration(
+            color: listCardFill(theme),
+            shape: SuperellipseBorder(radius: s.listRadius),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < widget.children.length; i++)
+                _RowSlot(
+                  key: _key(i),
+                  contentKey: _contentKey(i),
+                  index: i,
+                  // Hairline above every row but the first, after the leading icon (inset + 32 + 14).
+                  // Selected neighbours read as one block: no hairline between them.
+                  hairline:
+                      i == 0 ||
+                          (selected(widget.children[i]) &&
+                              selected(widget.children[i - 1]))
+                      ? null
+                      : (leading(widget.children[i]) ||
+                                leading(widget.children[i - 1])
+                            ? s.listInset + 32 + 14
+                            : s.listInset),
+                  hairlineColor: _drag != null ? null : c.line,
+                  offset: _offsets[i]?.get() ?? 0,
+                  lifted: _lifted == i,
+                  reorder: reorder ? this : null,
+                  child: widget.children[i],
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -244,6 +248,22 @@ class _ListSectionState extends State<ListSection> {
     );
   }
 }
+
+/// Fill of a [ListSection] card. Dark: ink 4% over surface (a lifted grey). Light: near-white so
+/// the card reads against the tinted page (ink-over-surface vanished into the ground at 1.02:1).
+Color listCardFill(ThemeData theme) => theme.brightness == Brightness.dark
+    ? mixSrgb(theme.colors.ink, 0.04, theme.colors.surface)
+    : const Color(0xffffffff);
+
+/// Inner hairline of a [ListSection] card: light only, a soft edge so white never blurs into the page.
+Decoration listCardDecoration(ThemeData theme) => ShapeDecoration(
+  shape: SuperellipseBorder(
+    radius: theme.sizes.listRadius,
+    side: theme.brightness == Brightness.dark
+        ? BorderSide.none
+        : BorderSide(color: Color.from(alpha: 0.09, red: 0, green: 0, blue: 0)),
+  ),
+);
 
 class _Drag {
   _Drag(this.from, this.heights, this.min, this.max) : to = from;
