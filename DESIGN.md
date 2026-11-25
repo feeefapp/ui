@@ -36,9 +36,10 @@ in Arabic, often in a hurry. Every rule here protects their speed and their trus
    - **Search ends the row.** `ToolbarSearch` is the last bubble of its toolbar: filters start the
      row (`children`), views and tools sit just before the search (`trailing`), and the open field
      grows toward the start over them.
-   - **Rows don't wrap; they fold.** Chips and actions that don't fit go into a "…" bubble whose
-     menu holds them (`ActionsBar`, `FilterBar` chips). A chip is one control; its secondary
-     actions (clear, unpin) live in what it opens.
+   - **Rows don't wrap.** Actions that don't fit fold into a "…" bubble whose menu holds them
+     (`ActionsBar`); `FilterBar` chips scroll sideways instead. A chip is one control with one short
+     text (its value, or its name while unset); its secondary actions (clear, unpin) live in what it
+     opens.
    - **Selection lines up.** A list's select-all checkbox sits in its top bar, and every row's
      checkbox sits in one column right under it. When selection is the row action, its checkbox
      spans the painted row, including the amount, status and padding. A navigable row gives the

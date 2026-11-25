@@ -163,15 +163,20 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await frames(tester, 5);
     expect(find.text('Status'), findsNothing);
-    // The chip shows the value.
+    // An on/off chip shows just its name; clearing and unpinning live in its editor.
     expect(button('Edit Paid filter'), findsOneWidget);
-    expect(find.text('On'), findsOneWidget);
+    expect(find.text('Paid'), findsOneWidget);
+    expect(find.text('On'), findsNothing);
 
-    await tester.tap(button('Clear Paid value'));
+    await tester.tap(button('Edit Paid filter'));
+    await frames(tester, 5);
+    await tester.tap(textButton('Any'));
     await frames(tester, 5);
     expect(_state(tester).value, isEmpty);
-    expect(find.text('Any'), findsOneWidget);
+    expect(_state(tester).pinned, ['paid']);
 
+    await tester.tap(button('Edit Paid filter'));
+    await frames(tester, 5);
     await tester.tap(button('Unpin Paid'));
     await frames(tester, 5);
     expect(_state(tester).pinned, isEmpty);

@@ -1,8 +1,7 @@
 'use client'
 
-import { useLayoutEffect, useRef, useState, useId, type ReactNode } from 'react'
+import { useRef, useState, useId, type ReactNode } from 'react'
 import * as Popover from '@radix-ui/react-popover'
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import {
   ArrowLeft,
   ListFilter,
@@ -12,7 +11,6 @@ import {
   SlidersHorizontal,
   CalendarDays,
   ToggleLeft,
-  MoreHorizontal,
 } from 'lucide-react'
 import { ToolbarSearch } from './toolbar-search'
 import { ToolbarGroup } from './toolbar'
@@ -20,8 +18,6 @@ import { IconButton, Button } from './primitives/button'
 import { TextField } from './primitives/text-field'
 import { PopoverSurface } from './primitives/popover-surface'
 import { useFloatingBoundary } from './menu/boundary'
-import { MenuSurface } from './menu/menu-surface'
-import { computeActionsLayout } from './actions/layout'
 import { Modal, PresentationDock } from './presentation'
 import { ScrollArea } from './scroll'
 import { Dock } from './dock'
@@ -40,9 +36,6 @@ import {
 } from './filters/temporal'
 import './filter-bar.css'
 import { GlassScope } from './glass/container'
-
-/** A toolbar bubble's padding (2px) and border (1px) on both sides, around its controls. */
-const BUBBLE_EDGES = 6
 
 /** A filter's value: `true` for on/off filters, a string, a `{from, to}` range, or `null` (any). */
 export type FilterValue = string | boolean | { from: string; to: string } | null
@@ -224,47 +217,8 @@ export function FilterBar({
     setEditing(option.id)
     setCatalog(false)
   }
-  // Chips that fit the row stay; the rest fold into "…" (the actions bar's split, measured).
+  // Pinned chips sit in one row that scrolls sideways when they don't fit.
   const pinnedOptions = options.filter((option) => pins.includes(option.id))
-  const pinsRow = useRef<HTMLDivElement>(null)
-  const measureRow = useRef<HTMLDivElement>(null)
-  const moreTrigger = useRef<HTMLButtonElement>(null)
-  const pendingEdit = useRef<FilterOption | null>(null)
-  const [foldedKey, setFoldedKey] = useState('')
-  const folded = new Set(foldedKey ? foldedKey.split('\n') : [])
-  useLayoutEffect(() => {
-    const row = pinsRow.current
-    const measure = measureRow.current
-    if (!row || !measure) {
-      setFoldedKey('')
-      return
-    }
-    const fit = () => {
-      // Plain controls are measured (no glass); a bubble adds its padding and border around them.
-      const bubble = (node: Element | null) => (node ? node.getBoundingClientRect().width + BUBBLE_EDGES : 0)
-      const widths = new Map(
-        [...measure.querySelectorAll<HTMLElement>('[data-filter-chip]')].map((node) => [
-          node.dataset.filterChip!,
-          bubble(node),
-        ])
-      )
-      const more = bubble(measure.querySelector('[data-filter-more]'))
-      const layout = computeActionsLayout({
-        actions: pinnedOptions,
-        maxWidth: row.clientWidth,
-        measure: (option) => widths.get(option.id) ?? 0,
-        overflowWidth: more,
-        gap: Number.parseFloat(getComputedStyle(row).columnGap) || 0,
-      })
-      const next = layout.overflow.map((option) => option.id).join('\n')
-      setFoldedKey((current) => (current === next ? current : next))
-    }
-    fit()
-    const observer = new ResizeObserver(fit)
-    observer.observe(row)
-    observer.observe(measure)
-    return () => observer.disconnect()
-  })
   const selected = options.find((option) => option.id === editing)
   const dialogSelected =
     (isTemporalType(selected?.type) &&
@@ -304,19 +258,32 @@ export function FilterBar({
         {t('lab.filter.unpin')}
       </Button>
     ) : null
-  const chip = (option: FilterOption) => (
-    <Button
-      variant="text"
-      appearance="toolbar"
-      controlSize="regular"
-      aria-label={t('lab.filter.edit', { name: option.label })}
-      data-filter-edit={option.id}
-      onClick={(event) => edit(option, event.currentTarget)}
-    >
-      {option.label}
-      <span className="lab-filter-chip-value">{summary(option, read(option), i18n.locale, t)}</span>
-    </Button>
-  )
+  // One short text per chip: the value when set ("Last 7 days"), the filter's name when not
+  // ("Status"). On/off filters always show their name; set chips are tinted. The full
+  // "name: value" stays in the accessible name and the tooltip.
+  const chip = (option: FilterOption) => {
+    const current = read(option)
+    const set = current != null
+    const text = set && option.type && option.type !== 'boolean' ? summary(option, current, i18n.locale, t) : option.label
+    const full = set ? `${option.label}: ${summary(option, current, i18n.locale, t)}` : option.label
+    return (
+      <Button
+        variant="text"
+        appearance="toolbar"
+        controlSize="regular"
+        aria-label={t('lab.filter.edit', { name: option.label })}
+        aria-description={set ? full : undefined}
+        title={full}
+        data-filter-edit={option.id}
+        data-filter-set={set || undefined}
+        onClick={(event) => edit(option, event.currentTarget)}
+      >
+        <span className="lab-filter-chip-value" dir="auto">
+          {text}
+        </span>
+      </Button>
+    )
+  }
   return (
     <GlassScope ref={host} className="lab-filter-bar" role="group" aria-label={label}>
       {onBack && (
@@ -600,77 +567,14 @@ export function FilterBar({
         )}
       </ToolbarGroup>
       {!!pinnedOptions.length && (
-        // One bubble per chip: name and value. Clearing and unpinning live in the chip's editor.
-        // Chips that don't fit fold into a "…" bubble whose menu opens their editors.
-        <div ref={pinsRow} className="lab-filter-pins" role="group" aria-label={t('lab.filter.pinned')}>
-          {pinnedOptions
-            .filter((option) => !folded.has(option.id))
-            .map((option) => (
-              <ToolbarGroup key={option.id} label={t('lab.filter.named', { name: option.label })}>
-                {chip(option)}
-              </ToolbarGroup>
-            ))}
-          {folded.size > 0 && (
-            <ToolbarGroup label={t('lab.filter.more')}>
-              <DropdownMenu.Root modal={false}>
-                <DropdownMenu.Trigger asChild>
-                  <IconButton ref={moreTrigger} variant="text" appearance="toolbar" controlSize="regular" aria-label={t('lab.filter.moreCount', { count: folded.size })}>
-                    <MoreHorizontal />
-                  </IconButton>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Portal container={boundary || undefined}>
-                  <MenuSurface asChild>
-                    <DropdownMenu.Content
-                      className="lab-actions-menu"
-                      aria-label={t('lab.filter.more')}
-                      align="end"
-                      sideOffset={8}
-                      collisionPadding={12}
-                      onCloseAutoFocus={(event) => {
-                        // A picked filter's editor is already open: focus stays in it.
-                        if (!pendingEdit.current) return
-                        pendingEdit.current = null
-                        event.preventDefault()
-                      }}
-                    >
-                      {pinnedOptions
-                        .filter((option) => folded.has(option.id))
-                        .map((option) => (
-                          <DropdownMenu.Item
-                            key={option.id}
-                            className="lab-actions-menu__item"
-                            data-lab-corners
-                            textValue={option.label}
-                            onSelect={() => {
-                              pendingEdit.current = option
-                              edit(option, moreTrigger.current ?? undefined)
-                            }}
-                          >
-                            <span className="lab-actions-menu__label">
-                              {option.label}
-                              <span className="lab-filter-menu-value">{summary(option, read(option), i18n.locale, t)}</span>
-                            </span>
-                          </DropdownMenu.Item>
-                        ))}
-                    </DropdownMenu.Content>
-                  </MenuSurface>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
+        // One bubble per chip: its value, or its name while unset. Clearing and unpinning live
+        // in the chip's editor. Chips that don't fit scroll sideways (no wrapping, no folding).
+        <div className="lab-filter-pins" role="group" aria-label={t('lab.filter.pinned')}>
+          {pinnedOptions.map((option) => (
+            <ToolbarGroup key={option.id} label={t('lab.filter.named', { name: option.label })}>
+              {chip(option)}
             </ToolbarGroup>
-          )}
-          {/* Real chips, inert and hidden, keep the fit exact (fonts, values, zoom). */}
-          <div ref={measureRow} className="lab-filter-pins-measure" aria-hidden="true" inert>
-            {pinnedOptions.map((option) => (
-              <span key={option.id} data-filter-chip={option.id}>
-                {chip(option)}
-              </span>
-            ))}
-            <span data-filter-more="">
-              <IconButton variant="text" appearance="toolbar" controlSize="regular" aria-label={t('lab.filter.more')} tabIndex={-1}>
-                <MoreHorizontal />
-              </IconButton>
-            </span>
-          </div>
+          ))}
         </div>
       )}
       {trailing && <div className="lab-filter-trailing">{trailing}</div>}
@@ -691,10 +595,6 @@ export function FilterBar({
               sideOffset={8}
               collisionPadding={12}
               collisionBoundary={container}
-              // Opened from the "…" menu: the closing menu hands focus back to "…" a moment later.
-              onFocusOutside={(event) => {
-                if (moreTrigger.current?.contains(event.target as Node)) event.preventDefault()
-              }}
               onOpenAutoFocus={(event) => {
                 if (smallSelected?.type === 'enum') {
                   event.preventDefault()

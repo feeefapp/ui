@@ -564,9 +564,11 @@ class _FilterBarState extends State<FilterBar> {
 
     // Bubbles and pinned chips sit --lab-toolbar-gap (the shell gap G by default) apart.
     final gap = ThemeProvider.of(context).sizes.toolbarGap;
-    final bar = _BarWrap(
-      gap: gap,
-      pushLastToEnd: widget.trailing != null,
+    // `.lab-filter-bar`: one row. Pinned chips take the room left and scroll sideways when they
+    // don't fit; the trailing actions stay at the end.
+    final bar = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: gap,
       children: [
         if (widget.onBack != null)
           ToolbarGroup(
@@ -625,17 +627,28 @@ class _FilterBarState extends State<FilterBar> {
               ),
           ],
         ),
-        if (pinned.isNotEmpty)
-          Semantics(
-            container: true,
-            explicitChildNodes: true,
-            label: 'Pinned filters',
-            child: Wrap(
-              spacing: gap,
-              runSpacing: gap,
-              children: [for (final option in pinned) _chip(context, option)],
-            ),
-          ),
+        Expanded(
+          child: pinned.isEmpty
+              ? const SizedBox.shrink()
+              : Semantics(
+                  container: true,
+                  explicitChildNodes: true,
+                  label: 'Pinned filters',
+                  child: ScrollConfiguration(
+                    behavior: ScrollConfiguration.of(context)
+                        .copyWith(scrollbars: false, overscroll: false),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        spacing: gap,
+                        children: [
+                          for (final option in pinned) _chip(context, option),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+        ),
         if (widget.trailing != null)
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -707,6 +720,7 @@ class _FilterBarState extends State<FilterBar> {
             dock: PresentationDock(
               label: 'Filter editor actions',
               children: [
+                if (dialog != null) ?_unpinButton(dialog),
                 Button(
                   onClick: () {
                     if (selected != null) {
@@ -780,6 +794,9 @@ class _FilterBarState extends State<FilterBar> {
     );
   }
 
+  /// One button per chip (the web kit's): the value when set ("Last 7 days"), the filter's name
+  /// when not ("Status"); on/off filters always show their name. Clearing and unpinning live in
+  /// the chip's editor, so a row of chips stays short.
   Widget _chip(BuildContext context, FilterOption option) {
     final c = ThemeProvider.of(context).colors;
     final key = _chipKeys.putIfAbsent(option.id, GlobalKey.new);
@@ -787,11 +804,11 @@ class _FilterBarState extends State<FilterBar> {
       option.id,
       () => FocusNode(debugLabel: 'Edit ${option.id}'),
     );
-    final unpin = _unpinNodes.putIfAbsent(
-      option.id,
-      () => FocusNode(debugLabel: 'Unpin ${option.id}'),
-    );
     final value = _read(option);
+    final set = value != null;
+    final text = set && !_isBoolean(option)
+        ? _summary(option, value)
+        : option.label;
     return ToolbarGroup(
       label: '${option.label} filter',
       glassId: '$_id-pin-${option.id}',
@@ -805,39 +822,39 @@ class _FilterBarState extends State<FilterBar> {
             ariaLabel: 'Edit ${option.label} filter',
             onClick: () => _edit(option, key),
             children: [
-              Text(option.label),
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 130),
+                constraints: const BoxConstraints(maxWidth: 140),
                 child: Text(
-                  _summary(option, value),
+                  text,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: c.muted),
+                  style: set ? null : TextStyle(color: c.muted),
                 ),
               ),
             ],
           ),
         ),
-        IconButton(
-          appearance: ButtonAppearance.toolbar,
-          controlSize: ControlSize.regular,
-          ariaLabel: 'Clear ${option.label} value',
-          disabled: value == null,
-          onClick: () {
-            node.requestFocus();
-            _change(option, null);
-          },
-          icon: const LucideX(size: 16),
-        ),
-        IconButton(
-          appearance: ButtonAppearance.toolbar,
-          controlSize: ControlSize.regular,
-          focusNode: unpin,
-          ariaLabel: 'Unpin ${option.label}',
-          onClick: () =>
-              _setPins(_pins.where((id) => id != option.id).toList()),
-          icon: const LucidePinOff(size: 16),
-        ),
       ],
+    );
+  }
+
+  /// "Unpin" in a pinned filter's editor (the chip itself has no unpin button).
+  Widget? _unpinButton(FilterOption option) {
+    if (!_pins.contains(option.id)) return null;
+    final node = _unpinNodes.putIfAbsent(
+      option.id,
+      () => FocusNode(debugLabel: 'Unpin ${option.id}'),
+    );
+    return Button(
+      controlSize: ControlSize.regular,
+      focusNode: node,
+      ariaLabel: 'Unpin ${option.label}',
+      onClick: () {
+        _setPins(_pins.where((id) => id != option.id).toList());
+        setState(() => _editing = null);
+        _close();
+      },
+      children: const [LucidePinOff(size: 16), Text('Unpin')],
     );
   }
 
@@ -1180,6 +1197,7 @@ class _FilterBarState extends State<FilterBar> {
       bottom: Dock(
         label: 'Filter value actions',
         children: [
+          ?_unpinButton(option),
           Button(
             controlSize: ControlSize.regular,
             onClick: () => _commit(option, null),
@@ -1214,159 +1232,3 @@ FilterValue? _fromTemporal(TemporalValue? value) => switch (value) {
   TemporalRange(:final from, :final to) => FilterRange(from: from, to: to),
   null => null,
 };
-
-// ---- Layout -------------------------------------------------------------------------------------
-
-/// `.lab-filter-bar`: a wrapping row (gap 8, items at the line's start, each at most the full
-/// width) whose last item takes `margin-inline-start: auto` when [pushLastToEnd].
-class _BarWrap extends MultiChildRenderObjectWidget {
-  const _BarWrap({
-    required this.gap,
-    required this.pushLastToEnd,
-    required super.children,
-  });
-  final double gap;
-  final bool pushLastToEnd;
-
-  @override
-  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    super.debugFillProperties(properties);
-    properties
-      ..add(DoubleProperty('gap', gap))
-      ..add(
-        FlagProperty(
-          'pushLastToEnd',
-          value: pushLastToEnd,
-          ifTrue: 'last item at end',
-        ),
-      );
-  }
-
-  @override
-  RenderObject createRenderObject(BuildContext context) =>
-      _RenderBarWrap(gap, pushLastToEnd, Directionality.of(context));
-
-  @override
-  void updateRenderObject(BuildContext context, _RenderBarWrap renderObject) =>
-      renderObject
-        ..gap = gap
-        ..pushLastToEnd = pushLastToEnd
-        ..direction = Directionality.of(context);
-}
-
-class _BarWrapData extends ContainerBoxParentData<RenderBox> {}
-
-class _RenderBarWrap extends RenderBox
-    with
-        ContainerRenderObjectMixin<RenderBox, _BarWrapData>,
-        RenderBoxContainerDefaultsMixin<RenderBox, _BarWrapData> {
-  _RenderBarWrap(this._gap, this._pushLastToEnd, this._direction);
-
-  double _gap;
-  set gap(double value) {
-    if (value == _gap) return;
-    _gap = value;
-    markNeedsLayout();
-  }
-
-  bool _pushLastToEnd;
-  set pushLastToEnd(bool value) {
-    if (value == _pushLastToEnd) return;
-    _pushLastToEnd = value;
-    markNeedsLayout();
-  }
-
-  TextDirection _direction;
-  set direction(TextDirection value) {
-    if (value == _direction) return;
-    _direction = value;
-    markNeedsLayout();
-  }
-
-  @override
-  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    super.debugFillProperties(properties);
-    properties
-      ..add(DoubleProperty('gap', _gap))
-      ..add(
-        FlagProperty(
-          'pushLastToEnd',
-          value: _pushLastToEnd,
-          ifTrue: 'last item at end',
-        ),
-      )
-      ..add(EnumProperty<TextDirection>('direction', _direction));
-  }
-
-  @override
-  void setupParentData(RenderBox child) {
-    if (child.parentData is! _BarWrapData) child.parentData = _BarWrapData();
-  }
-
-  Size _layout(BoxConstraints constraints, {required bool dry}) {
-    final maxWidth = constraints.maxWidth;
-    final inner = BoxConstraints(maxWidth: maxWidth);
-    final children = <RenderBox>[];
-    final sizes = <Size>[];
-    var child = firstChild;
-    while (child != null) {
-      children.add(child);
-      if (dry) {
-        sizes.add(child.getDryLayout(inner));
-      } else {
-        child.layout(inner, parentUsesSize: true);
-        sizes.add(child.size);
-      }
-      child = childAfter(child);
-    }
-    final starts = <Offset>[];
-    var x = 0.0, y = 0.0, line = 0.0, right = 0.0;
-    var empty = true;
-    for (var i = 0; i < sizes.length; i++) {
-      final size = sizes[i];
-      if (!empty && x + _gap + size.width > maxWidth + 1e-9) {
-        y += line + _gap;
-        x = 0;
-        line = 0;
-        empty = true;
-      }
-      var left = empty ? 0.0 : x + _gap;
-      if (_pushLastToEnd && i == sizes.length - 1 && maxWidth.isFinite) {
-        left = math.max(left, maxWidth - size.width);
-      }
-      starts.add(Offset(left, y));
-      x = left + size.width;
-      right = math.max(right, x);
-      line = math.max(line, size.height);
-      empty = false;
-    }
-    final result = constraints.constrain(
-      Size(maxWidth.isFinite ? maxWidth : right, y + line),
-    );
-    if (!dry) {
-      final rtl = _direction == TextDirection.rtl;
-      for (var i = 0; i < children.length; i++) {
-        final data = children[i].parentData! as _BarWrapData;
-        data.offset = rtl
-            ? Offset(result.width - starts[i].dx - sizes[i].width, starts[i].dy)
-            : starts[i];
-      }
-    }
-    return result;
-  }
-
-  @override
-  void performLayout() => size = _layout(constraints, dry: false);
-
-  @override
-  Size computeDryLayout(BoxConstraints constraints) =>
-      _layout(constraints, dry: true);
-
-  @override
-  void paint(PaintingContext context, Offset offset) =>
-      defaultPaint(context, offset);
-
-  @override
-  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) =>
-      defaultHitTestChildren(result, position: position);
-}
