@@ -1,17 +1,14 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useLayoutEffect, useRef, useState, useId } from 'react';
+import { useRef, useState, useId } from 'react';
 import * as Popover from '@radix-ui/react-popover';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { ArrowLeft, ListFilter, Sparkles, Pin, PinOff, SlidersHorizontal, CalendarDays, ToggleLeft, MoreHorizontal, } from 'lucide-react';
+import { ArrowLeft, ListFilter, Sparkles, Pin, PinOff, SlidersHorizontal, CalendarDays, ToggleLeft, } from 'lucide-react';
 import { ToolbarSearch } from './toolbar-search.js';
 import { ToolbarGroup } from './toolbar.js';
 import { IconButton, Button } from './primitives/button.js';
 import { TextField } from './primitives/text-field.js';
 import { PopoverSurface } from './primitives/popover-surface.js';
 import { useFloatingBoundary } from './menu/boundary.js';
-import { MenuSurface } from './menu/menu-surface.js';
-import { computeActionsLayout } from './actions/layout.js';
 import { Modal, PresentationDock } from './presentation/index.js';
 import { ScrollArea } from './scroll/index.js';
 import { Dock } from './dock/index.js';
@@ -22,8 +19,6 @@ import { useI18n } from './i18n.js';
 import { isTemporalType, isTemporalRange, validateTemporal, readTemporalForm, } from './filters/temporal.js';
 import './filter-bar.css';
 import { GlassScope } from './glass/container.js';
-/** A toolbar bubble's padding (2px) and border (1px) on both sides, around its controls. */
-const BUBBLE_EDGES = 6;
 function summary(option, value, locale, t) {
     if (value == null)
         return t('lab.filter.any');
@@ -112,45 +107,8 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
         setEditing(option.id);
         setCatalog(false);
     };
-    // Chips that fit the row stay; the rest fold into "…" (the actions bar's split, measured).
+    // Pinned chips sit in one row that scrolls sideways when they don't fit.
     const pinnedOptions = options.filter((option) => pins.includes(option.id));
-    const pinsRow = useRef(null);
-    const measureRow = useRef(null);
-    const moreTrigger = useRef(null);
-    const pendingEdit = useRef(null);
-    const [foldedKey, setFoldedKey] = useState('');
-    const folded = new Set(foldedKey ? foldedKey.split('\n') : []);
-    useLayoutEffect(() => {
-        const row = pinsRow.current;
-        const measure = measureRow.current;
-        if (!row || !measure) {
-            setFoldedKey('');
-            return;
-        }
-        const fit = () => {
-            // Plain controls are measured (no glass); a bubble adds its padding and border around them.
-            const bubble = (node) => (node ? node.getBoundingClientRect().width + BUBBLE_EDGES : 0);
-            const widths = new Map([...measure.querySelectorAll('[data-filter-chip]')].map((node) => [
-                node.dataset.filterChip,
-                bubble(node),
-            ]));
-            const more = bubble(measure.querySelector('[data-filter-more]'));
-            const layout = computeActionsLayout({
-                actions: pinnedOptions,
-                maxWidth: row.clientWidth,
-                measure: (option) => widths.get(option.id) ?? 0,
-                overflowWidth: more,
-                gap: Number.parseFloat(getComputedStyle(row).columnGap) || 0,
-            });
-            const next = layout.overflow.map((option) => option.id).join('\n');
-            setFoldedKey((current) => (current === next ? current : next));
-        };
-        fit();
-        const observer = new ResizeObserver(fit);
-        observer.observe(row);
-        observer.observe(measure);
-        return () => observer.disconnect();
-    });
     const selected = options.find((option) => option.id === editing);
     const dialogSelected = (isTemporalType(selected?.type) &&
         isTemporalRange(selected.type)) ||
@@ -174,7 +132,16 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
         setEditing(null);
     };
     const unpinButton = (option, appearance) => option && pins.includes(option.id) ? (_jsxs(Button, { variant: "text", appearance: appearance, controlSize: "regular", "aria-label": t('lab.filter.unpinNamed', { name: option.label }), "data-filter-unpin": "", onClick: () => unpin(option), children: [_jsx(PinOff, {}), t('lab.filter.unpin')] })) : null;
-    const chip = (option) => (_jsxs(Button, { variant: "text", appearance: "toolbar", controlSize: "regular", "aria-label": t('lab.filter.edit', { name: option.label }), "data-filter-edit": option.id, onClick: (event) => edit(option, event.currentTarget), children: [option.label, _jsx("span", { className: "lab-filter-chip-value", children: summary(option, read(option), i18n.locale, t) })] }));
+    // One short text per chip: the value when set ("Last 7 days"), the filter's name when not
+    // ("Status"). On/off filters always show their name; set chips are tinted. The full
+    // "name: value" stays in the accessible name and the tooltip.
+    const chip = (option) => {
+        const current = read(option);
+        const set = current != null;
+        const text = set && option.type && option.type !== 'boolean' ? summary(option, current, i18n.locale, t) : option.label;
+        const full = set ? `${option.label}: ${summary(option, current, i18n.locale, t)}` : option.label;
+        return (_jsx(Button, { variant: "text", appearance: "toolbar", controlSize: "regular", "aria-label": t('lab.filter.edit', { name: option.label }), "aria-description": set ? full : undefined, title: full, "data-filter-edit": option.id, "data-filter-set": set || undefined, onClick: (event) => edit(option, event.currentTarget), children: _jsx("span", { className: "lab-filter-chip-value", dir: "auto", children: text }) }));
+    };
     return (_jsxs(GlassScope, { ref: host, className: "lab-filter-bar", role: "group", "aria-label": label, children: [onBack && (_jsx(ToolbarGroup, { label: t('lab.filter.navigation'), children: _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "regular", "aria-label": t('lab.filter.back'), onClick: onBack, children: _jsx(ArrowLeft, { className: "lab-dir-flip" }) }) })), _jsxs(ToolbarGroup, { label: t('lab.filter.controls'), children: [_jsxs(Popover.Root, { open: catalog, onOpenChange: (open) => {
                             prepare(open);
                             setCatalog(open);
@@ -254,30 +221,12 @@ export function FilterBar({ label, options, value, onChange, values: controlledV
                                                                 setError('');
                                                                 naturalInput.current?.focus();
                                                             }, children: suggestion }, suggestion))) })) : null] }) }) }) }) })] }))] }), !!pinnedOptions.length && (
-            // One bubble per chip: name and value. Clearing and unpinning live in the chip's editor.
-            // Chips that don't fit fold into a "…" bubble whose menu opens their editors.
-            _jsxs("div", { ref: pinsRow, className: "lab-filter-pins", role: "group", "aria-label": t('lab.filter.pinned'), children: [pinnedOptions
-                        .filter((option) => !folded.has(option.id))
-                        .map((option) => (_jsx(ToolbarGroup, { label: t('lab.filter.named', { name: option.label }), children: chip(option) }, option.id))), folded.size > 0 && (_jsx(ToolbarGroup, { label: t('lab.filter.more'), children: _jsxs(DropdownMenu.Root, { modal: false, children: [_jsx(DropdownMenu.Trigger, { asChild: true, children: _jsx(IconButton, { ref: moreTrigger, variant: "text", appearance: "toolbar", controlSize: "regular", "aria-label": t('lab.filter.moreCount', { count: folded.size }), children: _jsx(MoreHorizontal, {}) }) }), _jsx(DropdownMenu.Portal, { container: boundary || undefined, children: _jsx(MenuSurface, { asChild: true, children: _jsx(DropdownMenu.Content, { className: "lab-actions-menu", "aria-label": t('lab.filter.more'), align: "end", sideOffset: 8, collisionPadding: 12, onCloseAutoFocus: (event) => {
-                                                // A picked filter's editor is already open: focus stays in it.
-                                                if (!pendingEdit.current)
-                                                    return;
-                                                pendingEdit.current = null;
-                                                event.preventDefault();
-                                            }, children: pinnedOptions
-                                                .filter((option) => folded.has(option.id))
-                                                .map((option) => (_jsx(DropdownMenu.Item, { className: "lab-actions-menu__item", "data-lab-corners": true, textValue: option.label, onSelect: () => {
-                                                    pendingEdit.current = option;
-                                                    edit(option, moreTrigger.current ?? undefined);
-                                                }, children: _jsxs("span", { className: "lab-actions-menu__label", children: [option.label, _jsx("span", { className: "lab-filter-menu-value", children: summary(option, read(option), i18n.locale, t) })] }) }, option.id))) }) }) })] }) })), _jsxs("div", { ref: measureRow, className: "lab-filter-pins-measure", "aria-hidden": "true", inert: true, children: [pinnedOptions.map((option) => (_jsx("span", { "data-filter-chip": option.id, children: chip(option) }, option.id))), _jsx("span", { "data-filter-more": "", children: _jsx(IconButton, { variant: "text", appearance: "toolbar", controlSize: "regular", "aria-label": t('lab.filter.more'), tabIndex: -1, children: _jsx(MoreHorizontal, {}) }) })] })] })), trailing && _jsx("div", { className: "lab-filter-trailing", children: trailing }), _jsxs(Popover.Root, { open: !!smallSelected, onOpenChange: (open) => {
+            // One bubble per chip: its value, or its name while unset. Clearing and unpinning live
+            // in the chip's editor. Chips that don't fit scroll sideways (no wrapping, no folding).
+            _jsx("div", { className: "lab-filter-pins", role: "group", "aria-label": t('lab.filter.pinned'), children: pinnedOptions.map((option) => (_jsx(ToolbarGroup, { label: t('lab.filter.named', { name: option.label }), children: chip(option) }, option.id))) })), trailing && _jsx("div", { className: "lab-filter-trailing", children: trailing }), _jsxs(Popover.Root, { open: !!smallSelected, onOpenChange: (open) => {
                     if (!open)
                         setEditing(null);
-                }, children: [_jsx(Popover.Anchor, { virtualRef: anchor }), _jsx(Popover.Portal, { container: container, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(Popover.Content, { dir: dir, className: "lab-filter-panel lab-filter-value-menu", "aria-label": smallSelected ? t('lab.filter.edit', { name: smallSelected.label }) : t('lab.filter.editAny'), align: "start", sideOffset: 8, collisionPadding: 12, collisionBoundary: container, 
-                                // Opened from the "…" menu: the closing menu hands focus back to "…" a moment later.
-                                onFocusOutside: (event) => {
-                                    if (moreTrigger.current?.contains(event.target))
-                                        event.preventDefault();
-                                }, onOpenAutoFocus: (event) => {
+                }, children: [_jsx(Popover.Anchor, { virtualRef: anchor }), _jsx(Popover.Portal, { container: container, children: _jsx(PopoverSurface, { asChild: true, children: _jsx(Popover.Content, { dir: dir, className: "lab-filter-panel lab-filter-value-menu", "aria-label": smallSelected ? t('lab.filter.edit', { name: smallSelected.label }) : t('lab.filter.editAny'), align: "start", sideOffset: 8, collisionPadding: 12, collisionBoundary: container, onOpenAutoFocus: (event) => {
                                     if (smallSelected?.type === 'enum') {
                                         event.preventDefault();
                                         enumSearch.current?.focus();

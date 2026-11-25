@@ -59,8 +59,8 @@ html[data-lab-theme] .lab-text-field textarea.lab-raw-input {
 }
 /* The field's edge, on its own layer so the floated hint can cut a notch in it (a mask, like a
 fieldset legend) instead of covering the border with a patch of colour. It sits 1px outside the
-control behind a transparent border; the inset shadow is the edge. Focus draws no ring outside: the
-edge turns the focus colour and thickens inward to --lab-focus-ring-width. */
+control behind a transparent border; the inset shadow is the edge. Focus draws no ring: the
+edge turns a softened focus tint, still 1px. */
 .lab-text-field-outline {
   position: absolute;
   inset: -1px;
@@ -74,8 +74,9 @@ edge turns the focus colour and thickens inward to --lab-focus-ring-width. */
     border-color 140ms,
     box-shadow 140ms;
 }
+/* Focus: a quiet 1px edge in a softened focus tint, no thick ring. */
 .lab-text-field-edit:focus-within .lab-text-field-outline {
-  box-shadow: inset 0 0 0 var(--lab-focus-ring-width) var(--lab-focus);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lab-focus) 45%, transparent);
 }
 /* A trailing action focuses independently; its own ring is never suppressed. */
 .lab-text-field-label {

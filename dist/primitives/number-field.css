@@ -58,8 +58,8 @@ html[data-lab-theme] .lab-number-field:focus-visible:not([data-editing]) {
   background: var(--lab-variant-hover);
 }
 html[data-lab-theme] .lab-number-field[data-editing] {
-  border-color: var(--lab-focus);
-  box-shadow: inset 0 0 0 calc(var(--lab-focus-ring-width) - 1px) var(--lab-focus);
+  border-color: color-mix(in srgb, var(--lab-focus) 45%, transparent);
+  box-shadow: none;
   outline: none;
 }
 html[data-lab-theme] .lab-number-field[data-editing] {
@@ -185,8 +185,8 @@ html[data-lab-theme] .lab-number-field[data-glass-member][data-dragging] {
   background: color-mix(in srgb, var(--lab-ink) 10%, transparent);
 }
 html[data-lab-theme] .lab-number-field[data-glass-member][data-editing] {
-  border-color: var(--lab-focus);
-  box-shadow: inset 0 0 0 calc(var(--lab-focus-ring-width) - 1px) var(--lab-focus);
+  border-color: color-mix(in srgb, var(--lab-focus) 45%, transparent);
+  box-shadow: none;
 }
 html[data-lab-theme] .lab-number-field-container[data-invalid] > .lab-number-field[data-glass-member] {
   border-color: var(--lab-field-error, var(--lab-danger));

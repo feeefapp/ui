@@ -32,6 +32,12 @@ for row sides, headers and hairlines. */
   corner-shape: superellipse(1.5);
   background: var(--lab-list-card-bg);
 }
+/* Light: a white card with a hairline, so it reads on the tinted page (twin of Flutter
+`listCardFill` / `listCardDecoration`). */
+html:not([data-lab-theme='dark']) .lab-list-card {
+  --lab-list-card-bg: #fff;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.09);
+}
 .lab-list-item {
   position: relative;
   min-width: 0;
