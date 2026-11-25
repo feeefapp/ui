@@ -512,7 +512,10 @@ class _ScaffoldWidgetState extends State<Scaffold> {
       ),
     );
     return ColoredBox(
-      color: mixSrgb(c.primary, 0.03, c.ground),
+      // `lab` washes the ground toward the primary; `mono` keeps it grey (primary marks actions only).
+      color: theme.config.palette == Palette.mono
+          ? c.ground
+          : mixSrgb(c.primary, 0.03, c.ground),
       child: DefaultTextStyle.merge(
         style: TextStyle(color: c.ink),
         child: Stack(
@@ -1035,6 +1038,8 @@ class _WorkspaceDrawerState extends State<_WorkspaceDrawer>
         child: ColoredBox(
           color: widget.glassSidebar
               ? const Color(0x00000000)
+              : theme.config.palette == Palette.mono
+              ? c.surface
               : mixSrgb(c.primary, 0.03, c.surface),
           child: Stack(
             children: [

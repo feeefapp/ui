@@ -1,5 +1,9 @@
 ## Unreleased
 
+* `Chip` (`primitives/chip.dart`): a small-control capsule for statuses, tags and compact actions
+  in dense rows, `filled` / `tonal` / `outlined` around one accent, optional leading mark, square
+  when icon-only, passive when `onPressed` is null.
+
 Flutter DevTools:
 
 * Every widget, State and render object describes its properties for the inspector, and the

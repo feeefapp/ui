@@ -306,10 +306,11 @@ class _FieldShellState extends State<FieldShell> {
         : 12.0;
     final insetEnd = widget.trailing != null ? _trailingWidth + 24 : 12.0;
     final ink = paint.ink;
+    // Focus: a quiet 1px edge in a softened focus tint — no thick ring.
     final edge = invalid
         ? c.danger
         : _focused
-        ? c.focus
+        ? mixSrgb(c.focus, 0.45, transparent)
         : paint.edge;
     final labelColor = invalid
         ? c.danger
@@ -326,7 +327,7 @@ class _FieldShellState extends State<FieldShell> {
         fill: paint.fill,
         edge: edge,
         radius: radius,
-        ring: _focused ? (invalid ? c.danger : c.focus) : null,
+        ring: null,
         ringWidth: FocusRingStyle.of(context).width,
         raised: widget.variant == ControlVariant.elevated && !_focused,
         highlight: c.controlHighlight,

@@ -601,9 +601,11 @@ class _NumberFieldState extends State<NumberField>
         dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
         fill: fill,
         // The glass draws the outline; the edge only marks editing and errors.
-        edge: invalid ? c.danger : (editing ? c.focus : clear),
-        // Editing reads as a field: its own edge thickens inward, no outer ring.
-        edgeWidth: editing ? FocusRingStyle.of(context).width : 1,
+        edge: invalid
+            ? c.danger
+            : (editing ? mixSrgb(c.focus, 0.45, transparent) : clear),
+        // Editing reads as a field: a quiet 1px edge, no thick ring.
+        edgeWidth: 1,
         radius: radius,
         raised: false,
         highlight: c.controlHighlight,

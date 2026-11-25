@@ -12,8 +12,6 @@ import '../glass/container.dart' show GlassOwnPress;
 import '../brand/geometry.dart';
 import '../theme.dart';
 import '../theme/css_text.dart';
-import '../theme/surfaces.dart';
-
 /// A bare single-line text box (`<input class="lab-input">`): field height, 5px 10px padding, a
 /// 1px line border with superellipse corners, the surface fill, 13px/20px text, a focus-coloured
 /// edge that thickens inward when focused (no outer ring), half opacity when disabled, a danger
@@ -547,9 +545,7 @@ class _RawFieldState extends State<_RawField> {
           fill: c.surface,
           edge: c.glassEdgeLow,
           border: border,
-          borderWidth: _focusVisible && !widget.invalid
-              ? FocusRingStyle.of(context).width
-              : 1,
+          borderWidth: 1,
           radius: radius,
         ),
         child: Padding(

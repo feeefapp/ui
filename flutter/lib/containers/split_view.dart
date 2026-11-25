@@ -240,7 +240,11 @@ class _SplitViewState extends State<SplitView> {
   Widget _wide(BuildContext context) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
-    final width = _painted;
+    // Under a scaffold that extends its body behind the sidebar, the start padding is the
+    // sidebar: the list column grows by it (its pages pad past it) and the detail drops it.
+    final media = MediaQuery.of(context);
+    final inset = _rtl ? media.padding.right : media.padding.left;
+    final width = _painted + inset;
     final strong = _resizing || _focused;
     final lineWidth = strong || (_hovered && widget.resizable) ? 3.0 : 1.0;
     final lineColor = strong
@@ -266,11 +270,11 @@ class _SplitViewState extends State<SplitView> {
     if (widget.resizable) {
       divider = Semantics(
         label: widget.resizeLabel,
-        value: '${width.round()}',
+        value: '${_painted.round()}',
         increasedValue:
-            '${splitListWidth(width + 24, widget.minListWidth, widget.maxListWidth).round()}',
+            '${splitListWidth(_painted + 24, widget.minListWidth, widget.maxListWidth).round()}',
         decreasedValue:
-            '${splitListWidth(width - 24, widget.minListWidth, widget.maxListWidth).round()}',
+            '${splitListWidth(_painted - 24, widget.minListWidth, widget.maxListWidth).round()}',
         onIncrease: () => _step(24),
         onDecrease: () => _step(-24),
         child: Focus(
@@ -357,7 +361,20 @@ class _SplitViewState extends State<SplitView> {
                     width: width,
                     child: ClipRect(child: widget.list),
                   ),
-                  Expanded(child: ClipRect(child: detail)),
+                  Expanded(
+                    child: ClipRect(
+                      child: inset == 0
+                          ? detail
+                          : MediaQuery(
+                              data: media.copyWith(
+                                padding: _rtl
+                                    ? media.padding.copyWith(right: 0)
+                                    : media.padding.copyWith(left: 0),
+                              ),
+                              child: detail,
+                            ),
+                    ),
+                  ),
                 ],
               ),
               // A 12px invisible grip around the hairline, above both columns.

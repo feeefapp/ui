@@ -841,11 +841,10 @@ html[data-lab-theme] input.lab-input:-webkit-autofill {
 html[data-lab-theme] :is(.lab-input, .lab-select) {
   height: var(--lab-field-height);
 }
-/* Fields show focus on their own edge: it turns the focus colour and thickens inward to the ring
-width. No ring outside. */
+/* Fields show focus on their own edge: a quiet 1px edge in a softened focus tint. No ring. */
 html[data-lab-theme] :is(.lab-input, .lab-textarea, .lab-select):focus-visible {
-  border-color: var(--lab-focus);
-  box-shadow: inset 0 0 0 calc(var(--lab-focus-ring-width) - 1px) var(--lab-focus);
+  border-color: color-mix(in srgb, var(--lab-focus) 45%, transparent);
+  box-shadow: none;
   outline: none;
 }
 html[data-lab-theme] :is(.lab-input, .lab-textarea, .lab-select):is(:disabled, [data-disabled]) {

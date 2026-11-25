@@ -79,6 +79,7 @@ export 'pixel_art.dart';
 export 'primitives/badge.dart';
 export 'primitives/notice.dart';
 export 'primitives/button.dart';
+export 'primitives/chip.dart';
 export 'primitives/choice.dart';
 export 'primitives/fields.dart';
 export 'primitives/lens_model.dart';
