@@ -46,6 +46,15 @@ function Overview() {
         </p>
       </Section>
 
+      <Section title="Empty board">
+        <p>
+          <C>emptyContent</C> places a custom welcome in the viewport. Use <C>emptyScene</C> for
+          interactive content that pans and zooms with the board. Give the scene a <C>maxWidth</C>
+          and content that lays out at that width or smaller. The board measures its height and
+          fits it between the floating panels when it appears or the available space changes.
+        </p>
+      </Section>
+
       <Section title="Takes">
         <p>
           <C>takes</C> are <C>ImageTake</C> records (<C>@feeef.dev/ui/image/types</C>), newest first; the

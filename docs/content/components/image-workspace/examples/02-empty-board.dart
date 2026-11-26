@@ -43,10 +43,27 @@ class _EmptyBoardState extends State<EmptyBoard> {
                 insets: (top: 12, right: 12, bottom: 12, left: 12),
                 now: DateTime.now().millisecondsSinceEpoch,
                 signedIn: true,
-                starters: _starters,
+                starters: const [],
                 onStarter: (prompt) => setState(() => _prompt = prompt),
                 onRetry: (_) {},
                 onRemove: (_) {},
+                emptyScene: (
+                  maxWidth: 360,
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final starter in _starters)
+                        Button(
+                          variant: ButtonVariant.tonal,
+                          onClick: () =>
+                              setState(() => _prompt = starter.prompt),
+                          children: [Text(starter.label)],
+                        ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

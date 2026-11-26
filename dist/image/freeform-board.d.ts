@@ -39,7 +39,7 @@ export declare function fitView(rect: {
  * the selected one glides into the free area between the floating panels. Drag to pan, scroll to
  * pan, pinch or ⌘/Ctrl+scroll to zoom, double-click a card to fit it.
  */
-export declare function FreeformBoard({ embedded, takes, selectedId, onSelect, insets, now, signedIn, starters, onStarter, onRetry, onRemove, emptyContent, modelLabel, }: {
+export declare function FreeformBoard({ embedded, takes, selectedId, onSelect, insets, now, signedIn, starters, onStarter, onRetry, onRemove, emptyContent, emptyScene, modelLabel, }: {
     /** Display name of a take's model for its card label ("{model} #{n}"). Defaults to a tidied id. */
     modelLabel?(modelId: string): string | undefined;
     /** Fills its positioned parent instead of the whole window (`position: fixed`). */
@@ -67,8 +67,13 @@ export declare function FreeformBoard({ embedded, takes, selectedId, onSelect, i
     onRetry(take: ImageTake): void;
     /** Called from a failed card's "Remove". */
     onRemove(take: ImageTake): void;
-    /** Replaces the default welcome on an empty board (e.g. the poster template gallery). */
+    /** Replaces the default welcome with content fixed to the viewport. */
     emptyContent?: ReactNode;
+    /** Interactive content at the world origin. The board fits its measured bounds on entry and resize. */
+    emptyScene?: {
+        content: ReactNode;
+        maxWidth: number;
+    };
 }): import("react").JSX.Element;
 export {};
 //# sourceMappingURL=freeform-board.d.ts.map

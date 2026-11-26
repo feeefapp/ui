@@ -31,6 +31,7 @@ const CARD_H = 560
 const GAP = 72
 const MIN_SCALE = 0.08
 const MAX_SCALE = 4
+const SCENE_PADDING = 16
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
 
@@ -89,6 +90,7 @@ export function FreeformBoard({
   onRetry,
   onRemove,
   emptyContent,
+  emptyScene,
   modelLabel,
 }: {
   /** Display name of a take's model for its card label ("{model} #{n}"). Defaults to a tidied id. */
@@ -115,11 +117,15 @@ export function FreeformBoard({
   onRetry(take: ImageTake): void
   /** Called from a failed card's "Remove". */
   onRemove(take: ImageTake): void
-  /** Replaces the default welcome on an empty board (e.g. the poster template gallery). */
+  /** Replaces the default welcome with content fixed to the viewport. */
   emptyContent?: ReactNode
+  /** Interactive content at the world origin. The board fits its measured bounds on entry and resize. */
+  emptyScene?: { content: ReactNode; maxWidth: number }
 }) {
   const { t } = useI18n()
   const root = useRef<HTMLDivElement>(null)
+  const sceneRef = useRef<HTMLDivElement>(null)
+  const [sceneSize, setSceneSize] = useState({ w: 0, h: 0 })
   // 0 × 0 until the board is measured: nothing is fitted to a guessed size.
   const [size, setSize] = useState({ w: 0, h: 0 })
   const fittedOnce = useRef(false)
@@ -136,9 +142,17 @@ export function FreeformBoard({
     card?: string
   } | null>(null)
   const pinch = useRef(new Map<number, { x: number; y: number }>())
+  const suppressSceneClick = useRef(false)
   const [grabbing, setGrabbing] = useState(false)
   const cards = useMemo(() => layoutCards(takes, ratios), [takes, ratios])
   const selected = cards.find((card) => card.take.id === selectedId) ?? cards[cards.length - 1]
+  const scene = cards.length === 0 ? emptyScene : undefined
+  const hasScene = scene != null
+  const roomW = size.w - insets.left - insets.right
+  const roomH = size.h - insets.top - insets.bottom
+  const sceneWidth = Math.max(0, Math.min(scene?.maxWidth ?? 0, roomW - SCENE_PADDING * 2))
+  const sceneReady =
+    sceneWidth > 0 && roomH > 0 && sceneSize.h > 0 && Math.abs(sceneSize.w - sceneWidth) < 1
 
   useLayoutEffect(() => {
     const el = root.current
@@ -149,6 +163,16 @@ export function FreeformBoard({
     observer.observe(el)
     return () => observer.disconnect()
   }, [])
+
+  useLayoutEffect(() => {
+    const el = sceneRef.current
+    if (!el) return
+    const observer = new ResizeObserver(([entry]) => {
+      setSceneSize({ w: entry.contentRect.width, h: entry.contentRect.height })
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [hasScene])
 
   const glide = useCallback((next: View, instant = false) => {
     setAnimate(!instant && !prefersReducedMotion())
@@ -172,19 +196,33 @@ export function FreeformBoard({
 
   // Bring the selection (or a new version) into the free area whenever it, the panels or the window change.
   const layoutKey = cards.map((card) => `${card.take.id}:${card.x}:${card.w}`).join('|')
-  const key = `${selected?.take.id}:${layoutKey}:${size.w}x${size.h}:${insets.left},${insets.top},${insets.right},${insets.bottom}`
-  useEffect(() => {
+  const key = `${selected?.take.id}:${layoutKey}:${size.w}x${size.h}:${insets.left},${insets.top},${insets.right},${insets.bottom}:${scene ? `${sceneWidth},${sceneSize.h},${sceneReady}` : ''}`
+  useLayoutEffect(() => {
+    if (scene) {
+      if (!sceneReady) return
+      const scale = Math.min(1, (roomH - Math.min(SCENE_PADDING * 2, roomH / 4)) / sceneSize.h)
+      glide(
+        {
+          x: insets.left + (roomW - sceneWidth * scale) / 2,
+          y: insets.top + (roomH - sceneSize.h * scale) / 2,
+          scale,
+        },
+        true
+      )
+      fittedOnce.current = true
+      return
+    }
     // Unmeasured or hidden (a viewport no bigger than the chrome around it): nothing to fit yet. The
     // first real fit snaps into place; later ones glide.
-    if (size.w - insets.left - insets.right <= 56 || size.h - insets.top - insets.bottom <= 56) return
+    if (roomW <= 56 || roomH <= 56) return
     const instant = !fittedOnce.current
     fittedOnce.current = true
     if (selected) fitCard(selected, instant)
     else
       glide(
         {
-          x: insets.left + (size.w - insets.left - insets.right) / 2,
-          y: insets.top + (size.h - insets.top - insets.bottom) / 2,
+          x: insets.left + roomW / 2,
+          y: insets.top + roomH / 2,
           scale: 1,
         },
         instant
@@ -214,7 +252,7 @@ export function FreeformBoard({
     const el = root.current
     if (!el) return
     const wheel = (event: WheelEvent) => {
-      // Scrollable panels on the board (the template gallery) scroll natively.
+      // An overlay may own its own scrolling; scene content uses the board gestures.
       const inPanel = (event.target as Element | null)?.closest?.('[data-ff-scroll]')
       if (inPanel && !event.ctrlKey && !event.metaKey) return
       event.preventDefault()
@@ -237,8 +275,13 @@ export function FreeformBoard({
 
   const down = (event: ReactPointerEvent) => {
     if (event.button !== 0 && event.button !== 1) return
+    if (pinch.current.size === 0) suppressSceneClick.current = false
+    else suppressSceneClick.current = true
     pinch.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
-    ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
+    const target = event.target as Element
+    // Capture on the scene target so a tap retains native focus and click behavior.
+    const capture = target.closest('[data-ff-scene]') ? target : event.currentTarget
+    capture.setPointerCapture(event.pointerId)
     if (pinch.current.size === 1)
       drag.current = {
         id: event.pointerId,
@@ -276,6 +319,7 @@ export function FreeformBoard({
     const dy = event.clientY - d.y
     if (!d.moved && Math.hypot(dx, dy) < 4) return
     d.moved = true
+    suppressSceneClick.current = true
     setGrabbing(true)
     setView((old) => ({ ...old, x: d.vx + dx, y: d.vy + dy }))
   }
@@ -306,6 +350,16 @@ export function FreeformBoard({
       onPointerMove={move}
       onPointerUp={up}
       onPointerCancel={up}
+      onClickCapture={(event) => {
+        if (
+          event.detail &&
+          suppressSceneClick.current &&
+          (event.target as Element).closest('[data-ff-scene]')
+        ) {
+          event.stopPropagation()
+          event.preventDefault()
+        }
+      }}
       onDoubleClick={(event) => {
         const id = (event.target as HTMLElement).closest<HTMLElement>('[data-card]')?.dataset.card
         const card = cards.find((row) => row.take.id === id)
@@ -318,8 +372,20 @@ export function FreeformBoard({
         className="lab-ff-world"
         data-animate={animate}
         style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})` }}
-        onTransitionEnd={() => setAnimate(false)}
+        onTransitionEnd={(event) => {
+          if (event.target === event.currentTarget) setAnimate(false)
+        }}
       >
+        {scene && (
+          <div
+            ref={sceneRef}
+            className="lab-ff-scene"
+            data-ff-scene=""
+            style={{ width: sceneWidth, visibility: sceneReady ? undefined : 'hidden' }}
+          >
+            {scene.content}
+          </div>
+        )}
         {cards.map((card) => {
           const take = card.take
           const busy = take.status === 'pending' || take.status === 'processing'
@@ -391,7 +457,7 @@ export function FreeformBoard({
         })}
       </div>
 
-      {!cards.length && (
+      {!cards.length && !scene && (
         <div
           className="lab-ff-empty-frame"
           style={{

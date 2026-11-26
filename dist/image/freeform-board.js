@@ -16,6 +16,7 @@ const CARD_H = 560;
 const GAP = 72;
 const MIN_SCALE = 0.08;
 const MAX_SCALE = 4;
+const SCENE_PADDING = 16;
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 /** Lay the versions out left to right, oldest first, centred on the origin row. */
 /** `google/gemini-3-pro-image-preview` → `Gemini 3 Pro Image Preview`. */
@@ -50,9 +51,11 @@ export function fitView(rect, viewport, insets, padding = 28, maxScale = 1) {
  * the selected one glides into the free area between the floating panels. Drag to pan, scroll to
  * pan, pinch or ⌘/Ctrl+scroll to zoom, double-click a card to fit it.
  */
-export function FreeformBoard({ embedded = false, takes, selectedId, onSelect, insets, now, signedIn, starters, onStarter, onRetry, onRemove, emptyContent, modelLabel, }) {
+export function FreeformBoard({ embedded = false, takes, selectedId, onSelect, insets, now, signedIn, starters, onStarter, onRetry, onRemove, emptyContent, emptyScene, modelLabel, }) {
     const { t } = useI18n();
     const root = useRef(null);
+    const sceneRef = useRef(null);
+    const [sceneSize, setSceneSize] = useState({ w: 0, h: 0 });
     // 0 × 0 until the board is measured: nothing is fitted to a guessed size.
     const [size, setSize] = useState({ w: 0, h: 0 });
     const fittedOnce = useRef(false);
@@ -61,9 +64,16 @@ export function FreeformBoard({ embedded = false, takes, selectedId, onSelect, i
     const [ratios, setRatios] = useState({});
     const drag = useRef(null);
     const pinch = useRef(new Map());
+    const suppressSceneClick = useRef(false);
     const [grabbing, setGrabbing] = useState(false);
     const cards = useMemo(() => layoutCards(takes, ratios), [takes, ratios]);
     const selected = cards.find((card) => card.take.id === selectedId) ?? cards[cards.length - 1];
+    const scene = cards.length === 0 ? emptyScene : undefined;
+    const hasScene = scene != null;
+    const roomW = size.w - insets.left - insets.right;
+    const roomH = size.h - insets.top - insets.bottom;
+    const sceneWidth = Math.max(0, Math.min(scene?.maxWidth ?? 0, roomW - SCENE_PADDING * 2));
+    const sceneReady = sceneWidth > 0 && roomH > 0 && sceneSize.h > 0 && Math.abs(sceneSize.w - sceneWidth) < 1;
     useLayoutEffect(() => {
         const el = root.current;
         if (!el)
@@ -72,6 +82,16 @@ export function FreeformBoard({ embedded = false, takes, selectedId, onSelect, i
         observer.observe(el);
         return () => observer.disconnect();
     }, []);
+    useLayoutEffect(() => {
+        const el = sceneRef.current;
+        if (!el)
+            return;
+        const observer = new ResizeObserver(([entry]) => {
+            setSceneSize({ w: entry.contentRect.width, h: entry.contentRect.height });
+        });
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [hasScene]);
     const glide = useCallback((next, instant = false) => {
         setAnimate(!instant && !prefersReducedMotion());
         setView(next);
@@ -92,11 +112,23 @@ export function FreeformBoard({ embedded = false, takes, selectedId, onSelect, i
     };
     // Bring the selection (or a new version) into the free area whenever it, the panels or the window change.
     const layoutKey = cards.map((card) => `${card.take.id}:${card.x}:${card.w}`).join('|');
-    const key = `${selected?.take.id}:${layoutKey}:${size.w}x${size.h}:${insets.left},${insets.top},${insets.right},${insets.bottom}`;
-    useEffect(() => {
+    const key = `${selected?.take.id}:${layoutKey}:${size.w}x${size.h}:${insets.left},${insets.top},${insets.right},${insets.bottom}:${scene ? `${sceneWidth},${sceneSize.h},${sceneReady}` : ''}`;
+    useLayoutEffect(() => {
+        if (scene) {
+            if (!sceneReady)
+                return;
+            const scale = Math.min(1, (roomH - Math.min(SCENE_PADDING * 2, roomH / 4)) / sceneSize.h);
+            glide({
+                x: insets.left + (roomW - sceneWidth * scale) / 2,
+                y: insets.top + (roomH - sceneSize.h * scale) / 2,
+                scale,
+            }, true);
+            fittedOnce.current = true;
+            return;
+        }
         // Unmeasured or hidden (a viewport no bigger than the chrome around it): nothing to fit yet. The
         // first real fit snaps into place; later ones glide.
-        if (size.w - insets.left - insets.right <= 56 || size.h - insets.top - insets.bottom <= 56)
+        if (roomW <= 56 || roomH <= 56)
             return;
         const instant = !fittedOnce.current;
         fittedOnce.current = true;
@@ -104,8 +136,8 @@ export function FreeformBoard({ embedded = false, takes, selectedId, onSelect, i
             fitCard(selected, instant);
         else
             glide({
-                x: insets.left + (size.w - insets.left - insets.right) / 2,
-                y: insets.top + (size.h - insets.top - insets.bottom) / 2,
+                x: insets.left + roomW / 2,
+                y: insets.top + roomH / 2,
                 scale: 1,
             }, instant);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -128,7 +160,7 @@ export function FreeformBoard({ embedded = false, takes, selectedId, onSelect, i
         if (!el)
             return;
         const wheel = (event) => {
-            // Scrollable panels on the board (the template gallery) scroll natively.
+            // An overlay may own its own scrolling; scene content uses the board gestures.
             const inPanel = event.target?.closest?.('[data-ff-scroll]');
             if (inPanel && !event.ctrlKey && !event.metaKey)
                 return;
@@ -150,8 +182,15 @@ export function FreeformBoard({ embedded = false, takes, selectedId, onSelect, i
     const down = (event) => {
         if (event.button !== 0 && event.button !== 1)
             return;
+        if (pinch.current.size === 0)
+            suppressSceneClick.current = false;
+        else
+            suppressSceneClick.current = true;
         pinch.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-        event.currentTarget.setPointerCapture(event.pointerId);
+        const target = event.target;
+        // Capture on the scene target so a tap retains native focus and click behavior.
+        const capture = target.closest('[data-ff-scene]') ? target : event.currentTarget;
+        capture.setPointerCapture(event.pointerId);
         if (pinch.current.size === 1)
             drag.current = {
                 id: event.pointerId,
@@ -189,6 +228,7 @@ export function FreeformBoard({ embedded = false, takes, selectedId, onSelect, i
         if (!d.moved && Math.hypot(dx, dy) < 4)
             return;
         d.moved = true;
+        suppressSceneClick.current = true;
         setGrabbing(true);
         setView((old) => ({ ...old, x: d.vx + dx, y: d.vy + dy }));
     };
@@ -208,22 +248,32 @@ export function FreeformBoard({ embedded = false, takes, selectedId, onSelect, i
     return (_jsxs("div", { ref: root, className: "lab-ff lab-workspace-canvas", "data-embedded": embedded || undefined, "data-grabbing": grabbing, style: {
             backgroundSize: `${dot}px ${dot}px`,
             backgroundPosition: `${view.x}px ${view.y}px`,
-        }, onPointerDown: down, onPointerMove: move, onPointerUp: up, onPointerCancel: up, onDoubleClick: (event) => {
+        }, onPointerDown: down, onPointerMove: move, onPointerUp: up, onPointerCancel: up, onClickCapture: (event) => {
+            if (event.detail &&
+                suppressSceneClick.current &&
+                event.target.closest('[data-ff-scene]')) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+        }, onDoubleClick: (event) => {
             const id = event.target.closest('[data-card]')?.dataset.card;
             const card = cards.find((row) => row.take.id === id);
             if (card)
                 fitCard(card);
-        }, role: "application", "aria-label": t('lab.board.canvasHint'), children: [_jsx("div", { className: "lab-ff-world", "data-animate": animate, style: { transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})` }, onTransitionEnd: () => setAnimate(false), children: cards.map((card) => {
-                    const take = card.take;
-                    const busy = take.status === 'pending' || take.status === 'processing';
-                    return (_jsxs("figure", { "data-card": take.id, className: "lab-ff-card", "data-status": take.status, "aria-current": take.id === selected?.take.id, style: { left: card.x, top: card.y, width: card.w, height: card.h }, children: [take.status === 'completed' ? (_jsx("img", { src: take.fileUrl, alt: take.prompt || t('lab.board.generatedImage'), draggable: false, onLoad: (e) => {
-                                    const img = e.currentTarget;
-                                    const r = img.naturalWidth / Math.max(1, img.naturalHeight);
-                                    if (Number.isFinite(r) && Math.abs((ratios[take.id] ?? 0) - r) > 0.01)
-                                        setRatios((old) => ({ ...old, [take.id]: r }));
-                                } })) : busy ? (_jsxs("div", { className: "lab-ff-state", role: "status", children: [_jsx(PixelLoader, { size: 40, label: t('lab.board.creating') }), _jsx("b", { children: t('lab.board.takingShape') }), _jsxs("small", { children: [elapsed(take.createdAt, now), " \u00B7 ", t('lab.board.usually')] })] })) : (_jsxs("div", { className: "lab-ff-state", role: "alert", children: [_jsx("b", { children: t('lab.board.didntWork') }), _jsx("small", { children: takeErrorText(take, t, t('lab.board.tryAnother')) }), _jsxs("span", { className: "lab-ff-state-actions", children: [_jsxs(Button, { type: "button", variant: "elevated", onPointerDown: (e) => e.stopPropagation(), onClick: () => onRetry(take), children: [_jsx(RefreshCw, { size: 18 }), " ", t('lab.canvas.tryAgain')] }), _jsxs(Button, { type: "button", variant: "destructive", onPointerDown: (e) => e.stopPropagation(), onClick: () => onRemove(take), children: [_jsx(Trash2, { size: 18 }), " ", t('lab.canvas.remove')] })] })] })), _jsxs("figcaption", { className: "lab-ff-label", style: { transform: `scale(${1 / view.scale})` }, children: [take.starred && _jsx(Star, { size: 11, fill: "currentColor" }), _jsxs("span", { className: "lab-ff-label-text", children: [(take.model && (modelLabel?.(take.model) || humanModel(take.model))) ||
-                                                t(`lab.canvas.op_${take.operation}`), ' ', "#", card.number] }), take.status === 'failed' && _jsx(X, { size: 11 })] })] }, take.id));
-                }) }), !cards.length && (_jsx("div", { className: "lab-ff-empty-frame", style: {
+        }, role: "application", "aria-label": t('lab.board.canvasHint'), children: [_jsxs("div", { className: "lab-ff-world", "data-animate": animate, style: { transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})` }, onTransitionEnd: (event) => {
+                    if (event.target === event.currentTarget)
+                        setAnimate(false);
+                }, children: [scene && (_jsx("div", { ref: sceneRef, className: "lab-ff-scene", "data-ff-scene": "", style: { width: sceneWidth, visibility: sceneReady ? undefined : 'hidden' }, children: scene.content })), cards.map((card) => {
+                        const take = card.take;
+                        const busy = take.status === 'pending' || take.status === 'processing';
+                        return (_jsxs("figure", { "data-card": take.id, className: "lab-ff-card", "data-status": take.status, "aria-current": take.id === selected?.take.id, style: { left: card.x, top: card.y, width: card.w, height: card.h }, children: [take.status === 'completed' ? (_jsx("img", { src: take.fileUrl, alt: take.prompt || t('lab.board.generatedImage'), draggable: false, onLoad: (e) => {
+                                        const img = e.currentTarget;
+                                        const r = img.naturalWidth / Math.max(1, img.naturalHeight);
+                                        if (Number.isFinite(r) && Math.abs((ratios[take.id] ?? 0) - r) > 0.01)
+                                            setRatios((old) => ({ ...old, [take.id]: r }));
+                                    } })) : busy ? (_jsxs("div", { className: "lab-ff-state", role: "status", children: [_jsx(PixelLoader, { size: 40, label: t('lab.board.creating') }), _jsx("b", { children: t('lab.board.takingShape') }), _jsxs("small", { children: [elapsed(take.createdAt, now), " \u00B7 ", t('lab.board.usually')] })] })) : (_jsxs("div", { className: "lab-ff-state", role: "alert", children: [_jsx("b", { children: t('lab.board.didntWork') }), _jsx("small", { children: takeErrorText(take, t, t('lab.board.tryAnother')) }), _jsxs("span", { className: "lab-ff-state-actions", children: [_jsxs(Button, { type: "button", variant: "elevated", onPointerDown: (e) => e.stopPropagation(), onClick: () => onRetry(take), children: [_jsx(RefreshCw, { size: 18 }), " ", t('lab.canvas.tryAgain')] }), _jsxs(Button, { type: "button", variant: "destructive", onPointerDown: (e) => e.stopPropagation(), onClick: () => onRemove(take), children: [_jsx(Trash2, { size: 18 }), " ", t('lab.canvas.remove')] })] })] })), _jsxs("figcaption", { className: "lab-ff-label", style: { transform: `scale(${1 / view.scale})` }, children: [take.starred && _jsx(Star, { size: 11, fill: "currentColor" }), _jsxs("span", { className: "lab-ff-label-text", children: [(take.model && (modelLabel?.(take.model) || humanModel(take.model))) ||
+                                                    t(`lab.canvas.op_${take.operation}`), ' ', "#", card.number] }), take.status === 'failed' && _jsx(X, { size: 11 })] })] }, take.id));
+                    })] }), !cards.length && !scene && (_jsx("div", { className: "lab-ff-empty-frame", style: {
                     top: insets.top,
                     right: insets.right,
                     bottom: insets.bottom,

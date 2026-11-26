@@ -12,6 +12,7 @@ import '../pixel_art.dart';
 import '../glass/container.dart';
 import '../i18n/i18n.dart';
 import '../icons/lucide.dart';
+import '../layout/size_reporter.dart';
 import '../primitives/button.dart';
 import '../scaffold.dart';
 import '../theme.dart';
@@ -53,6 +54,7 @@ const double cardHeight = 560;
 const double _gap = 72;
 const double _minScale = 0.08;
 const double _maxScale = 4;
+const double _scenePadding = 16;
 
 double _clamp(double v, double min, double max) =>
     math.min(max, math.max(min, v));
@@ -157,6 +159,7 @@ class FreeformBoard extends StatefulWidget {
     required this.onRetry,
     required this.onRemove,
     this.emptyContent,
+    this.emptyScene,
     this.imageBuilder,
     this.imageRatios = const {},
   });
@@ -196,8 +199,11 @@ class FreeformBoard extends StatefulWidget {
   /// Called from a failed card's "Remove".
   final ValueChanged<ImageTake> onRemove;
 
-  /// Replaces the default welcome on an empty board (e.g. the poster template gallery).
+  /// Replaces the default welcome with content fixed to the viewport.
   final Widget? emptyContent;
+
+  /// Interactive content at the world origin. The board fits its measured bounds on entry and resize.
+  final ({double maxWidth, Widget child})? emptyScene;
 
   /// Draws a completed take instead of loading its `fileUrl` (for images the host already holds,
   /// or formats Flutter can't decode, such as SVG). Its card keeps the take's aspect ratio.
@@ -229,6 +235,7 @@ class FreeformBoard extends StatefulWidget {
       ..add(IntProperty('now', now))
       ..add(FlagProperty('signedIn', value: signedIn, ifTrue: 'signed in'))
       ..add(IterableProperty<BoardStarter>('starters', starters))
+      ..add(DiagnosticsProperty('emptyScene', emptyScene))
       ..add(
         ObjectFlagProperty<ValueChanged<String>>.has('onStarter', onStarter),
       )
@@ -260,6 +267,7 @@ class _FreeformBoardState extends State<FreeformBoard>
     with SingleTickerProviderStateMixin {
   Size _size = const Size(1280, 800);
   FrameView? _view;
+  Size _sceneSize = Size.zero;
   late final _glide = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 520),
@@ -557,6 +565,18 @@ class _FreeformBoardState extends State<FreeformBoard>
         _cards = layoutCards(widget.takes, {..._ratios, ...widget.imageRatios});
         final selected = _selected;
         final insets = widget.insets;
+        final scene = _cards.isEmpty ? widget.emptyScene : null;
+        final roomW = size.width - insets.left - insets.right;
+        final roomH = size.height - insets.top - insets.bottom;
+        final sceneWidth = math.max(
+          0.0,
+          math.min(scene?.maxWidth ?? 0, roomW - _scenePadding * 2),
+        );
+        final sceneReady =
+            sceneWidth > 0 &&
+            roomH > 0 &&
+            _sceneSize.height > 0 &&
+            (_sceneSize.width - sceneWidth).abs() < 1;
         // Bring the selection (or a new version) into the free area whenever it, the panels or
         // the window change.
         final key = [
@@ -564,26 +584,48 @@ class _FreeformBoardState extends State<FreeformBoard>
           for (final card in _cards) '${card.take.id}:${card.x}:${card.w}',
           '${size.width}x${size.height}',
           '${insets.left},${insets.top},${insets.right},${insets.bottom}',
+          if (scene != null) '$sceneWidth,${_sceneSize.height},$sceneReady',
         ].join('|');
         // Unmeasured or hidden (a viewport no bigger than the chrome around it): nothing to fit
         // yet, so the first real layout snaps straight to the right view instead of gliding from
         // a fit made for a zero-size board.
-        final degenerate =
-            size.width - insets.left - insets.right <= 56 ||
-            size.height - insets.top - insets.bottom <= 56;
-        if (!degenerate && key != _fitKey) {
+        final canFit = scene != null ? sceneReady : roomW > 56 && roomH > 56;
+        if (canFit && key != _fitKey) {
           _fitKey = key;
-          final target = selected != null ? _fitted(selected) : _home();
-          if (_view == null) {
-            _view = target;
+          if (scene != null) {
+            final scale = math.min(
+              1.0,
+              (roomH - math.min(_scenePadding * 2, roomH / 4)) /
+                  _sceneSize.height,
+            );
+            _glide.stop();
+            _view = FrameView(
+              x: insets.left + (roomW - sceneWidth * scale) / 2,
+              y: insets.top + (roomH - _sceneSize.height * scale) / 2,
+              scale: scale,
+            );
           } else {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted && _fitKey == key) _glideTo(target);
-            });
+            final target = selected != null ? _fitted(selected) : _home();
+            if (_view == null) {
+              _view = target;
+            } else {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted && _fitKey == key) _glideTo(target);
+              });
+            }
           }
         }
         final view = _current;
-        return _board(context, i18n, size, view, selected);
+        return _board(
+          context,
+          i18n,
+          size,
+          view,
+          selected,
+          scene?.child,
+          sceneWidth,
+          sceneReady,
+        );
       },
     );
   }
@@ -594,6 +636,9 @@ class _FreeformBoardState extends State<FreeformBoard>
     Size size,
     FrameView view,
     FreeformCard? selected,
+    Widget? scene,
+    double sceneWidth,
+    bool sceneReady,
   ) {
     final theme = ThemeProvider.of(context);
     final c = theme.colors;
@@ -654,7 +699,51 @@ class _FreeformBoardState extends State<FreeformBoard>
         ),
       );
     }
-    if (_cards.isEmpty) {
+    if (scene != null) {
+      children.add(
+        Positioned(
+          left: view.x,
+          top: view.y,
+          width: sceneWidth,
+          child: Transform.scale(
+            alignment: Alignment.topLeft,
+            scale: view.scale,
+            child: SizeReporter(
+              onSize: (size) {
+                if (mounted && _sceneSize != size) {
+                  setState(() => _sceneSize = size);
+                }
+              },
+              child: IgnorePointer(
+                ignoring: !sceneReady,
+                child: Opacity(
+                  opacity: sceneReady ? 1 : 0,
+                  // The board's listener moves the view. Win the gesture arena when a drag or
+                  // pinch starts over a control so its tap recognizer cancels activation.
+                  child: RawGestureDetector(
+                    excludeFromSemantics: true,
+                    gestures: {
+                      ScaleGestureRecognizer:
+                          GestureRecognizerFactoryWithHandlers<
+                            ScaleGestureRecognizer
+                          >(
+                            ScaleGestureRecognizer.new,
+                            (recognizer) => recognizer
+                              ..gestureSettings = const DeviceGestureSettings(
+                                touchSlop: 2,
+                              )
+                              ..onStart = (_) {},
+                          ),
+                    },
+                    child: scene,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    } else if (_cards.isEmpty) {
       children.add(
         Positioned(
           top: insets.top,

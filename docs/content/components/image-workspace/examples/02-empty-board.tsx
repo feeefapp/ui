@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { FreeformBoard } from '@feeef.dev/ui/image/freeform-board'
+import { Button } from '@feeef.dev/ui/ui'
 
 const STARTERS = [
   { label: 'Product on marble', prompt: 'A perfume bottle on white marble, soft studio light' },
@@ -19,10 +20,22 @@ export default function EmptyBoard() {
           insets={{ top: 12, right: 12, bottom: 12, left: 12 }}
           now={Date.now()}
           signedIn
-          starters={STARTERS}
+          starters={[]}
           onStarter={setPrompt}
           onRetry={() => {}}
           onRemove={() => {}}
+          emptyScene={{
+            maxWidth: 360,
+            content: (
+              <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 8 }}>
+                {STARTERS.map((starter) => (
+                  <Button key={starter.label} variant="tonal" onClick={() => setPrompt(starter.prompt)}>
+                    {starter.label}
+                  </Button>
+                ))}
+              </div>
+            ),
+          }}
         />
       </div>
       <small>{prompt ? `Starter: ${prompt}` : 'Pick a starter.'}</small>
@@ -33,5 +46,5 @@ export default function EmptyBoard() {
 export const meta = {
   title: 'Empty board',
   description:
-    'With no versions the board shows a welcome and starter prompts. Pass emptyContent to replace it, as poster mode does with its template gallery.',
+    'Starter actions in an empty scene pan and zoom with the board. Click an action to select a prompt.',
 }
