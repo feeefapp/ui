@@ -9,8 +9,7 @@ class _PaneSwitch extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       // The area it presents over: its parent in place, otherwise the window.
-      final routed = PresentationRouteScope.maybeOf(context) != null;
-      final available = sheet.container || routed
+      final available = sheet.container
           ? constraints.maxWidth
           : MediaQuery.sizeOf(context).width;
       return available < sheet.regularBreakpoint
@@ -125,7 +124,7 @@ class _DesktopPaneState extends State<_DesktopPane>
     if (isOpen) _shown = widget.pane;
     return PresentationLayer(
       mounted: presented,
-      inPlace: widget.pane.container || routed,
+      inPlace: widget.pane.container,
       builder: _view,
     );
   }

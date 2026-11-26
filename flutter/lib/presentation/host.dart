@@ -70,8 +70,8 @@ class PresentationRouteScope extends InheritedWidget {
       old.open != open || old._active != _active;
 }
 
-/// Puts a surface in the nearest [Overlay] while [mounted] (an [OverlayPortal]), or in place,
-/// filling its parent, when [inPlace] (a container preview, or a route). The twin of the web host
+/// Puts a surface in the root [Overlay] while [mounted] (an [OverlayPortal]), or in place,
+/// filling its parent, when [inPlace] (a container preview). The twin of the web host
 /// rendering in the top layer or in a container. The glass inside is its own layer: it never
 /// merges with the page's glass.
 class PresentationLayer extends StatefulWidget {
@@ -123,8 +123,11 @@ class _PresentationLayerState extends State<PresentationLayer> {
           ? GlassLayer(child: Builder(builder: widget.builder))
           : const SizedBox.shrink();
     }
+    // The root overlay, like the web top layer: a surface opened inside a nested navigator (a
+    // shell branch) still covers the shell's sidebar. It keeps the opener's inherited scopes.
     return OverlayPortal(
       controller: _portal,
+      overlayLocation: OverlayChildLocation.rootOverlay,
       overlayChildBuilder: (context) => widget.mounted
           ? GlassLayer(child: Builder(builder: widget.builder))
           : const SizedBox.shrink(),

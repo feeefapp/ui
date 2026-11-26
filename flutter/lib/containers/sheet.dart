@@ -1639,7 +1639,7 @@ class _SheetState extends State<_BottomSheet> {
     _scheduleSync();
     return PresentationLayer(
       mounted: _mounted,
-      inPlace: widget.sheet.container || _route != null,
+      inPlace: widget.sheet.container,
       builder: _hostView,
     );
   }

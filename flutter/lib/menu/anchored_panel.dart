@@ -370,11 +370,13 @@ class _AnchoredPanelState extends State<AnchoredPanel>
   @override
   Widget build(BuildContext context) {
     final direction = Directionality.of(context);
+    // The root overlay, with presentation surfaces: a menu opened inside a modal stays above it.
     return OverlayPortal(
       controller: _portal,
+      overlayLocation: OverlayChildLocation.rootOverlay,
       overlayChildBuilder: (overlayContext) {
         if (!_visible) return const SizedBox.shrink();
-        final overlay = Overlay.maybeOf(overlayContext);
+        final overlay = Overlay.maybeOf(overlayContext, rootOverlay: true);
         final safe = overlay == null
             ? EdgeInsets.zero
             : MediaQuery.maybePaddingOf(overlay.context) ?? EdgeInsets.zero;

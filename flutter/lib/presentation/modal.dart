@@ -214,7 +214,7 @@ class _ModalState extends State<Modal> with PresentationStateMixin<Modal> {
     if (isOpen) _shown = widget;
     return PresentationLayer(
       mounted: presented,
-      inPlace: widget.container || routed,
+      inPlace: widget.container,
       builder: _view,
     );
   }

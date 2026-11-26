@@ -237,7 +237,7 @@ class _AlertState extends State<Alert> with PresentationStateMixin<Alert> {
     }
     return PresentationLayer(
       mounted: presented,
-      inPlace: widget.container || routed,
+      inPlace: widget.container,
       builder: _view,
     );
   }
