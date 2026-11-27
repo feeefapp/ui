@@ -649,12 +649,7 @@ class _ArrangeMotionState extends State<_ArrangeMotion>
     final phase = (widget.seed % 11) / 11 * 2 * math.pi;
     return AnimatedBuilder(
       animation: _ctrl,
-      builder: (context, child) => Transform.rotate(
-        angle: _ctrl.isAnimating
-            ? math.sin(_ctrl.value * 2 * math.pi + phase) * 0.0055
-            : 0,
-        child: child,
-      ),
+      builder: (context, child) => child ?? SizedBox.shrink(),
       child: widget.child,
     );
   }

@@ -415,6 +415,7 @@ class _ScrollAreaState extends State<ScrollArea> {
         onSize: (size) => _measured(top, size),
         child: MediaQuery.removePadding(
           context: context,
+          removeTop: true,
           removeLeft: true,
           removeRight: true,
           child: Center(heightFactor: 1, child: child),

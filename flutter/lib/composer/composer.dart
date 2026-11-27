@@ -27,9 +27,9 @@ export 'composer_model.dart';
 /// `--lab-space-1` / `--lab-space-3` for a density.
 double _space1(SizeTokens s) => s.density == Density.thin ? 2 : 4;
 double _space6(SizeTokens s) => switch (s.density) {
-  Density.comfortable => 24,
-  Density.compact => 16,
-  Density.thin => 12,
+  Density.comfortable => 14,
+  Density.compact => 12,
+  Density.thin => 6,
 };
 double _space3(SizeTokens s) => switch (s.density) {
   Density.comfortable => 12,
@@ -628,7 +628,7 @@ class ComposerAttachment extends StatelessWidget {
           )
         : SizedBox.square(dimension: m.thumb, child: preview);
     final media = Container(
-      height: m.thumb,
+      height: 40,
       constraints: BoxConstraints(
         minWidth: m.thumb,
         maxWidth: wide ? m.thumb * 3 : m.thumb,
@@ -641,7 +641,7 @@ class ComposerAttachment extends StatelessWidget {
       foregroundDecoration: ShapeDecoration(
         shape: SuperellipseBorder(
           radius: radius,
-          side: BorderSide(color: mixSrgb(c.ink, 0.08, transparent)),
+          side: BorderSide(color: mixSrgb(c.ink, 0.05, transparent)),
         ),
       ),
       child: Stack(

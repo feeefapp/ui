@@ -813,7 +813,6 @@ class _ListRowState extends State<ListRow> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            spacing: 2,
             children: [
               DefaultTextStyle.merge(
                 style: const TextStyle(

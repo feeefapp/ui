@@ -1918,7 +1918,6 @@ class _SheetState extends State<_BottomSheet> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (_showGrabber) const SizedBox(height: sheetGrabberBand),
                 if (widget.sheet.builder != null)
                   ..._builtContent(context, header, dock)
                 else

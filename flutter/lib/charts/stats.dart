@@ -344,7 +344,7 @@ class StatTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
-          spacing: 6,
+          spacing: 2,
           children: [
             Text(
               label,
