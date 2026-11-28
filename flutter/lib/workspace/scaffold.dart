@@ -651,6 +651,17 @@ class _SidebarGlassState extends State<_SidebarGlass>
                 child: const SizedBox.expand(),
               ),
             ),
+            // Readability veil: the frosted sidebar floats over any content (white sheets,
+            // photos); a share of the theme surface keeps its text at a steady contrast.
+            if (!widget.drawer)
+              DecoratedBox(
+                decoration: ShapeDecoration(
+                  color: theme.colors.surface.withValues(
+                    alpha: theme.brightness == Brightness.dark ? .72 : .6,
+                  ),
+                  shape: SuperellipseBorder(radius: radius),
+                ),
+              ),
           ],
         ),
       ),
