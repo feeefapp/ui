@@ -38,6 +38,14 @@ class ComposerReference {
 
 /// A prompt idea offered by the + menu.
 @immutable
+/// A host entry in the add menu, under the built-in ones (for example "Pick a product").
+class ComposerMenuAction {
+  const ComposerMenuAction({required this.label, required this.icon, required this.onSelect});
+  final String label;
+  final LucideIconData icon;
+  final VoidCallback onSelect;
+}
+
 class ComposerTemplate {
   const ComposerTemplate({
     required this.id,
@@ -153,7 +161,11 @@ class ImagePromptComposer extends StatefulWidget {
     this.readClipboard,
     this.dropActive = false,
     this.focusNode,
+    this.menuActions = const [],
   });
+
+  /// Extra add-menu entries from the host, shown last.
+  final List<ComposerMenuAction> menuActions;
 
   /// The prompt text (controlled).
   final String prompt;
@@ -1129,6 +1141,7 @@ class _AddMenuState extends State<_AddMenu> {
   final _recent = FocusNode(debugLabel: 'recent');
   final _ideas = FocusNode(debugLabel: 'ideas');
   final _edit = FocusNode(debugLabel: 'edit');
+  final List<FocusNode> _extraNodes = [];
   final List<FocusNode> _subNodes = [];
   final _group = Object();
 
@@ -1141,10 +1154,18 @@ class _AddMenuState extends State<_AddMenu> {
       _ideas,
       _edit,
       ..._subNodes,
+      ..._extraNodes,
     ]) {
       node.dispose();
     }
     super.dispose();
+  }
+
+  FocusNode _extraFocus(int i) {
+    while (_extraNodes.length <= i) {
+      _extraNodes.add(FocusNode(debugLabel: 'extra ${_extraNodes.length}'));
+    }
+    return _extraNodes[i];
   }
 
   List<FocusNode> _subFocus(int count) {
@@ -1340,6 +1361,14 @@ class _AddMenuState extends State<_AddMenu> {
                   onSelect: () => _select(widget.onEditPhoto),
                   child: Text(t('lab.imgcomposer.editPhoto')),
                 ),
+                if (composer.menuActions.isNotEmpty) separator(),
+                for (final (i, action) in composer.menuActions.indexed)
+                  _MenuItem(
+                    focusNode: _extraFocus(i),
+                    icon: action.icon,
+                    onSelect: () => _select(action.onSelect),
+                    child: Text(action.label),
+                  ),
               ],
             ),
           ),

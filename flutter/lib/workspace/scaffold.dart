@@ -642,6 +642,8 @@ class _SidebarGlassState extends State<_SidebarGlass>
               interactive: false,
               adaptive: false,
               material: widget.drawer ? GlassKind.menu : GlassKind.regular,
+              // Frosted: the sidebar floats over the canvas, images included; blur what is behind.
+              frosted: true,
               child: GlassMemberBox(
                 motion: GlassMotion.follow,
                 radius: radius,

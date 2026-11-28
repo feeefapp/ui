@@ -230,19 +230,6 @@ class _ListSectionState extends State<ListSection> {
               ),
             ),
           card,
-          if (widget.footer != null)
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: s.listInset),
-              child: DefaultTextStyle.merge(
-                style: TextStyle(
-                  color: c.muted,
-                  fontSize: 13,
-                  height: 19 / 13,
-                  leadingDistribution: TextLeadingDistribution.even,
-                ),
-                child: widget.footer!,
-              ),
-            ),
         ],
       ),
     );

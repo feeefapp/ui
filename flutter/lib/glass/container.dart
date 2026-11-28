@@ -47,6 +47,7 @@ class GlassContainer extends StatefulWidget {
     this.interactive = true,
     this.adaptive = true,
     this.material = GlassKind.regular,
+    this.frosted = false,
     required this.child,
   });
 
@@ -55,6 +56,10 @@ class GlassContainer extends StatefulWidget {
   /// least [glassMenuBlur] px, with a deeper shadow) so text on it reads over anything; the
   /// hairline, moving light and lens stay. It ignores the theme's tint and never adapts its tone.
   /// [MenuSurface] uses it.
+  /// Always blurs the backdrop at least at the frosted strength (large panels such as the
+  /// sidebar, where a clear veil would leave text unreadable over images).
+  final bool frosted;
+
   final GlassKind material;
 
   /// Small glass (at most [glassAdaptMaxHeight] tall) over a [GlassBackdrop] of the opposite
@@ -565,7 +570,7 @@ class _GlassContainerState extends State<GlassContainer> {
       // The bend is part of the liquid effect: transparent glass stays unbent.
       refraction: theme.config.glassRefraction && liquid,
       // Liquid glass that can't bend here (no shader filters) frosts instead.
-      frosted: glassFrostsOf(context),
+      frosted: widget.frosted || glassFrostsOf(context),
       refractionStrength: theme.config.refractionStrength,
       highlight: theme.config.highlight,
       highlightWidth: theme.config.highlightWidth,
@@ -917,11 +922,13 @@ class _GlassBackdropsState extends State<_GlassBackdrops> {
           child: const SizedBox.expand(),
         );
       }
-      final blur = face == null
+      final liquid = face == null
           ? material.blurFor(side)
           : material.blur
           ? liquidFrost(_smallestSide(path), material.tint, dpr)
           : 0.0;
+      // Frosted glass keeps its bend but never drops below the frosted blur.
+      final blur = material.frosted ? math.max(liquid, glassFrostedBlur(side)) : liquid;
       return GlassRefraction(
         path: path,
         spacing: scene.spacing,
